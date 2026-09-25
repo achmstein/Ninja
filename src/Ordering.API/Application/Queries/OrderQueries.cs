@@ -269,6 +269,14 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 && (o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.AwaitingValidation
                     || o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Submitted));
 
+    public Task<bool> HasUnconfirmedGuestOrderAwayAsync(string guestId)
+        => context.Orders
+            .AsNoTracking()
+            .AnyAsync(o => o.GuestId == guestId
+                && o.PlaceId == null
+                && (o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.AwaitingValidation
+                    || o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Submitted));
+
     public Task<bool> IsGuestBlockedAsync(string guestId, int branchId)
     {
         var now = DateTime.UtcNow;

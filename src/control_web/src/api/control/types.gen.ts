@@ -42,6 +42,7 @@ export type BrandDto = {
     locale: BrandLocale;
     version: number | string;
     entitlements?: null | BrandFeatures;
+    guestOrdersAnywhere?: boolean;
 };
 
 export type BrandFeatures = {
@@ -167,6 +168,7 @@ export type CreateTenantRequest = {
     businessType?: BusinessType;
     arabicStyle?: null | string;
     defaultTheme?: null | string;
+    guestOrdersAnywhere?: boolean;
 };
 
 export type ExtendRequest = {
@@ -523,6 +525,7 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
+    guestOrdersAnywhere?: null | boolean;
 };
 
 export type UpdatesResponse = {

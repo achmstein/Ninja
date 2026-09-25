@@ -336,6 +336,19 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
+    public void Guest_order_without_a_destination_is_allowed_where_the_cafe_takes_them_from_anywhere()
+    {
+        // The café said a guest may order away from a table: it is collected,
+        // and the phone on it is how the counter finds whoever ordered
+        var order = NewGuestOrder(guestOrdersAnywhere: true);
+
+        // Assert
+        Assert.IsTrue(order.IsGuestOrder);
+        Assert.IsFalse(order.HasDestination);
+        Assert.AreEqual("01012345678", order.GuestPhone);
+    }
+
+    [TestMethod]
     public void Signed_in_order_without_a_destination_is_allowed()
     {
         // The gate is on guests only — an account holder stays accountable
@@ -362,7 +375,8 @@ public class OrderAggregateTest
         int? placeId = null,
         string? guestId = "guest-1",
         string? guestName = "Nadia",
-        string? guestPhone = "01012345678") =>
+        string? guestPhone = "01012345678",
+        bool guestOrdersAnywhere = false) =>
         new(
             userId: string.Empty,
             userName: string.Empty,
@@ -372,7 +386,8 @@ public class OrderAggregateTest
             guestPhone: guestPhone,
             placeId: placeId,
             placeKind: placeId is null ? null : "Table",
-            placeName: placeId is null ? null : new LocalizedText("Table 3"));
+            placeName: placeId is null ? null : new LocalizedText("Table 3"),
+            guestOrdersAnywhere: guestOrdersAnywhere);
 
     [TestMethod]
     public void Total_is_net_of_line_discounts_and_loyalty_discount()

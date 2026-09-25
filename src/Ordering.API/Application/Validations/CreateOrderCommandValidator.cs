@@ -37,8 +37,10 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
                 .WithMessage("Loyalty points cannot be redeemed on a guest order.");
 
             // A guest order has to be going somewhere in the building. Ordering
-            // ahead to collect is for account holders, who can be held to it.
+            // ahead to collect is for account holders, who can be held to it —
+            // unless the café takes guests' orders from anywhere.
             RuleFor(command => command.HasDestination).Equal(true)
+                .Unless(command => command.GuestOrdersAnywhere)
                 .WithMessage("A table or room is required to order as a guest.");
         });
 

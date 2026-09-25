@@ -10,4 +10,5 @@ public record BranchSettingsChangedIntegrationEvent(
     int BranchId,
     bool IsOrderingEnabled,
     bool IsReservationsEnabled,
-    bool RequireSignInForTableOrders = false) : IntegrationEvent;
+    bool RequireSignInForTableOrders = false,
+    bool GuestOrdersAnywhere = false) : IntegrationEvent;

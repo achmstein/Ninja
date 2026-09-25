@@ -206,7 +206,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
@@ -262,8 +262,10 @@ public class Order
             // to carry it to, and ordering ahead — which is what a destination
             // less order really is — is reserved for account holders who can
             // be held to it. In practice this always means a table: a room
-            // session belongs to an account.
-            if (!HasDestination)
+            // session belongs to an account. A café that takes guests' orders
+            // from anywhere lets one go without: it is collected, and the
+            // phone above is how the counter finds whoever ordered it.
+            if (!HasDestination && !guestOrdersAnywhere)
             {
                 throw new OrderingDomainException("A guest order needs a table or room to be delivered to.");
             }

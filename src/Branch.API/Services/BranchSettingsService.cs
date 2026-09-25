@@ -46,7 +46,31 @@ public class BranchSettingsService(
             "Branch {BranchId} settings: ordering {Ordering}, reservations {Reservations}",
             branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled);
 
+        await PublishAsync(branch);
+    }
+
+    /// <summary>
+    /// Every branch's flags again, unchanged: for a café-wide setting the
+    /// branch event carries, when it changed.
+    /// </summary>
+    public async Task PublishAllAsync()
+    {
+        foreach (var branch in await context.Branches.AsNoTracking().ToListAsync())
+        {
+            await PublishAsync(branch);
+        }
+    }
+
+    private async Task PublishAsync(Model.Branch branch)
+    {
+        // Whether a guest may order away from a table is the café's, not the
+        // branch's; it rides here because this is the event Ordering projects
+        var guestOrdersAnywhere = await context.Tenants.AsNoTracking()
+            .Where(t => t.Id == Model.Tenant.SingletonId)
+            .Select(t => t.GuestOrdersAnywhere)
+            .SingleOrDefaultAsync();
+
         await eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders));
+            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, guestOrdersAnywhere));
     }
 }

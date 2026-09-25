@@ -981,6 +981,10 @@
               "null",
               "string"
             ]
+          },
+          "guestOrdersAnywhere": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -1319,6 +1323,12 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "guestOrdersAnywhere": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }

@@ -18,4 +18,10 @@ public interface IBranchSettingsQueries
     /// a branch with no projection row takes guest table orders.
     /// </summary>
     Task<bool> RequiresSignInForTableOrdersAsync(int branchId);
+
+    /// <summary>
+    /// Whether a guest may order here without a table. Fail-closed: a branch
+    /// with no projection row wants a guest at a table, as it always has.
+    /// </summary>
+    Task<bool> AllowsGuestOrdersAnywhereAsync(int branchId);
 }

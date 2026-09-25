@@ -79,6 +79,7 @@ public static partial class TenantApi
         BranchContext context,
         IConfiguration configuration,
         IEventBus eventBus,
+        BranchSettingsService settings,
         UpdateTenantRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name.En))
@@ -107,6 +108,8 @@ public static partial class TenantApi
         tenant.CustomerUrl = string.IsNullOrEmpty(customerUrl) ? null : customerUrl;
         tenant.Theme = theme;
         if (request.BusinessType is { Length: > 0 } business) tenant.BusinessType = business.Trim().ToLowerInvariant();
+        var guestsChanged = request.GuestOrdersAnywhere is { } anywhere && anywhere != tenant.GuestOrdersAnywhere;
+        if (guestsChanged) tenant.GuestOrdersAnywhere = request.GuestOrdersAnywhere!.Value;
         if (locale is { } l)
         {
             tenant.Country = l.Country;
@@ -121,6 +124,8 @@ public static partial class TenantApi
         await context.SaveChangesAsync();
         // The services that own a module keep their own copy of the switches
         await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
+        // Ordering reads it with each branch's flags, so every branch says it again
+        if (guestsChanged) await settings.PublishAllAsync();
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
@@ -456,7 +461,8 @@ public record TenantResponse(
     TenantFeatures Entitlements,
     TenantLocaleDto Locale,
     long Version,
-    string? BusinessType = null)
+    string? BusinessType = null,
+    bool GuestOrdersAnywhere = false)
 {
     public static TenantResponse From(Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
@@ -486,12 +492,14 @@ public record TenantResponse(
             t.Entitlements,
             TenantLocaleDto.From(t),
             v,
-            t.BusinessType);
+            t.BusinessType,
+            t.GuestOrdersAnywhere);
     }
 }
 
 /// <param name="BusinessType">What kind of place it is; the control plane says so when it creates the café, null leaves it.</param>
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null);
+/// <param name="GuestOrdersAnywhere">Whether a guest may order without being at a table; null leaves it.</param>
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

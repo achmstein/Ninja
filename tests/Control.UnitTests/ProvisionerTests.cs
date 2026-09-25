@@ -37,7 +37,8 @@ public sealed class ProvisionerTests
             HealthCalls++;
             return HealthCalls <= FailHealthTimes ? throw new TimeoutException("still not healthy: catalog") : Task.CompletedTask;
         }
-        public Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct) => Task.CompletedTask;
+        public JsonObject? SeededBrand { get; private set; }
+        public Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct) { SeededBrand = brand; return Task.CompletedTask; }
         public Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct) => Task.FromResult<JsonObject?>(null);
         public Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct) => Task.CompletedTask;
     }
@@ -124,6 +125,23 @@ public sealed class ProvisionerTests
             else Assert.DoesNotContain($"blue-{service}-api:", yaml, $"{service} is not in the plan");
         }
         Assert.Contains("blue-spaces-api:", yaml, "spaces always runs");
+    }
+
+    /// <summary>Whether a guest may order away from a table is chosen when the café is created, and the stack starts with it.</summary>
+    [TestMethod]
+    public async Task A_fresh_stack_starts_with_the_guest_ordering_the_cafe_was_created_with()
+    {
+        _tenant.Status = TenantStatus.Requested;
+        _tenant.GuestOrdersAnywhere = true;
+        // No edge on this box to reload
+        _platform.DryRun = true;
+        _platform.EdgeSnippetPath = Path.Combine(_root, "no-edge", "custom-domains.caddy");
+        await _context.SaveChangesAsync();
+
+        await _provisioner.ProvisionAsync(_tenant.Id, CancellationToken.None);
+
+        Assert.IsNotNull(_stack.SeededBrand, string.Join(", ", Steps()));
+        Assert.IsTrue(_stack.SeededBrand["guestOrdersAnywhere"]!.GetValue<bool>());
     }
 
     /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter café stays without inventory, finance and payroll.</summary>

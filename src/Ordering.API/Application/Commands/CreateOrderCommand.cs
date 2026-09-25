@@ -114,6 +114,13 @@ public class CreateOrderCommand : IRequest<int>
     public string? PromoCode { get; private set; }
 
     /// <summary>
+    /// The café takes a guest's order without a place, to collect. Read from
+    /// the branch's projected settings by the endpoint, never from a body.
+    /// </summary>
+    [DataMember]
+    public bool GuestOrdersAnywhere { get; private set; }
+
+    /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
     /// sale keyed in by staff.
     /// </summary>
@@ -148,9 +155,11 @@ public class CreateOrderCommand : IRequest<int>
         int? placeId = null,
         string? placeKind = null,
         LocalizedText? placeName = null,
-        string? promoCode = null)
+        string? promoCode = null,
+        bool guestOrdersAnywhere = false)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        GuestOrdersAnywhere = guestOrdersAnywhere;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim();
         PlaceId = placeId;
         PlaceKind = placeKind;

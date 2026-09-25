@@ -24,6 +24,12 @@ public class BranchSettings
     public bool RequireSignInForTableOrders { get; set; }
 
     /// <summary>
+    /// A guest may order without a table — from anywhere, to collect. The
+    /// café's setting, not the branch's, carried on every branch's event.
+    /// </summary>
+    public bool GuestOrdersAnywhere { get; set; }
+
+    /// <summary>
     /// CreationDate of the last event applied — the out-of-order guard: an
     /// older event arriving late must not undo a newer one.
     /// </summary>

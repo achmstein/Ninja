@@ -4,6 +4,7 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import type { ModuleName } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export const BUSINESS_TYPES: BusinessType[] = ['CoffeeShop', 'Restaurant', 'GameStation', 'Other']
@@ -61,6 +62,28 @@ export function BusinessPicker({
         )
       })}
     </ToggleGroup>
+  )
+}
+
+/** Whether a guest may order without being at a table: the café's call, changeable later on its Brand tab. */
+export function GuestOrdersField({
+  id,
+  checked,
+  onChange,
+}: {
+  id: string
+  checked: boolean
+  onChange: (value: boolean) => void
+}) {
+  const t = useT()
+  return (
+    <div className='flex items-start justify-between gap-4 rounded-lg border px-3 py-2'>
+      <div className='grid gap-1'>
+        <Label htmlFor={id} className='font-normal'>{t('guestOrdersAnywhere')}</Label>
+        <p className='text-muted-foreground text-xs'>{t('guestOrdersAnywhereHint')}</p>
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
   )
 }
 

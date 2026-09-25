@@ -113,6 +113,13 @@ public class Tenant
     /// <summary>"light" or "dark" for someone who has not chosen; null follows the device.</summary>
     public string? DefaultTheme { get; set; }
 
+    /// <summary>
+    /// A guest may order without being at a table, to collect; off, a guest
+    /// orders from the table they scanned. The stack holds the live value,
+    /// this copy follows it and seeds a fresh stack.
+    /// </summary>
+    public bool GuestOrdersAnywhere { get; set; }
+
     /// <summary>A café's own customer host ("menu.cafe.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 

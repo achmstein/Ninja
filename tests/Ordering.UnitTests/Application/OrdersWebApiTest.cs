@@ -497,6 +497,58 @@ public class OrdersWebApiTest
     }
 
     [TestMethod]
+    public async Task Create_guest_order_without_a_destination_is_taken_where_the_cafe_allows_it()
+    {
+        // Arrange - the café takes guests' orders from anywhere, to collect;
+        // the setting is Ordering's projection of Branch.API's
+        _branchSettingsMock.AllowsGuestOrdersAnywhereAsync(1).Returns(true);
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
+
+        // Act
+        var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
+
+        // Assert
+        Assert.IsInstanceOfType<Ok>(result.Result);
+        await _mediatorMock.Received().Send(
+            Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
+                c.Command.IsGuestOrder && c.Command.PlaceId == null && c.Command.GuestOrdersAnywhere),
+            default);
+    }
+
+    [TestMethod]
+    public async Task Create_guest_order_from_away_waits_for_the_last_one()
+    {
+        // Arrange - one order from away on the queue per device, as at a table
+        _branchSettingsMock.AllowsGuestOrdersAnywhereAsync(1).Returns(true);
+        _orderQueriesMock.HasUnconfirmedGuestOrderAwayAsync(Arg.Any<string>()).Returns(true);
+
+        // Act
+        var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
+
+        // Assert
+        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
+    }
+
+    [TestMethod]
+    public async Task Create_guest_order_from_away_is_not_a_table_order()
+    {
+        // Arrange - a branch that wants an account on a table order has
+        // nothing to say about one with no table
+        _branchSettingsMock.AllowsGuestOrdersAnywhereAsync(1).Returns(true);
+        _branchSettingsMock.RequiresSignInForTableOrdersAsync(1).Returns(true);
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
+
+        // Act
+        var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
+
+        // Assert
+        Assert.IsInstanceOfType<Ok>(result.Result);
+    }
+
+    [TestMethod]
     public async Task Create_signed_in_order_without_a_destination_is_allowed()
     {
         // Arrange â€” the gate is on guests only; an account holder stays

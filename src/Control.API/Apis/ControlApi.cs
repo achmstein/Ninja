@@ -166,6 +166,7 @@ public static partial class ControlApi
             BusinessType = request.BusinessType,
             ArabicStyle = arabicStyle,
             DefaultTheme = defaultTheme,
+            GuestOrdersAnywhere = request.GuestOrdersAnywhere,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -429,7 +430,8 @@ public record CreateTenantRequest(
     Module[]? Addons = null,
     BusinessType BusinessType = BusinessType.Other,
     string? ArabicStyle = null,
-    string? DefaultTheme = null);
+    string? DefaultTheme = null,
+    bool GuestOrdersAnywhere = false);
 
 public record UpgradeRequest(string? ImageTag);
 

@@ -162,6 +162,7 @@ public static partial class OrdersApi
         var isGuest = string.IsNullOrEmpty(signedInUserId);
 
         string? guestId = null;
+        var guestOrdersAnywhere = false;
 
         if (isGuest)
         {
@@ -195,10 +196,22 @@ public static partial class OrdersApi
 
             // Ordering without saying where to bring it is ordering ahead, and
             // that is for account holders — there is nobody to hand a guest's
-            // order to and nothing tying it to a visit
+            // order to and nothing tying it to a visit. Unless the café takes
+            // guests' orders from anywhere: then it is theirs to collect, and
+            // the phone they left is how the counter reaches them.
             if (request.PlaceId is null)
             {
-                return TypedResults.BadRequest("A table or room is required to order as a guest.");
+                guestOrdersAnywhere = await services.BranchSettings.AllowsGuestOrdersAnywhereAsync(httpContext.GetRequiredBranchId());
+                if (!guestOrdersAnywhere)
+                {
+                    return TypedResults.BadRequest("A table or room is required to order as a guest.");
+                }
+
+                // One order at a time from away too, until the till answers it
+                if (await services.Queries.HasUnconfirmedGuestOrderAwayAsync(guestId))
+                {
+                    return TypedResults.BadRequest("Your last order is still waiting for the counter. It will be confirmed shortly.");
+                }
             }
 
             // Turned away by the till today: the answer does not change
@@ -209,7 +222,8 @@ public static partial class OrdersApi
             }
 
             // The branch wants a name it can hold to on a table order
-            if (await services.BranchSettings.RequiresSignInForTableOrdersAsync(httpContext.GetRequiredBranchId()))
+            if (request.PlaceId is not null
+                && await services.BranchSettings.RequiresSignInForTableOrdersAsync(httpContext.GetRequiredBranchId()))
             {
                 return TypedResults.BadRequest("Ordering to a table here needs an account. Please sign in.");
             }
@@ -279,7 +293,8 @@ public static partial class OrdersApi
                 // The projection fills in what the client left out
                 placeKind: request.PlaceKind ?? place?.Kind,
                 placeName: request.PlaceName ?? place?.Name,
-                promoCode: request.PromoCode);
+                promoCode: request.PromoCode,
+                guestOrdersAnywhere: guestOrdersAnywhere);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 

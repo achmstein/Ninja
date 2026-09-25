@@ -29,6 +29,12 @@ public interface IOrderQueries
     /// </summary>
     Task<bool> HasUnconfirmedGuestOrderAtPlaceAsync(string guestId, int placeId);
 
+    /// <summary>
+    /// The same for a guest ordering from away: one order without a place
+    /// waiting on the till at a time.
+    /// </summary>
+    Task<bool> HasUnconfirmedGuestOrderAwayAsync(string guestId);
+
     /// <summary>The till turned this guest away at this branch, and the block has not lapsed.</summary>
     Task<bool> IsGuestBlockedAsync(string guestId, int branchId);
 

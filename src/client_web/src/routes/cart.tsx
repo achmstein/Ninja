@@ -52,7 +52,7 @@ import { PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { StillHereCard } from '@/components/places/still-here'
-import { useFeatures } from '@/lib/brand'
+import { useBrand, useFeatures } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -80,6 +80,8 @@ function CartPage() {
   const auth = useAuth()
   // Points are loyalty's: without the module there is no balance to ask for and nothing to redeem
   const { loyalty: loyaltyOn } = useFeatures()
+  // The café takes a guest's order without a table, to collect
+  const guestOrdersAnywhere = useBrand()?.guestOrdersAnywhere ?? false
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   // Room-beats-table lives in useOrderDestination so the header chip and this
@@ -330,7 +332,8 @@ function CartPage() {
   // nothing anchoring the order to someone in the building, so the only ways
   // forward are to scan the table or to sign in — the server refuses it either
   // way, and finding that out after tapping Order would be the wrong lesson.
-  const guestNeedsTable = isGuest && !destination
+  // A café that takes guests' orders from anywhere lets it through, to collect.
+  const guestNeedsTable = isGuest && !destination && !guestOrdersAnywhere
   // The branch wants a name it can hold to on a table order: a guest at a
   // table signs in first. Ordering refuses it too; this just says so
   // before the tap rather than after.
@@ -503,11 +506,19 @@ function CartPage() {
         {tableUnconfirmed && activePlace ? (
           <StillHereCard place={activePlace} />
         ) : (
-          destination && (
+          destination ? (
             <div className='text-muted-foreground flex items-center gap-2 text-sm'>
               <PlaceIcon kind={destination.placeKind} className='h-4 w-4' />
               {localized(destination.name)}
             </div>
+          ) : (
+            isGuest &&
+            guestOrdersAnywhere && (
+              <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+                <ShoppingBag className='h-4 w-4' />
+                {t('guestOrderToCollect')}
+              </div>
+            )
           )
         )}
 

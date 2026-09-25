@@ -12,6 +12,7 @@ import {
 import { ColorField } from '@/components/brand/color-field'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
+import { GuestOrdersField } from '@/features/tenants/new-tenant-business'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import {
@@ -184,6 +185,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
+  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(brand.guestOrdersAnywhere ?? false)
 
   const orNull = (v: string) => (v.trim() ? v.trim().toLowerCase() : null)
 
@@ -265,6 +267,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         features,
         theme,
         locale: brand.locale,
+        guestOrdersAnywhere,
       },
     })
   }
@@ -373,6 +376,11 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
               })}
             </div>
           </div>
+          <GuestOrdersField
+            id='brand-guest-orders'
+            checked={guestOrdersAnywhere}
+            onChange={setGuestOrdersAnywhere}
+          />
           <div className='flex justify-end'>
             <Button type='submit' disabled={!canSubmit}>
               {save.isPending && <Spinner />}

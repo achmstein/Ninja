@@ -35,6 +35,12 @@ const webExtras = {
     en: 'Scan the QR code on your table to order',
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
+  // A café that takes guests' orders from anywhere: one without a table is
+  // collected at the counter
+  guestOrderToCollect: {
+    en: "No table: you'll collect your order at the counter",
+    ar: 'من غير ترابيزة: هتستلم طلبك من الكاشير',
+  },
   signInForBills: {
     en: 'Sign in to see your bills, or order as a guest',
     ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كضيف',

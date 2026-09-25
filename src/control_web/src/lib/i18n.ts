@@ -31,6 +31,8 @@ const dictionary = {
   arabicStyleHint: "Which Arabic the café's apps speak to staff and customers.",
   defaultTheme: "Starting theme",
   defaultThemeHint: "What a new customer or device starts in, until they choose their own.",
+  guestOrdersAnywhere: "Guests can order from anywhere",
+  guestOrdersAnywhereHint: "Without an account and away from a table — from home or on the way, to collect. Off, a guest orders from the table they scanned.",
 
   // Auth
   signInFailed: "Sign-in failed",

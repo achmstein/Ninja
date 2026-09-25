@@ -69,6 +69,14 @@ public class Tenant
     /// </summary>
     public string? BusinessType { get; set; }
 
+    /// <summary>
+    /// A guest may order without being at a table: from home, on the way, to
+    /// collect at the counter. Off, a guest's order has to name the place it
+    /// is carried to, and ordering ahead is for account holders. Chosen when
+    /// the café is created; the control plane can change it on the running stack.
+    /// </summary>
+    public bool GuestOrdersAnywhere { get; set; }
+
     /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a café that only seats people.</summary>
     public bool ReservationsEnabled { get; set; } = true;
 

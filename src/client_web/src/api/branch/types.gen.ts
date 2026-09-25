@@ -98,6 +98,7 @@ export type TenantResponse = {
     locale: TenantLocaleDto;
     version: number | string;
     businessType?: null | string;
+    guestOrdersAnywhere?: boolean;
 };
 
 export type TenantThemeDarkDto = {
@@ -159,6 +160,7 @@ export type UpdateTenantRequest = {
     theme?: null | TenantThemeDto;
     locale?: null | TenantLocaleDto;
     businessType?: null | string;
+    guestOrdersAnywhere?: null | boolean;
 };
 
 export type GetBranchesData = {

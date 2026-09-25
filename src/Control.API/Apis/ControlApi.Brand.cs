@@ -55,12 +55,13 @@ public static partial class ControlApi
         using var response = await stack.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(request), StackAuth.Control, ct);
         var result = await BrandResult(response, tenant, options.Value, ct);
 
-        // The control plane's own copy of the name and color follows, so the list and a re-provision agree with the stack
+        // The control plane's own copy of the name, color and guest setting follows, so the list and a re-provision agree with the stack
         if (result.Result is Ok<BrandDto> { Value: { } brand })
         {
             tenant.NameEn = brand.Name.En;
             tenant.NameAr = brand.Name.Ar;
             tenant.PrimaryColor = brand.PrimaryColor;
+            if (request.GuestOrdersAnywhere is not null) tenant.GuestOrdersAnywhere = brand.GuestOrdersAnywhere;
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("brand.updated", slug, request, ct);
         }
@@ -200,7 +201,8 @@ public record BrandDto(
     BrandLocale Locale,
     long Version,
     // Null from a stack older than plans: everything is entitled there
-    BrandFeatures? Entitlements = null)
+    BrandFeatures? Entitlements = null,
+    bool GuestOrdersAnywhere = false)
 {
     public BrandDto OnCustomerHost(string origin) => this with
     {
@@ -223,4 +225,6 @@ public record UpdateBrandRequest(
     string? CustomerUrl,
     BrandFeatures Features,
     BrandTheme? Theme = null,
-    BrandLocale? Locale = null);
+    BrandLocale? Locale = null,
+    // Null leaves it as the stack has it
+    bool? GuestOrdersAnywhere = null);

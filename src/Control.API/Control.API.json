@@ -3244,6 +3244,10 @@
                 "$ref": "#/components/schemas/BrandFeatures"
               }
             ]
+          },
+          "guestOrdersAnywhere": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -3915,6 +3919,10 @@
               "null",
               "string"
             ]
+          },
+          "guestOrdersAnywhere": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5647,6 +5655,12 @@
               {
                 "$ref": "#/components/schemas/BrandLocale"
               }
+            ]
+          },
+          "guestOrdersAnywhere": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }

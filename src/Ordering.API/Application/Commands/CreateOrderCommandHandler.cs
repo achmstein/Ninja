@@ -52,7 +52,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             placeId: message.PlaceId,
             placeKind: message.PlaceKind,
             placeName: message.PlaceName,
-            promoCode: message.PromoCode);
+            promoCode: message.PromoCode,
+            guestOrdersAnywhere: message.GuestOrdersAnywhere);
 
         foreach (var item in message.OrderItems)
         {
