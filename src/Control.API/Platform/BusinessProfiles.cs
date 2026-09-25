@@ -9,6 +9,8 @@ public enum BusinessType
     Restaurant = 1,
     GameStation = 2,
     Other = 3,
+    /// <summary>Cooks for pickup only: no tables, no dining room, guests order ahead and collect.</summary>
+    CloudKitchen = 4,
 }
 
 /// <summary>
@@ -28,6 +30,10 @@ public static class BusinessProfiles
         // Rooms and consoles by the hour, booked ahead, snacks from a small kitchen
         [BusinessType.GameStation] = PlanCatalog.All,
         [BusinessType.Other] = PlanCatalog.All,
+        // A kitchen and a counter: nobody sits, so nothing is booked or timed.
+        // Tabs are for regulars at a counter they come back to, not a hatch
+        // they collect from once; the rest runs any kitchen
+        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Loyalty, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
     };
 
     private static readonly IReadOnlyDictionary<BusinessType, IReadOnlySet<Module>> Suggested = new Dictionary<BusinessType, IReadOnlySet<Module>>
@@ -36,6 +42,8 @@ public static class BusinessProfiles
         [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Kds, Module.Inventory },
         [BusinessType.GameStation] = new HashSet<Module> { Module.TimeBilling, Module.Reservations },
         [BusinessType.Other] = new HashSet<Module>(),
+        // Everything is cooked to order, off stock, and repeat customers are the business
+        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Kds, Module.Inventory, Module.Loyalty },
     };
 
     /// <summary>The switches a fresh stack starts with: what the business wants, within what is entitled.</summary>
@@ -46,12 +54,21 @@ public static class BusinessProfiles
     public static IReadOnlyList<Module> SuggestedAddons(BusinessType type, TenantPlan plan) =>
         Suggested[type].Except(PlanCatalog.Included(plan)).Order().ToList();
 
+    /// <summary>
+    /// Whether a fresh stack lets a guest order without being at a table. A
+    /// cloud kitchen has no tables, so every guest orders from somewhere
+    /// else; anywhere else a guest orders from the table they scanned. The
+    /// owner switches it in admin afterwards.
+    /// </summary>
+    public static bool GuestOrdersAnywhere(BusinessType type) => type == BusinessType.CloudKitchen;
+
     /// <summary>How the stack spells it.</summary>
     public static string Key(BusinessType type) => type switch
     {
         BusinessType.CoffeeShop => "coffee_shop",
         BusinessType.Restaurant => "restaurant",
         BusinessType.GameStation => "game_station",
+        BusinessType.CloudKitchen => "cloud_kitchen",
         _ => "other",
     };
 }

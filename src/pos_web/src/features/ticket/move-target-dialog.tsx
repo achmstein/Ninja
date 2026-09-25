@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { API_VERSION } from '@/lib/api-client'
+import { useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -98,6 +99,7 @@ export function MoveTargetDialog({
     }
   }, [open])
 
+  const cloudKitchen = useIsCloudKitchen()
   const { data: tickets = [] } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     enabled: open,
@@ -106,7 +108,8 @@ export function MoveTargetDialog({
   // bill follows its stay
   const { data: tables = [] } = useQuery({
     ...listPlacesOptions({ query: { timed: false } }),
-    enabled: open,
+    // A cloud kitchen seats nobody: a bill never moves to a table
+    enabled: open && !cloudKitchen,
   })
 
   const others = tickets.filter(

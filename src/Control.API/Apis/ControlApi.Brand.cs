@@ -55,13 +55,18 @@ public static partial class ControlApi
         using var response = await stack.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(request), StackAuth.Control, ct);
         var result = await BrandResult(response, tenant, options.Value, ct);
 
-        // The control plane's own copy of the name, color and guest setting follows, so the list and a re-provision agree with the stack
+        // The control plane's own copy follows, so the list, the record and a re-provision agree with the stack
         if (result.Result is Ok<BrandDto> { Value: { } brand })
         {
             tenant.NameEn = brand.Name.En;
             tenant.NameAr = brand.Name.Ar;
             tenant.PrimaryColor = brand.PrimaryColor;
-            if (request.GuestOrdersAnywhere is not null) tenant.GuestOrdersAnywhere = brand.GuestOrdersAnywhere;
+            tenant.DefaultTheme = brand.Theme.Mode;
+            tenant.Country = brand.Locale.Country;
+            tenant.Currency = brand.Locale.Currency;
+            tenant.TimeZone = brand.Locale.TimeZone;
+            tenant.DefaultLanguage = brand.Locale.Language;
+            if (brand.Locale.ArabicStyle is { } arabic) tenant.ArabicStyle = arabic;
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("brand.updated", slug, request, ct);
         }
@@ -177,7 +182,8 @@ public record BrandWordmark(string Url, int Width, int Height)
 
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
-public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark, string? HeaderSize = null);
+/// <param name="Mode">light or dark for someone who has not chosen; null follows the device. The record edits it; the Brand tab sends it back as it came.</param>
+public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark, string? HeaderSize = null, string? Mode = null);
 
 public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
@@ -185,7 +191,8 @@ public record BrandIcons(string Icon192, string Icon512, string Maskable512, str
 
 public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
 
-public record BrandLocale(string Country, string Currency, string TimeZone, string Language);
+/// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
+public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null);
 
 /// <summary>The stack's brand (Branch.API's tenant response) as the control app reads it, with every image URL made absolute on the customer host.</summary>
 public record BrandDto(
@@ -201,8 +208,7 @@ public record BrandDto(
     BrandLocale Locale,
     long Version,
     // Null from a stack older than plans: everything is entitled there
-    BrandFeatures? Entitlements = null,
-    bool GuestOrdersAnywhere = false)
+    BrandFeatures? Entitlements = null)
 {
     public BrandDto OnCustomerHost(string origin) => this with
     {
@@ -225,6 +231,4 @@ public record UpdateBrandRequest(
     string? CustomerUrl,
     BrandFeatures Features,
     BrandTheme? Theme = null,
-    BrandLocale? Locale = null,
-    // Null leaves it as the stack has it
-    bool? GuestOrdersAnywhere = null);
+    BrandLocale? Locale = null);

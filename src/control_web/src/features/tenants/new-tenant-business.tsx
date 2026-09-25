@@ -1,17 +1,23 @@
-import { Coffee, Gamepad2, Store, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { ChefHat, Coffee, Gamepad2, Store, UtensilsCrossed, type LucideIcon } from 'lucide-react'
 import type { BusinessType } from '@/api/control'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import type { ModuleName } from '@/lib/tenant'
-import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
-export const BUSINESS_TYPES: BusinessType[] = ['CoffeeShop', 'Restaurant', 'GameStation', 'Other']
+export const BUSINESS_TYPES: BusinessType[] = ['CoffeeShop', 'Restaurant', 'CloudKitchen', 'GameStation', 'Other']
 
 const LOOK: Record<BusinessType, { icon: LucideIcon; label: TranslationKey; about: TranslationKey }> = {
   CoffeeShop: { icon: Coffee, label: 'businessCoffeeShop', about: 'businessCoffeeShopAbout' },
   Restaurant: { icon: UtensilsCrossed, label: 'businessRestaurant', about: 'businessRestaurantAbout' },
+  CloudKitchen: { icon: ChefHat, label: 'businessCloudKitchen', about: 'businessCloudKitchenAbout' },
   GameStation: { icon: Gamepad2, label: 'businessGameStation', about: 'businessGameStationAbout' },
   Other: { icon: Store, label: 'businessOther', about: 'businessOtherAbout' },
 }
@@ -24,65 +30,44 @@ const LOOK: Record<BusinessType, { icon: LucideIcon; label: TranslationKey; abou
 export const SUGGESTED_MODULES: Record<BusinessType, ModuleName[]> = {
   CoffeeShop: ['Loyalty', 'Kds'],
   Restaurant: ['Reservations', 'Kds', 'Inventory'],
+  CloudKitchen: ['Loyalty', 'Inventory', 'Kds'],
   GameStation: ['TimeBilling', 'Reservations'],
   Other: [],
 }
 
-/** The first question the wizard asks: what kind of place is it? */
+/**
+ * What kind of place is it: a select, since the list keeps growing, with
+ * the chosen kind's one line under it.
+ */
 export function BusinessPicker({
+  id,
   value,
   onChange,
 }: {
+  id: string
   value: BusinessType
   onChange: (value: BusinessType) => void
 }) {
   const t = useT()
   return (
-    <ToggleGroup
-      type='single'
-      value={value}
-      onValueChange={(v) => v && onChange(v as BusinessType)}
-      className='grid w-full grid-cols-2 gap-3 sm:grid-cols-4'
-    >
-      {BUSINESS_TYPES.map((type) => {
-        const { icon: Icon, label, about } = LOOK[type]
-        return (
-          <ToggleGroupItem
-            key={type}
-            value={type}
-            className={cn(
-              'flex h-auto flex-col items-start gap-1 rounded-lg border p-3 text-start',
-              'data-[state=on]:border-primary data-[state=on]:bg-primary/5'
-            )}
-          >
-            <Icon className='size-5' />
-            <span className='text-sm font-semibold'>{t(label)}</span>
-            <span className='text-muted-foreground text-xs font-normal whitespace-normal'>{t(about)}</span>
-          </ToggleGroupItem>
-        )
-      })}
-    </ToggleGroup>
-  )
-}
-
-/** Whether a guest may order without being at a table: the café's call, changeable later on its Brand tab. */
-export function GuestOrdersField({
-  id,
-  checked,
-  onChange,
-}: {
-  id: string
-  checked: boolean
-  onChange: (value: boolean) => void
-}) {
-  const t = useT()
-  return (
-    <div className='flex items-start justify-between gap-4 rounded-lg border px-3 py-2'>
-      <div className='grid gap-1'>
-        <Label htmlFor={id} className='font-normal'>{t('guestOrdersAnywhere')}</Label>
-        <p className='text-muted-foreground text-xs'>{t('guestOrdersAnywhereHint')}</p>
-      </div>
-      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    <div className='grid gap-2'>
+      <Select value={value} onValueChange={(v) => onChange(v as BusinessType)}>
+        <SelectTrigger id={id} className='w-full'>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {BUSINESS_TYPES.map((type) => {
+            const { icon: Icon, label } = LOOK[type]
+            return (
+              <SelectItem key={type} value={type}>
+                <Icon className='size-4' />
+                {t(label)}
+              </SelectItem>
+            )
+          })}
+        </SelectContent>
+      </Select>
+      <p className='text-muted-foreground text-xs'>{t(LOOK[value].about)}</p>
     </div>
   )
 }

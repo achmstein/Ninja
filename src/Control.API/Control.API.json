@@ -257,7 +257,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "The record: contact, plan, notes, own domain, and what the next stamp uses",
+        "summary": "The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once",
         "operationId": "UpdateTenant",
         "parameters": [
           {
@@ -3244,10 +3244,6 @@
                 "$ref": "#/components/schemas/BrandFeatures"
               }
             ]
-          },
-          "guestOrdersAnywhere": {
-            "type": "boolean",
-            "default": false
           }
         }
       },
@@ -3337,6 +3333,12 @@
           },
           "language": {
             "type": "string"
+          },
+          "arabicStyle": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3410,6 +3412,12 @@
             ]
           },
           "headerSize": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mode": {
             "type": [
               "null",
               "string"
@@ -3530,7 +3538,8 @@
           "CoffeeShop",
           "Restaurant",
           "GameStation",
-          "Other"
+          "Other",
+          "CloudKitchen"
         ],
         "default": "Other"
       },
@@ -3919,10 +3928,6 @@
               "null",
               "string"
             ]
-          },
-          "guestOrdersAnywhere": {
-            "type": "boolean",
-            "default": false
           }
         }
       },
@@ -5140,6 +5145,16 @@
               "type": "string"
             },
             "description": "The services the plan stamps (catalog, ordering, …): a module's own service only with its module"
+          },
+          "businessType": {
+            "$ref": "#/components/schemas/BusinessType"
+          },
+          "defaultTheme": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "light or dark for someone who has not chosen; null follows the device"
           }
         }
       },
@@ -5656,12 +5671,6 @@
                 "$ref": "#/components/schemas/BrandLocale"
               }
             ]
-          },
-          "guestOrdersAnywhere": {
-            "type": [
-              "null",
-              "boolean"
-            ]
           }
         }
       },
@@ -5830,6 +5839,31 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "arabicStyle": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "standard or egyptian; null leaves it"
+          },
+          "defaultTheme": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "light, dark or device; null leaves it"
+          },
+          "businessType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it",
+                "$ref": "#/components/schemas/BusinessType"
+              }
             ]
           }
         }

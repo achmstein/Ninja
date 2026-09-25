@@ -151,6 +151,15 @@ export function useFeatures(): TenantFeatures {
   return useBrand()?.features ?? ALL_FEATURES
 }
 
+/**
+ * A cloud kitchen cooks for pickup only: it has no tables, so nothing about
+ * places (the floor, QR codes, a waiter call) is offered. The kind of place
+ * is the café's, chosen when it was created; false until the brand is known.
+ */
+export function useIsCloudKitchen(): boolean {
+  return useBrand()?.businessType === 'cloud_kitchen'
+}
+
 /** Where customers open the menu: the brand's customerUrl, else the platform's default for this host. */
 export function useCustomerOrigin(): string {
   return useBrand()?.customerUrl ?? defaultCustomerOrigin()

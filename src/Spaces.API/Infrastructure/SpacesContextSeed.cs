@@ -8,8 +8,8 @@ namespace Ninja.Spaces.API.Infrastructure;
 /// <summary>
 /// Plants the floor once, on an empty database, according to the stack's
 /// <see cref="SeedProfile"/>: nothing for a customer (the owner draws the
-/// floor), a few tables and one room for a demo, tenant one's own rooms
-/// and tables for dev and tests.
+/// floor), a floor for the stack's kind of place for a demo (none for a
+/// cloud kitchen), tenant one's own rooms and tables for dev and tests.
 /// </summary>
 public class SpacesContextSeed(ILogger<SpacesContextSeed> logger, IConfiguration configuration) : IDbSeeder<SpacesContext>
 {
@@ -37,14 +37,53 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger, IConfiguration
             return;
         }
 
-        var places = new List<Place>();
-        for (var i = 1; i <= 4; i++)
-            places.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
-        places.Add(Room("Room 1", "غرفة ١", 50.00m, 80.00m, 1, "A private room for groups", "غرفة خاصة للمجموعات"));
+        var business = SeedProfile.Business(configuration);
+        var places = SamplePlaces(business);
+        if (places.Count == 0)
+        {
+            logger.LogInformation("Seed profile {Profile} for a {Business}: no places to plant", SeedProfile.Sample, business);
+            return;
+        }
 
         context.Places.AddRange(places);
         await context.SaveChangesAsync();
-        logger.LogInformation("Seeded the sample floor: {NumPlaces} places", places.Count);
+        logger.LogInformation("Seeded the sample {Business} floor: {NumPlaces} places", business, places.Count);
+    }
+
+    /// <summary>
+    /// The sample floor for a kind of place, in branch one: a coffee shop has
+    /// a few tables and a room, a restaurant a dining room of tables, a game
+    /// station rooms by the hour with a couple of tables, a cloud kitchen
+    /// nothing at all — its guests collect.
+    /// </summary>
+    public static List<Place> SamplePlaces(string business)
+    {
+        var places = new List<Place>();
+        switch (business)
+        {
+            case SeedProfile.CloudKitchen:
+                break;
+            case SeedProfile.Restaurant:
+                for (var i = 1; i <= 8; i++)
+                    places.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
+                places.Add(Place.Table(new LocalizedText("Terrace 1", "التراس ١"), 1));
+                places.Add(Place.Table(new LocalizedText("Terrace 2", "التراس ٢"), 1));
+                break;
+            case SeedProfile.GameStation:
+                for (var i = 1; i <= 4; i++)
+                    places.Add(Room($"Room {i}", $"اوضة {ArabicDigits(i)}", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"));
+                places.Add(Room("Room VIP", "اوضة VIP", 120.00m, 160.00m, 1, "PS5 Pro, 4 controllers and 75\" TV - Fits up to 8 people", "بلايستيشن 5 برو مع 4 دراعات وشاشة 75 بوصة - تساع لحد 8 أشخاص"));
+                for (var i = 1; i <= 2; i++)
+                    places.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
+                break;
+            default:
+                // A coffee shop, or a kind the sample does not know: the generic café
+                for (var i = 1; i <= 4; i++)
+                    places.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
+                places.Add(Room("Room 1", "غرفة ١", 50.00m, 80.00m, 1, "A private room for groups", "غرفة خاصة للمجموعات"));
+                break;
+        }
+        return places;
     }
 
     private async Task SeedChillaxAsync(SpacesContext context)

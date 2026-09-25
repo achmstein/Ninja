@@ -38,7 +38,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Pics\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The photo credits stay in the repo, not in the image -->
+    <Content Include="Pics\*.*" Exclude="Pics\*.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

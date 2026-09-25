@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -127,12 +127,22 @@ public sealed class ProvisionerTests
         Assert.Contains("blue-spaces-api:", yaml, "spaces always runs");
     }
 
-    /// <summary>Whether a guest may order away from a table is chosen when the café is created, and the stack starts with it.</summary>
+    /// <summary>
+    /// Whether a guest may order away from a table starts from the kind of
+    /// place: a cloud kitchen has no tables, so its guests order from anywhere;
+    /// a café seats them and starts with orders from the table. The stack is
+    /// told the kind too, so its apps can leave the tables out.
+    /// </summary>
     [TestMethod]
-    public async Task A_fresh_stack_starts_with_the_guest_ordering_the_cafe_was_created_with()
+    [DataRow(BusinessType.CloudKitchen, "cloud_kitchen", true)]
+    [DataRow(BusinessType.CoffeeShop, "coffee_shop", false)]
+    [DataRow(BusinessType.Restaurant, "restaurant", false)]
+    [DataRow(BusinessType.GameStation, "game_station", false)]
+    [DataRow(BusinessType.Other, "other", false)]
+    public async Task A_fresh_stack_starts_with_the_guest_ordering_its_kind_of_place_needs(BusinessType business, string key, bool anywhere)
     {
         _tenant.Status = TenantStatus.Requested;
-        _tenant.GuestOrdersAnywhere = true;
+        _tenant.BusinessType = business;
         // No edge on this box to reload
         _platform.DryRun = true;
         _platform.EdgeSnippetPath = Path.Combine(_root, "no-edge", "custom-domains.caddy");
@@ -141,7 +151,26 @@ public sealed class ProvisionerTests
         await _provisioner.ProvisionAsync(_tenant.Id, CancellationToken.None);
 
         Assert.IsNotNull(_stack.SeededBrand, string.Join(", ", Steps()));
-        Assert.IsTrue(_stack.SeededBrand["guestOrdersAnywhere"]!.GetValue<bool>());
+        Assert.AreEqual(anywhere, _stack.SeededBrand["guestOrdersAnywhere"]!.GetValue<bool>());
+        Assert.AreEqual(key, _stack.SeededBrand["businessType"]!.GetValue<string>());
+    }
+
+    /// <summary>A cloud kitchen starts with its kitchen, stock and books on, and nothing that needs a seat.</summary>
+    [TestMethod]
+    public async Task A_cloud_kitchen_starts_with_nothing_booked_or_timed()
+    {
+        _tenant.Status = TenantStatus.Requested;
+        _tenant.BusinessType = BusinessType.CloudKitchen;
+        _platform.DryRun = true;
+        _platform.EdgeSnippetPath = Path.Combine(_root, "no-edge", "custom-domains.caddy");
+        await _context.SaveChangesAsync();
+
+        await _provisioner.ProvisionAsync(_tenant.Id, CancellationToken.None);
+
+        var features = _stack.SeededBrand!["features"]!;
+        Assert.IsFalse(features["reservations"]!.GetValue<bool>(), "nobody books a seat");
+        Assert.IsFalse(features["timeBilling"]!.GetValue<bool>(), "nothing runs on a clock");
+        Assert.IsTrue(features["kds"]!.GetValue<bool>(), "the kitchen cooks every order");
     }
 
     /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter café stays without inventory, finance and payroll.</summary>

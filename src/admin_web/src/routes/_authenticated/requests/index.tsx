@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
+import { PlacesGate } from '@/components/places-gate'
 import { ServiceRequests } from '@/features/requests'
 
 const requestsSearchSchema = z.object({
@@ -9,5 +10,9 @@ const requestsSearchSchema = z.object({
 
 export const Route = createFileRoute('/_authenticated/requests/')({
   validateSearch: requestsSearchSchema,
-  component: ServiceRequests,
+  component: () => (
+    <PlacesGate>
+      <ServiceRequests />
+    </PlacesGate>
+  ),
 })

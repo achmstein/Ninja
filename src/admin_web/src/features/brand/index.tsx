@@ -8,7 +8,7 @@ import {
   updateTenantMutation,
   uploadTenantImageMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
-import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, type Brand } from '@/lib/brand'
+import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
 import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
@@ -46,9 +46,10 @@ import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
-const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
-  { key: 'reservations', label: 'featureReservations' },
-  { key: 'timeBilling', label: 'featureTimeBilling' },
+const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean }[] = [
+  // Both hang off a place: a cloud kitchen, with none, is not offered them
+  { key: 'reservations', label: 'featureReservations', needsPlaces: true },
+  { key: 'timeBilling', label: 'featureTimeBilling', needsPlaces: true },
   { key: 'loyalty', label: 'featureLoyalty' },
   { key: 'tabs', label: 'featureTabs' },
   { key: 'inventory', label: 'featureInventory' },
@@ -158,6 +159,8 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [theme, setTheme] = useState<ThemeForm>(toThemeForm(brand.theme))
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<TenantFeatures>(brand.features)
+  const cloudKitchen = useIsCloudKitchen()
+  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(brand.guestOrdersAnywhere ?? false)
   const [error, setError] = useState<string | null>(null)
 
   const put = (next: Brand) => queryClient.setQueryData(brandQueryKey(), next)
@@ -211,6 +214,7 @@ function BrandForm({ brand }: { brand: Brand }) {
         primaryColor: color.trim() || null,
         customerUrl: customerUrl.trim() || null,
         features,
+        guestOrdersAnywhere,
         theme: fromThemeForm(theme),
         locale: { ...brand.locale, arabicStyle },
       },
@@ -440,7 +444,7 @@ function BrandForm({ brand }: { brand: Brand }) {
             <div className='space-y-2'>
               <Label>{t('features')}</Label>
               <div className='divide-y rounded-lg border'>
-                {FEATURE_ROWS.map((row) => {
+                {FEATURE_ROWS.filter((row) => !row.needsPlaces || !cloudKitchen).map((row) => {
                   // What the plan allows: a module outside it stays off, and says why
                   const entitled = brand.entitlements?.[row.key] ?? true
                   return (
@@ -468,6 +472,24 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* The café's, not a branch's: every branch takes guests' orders the same way, and it changes live */}
+            <div className='space-y-2'>
+              <Label>{t('guestOrdering')}</Label>
+              <div className='flex items-start justify-between gap-4 rounded-lg border p-3'>
+                <div className='grid gap-1'>
+                  <Label htmlFor='guest-orders-anywhere' className='text-sm'>
+                    {t('guestOrdersAnywhere')}
+                  </Label>
+                  <p className='text-muted-foreground text-xs'>{t('guestOrdersAnywhereHint')}</p>
+                </div>
+                <Switch
+                  id='guest-orders-anywhere'
+                  checked={guestOrdersAnywhere}
+                  onCheckedChange={setGuestOrdersAnywhere}
+                />
               </div>
             </div>
 

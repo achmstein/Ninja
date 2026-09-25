@@ -129,6 +129,10 @@ class TenantBrand {
   /// `light` or `dark` for someone who has not chosen; null follows the device
   final String? defaultThemeMode;
   final TenantFeatures features;
+
+  /// The kind of place the café was created as (`coffee_shop`,
+  /// `cloud_kitchen`, ...); null from a stack that does not say
+  final String? businessType;
   final int version;
 
   const TenantBrand({
@@ -139,8 +143,13 @@ class TenantBrand {
     this.locale = TenantLocale.egypt,
     this.defaultThemeMode,
     this.features = TenantFeatures.all,
+    this.businessType,
     this.version = 0,
   });
+
+  /// A cloud kitchen has no tables: the till works from counter bills and
+  /// app orders, never a floor
+  bool get isCloudKitchen => businessType == 'cloud_kitchen';
 
   /// What a receipt prints at the top: the wide logo, else the mark, else nothing (the name stands in)
   String? get receiptImageUrl => wordmarkUrl ?? logoUrl;
@@ -162,11 +171,13 @@ class TenantBrand {
       primaryColorHex: _hex(json['primaryColor'] as String?),
       logoUrl: absolute(logo),
       wordmarkUrl: absolute(wordmark),
-      locale: TenantLocale.parse(json['locale']),
+      locale: TenantLocale.parse(json['locale']),
+
       defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
+      businessType: json['businessType'] as String?,
       version: (json['version'] as num?)?.toInt() ?? 0,
     );
   }
@@ -182,6 +193,7 @@ class TenantBrand {
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
+        businessType: json['businessType'] as String?,
         version: (json['version'] as num?)?.toInt() ?? 0,
       );
 
@@ -193,6 +205,7 @@ class TenantBrand {
         'locale': locale.toJson(),
         'defaultThemeMode': defaultThemeMode,
         'features': features.toJson(),
+        'businessType': businessType,
         'version': version,
       };
 

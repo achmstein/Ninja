@@ -368,9 +368,6 @@ namespace Ninja.Control.API.Migrations
                     b.Property<int?>("GraceDays")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("GuestOrdersAnywhere")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("IdentitySecret")
                         .IsRequired()
                         .HasMaxLength(128)

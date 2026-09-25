@@ -166,7 +166,6 @@ public static partial class ControlApi
             BusinessType = request.BusinessType,
             ArabicStyle = arabicStyle,
             DefaultTheme = defaultTheme,
-            GuestOrdersAnywhere = request.GuestOrdersAnywhere,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -430,8 +429,7 @@ public record CreateTenantRequest(
     Module[]? Addons = null,
     BusinessType BusinessType = BusinessType.Other,
     string? ArabicStyle = null,
-    string? DefaultTheme = null,
-    bool GuestOrdersAnywhere = false);
+    string? DefaultTheme = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -513,7 +511,9 @@ public record TenantDetail(
     TenantUpdate? Update,
     bool IsDrill,
     IReadOnlyList<JobDto> Jobs,
-    [property: Description("The services the plan stamps (catalog, ordering, …): a module's own service only with its module")] IReadOnlyList<string> Services)
+    [property: Description("The services the plan stamps (catalog, ordering, …): a module's own service only with its module")] IReadOnlyList<string> Services,
+    BusinessType BusinessType = BusinessType.Other,
+    [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -529,7 +529,9 @@ public record TenantDetail(
             update,
             t.IsDrill,
             jobs ?? [],
-            PlanCatalog.Services(t));
+            PlanCatalog.Services(t),
+            t.BusinessType,
+            t.DefaultTheme);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

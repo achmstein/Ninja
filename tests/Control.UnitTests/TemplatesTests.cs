@@ -25,6 +25,7 @@ public sealed class TemplatesTests
         NameAr = "بلو",
         PrimaryColor = "#0055ff",
         Seed = TenantSeed.Sample,
+        BusinessType = BusinessType.Restaurant,
         Country = "SA",
         Currency = "SAR",
         TimeZone = "Asia/Riyadh",
@@ -175,6 +176,8 @@ public sealed class TemplatesTests
         // Every service plants its own tables from the same profile; a stamp is never tenant one
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Seed__Profile: \"sample\"").Count);
         Assert.IsFalse(yaml.Contains("chillax", StringComparison.OrdinalIgnoreCase));
+        // What the sample plants follows the kind of place, and every service is told it
+        Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__BusinessType: \"restaurant\"").Count);
         // The locale reaches every service, not only the one that stores it
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__TimeZone: \"Asia/Riyadh\"").Count);
         StringAssert.Contains(yaml, "Tenant__Currency: \"SAR\"");

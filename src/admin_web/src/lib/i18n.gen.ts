@@ -577,4 +577,9 @@ export const messages = {
   arabicStyleLabelHint: { en: "Which Arabic the apps speak to staff and customers.", ar: "أي عربية تستخدمها التطبيقات مع الموظفين والعملاء." },
   arabicStandardOption: { en: "Standard", ar: "الفصحى" },
   arabicEgyptianOption: { en: "Egyptian", ar: "المصرية" },
+  guestOrdering: { en: "Guest ordering", ar: "طلبات الضيوف" },
+  guestOrdersAnywhere: { en: "Guests can order from anywhere", ar: "يمكن للضيوف الطلب من أي مكان" },
+  guestOrdersAnywhereHint: { en: "Without an account and away from a table — from home or on the way, to collect at the counter. Off, a guest orders from the table they scanned.", ar: "دون حساب وبعيدًا عن الطاولة — من البيت أو في الطريق، والاستلام من الكاونتر. عند الإيقاف، يطلب الضيف من الطاولة التي مسح رمزها." },
+  noPlacesTitle: { en: "A cloud kitchen has no tables", ar: "المطبخ السحابي بلا طاولات" },
+  noPlacesDescription: { en: "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage.", ar: "يطلب الضيوف مسبقًا ويستلمون من الكاونتر، فلا توجد غرف أو طاولات أو رموز QR لإدارتها." },
 } as const satisfies Record<string, Message>

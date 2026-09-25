@@ -42,7 +42,6 @@ export type BrandDto = {
     locale: BrandLocale;
     version: number | string;
     entitlements?: null | BrandFeatures;
-    guestOrdersAnywhere?: boolean;
 };
 
 export type BrandFeatures = {
@@ -69,6 +68,7 @@ export type BrandLocale = {
     currency: string;
     timeZone: string;
     language: string;
+    arabicStyle?: null | string;
 };
 
 export type BrandText = {
@@ -84,6 +84,7 @@ export type BrandTheme = {
     fontArabic: null | string;
     dark: null | BrandThemeDark;
     headerSize?: null | string;
+    mode?: null | string;
 };
 
 export type BrandThemeDark = {
@@ -105,7 +106,7 @@ export type BrandWordmarks = {
     arDark: null | BrandWordmark;
 };
 
-export type BusinessType = 'CoffeeShop' | 'Restaurant' | 'GameStation' | 'Other';
+export type BusinessType = 'CoffeeShop' | 'Restaurant' | 'GameStation' | 'Other' | 'CloudKitchen';
 
 export type CapacityResponse = {
     at: string;
@@ -168,7 +169,6 @@ export type CreateTenantRequest = {
     businessType?: BusinessType;
     arabicStyle?: null | string;
     defaultTheme?: null | string;
-    guestOrdersAnywhere?: boolean;
 };
 
 export type ExtendRequest = {
@@ -423,6 +423,11 @@ export type TenantDetail = {
      * The services the plan stamps (catalog, ordering, …): a module's own service only with its module
      */
     services: Array<string>;
+    businessType?: BusinessType;
+    /**
+     * light or dark for someone who has not chosen; null follows the device
+     */
+    defaultTheme?: null | string;
 };
 
 export type TenantHostsDto = {
@@ -525,7 +530,6 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
-    guestOrdersAnywhere?: null | boolean;
 };
 
 export type UpdatesResponse = {
@@ -559,6 +563,15 @@ export type UpdateTenantRequest = {
     currency: null | string;
     timeZone: null | string;
     defaultLanguage: null | string;
+    /**
+     * standard or egyptian; null leaves it
+     */
+    arabicStyle?: null | string;
+    /**
+     * light, dark or device; null leaves it
+     */
+    defaultTheme?: null | string;
+    businessType?: null | BusinessType;
 };
 
 export type UpgradeRequest = {

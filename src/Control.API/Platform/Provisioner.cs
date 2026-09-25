@@ -116,8 +116,8 @@ public sealed class Provisioner(
                         ["arabicStyle"] = tenant.ArabicStyle,
                     },
                     ["businessType"] = BusinessProfiles.Key(tenant.BusinessType),
-                    // A restored stack keeps what its dump says
-                    ["guestOrdersAnywhere"] = restore is null ? tenant.GuestOrdersAnywhere : null,
+                    // The kind of place decides where guests start ordering from; a restored stack keeps what its dump says
+                    ["guestOrdersAnywhere"] = restore is null ? BusinessProfiles.GuestOrdersAnywhere(tenant.BusinessType) : null,
                 };
                 var images = SeedImages(tenant);
                 await stack.SeedBrandAsync(tenant, brand, images, ct);
