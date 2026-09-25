@@ -44,9 +44,9 @@ export function ShiftChip() {
   // place with a neutral placeholder.
   if (!view) {
     return (
-      <Button variant='outline' className='h-12 gap-2 px-4' disabled>
+      <Button variant='outline' className='h-12 gap-2 px-4 max-sm:w-12 max-sm:px-0' disabled>
         <span aria-hidden className='bg-muted-foreground/40 size-2 rounded-full' />
-        <Skeleton className='h-4 w-20' />
+        <Skeleton className='h-4 w-20 max-sm:hidden' />
       </Button>
     )
   }
@@ -61,9 +61,14 @@ export function ShiftChip() {
 
   return (
     <>
+      {/* A phone's header has room for the dot alone: it still says open,
+          paused or none, and the words stay for the screen reader */}
       <Button
         variant='outline'
-        className='h-12 gap-2 px-4'
+        className='h-12 gap-2 px-4 max-sm:w-12 max-sm:px-0'
+        title={
+          shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')
+        }
         onClick={() =>
           shift ? navigate({ to: '/shift' }) : setOpenShiftOpen(true)
         }
@@ -71,7 +76,7 @@ export function ShiftChip() {
         <span
           aria-hidden
           className={cn(
-            'size-2 rounded-full',
+            'size-2 rounded-full max-sm:size-3',
             !shift
               ? 'bg-muted-foreground/40'
               : showPaused
@@ -79,11 +84,11 @@ export function ShiftChip() {
                 : 'bg-emerald-500'
           )}
         />
-        <span className='text-sm font-medium tabular-nums'>
+        <span className='text-sm font-medium tabular-nums max-sm:sr-only'>
           {shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')}
         </span>
         {showPaused && (
-          <span className='text-xs font-medium text-amber-600 dark:text-amber-400'>
+          <span className='text-xs font-medium text-amber-600 max-sm:sr-only dark:text-amber-400'>
             {t('paused')}
           </span>
         )}

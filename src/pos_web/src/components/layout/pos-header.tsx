@@ -27,9 +27,9 @@ export function PosHeader() {
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
-    <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3'>
+    <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3 max-sm:px-2'>
       <BranchSwitcher />
-      <div className='ms-auto flex items-center gap-1'>
+      <div className='ms-auto flex shrink-0 items-center gap-1'>
         <ShiftChip />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

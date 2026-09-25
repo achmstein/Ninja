@@ -45,8 +45,8 @@ export function BranchSwitcher() {
 
   const brand = (
     <>
-      <BrandMark className='size-8 text-base' />
-      <div className='grid flex-1 text-start text-sm leading-tight'>
+      <BrandMark className='size-8 shrink-0 text-base' />
+      <div className='grid min-w-0 flex-1 text-start text-sm leading-tight'>
         <span className='truncate font-semibold'>{cafe || label}</span>
         {cafe && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
       </div>
@@ -54,13 +54,13 @@ export function BranchSwitcher() {
   )
 
   if (branches.length <= 1) {
-    return <div className='flex h-12 items-center gap-2 px-2'>{brand}</div>
+    return <div className='flex h-12 min-w-0 items-center gap-2 px-2'>{brand}</div>
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-12 gap-2 px-2'>
+        <Button variant='ghost' className='h-12 min-w-0 shrink gap-2 px-2'>
           {brand}
           <ChevronsUpDown className='text-muted-foreground size-4' />
         </Button>
