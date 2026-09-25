@@ -21,6 +21,8 @@ const dictionary = {
   businessCoffeeShopAbout: "Counter service, loyalty, a bar screen",
   businessRestaurant: "Restaurant",
   businessRestaurantAbout: "Tables, bookings, a kitchen",
+  businessCloudKitchen: "Cloud kitchen",
+  businessCloudKitchenAbout: "Pickup only: no tables, guests order ahead and collect",
   businessGameStation: "Game station",
   businessGameStationAbout: "Rooms by the hour, bookings, snacks",
   businessOther: "Something else",
@@ -31,8 +33,7 @@ const dictionary = {
   arabicStyleHint: "Which Arabic the café's apps speak to staff and customers.",
   defaultTheme: "Starting theme",
   defaultThemeHint: "What a new customer or device starts in, until they choose their own.",
-  guestOrdersAnywhere: "Guests can order from anywhere",
-  guestOrdersAnywhereHint: "Without an account and away from a table — from home or on the way, to collect. Off, a guest orders from the table they scanned.",
+  businessTypeRecordHint: "Changing it tells the café's apps (a cloud kitchen hides its tables); it doesn't change the menu, the module switches or guest ordering.",
 
   // Auth
   signInFailed: "Sign-in failed",

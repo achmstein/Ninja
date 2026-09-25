@@ -62,18 +62,19 @@ public class Tenant
     public string EffectiveArabicStyle => ArabicStyle ?? (Country == "EG" ? "egyptian" : "standard");
 
     /// <summary>
-    /// What kind of place it is — "coffee_shop", "restaurant", "game_station"
-    /// or "other" — chosen when the café was created. It picked the starting
-    /// switches and the kitchen's first station; nothing reads it after that
-    /// but the surfaces that describe the café.
+    /// What kind of place it is — "coffee_shop", "restaurant", "cloud_kitchen",
+    /// "game_station" or "other" — chosen when the café was created and
+    /// changeable from the control plane. It picked the starting switches and
+    /// the kitchen's first station; after that the surfaces read it, and a
+    /// cloud kitchen's apps leave out the tables it does not have.
     /// </summary>
     public string? BusinessType { get; set; }
 
     /// <summary>
     /// A guest may order without being at a table: from home, on the way, to
     /// collect at the counter. Off, a guest's order has to name the place it
-    /// is carried to, and ordering ahead is for account holders. Chosen when
-    /// the café is created; the control plane can change it on the running stack.
+    /// is carried to, and ordering ahead is for account holders. The kind of
+    /// place starts it (on for a cloud kitchen); the owner switches it in admin.
     /// </summary>
     public bool GuestOrdersAnywhere { get; set; }
 

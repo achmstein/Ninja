@@ -73,7 +73,7 @@ export const getTenant = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * The record: contact, plan, notes, own domain, and what the next stamp uses
+ * The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
  */
 export const updateTenant = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantData, ThrowOnError>): RequestResult<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError>({
     responseType: 'json',

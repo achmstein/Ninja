@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { TenantDetail } from '@/api/control'
+import type { BusinessType, TenantDetail } from '@/api/control'
 import {
   getTenantQueryKey,
   listTenantsQueryKey,
@@ -42,13 +42,21 @@ import {
   type TenantPlanName,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
+import {
+  BusinessPicker,
+  LookFields,
+  type ArabicStyle,
+  type DefaultTheme,
+} from './new-tenant-business'
 
 const FORM_ID = 'edit-record'
 
 /**
  * The record Control keeps about a café, edited in place: names, colour,
- * domain, contact, plan, notes and locale. The form mounts with the sheet,
- * so every opening starts from what the server has.
+ * domain, contact, plan, notes, and what the wizard chose — the kind of
+ * place, the locale, its Arabic and starting theme. A running café takes
+ * the name, locale, Arabic, theme and kind at once. The form mounts with
+ * the sheet, so every opening starts from what the server has.
  */
 export function EditRecordSheet({
   open,
@@ -89,6 +97,13 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [currency, setCurrency] = useState(tenant.locale.currency)
   const [timeZone, setTimeZone] = useState(tenant.locale.timeZone)
   const [defaultLanguage, setDefaultLanguage] = useState(tenant.locale.language)
+  const [business, setBusiness] = useState<BusinessType>(tenant.businessType ?? 'Other')
+  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
+    tenant.locale.arabicStyle === 'egyptian' ? 'egyptian' : 'standard'
+  )
+  const [defaultTheme, setDefaultTheme] = useState<DefaultTheme>(
+    tenant.defaultTheme === 'light' || tenant.defaultTheme === 'dark' ? tenant.defaultTheme : 'device'
+  )
 
   // The country's own zones first, then every zone the browser knows
   const zones = useMemo(() => {
@@ -141,6 +156,9 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         currency,
         timeZone,
         defaultLanguage,
+        arabicStyle,
+        defaultTheme,
+        businessType: business,
       },
     })
   }
@@ -149,6 +167,11 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
     <>
       <form id={FORM_ID} onSubmit={submit} className='flex flex-1 flex-col gap-4 overflow-y-auto px-4'>
         <LocalizedInput id='record-name' label={t('name')} value={name} onChange={setName} autoFocus />
+        <div className='grid gap-2'>
+          <Label htmlFor='record-business'>{t('businessType')}</Label>
+          <BusinessPicker id='record-business' value={business} onChange={setBusiness} />
+          <p className='text-muted-foreground text-xs'>{t('businessTypeRecordHint')}</p>
+        </div>
         <ColorField
           id='record-color'
           label={t('brandColor')}
@@ -261,6 +284,12 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             </SelectContent>
           </Select>
         </div>
+        <LookFields
+          arabicStyle={arabicStyle}
+          onArabicStyle={setArabicStyle}
+          defaultTheme={defaultTheme}
+          onDefaultTheme={setDefaultTheme}
+        />
       </form>
       <SheetFooter className='flex-row justify-end'>
         <Button type='button' variant='outline' onClick={onClose}>

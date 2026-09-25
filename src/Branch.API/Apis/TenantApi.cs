@@ -497,7 +497,7 @@ public record TenantResponse(
     }
 }
 
-/// <param name="BusinessType">What kind of place it is; the control plane says so when it creates the café, null leaves it.</param>
+/// <param name="BusinessType">What kind of place it is; the control plane says so, null leaves it.</param>
 /// <param name="GuestOrdersAnywhere">Whether a guest may order without being at a table; null leaves it.</param>
 public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null);
 

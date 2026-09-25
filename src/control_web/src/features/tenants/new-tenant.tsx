@@ -74,7 +74,6 @@ import { toast } from '@/lib/toast'
 import { LocaleFields } from './new-tenant-locale'
 import {
   BusinessPicker,
-  GuestOrdersField,
   LookFields,
   SUGGESTED_MODULES,
   type ArabicStyle,
@@ -165,7 +164,6 @@ export function NewTenantPage() {
   )
   const [arabicTouched, setArabicTouched] = useState(false)
   const [defaultTheme, setDefaultTheme] = useState<DefaultTheme>('device')
-  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(false)
   const plans = useQuery(getPlansOptions())
   const planRow = plans.data?.plans.find((p) => p.plan === plan)
   const included = new Set((planRow?.included ?? []).map(moduleName))
@@ -275,7 +273,6 @@ export function NewTenantPage() {
       businessType: business,
       arabicStyle,
       defaultTheme: defaultTheme === 'device' ? null : defaultTheme,
-      guestOrdersAnywhere,
       notes: notes.trim() || null,
       provision: true,
       force,
@@ -302,15 +299,8 @@ export function NewTenantPage() {
               <CardTitle>{t('businessType')}</CardTitle>
             </CardHeader>
             <CardContent className='grid gap-2'>
-              <BusinessPicker value={business} onChange={pickBusiness} />
+              <BusinessPicker id='businessType' value={business} onChange={pickBusiness} />
               <p className='text-muted-foreground text-xs'>{t('businessTypeHint')}</p>
-              <div className='mt-2'>
-                <GuestOrdersField
-                  id='guestOrdersAnywhere'
-                  checked={guestOrdersAnywhere}
-                  onChange={setGuestOrdersAnywhere}
-                />
-              </div>
             </CardContent>
           </Card>
 

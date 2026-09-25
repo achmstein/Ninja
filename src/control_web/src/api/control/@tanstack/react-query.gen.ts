@@ -147,7 +147,7 @@ export const getTenantOptions = (options: Options<GetTenantData>) => queryOption
 });
 
 /**
- * The record: contact, plan, notes, own domain, and what the next stamp uses
+ * The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
  */
 export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>>): UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> => {
     const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
