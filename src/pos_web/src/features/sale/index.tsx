@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -7,9 +7,11 @@ import {
   Loader2,
   Minus,
   Plus,
+  Search,
   Sparkles,
   Trash2,
   UserPlus,
+  X,
 } from 'lucide-react'
 import {
   listCategoriesOptions,
@@ -23,6 +25,7 @@ import {
 } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ChooseCustomerButton,
@@ -30,6 +33,7 @@ import {
 } from '@/features/customer/selected-customer'
 import { stayRoster } from '@/features/places/status'
 import { useStay, useStayActions } from '@/features/places/use-places'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -74,7 +78,7 @@ function ItemTile({
       onClick={() => onTap(item)}
       className='bg-card text-card-foreground flex flex-col overflow-hidden rounded-xl border text-start shadow-xs transition-colors active:scale-[0.98] disabled:opacity-40'
     >
-      <div className='bg-muted flex aspect-square w-full items-center justify-center overflow-hidden'>
+      <div className='bg-muted flex aspect-[4/3] w-full items-center justify-center overflow-hidden md:aspect-square'>
         <ItemImage
           src={item.pictureUri ? itemPictureUrl(item.id) : null}
           className='h-full w-full'
@@ -214,6 +218,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     null,
   )
   const [customerOpen, setCustomerOpen] = useState(false)
+  // On a phone the running order lives in a sheet under the menu, opened
+  // from the bar along the bottom; a tablet keeps it beside the menu
+  const isMobile = useIsMobile()
+  const [orderOpen, setOrderOpen] = useState(false)
+  // A phone shows one category's chips at a time, so a name typed in is the
+  // quicker way to an item than scrolling the row
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Adding to a room's bill: the people in the room are the first choice
   // for whose round this is, and somebody picked from the search who is not
@@ -374,8 +386,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       : activeCategory === USUALS_CATEGORY && !hasUsuals
         ? firstCategoryId
         : activeCategory
-  const visibleItems =
-    activeCategoryId === USUALS_CATEGORY
+  const needle = searchOpen ? searchTerm.trim().toLowerCase() : ''
+  const visibleItems = needle
+    ? items.filter(
+        (item) =>
+          (item.name?.en ?? '').toLowerCase().includes(needle) ||
+          (item.name?.ar ?? '').toLowerCase().includes(needle),
+      )
+    : activeCategoryId === USUALS_CATEGORY
       ? usualItems
       : items
           .filter((item) => toNumber(item.catalogTypeId) === activeCategoryId)
@@ -483,6 +501,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   })
 
   const charge = () => {
+    // The blocking "sending" wait paints under an open sheet otherwise
+    setOrderOpen(false)
     const signature = JSON.stringify({
       lines: lines.map((line) => [
         line.productId,
@@ -597,6 +617,123 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   }, [pending])
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
+  const SaleHeading = isMobile ? SheetTitle : 'h2'
+
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setSearchTerm('')
+  }
+
+  const itemGrid = (tiles: ReactNode) => (
+    <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
+      {tiles}
+    </div>
+  )
+
+  // The running sale: beside the menu on a tablet, in the bottom sheet on a
+  // phone — the same parts either way, so nothing is out of reach on either
+  const orderPanel = (
+    <>
+      <div className='flex items-center gap-2 border-b p-3 max-md:pe-14'>
+        <SaleHeading className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
+          <span className='truncate'>{t('currentSale')}</span>
+          {count > 0 && (
+            <span className='text-muted-foreground shrink-0 text-sm font-medium'>
+              {t('linesCount', { count })}
+            </span>
+          )}
+        </SaleHeading>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='size-11'
+          aria-label={t('clearSale')}
+          disabled={lines.length === 0 && !customer && !note}
+          onClick={clear}
+        >
+          <Trash2 className='size-5' />
+        </Button>
+      </div>
+
+      <div className='border-b p-3'>
+        {addingToTicket && roomSession && roster.length >= 2 && (
+          <div className='mb-2 flex flex-col gap-1.5'>
+            <span className='text-muted-foreground text-xs font-medium'>
+              {t('whoseRound')}
+            </span>
+            <div className='flex flex-wrap gap-2'>
+              {roster.map((m) => (
+                <button
+                  key={m.id}
+                  type='button'
+                  onClick={() => pickCustomer({ id: m.id, name: m.name })}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-sm max-md:min-h-11 max-md:px-4',
+                    customer?.id === m.id
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'bg-background',
+                  )}
+                >
+                  {m.name || t('guest')}
+                </button>
+              ))}
+              <button
+                type='button'
+                onClick={() => setCustomerOpen(true)}
+                className='text-muted-foreground flex items-center gap-1 rounded-full border border-dashed px-3 py-1.5 text-sm max-md:min-h-11 max-md:px-4'
+              >
+                <UserPlus className='size-4' />
+                {t('someoneElse')}
+              </button>
+            </div>
+          </div>
+        )}
+        {customer ? (
+          <SelectedCustomer
+            customer={customer}
+            onRemove={() => setCustomer(null)}
+          />
+        ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
+          <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
+        )}
+      </div>
+
+      <div className='min-h-0 flex-1 overflow-y-auto'>
+        {lines.length === 0 ? null : (
+          <div className='flex flex-col divide-y'>
+            {lines.map((line) => (
+              <CartLineRow
+                key={lineKey(line)}
+                line={line}
+                onSetQuantity={setQuantity}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className='flex flex-col gap-3 border-t p-3'>
+        <Input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={t('orderNoteOptional')}
+          className='h-12 text-base'
+          autoComplete='off'
+        />
+        <Button
+          size='lg'
+          className='h-14 w-full justify-between px-5 text-lg'
+          disabled={
+            lines.length === 0 || placeOrder.isPending || pending !== null
+          }
+          onClick={charge}
+        >
+          <span>{addingToTicket ? t('addToTicket') : t('chargeAction')}</span>
+          <span className='tabular-nums'>{money(total)}</span>
+        </Button>
+      </div>
+    </>
+  )
 
   return (
     <div className='flex h-[calc(100svh-4rem)]'>
@@ -623,169 +760,141 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
               </Link>
             )}
           </Button>
-          {/* Every category in view: the chips wrap into rows rather than
-              scrolling sideways behind a scrollbar */}
-          <div className='flex min-w-0 flex-1 flex-wrap gap-2'>
-            {hasUsuals && (
-              <Button
-                variant={
-                  activeCategoryId === USUALS_CATEGORY ? 'default' : 'outline'
-                }
-                className='h-11 shrink-0 px-4 text-base'
-                onClick={() => setActiveCategory(USUALS_CATEGORY)}
-              >
-                <Sparkles className='size-4' />
-                {t('usuals')}
-              </Button>
-            )}
-            {sortedCategories.map((category) => {
-              const id = toNumber(category.id)
-              return (
+          {searchOpen ? (
+            <div className='relative min-w-0 flex-1'>
+              <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
+              <Input
+                autoFocus
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={t('searchItems')}
+                className='h-11 ps-9 text-base'
+                autoComplete='off'
+                enterKeyHint='search'
+              />
+            </div>
+          ) : (
+            /* A tablet sees every category: the chips wrap into rows rather
+               than scrolling sideways behind a scrollbar. A phone has no
+               room for rows of chips above the menu, so there they are one
+               row that swipes, each chip snapping to the edge. */
+            <div className='no-scrollbar flex min-w-0 flex-1 gap-2 max-md:snap-x max-md:snap-mandatory max-md:scroll-px-1 max-md:overflow-x-auto max-md:px-1 md:flex-wrap'>
+              {hasUsuals && (
                 <Button
-                  key={id}
-                  variant={id === activeCategoryId ? 'default' : 'outline'}
-                  className='h-11 shrink-0 px-4 text-base'
-                  onClick={() => setActiveCategory(id)}
+                  variant={
+                    activeCategoryId === USUALS_CATEGORY ? 'default' : 'outline'
+                  }
+                  className='h-11 shrink-0 snap-start px-4 text-base'
+                  onClick={() => setActiveCategory(USUALS_CATEGORY)}
                 >
-                  {localized(category.name)}
+                  <Sparkles className='size-4' />
+                  {t('usuals')}
                 </Button>
-              )
-            })}
-          </div>
+              )}
+              {sortedCategories.map((category) => {
+                const id = toNumber(category.id)
+                return (
+                  <Button
+                    key={id}
+                    variant={id === activeCategoryId ? 'default' : 'outline'}
+                    className='h-11 shrink-0 snap-start px-4 text-base'
+                    onClick={() => setActiveCategory(id)}
+                  >
+                    {localized(category.name)}
+                  </Button>
+                )
+              })}
+            </div>
+          )}
+          {/* Search is the phone's shortcut past the one-row chips; a
+              tablet has every category in view already */}
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-11 shrink-0 md:hidden'
+            aria-label={searchOpen ? t('clear') : t('searchItems')}
+            onClick={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
+          >
+            {searchOpen ? (
+              <X className='size-5' />
+            ) : (
+              <Search className='size-5' />
+            )}
+          </Button>
         </div>
 
         <div className='flex-1 overflow-y-auto p-3'>
           {itemsLoading ? (
-            <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
-              {Array.from({ length: 8 }).map((_, i) => (
+            itemGrid(
+              Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
                   className='flex flex-col overflow-hidden rounded-xl border shadow-xs'
                 >
-                  {/* Square picture, then name and price lines — the item tile's shape */}
-                  <Skeleton className='aspect-square w-full rounded-none' />
+                  {/* Picture, then name and price lines — the item tile's shape */}
+                  <Skeleton className='aspect-[4/3] w-full rounded-none md:aspect-square' />
                   <div className='flex flex-col gap-1.5 p-2'>
                     <Skeleton className='h-4 w-full' />
                     <Skeleton className='h-3 w-1/2' />
                   </div>
                 </div>
-              ))}
-            </div>
+              )),
+            )
           ) : visibleItems.length === 0 ? (
             <p className='text-muted-foreground py-16 text-center'>
-              {t('noItemsInCategory')}
+              {needle ? t('noItemsMatch') : t('noItemsInCategory')}
             </p>
           ) : (
-            <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
-              {visibleItems.map((item) => (
+            itemGrid(
+              visibleItems.map((item) => (
                 <ItemTile key={String(item.id)} item={item} onTap={tapItem} />
-              ))}
-            </div>
+              )),
+            )
           )}
         </div>
+
+        {/* The phone's way to the order: always on screen under the menu,
+            reading what is in it and what it comes to */}
+        {isMobile && (
+          <div className='border-t p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]'>
+            <Button
+              size='lg'
+              className='h-14 w-full justify-between gap-3 px-4 text-base'
+              onClick={() => setOrderOpen(true)}
+            >
+              <span className='flex min-w-0 items-center gap-2'>
+                {count > 0 && (
+                  <span className='bg-primary-foreground text-primary flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full px-2 text-sm font-bold tabular-nums'>
+                    {count}
+                  </span>
+                )}
+                <span className='truncate font-semibold'>
+                  {t('viewOrder')}
+                </span>
+              </span>
+              <span className='shrink-0 text-lg font-semibold tabular-nums'>
+                {money(total)}
+              </span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ----- running sale ----- */}
-      <aside className='flex w-[340px] shrink-0 flex-col border-s xl:w-[380px]'>
-        <div className='flex items-center gap-2 border-b p-3'>
-          <h2 className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
-            <span className='truncate'>{t('currentSale')}</span>
-            {count > 0 && (
-              <span className='text-muted-foreground shrink-0 text-sm font-medium'>
-                {t('linesCount', { count })}
-              </span>
-            )}
-          </h2>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='size-11'
-            aria-label={t('clearSale')}
-            disabled={lines.length === 0 && !customer && !note}
-            onClick={clear}
+      {isMobile ? (
+        <Sheet open={orderOpen} onOpenChange={setOrderOpen}>
+          <SheetContent
+            aria-describedby={undefined}
+            className='h-[calc(100svh-2.5rem)]'
           >
-            <Trash2 className='size-5' />
-          </Button>
-        </div>
-
-        <div className='border-b p-3'>
-          {addingToTicket && roomSession && roster.length >= 2 && (
-            <div className='mb-2 flex flex-col gap-1.5'>
-              <span className='text-muted-foreground text-xs font-medium'>
-                {t('whoseRound')}
-              </span>
-              <div className='flex flex-wrap gap-2'>
-                {roster.map((m) => (
-                  <button
-                    key={m.id}
-                    type='button'
-                    onClick={() => pickCustomer({ id: m.id, name: m.name })}
-                    className={cn(
-                      'rounded-full border px-3 py-1.5 text-sm',
-                      customer?.id === m.id
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'bg-background',
-                    )}
-                  >
-                    {m.name || t('guest')}
-                  </button>
-                ))}
-                <button
-                  type='button'
-                  onClick={() => setCustomerOpen(true)}
-                  className='text-muted-foreground flex items-center gap-1 rounded-full border border-dashed px-3 py-1.5 text-sm'
-                >
-                  <UserPlus className='size-4' />
-                  {t('someoneElse')}
-                </button>
-              </div>
-            </div>
-          )}
-          {customer ? (
-            <SelectedCustomer
-              customer={customer}
-              onRemove={() => setCustomer(null)}
-            />
-          ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
-            <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
-          )}
-        </div>
-
-        <div className='flex-1 overflow-y-auto'>
-          {lines.length === 0 ? null : (
-            <div className='flex flex-col divide-y'>
-              {lines.map((line) => (
-                <CartLineRow
-                  key={lineKey(line)}
-                  line={line}
-                  onSetQuantity={setQuantity}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className='flex flex-col gap-3 border-t p-3'>
-          <Input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder={t('orderNoteOptional')}
-            className='h-12 text-base'
-            autoComplete='off'
-          />
-          <Button
-            size='lg'
-            className='h-14 w-full justify-between px-5 text-lg'
-            disabled={
-              lines.length === 0 || placeOrder.isPending || pending !== null
-            }
-            onClick={charge}
-          >
-            <span>{addingToTicket ? t('addToTicket') : t('chargeAction')}</span>
-            <span className='tabular-nums'>{money(total)}</span>
-          </Button>
-        </div>
-      </aside>
+            {orderPanel}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <aside className='flex w-[340px] shrink-0 flex-col border-s xl:w-[380px]'>
+          {orderPanel}
+        </aside>
+      )}
 
       <CustomizeDialog
         item={customizeItem}

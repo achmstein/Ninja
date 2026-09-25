@@ -237,6 +237,7 @@ const dictionary = {
 
   // Sale pad (counter sale)
   currentSale: { en: "Current sale", ar: "البيع الحالي" },
+  viewOrder: { en: "View order", ar: "عرض الطلب" },
   noItemsInCategory: { en: "No items in this category", ar: "لا توجد أصناف في هذا القسم" },
   unavailable: { en: "Unavailable", ar: "غير متاح" },
   required: { en: "Required", ar: "مطلوب" },
