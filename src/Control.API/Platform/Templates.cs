@@ -277,6 +277,8 @@ public static partial class Templates
             sb.AppendLine($"      Keycloak__Realm: \"{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      OTEL_SERVICE_NAME: \"{name}\"");
             sb.AppendLine($"      Seed__Profile: \"{tenant.Seed.ToString().ToLowerInvariant()}\"");
+            // A sample stack plants a menu and a floor for its kind of place
+            sb.AppendLine($"      Tenant__BusinessType: \"{BusinessProfiles.Key(tenant.BusinessType)}\"");
             // Every service formats, rolls its day over and reads its offers in the tenant's locale
             sb.AppendLine($"      Tenant__Country: \"{tenant.Country}\"");
             sb.AppendLine($"      Tenant__Currency: \"{tenant.Currency}\"");
