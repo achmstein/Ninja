@@ -6,7 +6,7 @@ import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
+import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Main } from '@/components/layout/main'
@@ -48,6 +48,8 @@ export function Dashboard() {
   const auth = useAuth()
   const owner = isOwner(auth.user)
   const features = useFeatures()
+  // A cloud kitchen has no tables: no floor, no table counts, no waiter calls
+  const cloudKitchen = useIsCloudKitchen()
   const locale = useLocale()
   const localized = useLocalized()
 
@@ -70,6 +72,7 @@ export function Dashboard() {
     queryKey: ['service-requests'],
     queryFn: () => serviceRequestsService.pending(),
     refetchInterval: 60_000,
+    enabled: !cloudKitchen,
   })
   const lowStockQuery = useQuery({
     ...stockLevelsQueryOptions({ low: true }),
@@ -137,7 +140,7 @@ export function Dashboard() {
       detailClass: urgencyTextClass(oldestUrgency),
     })
   }
-  if (requestCount > 0) {
+  if (!cloudKitchen && requestCount > 0) {
     attention.push({
       key: 'requests',
       to: '/requests',
@@ -205,7 +208,7 @@ export function Dashboard() {
           loading={pendingQuery.isPending}
           to='/orders'
         />
-        {features.timeBilling && (
+        {!cloudKitchen && features.timeBilling && (
           <Stat
             label={t('placesInUse')}
             value={t('ofTotal', {
@@ -216,16 +219,18 @@ export function Dashboard() {
             to='/places'
           />
         )}
-        <Stat
-          label={t('tablesInUse')}
-          value={t('ofTotal', { count: busyTables, total: activeTables })}
-          loading={floor.isPending}
-          to='/places'
-        />
+        {!cloudKitchen && (
+          <Stat
+            label={t('tablesInUse')}
+            value={t('ofTotal', { count: busyTables, total: activeTables })}
+            loading={floor.isPending}
+            to='/places'
+          />
+        )}
       </StatStrip>
 
       <div className='grid gap-6 lg:grid-cols-2'>
-        {(features.timeBilling || features.reservations) && (
+        {!cloudKitchen && (features.timeBilling || features.reservations) && (
           <LiveFloor
             stays={running}
             places={places}

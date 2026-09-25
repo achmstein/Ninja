@@ -3,7 +3,7 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
+import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -25,6 +25,7 @@ export function AppSidebar() {
   const auth = useAuth()
   const isOwner = getRealmRoles(auth.user).includes('Owner')
   const features = useFeatures()
+  const cloudKitchen = useIsCloudKitchen()
 
   // Pending-order count badge on Orders, kept fresh by SignalR
   const { data: pendingOrders = [] } = useQuery({
@@ -49,7 +50,7 @@ export function AppSidebar() {
     return count ? { ...item, badge: String(count) } : item
   }
 
-  // Owner-only pages stay off an admin's menu; switched-off features stay off everyone's
+  // Owner-only pages stay off an admin's menu; switched-off features stay off everyone's; tables stay off a cloud kitchen's
   const navGroups = sidebarData.navGroups
     .filter((group) => !group.ownerOnly || isOwner)
     .filter((group) => !group.feature || features[group.feature])
@@ -58,6 +59,7 @@ export function AppSidebar() {
       items: group.items
         .filter((item) => item.items || !item.ownerOnly || isOwner)
         .filter((item) => item.items || !item.feature || features[item.feature])
+        .filter((item) => item.items || !item.needsPlaces || !cloudKitchen)
         .map((item): NavItem => {
           if (item.items) {
             return { ...item, items: item.items.map(withBadge) }

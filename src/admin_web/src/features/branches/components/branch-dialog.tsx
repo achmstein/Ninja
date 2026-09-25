@@ -5,6 +5,7 @@ import {
   createBranchMutation,
   updateBranchMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
+import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,7 @@ function BranchForm({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const cloudKitchen = useIsCloudKitchen()
   const queryClient = useQueryClient()
   const isEditing = !!branch
 
@@ -256,8 +258,8 @@ function BranchForm({
 
       {/* Off by default; on when strangers with a table's link become a
           problem — a guest may still browse, but a table order needs an
-          account the branch can hold to */}
-      {isEditing && (
+          account the branch can hold to. A cloud kitchen has no tables */}
+      {isEditing && !cloudKitchen && (
         <div className='flex items-center justify-between rounded-lg border p-3'>
           <Label className='text-sm'>{t('requireSignInForTableOrders')}</Label>
           <Switch

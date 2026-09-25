@@ -617,5 +617,10 @@
   "arabicStyleLabel": "العربية",
   "arabicStyleLabelHint": "أي عربية تستخدمها التطبيقات مع الموظفين والعملاء.",
   "arabicStandardOption": "الفصحى",
-  "arabicEgyptianOption": "المصرية"
+  "arabicEgyptianOption": "المصرية",
+  "guestOrdering": "طلبات الضيوف",
+  "guestOrdersAnywhere": "يمكن للضيوف الطلب من أي مكان",
+  "guestOrdersAnywhereHint": "دون حساب وبعيدًا عن الطاولة — من البيت أو في الطريق، والاستلام من الكاونتر. عند الإيقاف، يطلب الضيف من الطاولة التي مسح رمزها.",
+  "noPlacesTitle": "المطبخ السحابي بلا طاولات",
+  "noPlacesDescription": "يطلب الضيوف مسبقًا ويستلمون من الكاونتر، فلا توجد غرف أو طاولات أو رموز QR لإدارتها."
 }

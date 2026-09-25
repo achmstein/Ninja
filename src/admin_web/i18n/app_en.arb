@@ -808,5 +808,10 @@
   "arabicStyleLabel": "Arabic",
   "arabicStyleLabelHint": "Which Arabic the apps speak to staff and customers.",
   "arabicStandardOption": "Standard",
-  "arabicEgyptianOption": "Egyptian"
+  "arabicEgyptianOption": "Egyptian",
+  "guestOrdering": "Guest ordering",
+  "guestOrdersAnywhere": "Guests can order from anywhere",
+  "guestOrdersAnywhereHint": "Without an account and away from a table — from home or on the way, to collect at the counter. Off, a guest orders from the table they scanned.",
+  "noPlacesTitle": "A cloud kitchen has no tables",
+  "noPlacesDescription": "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage."
 }

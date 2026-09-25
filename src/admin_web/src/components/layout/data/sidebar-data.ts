@@ -37,10 +37,10 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        // Rooms & Tables is every café's: the tables and their QR codes live there whatever the plan
-        { title: 'placesNav', url: '/places', icon: Armchair },
+        // Rooms & Tables is every café's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
+        { title: 'placesNav', url: '/places', icon: Armchair, needsPlaces: true },
         // A waiter call or a bill request comes from any table's scan page, whatever the plan
-        { title: 'requests', url: '/requests', icon: ConciergeBell },
+        { title: 'requests', url: '/requests', icon: ConciergeBell, needsPlaces: true },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },

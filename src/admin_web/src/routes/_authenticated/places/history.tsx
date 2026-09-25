@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { FeatureGate } from '@/components/feature-gate'
+import { PlacesGate } from '@/components/places-gate'
 import { StayHistory } from '@/features/places/history'
 
 const historySearchSchema = z.object({
@@ -13,8 +14,10 @@ const historySearchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/places/history')({
   validateSearch: historySearchSchema,
   component: () => (
-    <FeatureGate feature='timeBilling'>
-      <StayHistory />
-    </FeatureGate>
+    <PlacesGate>
+      <FeatureGate feature='timeBilling'>
+        <StayHistory />
+      </FeatureGate>
+    </PlacesGate>
   ),
 })

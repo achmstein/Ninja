@@ -16,6 +16,8 @@ type NavLink = BaseNavItem & {
   ownerOnly?: boolean
   /** Only shown while the tenant has this feature switched on */
   feature?: FeatureKey
+  /** About tables and rooms: not shown to a cloud kitchen, which has none */
+  needsPlaces?: boolean
 }
 
 type NavCollapsible = BaseNavItem & {
