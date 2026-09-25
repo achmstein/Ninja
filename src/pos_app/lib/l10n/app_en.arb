@@ -568,7 +568,6 @@
   "takingOrders": "Taking orders",
   "takingReservations": "Taking reservations",
   "paused": "Paused",
-  "shiftDetails": "Shift details",
   "shiftTitle": "Shift",
   "shiftNumber": "Shift #{id}",
   "@shiftNumber": {

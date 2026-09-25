@@ -1844,12 +1844,6 @@ abstract class AppLocalizations {
   /// **'Paused'**
   String get paused;
 
-  /// No description provided for @shiftDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Shift details'**
-  String get shiftDetails;
-
   /// No description provided for @shiftTitle.
   ///
   /// In en, this message translates to:

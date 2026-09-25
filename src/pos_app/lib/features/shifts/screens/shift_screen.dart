@@ -12,14 +12,17 @@ import '../dialogs/open_shift_dialog.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
 import '../widgets/shift_report.dart';
+import '../widgets/trading_switches.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 80.0;
 
 /// The live X report of the branch's open shift: what the drawer should
-/// hold right now and how it got there. Actions live in a sticky bottom
-/// bar: pay in / pay out, and closing the shift (destructive — it freezes
-/// the Z). With no shift open, this is the place to open one.
+/// hold right now and how it got there — where the header chip lands. The
+/// pause switches (taking orders / reservations) sit above the figures;
+/// actions live in a sticky bottom bar: pay in / pay out, and closing the
+/// shift (destructive — it freezes the Z). With no shift open, this is the
+/// place to open one.
 class ShiftScreen extends ConsumerWidget {
   const ShiftScreen({super.key});
 
@@ -61,6 +64,14 @@ class ShiftScreen extends ConsumerWidget {
                 onPress: () => context.go('/shifts'),
                 prefix: const Icon(FIcons.history, size: 20),
                 child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 448),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: TradingSwitches(),
               ),
             ),
           ],
@@ -112,6 +123,8 @@ class ShiftScreen extends ConsumerWidget {
                     ],
                   ),
                   const FDivider(),
+                  const TradingSwitches(),
+                  const SizedBox(height: 16),
                   ShiftReport(shift: shift),
                 ],
               ),

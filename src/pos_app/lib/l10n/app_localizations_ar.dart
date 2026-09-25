@@ -999,9 +999,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paused => 'متوقف';
 
   @override
-  String get shiftDetails => 'تفاصيل الوردية';
-
-  @override
   String get shiftTitle => 'الوردية';
 
   @override

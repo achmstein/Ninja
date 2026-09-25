@@ -356,7 +356,6 @@ const dictionary = {
   takingOrders: { en: "Taking orders", ar: "نستقبل الطلبات" },
   takingReservations: { en: "Taking reservations", ar: "نستقبل الحجوزات" },
   paused: { en: "Paused", ar: "متوقف" },
-  shiftDetails: { en: "Shift details", ar: "تفاصيل الوردية" },
 
   // Shift / cash drawer (وردية = shift, الدرج = the till drawer)
   shiftTitle: { en: "Shift", ar: "الوردية" },

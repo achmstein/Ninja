@@ -1,25 +1,28 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
 import { cn } from '@/lib/utils'
 import { useLocale, useT } from '@/lib/i18n'
-import { ShiftPanel } from './shift-panel'
+import { OpenShiftDialog } from './open-shift-dialog'
 import { useCurrentShift } from './use-current-shift'
 
 /**
  * Header status chip: one plain outline button that reads the day — a
  * status dot plus the shift's open time, muted "No shift" when none, and an
  * amber "Paused" when the store has stopped taking orders or reservations
- * mid-shift. Tap → the shift panel (open/close the shift, the pause
- * switches, the X report). Quiet while the first answer is still loading.
- * The dot does the signalling so the chip keeps the same surface, border
- * and foreground as every other control in the chrome.
+ * mid-shift. Tap → straight to the shift screen (its X report, drawer
+ * movements, the pause switches and the close), or the open-shift dialog
+ * when none is open. Quiet while the first answer is still loading. The
+ * dot does the signalling so the chip keeps the same surface, border and
+ * foreground as every other control in the chrome.
  */
 export function ShiftChip() {
   const t = useT()
   const locale = useLocale()
-  const [panelOpen, setPanelOpen] = useState(false)
+  const navigate = useNavigate()
+  const [openShiftOpen, setOpenShiftOpen] = useState(false)
   const { shift: liveShift, noShift: liveNoShift } = useCurrentShift({
     refetchInterval: 60_000,
   })
@@ -61,7 +64,9 @@ export function ShiftChip() {
       <Button
         variant='outline'
         className='h-12 gap-2 px-4'
-        onClick={() => setPanelOpen(true)}
+        onClick={() =>
+          shift ? navigate({ to: '/shift' }) : setOpenShiftOpen(true)
+        }
       >
         <span
           aria-hidden
@@ -83,7 +88,7 @@ export function ShiftChip() {
           </span>
         )}
       </Button>
-      <ShiftPanel shift={shift} open={panelOpen} onOpenChange={setPanelOpen} />
+      <OpenShiftDialog open={openShiftOpen} onOpenChange={setOpenShiftOpen} />
     </>
   )
 }

@@ -552,7 +552,6 @@
   "takingOrders": "نستقبل الطلبات",
   "takingReservations": "نستقبل الحجوزات",
   "paused": "متوقف",
-  "shiftDetails": "تفاصيل الوردية",
   "shiftTitle": "الوردية",
   "shiftNumber": "وردية #{id}",
   "@shiftNumber": {

@@ -992,9 +992,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paused => 'Paused';
 
   @override
-  String get shiftDetails => 'Shift details';
-
-  @override
   String get shiftTitle => 'Shift';
 
   @override

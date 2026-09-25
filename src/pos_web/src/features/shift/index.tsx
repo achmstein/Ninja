@@ -19,13 +19,16 @@ import { CloseShiftDialog } from './close-shift-dialog'
 import { MovementDialog, type MovementDirection } from './movement-dialog'
 import { OpenShiftDialog } from './open-shift-dialog'
 import { ShiftReport } from './shift-report'
+import { TradingSwitches } from './trading-switches'
 import { useCurrentShift } from './use-current-shift'
 
 /**
  * The live X report of the branch's open shift: what the drawer should
- * hold right now and how it got there. Actions live in a sticky bottom
- * bar: pay in / pay out, and closing the shift (destructive — it freezes
- * the Z). With no shift open, this is the place to open one.
+ * hold right now and how it got there — where the header chip lands. The
+ * pause switches (taking orders / reservations) sit above the figures;
+ * actions live in a sticky bottom bar: pay in / pay out, and closing the
+ * shift (destructive — it freezes the Z). With no shift open, this is the
+ * place to open one.
  */
 export function ShiftScreen() {
   const t = useT()
@@ -70,6 +73,7 @@ export function ShiftScreen() {
             {t('shiftHistory')}
           </Link>
         </Button>
+        <TradingSwitches className='mt-4 w-full max-w-md text-start' />
         <OpenShiftDialog open={openShiftOpen} onOpenChange={setOpenShiftOpen} />
       </div>
     )
@@ -98,6 +102,8 @@ export function ShiftScreen() {
       </div>
 
       <Separator className='my-3' />
+
+      <TradingSwitches className='mb-4' />
 
       <ShiftReport shift={shift} />
 
