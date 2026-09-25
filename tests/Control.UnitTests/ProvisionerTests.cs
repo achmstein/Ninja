@@ -26,6 +26,7 @@ public sealed class ProvisionerTests
     private PlatformOptions _platform = null!;
     private Provisioner _provisioner = null!;
     private DryRunBrokerAdmin _broker = null!;
+    private DryRunDatabaseAdmin _databases = null!;
     private Tenant _tenant = null!;
 
     private sealed class FailingStack : ITenantStack
@@ -78,8 +79,9 @@ public sealed class ProvisionerTests
         _audit = new CollectingAudit();
         var backups = new BackupService(_box, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
         _broker = new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance);
+        _databases = new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance);
         _provisioner = new Provisioner(_context, options, _box,
-            new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
+            _databases,
             _broker,
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             _stack, _audit, backups, NullLogger<Provisioner>.Instance);
@@ -184,7 +186,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         AssertShape(ComposeOnDisk(), "loyalty", "accounts");
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
     }
 
     /// <summary>Up to Pro: every service is stamped and no queue is touched; down to Free: five go, with their queues.</summary>
@@ -270,7 +272,7 @@ public sealed class ProvisionerTests
     {
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         Assert.AreEqual("v1", _tenant.PreviousImageTag);
@@ -317,12 +319,26 @@ public sealed class ProvisionerTests
         Assert.DoesNotContain("ninja-branch", compose);
     }
 
+    /// <summary>What Branch.API left behind goes once the upgraded stack answers, and a failed upgrade leaves it for the rollback.</summary>
+    [TestMethod]
+    public async Task An_upgrade_drops_the_retired_services_database_and_queue_once_the_stack_answers()
+    {
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { "blue_branchdb" }, _databases.Dropped);
+        CollectionAssert.Contains(_broker.DeletedQueues, "blue/Branch");
+
+
+    }
+
     [TestMethod]
     public async Task An_upgrade_whose_stack_is_not_healthy_rolls_back_to_the_previous_tag()
     {
         _stack.FailHealthTimes = 1;
 
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        Assert.IsEmpty(_databases.Dropped, "an upgrade that rolls back leaves the retired database for the tag it goes back to");
 
         CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status, "the café is back on what worked");

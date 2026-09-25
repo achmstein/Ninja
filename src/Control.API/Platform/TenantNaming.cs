@@ -14,6 +14,16 @@ public static partial class TenantNaming
         "payrolldb", "financedb", "loyaltydb", "tenantdb", "notificationdb",
     ];
 
+    /// <summary>
+    /// What a retired service left on the shared Postgres and broker: the
+    /// database and the durable queue Branch.API had before it became
+    /// Tenant.API. An upgrade drops them once the new stack answers; gone
+    /// twice is nothing.
+    /// </summary>
+    public static readonly string[] RetiredDatabases = ["branchdb"];
+
+    public static readonly string[] RetiredQueues = ["Branch"];
+
     /// <summary>Every service a stack can run, as image suffix → compose service suffix; PlanCatalog.Services says which a plan does.</summary>
     public static readonly string[] Services =
     [

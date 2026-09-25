@@ -341,6 +341,23 @@ public sealed class Provisioner(
             return off.Count == 0 ? "every service runs" : $"{string.Join(", ", off)} off vhost {vhost}";
         }, ct);
 
+    /// <summary>
+    /// The databases and queues of services that no longer exist
+    /// (<see cref="TenantNaming.RetiredDatabases"/>, <see cref="TenantNaming.RetiredQueues"/>):
+    /// run only after the new stack answers, so a failed upgrade that rolls
+    /// back still finds what the old one used.
+    /// </summary>
+    private Task<string> RetiredStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
+        => Step(tenant, runId, "retired", async () =>
+        {
+            var vhost = TenantNaming.VHost(tenant.Slug);
+            foreach (var db in TenantNaming.RetiredDatabases)
+                await databases.DropDatabaseAsync(TenantNaming.Database(tenant.Slug, db), ct);
+            foreach (var queue in TenantNaming.RetiredQueues)
+                await broker.DeleteQueueAsync(vhost, queue, ct);
+            return $"dropped {string.Join(", ", TenantNaming.RetiredDatabases.Select(db => TenantNaming.Database(tenant.Slug, db)))}; {string.Join(", ", TenantNaming.RetiredQueues)} off vhost {vhost}";
+        }, ct);
+
     /// <summary>The shared broker user off the vhost: what a stack stamped before it had a user of its own still connected as. Nothing to do for a fresh one.</summary>
     private Task<string> BrokerLockdownStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "broker-lockdown", async () =>
@@ -498,6 +515,7 @@ public sealed class Provisioner(
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);
+            await RetiredStepAsync(tenant, runId, ct);
 
             tenant.Status = TenantStatus.Running;
             await context.SaveChangesAsync(ct);

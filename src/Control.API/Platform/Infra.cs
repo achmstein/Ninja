@@ -764,9 +764,10 @@ public sealed class DryRunDatabaseAdmin(ILogger<DryRunDatabaseAdmin> logger) : I
 {
     public List<string> Created { get; } = [];
     public List<string> Roles { get; } = [];
+    public List<string> Dropped { get; } = [];
     public Task EnsureRoleAsync(string role, string password, CancellationToken ct) { if (!Roles.Contains(role)) Roles.Add(role); logger.LogInformation("(dry run) role {Role}", role); return Task.CompletedTask; }
     public Task EnsureDatabaseAsync(string name, string owner, CancellationToken ct) { if (!Created.Contains(name)) Created.Add(name); logger.LogInformation("(dry run) database {Db} owned by {Owner}", name, owner); return Task.CompletedTask; }
-    public Task DropDatabaseAsync(string name, CancellationToken ct) { Created.Remove(name); logger.LogInformation("(dry run) drop database {Db}", name); return Task.CompletedTask; }
+    public Task DropDatabaseAsync(string name, CancellationToken ct) { Created.Remove(name); Dropped.Add(name); logger.LogInformation("(dry run) drop database {Db}", name); return Task.CompletedTask; }
     public Task DropRoleAsync(string role, CancellationToken ct) { Roles.Remove(role); logger.LogInformation("(dry run) drop role {Role}", role); return Task.CompletedTask; }
     public Task LockDownAsync(string name, CancellationToken ct) { logger.LogInformation("(dry run) revoke public on {Db}", name); return Task.CompletedTask; }
 }
