@@ -33,11 +33,16 @@ public static class Extensions
             .AddSubscription<ShiftClosedIntegrationEvent, ShiftClosedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(BranchIntegrationEventContext.Default));
+
+        // The café's own settings once at every start, after the migration
+        // above has made sure the tenant row is there
+        builder.Services.AddHostedService<TenantSettingsAnnouncer>();
     }
 }
 
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
+[JsonSerializable(typeof(TenantSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 public partial class BranchIntegrationEventContext : JsonSerializerContext

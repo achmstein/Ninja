@@ -54,6 +54,7 @@ internal static class Extensions
         services.AddSingleton<TenantCountry>();
         services.AddScoped<IOrderQueries, OrderQueries>();
         services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
+        services.AddScoped<ITenantSettingsQueries, TenantSettingsQueries>();
         services.AddScoped<IPlaceQueries, PlaceQueries>();
         services.AddScoped<IBuyerRepository, BuyerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
@@ -76,6 +77,9 @@ internal static class Extensions
         // Branch.API's flags, projected locally so a paused branch refuses
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
+
+        // The café's own settings, the same way: one row that every branch reads
+        eventBus.AddSubscription<TenantSettingsChangedIntegrationEvent, TenantSettingsChangedIntegrationEventHandler>();
 
         // Spaces' places, projected locally: an order names a place and a
         // deactivated one is refused without a call across services

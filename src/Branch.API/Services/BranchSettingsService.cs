@@ -50,33 +50,12 @@ public class BranchSettingsService(
     }
 
     /// <summary>
-    /// Every branch's flags again, unchanged: for a café-wide setting the
-    /// branch event carries, when it changed.
-    /// </summary>
-    public async Task PublishAllAsync()
-    {
-        foreach (var branch in await context.Branches.AsNoTracking().ToListAsync())
-        {
-            await PublishAsync(branch);
-        }
-    }
-
-    /// <summary>
-    /// A new branch's flags, as they start: until this goes out Ordering has
-    /// no row for the branch and takes every café-wide setting it carries as off.
+    /// A new branch's flags, as they start: until this goes out Ordering,
+    /// Spaces and Notification have no row for the branch.
     /// </summary>
     public Task PublishNewAsync(Model.Branch branch) => PublishAsync(branch);
 
-    private async Task PublishAsync(Model.Branch branch)
-    {
-        // Whether a guest may order away from a table is the café's, not the
-        // branch's; it rides here because this is the event Ordering projects
-        var guestOrdersAnywhere = await context.Tenants.AsNoTracking()
-            .Where(t => t.Id == Model.Tenant.SingletonId)
-            .Select(t => t.GuestOrdersAnywhere)
-            .SingleOrDefaultAsync();
-
-        await eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, guestOrdersAnywhere));
-    }
+    private Task PublishAsync(Model.Branch branch)
+        => eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
+            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders));
 }

@@ -209,7 +209,7 @@ public static partial class OrdersApi
             // the phone they left is how the counter reaches them.
             if (request.PlaceId is null)
             {
-                guestOrdersAnywhere = await services.BranchSettings.AllowsGuestOrdersAnywhereAsync(httpContext.GetRequiredBranchId());
+                guestOrdersAnywhere = await services.TenantSettings.AllowsGuestOrdersAnywhereAsync();
                 if (!guestOrdersAnywhere)
                 {
                     return TypedResults.BadRequest("A table or room is required to order as a guest.");

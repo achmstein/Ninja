@@ -17,6 +17,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<Buyer> Buyers { get; set; }
     public DbSet<OrderRating> OrderRatings { get; set; }
     public DbSet<BranchSettings> BranchSettings { get; set; }
+    public DbSet<TenantSettings> TenantSettings { get; set; }
     public DbSet<GuestBlock> GuestBlocks { get; set; }
     public DbSet<Place> Places { get; set; }
     public DbSet<KitchenStation> KitchenStations { get; set; }
@@ -49,6 +50,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new OrderRatingEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BuyerEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new GuestBlockEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new KitchenStationEntityTypeConfiguration());

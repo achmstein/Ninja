@@ -79,7 +79,6 @@ public static partial class TenantApi
         BranchContext context,
         IConfiguration configuration,
         IEventBus eventBus,
-        BranchSettingsService settings,
         UpdateTenantRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name.En))
@@ -124,8 +123,8 @@ public static partial class TenantApi
         await context.SaveChangesAsync();
         // The services that own a module keep their own copy of the switches
         await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
-        // Ordering reads it with each branch's flags, so every branch says it again
-        if (guestsChanged) await settings.PublishAllAsync();
+        // The café's own settings travel on their own; Ordering keeps its copy
+        if (guestsChanged) await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }

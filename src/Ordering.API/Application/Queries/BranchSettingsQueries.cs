@@ -19,12 +19,4 @@ public class BranchSettingsQueries(OrderingContext context) : IBranchSettingsQue
             .FirstOrDefaultAsync(b => b.BranchId == branchId);
         return row?.RequireSignInForTableOrders ?? false;
     }
-
-    public async Task<bool> AllowsGuestOrdersAnywhereAsync(int branchId)
-    {
-        var row = await context.BranchSettings
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.BranchId == branchId);
-        return row?.GuestOrdersAnywhere ?? false;
-    }
 }
