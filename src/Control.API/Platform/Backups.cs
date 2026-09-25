@@ -270,13 +270,64 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         foreach (var db in TenantNaming.Databases)
         {
             var dump = Path.Combine(dir, $"{db}.dump");
+            // A backup from before Tenant.API has its data as Branch.API's: the same tables and migration history
+            if (!File.Exists(dump) && TenantNaming.RenamedDatabases.FirstOrDefault(r => r.To == db) is { From: { } old })
+                dump = Path.Combine(dir, $"{old}.dump");
             if (!File.Exists(dump)) throw new FileNotFoundException($"{db}.dump is missing from backup {id}");
-            await using var file = File.OpenRead(dump);
-            var result = await shell.RunAsync("docker",
-                // As the new tenant's role, or the superuser would own every restored table and the role could not migrate or write them
-                ["exec", "-i", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_restore", "-U", Platform.PostgresUser, "--no-owner", "--role", TenantNaming.DbRole(into.Slug), "--clean", "--if-exists", "-d", TenantNaming.Database(into.Slug, db)],
-                null, file, Stream.Null, ct);
-            if (!result.Ok) throw new InvalidOperationException($"pg_restore {db}: {result.Output}");
+            await RestoreDumpAsync(dump, into, db, ct);
+        }
+    }
+
+    /// <summary>One dump into one of <paramref name="into"/>'s databases, replacing what is there.</summary>
+    public async Task RestoreDumpAsync(string dump, Tenant into, string db, CancellationToken ct)
+    {
+        await using var file = File.OpenRead(dump);
+        var result = await shell.RunAsync("docker",
+            // As the new tenant's role, or the superuser would own every restored table and the role could not migrate or write them
+            ["exec", "-i", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_restore", "-U", Platform.PostgresUser, "--no-owner", "--role", TenantNaming.DbRole(into.Slug), "--clean", "--if-exists", "-d", TenantNaming.Database(into.Slug, db)],
+            null, file, Stream.Null, ct);
+        if (!result.Ok) throw new InvalidOperationException($"pg_restore {db}: {result.Output}");
+    }
+
+    /// <summary>
+    /// A renamed service's data carried into its new database, once: from the
+    /// old database while it still exists, otherwise from the newest backup
+    /// that holds it. Returns what was carried from, or null when there was
+    /// nothing (a tenant born after the rename).
+    /// </summary>
+    public async Task<string?> CarryAsync(Tenant tenant, string from, string to, CancellationToken ct)
+    {
+        var scratch = Path.Combine(Platform.TenantsRoot, tenant.Slug, $"carry-{from}.dump");
+        Directory.CreateDirectory(Path.GetDirectoryName(scratch)!);
+        try
+        {
+            string? source = null;
+            try
+            {
+                await DumpAsync(TenantNaming.Database(tenant.Slug, from), scratch, ct);
+                source = TenantNaming.Database(tenant.Slug, from);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Gone already: an upgrade before this step dropped it
+                logger.LogWarning("{Slug}: {Db} not dumped ({Error}); looking in the backups", tenant.Slug, from, ex.Message);
+            }
+
+            if (source is null)
+            {
+                var backup = List(tenant.Slug).FirstOrDefault(b => File.Exists(Path.Combine(Dir(tenant.Slug, b.Id), $"{from}.dump")));
+                if (backup is null) return null;
+                await VerifyAsync(tenant.Slug, backup, ct);
+                File.Copy(Path.Combine(Dir(tenant.Slug, backup.Id), $"{from}.dump"), scratch, overwrite: true);
+                source = $"backup {backup.Id}";
+            }
+
+            await RestoreDumpAsync(scratch, tenant, to, ct);
+            return source;
+        }
+        finally
+        {
+            if (File.Exists(scratch)) File.Delete(scratch);
         }
     }
 

@@ -55,8 +55,11 @@ public sealed class ProvisionerTests
             return Failures.TryPeek(out var f) && $"{file} {string.Join(' ', args)}".Contains(f.Match, StringComparison.Ordinal) ? new ShellResult(1, Failures.Dequeue().Log) : result;
         }
 
-        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
-            => inner.RunAsync(file, args, workingDirectory, stdin, stdout, ct);
+        public async Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
+        {
+            var result = await inner.RunAsync(file, args, workingDirectory, stdin, stdout, ct);
+            return Failures.TryPeek(out var f) && $"{file} {string.Join(' ', args)}".Contains(f.Match, StringComparison.Ordinal) ? new ShellResult(1, Failures.Dequeue().Log) : result;
+        }
     }
 
     private sealed class CollectingAudit : IAuditWriter
@@ -175,6 +178,50 @@ public sealed class ProvisionerTests
         Assert.IsTrue(features["kds"]!.GetValue<bool>(), "the kitchen cooks every order");
     }
 
+    private string CarryOutput() => _context.Steps.OrderBy(s => s.Id).Last(s => s.Name == "carry").Output ?? "";
+
+    private bool RestoredIntoTenantDb() => _shell.Commands.Any(c => c.Contains("pg_restore") && c.EndsWith("-d blue_tenantdb", StringComparison.Ordinal));
+
+    /// <summary>Branch.API's data is Tenant.API's: the first upgrade copies branchdb into tenantdb before the new stack boots, and never again.</summary>
+    [TestMethod]
+    public async Task An_upgrade_carries_the_old_branch_database_into_tenantdb_once()
+    {
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        Assert.AreEqual("tenantdb from blue_branchdb", CarryOutput());
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("pg_dump") && c.EndsWith("blue_branchdb", StringComparison.Ordinal)));
+        Assert.IsTrue(RestoredIntoTenantDb());
+        var carry = Steps().ToList().IndexOf("carry:Done");
+        Assert.IsTrue(carry < Steps().ToList().IndexOf("stack:Done"), "before the new stack boots and migrates");
+        Assert.IsTrue(carry < Steps().ToList().IndexOf("retired:Done"), "before the old database is dropped");
+
+        _shell.Commands.Clear();
+        await _provisioner.UpgradeAsync(_tenant.Id, "v3", null, CancellationToken.None);
+
+        Assert.AreEqual("tenantdb carried before", CarryOutput());
+        Assert.IsFalse(RestoredIntoTenantDb(), "what was written since is not overwritten");
+    }
+
+    /// <summary>A tenant upgraded before the carry step lost branchdb to the retired step: its newest backup that has it brings the data back.</summary>
+    [TestMethod]
+    public async Task A_tenant_whose_branch_database_is_gone_gets_it_back_from_the_newest_backup_holding_it()
+    {
+        foreach (var (id, files) in new[] { ("20260920-010000", new[] { "branchdb.dump" }), ("20260924-010000", new[] { "branchdb.dump" }), ("20260925-230000", new[] { "tenantdb.dump" }) })
+        {
+            var dir = Path.Combine(_root, "blue", "backups", id);
+            Directory.CreateDirectory(dir);
+            foreach (var file in files) await File.WriteAllTextAsync(Path.Combine(dir, file), id);
+            await File.WriteAllTextAsync(Path.Combine(dir, "manifest.json"), $$"""{"id":"{{id}}","at":"2026-09-20T01:00:00Z","sizeBytes":1,"databases":[],"hasUploads":false,"imageTag":"v1"}""");
+        }
+        _box.Failures.Enqueue(("pg_dump -U postgres -Fc blue_branchdb", "pg_dump: error: database \"blue_branchdb\" does not exist"));
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        Assert.AreEqual("tenantdb from backup 20260924-010000", CarryOutput(), "the newest with branchdb in it, not the newest of all");
+        Assert.IsTrue(RestoredIntoTenantDb());
+    }
+
     /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter café stays without inventory, finance and payroll.</summary>
     [TestMethod]
     public async Task An_upgrade_keeps_the_stack_in_the_plans_shape()
@@ -186,7 +233,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         AssertShape(ComposeOnDisk(), "loyalty", "accounts");
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
     }
 
     /// <summary>Up to Pro: every service is stamped and no queue is touched; down to Free: five go, with their queues.</summary>
@@ -272,7 +319,7 @@ public sealed class ProvisionerTests
     {
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "retired:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         Assert.AreEqual("v1", _tenant.PreviousImageTag);
@@ -340,7 +387,7 @@ public sealed class ProvisionerTests
 
         Assert.IsEmpty(_databases.Dropped, "an upgrade that rolls back leaves the retired database for the tag it goes back to");
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status, "the café is back on what worked");
         Assert.AreEqual("v1", _tenant.ImageTag);
         Assert.IsNull(_tenant.PreviousImageTag, "the tag that failed is nothing to go back to");
@@ -357,7 +404,7 @@ public sealed class ProvisionerTests
 
         await _provisioner.UpgradeAsync(_tenant.Id, "nope", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v1", _tenant.ImageTag);
         Assert.AreEqual(

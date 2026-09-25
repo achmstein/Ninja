@@ -358,6 +358,34 @@ public sealed class Provisioner(
             return $"dropped {string.Join(", ", TenantNaming.RetiredDatabases.Select(db => TenantNaming.Database(tenant.Slug, db)))}; {string.Join(", ", TenantNaming.RetiredQueues)} off vhost {vhost}";
         }, ct);
 
+    /// <summary>
+    /// A renamed service's data into its new database (<see cref="TenantNaming.RenamedDatabases"/>),
+    /// once per tenant: from the old database while it exists, else from the
+    /// newest backup holding it (an upgrade that dropped it before this step
+    /// existed). Runs after the upgrade's backup and before the new stack
+    /// boots, so the service migrates on what it had. A marker in the
+    /// tenant's folder keeps a later upgrade from carrying it again over data
+    /// written since.
+    /// </summary>
+    private Task<string> CarryStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
+        => Step(tenant, runId, "carry", async () =>
+        {
+            var said = new List<string>();
+            foreach (var (from, to) in TenantNaming.RenamedDatabases)
+            {
+                var marker = Path.Combine(Dir(tenant), $"{to}.carried");
+                if (File.Exists(marker))
+                {
+                    said.Add($"{to} carried before");
+                    continue;
+                }
+                var source = await backups.CarryAsync(tenant, from, to, ct);
+                await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} {source ?? "nothing to carry"}", ct);
+                said.Add(source is null ? $"no {from} to carry" : $"{to} from {source}");
+            }
+            return string.Join("; ", said);
+        }, ct);
+
     /// <summary>The shared broker user off the vhost: what a stack stamped before it had a user of its own still connected as. Nothing to do for a fresh one.</summary>
     private Task<string> BrokerLockdownStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "broker-lockdown", async () =>
@@ -512,6 +540,7 @@ public sealed class Provisioner(
 
         try
         {
+            await CarryStepAsync(tenant, runId, ct);
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);

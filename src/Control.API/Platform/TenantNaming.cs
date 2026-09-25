@@ -24,6 +24,14 @@ public static partial class TenantNaming
 
     public static readonly string[] RetiredQueues = ["Branch"];
 
+    /// <summary>
+    /// A service renamed with its data: Branch.API became Tenant.API with the
+    /// same tables and migration history, so branchdb's data is tenantdb's.
+    /// The carry step of an upgrade copies it over once, before the retired
+    /// step drops the old database.
+    /// </summary>
+    public static readonly (string From, string To)[] RenamedDatabases = [("branchdb", "tenantdb")];
+
     /// <summary>Every service a stack can run, as image suffix → compose service suffix; PlanCatalog.Services says which a plan does.</summary>
     public static readonly string[] Services =
     [
