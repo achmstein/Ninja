@@ -239,7 +239,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
           ),
 
           // Overlay with cutout
-          _ScanOverlay(hint: l10n.pointCameraAtRoomOrTableQr),
+          ScanOverlay(hint: l10n.pointCameraAtRoomOrTableQr),
 
           // Loading indicator
           if (_isProcessing)
@@ -259,10 +259,12 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   }
 }
 
-class _ScanOverlay extends StatelessWidget {
+/// The dimmed camera with a cut-out square and a hint under it, shared by
+/// the place scanner and the claim scanner
+class ScanOverlay extends StatelessWidget {
   final String hint;
 
-  const _ScanOverlay({required this.hint});
+  const ScanOverlay({super.key, required this.hint});
 
   @override
   Widget build(BuildContext context) {

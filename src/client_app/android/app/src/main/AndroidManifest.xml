@@ -50,6 +50,8 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/room/"/>
                 <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/table/"/>
+                <!-- A counter customer's one-time link to claim their account -->
+                <data android:scheme="https" android:host="chillax.site" android:path="/claim"/>
             </intent-filter>
         </activity>
         <!-- Hand VIEW intents to Flutter so go_router routes them -->

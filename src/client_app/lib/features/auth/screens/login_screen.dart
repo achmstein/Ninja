@@ -304,6 +304,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+
+                // Added at the counter by name and phone: the till's QR or
+                // link turns that into an account they can sign in to
+                Center(
+                  child: GestureDetector(
+                    onTap: () => context.push('/claim'),
+                    child: AppText(
+                      l10n.haveCafeCode,
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

@@ -935,6 +935,69 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ratedThanks => 'شكراً على تقييمك!';
+
+  @override
+  String get haveCafeCode => 'معاك كود من الكافيه؟';
+
+  @override
+  String claimTitle(String cafe) {
+    return 'حسابك في $cafe';
+  }
+
+  @override
+  String get claimIntro =>
+      'الكافيه ضافك من الكاشير. حط إيميل وباسورد عشان تدخل وتشوف نقاطك وطلباتك.';
+
+  @override
+  String get claimSubmit => 'اعمل حسابي';
+
+  @override
+  String get claimDone => 'حسابك جاهز';
+
+  @override
+  String get claimExpired => 'اللينك ده خلص. اطلب لينك جديد من الكافيه.';
+
+  @override
+  String get claimUsed => 'اللينك ده اتستخدم قبل كده. سجّل دخول بدل كده.';
+
+  @override
+  String get claimInvalid => 'اللينك ده مش صحيح.';
+
+  @override
+  String get claimEmailTaken => 'الإيميل ده عليه حساب بالفعل';
+
+  @override
+  String get claimScanOrPaste => 'صوّر كود الكافيه أو الزق اللينك';
+
+  @override
+  String get claimScan => 'صوّر الكود';
+
+  @override
+  String get claimPointCamera => 'وجّه الكاميرا على كود الكافيه';
+
+  @override
+  String get claimPasteLabel => 'اللينك أو الكود';
+
+  @override
+  String get claimPasteHint => 'الزق اللي الكافيه بعتهولك';
+
+  @override
+  String get claimContinue => 'كمّل';
+
+  @override
+  String get claimTryAnother => 'استخدم كود تاني';
+
+  @override
+  String get claimBadEmail => 'اكتب إيميل صحيح';
+
+  @override
+  String get claimPasswordTooShort => 'الباسورد لازم يكون ٨ حروف على الأقل.';
+
+  @override
+  String get claimTooMany => 'محاولات كتير. استنى دقيقة وجرب تاني.';
+
+  @override
+  String get claimFailed => 'معرفناش نعمل حسابك. جرب تاني.';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -1537,4 +1600,69 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ratedThanks => 'شكرًا على تقييمك!';
+
+  @override
+  String get haveCafeCode => 'هل لديك رمز من المقهى؟';
+
+  @override
+  String claimTitle(String cafe) {
+    return 'حسابك في $cafe';
+  }
+
+  @override
+  String get claimIntro =>
+      'أضافك المقهى عند الكاشير. أضف بريدًا إلكترونيًا وكلمة مرور لتسجيل الدخول ومتابعة نقاطك وطلباتك.';
+
+  @override
+  String get claimSubmit => 'إنشاء حسابي';
+
+  @override
+  String get claimDone => 'حسابك جاهز';
+
+  @override
+  String get claimExpired =>
+      'انتهت صلاحية هذا الرابط. اطلب رابطًا جديدًا من المقهى.';
+
+  @override
+  String get claimUsed =>
+      'تم استخدام هذا الرابط من قبل. سجّل الدخول بدلًا من ذلك.';
+
+  @override
+  String get claimInvalid => 'هذا الرابط غير صالح.';
+
+  @override
+  String get claimEmailTaken => 'هذا البريد الإلكتروني مرتبط بحساب بالفعل';
+
+  @override
+  String get claimScanOrPaste => 'امسح رمز المقهى أو الصق الرابط';
+
+  @override
+  String get claimScan => 'امسح الرمز';
+
+  @override
+  String get claimPointCamera => 'وجّه الكاميرا نحو رمز المقهى';
+
+  @override
+  String get claimPasteLabel => 'الرابط أو الرمز';
+
+  @override
+  String get claimPasteHint => 'الصق ما أرسله إليك المقهى';
+
+  @override
+  String get claimContinue => 'متابعة';
+
+  @override
+  String get claimTryAnother => 'استخدم رمزًا آخر';
+
+  @override
+  String get claimBadEmail => 'أدخل بريدًا إلكترونيًا صحيحًا';
+
+  @override
+  String get claimPasswordTooShort => 'يجب ألا تقل كلمة المرور عن ٨ أحرف.';
+
+  @override
+  String get claimTooMany => 'محاولات كثيرة. انتظر دقيقة ثم حاول مرة أخرى.';
+
+  @override
+  String get claimFailed => 'تعذّر إنشاء حسابك. حاول مرة أخرى.';
 }

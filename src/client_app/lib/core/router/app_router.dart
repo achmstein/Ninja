@@ -19,6 +19,7 @@ import '../../features/profile/screens/loyalty_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/claim/claim_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 /// Splash screen shown while checking authentication
@@ -93,6 +94,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // login would lose it. The page sends them on itself; a timed place
       // asks for sign-in only when they join or hold.
       final isPlaceLink = currentLocation.startsWith('/p/');
+      // A counter customer's link to take their account over: they have no
+      // way to sign in yet, which is the point of it
+      final isClaiming = currentLocation == '/claim';
 
       // While initializing, stay on or go to splash
       if (isInitializing) {
@@ -105,7 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect to login if not authenticated
-      if (!isAuthenticated && !isLoggingIn && !isRegistering && !isPlaceLink) {
+      if (!isAuthenticated && !isLoggingIn && !isRegistering && !isPlaceLink && !isClaiming) {
         return '/login';
       }
 
@@ -144,6 +148,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      // A counter customer's claim link opened as an App Link
+      // (https://{café}/claim?token=…), or the sign-in page's "Have a code
+      // from the café?" with no token yet
+      GoRoute(
+        path: '/claim',
+        builder: (context, state) => ClaimScreen(token: state.uri.queryParameters['token']),
       ),
 
       // A place's QR opened as an App Link (chillax.site/p/{id})

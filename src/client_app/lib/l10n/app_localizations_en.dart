@@ -944,4 +944,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratedThanks => 'Thanks for rating!';
+
+  @override
+  String get haveCafeCode => 'Have a code from the café?';
+
+  @override
+  String claimTitle(String cafe) {
+    return 'Your account at $cafe';
+  }
+
+  @override
+  String get claimIntro =>
+      'The café added you at the counter. Add an email and a password to sign in and see your points and orders.';
+
+  @override
+  String get claimSubmit => 'Create my account';
+
+  @override
+  String get claimDone => 'Your account is ready';
+
+  @override
+  String get claimExpired =>
+      'This link has expired. Ask the café for a new one.';
+
+  @override
+  String get claimUsed => 'This link was already used. Sign in instead.';
+
+  @override
+  String get claimInvalid => 'This link isn\'t valid.';
+
+  @override
+  String get claimEmailTaken => 'That email already has an account';
+
+  @override
+  String get claimScanOrPaste => 'Scan the café\'s QR code or paste the link';
+
+  @override
+  String get claimScan => 'Scan the QR code';
+
+  @override
+  String get claimPointCamera => 'Point the camera at the café\'s QR code';
+
+  @override
+  String get claimPasteLabel => 'Link or code';
+
+  @override
+  String get claimPasteHint => 'Paste what the café sent you';
+
+  @override
+  String get claimContinue => 'Continue';
+
+  @override
+  String get claimTryAnother => 'Use another code';
+
+  @override
+  String get claimBadEmail => 'Enter a valid email';
+
+  @override
+  String get claimPasswordTooShort => 'Password must be at least 8 characters.';
+
+  @override
+  String get claimTooMany => 'Too many tries. Wait a minute and try again.';
+
+  @override
+  String get claimFailed => 'Couldn\'t create your account. Try again.';
 }

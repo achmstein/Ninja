@@ -1808,6 +1808,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thanks for rating!'**
   String get ratedThanks;
+
+  /// No description provided for @haveCafeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a code from the café?'**
+  String get haveCafeCode;
+
+  /// No description provided for @claimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account at {cafe}'**
+  String claimTitle(String cafe);
+
+  /// No description provided for @claimIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The café added you at the counter. Add an email and a password to sign in and see your points and orders.'**
+  String get claimIntro;
+
+  /// No description provided for @claimSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create my account'**
+  String get claimSubmit;
+
+  /// No description provided for @claimDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is ready'**
+  String get claimDone;
+
+  /// No description provided for @claimExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired. Ask the café for a new one.'**
+  String get claimExpired;
+
+  /// No description provided for @claimUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This link was already used. Sign in instead.'**
+  String get claimUsed;
+
+  /// No description provided for @claimInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link isn\'t valid.'**
+  String get claimInvalid;
+
+  /// No description provided for @claimEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That email already has an account'**
+  String get claimEmailTaken;
+
+  /// No description provided for @claimScanOrPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the café\'s QR code or paste the link'**
+  String get claimScanOrPaste;
+
+  /// No description provided for @claimScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code'**
+  String get claimScan;
+
+  /// No description provided for @claimPointCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the café\'s QR code'**
+  String get claimPointCamera;
+
+  /// No description provided for @claimPasteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link or code'**
+  String get claimPasteLabel;
+
+  /// No description provided for @claimPasteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste what the café sent you'**
+  String get claimPasteHint;
+
+  /// No description provided for @claimContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get claimContinue;
+
+  /// No description provided for @claimTryAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another code'**
+  String get claimTryAnother;
+
+  /// No description provided for @claimBadEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email'**
+  String get claimBadEmail;
+
+  /// No description provided for @claimPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get claimPasswordTooShort;
+
+  /// No description provided for @claimTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a minute and try again.'**
+  String get claimTooMany;
+
+  /// No description provided for @claimFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create your account. Try again.'**
+  String get claimFailed;
 }
 
 class _AppLocalizationsDelegate

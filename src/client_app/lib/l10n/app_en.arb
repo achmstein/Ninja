@@ -535,5 +535,32 @@
   "billTotal": "Bill total",
   "paidSeveralWays": "Paid several ways",
   "howWasIt": "How was it?",
-  "ratedThanks": "Thanks for rating!"
+  "ratedThanks": "Thanks for rating!",
+  "haveCafeCode": "Have a code from the café?",
+  "claimTitle": "Your account at {cafe}",
+  "@claimTitle": {
+    "placeholders": {
+      "cafe": {
+        "type": "String"
+      }
+    }
+  },
+  "claimIntro": "The café added you at the counter. Add an email and a password to sign in and see your points and orders.",
+  "claimSubmit": "Create my account",
+  "claimDone": "Your account is ready",
+  "claimExpired": "This link has expired. Ask the café for a new one.",
+  "claimUsed": "This link was already used. Sign in instead.",
+  "claimInvalid": "This link isn't valid.",
+  "claimEmailTaken": "That email already has an account",
+  "claimScanOrPaste": "Scan the café's QR code or paste the link",
+  "claimScan": "Scan the QR code",
+  "claimPointCamera": "Point the camera at the café's QR code",
+  "claimPasteLabel": "Link or code",
+  "claimPasteHint": "Paste what the café sent you",
+  "claimContinue": "Continue",
+  "claimTryAnother": "Use another code",
+  "claimBadEmail": "Enter a valid email",
+  "claimPasswordTooShort": "Password must be at least 8 characters.",
+  "claimTooMany": "Too many tries. Wait a minute and try again.",
+  "claimFailed": "Couldn't create your account. Try again."
 }
