@@ -14,6 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { NewCustomerDialog } from '@/features/customer/new-customer-dialog'
+import { customerName, type IdentityCustomer } from '@/features/customer/counter-customers'
 import type { SaleCustomer } from './cart'
 
 // Keycloak user as the identity BFF route returns it. No generated SDK for
@@ -26,6 +28,7 @@ type IdentityUser = {
   firstName?: string
   lastName?: string
   phoneNumber?: string
+  addedAtCounter?: boolean
 }
 
 function displayName(user: IdentityUser): string {
@@ -84,6 +87,7 @@ export function CustomerDialog({
   const t = useT()
   const [term, setTerm] = useState('')
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
+  const [adding, setAdding] = useState(false)
   const debouncedTerm = useDebounced(term.trim(), SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
@@ -115,6 +119,18 @@ export function CustomerDialog({
   const typedName = term.trim()
   const useTypedName = () => {
     onSelect({ id: null, name: typedName })
+    onOpenChange(false)
+  }
+
+  // Someone the till does not know yet, by name and phone: an account made
+  // here, found again by their number next time
+  const pickNew = (customer: IdentityCustomer) => {
+    setAdding(false)
+    onSelect({
+      id: customer.id,
+      name: customerName(customer),
+      phone: customer.phoneNumber,
+    })
     onOpenChange(false)
   }
 
@@ -196,9 +212,19 @@ export function CustomerDialog({
               {t('somethingWentWrong')}
             </p>
           ) : users.length === 0 ? (
-            <p className='text-muted-foreground py-8 text-center text-sm'>
-              {t('noCustomersFound')}
-            </p>
+            <div className='flex flex-col items-center gap-3 py-6'>
+              <p className='text-muted-foreground text-center text-sm'>
+                {t('noCustomersFound')}
+              </p>
+              <Button
+                variant='outline'
+                className='h-11 gap-2'
+                onClick={() => setAdding(true)}
+              >
+                <UserPlus className='size-4' />
+                {t('newCustomer')}
+              </Button>
+            </div>
           ) : (
             <div className='flex flex-col'>
               {users.map((user) => (
@@ -246,6 +272,7 @@ export function CustomerDialog({
                       id: user.id,
                       name: displayName(user),
                       phone: user.phoneNumber,
+                      addedAtCounter: !!user.addedAtCounter,
                     })
                   }
                 >
@@ -257,18 +284,35 @@ export function CustomerDialog({
           )}
         </div>
 
-        <Button
-          variant='outline'
-          size='lg'
-          className='h-12'
-          onClick={() => onOpenChange(false)}
-        >
-          {t('cancel')}
-        </Button>
+        <div className='grid grid-cols-2 gap-2'>
+          <Button
+            variant='outline'
+            size='lg'
+            className='h-12'
+            onClick={() => onOpenChange(false)}
+          >
+            {t('cancel')}
+          </Button>
+          <Button
+            variant='secondary'
+            size='lg'
+            className='h-12 gap-2'
+            onClick={() => setAdding(true)}
+          >
+            <UserPlus className='size-4' />
+            {t('newCustomer')}
+          </Button>
+        </div>
       </DialogContent>
       <CustomerCard
         customer={cardFor}
         onOpenChange={(open) => !open && setCardFor(null)}
+      />
+      <NewCustomerDialog
+        open={adding}
+        onOpenChange={setAdding}
+        initialText={typedName}
+        onPick={pickNew}
       />
     </Dialog>
   )

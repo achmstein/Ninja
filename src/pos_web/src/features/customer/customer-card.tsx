@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Award, MessageCircle, Phone, User, Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Award, MessageCircle, Phone, QrCode, User, Wallet } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,19 +9,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useFeatures } from '@/lib/brand'
+import { useBrand, useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { whatsAppLink } from '@/lib/phone'
 import { PayTabDialog } from './pay-tab-dialog'
 import { useLoyalty, useTab } from './use-customer-card'
+import { AppLinkDialog } from './app-link-dialog'
+import { useAddedAtCounter } from './counter-customers'
 
 /** Someone the till can look up: an identity account, with what it knows of them. */
 export type CardCustomer = {
   id: string
   name: string
   phone?: string | null
+  /** Added at the counter and not claimed yet; looked up by phone when not known. */
+  addedAtCounter?: boolean
 }
 
 // 100 points = 1 EGP, the same constant Loyalty and Ordering each keep
@@ -50,7 +54,13 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
   const t = useT()
   const money = useMoney()
   const features = useFeatures()
+  const country = useBrand()?.locale.country ?? 'EG'
   const [payOpen, setPayOpen] = useState(false)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const addedAtCounter = useAddedAtCounter(customer)
+  // A link belongs to the customer it was asked for; the next card starts closed
+  const customerId = customer?.id
+  useEffect(() => setLinkOpen(false), [customerId])
 
   const open = customer !== null
   const loyalty = useLoyalty(customer?.id, open && features.loyalty)
@@ -81,12 +91,17 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
 
   return (
     <>
-      <Dialog open={open && !payOpen} onOpenChange={onOpenChange}>
+      <Dialog open={open && !payOpen && !linkOpen} onOpenChange={onOpenChange}>
         <DialogContent className='flex flex-col gap-4 sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 text-xl'>
               <User className='size-5 shrink-0' />
               <span className='truncate'>{customer?.name || t('guest')}</span>
+              {addedAtCounter && (
+                <Badge variant='secondary' className='shrink-0'>
+                  {t('addedAtCounter')}
+                </Badge>
+              )}
             </DialogTitle>
             {customer?.phone && (
               <p className='text-muted-foreground flex items-center gap-1.5 text-sm' dir='ltr'>
@@ -94,7 +109,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
                 {customer.phone}
                 {/* The customer on WhatsApp, from the cashier's own phone or this browser */}
                 <a
-                  href={whatsAppLink(customer.phone)}
+                  href={whatsAppLink(customer.phone, undefined, country)}
                   target='_blank'
                   rel='noreferrer'
                   aria-label='WhatsApp'
@@ -173,6 +188,19 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               )
             )}
 
+          {/* Their points are theirs to see in the app once they claim the account */}
+          {addedAtCounter && (
+            <Button
+              variant='secondary'
+              size='lg'
+              className='h-12 gap-2'
+              onClick={() => setLinkOpen(true)}
+            >
+              <QrCode className='size-5' />
+              {t('sendAppLink')}
+            </Button>
+          )}
+
           <Button
             variant='outline'
             size='lg'
@@ -183,6 +211,11 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
           </Button>
         </DialogContent>
       </Dialog>
+
+      <AppLinkDialog
+        customer={linkOpen && customer ? customer : null}
+        onOpenChange={(next) => !next && setLinkOpen(false)}
+      />
 
       {features.tabs && customer && (
         <PayTabDialog
