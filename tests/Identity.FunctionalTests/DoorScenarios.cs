@@ -127,7 +127,7 @@ public sealed class DoorScenarios
     }
 
     [TestMethod]
-    public async Task A_staff_account_is_an_Admin_or_a_Cashier_and_only_an_Admin_can_be_an_Owner()
+    public async Task A_staff_account_is_an_Admin_a_Cashier_or_a_Kitchen_and_only_an_Admin_can_be_an_Owner()
     {
         var (byManager, _) = await Suite.BackOffice.RefusedAsync(HttpMethod.Post, Suite.Url("/register-admin"), new
         {
@@ -140,7 +140,7 @@ public sealed class DoorScenarios
             name = "Omar", email = AnEmail("omar"), password = "a-good-password", role = "Barista",
         });
         Assert.AreEqual(HttpStatusCode.BadRequest, barista);
-        Assert.Contains("Admin or Cashier", why);
+        Assert.Contains("Admin, Cashier or Kitchen", why);
 
         var (cashierOwner, told) = await Suite.Owner.RefusedAsync(HttpMethod.Post, Suite.Url("/register-admin"), new
         {
