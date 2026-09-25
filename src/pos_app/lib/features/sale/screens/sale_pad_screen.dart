@@ -699,7 +699,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                                   child: (customer.id ?? '').isNotEmpty
                                       // An account: tap for the card — points and tab at a glance
                                       ? FTappable(
-                                          onPress: () => showCustomerCard(context, id: customer.id!, name: customer.name, phone: customer.phone),
+                                          onPress: () => showCustomerCard(context, id: customer.id!, name: customer.name, phone: customer.phone, addedAtCounter: customer.addedAtCounter),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,

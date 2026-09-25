@@ -2779,6 +2779,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reprint'**
   String get reprint;
+
+  /// No description provided for @newCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'New customer'**
+  String get newCustomer;
+
+  /// No description provided for @newCustomerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get newCustomerName;
+
+  /// No description provided for @newCustomerPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get newCustomerPhone;
+
+  /// No description provided for @createCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add customer'**
+  String get createCustomer;
+
+  /// No description provided for @alreadyACustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Already a customer'**
+  String get alreadyACustomer;
+
+  /// No description provided for @useThisCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this customer'**
+  String get useThisCustomer;
+
+  /// No description provided for @didYouMean.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you mean?'**
+  String get didYouMean;
+
+  /// No description provided for @sameName.
+  ///
+  /// In en, this message translates to:
+  /// **'Same name'**
+  String get sameName;
+
+  /// No description provided for @phoneLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number like {placeholder}'**
+  String phoneLike(String placeholder);
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get nameRequired;
+
+  /// No description provided for @addedAtCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Added at the counter'**
+  String get addedAtCounter;
+
+  /// No description provided for @sendAppLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send app link'**
+  String get sendAppLink;
+
+  /// No description provided for @appLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App link for {name}'**
+  String appLinkTitle(String name);
+
+  /// No description provided for @appLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'They scan it with their phone camera to set an email and password. It works once.'**
+  String get appLinkHint;
+
+  /// No description provided for @appLinkUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Works until {time}'**
+  String appLinkUntil(String time);
+
+  /// No description provided for @sendOnWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send on WhatsApp'**
+  String get sendOnWhatsApp;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
+
+  /// No description provided for @appLinkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}'**
+  String appLinkMessage(String name, String cafe, String url);
+
+  /// No description provided for @alreadyHasAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'This customer already has their own account'**
+  String get alreadyHasAccount;
+
+  /// No description provided for @tooManyLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many links just now, try again in a minute'**
+  String get tooManyLinks;
 }
 
 class _AppLocalizationsDelegate

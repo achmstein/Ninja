@@ -11,6 +11,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/customer_card.dart';
 import '../providers/customer_providers.dart';
+import 'app_link_dialog.dart';
 import 'pay_tab_dialog.dart';
 
 /// The customer in front of the cashier, at a glance: their points (as
@@ -18,7 +19,10 @@ import 'pay_tab_dialog.dart';
 /// never at the till) and their tab, which the till can take money against.
 /// Opened by tapping the customer wherever they already appear; there is no
 /// list of everyone — the back office has that.
-Future<void> showCustomerCard(BuildContext context, {required String id, required String name, String? phone}) {
+///
+/// A customer [addedAtCounter] (by name and phone, not yet claimed) is
+/// marked so, and offers the one-time app link that makes the account theirs.
+Future<void> showCustomerCard(BuildContext context, {required String id, required String name, String? phone, bool addedAtCounter = false}) {
   return showFDialog<void>(
     context: context,
     useRootNavigator: true,
@@ -26,14 +30,15 @@ Future<void> showCustomerCard(BuildContext context, {required String id, require
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone)),
+      builder: (context, _) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter),
     ),
   );
 }
 
 class _CustomerCard extends ConsumerWidget {
   final CardCustomer customer;
-  const _CustomerCard({required this.customer});
+  final bool addedAtCounter;
+  const _CustomerCard({required this.customer, this.addedAtCounter = false});
 
   String _tierLabel(AppLocalizations l10n, String tier) => switch (tier) {
         'Bronze' => l10n.tierBronze,
@@ -116,10 +121,17 @@ class _CustomerCard extends ConsumerWidget {
               const SizedBox(width: 6),
               // The customer on WhatsApp, from the till's own account
               GestureDetector(
-                onTap: () => openWhatsApp(phone),
+                onTap: () => openWhatsApp(phone, country: ref.read(brandProvider).locale.country),
                 child: Icon(FIcons.messageCircle, size: 16, color: AppColors.emerald(brightness)),
               ),
             ]),
+          ],
+          if (addedAtCounter) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FBadge(variant: FBadgeVariant.secondary, child: Text(l10n.addedAtCounter)),
+            ),
           ],
           const SizedBox(height: 16),
           if (features.loyalty) ...[
@@ -205,6 +217,19 @@ class _CustomerCard extends ConsumerWidget {
                     ),
             ),
             const SizedBox(height: 12),
+          ],
+          // Their account, theirs: a link to set an email and a password
+          if (addedAtCounter && online) ...[
+            SizedBox(
+              height: 48,
+              child: FButton(
+                variant: FButtonVariant.outline,
+                onPress: () => sendAppLink(context, ref, id: customer.id, name: customer.name, phone: customer.phone),
+                prefix: const Icon(FIcons.qrCode, size: 18),
+                child: Text(l10n.sendAppLink, style: theme.typography.base.forButton),
+              ),
+            ),
+            const SizedBox(height: 8),
           ],
           const SizedBox(height: 4),
           SizedBox(

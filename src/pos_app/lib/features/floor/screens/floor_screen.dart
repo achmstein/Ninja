@@ -159,7 +159,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final picked = await showCustomerDialog(context, accountsOnly: true, title: l10n.findCustomer);
     final id = picked?.id;
     if (id == null || id.isEmpty || !mounted) return;
-    await showCustomerCard(context, id: id, name: picked!.name, phone: picked.phone);
+    await showCustomerCard(context, id: id, name: picked!.name, phone: picked.phone, addedAtCounter: picked.addedAtCounter);
   }
 
   // A table with a bill is among the bills; the list only offers the free

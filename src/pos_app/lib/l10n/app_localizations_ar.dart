@@ -1522,4 +1522,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reprint => 'إعادة طباعة';
+
+  @override
+  String get newCustomer => 'عميل جديد';
+
+  @override
+  String get newCustomerName => 'الاسم';
+
+  @override
+  String get newCustomerPhone => 'رقم الجوال';
+
+  @override
+  String get createCustomer => 'إضافة العميل';
+
+  @override
+  String get alreadyACustomer => 'عميل مسجَّل بالفعل';
+
+  @override
+  String get useThisCustomer => 'استخدم هذا العميل';
+
+  @override
+  String get didYouMean => 'هل تقصد؟';
+
+  @override
+  String get sameName => 'الاسم نفسه';
+
+  @override
+  String phoneLike(String placeholder) {
+    return 'أدخل رقمًا بصيغة $placeholder';
+  }
+
+  @override
+  String get nameRequired => 'أدخل الاسم';
+
+  @override
+  String get addedAtCounter => 'أُضيف من الكاشير';
+
+  @override
+  String get sendAppLink => 'إرسال رابط التطبيق';
+
+  @override
+  String appLinkTitle(String name) {
+    return 'رابط التطبيق لـ$name';
+  }
+
+  @override
+  String get appLinkHint =>
+      'يمسحه بكاميرا جواله ليضيف بريدًا إلكترونيًا وكلمة مرور. يعمل مرة واحدة فقط.';
+
+  @override
+  String appLinkUntil(String time) {
+    return 'صالح حتى $time';
+  }
+
+  @override
+  String get sendOnWhatsApp => 'إرسال عبر واتساب';
+
+  @override
+  String get copyLink => 'نسخ الرابط';
+
+  @override
+  String get linkCopied => 'تم نسخ الرابط';
+
+  @override
+  String appLinkMessage(String name, String cafe, String url) {
+    return 'مرحبًا $name، نقاطك في $cafe بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): $url';
+  }
+
+  @override
+  String get alreadyHasAccount => 'لدى هذا العميل حساب خاص به بالفعل';
+
+  @override
+  String get tooManyLinks => 'روابط كثيرة خلال وقت قصير، حاول بعد دقيقة';
 }

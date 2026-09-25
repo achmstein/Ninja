@@ -7,7 +7,9 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/phone.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
+import '../../customers/dialogs/new_customer_dialog.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../models/sale_line.dart';
 
@@ -101,6 +103,15 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
 
   void _pick(SaleCustomer customer) => Navigator.of(context, rootNavigator: true).pop(customer);
 
+  // A customer by name and phone, made here: what was typed in the search
+  // goes into the field it reads as
+  Future<void> _newCustomer() async {
+    final typed = _term.text.trim();
+    final asPhone = looksLikePhone(typed);
+    final added = await showNewCustomerDialog(context, name: asPhone ? '' : typed, phone: asPhone ? typed : '');
+    if (added != null && mounted) _pick(added);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -154,10 +165,27 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
               ),
               const SizedBox(height: 16),
             ],
-            FTextField(
-              control: FTextFieldControl.managed(controller: _term),
-              hint: l10n.searchCustomersPlaceholder,
-              autofocus: true,
+            Row(
+              children: [
+                Expanded(
+                  child: FTextField(
+                    control: FTextFieldControl.managed(controller: _term),
+                    hint: l10n.searchCustomersPlaceholder,
+                    autofocus: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 44,
+                  child: FButton(
+                    variant: FButtonVariant.outline,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: _newCustomer,
+                    prefix: const Icon(FIcons.userPlus, size: 18),
+                    child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
+                  ),
+                ),
+              ],
             ),
             if (!widget.accountsOnly && typedName.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -218,7 +246,22 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                 : _failed
                 ? centered(l10n.somethingWentWrong)
                 : _users.isEmpty
-                ? centered(l10n.noCustomersFound)
+                // Nobody by that name or number: add them, with what was typed
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      centered(l10n.noCustomersFound),
+                      SizedBox(
+                        height: 48,
+                        child: FButton(
+                          onPress: _newCustomer,
+                          prefix: const Icon(FIcons.userPlus, size: 18),
+                          child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
+                        ),
+                      ),
+                    ],
+                  )
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -229,7 +272,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                         children: [
                           Expanded(
                             child: FTappable(
-                              onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber)),
+                              onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter)),
                               builder: (context, states, child) => Container(
                                 constraints: const BoxConstraints(minHeight: 56),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -282,7 +325,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                             dimension: 44,
                             child: FButton.icon(
                               variant: FButtonVariant.ghost,
-                              onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber),
+                              onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter),
                               child: Icon(FIcons.info, size: 20, color: theme.colors.mutedForeground),
                             ),
                           ),

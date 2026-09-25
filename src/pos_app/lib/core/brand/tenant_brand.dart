@@ -133,6 +133,11 @@ class TenantBrand {
   /// The kind of place the café was created as (`coffee_shop`,
   /// `cloud_kitchen`, ...); null from a stack that does not say
   final String? businessType;
+
+  /// Where customers open the menu (`https://…`, no trailing slash); null
+  /// when provisioning has not said. The app link a counter customer
+  /// claims their account with points there.
+  final String? customerUrl;
   final int version;
 
   const TenantBrand({
@@ -144,6 +149,7 @@ class TenantBrand {
     this.defaultThemeMode,
     this.features = TenantFeatures.all,
     this.businessType,
+    this.customerUrl,
     this.version = 0,
   });
 
@@ -178,6 +184,7 @@ class TenantBrand {
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
       businessType: json['businessType'] as String?,
+      customerUrl: _origin(json['customerUrl']),
       version: (json['version'] as num?)?.toInt() ?? 0,
     );
   }
@@ -194,6 +201,7 @@ class TenantBrand {
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
         businessType: json['businessType'] as String?,
+        customerUrl: _origin(json['customerUrl']),
         version: (json['version'] as num?)?.toInt() ?? 0,
       );
 
@@ -206,6 +214,7 @@ class TenantBrand {
         'defaultThemeMode': defaultThemeMode,
         'features': features.toJson(),
         'businessType': businessType,
+        'customerUrl': customerUrl,
         'version': version,
       };
 
@@ -228,6 +237,14 @@ class TenantBrand {
     final v = value.trim().toLowerCase();
     return RegExp(r'^#[0-9a-f]{6}$').hasMatch(v) ? v : null;
   }
+}
+
+/// An absolute http(s) origin without its trailing slash, else null
+String? _origin(Object? value) {
+  if (value is! String) return null;
+  final v = value.trim();
+  if (!v.startsWith('http://') && !v.startsWith('https://')) return null;
+  return v.endsWith('/') ? v.substring(0, v.length - 1) : v;
 }
 
 /// `light` or `dark`, anything else follows the device

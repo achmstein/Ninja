@@ -61,6 +61,7 @@ dependencies:
   url_launcher: ^6.3.2
   # The connect screen reads the QR code from the café's admin
   mobile_scanner: ^6.0.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

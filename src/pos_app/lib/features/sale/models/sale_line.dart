@@ -120,12 +120,19 @@ class SaleCustomer {
   /// As the search knew it; shown on the customer card
   final String? phone;
 
-  const SaleCustomer({this.id, required this.name, this.phone});
+  /// Added at the counter and not yet claimed: their card offers the app link
+  final bool addedAtCounter;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'phone': phone};
+  const SaleCustomer({this.id, required this.name, this.phone, this.addedAtCounter = false});
 
-  factory SaleCustomer.fromJson(Map<String, dynamic> json) =>
-      SaleCustomer(id: json['id'] as String?, name: json['name'] as String? ?? '', phone: json['phone'] as String?);
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'phone': phone, if (addedAtCounter) 'addedAtCounter': true};
+
+  factory SaleCustomer.fromJson(Map<String, dynamic> json) => SaleCustomer(
+        id: json['id'] as String?,
+        name: json['name'] as String? ?? '',
+        phone: json['phone'] as String?,
+        addedAtCounter: json['addedAtCounter'] as bool? ?? false,
+      );
 }
 
 double saleTotal(List<SaleLine> lines) => lines.fold(0, (sum, l) => sum + l.total);

@@ -1509,4 +1509,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reprint => 'Reprint';
+
+  @override
+  String get newCustomer => 'New customer';
+
+  @override
+  String get newCustomerName => 'Name';
+
+  @override
+  String get newCustomerPhone => 'Phone';
+
+  @override
+  String get createCustomer => 'Add customer';
+
+  @override
+  String get alreadyACustomer => 'Already a customer';
+
+  @override
+  String get useThisCustomer => 'Use this customer';
+
+  @override
+  String get didYouMean => 'Did you mean?';
+
+  @override
+  String get sameName => 'Same name';
+
+  @override
+  String phoneLike(String placeholder) {
+    return 'Enter a number like $placeholder';
+  }
+
+  @override
+  String get nameRequired => 'Enter a name';
+
+  @override
+  String get addedAtCounter => 'Added at the counter';
+
+  @override
+  String get sendAppLink => 'Send app link';
+
+  @override
+  String appLinkTitle(String name) {
+    return 'App link for $name';
+  }
+
+  @override
+  String get appLinkHint =>
+      'They scan it with their phone camera to set an email and password. It works once.';
+
+  @override
+  String appLinkUntil(String time) {
+    return 'Works until $time';
+  }
+
+  @override
+  String get sendOnWhatsApp => 'Send on WhatsApp';
+
+  @override
+  String get copyLink => 'Copy link';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String appLinkMessage(String name, String cafe, String url) {
+    return 'Hi $name, your points at $cafe are waiting. Set up your account here (works for 30 minutes): $url';
+  }
+
+  @override
+  String get alreadyHasAccount => 'This customer already has their own account';
+
+  @override
+  String get tooManyLinks => 'Too many links just now, try again in a minute';
 }
