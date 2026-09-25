@@ -20,7 +20,7 @@ public sealed class FakeKeycloak : IAsyncDisposable
 {
     public const string Realm = "ninja";
 
-    private static readonly string[] RealmRoles = ["Admin", "Cashier", "Owner"];
+    private static readonly string[] RealmRoles = ["Admin", "Cashier", "Owner", "Customer"];
 
     private readonly WebApplication _app;
     private readonly ConcurrentDictionary<string, JsonObject> _users = new();
@@ -100,6 +100,11 @@ public sealed class FakeKeycloak : IAsyncDisposable
         app.MapPost($"{admin}/users", (JsonObject user) =>
         {
             var email = user["email"]?.GetValue<string>() ?? "";
+            if (email.Length == 0)
+            {
+                // What Keycloak 26 answers in a realm that signs in by email
+                return Results.BadRequest(new { field = "email", errorMessage = "error-user-attribute-required" });
+            }
             if (UserByEmail(email) is not null)
             {
                 return Results.Conflict(new { errorMessage = "User exists with same email" });
@@ -112,7 +117,8 @@ public sealed class FakeKeycloak : IAsyncDisposable
             return Results.Created($"{admin}/users/{id}", null);
         });
 
-        app.MapGet($"{admin}/users", (int? first, int? max) => Results.Ok(_users.Values
+        app.MapGet($"{admin}/users", (int? first, int? max, string? email) => Results.Ok(_users.Values
+            .Where(u => email is null || string.Equals(u["email"]?.GetValue<string>(), email, StringComparison.OrdinalIgnoreCase))
             .OrderBy(u => u["username"]?.GetValue<string>(), StringComparer.OrdinalIgnoreCase)
             .Skip(first ?? 0)
             .Take(max ?? 100)
@@ -126,6 +132,13 @@ public sealed class FakeKeycloak : IAsyncDisposable
         app.MapPut($"{admin}/users/{{id}}", (string id, JsonObject user) =>
         {
             if (!_users.ContainsKey(id)) return Results.NotFound();
+            var email = user["email"]?.GetValue<string>();
+            if (email is not null && UserByEmail(email) is { } holder && holder["id"]?.GetValue<string>() != id)
+            {
+                return Results.Conflict(new { errorMessage = "User exists with same email" });
+            }
+            // An email-as-username realm: the username follows the email
+            if (email is not null) user["username"] = email;
             user["id"] = id;
             _users[id] = user;
             return Results.NoContent();

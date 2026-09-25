@@ -19,6 +19,8 @@ builder.Services.AddHttpClient("KeycloakAdmin", client =>
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 builder.Services.AddSingleton<KeycloakAdmin>();
+builder.Services.AddSingleton<TenantCountry>();
+builder.Services.AddCounterCustomerRateLimits(builder.Configuration);
 
 // The customer index the till and the admin search from: Keycloak's own
 // search matches name and email as plain substrings and costs a role call
@@ -38,6 +40,7 @@ app.MapDefaultEndpoints();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Any write that goes through this service (a registration, a profile or
 // role or branch change) rebuilds the directory shortly after, so the till
@@ -60,6 +63,12 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
     var realm = config["Keycloak:Realm"] ?? "chillax";
     var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
     var adminClientSecret = config["Keycloak:AdminClientSecret"];
+
+    // The counter's stand-in addresses are nobody's to sign up with
+    if (CounterCustomer.IsStandInEmail(request.Email))
+    {
+        return Results.BadRequest(new { message = "Enter a valid email" });
+    }
 
     var client = httpClientFactory.CreateClient("KeycloakAdmin");
 
@@ -304,7 +313,7 @@ app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, in
     var result = matches
         .Skip(first ?? 0)
         .Take(max ?? 50)
-        .Select(ToDto)
+        .Select(UserDto.From)
         .ToList();
 
     return Results.Ok(result);
@@ -313,7 +322,7 @@ app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, in
 }).RequireAuthorization("Pos");
 
 // Get user by ID endpoint (admin only)
-app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFactory httpClientFactory, IConfiguration config, TenantCountry country) =>
 {
     var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
     var realm = config["Keycloak:Realm"] ?? "chillax";
@@ -374,18 +383,7 @@ app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFact
         realmRoles = roles?.Select(r => r.Name).Where(n => n != null).Cast<string>().ToList() ?? [];
     }
 
-    return Results.Ok(new UserDto(
-        user.Id,
-        user.Username,
-        user.Email,
-        user.FirstName,
-        user.LastName,
-        user.Enabled,
-        user.CreatedTimestamp,
-        realmRoles,
-        user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault(),
-        BranchesOf(user.Attributes)
-    ));
+    return Results.Ok(UserDto.From(UserDirectory.FromKeycloak(user, realmRoles, country.Code)));
 }).RequireAuthorization("Admin");
 
 // Get user count endpoint
@@ -516,6 +514,10 @@ app.MapPost("/api/identity/update-email", async (UpdateEmailRequest request, Htt
         return Results.NotFound(new { message = "User not found" });
     }
 
+    if (CounterCustomer.IsStandInEmail(request.NewEmail))
+    {
+        return Results.BadRequest(new { message = "Enter a valid email" });
+    }
     userJson["email"] = request.NewEmail;
     userJson["emailVerified"] = false;
 
@@ -1118,7 +1120,7 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
     return Results.Ok(new
     {
         name = fullName,
-        email = user.Email,
+        email = CounterCustomer.VisibleEmail(user.Email),
         phoneNumber = phoneNumber,
         branches = BranchesOf(user.Attributes),
         isProfileComplete = isProfileComplete
@@ -1128,21 +1130,11 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
 // Branch ids from the `branches` user attribute (strings on the wire)
 static List<int> BranchesOf(Dictionary<string, string[]>? attributes) => UserAttributes.BranchesOf(attributes);
 
-static UserDto ToDto(DirectoryUser user) => new(
-    user.Id,
-    user.Username,
-    user.Email,
-    user.FirstName,
-    user.LastName,
-    user.Enabled,
-    user.CreatedTimestamp,
-    user.RealmRoles.ToList(),
-    user.PhoneNumber,
-    user.Branches.ToList());
-
 // "Admin" or "Admin,Owner,Cashier"
 static string[] SplitRoles(string? roles) =>
     (roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+app.MapCounterCustomers();
 
 app.Run();
 
@@ -1154,6 +1146,7 @@ record UpdateEmailRequest(string NewEmail);
 record UpdateNameRequest(string NewName);
 record UpdateProfileRequest(string? Name, string? PhoneNumber);
 
+/// <param name="AddedAtCounter">Added at the till by name and phone and not yet claimed by its customer: no email, no password, a "Send app link" away from being theirs.</param>
 record UserDto(
     string Id,
     string? Username,
@@ -1164,8 +1157,23 @@ record UserDto(
     long? CreatedTimestamp,
     List<string> RealmRoles,
     string? PhoneNumber,
-    List<int> Branches
-);
+    List<int> Branches,
+    bool AddedAtCounter = false
+)
+{
+    public static UserDto From(DirectoryUser user) => new(
+        user.Id,
+        user.Username,
+        user.Email,
+        user.FirstName,
+        user.LastName,
+        user.Enabled,
+        user.CreatedTimestamp,
+        user.RealmRoles.ToList(),
+        user.PhoneNumber,
+        user.Branches.ToList(),
+        user.AddedAtCounter);
+}
 
 // Keycloak user model for deserialization
 class KeycloakUser

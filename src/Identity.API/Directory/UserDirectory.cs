@@ -1,3 +1,5 @@
+using Ninja.ServiceDefaults;
+
 namespace Ninja.Identity.API.Directory;
 
 /// <summary>One user as the directory holds it: what Keycloak knows plus the normalized forms search runs on.</summary>
@@ -11,7 +13,9 @@ public sealed record DirectoryUser(
     long? CreatedTimestamp,
     IReadOnlyList<string> RealmRoles,
     string? PhoneNumber,
-    IReadOnlyList<int> Branches)
+    IReadOnlyList<int> Branches,
+    bool AddedAtCounter = false,
+    string PhoneNormalized = "")
 {
     public string DisplayName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))) is { Length: > 0 } full ? full : Username ?? "";
 
@@ -64,6 +68,20 @@ public sealed class DirectorySnapshot(IReadOnlyList<DirectoryUser> users, DateTi
             .ThenBy(m => m.User.DisplayName, StringComparer.OrdinalIgnoreCase)
             .Select(m => m.User);
     }
+
+    /// <summary>
+    /// The one user outside the given roles whose phone, normalized the same
+    /// way, is this number: how the till knows a customer is already here.
+    /// </summary>
+    public DirectoryUser? ByPhone(string normalizedPhone, string[] excludeRoles) =>
+        string.IsNullOrEmpty(normalizedPhone)
+            ? null
+            : Users
+                .Where(u => u.PhoneNormalized == normalizedPhone && !u.RealmRoles.Any(excludeRoles.Contains))
+                // A person who signed up themselves before one the counter added
+                .OrderBy(u => u.AddedAtCounter)
+                .ThenBy(u => u.CreatedTimestamp ?? long.MaxValue)
+                .FirstOrDefault();
 }
 
 /// <summary>
@@ -78,7 +96,7 @@ public sealed class DirectorySnapshot(IReadOnlyList<DirectoryUser> users, DateTi
 /// index is older than a short cooldown — so a customer who signed up a
 /// minute ago is found on the cashier's first try.
 /// </summary>
-public sealed class UserDirectory(KeycloakAdmin keycloak, IConfiguration config, ILogger<UserDirectory> logger) : BackgroundService
+public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country, IConfiguration config, ILogger<UserDirectory> logger) : BackgroundService
 {
     private static readonly string[] SystemRolePrefixes = ["default-roles-", "offline_access", "uma_authorization"];
 
@@ -220,18 +238,31 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, IConfiguration config,
         }
 
         return users
-            .Select(u => new DirectoryUser(
-                u.Id,
-                u.Username,
-                u.Email,
-                u.FirstName,
-                u.LastName,
-                u.Enabled,
-                u.CreatedTimestamp,
-                rolesByUser.GetValueOrDefault(u.Id) ?? [],
-                u.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault(),
-                UserAttributes.BranchesOf(u.Attributes)))
+            .Select(u => FromKeycloak(u, rolesByUser.GetValueOrDefault(u.Id) ?? [], country.Code))
             .ToList();
+    }
+
+    /// <summary>
+    /// A Keycloak user as the apps see them. A customer added at the counter
+    /// has a stand-in address only Keycloak needs (see CounterCustomer): it
+    /// is nobody's email, so it is neither shown nor searched.
+    /// </summary>
+    internal static DirectoryUser FromKeycloak(KeycloakUser u, IReadOnlyList<string> roles, string country)
+    {
+        var phone = u.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault();
+        return new DirectoryUser(
+            u.Id,
+            CounterCustomer.IsStandInEmail(u.Username) ? phone : u.Username,
+            CounterCustomer.VisibleEmail(u.Email),
+            u.FirstName,
+            u.LastName,
+            u.Enabled,
+            u.CreatedTimestamp,
+            roles,
+            phone,
+            UserAttributes.BranchesOf(u.Attributes),
+            CounterCustomer.IsAddedAtCounter(u.Attributes),
+            PhoneRules.Normalize(phone, country));
     }
 
     private async Task<List<T>> PageAsync<T>(HttpClient client, string url, CancellationToken ct)

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Identity.FunctionalTests" />
+    <InternalsVisibleTo Include="Identity.UnitTests" />
   </ItemGroup>
 
 </Project>
