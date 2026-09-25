@@ -80,7 +80,7 @@ export function ShiftScreen() {
   }
 
   return (
-    <div className='mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28'>
+    <div className='mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28 max-sm:p-3 max-sm:pb-[calc(9.5rem+env(safe-area-inset-bottom))]'>
       <div className='flex items-center gap-2'>
         <Button asChild variant='ghost' size='icon' className='size-12'>
           <Link to='/' aria-label={t('backToFloor')}>
@@ -107,12 +107,13 @@ export function ShiftScreen() {
 
       <ShiftReport shift={shift} />
 
-      {/* Sticky action bar: drawer movements + the shift close */}
-      <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur'>
-        <div className='mx-auto flex max-w-3xl items-center gap-2'>
+      {/* Sticky action bar: drawer movements + the shift close. Three
+          across do not fit a phone, so there the close takes a row of its own */}
+      <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur'>
+        <div className='mx-auto flex max-w-3xl items-center gap-2 max-sm:grid max-sm:grid-cols-2'>
           <Button
             variant='outline'
-            className='h-14 flex-1 text-base'
+            className='h-14 flex-1 text-base max-sm:h-12'
             onClick={() => setMovement('in')}
           >
             <ArrowDownToLine className='size-5' />
@@ -120,7 +121,7 @@ export function ShiftScreen() {
           </Button>
           <Button
             variant='outline'
-            className='h-14 flex-1 text-base'
+            className='h-14 flex-1 text-base max-sm:h-12'
             onClick={() => setMovement('out')}
           >
             <ArrowUpFromLine className='size-5' />
@@ -128,7 +129,7 @@ export function ShiftScreen() {
           </Button>
           <Button
             variant='destructive'
-            className='h-14 flex-1 text-base'
+            className='h-14 flex-1 text-base max-sm:col-span-2 max-sm:h-12'
             onClick={() => setCloseOpen(true)}
           >
             <Lock className='size-5' />

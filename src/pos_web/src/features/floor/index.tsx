@@ -329,8 +329,8 @@ export function Floor() {
     <div
       className={
         placesOpen && !cloudKitchen
-          ? 'grid gap-6 p-4 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'
-          : 'grid gap-6 p-4'
+          ? 'grid gap-6 p-4 max-sm:p-3 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'
+          : 'grid gap-6 p-4 max-sm:p-3'
       }
     >
       {/* Places with no bill yet — sticky, scrolling on its own, last on a
@@ -358,7 +358,8 @@ export function Floor() {
       )}
 
       <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2'>
-        <div className='flex items-center justify-between gap-3'>
+        {/* A phone puts the buttons on a row of their own under the title */}
+        <div className='flex flex-wrap items-center justify-between gap-3'>
           <div className='flex items-center gap-2'>
             {!cloudKitchen && (
               <Button
@@ -378,10 +379,10 @@ export function Floor() {
             )}
             <h1 className='text-xl font-bold'>{t('openBills')}</h1>
           </div>
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2 max-sm:w-full'>
             <Button
               size='lg'
-              className='h-12 gap-2 px-5 text-base'
+              className='h-12 gap-2 px-5 text-base max-sm:flex-1'
               onClick={() => navigate({ to: '/sale' })}
             >
               <ShoppingCart className='size-5' />
@@ -393,7 +394,7 @@ export function Floor() {
               <Button
                 size='lg'
                 variant='outline'
-                className='h-12 gap-2 px-5 text-base'
+                className='h-12 gap-2 px-5 text-base max-sm:flex-1'
                 onClick={() => setNewTabOpen(true)}
               >
                 <Plus className='size-5' />
@@ -459,7 +460,7 @@ export function Floor() {
                     onClick={() =>
                       setSelectedPlaceId(toNumber(reservation.placeId))
                     }
-                    className='bg-card hover:bg-accent/50 flex w-[240px] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
+                    className='bg-card hover:bg-accent/50 flex w-[240px] max-w-[80vw] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
                   >
                     <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
                       {/* The customer asked for the clock to start on arrival:
@@ -498,7 +499,7 @@ export function Floor() {
         )}
 
         {isLoading ? (
-          <div className='grid grid-cols-[repeat(auto-fill,minmax(180px,220px))] gap-3'>
+          <div className='grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,220px))]'>
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
@@ -592,7 +593,7 @@ export function Floor() {
 
             {/* Rounded cards cap at ~220px so a lone bill stays a normal card,
                 not a full-width banner, and the row fills left to right */}
-            <div className='grid grid-cols-[repeat(auto-fill,minmax(180px,220px))] gap-3'>
+            <div className='grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,220px))]'>
               {shownBills.map((ticket) => (
                 <BillCard
                   key={String(ticket.id)}

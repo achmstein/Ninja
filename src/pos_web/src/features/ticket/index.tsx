@@ -562,8 +562,19 @@ export function TicketScreen({
     settleOutcome && !ticket.settledAt ? settleOutcome.payments : undefined
 
   return (
-    <div className='mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28'>
-      <div className='flex items-center gap-2'>
+    <div
+      className={cn(
+        'mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28 max-sm:p-3',
+        // The phone's bar stacks its actions under the total while they
+        // are more than one button, so the list keeps clear of a taller bar
+        isSettled || selecting
+          ? 'max-sm:pb-[calc(14.5rem+env(safe-area-inset-bottom))]'
+          : 'max-sm:pb-[calc(7.5rem+env(safe-area-inset-bottom))]',
+      )}
+    >
+      {/* On a phone the bill's tools drop to a row of their own under the
+          title, which keeps the whole width for the place's name */}
+      <div className='flex flex-wrap items-center gap-2'>
         <Button asChild variant='ghost' size='icon' className='size-12'>
           <Link
             to={backTo}
@@ -597,12 +608,13 @@ export function TicketScreen({
             {t('voidedBadge')}
           </Badge>
         ) : (
-          <div className='flex gap-1'>
+          <div className='flex gap-1 max-sm:basis-full max-sm:justify-end'>
             {/* The pad, pointed at this bill — same flow as a new sale, the
                 money just comes later. Everything sold here is on the menu,
                 so there is no typed-in line beside it. */}
             <Button
               className='h-12 gap-2 px-3'
+              aria-label={t('addItems')}
               onClick={() =>
                 navigate({ to: '/sale', search: { ticket: ticketId } })
               }
@@ -613,6 +625,7 @@ export function TicketScreen({
             <Button
               variant={selecting ? 'secondary' : 'outline'}
               className='h-12 gap-2 px-3'
+              aria-label={t('selectLines')}
               disabled={lines.length === 0}
               onClick={toggleSelecting}
             >
@@ -622,6 +635,7 @@ export function TicketScreen({
             <Button
               variant={toNumber(ticket.discount) > 0 ? 'secondary' : 'outline'}
               className='h-12 gap-2 px-3'
+              aria-label={t('discount')}
               disabled={lines.length === 0}
               onClick={() => setDiscountOpen(true)}
             >
@@ -648,6 +662,7 @@ export function TicketScreen({
               <Button
                 variant='outline'
                 className='text-destructive hover:text-destructive h-12 gap-2 px-3'
+                aria-label={t('discardTicket')}
                 onClick={() => setDiscardOpen(true)}
               >
                 <Trash2 className='size-5' />
@@ -658,6 +673,7 @@ export function TicketScreen({
                 <Button
                   variant='outline'
                   className='text-destructive hover:text-destructive h-12 gap-2 px-3'
+                  aria-label={t('voidTicket')}
                   onClick={() =>
                     runningStay ? setVoidGuardOpen(true) : setVoidOpen(true)
                   }
@@ -872,8 +888,8 @@ export function TicketScreen({
       {/* Sticky action bar: the running total is always in reach, and so is
           the primary action (Settle, or Move while selecting) */}
       {!isVoided && (
-        <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur'>
-          <div className='mx-auto flex max-w-3xl items-center gap-4'>
+        <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur'>
+          <div className='mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2'>
             <div className='min-w-0'>
               <div className='text-muted-foreground text-sm'>{t('total')}</div>
               <div className='text-2xl font-bold tabular-nums'>
@@ -908,7 +924,14 @@ export function TicketScreen({
                 </div>
               )}
             </div>
-            <div className='ms-auto'>
+            <div
+              className={cn(
+                'ms-auto',
+                // Several actions: a row of their own under the total, each
+                // an equal share of the width
+                (isSettled || selecting) && 'max-sm:w-full',
+              )}
+            >
               {isSettled ? (
                 <div className='flex gap-2'>
                   {/* Owner-only, like void: money goes back, so an owner says
@@ -918,7 +941,7 @@ export function TicketScreen({
                       <Button
                         size='lg'
                         variant='outline'
-                        className='text-destructive hover:text-destructive h-14 px-5 text-lg'
+                        className='text-destructive hover:text-destructive h-14 px-5 text-lg max-sm:h-12 max-sm:flex-1 max-sm:px-3 max-sm:text-base'
                         onClick={() => setRefundOpen(true)}
                       >
                         <Undo2 className='size-5' />
@@ -927,7 +950,7 @@ export function TicketScreen({
                     )}
                   <Button
                     size='lg'
-                    className='h-14 px-6 text-lg'
+                    className='h-14 px-6 text-lg max-sm:h-12 max-sm:flex-1 max-sm:px-3 max-sm:text-base'
                     onClick={() => window.print()}
                   >
                     <Printer className='size-5' />
@@ -935,11 +958,11 @@ export function TicketScreen({
                   </Button>
                 </div>
               ) : selecting ? (
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 max-sm:grid max-sm:grid-cols-2'>
                   <Button
                     variant='outline'
                     size='lg'
-                    className='h-14 gap-2 px-5 text-lg'
+                    className='h-14 gap-2 px-5 text-lg max-sm:col-span-2 max-sm:h-12 max-sm:px-3 max-sm:text-base'
                     disabled={
                       selectedIds.size === 0 ||
                       assignCustomer.isPending ||
@@ -953,7 +976,7 @@ export function TicketScreen({
                   <Button
                     variant='outline'
                     size='lg'
-                    className='h-14 gap-2 px-5 text-lg'
+                    className='h-14 gap-2 px-5 text-lg max-sm:h-12 max-sm:px-3 max-sm:text-base'
                     disabled={selectedIds.size === 0 || moveLines.isPending}
                     onClick={() => setMoveMode('move')}
                   >
@@ -961,7 +984,7 @@ export function TicketScreen({
                   </Button>
                   <Button
                     size='lg'
-                    className='h-14 gap-2 px-6 text-lg'
+                    className='h-14 gap-2 px-6 text-lg max-sm:h-12 max-sm:px-3 max-sm:text-base'
                     disabled={selectedIds.size === 0 || moveLines.isPending}
                     onClick={() => setMoveMode('new')}
                   >
@@ -974,7 +997,7 @@ export function TicketScreen({
               ) : (
                 <Button
                   size='lg'
-                  className='h-14 px-8 text-lg'
+                  className='h-14 px-8 text-lg max-sm:px-6'
                   disabled={lines.length === 0}
                   onClick={() =>
                     runningStay

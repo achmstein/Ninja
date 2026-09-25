@@ -72,7 +72,12 @@ export function KitchenReprintButton({ lines }: { lines: TicketLineView[] }) {
 
   return (
     <>
-      <Button variant='outline' className='h-12 gap-2 px-3' onClick={() => setOpen(true)}>
+      <Button
+        variant='outline'
+        className='h-12 gap-2 px-3'
+        aria-label={t('kitchenTickets')}
+        onClick={() => setOpen(true)}
+      >
         <Printer className='size-5' />
         <span className='hidden sm:inline'>{t('kitchenTickets')}</span>
       </Button>
