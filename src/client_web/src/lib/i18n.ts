@@ -41,6 +41,16 @@ const webExtras = {
     en: "No table: you'll collect your order at the counter",
     ar: 'من غير ترابيزة: هتستلم طلبك من الكاشير',
   },
+  // A cloud kitchen: no table to scan, so the order is collected, and a
+  // guest the kitchen does not take signs in to order ahead
+  orderToCollect: {
+    en: "You'll collect your order at the counter",
+    ar: 'هتستلم طلبك من الكاشير',
+  },
+  signInToOrderPickup: {
+    en: 'Sign in to order ahead and collect it at the counter',
+    ar: 'سجل دخول عشان تطلب وتستلم من الكاشير',
+  },
   signInForBills: {
     en: 'Sign in to see your bills, or order as a guest',
     ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كضيف',

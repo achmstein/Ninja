@@ -276,11 +276,13 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
     final sessions = placesState.openStays;
     final features = ref.watch(featuresProvider);
+    // No tables to open or seat: the till is the open bills and the counter
+    final cloudKitchen = ref.watch(isCloudKitchenProvider);
     // A tenant without the clock has no room bills to filter
     final rooms = features.timeBilling;
     // Reservations are the one thing not yet a bill that the cashier must
     // not miss: somebody is on their way, or due later today
-    final reserved = features.reservations ? placesState.openReservations.where((r) => r.isOpen).toList() : const <Reservation>[];
+    final reserved = features.reservations && !cloudKitchen ? placesState.openReservations.where((r) => r.isOpen).toList() : const <Reservation>[];
     final now = DateTime.now();
     Stay? stayForTicket(TicketSummary t) =>
         t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isRunning).firstOrNull;
@@ -308,7 +310,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         children: [
           // Places with no bill yet — scrolling on its own, collapsed away
           // when the cashier wants the full width
-          if (_placesOpen) ...[
+          if (_placesOpen && !cloudKitchen) ...[
             SizedBox(
               width: _placesWidth,
               child: Column(
@@ -343,7 +345,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
               children: [
                 Row(
                   children: [
-                    SizedBox.square(
+                    if (!cloudKitchen) SizedBox.square(
                       dimension: 40,
                       child: FButton.icon(
                         variant: FButtonVariant.ghost,
@@ -361,7 +363,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    if (!cloudKitchen) const SizedBox(width: 8),
                     Text(l10n.openBills, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
                     const Spacer(),
                     SizedBox(
@@ -376,6 +378,24 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                         ),
                       ),
                     ),
+                    // The places column is where a named counter tab opens;
+                    // with no places it opens from here
+                    if (cloudKitchen) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 48,
+                        child: FButton(
+                          variant: FButtonVariant.outline,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: _newTab,
+                          prefix: const Icon(FIcons.plus, size: 20),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(l10n.newTab, style: theme.typography.base.forButton),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 8),
                     SizedBox.square(
                       dimension: 48,

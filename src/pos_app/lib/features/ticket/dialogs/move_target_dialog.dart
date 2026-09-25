@@ -8,6 +8,7 @@ import '../../../core/widgets/heading.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
+import '../../../core/brand/brand_provider.dart';
 import '../../tables/models/cafe_table.dart';
 import '../../tables/services/tables_service.dart';
 import '../../tickets/models/enums.dart';
@@ -172,7 +173,10 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
   // (turnover split), or a free table the group moved to.
   Widget _newBillBody(FThemeData theme, AppLocalizations l10n) {
     final tickets = ref.watch(openTicketsProvider).value ?? const [];
-    final tables = ref.watch(tablesProvider).value ?? const <CafeTable>[];
+    // A cloud kitchen seats nobody: a bill never moves to a table
+    final tables = ref.watch(isCloudKitchenProvider)
+        ? const <CafeTable>[]
+        : ref.watch(tablesProvider).value ?? const <CafeTable>[];
     final freeTables = [
       for (final table in tables)
         if (table.isActive && !tickets.any((t) => t.type == TicketType.table && t.placeId == table.id)) table,

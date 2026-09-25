@@ -12,6 +12,8 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   tableOrdersNeedAccount: 'الطلب على الطاولة هنا يتطلب حسابًا. سجّل الدخول لتطلب.',
   scanTableToOrder: 'امسح الرمز الموجود على الطاولة لتطلب',
   guestOrderToCollect: 'دون طاولة: ستستلم طلبك من الكاشير',
+  orderToCollect: 'ستستلم طلبك من الكاشير',
+  signInToOrderPickup: 'سجّل الدخول لتطلب مسبقًا وتستلم من الكاشير',
   signInForBills: 'سجّل الدخول لترى فواتيرك، أو اطلب كضيف',
   continueWithGoogle: 'جوجل',
   continueWithApple: 'أبل',

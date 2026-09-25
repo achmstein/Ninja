@@ -52,7 +52,7 @@ import { PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { StillHereCard } from '@/components/places/still-here'
-import { useBrand, useFeatures } from '@/lib/brand'
+import { useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -82,6 +82,9 @@ function CartPage() {
   const { loyalty: loyaltyOn } = useFeatures()
   // The café takes a guest's order without a table, to collect
   const guestOrdersAnywhere = useBrand()?.guestOrdersAnywhere ?? false
+  // No tables to scan: every order is collected, and a guest the café
+  // does not take signs in instead
+  const cloudKitchen = useIsCloudKitchen()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   // Room-beats-table lives in useOrderDestination so the header chip and this
@@ -348,7 +351,7 @@ function CartPage() {
     guestNeedsTable || guestNeedsAccount ? (
       <div className='flex flex-col gap-3 border-t pt-4'>
         <div className='flex items-start gap-2 text-sm'>
-          {guestNeedsAccount ? (
+          {guestNeedsAccount || cloudKitchen ? (
             <LogIn className='text-primary mt-0.5 h-4 w-4 shrink-0' />
           ) : (
             <QrCode className='text-primary mt-0.5 h-4 w-4 shrink-0' />
@@ -356,7 +359,9 @@ function CartPage() {
           <span>
             {guestNeedsAccount
               ? t('tableOrdersNeedAccount')
-              : t('scanTableToOrder')}
+              : cloudKitchen
+                ? t('signInToOrderPickup')
+                : t('scanTableToOrder')}
           </span>
         </div>
         <Button
@@ -512,11 +517,11 @@ function CartPage() {
               {localized(destination.name)}
             </div>
           ) : (
-            isGuest &&
-            guestOrdersAnywhere && (
+            ((isGuest && guestOrdersAnywhere) || cloudKitchen) && (
               <div className='text-muted-foreground flex items-center gap-2 text-sm'>
                 <ShoppingBag className='h-4 w-4' />
-                {t('guestOrderToCollect')}
+                {/* "No table" means nothing where there never are tables */}
+                {t(cloudKitchen ? 'orderToCollect' : 'guestOrderToCollect')}
               </div>
             )
           )

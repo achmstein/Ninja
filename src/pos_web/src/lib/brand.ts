@@ -151,6 +151,15 @@ export function useFeatures(): TenantFeatures {
   return useBrand()?.features ?? ALL_FEATURES
 }
 
+/**
+ * A cloud kitchen has no tables: its till works from counter bills and
+ * away orders only, never a floor. Said by the kind of place the café was
+ * created as ("cloud_kitchen").
+ */
+export function useIsCloudKitchen(): boolean {
+  return useBrand()?.businessType === 'cloud_kitchen'
+}
+
 /** Where customers open the menu; this origin when provisioning has not said. */
 export function useCustomerOrigin(): string {
   return useBrand()?.customerUrl ?? window.location.origin

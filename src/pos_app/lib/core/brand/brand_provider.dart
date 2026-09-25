@@ -73,3 +73,8 @@ final brandProvider = NotifierProvider<BrandNotifier, TenantBrand>(BrandNotifier
 final featuresProvider = Provider<TenantFeatures>((ref) {
   return ref.watch(brandProvider).features;
 });
+
+/// No tables to open or seat: the till is the open bills and the counter
+final isCloudKitchenProvider = Provider<bool>((ref) {
+  return ref.watch(brandProvider).isCloudKitchen;
+});

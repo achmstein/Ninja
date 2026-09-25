@@ -8,6 +8,7 @@ import {
   PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   ReceiptText,
   Search,
   ShoppingBag,
@@ -45,7 +46,7 @@ import {
   pendingForTicket,
   usePendingOrders,
 } from '@/features/orders/use-pending-orders'
-import { useFeatures } from '@/lib/brand'
+import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
@@ -182,6 +183,8 @@ export function Floor() {
     })
   }
   const features = useFeatures()
+  // No tables to open or seat: the till is the open bills and the counter
+  const cloudKitchen = useIsCloudKitchen()
   const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
     'all',
   )
@@ -325,7 +328,7 @@ export function Floor() {
   return (
     <div
       className={
-        placesOpen
+        placesOpen && !cloudKitchen
           ? 'grid gap-6 p-4 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'
           : 'grid gap-6 p-4'
       }
@@ -335,40 +338,44 @@ export function Floor() {
           wants the full width; the header toggle brings it back. The scroll
           box clips anything outside its edges, so a hair of inner padding
           keeps the search box's focus ring whole. */}
-      <aside
-        hidden={!placesOpen}
-        className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'
-      >
-        <Heading>{t('openPlace')}</Heading>
-        <PlaceList
-          places={places}
-          stayForPlace={stayForPlace}
-          reservationForPlace={reservationForPlace}
-          tickets={tickets}
-          busy={openTable.isPending}
-          onNewTab={() => setNewTabOpen(true)}
-          loading={placesLoading}
-          onPick={pickPlace}
-        />
-      </aside>
+      {!cloudKitchen && (
+        <aside
+          hidden={!placesOpen}
+          className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'
+        >
+          <Heading>{t('openPlace')}</Heading>
+          <PlaceList
+            places={places}
+            stayForPlace={stayForPlace}
+            reservationForPlace={reservationForPlace}
+            tickets={tickets}
+            busy={openTable.isPending}
+            onNewTab={() => setNewTabOpen(true)}
+            loading={placesLoading}
+            onPick={pickPlace}
+          />
+        </aside>
+      )}
 
       <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2'>
         <div className='flex items-center justify-between gap-3'>
           <div className='flex items-center gap-2'>
-            <Button
-              size='icon'
-              variant='ghost'
-              className='text-muted-foreground size-10'
-              aria-label={placesOpen ? t('hidePlaces') : t('showPlaces')}
-              aria-pressed={placesOpen}
-              onClick={togglePlaces}
-            >
-              {placesOpen ? (
-                <PanelLeftClose className='size-5 rtl:-scale-x-100' />
-              ) : (
-                <PanelLeftOpen className='size-5 rtl:-scale-x-100' />
-              )}
-            </Button>
+            {!cloudKitchen && (
+              <Button
+                size='icon'
+                variant='ghost'
+                className='text-muted-foreground size-10'
+                aria-label={placesOpen ? t('hidePlaces') : t('showPlaces')}
+                aria-pressed={placesOpen}
+                onClick={togglePlaces}
+              >
+                {placesOpen ? (
+                  <PanelLeftClose className='size-5 rtl:-scale-x-100' />
+                ) : (
+                  <PanelLeftOpen className='size-5 rtl:-scale-x-100' />
+                )}
+              </Button>
+            )}
             <h1 className='text-xl font-bold'>{t('openBills')}</h1>
           </div>
           <div className='flex gap-2'>
@@ -380,6 +387,19 @@ export function Floor() {
               <ShoppingCart className='size-5' />
               {t('newSale')}
             </Button>
+            {/* The places column is where a named counter tab opens; with
+                no places it opens from here */}
+            {cloudKitchen && (
+              <Button
+                size='lg'
+                variant='outline'
+                className='h-12 gap-2 px-5 text-base'
+                onClick={() => setNewTabOpen(true)}
+              >
+                <Plus className='size-5' />
+                {t('newTab')}
+              </Button>
+            )}
             <Button
               size='lg'
               variant='outline'
@@ -421,7 +441,7 @@ export function Floor() {
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
-        {features.reservations && reserved.length > 0 && (
+        {features.reservations && !cloudKitchen && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
