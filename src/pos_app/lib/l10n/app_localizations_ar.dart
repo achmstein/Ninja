@@ -1594,4 +1594,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tooManyLinks => 'روابط كثيرة خلال وقت قصير، حاول بعد دقيقة';
+
+  @override
+  String get starting => 'جاري التشغيل…';
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app.dart' show rootNavigatorKey;
 import '../auth/auth_service.dart';
 import '../brand/brand_mark.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/pos_shell.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/availability/screens/availability_screen.dart';
@@ -16,33 +18,62 @@ import '../../features/shifts/screens/shift_history_screen.dart';
 import '../../features/shifts/screens/shift_screen.dart';
 import '../../features/ticket/screens/ticket_screen.dart';
 
-/// Splash screen shown while checking authentication
+/// What shows while the till reads its session and café: Ninja's own
+/// chrome, as control_web's splash draws it (the café's mark takes over once
+/// it is known). The app's theme, so light by default and dark with the
+/// device; the native launch splash before it is drawn to match
+/// (src/scripts/generate-app-icons.mjs).
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
-  static const _bgColor = Color(0xFF18181B);
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: Center(
+        child: _SplashBody(
+          lockup: PlatformLockup(
+            label: 'POS',
+            color: colors.foreground,
+            labelColor: colors.mutedForeground,
+            lineColor: colors.border,
+          ),
+          muted: colors.mutedForeground,
+        ),
+      ),
+    );
+  }
+}
+
+/// The lockup, and under it a small spinner and what the app is doing
+class _SplashBody extends StatelessWidget {
+  final Widget lockup;
+  final Color muted;
+
+  const _SplashBody({required this.lockup, required this.muted});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bgColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    final label = AppLocalizations.of(context)?.starting ?? 'Starting…';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        lockup,
+        const SizedBox(height: 32),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const PlatformWordmark(size: 64, color: Colors.white),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(color: muted, strokeWidth: 2),
             ),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(color: muted, fontSize: 14)),
           ],
         ),
-      ),
+      ],
     );
   }
 }

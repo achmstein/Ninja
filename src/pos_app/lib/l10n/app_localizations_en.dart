@@ -1581,4 +1581,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooManyLinks => 'Too many links just now, try again in a minute';
+
+  @override
+  String get starting => 'Starting…';
 }

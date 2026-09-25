@@ -794,5 +794,6 @@
   "appLinkMessage": "Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}",
   "@appLinkMessage": {"placeholders": {"name": {"type": "String"}, "cafe": {"type": "String"}, "url": {"type": "String"}}},
   "alreadyHasAccount": "This customer already has their own account",
-  "tooManyLinks": "Too many links just now, try again in a minute"
+  "tooManyLinks": "Too many links just now, try again in a minute",
+  "starting": "Starting…"
 }
