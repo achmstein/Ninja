@@ -620,7 +620,7 @@
   "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one.",
   "cashierRole": "Cashier",
   "retry": "Retry",
-  "placesNav": "Rooms & Tables",
+  "placesNav": "Places",
   "tables": "Tables",
   "stations": "Stations",
   "fillEveryRate": "Every rate needs a code and a price per hour",
