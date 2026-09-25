@@ -140,6 +140,48 @@ const webExtras = {
     en: 'Choose “Add to Home Screen”',
     ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)',
   },
+  // Claiming the account the café added at the counter (name and phone
+  // only), from the one-time link the cashier showed. Web first; these move
+  // into the ARB files if the app grows the same screen.
+  claimTitle: { en: 'Your account at {cafe}', ar: 'حسابك في {cafe}' },
+  claimIntro: {
+    en: 'The café added you at the counter. Add an email and a password to sign in and see your points and orders.',
+    ar: 'الكافيه ضافك من الكاشير. حط إيميل وباسورد عشان تدخل وتشوف نقطك وطلباتك.',
+  },
+  claimSubmit: { en: 'Create my account', ar: 'اعمل حسابي' },
+  claimDone: { en: 'Your account is ready', ar: 'حسابك جاهز' },
+  claimDoneHint: {
+    en: 'Sign in with {email} to see your points and orders.',
+    ar: 'سجل دخول بـ {email} عشان تشوف نقطك وطلباتك.',
+  },
+  claimExpired: {
+    en: 'This link has expired. Ask the café for a new one.',
+    ar: 'اللينك ده خلص. اطلب لينك جديد من الكافيه.',
+  },
+  claimUsed: {
+    en: 'This link was already used. Sign in instead.',
+    ar: 'اللينك ده اتستخدم قبل كده. سجّل دخول بدل كده.',
+  },
+  claimInvalid: { en: "This link isn't valid.", ar: 'اللينك ده مش صحيح.' },
+  claimEmailTaken: {
+    en: 'That email already has an account',
+    ar: 'الإيميل ده عليه حساب بالفعل',
+  },
+  claimBadEmail: { en: 'Enter a valid email', ar: 'اكتب إيميل صحيح' },
+  claimTooMany: {
+    en: 'Too many tries. Wait a minute and try again.',
+    ar: 'محاولات كتير. استنى دقيقة وجرب تاني.',
+  },
+  claimFailed: {
+    en: "Couldn't create your account. Try again.",
+    ar: 'معرفناش نعمل حسابك. جرب تاني.',
+  },
+  claimSignedInNote: {
+    en: "You're signed in with another account. Creating this one signs you out of it.",
+    ar: 'انت داخل بحساب تاني. لما تعمل الحساب ده هتخرج منه.',
+  },
+  showPassword: { en: 'Show password', ar: 'اظهر الباسورد' },
+  hidePassword: { en: 'Hide password', ar: 'اخفي الباسورد' },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

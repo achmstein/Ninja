@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as BillsRouteImport } from './routes/bills'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as LoyaltyRouteImport } from './routes/loyalty'
 import { Route as PlacesRouteImport } from './routes/places'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -41,6 +42,11 @@ const BillsRoute = BillsRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimRoute = ClaimRouteImport.update({
+  id: '/claim',
+  path: '/claim',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoyaltyRoute = LoyaltyRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
   '/cart': typeof CartRoute
+  '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
   '/cart': typeof CartRoute
+  '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
   '/cart': typeof CartRoute
+  '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/bills'
     | '/cart'
+    | '/claim'
     | '/loyalty'
     | '/places'
     | '/profile'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/bills'
     | '/cart'
+    | '/claim'
     | '/loyalty'
     | '/places'
     | '/profile'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/bills'
     | '/cart'
+    | '/claim'
     | '/loyalty'
     | '/places'
     | '/profile'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   BillsRoute: typeof BillsRoute
   CartRoute: typeof CartRoute
+  ClaimRoute: typeof ClaimRoute
   LoyaltyRoute: typeof LoyaltyRoute
   PlacesRoute: typeof PlacesRoute
   ProfileRoute: typeof ProfileRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claim': {
+      id: '/claim'
+      path: '/claim'
+      fullPath: '/claim'
+      preLoaderRoute: typeof ClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/loyalty': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   BillsRoute: BillsRoute,
   CartRoute: CartRoute,
+  ClaimRoute: ClaimRoute,
   LoyaltyRoute: LoyaltyRoute,
   PlacesRoute: PlacesRoute,
   ProfileRoute: ProfileRoute,

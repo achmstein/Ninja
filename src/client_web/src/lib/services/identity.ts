@@ -30,3 +30,31 @@ export async function changePassword(newPassword: string): Promise<void> {
 export async function deleteAccount(): Promise<void> {
   await apiClient.delete(`${BASE}/delete-account`)
 }
+
+// Claiming an account the café added at the counter (name and phone, no
+// email): anonymous, with the one-time token from the link or QR the
+// cashier showed.
+
+export type ClaimPreview = {
+  name: string
+  phoneNumber?: string | null
+  expiresAt?: string | null
+}
+
+export async function previewClaim(token: string): Promise<ClaimPreview> {
+  const response = await apiClient.post<ClaimPreview>(`${BASE}/claim/preview`, { token })
+  return response.data
+}
+
+export async function claimAccount(
+  token: string,
+  email: string,
+  password: string
+): Promise<{ email: string }> {
+  const response = await apiClient.post<{ email: string }>(`${BASE}/claim`, {
+    token,
+    email,
+    password,
+  })
+  return response.data
+}
