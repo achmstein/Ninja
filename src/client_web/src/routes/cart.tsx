@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ScanTableButton } from '@/components/places/table-scanner'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -364,8 +365,14 @@ function CartPage() {
                 : t('scanTableToOrder')}
           </span>
         </div>
+        {/* A table to scan: the camera, in the app — the phone's own camera
+            opens the link in the browser, not in an installed app */}
+        {guestNeedsTable && !cloudKitchen && (
+          <ScanTableButton className='w-full rounded-pill' />
+        )}
         <Button
           size='lg'
+          variant={guestNeedsTable && !cloudKitchen ? 'outline' : 'default'}
           className='w-full rounded-pill'
           onClick={() => setSignInOpen(true)}
         >

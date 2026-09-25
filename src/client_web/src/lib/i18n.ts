@@ -41,6 +41,19 @@ const webExtras = {
     en: 'Scan the QR code on your table to order',
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
+  // The in-app scanner: an installed app cannot be reached by the phone's camera
+  scanTable: {
+    en: 'Scan table',
+    ar: 'امسح الترابيزة',
+  },
+  scanTableHint: {
+    en: 'Point the camera at the QR code on your table',
+    ar: 'وجّه الكاميرا على الكود اللي على الترابيزة',
+  },
+  cameraBlocked: {
+    en: "The camera isn't available. Allow it for this app in your phone's settings, or scan the code with the phone's camera.",
+    ar: 'الكاميرا مش متاحة. اسمح بيها للتطبيق من إعدادات الموبايل، أو امسح الكود بكاميرا الموبايل.',
+  },
   // A café that takes guests' orders from anywhere: one without a table is
   // collected at the counter
   guestOrderToCollect: {
