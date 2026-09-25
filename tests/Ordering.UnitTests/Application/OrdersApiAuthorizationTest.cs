@@ -87,6 +87,7 @@ public class OrdersApiAuthorizationTest
     [DataRow("DeleteOrder")]
     [DataRow("GetAllOrders")]
     [DataRow("GetOrderStats")]
+    [DataRow("GetGuests")]
     [DataRow("GetOrdersByUserId")]
     public void Admin_endpoints_stay_closed(string endpointName)
     {

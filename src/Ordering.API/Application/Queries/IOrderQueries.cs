@@ -61,7 +61,8 @@ public interface IOrderQueries
 
     /// <summary>
     /// Get all orders paginated (admin), filtered by branch and optionally by
-    /// status, buyer, date range, and the room session they were ordered into
+    /// status, buyer, guest (a <see cref="GuestSummary.Key"/>), date range,
+    /// and the room session they were ordered into
     /// </summary>
     Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(
         int pageIndex,
@@ -73,7 +74,15 @@ public interface IOrderQueries
         DateTime? toDate = null,
         int? sessionId = null,
         string? search = null,
-        string? sort = null);
+        string? sort = null,
+        string? guest = null);
+
+    /// <summary>
+    /// The people who ordered at this branch without an account (admin): the
+    /// orders no account has claimed, one guest per phone number, the most
+    /// recent first. Search matches a name they ordered under or the phone.
+    /// </summary>
+    Task<PaginatedResult<GuestSummary>> GetGuestsAsync(int branchId, int pageIndex, int pageSize, string? search = null);
 
     /// <summary>
     /// Aggregated per-day and per-item order statistics (admin dashboard),
