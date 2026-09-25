@@ -333,6 +333,19 @@ jobs:
           name: print-connector-windows
           path: apps-publish/*
 
+  # scp-action is a container action, and those only run on Linux: the
+  # Windows build hands its exe over as an artifact and this job ships it
+  publish-print-connector:
+    needs: build-print-connector
+    runs-on: ubuntu-latest
+    environment: platform
+    steps:
+      - name: Download connector artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: print-connector-windows
+          path: apps-publish
+
       - name: Publish to the platform's download page
         uses: appleboy/scp-action@v0.1.7
         with:
