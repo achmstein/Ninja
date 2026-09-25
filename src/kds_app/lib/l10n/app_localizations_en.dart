@@ -283,4 +283,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kitchenPrinterStuckHint =>
       'Check the printer is on, has paper and its address is right.';
+
+  @override
+  String get starting => 'Starting…';
 }

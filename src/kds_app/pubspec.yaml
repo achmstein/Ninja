@@ -104,8 +104,9 @@ flutter:
         - asset: assets/fonts/OriginalSurfer-Regular.ttf
 
 # The launcher icon is the platform's N mark on an ember tile, so a kitchen
-# screen is told apart from a till at a glance; the splash is its wordmark
-# on the dark tile (both drawn from the bundled Original Surfer face): one
+# screen is told apart from a till at a glance; the splash is control_web's
+# `ninja | KDS` lockup on black, as a kitchen screen is, whatever the device's
+# theme (both drawn from the bundled Original Surfer face): one
 # build serves every café, and the café takes over inside once the tablet
 # is connected to it. The icon files are drawn by
 # src/scripts/generate-app-icons.mjs (which also draws the admin web's tile
@@ -120,11 +121,14 @@ flutter_launcher_icons:
   min_sdk_android: 21
 
 flutter_native_splash:
-  color: "#18181B"
+  color: "#000000"
   image: assets/images/ninja_splash.png
 
   fullscreen: true
 
+  # Android 12+ shows only a centred icon, cut to a 192 dp circle: the lockup
+  # is drawn small enough to sit inside it (so it reads smaller than on older
+  # Androids), on the same black
   android_12:
-    color: "#18181B"
+    color: "#000000"
     image: assets/images/ninja_splash_android12.png

@@ -601,6 +601,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check the printer is on, has paper and its address is right.'**
   String get kitchenPrinterStuckHint;
+
+  /// No description provided for @starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get starting;
 }
 
 class _AppLocalizationsDelegate

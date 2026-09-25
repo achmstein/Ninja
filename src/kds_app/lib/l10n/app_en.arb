@@ -104,5 +104,6 @@
   "kitchenTicketTestBody": "This station's printer works",
   "kitchenPrinterStuck": "Kitchen tickets are not printing: {stations}",
   "@kitchenPrinterStuck": {"placeholders": {"stations": {"type": "String"}}},
-  "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right."
+  "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right.",
+  "starting": "Starting…"
 }

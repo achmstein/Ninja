@@ -76,6 +76,50 @@ class PlatformWordmark extends StatelessWidget {
       );
 }
 
+/// The platform's lockup, as control_web's splash draws it: `ninja` in the
+/// display face, a hairline, and which of its apps this is ([label], "POS"
+/// or "KDS") in small letter-spaced caps. A Latin mark, so it keeps its own
+/// direction on an Arabic screen.
+class PlatformLockup extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color labelColor;
+  final Color lineColor;
+
+  const PlatformLockup({
+    super.key,
+    required this.label,
+    required this.color,
+    required this.labelColor,
+    required this.lineColor,
+  });
+
+  @override
+  Widget build(BuildContext context) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PlatformWordmark(size: 48, color: color),
+            const SizedBox(width: 16),
+            Container(width: 1, height: 28, color: lineColor),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 14 * 0.2,
+                color: labelColor,
+                height: 1,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
 /// "Powered by ninja": quiet, at the foot of a staff page.
 class PoweredBy extends StatelessWidget {
   const PoweredBy({super.key});

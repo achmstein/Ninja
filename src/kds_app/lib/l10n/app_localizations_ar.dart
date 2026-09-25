@@ -282,4 +282,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kitchenPrinterStuckHint =>
       'تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.';
+
+  @override
+  String get starting => 'جاري التشغيل…';
 }
