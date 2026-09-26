@@ -118,7 +118,7 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
   return (
     <span className='flex min-w-0 items-center gap-1.5' aria-label={label}>
       <span className='relative grid shrink-0 place-items-center' style={{ width: RING, height: RING }}>
-        <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90 rtl:scale-x-[-1]' aria-hidden>
+        <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90 rtl:scale-y-[-1]' aria-hidden>
           <circle cx={RING / 2} cy={RING / 2} r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.2} strokeWidth={2} />
           <motion.circle
             cx={RING / 2}

@@ -125,10 +125,15 @@ function ProfilePage() {
                 {signedIn ? displayName : guestContact ? guestContact.name : t('guestUser')}
               </div>
               {signedIn && myProfileQuery.data?.phoneNumber && (
-                <div className='truncate text-sm opacity-60' dir='ltr'>{myProfileQuery.data.phoneNumber}</div>
+                <div className='truncate text-sm opacity-60'>
+                  {/* The digits run left to right; the line sits where the page reads from */}
+                  <span dir='ltr'>{myProfileQuery.data.phoneNumber}</span>
+                </div>
               )}
               {!signedIn && guestContact && (
-                <div className='truncate text-sm opacity-60' dir='ltr'>{guestContact.phone}</div>
+                <div className='truncate text-sm opacity-60'>
+                  <span dir='ltr'>{guestContact.phone}</span>
+                </div>
               )}
               {loyalty && (
                 <div className='mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-bold text-amber-300'>
