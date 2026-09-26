@@ -106,15 +106,15 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [openId, setOpenId] = useState<number | null>(null)
-  // A hold arriving closes whichever card was open, whether or not its
-  // form lived to say it was done (a live update can bring the hold before
-  // the tick has had its beat, and the form goes with the card's face).
-  // Else cancelling brought the form back inside a card that looked shut
-  const [wasHeld, setWasHeld] = useState(hold != null)
-  if ((hold != null) !== wasHeld) {
-    setWasHeld(hold != null)
-    if (hold) setOpenId(null)
-  }
+  // A hold closes whichever card was open, once the list has faded behind the
+  // reservation, so nothing shifts behind the tick as it starts to grow; by
+  // the time a cancel brings the list back the card is shut
+  const heldNow = hold != null
+  useEffect(() => {
+    if (!heldNow) return
+    const timer = window.setTimeout(() => setOpenId(null), 900)
+    return () => window.clearTimeout(timer)
+  }, [heldNow])
   const [signInOpen, setSignInOpen] = useState(false)
   const closeHold = useCallback(() => setOpenId(null), [])
 
@@ -212,9 +212,9 @@ function PlacesList({ atTable }: { atTable: boolean }) {
                   <PlaceCard
                     place={place}
                     canReserve={canReserve}
-                    open={openId === Number(place.id) && !hold}
+                    open={openId === Number(place.id)}
                     onToggle={handleToggle}
-                    // Booked, the form stays until the hold arrives and the tick grows out of it (ReservationShape)
+                    // Booked, the form stays: the tick grows out of it (ReservationShape) and the hold closes it
                     onDone={(outcome) => outcome === 'failed' && closeHold()}
                   />
                 </RiseItem>

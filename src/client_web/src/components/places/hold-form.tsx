@@ -15,8 +15,12 @@ import { cn } from '@/lib/utils'
 import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { Switch } from '@/components/ui/switch'
 
-/** How long the tick shows before anything else moves, ms: the card only becomes the reservation after it */
+/** How long the tick shows before whoever showed the form puts it away (the scan sheet), ms */
 const SUCCESS_HOLD_MS = 700
+/** The tick's own beat, ms: the button has become the circle and the tick has come in */
+const TICK_BEAT_MS = 420
+/** The book button's height, and so the tick circle's size, px */
+const TICK = 48
 
 /**
  * Booking a place, as the app does it: the ten-minute window, the start-now
@@ -58,8 +62,13 @@ export function HoldForm({
     ...reservePlaceMutation(),
     // Nothing is re-read until the tick has had its beat: the hold arriving
     // is what turns the card into the reservation, so it waits its turn
+    // The hold is read again at once, while the tick has its beat; the
+    // reservation starts growing out of the tick the moment that beat is over
     onSuccess: () => {
-      toast.success(t('roomReservedSuccess'))
+      const r = button.current?.querySelector('button')?.getBoundingClientRect()
+      // The button is on its way to a circle of its own height, round its centre
+      if (r) holdOrigin.set({ x: r.x + r.width / 2 - TICK / 2, y: r.y + r.height / 2 - TICK / 2, width: TICK, height: TICK }, TICK_BEAT_MS)
+      invalidate()
       setBooked(true)
     },
     onError: (error) => {
@@ -79,14 +88,9 @@ export function HoldForm({
   })
   useEffect(() => {
     if (!booked) return
-    const timer = window.setTimeout(() => {
-      // Where the tick is now is where the reservation grows out of
-      holdOrigin.set(button.current?.querySelector('button')?.getBoundingClientRect())
-      invalidate()
-      done.current('booked')
-    }, SUCCESS_HOLD_MS)
+    const timer = window.setTimeout(() => done.current('booked'), SUCCESS_HOLD_MS)
     return () => window.clearTimeout(timer)
-  }, [booked, invalidate])
+  }, [booked])
 
   const options = tariffOptions(place.tariff)
   const pickRate = startOnConfirm && hasOptions(place.tariff)
@@ -171,7 +175,7 @@ export function HoldForm({
       <motion.div ref={button} {...step(2)} className='flex justify-center pt-1'>
         <MorphButton
           phase={phase}
-          height={48}
+          height={TICK}
           className='font-bold'
           onClick={() =>
             hold.mutate({
