@@ -2,8 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { blurSwap, spring } from '@/lib/motion'
-import { useOrderPill } from '@/lib/order-pill'
-import { useIsland } from '@/lib/toast'
+import { useIsland } from '@/lib/island'
 import { cn } from '@/lib/utils'
 import { BrandMark, BrandWordmark } from '@/components/brand-mark'
 import { DestinationChip } from '@/components/places/place-chip'
@@ -31,9 +30,8 @@ export function NinjaTopBar({
   className?: string
 }) {
   // The island's slot is taken: by the order pill, or by a toast for a moment
-  const pillOn = useOrderPill((s) => s.onScreen)
-  const toastOn = useIsland((s) => s.toast != null)
-  const pill = pillOn || toastOn
+  // The island is up (the order's status, or a message for a moment)
+  const pill = useIsland((s) => s.busy)
   const swap = blurSwap(useReducedMotion())
   const brand = (
     <Link to='/' className='flex min-w-0 items-center'>

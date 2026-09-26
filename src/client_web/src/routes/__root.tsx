@@ -55,7 +55,7 @@ function RootLayout() {
 // with the app's resolved theme (not just the OS preference). Autopilot is
 // the demo's expand/collapse physics for title + description toasts.
 /**
- * The toasts are the island (lib/toast.ts): in the middle of the top bar,
+ * The island (lib/island.ts): one sileo pill in the middle of the top bar,
  * the slot the order pill uses, one at a time. The pill is 44 px, 10 px down
  * the 64 px bar; a toast is 40 px, so 12 px down sits it in the same place.
  * Sileo paints them opposite the page, as the dock is painted; autopilot is

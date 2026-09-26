@@ -12,7 +12,6 @@ import type { OrderDestination } from '@/lib/order-destination'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
-import { ORDER_PILL_ID } from '@/components/order-pill'
 import { HOLD_MS } from './hold'
 import { Odometer } from './odometer'
 import { HintBubble } from './hint-bubble'
@@ -629,10 +628,6 @@ function HoldButton({
       disabled={disabled}
       aria-label={t('ninjaHoldToOrder')}
       aria-busy={busy}
-      // The order pill grows out of this button once the order lands (as from the cart's)
-      layoutId={ORDER_PILL_ID}
-      // Its corner as a value, not only a class: a shared layout carries corners across only
-      // when both ends state them, and without one this landed with square corners
       style={{ borderRadius: 24 }}
       animate={early > 0 && !reduced ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
       transition={{ duration: 0.36 }}

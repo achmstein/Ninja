@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils'
 import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { Odometer } from '@/components/ninja/odometer'
 import { Slab } from '@/components/ninja/page/parts'
-import { ORDER_PILL_ID } from '@/components/order-pill'
 import { ScanTableButton } from '@/components/places/table-scanner'
 
 /** The action on the dark slab: the page's own light, which reads on the slab whatever the café's colour */
@@ -149,7 +148,7 @@ export function CheckoutAction({
 
   return (
     <div className='flex flex-col gap-1'>
-      <MorphButton phase={phase} layoutId={ORDER_PILL_ID} disabled={waiting} onClick={onOrder} height={52} className={cn(phase !== 'success' && ON_SLAB, 'text-[15px] font-bold')}>
+      <MorphButton phase={phase} disabled={waiting} onClick={onOrder} height={52} className={cn(phase !== 'success' && ON_SLAB, 'text-[15px] font-bold')}>
         {isGuest ? t('orderAsGuest') : t('placeOrder')}
       </MorphButton>
       {isGuest && signIn}

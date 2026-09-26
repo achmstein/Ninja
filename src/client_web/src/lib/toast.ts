@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import { sileo } from 'sileo'
-import { create } from 'zustand'
+import { island } from './island'
 
 type ToastType = 'success' | 'error' | 'info' | 'warning'
 
@@ -14,42 +13,30 @@ type ToastOptions = {
   duration?: number
 }
 
-/** How long a toast stays when the caller does not say, ms */
-const DEFAULT_MS = 3200
+/** How long a message holds the island, ms: errors a little longer, to be read */
+const HOLDS: Record<ToastType, number> = { success: 3200, info: 3200, warning: 3600, error: 4500 }
 
 /**
- * The island: toasts live in the middle of the top bar, the slot the order
- * pill uses (routes/__root.tsx places the toaster there). One at a time: a
- * new one takes the island over from the last. While one is on, the pill
- * and the bar's brand and chips step aside (`useIsland`), and come back
- * when it goes.
+ * What the app says, said on the island (lib/island.ts): the island morphs
+ * into the message for a moment, then back to what the customer is waiting
+ * on. The message is the title; its kind is its colour and icon, so no
+ * "Success" / "Something went wrong" line sits above it.
+ *
+ * Say something only when the screen does not already: a dish flying into
+ * the tray, a tick on a button or a page changing needs no toast as well.
+ * Failures, choices (Undo) and news from the café do.
  */
-export const useIsland = create<{ toast: string | null }>(() => ({ toast: null }))
-
-let away: number | null = null
-
-// The message is the title; the kind of toast is its colour and icon, so
-// no "Success" / "Something went wrong" line sits above it.
-const show = (type: ToastType, message: string, options?: ToastOptions) => {
-  sileo.clear('top-center')
-  const duration = options?.duration ?? DEFAULT_MS
-  const id = sileo[type]({
-    title: message,
-    description: options?.description,
-    ...(options?.icon !== undefined && { icon: options.icon }),
-    ...(options?.action && { button: { title: options.action.label, onClick: options.action.onClick } }),
-    duration,
-  })
-  useIsland.setState({ toast: id })
-  if (away != null) window.clearTimeout(away)
-  away = window.setTimeout(() => leave(id), duration)
-  return id
-}
-
-/** The island is free again once the toast on it has gone */
-function leave(id: string) {
-  if (useIsland.getState().toast === id) useIsland.setState({ toast: null })
-}
+const show = (type: ToastType, message: string, options?: ToastOptions) =>
+  island.flash(
+    {
+      type,
+      title: message,
+      description: options?.description,
+      ...(options?.icon !== undefined && { icon: options.icon }),
+      ...(options?.action && { button: { title: options.action.label, onClick: options.action.onClick } }),
+    },
+    options?.duration ?? HOLDS[type]
+  )
 
 export const toast = {
   success: (message: string, options?: ToastOptions) => show('success', message, options),
@@ -57,9 +44,8 @@ export const toast = {
   info: (message: string, options?: ToastOptions) => show('info', message, options),
   warning: (message: string, options?: ToastOptions) => show('warning', message, options),
   message: (message: string, options?: ToastOptions) => show('info', message, options),
-  /** Takes a toast away before its time (the id each call returns) */
+  /** Takes a message away before its time (the id a call returned) */
   dismiss: (id: string) => {
-    sileo.dismiss(id)
-    leave(id)
+    if (id) island.end()
   },
 }

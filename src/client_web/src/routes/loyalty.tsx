@@ -87,7 +87,6 @@ function LoyaltyPage() {
     ...createAccountMutation(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getAccount' }] })
-      toast.success(t('success'))
     },
     onError: () => toast.error(t('anErrorOccurred')),
   })

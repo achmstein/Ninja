@@ -116,7 +116,6 @@ export function ActiveStayView({ stay }: { stay: StayViewModel }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
-      toast.success(t('leftSession'))
     },
     onError: () => toast.error(t('failedToLeaveSession')),
   })

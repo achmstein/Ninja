@@ -225,11 +225,6 @@ export function NinjaHome({ menu }: HomeProps) {
     if (holdHint.pending) holdHint.done()
     const { customizations, unitPrice } = quickAddChoice(item)
     fly(item, photo, toneOf(item), () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
-    // Nothing opened to show what went in: the toast names it, with its photo
-    toast.success(t('ninjaAdded', { name: localized(item.name) }), {
-      icon: item.pictureUri ? <img src={itemPictureUrl(item.id)} alt='' className='size-5 rounded-full object-cover' /> : undefined,
-      duration: 2200,
-    })
   }
 
   const onKeepHolding = () => {

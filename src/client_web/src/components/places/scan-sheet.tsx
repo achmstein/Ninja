@@ -77,7 +77,6 @@ export function ScanSheet({
     ...joinStayMutation(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
-      toast.success(t('joinedSession'))
       onDone()
     },
     onError: () => toast.error(t('failedToJoinSession')),
