@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Award, Loader2, Minus, NotebookPen, Plus, Tag, X } from 'lucide-react'
-import { usePrice, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,6 @@ type Open = 'note' | 'promo' | 'points' | null
  */
 export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
   const t = useT()
-  const price = usePrice()
   const swap = blurSwap(useReducedMotion())
   const [open, setOpen] = useState<Open>(null)
   const toggle = (which: Exclude<Open, null>) => setOpen((o) => (o === which ? null : which))
@@ -36,7 +35,6 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
           {promo.code ? (
             <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300 dark:text-red-600')}>
               {promo.code}
-              {promoOn && ` −${price(extras.promoDiscount)}`}
             </span>
           ) : (
             t('promoCode')
@@ -44,22 +42,24 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
         </Pill>
         {points.offered && (
           <Pill icon={Award} on={open === 'points'} set={pointsOn} onClick={() => toggle('points')}>
-            {pointsOn ? `${points.count} ${t('pts')} −${price(extras.pointsDiscount)}` : t('useLoyaltyPoints')}
+            {pointsOn ? `${points.count} ${t('pts')}` : t('useLoyaltyPoints')}
           </Pill>
         )}
       </div>
 
-      <AnimatePresence initial={false} mode='popLayout'>
+      {/* One panel: it opens once, and moving to another pill swaps what is in it with a short blur rather than closing and opening again */}
+      <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            key={open}
+            key='panel'
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={springSoft}
             className='overflow-hidden'
           >
-            <div className='pt-1'>
+            <AnimatePresence mode='wait' initial={false}>
+            <motion.div key={open} {...swap} transition={{ duration: 0.14 }} className='pt-1'>
               {open === 'note' && (
                 <textarea
                   autoFocus
@@ -72,7 +72,8 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
               )}
               {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
               {open === 'points' && <PointsField extras={extras} />}
-            </div>
+            </motion.div>
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -177,7 +178,6 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
  */
 function PointsField({ extras }: { extras: CheckoutExtras }) {
   const t = useT()
-  const price = usePrice()
   const { points } = extras
   const set = (count: number) => {
     const next = Math.max(0, Math.min(points.max, count))
@@ -201,7 +201,7 @@ function PointsField({ extras }: { extras: CheckoutExtras }) {
           <Odometer value={String(points.count)} /> {t('pts')}
         </span>
         <span className='text-[11px] tabular-nums opacity-60'>
-          {extras.pointsDiscount > 0 ? `−${price(extras.pointsDiscount)}` : `${points.balance} ${t('pts')}`}
+          {t('ninjaPointsOf', { balance: String(points.balance) })}
         </span>
       </span>
       <button

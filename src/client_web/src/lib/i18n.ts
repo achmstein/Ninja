@@ -373,6 +373,7 @@ const webExtras = {
   ninjaPlayedWith: { en: 'With', ar: 'مع' },
   ninjaBackToCards: { en: 'Back to the cards', ar: 'ارجع للكروت' },
   ninjaUseAllPoints: { en: 'Use all', ar: 'استخدمهم كلهم' },
+  ninjaPointsOf: { en: 'of {balance}', ar: 'من {balance}' },
   ninjaRateOnceSwitched: { en: '{price} once the staff switch it', ar: '{price} من أول ما يحوّلوها' },
   ninjaSwitchingTo: { en: 'Switching to {option}', ar: 'بنحوّلها لـ {option}' },
   ninjaStaffSwitching: { en: 'The staff are switching it', ar: 'الموظفين بيحوّلوها' },
