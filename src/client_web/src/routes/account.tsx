@@ -87,7 +87,9 @@ function BalanceSlab({ balance }: { balance: number }) {
   const Icon = owes ? CircleAlert : hasCredit ? Check : Wallet
 
   return (
-    <Slab className='flex flex-col gap-2 py-7'>
+    <Slab className='isolate flex flex-col gap-2 py-7'>
+      {/* The tab's mark, large and faint in the corner, as a place's card wears its own */}
+      <Wallet className='pointer-events-none absolute -end-6 -bottom-10 -z-10 size-44 -rotate-12 opacity-[0.07]' />
       {/* A glow of the balance's colour behind it; it does not move */}
       {(owes || hasCredit) && (
         <div
