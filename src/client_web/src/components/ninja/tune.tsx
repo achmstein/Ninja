@@ -406,8 +406,14 @@ function Question({
   )
 }
 
+/** Longest name a dial stop holds whole; longer ones make the question big rows instead, where a name has room */
+const DIAL_NAME_MAX = 9
+
 function Control({ customization, selected, onPick }: ControlProps) {
-  switch (controlKind(customization)) {
+  const localized = useLocalized()
+  const kind = controlKind(customization)
+  const roomy = kind === 'dial' && sortedOptions(customization).some((o) => localized(o.name).length > DIAL_NAME_MAX)
+  switch (roomy ? 'chips' : kind) {
     case 'size':
       return <SizeControl customization={customization} selected={selected} onPick={onPick} />
     case 'dial':
@@ -480,7 +486,7 @@ function SizeControl({ customization, selected, onPick }: ControlProps) {
               className='relative flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2.5 disabled:opacity-40'
             >
               {on && <motion.span layoutId={`size-${customization.id}`} transition={springOpen} aria-hidden className='bg-background absolute inset-0 rounded-2xl shadow-sm' />}
-              <span className='relative text-sm font-semibold'>{name}</span>
+              <span className='relative text-center text-sm leading-tight font-semibold break-words'>{name}</span>
               {extra && <span className='text-muted-foreground relative text-xs tabular-nums'>{extra}</span>}
             </button>
           )
@@ -548,12 +554,12 @@ function DialControl({ customization, selected, onPick }: ControlProps) {
               if (e.detail === 0 && !on) onPick(id)
             }}
             className={cn(
-              'relative min-w-0 flex-1 rounded-full px-1 py-3 text-center text-xs font-semibold transition-colors duration-200 disabled:opacity-40',
+              'relative min-w-0 flex-1 rounded-full px-1 py-3 text-center text-xs leading-tight font-semibold transition-colors duration-200 disabled:opacity-40',
               on ? 'text-primary-foreground' : 'text-muted-foreground'
             )}
           >
             {on && <motion.span layoutId={`dial-${customization.id}`} transition={springOpen} aria-hidden className='bg-primary absolute inset-0 rounded-full' />}
-            <span className='relative block truncate'>{name}</span>
+            <span className='relative line-clamp-2 block break-words'>{name}</span>
           </button>
         )
       })}
@@ -589,8 +595,8 @@ function PickControl({ customization, selected, onPick }: ControlProps) {
                 className='ring-primary bg-primary/10 absolute inset-0 ring-2'
               />
             )}
-            <span className='relative min-w-0 flex-1 text-[15px] font-semibold'>{name}</span>
-            {extra && <span className='text-muted-foreground relative text-sm tabular-nums'>{extra}</span>}
+            <span className='relative min-w-0 flex-1 py-2 text-[15px] leading-snug font-semibold break-words'>{name}</span>
+            {extra && <span className='text-muted-foreground relative shrink-0 text-sm tabular-nums'>{extra}</span>}
             <span className={cn('relative grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors duration-200', on ? 'border-primary' : 'border-muted-foreground/40')}>
               <motion.span className='bg-primary size-2.5 rounded-full' initial={false} animate={{ scale: on ? 1 : 0 }} transition={springOpen} />
             </span>
@@ -620,19 +626,19 @@ function ExtrasControl({ customization, selected, onPick }: ControlProps) {
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
             className={cn(
-              'flex h-11 items-center gap-1.5 rounded-full ps-2 pe-4 text-sm font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
+              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] py-1.5 ps-2 pe-4 text-start text-sm leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
               on ? 'bg-primary text-primary-foreground' : 'bg-muted'
             )}
           >
-            <span className={cn('grid size-7 place-items-center rounded-full transition-colors duration-200', on ? 'bg-primary-foreground/20' : 'bg-background')}>
+            <span className={cn('grid size-7 shrink-0 place-items-center rounded-full transition-colors duration-200', on ? 'bg-primary-foreground/20' : 'bg-background')}>
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.span key={on ? 'on' : 'off'} {...swap} className='grid place-items-center'>
                   {on ? <Check className='size-4' /> : <Plus className='size-4' />}
                 </motion.span>
               </AnimatePresence>
             </span>
-            {name}
-            {extra && <span className='text-xs tabular-nums opacity-75'>{extra}</span>}
+            <span className='min-w-0 break-words'>{name}</span>
+            {extra && <span className='shrink-0 text-xs tabular-nums opacity-75'>{extra}</span>}
           </button>
         )
       })}
