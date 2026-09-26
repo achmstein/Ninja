@@ -33,8 +33,8 @@ export const NOT_FOUND_AFTER_MS = 2 * 60_000
 /** How long each end state stays on screen once reached */
 export const LINGER_MS: Record<PillStage, number | null> = {
   sent: null,
-  // Confirmed, the round is on the bill: the dock says so for a moment, then the bill carries it
-  confirmed: 3 * 60_000,
+  // Confirmed, the round is on the bill: the dock says so for a moment, then the row is the bill again
+  confirmed: 8_000,
   paid: 4_000,
   cancelled: 8_000,
 }
