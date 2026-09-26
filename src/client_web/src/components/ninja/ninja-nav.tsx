@@ -7,7 +7,11 @@ import { formatClock, useSecondTick } from '@/lib/clock'
 import { blurSwap, ease } from '@/lib/motion'
 import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
-import { DOCK_INSET, DOCK_SIDE } from './chrome'
+import { DOCK_H, DOCK_INSET, DOCK_SIDE } from './chrome'
+import { DockBill } from './dock-bill'
+import { useLiveBills } from '@/lib/live-bills'
+import { useLiveOrder } from '@/lib/live-order'
+import { hasLiveBill } from '@/components/bills/open-bills'
 import { LiquidPill } from './liquid-pill'
 import { Odometer } from './odometer'
 import { useLiquidEdges } from './use-liquid'
@@ -73,14 +77,17 @@ export function NinjaNav({ className }: { className?: string }) {
  * phone's home indicator.
  */
 export function NinjaNavDock() {
+  const live = useDockRowShown()
   return (
     // The menu's dock's own margins, so the bar does not shift when the page changes
     <div
       className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg md:hidden'
       style={{ paddingInline: DOCK_SIDE, bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
     >
-      <div className='bg-foreground text-background pointer-events-auto rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
-        <NinjaNav />
+      <div className='bg-foreground text-background pointer-events-auto relative rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
+        {/* The bill and the order on its way, above the tabs, on every tab */}
+        <DockRow />
+        <NinjaNav className={live ? 'border-background/10 border-t' : undefined} />
       </div>
     </div>
   )
@@ -145,5 +152,23 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
         )}
       </motion.span>
     </AnimatePresence>
+  )
+}
+
+/** Whether the dock has a bill or an order to show above its tabs */
+function useDockRowShown(): boolean {
+  const bills = useLiveBills()
+  const stage = useLiveOrder((s) => s.stage)
+  return hasLiveBill(bills) || stage != null
+}
+
+/** The bill and the order on its way, in a row of its own above the tabs (the menu puts it in the tray's row instead) */
+function DockRow() {
+  const bills = useLiveBills()
+  const shown = useDockRowShown()
+  return (
+    <div className='relative transition-[height] duration-300' style={{ height: shown ? DOCK_H : 0 }}>
+      <DockBill live={bills} trayEmpty />
+    </div>
   )
 }

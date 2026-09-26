@@ -7,6 +7,7 @@ import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen
 import { API_VERSION } from '@/lib/api-client'
 import { useArabicStyle, useLanguage, useLocalized, usePrice } from '@/lib/i18n'
 import { island, type IslandFace } from '@/lib/island'
+import { useLiveOrder } from '@/lib/live-order'
 import {
   CLOCK_SLACK_MS,
   nextCheck,
@@ -39,6 +40,9 @@ const NOTES = {
 /** How long the island stays open to say that the order has moved on, ms */
 const ANNOUNCE_MS = 4200
 
+/** The stages worth interrupting for; the others only change the dock quietly */
+const LOUD: PillStage[] = ['ready', 'cancelled']
+
 /** A stage in the island's colours: waiting on the café, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
   sent: 'loading',
@@ -49,12 +53,13 @@ const TYPES: Record<PillStage, IslandFace['type']> = {
 }
 
 /**
- * The order just placed, as the island's live face (lib/island.ts): Sent,
- * Preparing, Ready, the order's number with it, morphing in place at each
- * step. Opened (sileo's own expand) it says where the order is, what was
- * ordered and the total, with the way to the bill. It goes a little after
- * the order is done with. Draws nothing itself; mounted once, in the root
- * layout.
+ * The order just placed, followed: which order it is and where it has got
+ * to (Sent, Preparing, Ready), for the dock to show quietly beside the bill
+ * (useLiveOrder, components/ninja/dock-bill.tsx). When it is ready or
+ * turned down, the island (lib/island.ts) says so out loud for a moment,
+ * opened with the dishes and the way to the bill. It is let go a little
+ * after the order is done with. Draws nothing itself; mounted once, in the
+ * root layout.
  */
 export function OrderPill() {
   const placedAt = useOrderPill((s) => s.placedAt)
@@ -62,7 +67,6 @@ export function OrderPill() {
   const setShown = useOrderPill((s) => s.setShown)
   const language = useLanguage((s) => s.language)
   const standard = useArabicStyle((s) => s.standard)
-  const localized = useLocalized()
   const price = usePrice()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -107,56 +111,55 @@ export function OrderPill() {
     setShown(visible ? orderNumber : null, visible)
   }, [visible, orderNumber, setShown])
 
-  // The island's live face follows the order; a change of stage morphs it in place
+  // The dock shows the order while it is followed (components/ninja/dock-bill.tsx)
+  useEffect(() => {
+    useLiveOrder.setState(visible ? { stage, orderNumber } : { stage: null, orderNumber: null })
+  }, [visible, stage, orderNumber])
+  useEffect(() => () => useLiveOrder.setState({ stage: null, orderNumber: null }), [])
+
+  // What is worth interrupting for (ready, turned down) the island says out loud, opened with the order's
+  // dishes; the rest of the way the dock's quiet change is enough
   const say = (w: Parameters<typeof words>[0]) => words(w, language, standard)
   const items = order?.items ?? []
   const total = order?.total
-  // The stage the island last said out loud
   const told = useRef<PillStage | null>(null)
-  const itemsKey = items.map((line) => `${line.units}:${localized(line.productName)}`).join('|')
   useEffect(() => {
     if (!visible) {
-      island.live(null)
       told.current = null
       return
     }
-    const Icon = ICONS[stage]
-    const face: IslandFace = {
-      type: TYPES[stage],
-      // Collapsed it is small: the stage's icon and the order's number; opened, the stage says itself
-      title: orderNumber != null ? `#${orderNumber}` : say(STAGE_LABEL[stage]),
-      icon: <Icon className='size-4' />,
-      description: (
-        <OrderDetails
-          stage={say(STAGE_LABEL[stage])}
-          note={say(NOTES[stage])}
-          items={items}
-          total={total != null && Number(total) > 0 ? price(total) : null}
-        />
-      ),
-      button: { title: say(PILL_WORDS.seeBills), onClick: () => void navigate({ to: '/bills' }) },
-    }
-    island.live(face)
-    // Something new (the order moving on) opens the island to say it, then it collapses back to the number
-    if (told.current != null && told.current !== stage) island.flash({ ...face, title: say(STAGE_LABEL[stage]) }, ANNOUNCE_MS)
+    const moved = told.current != null && told.current !== stage
     told.current = stage
-    // Re-said only when what it says changes
+    if (!moved || !LOUD.includes(stage)) return
+    const Icon = ICONS[stage]
+    island.flash(
+      {
+        type: TYPES[stage],
+        title: orderNumber != null ? `${say(STAGE_LABEL[stage])} · #${orderNumber}` : say(STAGE_LABEL[stage]),
+        icon: <Icon className='size-4' />,
+        description: <OrderDetails note={say(NOTES[stage])} items={items} total={total != null && Number(total) > 0 ? price(total) : null} />,
+        button: { title: say(PILL_WORDS.seeBills), onClick: () => void navigate({ to: '/bills' }) },
+      },
+      ANNOUNCE_MS
+    )
+    try {
+      navigator.vibrate?.(stage === 'ready' ? [60, 60, 60] : 40)
+    } catch {
+      // Not every browser lets a page buzz the phone
+    }
+    // Said once, when the stage moves on
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, stage, orderNumber, itemsKey, total, language, standard])
-  useEffect(() => () => island.live(null), [])
+  }, [visible, stage])
 
   return null
 }
 
 /** The island opened: where the order is, what is in it, and what it comes to */
-function OrderDetails({ stage, note, items, total }: { stage: string; note: string; items: NonNullable<OrderSummary['items']>; total: string | null }) {
+function OrderDetails({ note, items, total }: { note: string; items: NonNullable<OrderSummary['items']>; total: string | null }) {
   const localized = useLocalized()
   return (
     <span className='flex flex-col gap-2 text-start'>
-      <span className='flex flex-col'>
-        <span className='font-semibold'>{stage}</span>
-        <span className='opacity-70'>{note}</span>
-      </span>
+      <span className='opacity-80'>{note}</span>
       {items.length > 0 && (
         <span className='flex flex-col gap-0.5'>
           {items.slice(0, 4).map((line, i) => (
