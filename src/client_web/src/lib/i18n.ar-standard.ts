@@ -191,6 +191,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaMonthVisits: { '=1': 'زيارة واحدة', '=2': 'زيارتان', other: '{count} زيارات' },
   ninjaBillOpen: 'فاتورتك',
   ninjaTableOpen: 'طاولتك',
+  ninjaRoomOpen: 'غرفتك',
   ninjaHideReceipt: 'إخفاء الإيصال',
   ninjaBillPrev: 'الفاتورة السابقة',
   ninjaBillNext: 'الفاتورة التالية',

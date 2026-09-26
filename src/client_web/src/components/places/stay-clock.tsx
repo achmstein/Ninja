@@ -1,4 +1,3 @@
-import { motion } from 'motion/react'
 import { type StayViewModel } from '@/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { hasOptions, PlaceIcon } from '@/lib/places'
@@ -22,8 +21,7 @@ function formatElapsed(seconds: number): string {
 /**
  * The running clock as the hero of the tab: the dock's dark slab, the time
  * as the biggest thing on the screen with its digits rolling like the
- * tray's total, a thin line along the bottom filling with each minute, and
- * who is in the room. No money here — the bill carries that.
+ * tray's total, and who is in the room. No money here — the bill carries that.
  */
 export function StayClock({
   stay,
@@ -38,7 +36,6 @@ export function StayClock({
   const t = useT()
   const localized = useLocalized()
   const seconds = elapsedSeconds(stay.startedAt, now)
-  const second = seconds % 60
 
   // The owner first, then in the order they joined
   const members = [...(stay.members ?? [])].sort((a, b) => (a.role === b.role ? 0 : a.role === 'Owner' ? -1 : 1))
@@ -86,15 +83,6 @@ export function StayClock({
         </div>
       )}
 
-      {/* The minute filling up; it snaps back empty rather than running backwards */}
-      <div aria-hidden className='bg-muted absolute inset-x-0 bottom-0 h-1'>
-        <motion.div
-          className='h-full origin-left bg-emerald-400 rtl:origin-right'
-          initial={false}
-          animate={{ scaleX: (second + 1) / 60 }}
-          transition={second === 0 ? { duration: 0 } : { duration: 1, ease: 'linear' }}
-        />
-      </div>
     </Slab>
   )
 }

@@ -1,13 +1,9 @@
 import { Link } from '@tanstack/react-router'
-import { Bell, Check, Hourglass, Loader2, Receipt } from 'lucide-react'
+import { Bell, Receipt } from 'lucide-react'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { useServiceRequests } from '@/lib/service-requests'
-import {
-  SERVICE_REQUEST,
-  type ServiceRequestType,
-} from '@/lib/services/notifications'
-import { cn } from '@/lib/utils'
+import { SERVICE_REQUEST } from '@/lib/services/notifications'
 import {
   useActivePlaceConfirmed,
   usePlaceStore,
@@ -16,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { TablePayButton } from '@/components/pay/bill-pay'
 import { StillHereCard } from './still-here'
+import { RequestTile } from './request-tile'
 
 /**
  * The customer's table while they sit at it with no clock running, as the
@@ -69,19 +66,21 @@ export function TableView({
         {!confirmed && <StillHereCard place={place} />}
 
         <div className='grid grid-cols-2 gap-3'>
-          <RequestPill
-            type={SERVICE_REQUEST.callWaiter}
+          <RequestTile
             icon={Bell}
             label={t('callWaiter')}
-            requests={requests}
+            state={requests.stateOf(SERVICE_REQUEST.callWaiter)}
+            busy={requests.pending != null}
             locked={!confirmed}
+            onTap={() => void requests.tap(SERVICE_REQUEST.callWaiter)}
           />
-          <RequestPill
-            type={SERVICE_REQUEST.receiptToPay}
+          <RequestTile
             icon={Receipt}
             label={t('getBill')}
-            requests={requests}
+            state={requests.stateOf(SERVICE_REQUEST.receiptToPay)}
+            busy={requests.pending != null}
             locked={!confirmed}
+            onTap={() => void requests.tap(SERVICE_REQUEST.receiptToPay)}
           />
         </div>
 
@@ -111,67 +110,5 @@ export function TableView({
         </button>
       </div>
     </div>
-  )
-}
-
-/** One request as a pill that is also its status: tap to send, tap again
- *  to take it back while it is only sent, then "on the way" with who is
- *  coming once the till picks it up. The open request is the cooldown; no
- *  toast asks anyone to wait. */
-function RequestPill({
-  type,
-  icon: Icon,
-  label,
-  requests,
-  locked = false,
-}: {
-  type: ServiceRequestType
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  requests: ReturnType<typeof useServiceRequests>
-  /** Nothing goes out until the session has vouched for the table */
-  locked?: boolean
-}) {
-  const t = useT()
-  const state = requests.stateOf(type)
-
-  return (
-    <Button
-      variant='outline'
-      className={cn(
-        'h-16 flex-col gap-0.5 rounded-[1.25rem] text-sm font-semibold transition-transform active:scale-[0.97] motion-reduce:transform-none',
-        state.phase === 'sent' && 'border-primary/30 bg-primary/5',
-        state.phase === 'onTheWay' &&
-          'border-primary/30 bg-primary/10 text-primary',
-      )}
-      disabled={
-        locked || requests.pending != null || state.phase === 'onTheWay'
-      }
-      onClick={() => requests.tap(type)}
-    >
-      {state.phase === 'sending' ? (
-        <Loader2 className='h-5 w-5 animate-spin' />
-      ) : state.phase === 'sent' ? (
-        <Hourglass className='h-5 w-5' />
-      ) : state.phase === 'onTheWay' ? (
-        <Check className='h-5 w-5' />
-      ) : (
-        <Icon className='h-5 w-5' />
-      )}
-      {state.phase === 'sent' ? (
-        <>
-          <span>{`${label} · ${t('sent')}`}</span>
-          <span className='text-muted-foreground text-[11px] font-normal'>
-            {t('tapToCancel')}
-          </span>
-        </>
-      ) : state.phase === 'onTheWay' ? (
-        <span className='truncate'>
-          {state.by ? t('onTheWayBy', { name: state.by }) : t('onTheWay')}
-        </span>
-      ) : (
-        <span>{label}</span>
-      )}
-    </Button>
   )
 }

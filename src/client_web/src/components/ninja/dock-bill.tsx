@@ -12,11 +12,16 @@ import { useServiceRequests } from '@/lib/service-requests'
 import { SERVICE_REQUEST } from '@/lib/services/notifications'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { TableView } from '@/components/places/table-view'
+import { StayRequests } from '@/components/places/stay-requests'
+import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Odometer } from './odometer'
 import { DOCK_H } from './chrome'
 import { useDockRowShown } from './use-dock-row'
+
+/** What a dot on the row stands for: something asked for and not yet done with */
+const ASKED = [SERVICE_REQUEST.callWaiter, SERVICE_REQUEST.receiptToPay, SERVICE_REQUEST.controllerChange, SERVICE_REQUEST.changeOption]
 
 const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Check, paid: ReceiptText, cancelled: X }
 
@@ -27,10 +32,13 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Che
  * blur. A tap opens the bill out of the dock as its sheet, its rounds
  * standing open, the way to pay under them. On the menu a dish going into
  * the tray takes the row back, and it returns when the tray is empty again;
- * on the other tabs it sits above the tabs. At a table the row is the
- * table too: its name (the top bar keeps only the brand), a dot while the waiter or the bill is asked for, and a tap opens
- * the table (the waiter, the bill, the way out) with the bills under it.
- * Nothing at all while there is no bill, no order and no table.
+ * on the other tabs it sits above the tabs. At a table, or in a room with
+ * the clock running, the row is that place too: its name (the top bar keeps
+ * only the brand), a dot while something is asked for, and a tap opens what
+ * can be asked for there (the waiter, the bill, a controller, the rate)
+ * with the bills under it. A room is a table with a clock: the same row,
+ * the same tiles. Nothing at all while there is no bill, no order and no
+ * place.
  */
 export function DockBill({ live, trayEmpty, className }: { live: LiveBills; trayEmpty: boolean; className?: string }) {
   const t = useT()
@@ -41,19 +49,26 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const swap = blurSwap(useReducedMotion())
   const [open, setOpen] = useState(false)
   const { stage, orderNumber } = useLiveOrder()
-  const table = useActivePlace()
+  const stay = useActiveStay()
+  // A running room is where the customer is, over a table scanned before it
+  const scanned = useActivePlace()
+  const table = stay ? null : scanned
   const confirmed = useActivePlaceConfirmed()
   // A dot on the table while the waiter or the bill is asked for, so the answer is one tap away
-  const requests = useServiceRequests({ placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} })
+  const requests = useServiceRequests(
+    stay
+      ? { placeId: Number(stay.placeId), placeKind: Number(stay.placeKind), placeName: stay.placeName ?? {}, sessionId: Number(stay.id) }
+      : { placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} }
+  )
   const asking =
-    table != null &&
-    (requests.stateOf(SERVICE_REQUEST.callWaiter).phase !== 'idle' || requests.stateOf(SERVICE_REQUEST.receiptToPay).phase !== 'idle')
+    (table != null || stay != null) &&
+    ASKED.some((type) => requests.stateOf(type).phase !== 'idle')
   const shown = useDockRowShown(live)
   if (!shown) return null
 
   const first = live.open[0]?.bill ?? live.forming?.bill
   const total = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
-  const place = (table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
+  const place = (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
   // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
   // With nothing on the bill yet the place is the row's one line
   const line = stage
@@ -62,7 +77,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       ? place
       : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
-  const placeKind = table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
+  const placeKind = stay ? Number(stay.placeKind) : table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
+  const label = t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
 
   return (
     <>
@@ -72,7 +88,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             key='bill'
             type='button'
             onClick={() => setOpen(true)}
-            aria-label={t(table ? 'ninjaTableOpen' : 'ninjaBillOpen')}
+            aria-label={label}
             {...swap}
             // Over the tray's own row, in the dock's colour, so the empty tray does not show under it
             className={cn(
@@ -115,7 +131,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               {total > 0 ? <Odometer value={price(total)} className='text-base font-bold' /> : <span className='truncate text-base font-bold'>{place}</span>}
             </span>
             <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-sm font-semibold'>
-              {t(table ? 'ninjaTableOpen' : 'ninjaBillOpen')}
+              {label}
               <ChevronUp className='size-4' />
             </span>
           </motion.button>
@@ -123,7 +139,18 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       </AnimatePresence>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        {table ? (
+        {stay ? (
+          // The room: what to ask for, then its bills
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>{localized(stay.placeName)}</SheetTitle>
+            </SheetHeader>
+            <div className='flex flex-col gap-5'>
+              <StayRequests stay={stay} />
+              <OpenBills live={live} />
+            </div>
+          </SheetContent>
+        ) : table ? (
           // The table first (the waiter, the bill, the way out), then its bills
           <SheetContent className='gap-0 p-0'>
             <SheetTitle className='sr-only'>{localized(table.name)}</SheetTitle>

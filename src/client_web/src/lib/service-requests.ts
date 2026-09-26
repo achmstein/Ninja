@@ -42,6 +42,8 @@ export const MY_REQUESTS_KEY = ['my-service-requests'] as const
 const successKey: Partial<Record<ServiceRequestType, TranslationKey>> = {
   [SERVICE_REQUEST.callWaiter]: 'waiterNotified',
   [SERVICE_REQUEST.receiptToPay]: 'billRequestSent',
+  [SERVICE_REQUEST.controllerChange]: 'controllerRequestSent',
+  [SERVICE_REQUEST.changeOption]: 'switchRequestSent',
 }
 
 const isOpen = (r: ServiceRequestView) =>
@@ -97,7 +99,8 @@ export function useServiceRequests(target: RequestTarget) {
       update(prev ?? []),
     )
 
-  const send = async (type: ServiceRequestType): Promise<boolean> => {
+  /** `optionCode`: the rate option wanted, for a changeOption request */
+  const send = async (type: ServiceRequestType, optionCode?: string): Promise<boolean> => {
     if (stateOf(type).phase !== 'idle') return false
     if (!auth.isAuthenticated) ensureGuestId()
     setPending(type)
@@ -108,6 +111,7 @@ export function useServiceRequests(target: RequestTarget) {
         placeKind: placeKindName(target.placeKind),
         placeName: target.placeName,
         sessionId: target.sessionId ?? null,
+        optionCode,
       })
       // Seen at once, then confirmed by the server's own list
       setMine((prev) => [created, ...prev.filter((r) => r.id !== created.id)])
@@ -147,9 +151,9 @@ export function useServiceRequests(target: RequestTarget) {
   }
 
   /** What one tap on the pill does in its current state */
-  const tap = (type: ServiceRequestType): Promise<boolean> => {
+  const tap = (type: ServiceRequestType, optionCode?: string): Promise<boolean> => {
     const phase = stateOf(type).phase
-    if (phase === 'idle') return send(type)
+    if (phase === 'idle') return send(type, optionCode)
     if (phase === 'sent') return cancel(type)
     return Promise.resolve(false)
   }
