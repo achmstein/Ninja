@@ -1,0 +1,192 @@
+import { useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { Award, Loader2, NotebookPen, Tag, X } from 'lucide-react'
+import { usePrice, useT } from '@/lib/i18n'
+import { blurSwap, springOpen, springSoft } from '@/lib/motion'
+import type { CheckoutExtras } from '@/lib/use-checkout-extras'
+import { cn } from '@/lib/utils'
+import { Slider } from '@/components/ui/slider'
+import { POINTS_STEP, promoReasonKey } from '@/components/cart/savings-model'
+
+type Open = 'note' | 'promo' | 'points' | null
+
+/**
+ * The extras of an order, quiet until wanted: a row of small pills in the
+ * tray's own colours (a note, a code, points), each saying what it holds
+ * once set. A tap opens only that one's field under the row, and a tap
+ * again (or on another) closes it; nothing stands open by itself.
+ */
+export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
+  const t = useT()
+  const price = usePrice()
+  const swap = blurSwap(useReducedMotion())
+  const [open, setOpen] = useState<Open>(null)
+  const toggle = (which: Exclude<Open, null>) => setOpen((o) => (o === which ? null : which))
+  const { promo, points } = extras
+  const promoOn = extras.promoDiscount > 0
+  const pointsOn = extras.pointsDiscount > 0
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='flex flex-wrap gap-2'>
+        <Pill icon={NotebookPen} on={open === 'note'} set={extras.note.trim() !== ''} onClick={() => toggle('note')}>
+          {extras.note.trim() ? <span className='max-w-28 truncate'>{extras.note.trim()}</span> : t('ninjaAddNote')}
+        </Pill>
+        <Pill icon={Tag} on={open === 'promo'} set={promoOn} onClick={() => toggle('promo')}>
+          {promo.code ? (
+            <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300 dark:text-red-600')}>
+              {promo.code}
+              {promoOn && ` −${price(extras.promoDiscount)}`}
+            </span>
+          ) : (
+            t('promoCode')
+          )}
+        </Pill>
+        {points.offered && (
+          <Pill icon={Award} on={open === 'points'} set={pointsOn} onClick={() => toggle('points')}>
+            {pointsOn ? `${points.count} ${t('pts')} −${price(extras.pointsDiscount)}` : t('useLoyaltyPoints')}
+          </Pill>
+        )}
+      </div>
+
+      <AnimatePresence initial={false} mode='popLayout'>
+        {open && (
+          <motion.div
+            key={open}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={springSoft}
+            className='overflow-hidden'
+          >
+            <div className='pt-1'>
+              {open === 'note' && (
+                <textarea
+                  autoFocus
+                  rows={2}
+                  value={extras.note}
+                  onChange={(e) => extras.setNote(e.target.value)}
+                  placeholder={t('orderNoteOptional')}
+                  className='bg-background/10 placeholder:text-background/50 focus-visible:ring-background/30 w-full resize-none rounded-2xl px-4 py-3 text-base outline-none focus-visible:ring-2 md:text-sm'
+                />
+              )}
+              {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
+              {open === 'points' && (
+                <div className='bg-background/10 flex flex-col gap-3 rounded-2xl px-4 py-3'>
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='font-semibold tabular-nums'>
+                      {points.count} {t('pts')}
+                    </span>
+                    <span className='text-xs tabular-nums opacity-60'>
+                      {points.balance} {t('pts')}
+                    </span>
+                  </div>
+                  <Slider
+                    min={0}
+                    max={points.max}
+                    step={POINTS_STEP}
+                    value={[points.count]}
+                    onValueChange={([value]) => {
+                      points.setCount(value)
+                      points.setActive(value > 0)
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Why a code does not apply, said under the row whether its field is open or not */}
+      <AnimatePresence initial={false}>
+        {promo.code && promo.reason && (
+          <motion.p key='reason' {...swap} className='px-1 text-xs text-red-300 dark:text-red-600'>
+            {t(promoReasonKey(promo.reason))}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function Pill({
+  icon: Icon,
+  on,
+  set,
+  onClick,
+  children,
+}: {
+  icon: typeof Tag
+  /** Its field is open */
+  on: boolean
+  /** It holds something that goes with the order */
+  set: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <motion.button
+      type='button'
+      layout='position'
+      transition={springOpen}
+      whileTap={{ scale: 0.96 }}
+      aria-expanded={on}
+      onClick={onClick}
+      className={cn(
+        'flex h-9 max-w-full items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200',
+        set ? 'bg-emerald-500/20 text-emerald-300 dark:text-emerald-700' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
+      )}
+    >
+      <Icon className='size-3.5 shrink-0' />
+      {children}
+    </motion.button>
+  )
+}
+
+/** The code, typed and applied in one line; applied, the pill carries it and here it can be taken off */
+function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => void }) {
+  const t = useT()
+  const [input, setInput] = useState('')
+  const { promo } = extras
+  if (promo.code) {
+    return (
+      <div className='bg-background/10 flex items-center gap-2 rounded-2xl px-4 py-2'>
+        <span className='min-w-0 flex-1 truncate font-mono text-sm font-bold tracking-wide'>{promo.code}</span>
+        {promo.checking ? (
+          <Loader2 className='size-4 animate-spin opacity-60' />
+        ) : (
+          <button type='button' aria-label={t('removePromo')} onClick={promo.clear} className='bg-background/15 grid size-8 place-items-center rounded-full'>
+            <X className='size-4' />
+          </button>
+        )}
+      </div>
+    )
+  }
+  return (
+    <form
+      className='bg-background/10 flex items-center gap-2 rounded-2xl py-1.5 ps-4 pe-1.5'
+      onSubmit={(e) => {
+        e.preventDefault()
+        const typed = input.trim().toUpperCase()
+        if (!typed) return
+        promo.apply(typed)
+        onDone()
+      }}
+    >
+      <input
+        autoFocus
+        placeholder={t('promoCode')}
+        aria-label={t('promoCode')}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        autoCapitalize='characters'
+        autoComplete='off'
+        className='placeholder:text-background/50 h-9 min-w-0 flex-1 bg-transparent text-base uppercase outline-none placeholder:normal-case md:text-sm'
+      />
+      <button type='submit' disabled={!input.trim()} className='bg-background text-foreground h-9 shrink-0 rounded-full px-4 text-[13px] font-bold disabled:opacity-40'>
+        {t('apply')}
+      </button>
+    </form>
+  )
+}

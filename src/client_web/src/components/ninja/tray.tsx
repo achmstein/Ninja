@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
-import { CheckoutExtrasRows } from '@/components/cart/checkout-extras'
+import { TrayExtras } from './tray-extras'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
@@ -452,7 +452,6 @@ function SheetHandle({
 function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras: CheckoutExtras; cloudKitchen: boolean }) {
   const t = useT()
   const localized = useLocalized()
-  const price = usePrice()
   const lines = useCart((s) => s.lines)
 
   return (
@@ -464,31 +463,10 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
         {lines.map((line) => (
           <SwipeLine key={lineKey(line)} line={line} />
         ))}
-        {/* The note, a code, points: right here in the order, on a light card as the bills sit in their sheet */}
-        <div className='bg-background text-foreground divide-border/60 mt-3 flex flex-col divide-y overflow-hidden rounded-[1.25rem]'>
-          <CheckoutExtrasRows extras={extras} />
+        {/* The note, a code, points: small pills under the dishes, each opening only when wanted */}
+        <div className='mt-3 px-2'>
+          <TrayExtras extras={extras} />
         </div>
-        {/* What they take off, and what the hold will send */}
-        {(extras.promoDiscount > 0 || extras.pointsDiscount > 0) && (
-          <div className='mt-3 flex flex-col gap-1 px-2 text-sm tabular-nums'>
-            <div className='flex justify-between opacity-70'>
-              <span>{t('subtotal')}</span>
-              <span>{price(extras.subtotal)}</span>
-            </div>
-            {extras.promoDiscount > 0 && (
-              <div className='flex justify-between text-emerald-400 dark:text-emerald-600'>
-                <span>{extras.promo.code}</span>
-                <span>−{price(extras.promoDiscount)}</span>
-              </div>
-            )}
-            {extras.pointsDiscount > 0 && (
-              <div className='flex justify-between text-emerald-400 dark:text-emerald-600'>
-                <span>{t('useLoyaltyPoints')}</span>
-                <span>−{price(extras.pointsDiscount)}</span>
-              </div>
-            )}
-          </div>
-        )}
         <div className='mt-3 flex flex-col gap-2 px-2 text-sm'>
           {order.tableUnconfirmed && order.activePlace ? (
             <div className='text-foreground rounded-2xl'>
