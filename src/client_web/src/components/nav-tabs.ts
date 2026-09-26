@@ -4,7 +4,7 @@ import { Coffee, Gamepad2, ReceiptText, User } from 'lucide-react'
 // places tab is where the customer is in the cafe, so its label and icon
 // follow the visit (docs/visit-tab.html); Bills is everything the cafe is
 // charging them, so the menu never carries orders. The bottom bar and the
-// Counter template's dock both draw these.
+// Ninja style's dock both draw these.
 export const NAV_TABS = [
   { to: '/', key: 'menu', icon: Coffee, exact: true },
   { to: '/places', key: 'rooms', icon: Gamepad2 },

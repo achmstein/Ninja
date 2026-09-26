@@ -35,7 +35,7 @@ export function Deck({
   columns: DeckColumn[]
   column: number
   onColumnChange: (column: number) => void
-  /** The row a column is scrolled to, told to the Counter so zooming out can find it */
+  /** The row a column is scrolled to, told to the Ninja style so zooming out can find it */
   onRowChange: (column: number, row: number) => void
   /** Where the deck opens; read on mount only */
   start: DeckPosition
@@ -212,7 +212,7 @@ function DeckCard({
               pressing || hint ? 'opacity-100' : 'opacity-0'
             )}
           >
-            {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm'>{t('counterHintHoldAdd')}</span>}
+            {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
             <PressRing pressing={pressing} />
           </span>
         )}

@@ -158,6 +158,8 @@ public sealed class ProvisionerTests
         Assert.IsNotNull(_stack.SeededBrand, string.Join(", ", Steps()));
         Assert.AreEqual(anywhere, _stack.SeededBrand["guestOrdersAnywhere"]!.GetValue<bool>());
         Assert.AreEqual(key, _stack.SeededBrand["businessType"]!.GetValue<string>());
+        // Every new café starts in Ninja, the platform's signature style
+        Assert.AreEqual("ninja", _stack.SeededBrand["theme"]!["style"]!.GetValue<string>());
     }
 
     /// <summary>A cloud kitchen starts with its kitchen, stock and books on, and nothing that needs a seat.</summary>

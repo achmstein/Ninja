@@ -3,6 +3,7 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import type { LayoutForm } from '@/lib/layout-form'
 import {
   LAYOUT_PARTS,
+  RECOMMENDED_STYLE,
   STYLE_KEYS,
   STYLES,
   styleOf,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/select'
 
 const STYLE_LABELS: Record<StyleKey, { name: TranslationKey; hint: TranslationKey }> = {
+  ninja: { name: 'styleNinja', hint: 'styleNinjaHint' },
   classic: { name: 'styleClassic', hint: 'styleClassicHint' },
   minimal: { name: 'styleMinimal', hint: 'styleMinimalHint' },
   bold: { name: 'styleBold', hint: 'styleBoldHint' },
@@ -83,7 +85,7 @@ export function StylePicker({
         <Label id='brand-style-label'>{t('brandStyle')}</Label>
         <p className='text-muted-foreground text-xs'>{t('brandStyleHint')}</p>
       </div>
-      <div role='radiogroup' aria-labelledby='brand-style-label' className='grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-5'>
+      <div role='radiogroup' aria-labelledby='brand-style-label' className='grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-6'>
         {STYLE_KEYS.map((key) => {
           const selected = key === current
           return (
@@ -100,7 +102,14 @@ export function StylePicker({
             >
               <StyleSketch style={key} />
               <span className='px-0.5'>
-                <span className='block text-sm font-medium'>{t(STYLE_LABELS[key].name)}</span>
+                <span className='flex flex-wrap items-center gap-1.5 text-sm font-medium'>
+                  {t(STYLE_LABELS[key].name)}
+                  {key === RECOMMENDED_STYLE && (
+                    <Badge variant='secondary' className='px-1.5 py-0 text-[10px]'>
+                      {t('styleRecommended')}
+                    </Badge>
+                  )}
+                </span>
                 <span className='text-muted-foreground block text-xs leading-snug'>{t(STYLE_LABELS[key].hint)}</span>
               </span>
             </button>
@@ -155,6 +164,27 @@ function StyleSketch({ style }: { style: StyleKey }) {
   const box = 'flex h-24 w-full flex-col gap-1.5 overflow-hidden rounded-md border p-2'
   const line = 'bg-foreground/25 h-1 rounded-full'
   switch (style) {
+    // One big card to swipe, the next peeking beside it, the order in a dark dock below
+    case 'ninja':
+      return (
+        <div aria-hidden className={cn(box, 'bg-background gap-1')}>
+          <div className='flex gap-2 border-b pb-1'>
+            <div className='bg-foreground/60 h-0.5 w-4' />
+            <div className='bg-foreground/20 h-0.5 w-4' />
+            <div className='bg-foreground/20 h-0.5 w-4' />
+          </div>
+          <div className='flex min-h-0 flex-1 gap-1'>
+            <div className='bg-foreground/20 flex flex-1 flex-col justify-end gap-0.5 rounded-md p-1 shadow-sm'>
+              <div className='bg-foreground/60 h-1 w-2/3 rounded-full' />
+            </div>
+            <div className='bg-foreground/10 w-2 rounded-s-md' />
+          </div>
+          <div className='bg-foreground/85 flex h-4 shrink-0 items-center justify-between rounded-full px-1.5'>
+            <div className='bg-background/60 h-0.5 w-5 rounded-full' />
+            <div className='bg-primary h-2 w-5 rounded-full' />
+          </div>
+        </div>
+      )
     // A thumbnail beside each name, chips above
     case 'classic':
       return (

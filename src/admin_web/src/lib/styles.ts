@@ -14,7 +14,7 @@
  * customer app carries a port of it in lib/core/brand/styles.dart.
  */
 
-export const STYLE_KEYS = ['classic', 'minimal', 'bold', 'cozy', 'night'] as const
+export const STYLE_KEYS = ['ninja', 'classic', 'minimal', 'bold', 'cozy', 'night'] as const
 export type StyleKey = (typeof STYLE_KEYS)[number]
 
 export const MENU_ITEMS = ['row', 'card', 'compact', 'hero'] as const
@@ -88,6 +88,15 @@ export type StylePreset = {
 const CLASSIC_HEADINGS: Headings = { font: null, weight: 700, scale: 1, uppercase: false, tracking: 0 }
 
 export const STYLES: Record<StyleKey, StylePreset> = {
+  // Ninja, the platform's signature style and a new café's first look: motion-first, one thumb,
+  // a deck of big cards, options in place, the order in a tray. The web customer app draws its
+  // own page and bars for it; these parts are what the rest (the previews, the phone app) wear
+  ninja: {
+    layout: { menuItem: 'hero', categories: 'tabs', header: 'left', buttons: 'pill', surface: 'shadow', density: 'comfortable' },
+    headings: { font: null, weight: 800, scale: 1.1, uppercase: false, tracking: -0.02 },
+    defaults: { radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic' },
+    forceDark: false,
+  },
   // Today's look, exactly: the default for every café that never chose
   classic: {
     layout: { menuItem: 'row', categories: 'chips', header: 'left', buttons: 'rounded', surface: 'outlined', density: 'comfortable' },
@@ -127,13 +136,18 @@ export const STYLES: Record<StyleKey, StylePreset> = {
 
 export const DEFAULT_STYLE: StyleKey = 'classic'
 
+/** The style the pickers mark as recommended, and the one a new café starts in. */
+export const RECOMMENDED_STYLE: StyleKey = 'ninja'
+
 export function isStyleKey(value: unknown): value is StyleKey {
   return typeof value === 'string' && (STYLE_KEYS as readonly string[]).includes(value)
 }
 
 /** The style a theme names; classic for none or one this build does not know. */
 export function styleOf(theme: { style?: string | null } | null | undefined): StyleKey {
-  return isStyleKey(theme?.style) ? theme.style : DEFAULT_STYLE
+  // Ninja was first built as "counter"; a value saved under that name still means it
+  const style = theme?.style === 'counter' ? 'ninja' : theme?.style
+  return isStyleKey(style) ? style : DEFAULT_STYLE
 }
 
 export function presetOf(theme: { style?: string | null } | null | undefined): StylePreset {

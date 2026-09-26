@@ -35,7 +35,7 @@ const ATTRIBUTES: Record<keyof Layout, string> = {
 }
 
 /**
- * Dev only: `?layout=counter` (a style, or a home part such as `tiles`) tries
+ * Dev only: `?layout=ninja` (a style, or a home part such as `tiles`) tries
  * a template on the café's own brand without saving anything. Read once, so
  * it holds while the tab moves between pages.
  */

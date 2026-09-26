@@ -7,16 +7,16 @@ import { cn } from '@/lib/utils'
 import { BrandMark, BrandWordmark } from '@/components/brand-mark'
 import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from '@/components/branch-switcher'
-import { COUNTER_BAR_H } from './chrome'
+import { NINJA_BAR_H } from './chrome'
 
 /**
- * The top bar in the Counter's chrome: slim and see-through, so the cards
+ * The top bar in the Ninja style's chrome: slim and see-through, so the cards
  * run on under it. The order pill lives in its middle: while the pill is on
  * screen the wordmark folds to the mark and the place chips step aside, and
  * they come back when it goes. `start` replaces the brand (the way back from
  * the whole menu).
  */
-export function CounterTopBar({ start, className }: { start?: ReactNode; className?: string }) {
+export function NinjaTopBar({ start, className }: { start?: ReactNode; className?: string }) {
   const pill = useOrderPill((s) => s.onScreen)
   const swap = blurSwap(useReducedMotion())
   return (
@@ -25,7 +25,7 @@ export function CounterTopBar({ start, className }: { start?: ReactNode; classNa
         'bg-background/70 z-30 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 backdrop-blur-xl backdrop-saturate-150 md:hidden',
         className
       )}
-      style={{ height: COUNTER_BAR_H }}
+      style={{ height: NINJA_BAR_H }}
     >
       <div className='flex min-w-0 items-center'>
         {start ?? (
@@ -36,7 +36,7 @@ export function CounterTopBar({ start, className }: { start?: ReactNode; classNa
                   <BrandMark className='size-9 rounded-xl text-base' />
                 </motion.span>
               ) : (
-                <motion.span key='word' {...swap} className='flex min-w-0'>
+                <motion.span key='word' {...swap} className='flex min-w-0 items-center gap-2'>
                   <BrandWordmark className='max-w-[50vw]' />
                 </motion.span>
               )}

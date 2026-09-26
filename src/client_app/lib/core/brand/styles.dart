@@ -1,8 +1,10 @@
 /// The customer app's styles: one flow, many looks.
 ///
 /// A port of `client_web/src/lib/styles.ts`, the single source of truth:
-/// the same five presets with the same values, and the same resolution. A
-/// change there is made here too.
+/// the same presets the API accepts, with the same values, and the same
+/// resolution. A change there is made here too. (The web's page templates
+/// showcase, paper, tiles and poster are not offered by the API, so they
+/// are not here.)
 ///
 /// A style dresses the same screens differently: how an item sits on the
 /// menu, how the categories and the header are laid out, the shape of the
@@ -15,7 +17,9 @@ library;
 
 import 'tenant_brand.dart';
 
-enum StyleKey { classic, minimal, bold, cozy, night }
+/// Ninja first: the platform's signature style, and the one a new café
+/// starts in.
+enum StyleKey { ninja, classic, minimal, bold, cozy, night }
 
 /// row: a thumbnail beside the text; card: a photo tile in a grid; compact: text only; hero: a wide photo
 enum MenuItemLayout { row, card, compact, hero }
@@ -126,6 +130,24 @@ class StylePreset {
 const _classicHeadings = Headings(font: null, weight: 700, scale: 1, uppercase: false, tracking: 0);
 
 const Map<StyleKey, StylePreset> styles = {
+  // Ninja, the platform's signature style. The web customer app draws its own
+  // motion-first page and bars for it (a deck of big cards, the order in a
+  // tray, held to send); this app has no Ninja home yet, so it wears Ninja's
+  // parts on the usual screens instead: wide photos, tabs, pill buttons,
+  // lifted surfaces, in Ninja's faces and corners
+  StyleKey.ninja: StylePreset(
+    layout: Layout(
+      menuItem: MenuItemLayout.hero,
+      categories: CategoriesLayout.tabs,
+      header: HeaderLayout.left,
+      buttons: ButtonsLayout.pill,
+      surface: SurfaceLayout.shadow,
+      density: DensityLayout.comfortable,
+    ),
+    headings: Headings(font: null, weight: 800, scale: 1.1, uppercase: false, tracking: -0.02),
+    defaults: StyleDefaults(radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic'),
+    forceDark: false,
+  ),
   // Today's look, exactly: the default for every café that never chose
   StyleKey.classic: StylePreset(
     layout: Layout(
@@ -201,7 +223,11 @@ const Map<StyleKey, StylePreset> styles = {
 const StyleKey defaultStyle = StyleKey.classic;
 
 /// The style a theme names; classic for none or one this build does not know.
-StyleKey styleOf(String? style) => StyleKey.values.where((k) => k.name == style).firstOrNull ?? defaultStyle;
+/// Ninja was first built as "counter"; a value saved under that name still means it.
+StyleKey styleOf(String? style) {
+  final name = style == 'counter' ? 'ninja' : style;
+  return StyleKey.values.where((k) => k.name == name).firstOrNull ?? defaultStyle;
+}
 
 StylePreset presetOf(String? style) => styles[styleOf(style)]!;
 

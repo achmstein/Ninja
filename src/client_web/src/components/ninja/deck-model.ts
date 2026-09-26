@@ -10,7 +10,7 @@ import {
 import { posterTone, type MenuSectionData, type PosterTone, type SectionKind } from '@/components/menu/home/sections'
 
 /**
- * The Counter's deck: one column of big cards per category, side by side.
+ * The Ninja style's deck: one column of big cards per category, side by side.
  * A returning guest's usuals lead as a column of their own, so the deck
  * opens on "your usual"; otherwise it opens on the first category.
  */

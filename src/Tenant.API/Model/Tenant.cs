@@ -245,9 +245,11 @@ public class TenantTheme
     /// The looks the customer apps know how to wear: each dresses the same
     /// screens differently (how an item, the categories and the header are
     /// laid out, the buttons, the surfaces, the spacing). The café's own
-    /// seeds win over a style's defaults.
+    /// seeds win over a style's defaults. "ninja" is the platform's
+    /// signature style, listed first; the control plane brands a new café
+    /// with it when it provisions the stack.
     /// </summary>
-    public static readonly string[] Styles = ["classic", "minimal", "bold", "cozy", "night"];
+    public static readonly string[] Styles = ["ninja", "classic", "minimal", "bold", "cozy", "night"];
 
     /// <summary>One of <see cref="Styles"/>; null is "classic", the look every café had before styles.</summary>
     public string? Style { get; set; }

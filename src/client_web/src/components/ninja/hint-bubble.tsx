@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * A one-line cue in the dock's colours. It rises in and fades out; under
- * reduced motion it only fades (the Counter's MotionConfig drops the rise).
+ * reduced motion it only fades (the Ninja style's MotionConfig drops the rise).
  * Put it inside an AnimatePresence.
  */
 export function HintBubble({ children, className }: { children: ReactNode; className?: string }) {

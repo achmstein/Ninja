@@ -2,7 +2,7 @@ import { cartCount, cartTotal, lineKey, type CartLine } from '@/lib/cart'
 
 /** What the docked tray shows: the latest lines' photos, how many more there are, and the running count and total. */
 export type TraySummary = {
-  thumbs: Array<{ key: string; pictureUrl?: string; name: string; quantity: number }>
+  thumbs: Array<{ key: string; pictureUrl?: string; name: string; nameAr?: string; quantity: number }>
   /** Lines not shown as a thumbnail */
   more: number
   count: number
@@ -16,7 +16,7 @@ export function traySummary(lines: CartLine[], max = TRAY_THUMBS): TraySummary {
   // The newest first, so the dish that just flew in sits at the front
   const newest = [...lines].reverse()
   return {
-    thumbs: newest.slice(0, max).map((l) => ({ key: lineKey(l), pictureUrl: l.pictureUrl, name: l.nameEn, quantity: l.quantity })),
+    thumbs: newest.slice(0, max).map((l) => ({ key: lineKey(l), pictureUrl: l.pictureUrl, name: l.nameEn, nameAr: l.nameAr, quantity: l.quantity })),
     more: Math.max(0, newest.length - max),
     count: cartCount(lines),
     total: cartTotal(lines),

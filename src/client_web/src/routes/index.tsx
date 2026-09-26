@@ -4,7 +4,7 @@ import { type CatalogItemDto } from '@/api/catalog'
 import { useBrandLayout } from '@/lib/brand-layout'
 import { CustomizeDialog } from '@/components/menu/customize-dialog'
 import { ListHome } from '@/components/menu/home/list-home'
-import { CounterHome } from '@/components/counter/counter-home'
+import { NinjaHome } from '@/components/ninja/ninja-home'
 import { PaperHome } from '@/components/menu/home/paper-home'
 import { PosterHome } from '@/components/menu/home/poster-home'
 import { ShowcaseHome } from '@/components/menu/home/showcase-home'
@@ -23,7 +23,7 @@ const HOMES = {
   paper: PaperHome,
   tiles: TilesHome,
   poster: PosterHome,
-  counter: CounterHome,
+  ninja: NinjaHome,
 } as const
 
 function MenuPage() {

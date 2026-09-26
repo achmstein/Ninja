@@ -27,7 +27,7 @@ export type TuneResult = {
 const SPRING = { type: 'spring', stiffness: 380, damping: 36 } as const
 
 /**
- * A card opened in place: the card itself grows to fill the Counter (it
+ * A card opened in place: the card itself grows to fill the Ninja menu (it
  * shares its layout id with the card in the deck, so the photo never leaves
  * the screen) and the item's options slide in under the photo, drawn from
  * its real option groups. The choices are the classic item sheet's: the
@@ -158,7 +158,7 @@ export function Tune({
             />
           ) : (
             <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-sm font-medium underline-offset-4 hover:underline'>
-              {t('counterAddNote')}
+              {t('ninjaAddNote')}
             </button>
           )}
         </motion.div>
@@ -175,7 +175,7 @@ export function Tune({
         <div className='flex items-center gap-1'>
           <button
             type='button'
-            aria-label={t('counterLess')}
+            aria-label={t('ninjaLess')}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             className='bg-muted grid size-10 place-items-center rounded-full disabled:opacity-40'
             disabled={quantity <= 1}
@@ -183,7 +183,7 @@ export function Tune({
             <Minus className='size-4' />
           </button>
           <span className='w-7 text-center text-lg font-bold tabular-nums'>{quantity}</span>
-          <button type='button' aria-label={t('counterMore')} onClick={() => setQuantity((q) => q + 1)} className='bg-muted grid size-10 place-items-center rounded-full'>
+          <button type='button' aria-label={t('ninjaMore')} onClick={() => setQuantity((q) => q + 1)} className='bg-muted grid size-10 place-items-center rounded-full'>
             <Plus className='size-4' />
           </button>
         </div>

@@ -3,7 +3,7 @@ import { useBrandLayout } from '@/lib/brand-layout'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useVisitTab } from '@/lib/visit'
-import { CounterNavDock } from '@/components/counter/counter-nav'
+import { NinjaNavDock } from '@/components/ninja/ninja-nav'
 import { isTabActive, NAV_TABS as tabs } from '@/components/nav-tabs'
 
 export function BottomNav() {
@@ -24,9 +24,9 @@ export function BottomNav() {
   if (pathname.startsWith('/cart')) return null
   // Paying is a page of its own too, like a provider's checkout
   if (pathname.startsWith('/pay/')) return null
-  // The Counter chrome floats the tabs in a dark slab; on the Counter's own
+  // The Ninja chrome floats the tabs in a dark slab; on the Ninja style's own
   // menu they are the lower row of the dock the tray sits in
-  if (chrome === 'counter') return pathname === '/' && home === 'counter' ? null : <CounterNavDock />
+  if (chrome === 'ninja') return pathname === '/' && home === 'ninja' ? null : <NinjaNavDock />
 
   return (
     <nav className='bg-background/95 fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t backdrop-blur md:hidden'>

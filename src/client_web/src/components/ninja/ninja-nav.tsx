@@ -8,12 +8,12 @@ import { LiquidPill } from './liquid-pill'
 import { useLiquidEdges } from './use-liquid'
 
 /**
- * The app's tabs as the Counter draws them: a row inside the dark dock, the
+ * The app's tabs as the Ninja style draws them: a row inside the dark dock, the
  * active tab lifted by the same liquid pill as the categories. On the menu
  * it sits under the tray, one slab with it; on every other tab it is the
- * whole dock (CounterNavDock).
+ * whole dock (NinjaNavDock).
  */
-export function CounterNav({ className }: { className?: string }) {
+export function NinjaNav({ className }: { className?: string }) {
   const t = useT()
   const visitTab = useVisitTab()
   const pathname = useRouterState({ select: (s) => (s.resolvedLocation ?? s.location).pathname })
@@ -22,7 +22,7 @@ export function CounterNav({ className }: { className?: string }) {
   const active = Math.max(0, tabs.findIndex((tab) => isTabActive(tab, pathname)))
   const row = useRef<HTMLDivElement>(null)
   const items = useRef<Array<HTMLAnchorElement | null>>([])
-  const edges = useLiquidEdges(active, items, row)
+  const edges = useLiquidEdges(active, items, row, tabs.map((tab) => tab.key).join(), 'app-tabs')
 
   return (
     <nav className={cn('md:hidden', className)}>
@@ -57,15 +57,15 @@ export function CounterNav({ className }: { className?: string }) {
 }
 
 /**
- * The bottom bar on every tab but the menu when the café wears the Counter:
+ * The bottom bar on every tab but the menu when the café wears the Ninja style:
  * the same dark slab, floating off the edges and lifted clear of the
  * phone's home indicator.
  */
-export function CounterNavDock() {
+export function NinjaNavDock() {
   return (
     <div className='pointer-events-none fixed inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg px-2 md:hidden'>
       <div className='bg-foreground text-background pointer-events-auto rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
-        <CounterNav />
+        <NinjaNav />
       </div>
     </div>
   )

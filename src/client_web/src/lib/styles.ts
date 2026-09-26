@@ -14,7 +14,7 @@
  * customer app carries a port of it in lib/core/brand/styles.dart.
  */
 
-export const STYLE_KEYS = ['classic', 'minimal', 'bold', 'cozy', 'night', 'showcase', 'paper', 'tiles', 'poster', 'counter'] as const
+export const STYLE_KEYS = ['ninja', 'classic', 'minimal', 'bold', 'cozy', 'night', 'showcase', 'paper', 'tiles', 'poster'] as const
 export type StyleKey = (typeof STYLE_KEYS)[number]
 
 export const MENU_ITEMS = ['row', 'card', 'compact', 'hero'] as const
@@ -23,8 +23,8 @@ export const HEADERS = ['left', 'center', 'banner'] as const
 export const BUTTON_STYLES = ['pill', 'rounded', 'square'] as const
 export const SURFACES = ['flat', 'outlined', 'shadow'] as const
 export const DENSITIES = ['airy', 'comfortable', 'compact'] as const
-export const HOMES = ['list', 'rows', 'paper', 'tiles', 'poster', 'counter'] as const
-export const CHROMES = ['classic', 'counter'] as const
+export const HOMES = ['list', 'rows', 'paper', 'tiles', 'poster', 'ninja'] as const
+export const CHROMES = ['classic', 'ninja'] as const
 
 export type MenuItemLayout = (typeof MENU_ITEMS)[number]
 export type CategoriesLayout = (typeof CATEGORY_STYLES)[number]
@@ -50,15 +50,15 @@ export type Layout = {
    * How the menu page is composed. list: search, offers, a category rail and
    * one long list; rows: a hero and a sideways row per category; paper: a
    * printed menu set in type; tiles: the categories first, each opening its
-   * items; poster: a loud colour block per category; counter: one surface
+   * items; poster: a loud colour block per category; ninja: one surface
    * of big swipeable cards that open in place, with the order docked below.
    */
   home: HomeLayout
   /**
    * How the app's own bars are dressed: the top bar, the bottom tabs and
-   * where notifications land. classic: today's bars; counter: a slim
+   * where notifications land. classic: today's bars; ninja: a slim
    * translucent top bar and the tabs in a floating dark dock (with the
-   * tray, on the Counter's menu). Each template gets its own in time.
+   * tray, on the Ninja style's menu). Each template gets its own in time.
    */
   chrome: ChromeLayout
 }
@@ -175,9 +175,10 @@ export const STYLES: Record<StyleKey, StylePreset> = {
     defaults: { radius: 'xl', fontLatin: 'Satoshi', fontArabic: 'Readex Pro', headerSize: 'md' },
     forceDark: false,
   },
-  // Motion-first, one thumb: a deck of big cards, options in place, the order in a tray, held to send
-  counter: {
-    layout: { menuItem: 'hero', categories: 'tabs', header: 'left', buttons: 'pill', surface: 'shadow', density: 'comfortable', home: 'counter', chrome: 'counter' },
+  // Ninja, the platform's signature style and a new café's first look: motion-first, one thumb,
+  // a deck of big cards, options in place, the order in a tray, held to send
+  ninja: {
+    layout: { menuItem: 'hero', categories: 'tabs', header: 'left', buttons: 'pill', surface: 'shadow', density: 'comfortable', home: 'ninja', chrome: 'ninja' },
     headings: { font: null, weight: 800, scale: 1.1, uppercase: false, tracking: -0.02 },
     defaults: { radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic' },
     forceDark: false,
@@ -192,7 +193,13 @@ export function isStyleKey(value: unknown): value is StyleKey {
 
 /** The style a theme names; classic for none or one this build does not know. */
 export function styleOf(theme: { style?: string | null } | null | undefined): StyleKey {
-  return isStyleKey(theme?.style) ? theme.style : DEFAULT_STYLE
+  const style = unalias(theme?.style)
+  return isStyleKey(style) ? style : DEFAULT_STYLE
+}
+
+/** Ninja was first built as "counter"; a value saved under that name still means it. */
+function unalias(value: unknown): unknown {
+  return value === 'counter' ? 'ninja' : value
 }
 
 export function presetOf(theme: { style?: string | null } | null | undefined): StylePreset {
@@ -211,7 +218,7 @@ export function resolveLayout(
   const overrides = theme?.layout
   if (!overrides) return layout
   for (const { part, values } of LAYOUT_PARTS) {
-    const value = overrides[part]
+    const value = unalias(overrides[part])
     if (typeof value === 'string' && values.includes(value)) (layout as Record<LayoutPart, string>)[part] = value
   }
   return layout

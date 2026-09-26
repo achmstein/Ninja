@@ -34,6 +34,17 @@ void main() {
       expect(resolveLayout('night', null).categories, CategoriesLayout.tabs);
     });
 
+    test("Ninja is listed first and, with no Ninja home here, wears its parts on the usual screens", () {
+      expect(StyleKey.values.first, StyleKey.ninja);
+      final layout = resolveLayout('ninja', null);
+      expect(layout.menuItem, MenuItemLayout.hero);
+      expect(layout.categories, CategoriesLayout.tabs);
+      expect(layout.buttons, ButtonsLayout.pill);
+      expect(presetOf('ninja').defaults.fontLatin, 'Plus Jakarta Sans');
+      // The name it was first built under still means it
+      expect(styleOf('counter'), StyleKey.ninja);
+    });
+
     test("the café's own parts go over its style's", () {
       final layout = resolveLayout('bold', {'menuItem': 'card', 'density': 'airy'});
       expect(layout.menuItem, MenuItemLayout.card);

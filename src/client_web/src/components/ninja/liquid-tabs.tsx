@@ -62,7 +62,7 @@ export function LiquidTabs({
       <button
         type='button'
         onClick={onZoomOut}
-        aria-label={t('counterWholeMenu')}
+        aria-label={t('ninjaWholeMenu')}
         data-hint-anchor='zoom'
         className='bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-full'
       >

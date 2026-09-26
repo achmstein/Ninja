@@ -26,6 +26,9 @@ public sealed class Provisioner(
 {
     private const string Source = "provisioner";
 
+    /// <summary>The style a fresh stack is branded with: Ninja, the platform's signature style. Cafés created before keep theirs.</summary>
+    public const string NewCafeStyle = "ninja";
+
     private PlatformOptions Platform => options.Value;
 
     private string Dir(Tenant tenant) => Path.Combine(Platform.TenantsRoot, tenant.Slug);
@@ -110,7 +113,8 @@ public sealed class Provisioner(
                     // The business picks which of the plan's modules are on the first day
                     ["features"] = kept?["features"]?.DeepClone()
                         ?? PlanCatalog.ToFeatures(BusinessProfiles.Starting(tenant.BusinessType, PlanCatalog.Entitlements(tenant))),
-                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme },
+                    // A new café starts in Ninja, the platform's signature style
+                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme, ["style"] = NewCafeStyle },
                     ["locale"] = new JsonObject
                     {
                         ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,

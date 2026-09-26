@@ -1,5 +1,5 @@
 /**
- * The Counter's gestures are shown once each: a first-visit cue, then never
+ * The Ninja style's gestures are shown once each: a first-visit cue, then never
  * again on this browser. What has been shown is kept in localStorage; when
  * storage is missing or refuses (a private window, blocked site data), the
  * page's own memory stands in, so a cue shows at most once per session.
@@ -7,7 +7,7 @@
 export const HINT_KEYS = ['swipe', 'zoom', 'holdAdd', 'tray'] as const
 export type HintKey = (typeof HINT_KEYS)[number]
 
-export const HINTS_STORAGE_KEY = 'ninja-counter-hints'
+export const HINTS_STORAGE_KEY = 'ninja-style-hints'
 
 export type HintStorage = Pick<Storage, 'getItem' | 'setItem'>
 

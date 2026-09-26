@@ -17,12 +17,18 @@ describe('resolveLayout', () => {
     })
   })
 
-  it('dresses the bars as the style says: the Counter its own, every other style classic', () => {
-    expect(resolveLayout({ style: 'counter' })).toMatchObject({ home: 'counter', chrome: 'counter' })
-    for (const style of STYLE_KEYS.filter((k) => k !== 'counter')) expect(STYLES[style].layout.chrome).toBe('classic')
-    // A café may keep the classic bars under the Counter, and an unknown value falls back to the style's
-    expect(resolveLayout({ style: 'counter', layout: { chrome: 'classic' } }).chrome).toBe('classic')
-    expect(resolveLayout({ style: 'counter', layout: { chrome: 'glass' } }).chrome).toBe('counter')
+  it('dresses the bars as the style says: Ninja its own, every other style classic', () => {
+    expect(resolveLayout({ style: 'ninja' })).toMatchObject({ home: 'ninja', chrome: 'ninja' })
+    for (const style of STYLE_KEYS.filter((k) => k !== 'ninja')) expect(STYLES[style].layout.chrome).toBe('classic')
+    // A café may keep the classic bars under Ninja, and an unknown value falls back to the style's
+    expect(resolveLayout({ style: 'ninja', layout: { chrome: 'classic' } }).chrome).toBe('classic')
+    expect(resolveLayout({ style: 'ninja', layout: { chrome: 'glass' } }).chrome).toBe('ninja')
+  })
+
+  it('lists Ninja first, and still reads the name it was built under', () => {
+    expect(STYLE_KEYS[0]).toBe('ninja')
+    expect(styleOf({ style: 'counter' })).toBe('ninja')
+    expect(resolveLayout({ style: 'classic', layout: { home: 'counter', chrome: 'counter' } })).toMatchObject({ home: 'ninja', chrome: 'ninja' })
   })
 
   it('takes the style, then each part the café chose over it', () => {

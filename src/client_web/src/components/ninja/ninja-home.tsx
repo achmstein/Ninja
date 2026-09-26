@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion, MotionConfig, useReducedMotion } from 'motion/react'
+import { AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
@@ -15,9 +15,9 @@ import { itemPictureUrl } from '@/components/menu/item-card'
 import { usePageMark } from '@/components/menu/home/page-effects'
 import { OrderingPausedNote } from '@/components/menu/home/shared'
 import type { HomeProps } from '@/components/menu/home/use-menu'
-import { DOCK_INSET } from './chrome'
-import { CounterNav } from './counter-nav'
-import { CounterTopBar } from './counter-top-bar'
+import { DOCK_INSET, DOCK_SIDE } from './chrome'
+import { NinjaNav } from './ninja-nav'
+import { NinjaTopBar } from './ninja-top-bar'
 import { Deck, type DeckPosition } from './deck'
 import { buildDeck, canQuickAdd, DECK_TOP, pickUsual, positionOf, quickAddChoice, TONE_CLASS, type DeckColumn } from './deck-model'
 import { FlightLayer, type Flight } from './flights'
@@ -31,7 +31,7 @@ import { useHint, useTimeout } from './use-hint'
 type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone'] }
 
 /**
- * The Counter: ordering as one surface that never leaves the page. Dishes
+ * Ninja: ordering as one surface that never leaves the page. Dishes
  * are big cards in a deck (up and down within a category, sideways between
  * them); a card opens in place into its options; what is added flies into
  * the tray; and a held press sends the order through the same path the cart
@@ -40,14 +40,14 @@ type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone'] }
  * through over the cards; the tray and the app's tabs are one dock below.
  * The gestures are each shown once, on a first visit.
  */
-export function CounterHome({ menu }: HomeProps) {
-  usePageMark('menu-counter')
+export function NinjaHome({ menu }: HomeProps) {
+  usePageMark('menu-ninja')
   const t = useT()
   const localized = useLocalized()
   const reduced = useReducedMotion()
   const cloudKitchen = useIsCloudKitchen()
-  // A café may keep the classic bars under the Counter: then the app's own tab bar sits under the dock
-  const counterChrome = useBrandLayout().chrome === 'counter'
+  // A café may keep the classic bars under the Ninja style: then the app's own tab bar sits under the dock
+  const ninjaChrome = useBrandLayout().chrome === 'ninja'
   const add = useCart((s) => s.add)
 
   const columns = useMemo(() => buildDeck(menu.sections), [menu.sections])
@@ -68,6 +68,10 @@ export function CounterHome({ menu }: HomeProps) {
   const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
   const [tuning, setTuning] = useState<Tuning | null>(null)
   const [expanded, setExpanded] = useState(false)
+  // How far the order sheet is open (it follows a finger), and so how dark the page behind it is
+  const openness = useMotionValue(0)
+  const [scrim, setScrim] = useState(false)
+  useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
   const [flights, setFlights] = useState<Flight[]>([])
   const [bump, setBump] = useState(0)
   const [signInOpen, setSignInOpen] = useState(false)
@@ -158,7 +162,7 @@ export function CounterHome({ menu }: HomeProps) {
 
   /** A photo lifts off where it is and flies into the tray */
   const fly = (item: CatalogItemDto, from: HTMLElement | null, tone: DeckColumn['tone']) => {
-    setAnnounce(t('counterAdded', { name: localized(item.name) }))
+    setAnnounce(t('ninjaAdded', { name: localized(item.name) }))
     const to = target.current?.getBoundingClientRect()
     const box = from?.getBoundingClientRect()
     if (reduced || !to || !box || box.width === 0) {
@@ -202,7 +206,7 @@ export function CounterHome({ menu }: HomeProps) {
       return
     }
     if (item.isAvailable === false) {
-      toast.warning(t('counterSoldOut', { name: localized(item.name) }))
+      toast.warning(t('ninjaSoldOut', { name: localized(item.name) }))
       return
     }
     // Something to choose first: open it instead
@@ -216,7 +220,7 @@ export function CounterHome({ menu }: HomeProps) {
     addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' })
     fly(item, photo, toneOf(item))
     // Nothing opened to show what went in: the toast names it, with its photo
-    toast.success(t('counterAdded', { name: localized(item.name) }), {
+    toast.success(t('ninjaAdded', { name: localized(item.name) }), {
       icon: item.pictureUri ? <img src={itemPictureUrl(item.id)} alt='' className='size-5 rounded-full object-cover' /> : undefined,
       duration: 2200,
     })
@@ -224,7 +228,7 @@ export function CounterHome({ menu }: HomeProps) {
 
   const onKeepHolding = () => {
     if (keepHoldingToast.current) toast.dismiss(keepHoldingToast.current)
-    keepHoldingToast.current = toast.info(t('counterKeepHolding'), { duration: 1800 })
+    keepHoldingToast.current = toast.info(t('ninjaKeepHolding'), { duration: 1800 })
   }
 
   const labels = columns.map((c) => c.label)
@@ -235,7 +239,7 @@ export function CounterHome({ menu }: HomeProps) {
         <div
           className={cn(
             'bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] z-10 mx-auto flex max-w-lg flex-col md:top-(--header-h) md:bottom-0',
-            counterChrome ? 'bottom-0' : 'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]'
+            ninjaChrome ? 'bottom-0' : 'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]'
           )}
           onPointerDownCapture={noteInput}
           onTouchStartCapture={noteInput}
@@ -281,13 +285,13 @@ export function CounterHome({ menu }: HomeProps) {
             </motion.div>
 
             {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
-            <CounterTopBar
+            <NinjaTopBar
               className='absolute inset-x-0 top-0 md:flex'
               start={
                 mode === 'grid' ? (
                   <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
                     <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
-                    <span className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>{t('counterWholeMenu')}</span>
+                    <span className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>{t('ninjaWholeMenu')}</span>
                   </button>
                 ) : undefined
               }
@@ -310,7 +314,7 @@ export function CounterHome({ menu }: HomeProps) {
                 <div key='swipe' className='pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center'>
                   <HintBubble>
                     <MoveVertical className='size-3.5' />
-                    {t('counterHintSwipe')}
+                    {t('ninjaHintSwipe')}
                   </HintBubble>
                 </div>
               )}
@@ -318,7 +322,7 @@ export function CounterHome({ menu }: HomeProps) {
                 <div key='zoom' className='pointer-events-none absolute end-3 bottom-14 z-20'>
                   <HintBubble>
                     <LayoutGrid className='size-3.5' />
-                    {t('counterHintZoom')}
+                    {t('ninjaHintZoom')}
                   </HintBubble>
                 </div>
               )}
@@ -343,37 +347,33 @@ export function CounterHome({ menu }: HomeProps) {
           </div>
 
           {/* The order opened darkens what is behind it, not the dock itself */}
-          <AnimatePresence>
-            {expanded && (
-              <motion.div
-                key='scrim'
-                aria-hidden
-                className='fixed inset-0 z-30 bg-black/40'
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setExpanded(false)}
-              />
-            )}
-          </AnimatePresence>
+          {scrim && (
+            <motion.div
+              aria-hidden
+              className='fixed inset-0 z-30 bg-black/40'
+              style={{ opacity: openness }}
+              onClick={() => setExpanded(false)}
+            />
+          )}
 
           {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
           <div
             className={'bg-foreground text-background relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'}
-            style={{ marginInline: DOCK_INSET, marginBottom: counterChrome ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : DOCK_INSET }}
+            style={{ marginInline: DOCK_SIDE, marginBottom: ninjaChrome ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : DOCK_INSET }}
           >
             <Tray
               targetRef={target}
               bump={bump}
               expanded={expanded}
               onExpandedChange={setExpanded}
+              openness={openness}
               canOrder={canOrder}
               order={order}
               cloudKitchen={cloudKitchen}
               onSignIn={() => setSignInOpen(true)}
               onKeepHolding={onKeepHolding}
             />
-            {counterChrome && <CounterNav className='border-background/10 border-t' />}
+            {ninjaChrome && <NinjaNav className='border-background/10 border-t' />}
           </div>
         </div>
 

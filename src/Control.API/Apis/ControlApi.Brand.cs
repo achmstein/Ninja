@@ -183,7 +183,7 @@ public record BrandWordmark(string Url, int Width, int Height)
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
 /// <param name="Mode">light or dark for someone who has not chosen; null follows the device. The record edits it; the Brand tab sends it back as it came.</param>
-/// <param name="Style">classic, minimal, bold, cozy or night; null is classic.</param>
+/// <param name="Style">ninja, classic, minimal, bold, cozy or night; null is classic. A new café starts in <see cref="Platform.Provisioner.NewCafeStyle"/>.</param>
 /// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice.</param>
 public record BrandTheme(
     string? Accent,

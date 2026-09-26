@@ -5,10 +5,10 @@ import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from './branch-switcher'
 import { BrandWordmark } from '@/components/brand-mark'
 import { MenuBanner } from './menu-banner'
-import { CounterTopBar } from './counter/counter-top-bar'
+import { NinjaTopBar } from './ninja/ninja-top-bar'
 
 const tabPaths = ['/', '/places', '/bills', '/profile']
-const OWN_MASTHEAD: readonly string[] = ['rows', 'paper', 'poster', 'counter']
+const OWN_MASTHEAD: readonly string[] = ['rows', 'paper', 'poster', 'ninja']
 
 // Mobile parity with the app: no persistent app bar. Every tab gets the same
 // row — branding at the start, the place chip and branch chip at the end —
@@ -25,8 +25,8 @@ export function MobileTopBar() {
   // A template that draws its own masthead on the menu (components/menu/home) carries the chips there
   if (pathname === '/' && OWN_MASTHEAD.includes(home)) return null
 
-  // The Counter's chrome: a slim translucent bar that stays put, the page scrolling under it
-  if (chrome === 'counter') return <CounterTopBar className='sticky top-[env(safe-area-inset-top)]' />
+  // The Ninja style's chrome: a slim translucent bar that stays put, the page scrolling under it
+  if (chrome === 'ninja') return <NinjaTopBar className='sticky top-[env(safe-area-inset-top)]' />
 
   if (header === 'banner' && pathname === '/') {
     return (
