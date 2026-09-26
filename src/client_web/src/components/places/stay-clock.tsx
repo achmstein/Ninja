@@ -5,6 +5,8 @@ import { hasOptions, PlaceIcon } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
 import { Slab } from '@/components/ninja/page/parts'
+import { springSoft } from '@/lib/motion'
+import { VISIT_CARD_ID } from './hold-form'
 
 /** Seconds on the clock since it started */
 function elapsedSeconds(start: string | null | undefined, now: number): number {
@@ -44,7 +46,7 @@ export function StayClock({
   const members = [...(stay.members ?? [])].sort((a, b) => (a.role === b.role ? 0 : a.role === 'Owner' ? -1 : 1))
 
   return (
-    <Slab className='isolate flex flex-col gap-5 pb-6'>
+    <Slab layoutId={VISIT_CARD_ID} transition={springSoft} className='isolate flex flex-col gap-5 pb-6'>
       <PlaceIcon kind={Number(stay.placeKind)} className='pointer-events-none absolute -end-8 -top-6 -z-10 size-48 rotate-12 opacity-[0.07]' />
 
       <div className='flex items-center justify-between gap-3'>

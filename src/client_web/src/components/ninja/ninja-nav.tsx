@@ -1,11 +1,15 @@
-import { useRef } from 'react'
+import { useRef, type ComponentType } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { useVisitTab } from '@/lib/visit'
+import { formatClock, useSecondTick } from '@/lib/clock'
+import { blurSwap } from '@/lib/motion'
+import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
 import { DOCK_INSET, DOCK_SIDE } from './chrome'
 import { LiquidPill } from './liquid-pill'
+import { Odometer } from './odometer'
 import { useLiquidEdges } from './use-liquid'
 
 /**
@@ -46,9 +50,15 @@ export function NinjaNav({ className }: { className?: string }) {
                 on ? 'text-background' : 'text-background/55'
               )}
             >
-              <Icon className='size-[18px] shrink-0' />
-              {/* A place's name can be long; the tab keeps its width */}
-              <span className='truncate'>{isVisit ? visitTab.label : t(tab.key)}</span>
+              {isVisit && visitTab.live ? (
+                <LiveVisit live={visitTab.live} icon={Icon} label={visitTab.label} />
+              ) : (
+                <>
+                  <Icon className='size-[18px] shrink-0' />
+                  {/* A place's name can be long; the tab keeps its width */}
+                  <span className='truncate'>{isVisit ? visitTab.label : t(tab.key)}</span>
+                </>
+              )}
             </Link>
           )
         })}
@@ -73,5 +83,66 @@ export function NinjaNavDock() {
         <NinjaNav />
       </div>
     </div>
+  )
+}
+
+const RING = 26
+const RING_R = 11
+
+/**
+ * The visit tab while something is on: a held place counts down to when
+ * the hold lapses, its ring draining round the icon (red in the last two
+ * minutes); a running clock counts up, a live dot on the icon. The digits
+ * roll like the tray's total, and moving from hold to clock swaps with a
+ * short blur. The place's name stays as the tab's accessible name.
+ */
+function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: ComponentType<{ className?: string }>; label: string }) {
+  const reduced = useReducedMotion()
+  const now = useSecondTick()
+  const swap = blurSwap(reduced)
+  const left = live.kind === 'hold' && live.until != null ? Math.max(0, (live.until - now) / 1000) : null
+  const share =
+    live.kind === 'hold' && live.until != null && live.made > 0
+      ? Math.max(0, Math.min(1, (live.until - now) / Math.max(1, live.until - live.made)))
+      : 1
+  const hurry = left != null && left <= 120
+  const clock = live.kind === 'stay' ? formatClock((now - live.since) / 1000) : left != null ? formatClock(left) : null
+
+  return (
+    <AnimatePresence mode='popLayout' initial={false}>
+      <motion.span key={live.kind} {...swap} className='flex min-w-0 items-center gap-1.5' aria-label={label}>
+        <span className='relative grid shrink-0 place-items-center' style={{ width: RING, height: RING }}>
+          {live.kind === 'hold' ? (
+            <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90 rtl:scale-x-[-1]' aria-hidden>
+              <circle cx={RING / 2} cy={RING / 2} r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.2} strokeWidth={2} />
+              <motion.circle
+                cx={RING / 2}
+                cy={RING / 2}
+                r={RING_R}
+                fill='none'
+                stroke='currentColor'
+                strokeWidth={2}
+                strokeLinecap='round'
+                className={hurry ? 'text-red-400' : 'text-amber-400'}
+                initial={false}
+                animate={{ pathLength: Math.max(0.001, share) }}
+                transition={{ duration: 1, ease: 'linear' }}
+              />
+            </svg>
+          ) : (
+            <span className='absolute -end-0.5 -top-0.5 grid size-2 place-items-center'>
+              <span className='absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none' />
+              <span className='size-1.5 rounded-full bg-emerald-400' />
+            </span>
+          )}
+          <Icon className='size-[14px]' />
+        </span>
+        {clock ? (
+          <Odometer value={clock} className={hurry ? 'text-red-400' : undefined} />
+        ) : (
+          <span className='truncate'>{label}</span>
+        )}
+      </motion.span>
+    </AnimatePresence>
   )
 }

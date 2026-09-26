@@ -7,7 +7,7 @@ import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
 import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, placeIcon } from '@/lib/places'
-import { useActiveStay, useMyStays } from '@/lib/stays'
+import { useActiveStay, useMyHold, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
 import { useFeatures } from '@/lib/brand'
 
@@ -105,17 +105,28 @@ export function visitTabVisible(
   return hasBookablePlaces && (features.reservations || features.timeBilling)
 }
 
+/**
+ * What the visit tab keeps time for: a running clock (since when), or a
+ * held place (from when it was made to when it lapses, where it lapses).
+ */
+export type VisitLive =
+  | { kind: 'stay'; since: number }
+  | { kind: 'hold'; made: number; until: number | null }
+
 /** The second tab, as the bars draw it: named after the clock's place when
- *  one runs, else after what there is to book; absent where there is
- *  nothing to book (a running clock keeps it, whatever the list says). */
+ *  one runs, or the held place while it waits, else after what there is to
+ *  book; absent where there is nothing to book (a running clock keeps it,
+ *  whatever the list says). `live` is what the dock's tab counts. */
 export function useVisitTab(): {
   label: string
   icon: LucideIcon
   visible: boolean
+  live: VisitLive | null
 } {
   const t = useT()
   const localized = useLocalized()
   const { seat, hasBookablePlaces, hasRooms } = useVisit()
+  const hold = useMyHold()
   const features = useFeatures()
 
   if (seat.kind === 'stay') {
@@ -132,6 +143,21 @@ export function useVisitTab(): {
         ),
       icon: placeIcon(kind),
       visible: true,
+      live: seat.stay.startedAt ? { kind: 'stay', since: new Date(seat.stay.startedAt).getTime() } : null,
+    }
+  }
+  if (hold) {
+    const kind = Number(hold.placeKind ?? PLACE_ROOM)
+    return {
+      label: localized(hold.placeName) || t('reserved'),
+      icon: placeIcon(kind),
+      visible: true,
+      live: {
+        kind: 'hold',
+        // Without the time it was made there is no window to drain, only the count
+        made: hold.createdAt ? new Date(hold.createdAt).getTime() : 0,
+        until: hold.expiresAt ? new Date(hold.expiresAt).getTime() : null,
+      },
     }
   }
   // A café with rooms books rooms; a restaurant books tables — same tab, its own icon
@@ -139,5 +165,6 @@ export function useVisitTab(): {
     label: t('rooms'),
     icon: hasRooms ? Gamepad2 : CalendarClock,
     visible: visitTabVisible(hasBookablePlaces, features),
+    live: null,
   }
 }

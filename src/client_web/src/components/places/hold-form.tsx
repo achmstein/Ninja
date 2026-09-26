@@ -14,8 +14,11 @@ import { cn } from '@/lib/utils'
 import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { Switch } from '@/components/ui/switch'
 
-/** The shared id the booked button's tick hands to the hold card, so booking grows into it */
-export const HOLD_LAYOUT_ID = 'book-hold'
+/**
+ * The one shape a visit is drawn as: the book button's tick grows into the
+ * reservation, and the reservation into the running clock
+ */
+export const VISIT_CARD_ID = 'visit-card'
 
 /** How long the tick stays before the card folds, ms: long enough for the hold card to grow out of it */
 const SUCCESS_HOLD_MS = 700
@@ -166,7 +169,7 @@ export function HoldForm({
         <MorphButton
           phase={phase}
           height={48}
-          layoutId={HOLD_LAYOUT_ID}
+          layoutId={VISIT_CARD_ID}
           className='font-bold'
           onClick={() =>
             hold.mutate({

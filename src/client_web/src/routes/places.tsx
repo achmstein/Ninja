@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -13,8 +14,8 @@ import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
-import { HeldCard } from '@/components/places/held-card'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
+import { ReservationView } from '@/components/places/reservation-view'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -40,6 +41,7 @@ function PlacesPage() {
   const t = useT()
   const { seat, settling } = useVisit()
   const { visible } = useVisitTab()
+  const hold = useMyHold()
   const navigate = useNavigate()
   const { scan } = Route.useSearch()
 
@@ -69,13 +71,30 @@ function PlacesPage() {
       </NinjaPage>
     )
   }
+  // One visit, one shape: the places; then only the one held, grown out of
+  // the book button; then its clock, grown out of the hold. Each view hands
+  // its slab to the next (VISIT_CARD_ID) while the rest of it falls away
+  const view = seat.kind === 'stay' ? 'stay' : hold ? 'held' : 'list'
   return (
     <>
-      {seat.kind === 'stay' ? (
-        <ActiveStayView stay={seat.stay} />
-      ) : (
-        <PlacesList atTable={seat.kind === 'table'} />
-      )}
+      <LayoutGroup>
+        <AnimatePresence mode='popLayout' initial={false}>
+          <motion.div
+            key={view}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: 24, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
+          >
+            {seat.kind === 'stay' ? (
+              <ActiveStayView stay={seat.stay} />
+            ) : hold ? (
+              <ReservationView reservation={hold} />
+            ) : (
+              <PlacesList atTable={seat.kind === 'table'} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </LayoutGroup>
       {scanSheet}
     </>
   )
@@ -83,8 +102,8 @@ function PlacesPage() {
 
 /** The bookable places of the branch — the rooms and stations with a
  *  clock, and any table the owner opened to reservations — as big cards,
- *  one open at a time with the booking under it, and the customer's
- *  reservation on one as the slab on top while they walk over. */
+ *  one open at a time with the booking under it. Once one is held the
+ *  tab shows only that (ReservationView). */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const auth = useAuth()
@@ -139,11 +158,6 @@ function PlacesList({ atTable }: { atTable: boolean }) {
           </RiseItem>
         )}
 
-        {hold && (
-          <RiseItem>
-            <HeldCard reservation={hold} />
-          </RiseItem>
-        )}
         {allBusy && !hold && auth.isAuthenticated && (
           <RiseItem>
             <NotifyBanner />

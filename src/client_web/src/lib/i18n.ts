@@ -340,6 +340,11 @@ const webExtras = {
   },
   bookClockRunning: { en: 'Clock running', ar: 'العداد شغال' },
   bookStartAt: { en: 'Start at', ar: 'ابدأ بـ' },
+  ninjaHeldFor: { en: 'Held for you', ar: 'محجوزة ليك' },
+  ninjaHoldWalkOver: { en: 'Walk over and show this at the counter', ar: 'تعالى ووري ده للكاشير' },
+  ninjaHoldFor: { en: 'For {time}', ar: 'الساعة {time}' },
+  ninjaHoldRanOut: { en: 'Your hold ran out. The café may still have it for you.', ar: 'وقت الحجز خلص. ممكن الكافيه لسه ماسكهالك.' },
+  ninjaHoldLeft: { en: '{time} left to arrive', ar: 'فاضل {time} توصل' },
   // Bills: each bill a stack of its rounds
   ninjaRoundCount: {
     plural: 'count',
