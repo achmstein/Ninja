@@ -478,7 +478,7 @@ export const getPaymentSettings = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Change the café's payment account, fee, tips and split options
+ * Change the café's payment account, fee and split options
  */
 export const savePaymentSettings = <ThrowOnError extends boolean = false>(options: Options<SavePaymentSettingsData, ThrowOnError>): RequestResult<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError> => (options.client ?? client).put<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError>({
     responseType: 'json',

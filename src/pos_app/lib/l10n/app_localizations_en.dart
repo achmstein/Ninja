@@ -1596,11 +1596,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlineRefunded => 'Refunded';
 
   @override
-  String onlineTip(String amount) {
-    return '+ $amount tip';
-  }
-
-  @override
   String onlineFee(String amount) {
     return 'fee $amount';
   }

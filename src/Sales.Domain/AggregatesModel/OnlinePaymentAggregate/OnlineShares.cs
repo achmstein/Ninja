@@ -98,13 +98,13 @@ public static class OnlineShares
     /// on: a percentage of what is charged plus a fixed part, solved so that
     /// what the provider keeps is what the fee covers.
     /// </summary>
-    public static decimal GuestFee(decimal amountAndTip, decimal percent, decimal fixedFee)
+    public static decimal GuestFee(decimal amount, decimal percent, decimal fixedFee)
     {
-        if (amountAndTip <= 0 || (percent <= 0 && fixedFee <= 0)) return 0m;
+        if (amount <= 0 || (percent <= 0 && fixedFee <= 0)) return 0m;
         var rate = percent / 100m;
         if (rate >= 1) throw new SalesDomainException("The fee percentage must be below 100.");
         // charged = amount + fee, and the provider takes charged * rate + fixed
-        var charged = (amountAndTip + fixedFee) / (1 - rate);
-        return Money(charged - amountAndTip);
+        var charged = (amount + fixedFee) / (1 - rate);
+        return Money(charged - amount);
     }
 }

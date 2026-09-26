@@ -98,7 +98,7 @@ export const updateTenant = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * How the owner's AI assistant speaks: its name, tone, manner, language and the café's notes for it
+ * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
  */
 export const setTenantAssistant = <ThrowOnError extends boolean = false>(options: Options<SetTenantAssistantData, ThrowOnError>): RequestResult<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError> => (options.client ?? client).put<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError>({
     responseType: 'json',

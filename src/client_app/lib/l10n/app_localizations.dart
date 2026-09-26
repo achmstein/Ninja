@@ -2049,18 +2049,6 @@ abstract class AppLocalizations {
   /// **'Online payment fee'**
   String get payOnlineFee;
 
-  /// No description provided for @payTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Tip'**
-  String get payTip;
-
-  /// No description provided for @payNoTip.
-  ///
-  /// In en, this message translates to:
-  /// **'No tip'**
-  String get payNoTip;
-
   /// No description provided for @payYouPay.
   ///
   /// In en, this message translates to:
@@ -2073,17 +2061,11 @@ abstract class AppLocalizations {
   /// **'Pay {amount}'**
   String payConfirm(String amount);
 
-  /// No description provided for @payMethods.
+  /// No description provided for @paySecureNote.
   ///
   /// In en, this message translates to:
-  /// **'Card, wallet or Apple Pay on the next page'**
-  String get payMethods;
-
-  /// No description provided for @payMethodsNoApple.
-  ///
-  /// In en, this message translates to:
-  /// **'Card or wallet on the next page'**
-  String get payMethodsNoApple;
+  /// **'You\'ll pay on a secure payment page'**
+  String get paySecureNote;
 
   /// No description provided for @payShares.
   ///

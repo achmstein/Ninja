@@ -89,8 +89,6 @@ class PayOptions {
   final String feeMode;
   final double feePercent;
   final double feeFixed;
-  final bool tipsEnabled;
-  final List<int> tipPercents;
   final bool allowItems;
   final bool allowEqual;
   final bool allowCustom;
@@ -107,8 +105,6 @@ class PayOptions {
     this.feeMode = 'Cafe',
     this.feePercent = 0,
     this.feeFixed = 0,
-    this.tipsEnabled = false,
-    this.tipPercents = const [],
     this.allowItems = false,
     this.allowEqual = false,
     this.allowCustom = false,
@@ -127,8 +123,6 @@ class PayOptions {
         feeMode: json['feeMode'] as String? ?? 'Cafe',
         feePercent: _num(json['feePercent']),
         feeFixed: _num(json['feeFixed']),
-        tipsEnabled: json['tipsEnabled'] as bool? ?? false,
-        tipPercents: ((json['tipPercents'] as List<dynamic>?) ?? const []).map((e) => (e as num).toInt()).toList(),
         allowItems: json['allowItems'] as bool? ?? false,
         allowEqual: json['allowEqual'] as bool? ?? false,
         allowCustom: json['allowCustom'] as bool? ?? false,
@@ -221,7 +215,6 @@ class StartedPayment {
   final String checkoutUrl;
   final double amount;
   final double fee;
-  final double tip;
   final double charged;
 
   const StartedPayment({
@@ -229,7 +222,6 @@ class StartedPayment {
     required this.checkoutUrl,
     required this.amount,
     required this.fee,
-    required this.tip,
     required this.charged,
   });
 
@@ -238,7 +230,6 @@ class StartedPayment {
         checkoutUrl: json['checkoutUrl'] as String,
         amount: _num(json['amount']),
         fee: _num(json['fee']),
-        tip: _num(json['tip']),
         charged: _num(json['charged']),
       );
 }
@@ -249,7 +240,6 @@ class PaymentStatus {
   final String status;
   final double amount;
   final double fee;
-  final double tip;
   final double charged;
   final String currency;
   final String? failureReason;
@@ -259,7 +249,6 @@ class PaymentStatus {
     required this.status,
     this.amount = 0,
     this.fee = 0,
-    this.tip = 0,
     this.charged = 0,
     this.currency = 'EGP',
     this.failureReason,
@@ -273,7 +262,6 @@ class PaymentStatus {
         status: json['status'] as String? ?? 'Pending',
         amount: _num(json['amount']),
         fee: _num(json['fee']),
-        tip: _num(json['tip']),
         charged: _num(json['charged']),
         currency: json['currency'] as String? ?? 'EGP',
         failureReason: json['failureReason'] as String?,

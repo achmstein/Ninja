@@ -7,7 +7,7 @@ namespace Ninja.Sales.API.Payments;
 public sealed record CheckoutItem(string Name, decimal Amount);
 
 /// <param name="Reference">Unguessable; the provider hands it back on the callback and the return.</param>
-/// <param name="Charged">Share, fee and tip: what the card is charged.</param>
+/// <param name="Charged">Share and fee: what the card is charged.</param>
 public sealed record CheckoutRequest(
     string Reference,
     decimal Charged,

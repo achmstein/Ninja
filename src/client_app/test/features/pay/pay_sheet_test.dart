@@ -22,8 +22,7 @@ class _Started {
   final int? parts;
   final int? of;
   final double? amount;
-  final double tip;
-  _Started(this.mode, this.lineIds, this.parts, this.of, this.amount, this.tip);
+  _Started(this.mode, this.lineIds, this.parts, this.of, this.amount);
 }
 
 class _FakePay implements PayRepository {
@@ -52,11 +51,10 @@ class _FakePay implements PayRepository {
       int? parts,
       int? of,
       double? amount,
-      double tip = 0,
       String? payerName}) async {
-    started.add(_Started(mode, lineIds, parts, of, amount, tip));
+    started.add(_Started(mode, lineIds, parts, of, amount));
     return const StartedPayment(
-        key: 'k1', checkoutUrl: 'https://pay.example/k1', amount: 0, fee: 0, tip: 0, charged: 0);
+        key: 'k1', checkoutUrl: 'https://pay.example/k1', amount: 0, fee: 0, charged: 0);
   }
 
   @override
@@ -312,22 +310,6 @@ void main() {
     await tester.pump();
     await _confirm(tester);
     expect(pay.started.single.amount, 40);
-    await _close(tester);
-  });
-
-  testWidgets('tips are a percentage of the share on top', (tester) async {
-    final pay = _FakePay(_view(options: const PayOptions(ready: true, tipsEnabled: true, tipPercents: [10, 15])));
-    await tester.pumpWidget(_app(pay));
-    await tester.pump();
-    await tester.tap(find.text('Pay fully'));
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('tip-10')));
-    await tester.pump();
-    expect(find.text('Pay 110.00 EGP'), findsOneWidget);
-    await _confirm(tester);
-    expect(pay.started.single.mode, SplitKind.full);
-    expect(pay.started.single.tip, 10);
     await _close(tester);
   });
 

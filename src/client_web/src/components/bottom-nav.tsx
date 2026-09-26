@@ -1,19 +1,10 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { Coffee, Gamepad2, ReceiptText, User } from 'lucide-react'
+import { useBrandLayout } from '@/lib/brand-layout'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useVisitTab } from '@/lib/visit'
-
-// Same four tabs as the mobile app: Menu / Places / Bills / Profile. The
-// places tab is where the customer is in the cafe, so its label and icon
-// follow the visit (docs/visit-tab.html); Bills is everything the cafe is
-// charging them, so the menu never carries orders.
-const tabs = [
-  { to: '/', key: 'menu', icon: Coffee, exact: true },
-  { to: '/places', key: 'rooms', icon: Gamepad2 },
-  { to: '/bills', key: 'bills', icon: ReceiptText },
-  { to: '/profile', key: 'youTab', icon: User },
-] as const
+import { CounterNavDock } from '@/components/counter/counter-nav'
+import { isTabActive, NAV_TABS as tabs } from '@/components/nav-tabs'
 
 export function BottomNav() {
   const t = useT()
@@ -26,12 +17,16 @@ export function BottomNav() {
   const pathname = useRouterState({
     select: (s) => (s.resolvedLocation ?? s.location).pathname,
   })
+  const { home, chrome } = useBrandLayout()
 
   // The cart is a pushed full-screen page on mobile (no tab bar) —
   // mobile parity. (The menu's "view cart" pill lives in ViewCartBar.)
   if (pathname.startsWith('/cart')) return null
   // Paying is a page of its own too, like a provider's checkout
   if (pathname.startsWith('/pay/')) return null
+  // The Counter chrome floats the tabs in a dark slab; on the Counter's own
+  // menu they are the lower row of the dock the tray sits in
+  if (chrome === 'counter') return pathname === '/' && home === 'counter' ? null : <CounterNavDock />
 
   return (
     <nav className='bg-background/95 fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t backdrop-blur md:hidden'>
@@ -40,13 +35,11 @@ export function BottomNav() {
           home indicator's inset under them: the box is border-box, so an
           inset padded inside a bare h-14 squeezed the tabs on an iPhone */}
       <div className='flex h-[calc(3.5rem+env(safe-area-inset-bottom))] items-stretch justify-around pb-[env(safe-area-inset-bottom)]'>
-        {tabs.map(({ to, key, icon, ...rest }) => {
+        {tabs.map((tab) => {
+          const { to, key, icon } = tab
           // No places to book, no tab: the chip is the table's door
           if (key === 'rooms' && !visitTab.visible) return null
-          const active =
-            'exact' in rest && rest.exact
-              ? pathname === to
-              : pathname.startsWith(to)
+          const active = isTabActive(tab, pathname)
           const isVisit = key === 'rooms'
           const Icon = isVisit ? visitTab.icon : icon
           return (

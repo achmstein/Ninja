@@ -1,31 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import { canSettleWith, onlineSummary } from './online-payments'
 
-const paid = (amount: number, tip = 0) => ({ amount, tip, status: 'Paid' })
+const paid = (amount: number) => ({ amount, status: 'Paid' })
 
 describe('onlineSummary', () => {
   it('leaves the whole bill to the till when nobody paid online', () => {
     expect(onlineSummary(250, [])).toEqual({
       paid: 0,
-      tips: 0,
       pending: false,
       remaining: 250,
       covered: false,
     })
   })
 
-  it('takes paid shares off the total, tips apart', () => {
-    const s = onlineSummary('300.00', [paid(100, 10), paid(50.5, 5)])
+  it('takes paid shares off the total', () => {
+    const s = onlineSummary('300.00', [paid(100), paid(50.5)])
     expect(s.paid).toBe(150.5)
-    expect(s.tips).toBe(15)
     expect(s.remaining).toBe(149.5)
     expect(s.covered).toBe(false)
   })
 
   it('ignores pending and refunded payments in the maths but flags pending', () => {
     const s = onlineSummary(100, [
-      { amount: 40, tip: 0, status: 'Pending' },
-      { amount: 30, tip: 0, status: 'Refunded' },
+      { amount: 40, status: 'Pending' },
+      { amount: 30, status: 'Refunded' },
     ])
     expect(s.paid).toBe(0)
     expect(s.remaining).toBe(100)

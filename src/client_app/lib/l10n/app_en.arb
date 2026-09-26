@@ -604,8 +604,6 @@
   },
   "payYourShare": "Your share",
   "payOnlineFee": "Online payment fee",
-  "payTip": "Tip",
-  "payNoTip": "No tip",
   "payYouPay": "You pay",
   "payConfirm": "Pay {amount}",
   "@payConfirm": {
@@ -615,8 +613,7 @@
       }
     }
   },
-  "payMethods": "Card, wallet or Apple Pay on the next page",
-  "payMethodsNoApple": "Card or wallet on the next page",
+  "paySecureNote": "You'll pay on a secure payment page",
   "payShares": "Payments",
   "payYou": "You",
   "payGuest": "Guest",

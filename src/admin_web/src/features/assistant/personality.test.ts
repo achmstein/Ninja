@@ -4,7 +4,6 @@ import { samePersonality, toPersonalityForm, toPersonalityRequest } from './pers
 describe('toPersonalityForm', () => {
   it('fills the defaults when nothing is set', () => {
     expect(toPersonalityForm(null)).toEqual({
-      name: '',
       tone: 'brief',
       manner: 'friendly',
       language: 'match',
@@ -14,10 +13,10 @@ describe('toPersonalityForm', () => {
 
   it('keeps what the owner chose, and treats an unknown value as the default', () => {
     expect(
-      toPersonalityForm({ name: 'Zein', tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
-    ).toEqual({ name: 'Zein', tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
+      toPersonalityForm({ tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
+    ).toEqual({ tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
     expect(
-      toPersonalityForm({ name: null, tone: 'chatty', manner: null, language: 'fr', notes: null }).language
+      toPersonalityForm({ tone: 'chatty', manner: null, language: 'fr', notes: null }).language
     ).toBe('match')
   })
 })
@@ -25,16 +24,16 @@ describe('toPersonalityForm', () => {
 describe('toPersonalityRequest', () => {
   it('sends a default as null and trims the text', () => {
     expect(
-      toPersonalityRequest({ name: '  ', tone: 'brief', manner: 'friendly', language: 'match', notes: ' ' })
-    ).toEqual({ name: null, tone: null, manner: null, language: null, notes: null })
+      toPersonalityRequest({ tone: 'brief', manner: 'friendly', language: 'match', notes: ' ' })
+    ).toEqual({ tone: null, manner: null, language: null, notes: null })
     expect(
-      toPersonalityRequest({ name: ' Zein ', tone: 'detailed', manner: 'formal', language: 'en', notes: ' T1 ' })
-    ).toEqual({ name: 'Zein', tone: 'detailed', manner: 'formal', language: 'en', notes: 'T1' })
+      toPersonalityRequest({ tone: 'detailed', manner: 'formal', language: 'en', notes: ' T1 ' })
+    ).toEqual({ tone: 'detailed', manner: 'formal', language: 'en', notes: 'T1' })
   })
 
   it('counts only a real change as one', () => {
     const saved = toPersonalityForm(null)
-    expect(samePersonality(saved, { ...saved, name: ' ' })).toBe(true)
+    expect(samePersonality(saved, { ...saved, notes: ' ' })).toBe(true)
     expect(samePersonality(saved, { ...saved, tone: 'detailed' })).toBe(false)
   })
 })

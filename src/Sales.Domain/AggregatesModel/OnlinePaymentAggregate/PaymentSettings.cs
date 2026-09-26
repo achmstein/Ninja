@@ -13,7 +13,7 @@ public enum FeeMode
 
 /// <summary>
 /// How this café takes payments at the table: its own provider account
-/// (Ninja never holds the money), who carries the fee, tips, and which ways
+/// (Ninja never holds the money), who carries the fee, and which ways
 /// of splitting guests may use. One row per café. The provider's secret key
 /// and callback secret are kept sealed (the API seals them with a key that
 /// is not in this database), and are never read back out.
@@ -53,11 +53,6 @@ public class PaymentSettings : Entity, IAggregateRoot
 
     /// <summary>The provider's fixed part per payment, in the currency.</summary>
     public decimal FeeFixed { get; private set; }
-
-    public bool TipsEnabled { get; private set; }
-
-    /// <summary>Tip buttons as percentages of the share, e.g. 5, 10, 15.</summary>
-    public List<int> TipPercents { get; private set; } = [5, 10, 15];
 
     public bool AllowItems { get; private set; } = true;
 
@@ -99,8 +94,6 @@ public class PaymentSettings : Entity, IAggregateRoot
         FeeMode feeMode,
         decimal feePercent,
         decimal feeFixed,
-        bool tipsEnabled,
-        IReadOnlyCollection<int> tipPercents,
         bool allowItems,
         bool allowEqual,
         bool allowCustom,
@@ -112,8 +105,6 @@ public class PaymentSettings : Entity, IAggregateRoot
             throw new SalesDomainException("The fee percentage must be from 0 to below 100.");
         if (feeFixed < 0)
             throw new SalesDomainException("The fixed fee cannot be negative.");
-        if (tipPercents.Count > 4 || tipPercents.Any(p => p <= 0 || p > 50))
-            throw new SalesDomainException("Up to four tip buttons, each from 1% to 50%.");
         if (new[] { cardIntegrationId, walletIntegrationId, applePayIntegrationId }.Any(id => id is <= 0))
             throw new SalesDomainException("An integration id is a positive number.");
 
@@ -125,8 +116,6 @@ public class PaymentSettings : Entity, IAggregateRoot
         FeeMode = feeMode;
         FeePercent = feePercent;
         FeeFixed = feeFixed;
-        TipsEnabled = tipsEnabled;
-        TipPercents = tipPercents.Distinct().Order().ToList();
         AllowItems = allowItems;
         AllowEqual = allowEqual;
         AllowCustom = allowCustom;
@@ -149,7 +138,7 @@ public class PaymentSettings : Entity, IAggregateRoot
         UpdatedAt = now;
     }
 
-    /// <summary>The fee a guest pays on their share and tip; 0 when the café carries it.</summary>
-    public decimal GuestFee(decimal amountAndTip)
-        => FeeMode == FeeMode.Guest ? OnlineShares.GuestFee(amountAndTip, FeePercent, FeeFixed) : 0m;
+    /// <summary>The fee a guest pays on their share; 0 when the café carries it.</summary>
+    public decimal GuestFee(decimal amount)
+        => FeeMode == FeeMode.Guest ? OnlineShares.GuestFee(amount, FeePercent, FeeFixed) : 0m;
 }

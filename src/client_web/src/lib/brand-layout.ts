@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { BrandThemeInput } from './brand-theme'
-import { presetOf, resolveLayout, styleOf, STYLES, type Layout, type StyleKey } from './styles'
+import { HOMES, isStyleKey, presetOf, resolveLayout, styleOf, STYLES, type Layout, type StyleKey } from './styles'
 
 /**
  * The layout the customer app wears, from the brand's style and its own
@@ -30,11 +30,28 @@ const ATTRIBUTES: Record<keyof Layout, string> = {
   buttons: 'buttons',
   surface: 'surface',
   density: 'density',
+  home: 'home',
+  chrome: 'chrome',
+}
+
+/**
+ * Dev only: `?layout=counter` (a style, or a home part such as `tiles`) tries
+ * a template on the café's own brand without saving anything. Read once, so
+ * it holds while the tab moves between pages.
+ */
+const DEV_LAYOUT =
+  import.meta.env.DEV && typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('layout') : null
+
+function withDevLayout(theme: BrandThemeInput['theme']): BrandThemeInput['theme'] {
+  if (!DEV_LAYOUT) return theme
+  if (isStyleKey(DEV_LAYOUT)) return { ...theme, style: DEV_LAYOUT, layout: null }
+  if ((HOMES as readonly string[]).includes(DEV_LAYOUT)) return { ...theme, layout: { ...theme?.layout, home: DEV_LAYOUT } }
+  return theme
 }
 
 /** Puts the style and each part on the page and in the store; classic for no theme. */
 export function applyBrandLayout(input: BrandThemeInput | null | undefined) {
-  const theme = input?.theme
+  const theme = withDevLayout(input?.theme)
   const style = styleOf(theme)
   const layout = resolveLayout(theme)
   const root = document.documentElement.dataset

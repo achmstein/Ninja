@@ -106,14 +106,14 @@ export const STYLES: Record<StyleKey, StylePreset> = {
   bold: {
     layout: { menuItem: 'hero', categories: 'chips', header: 'banner', buttons: 'pill', surface: 'shadow', density: 'comfortable' },
     headings: { font: null, weight: 800, scale: 1.3, uppercase: false, tracking: -0.02 },
-    defaults: { radius: 'xl', fontLatin: 'Poppins', fontArabic: 'Changa', headerSize: 'md' },
+    defaults: { radius: 'xl', fontLatin: 'Satoshi', fontArabic: 'Readex Pro', headerSize: 'md' },
     forceDark: false,
   },
   // Warm: photo cards, serif headings, the cover up top
   cozy: {
     layout: { menuItem: 'card', categories: 'chips', header: 'banner', buttons: 'rounded', surface: 'shadow', density: 'comfortable' },
     headings: { font: 'Playfair Display', weight: 600, scale: 1.2, uppercase: false, tracking: 0 },
-    defaults: { radius: 'lg', fontLatin: 'Nunito', fontArabic: 'Almarai' },
+    defaults: { radius: 'lg', fontLatin: 'Figtree', fontArabic: 'Almarai' },
     forceDark: false,
   },
   // A bar at night: always dark, photo cards, pill buttons

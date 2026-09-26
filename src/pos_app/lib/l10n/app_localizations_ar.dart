@@ -1608,11 +1608,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onlineRefunded => 'مُسترد';
 
   @override
-  String onlineTip(String amount) {
-    return '+ $amount إكرامية';
-  }
-
-  @override
   String onlineFee(String amount) {
     return 'رسوم $amount';
   }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, FlaskConical, Plus, X } from 'lucide-react'
+import { AlertTriangle, Copy, FlaskConical } from 'lucide-react'
 import {
   getPaymentSettingsOptions,
   getPaymentSettingsQueryKey,
@@ -26,10 +26,6 @@ import { PageHeader } from '@/components/page-header'
 import {
   FEE_CAFE,
   FEE_GUEST,
-  MAX_TIPS,
-  TIP_MAX,
-  TIP_MIN,
-  canAddTip,
   toForm,
   toRequest,
   type FormProblem,
@@ -43,7 +39,6 @@ const PROBLEMS: Record<FormProblem, TranslationKey> = {
   currency: 'payProblemCurrency',
   integrationId: 'payProblemIntegrationId',
   fee: 'payProblemFee',
-  tips: 'payProblemTips',
 }
 
 /** The server's one-line reason, when the error carried ProblemDetails. */
@@ -55,8 +50,8 @@ function problemDetail(e: unknown): string | undefined {
 
 /**
  * Online payments, the owner's side: the café's own Paymob account (keys,
- * integrations, the callback to paste into Paymob), who pays the fee, the
- * tips offered and how guests may split a bill.
+ * integrations, the callback to paste into Paymob), who pays the fee and
+ * how guests may split a bill.
  */
 export function PaymentSettingsPage() {
   const t = useT()
@@ -100,7 +95,6 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<PaymentsForm>(() => toForm(settings))
   const [problem, setProblem] = useState<string | null>(null)
-  const [tipDraft, setTipDraft] = useState('')
   const set = <K extends keyof PaymentsForm>(key: K, value: PaymentsForm[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -126,16 +120,6 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
     }
     setProblem(null)
     save.mutate({ ...settingsQuery, body: result.request })
-  }
-
-  const tipValue = Number(tipDraft)
-  const addTip = () => {
-    if (!canAddTip(form.tipPercents, tipValue)) return
-    set(
-      'tipPercents',
-      [...form.tipPercents, tipValue].sort((a, b) => a - b)
-    )
-    setTipDraft('')
   }
 
   const copyCallback = () => {
@@ -323,81 +307,6 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
       {/* What guests see on their phones */}
       <Card>
         <CardContent className='space-y-5 pt-6'>
-          <div className='flex items-center justify-between gap-4'>
-            <div className='grid gap-1'>
-              <Label htmlFor='pay-tips' className='font-semibold'>
-                {t('payTips')}
-              </Label>
-              <p className='text-muted-foreground text-xs'>
-                {t('payTipsHint', {
-                  max: MAX_TIPS,
-                  min: TIP_MIN,
-                  top: TIP_MAX,
-                })}
-              </p>
-            </div>
-            <Switch
-              id='pay-tips'
-              checked={form.tipsEnabled}
-              onCheckedChange={(v) => set('tipsEnabled', v)}
-            />
-          </div>
-          {form.tipsEnabled && (
-            <div className='flex flex-wrap items-center gap-2'>
-              {form.tipPercents.map((p) => (
-                <Badge
-                  key={p}
-                  variant='secondary'
-                  className='gap-1 py-1 ps-3 pe-1 text-sm'
-                >
-                  <span dir='ltr'>{p}%</span>
-                  <button
-                    type='button'
-                    className='hover:bg-background/60 rounded-full p-0.5'
-                    aria-label={t('remove')}
-                    onClick={() =>
-                      set(
-                        'tipPercents',
-                        form.tipPercents.filter((x) => x !== p)
-                      )
-                    }
-                  >
-                    <X className='size-3.5' />
-                  </button>
-                </Badge>
-              ))}
-              {form.tipPercents.length < MAX_TIPS && (
-                <div className='flex items-center gap-1'>
-                  <Input
-                    value={tipDraft}
-                    inputMode='numeric'
-                    dir='ltr'
-                    placeholder='%'
-                    aria-label={t('payAddTip')}
-                    className='h-8 w-20'
-                    onChange={(e) => setTipDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        addTip()
-                      }
-                    }}
-                  />
-                  <Button
-                    type='button'
-                    size='sm'
-                    variant='outline'
-                    disabled={!canAddTip(form.tipPercents, tipValue)}
-                    onClick={addTip}
-                  >
-                    <Plus className='size-4' />
-                    {t('payAddTip')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className='space-y-2'>
             <Label>{t('paySplitModes')}</Label>
             <p className='text-muted-foreground text-xs'>

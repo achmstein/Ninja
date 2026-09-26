@@ -53,8 +53,8 @@ export function MenuItem({ variant, ...props }: ItemRowProps & { variant: MenuIt
   }
 }
 
-/** The cart side of an item: whether it is on offer, its plain line, and what a tap does. */
-function useItemActions(item: CatalogItemDto, orderingEnabled: boolean, onCustomize: (item: CatalogItemDto) => void) {
+/** The cart side of an item: whether it is on offer, its plain line, and what a tap does. Every way of showing an item (and each home composition) shares it. */
+export function useItemActions(item: CatalogItemDto, orderingEnabled: boolean, onCustomize: (item: CatalogItemDto) => void) {
   const { lines, add } = useCart()
 
   const hasCustomizations = (item.customizations?.length ?? 0) > 0
@@ -97,8 +97,10 @@ function useItemActions(item: CatalogItemDto, orderingEnabled: boolean, onCustom
   return { hasCustomizations, simpleLine, onOffer, effectivePrice, handleOpen, canOrder }
 }
 
+export type ItemActions = ReturnType<typeof useItemActions>
+
 /** The add button, or the stepper once the plain item is in the cart. Round unless the style squares its buttons. */
-function AddControl({
+export function AddControl({
   actions,
   className,
 }: {
@@ -158,7 +160,7 @@ function AddControl({
   )
 }
 
-function FavoriteButton({
+export function FavoriteButton({
   item,
   isFavorite,
   onToggleFavorite,
@@ -196,7 +198,7 @@ function FavoriteButton({
 }
 
 /** The price, the offer's in green with the old one struck through beside it. */
-function PriceBlock({
+export function PriceBlock({
   item,
   actions,
   className,
@@ -210,7 +212,7 @@ function PriceBlock({
 }) {
   const price = usePrice()
   return (
-    <div className={cn(inline ? 'flex items-baseline gap-2' : '', className)}>
+    <div className={cn(inline ? 'flex flex-wrap items-baseline gap-x-2' : '', className)}>
       <div
         className={cn(
           'text-sm font-bold',

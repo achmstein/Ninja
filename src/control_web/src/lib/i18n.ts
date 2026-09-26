@@ -461,6 +461,7 @@ const dictionary = {
   headerLg: "Large",
   fontLatin: "Latin font",
   fontArabic: "Arabic font",
+  fontDisplayGroup: "Display · best for headings",
   darkScheme: "Dark scheme",
   derived: "Derived",
   contrastLow: "Hard to read (below {min}:1)",

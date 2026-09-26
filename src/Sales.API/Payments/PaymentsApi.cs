@@ -11,9 +11,8 @@ using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
 
 namespace Ninja.Sales.API.Payments;
 
-/// <param name="Tip">Only when the café takes tips; ignored otherwise.</param>
 /// <param name="PayerName">The name the guest gives; a signed-in customer's own name when left out.</param>
-public sealed record StartPaymentRequest(SplitMode Mode, IReadOnlyList<int>? LineIds, int? Parts, int? Of, decimal? Amount, decimal Tip, string? PayerName, string? PayerPhone);
+public sealed record StartPaymentRequest(SplitMode Mode, IReadOnlyList<int>? LineIds, int? Parts, int? Of, decimal? Amount, string? PayerName, string? PayerPhone);
 
 /// <param name="SecretKey">Null leaves the stored key; an empty string removes it.</param>
 /// <param name="HmacSecret">Likewise.</param>
@@ -28,8 +27,6 @@ public sealed record PaymentSettingsRequest(
     FeeMode FeeMode,
     decimal FeePercent,
     decimal FeeFixed,
-    bool TipsEnabled,
-    IReadOnlyList<int> TipPercents,
     bool AllowItems,
     bool AllowEqual,
     bool AllowCustom);
@@ -107,7 +104,7 @@ public static class PaymentsApi
         api.MapPut("/settings", SaveSettings)
             .RequireAuthorization("Owner")
             .WithName("SavePaymentSettings")
-            .WithSummary("Change the café's payment account, fee, tips and split options");
+            .WithSummary("Change the café's payment account, fee and split options");
 
         // The provider calls without an api-version, and signs what it sends
         app.MapPost(CallbackPath, Callback)
@@ -158,7 +155,7 @@ public static class PaymentsApi
         {
             var started = await mediator.Send(new StartOnlinePaymentCommand(
                 ticketId,
-                new ShareRequest(request.Mode, request.LineIds, request.Parts, request.Of, request.Amount, request.Tip),
+                new ShareRequest(request.Mode, request.LineIds, request.Parts, request.Of, request.Amount),
                 payer,
                 name,
                 request.PayerPhone));
@@ -183,7 +180,7 @@ public static class PaymentsApi
         if (payment is null) return TypedResults.NotFound();
         var ticket = await tickets.GetAsync(payment.TicketId);
         return TypedResults.Ok(new PaymentStatusView(
-            payment.Key, payment.TicketId, payment.Status.ToString(), payment.Amount, payment.Fee, payment.Tip, payment.Charged,
+            payment.Key, payment.TicketId, payment.Status.ToString(), payment.Amount, payment.Fee, payment.Charged,
             payment.Currency, payment.FailureReason, ticket is { Status: not TicketStatus.Open }));
     }
 
@@ -192,7 +189,7 @@ public static class PaymentsApi
         var list = await payments.ListForTicketAsync(ticketId);
         return TypedResults.Ok(list
             .Where(p => p.Status is OnlinePaymentStatus.Paid or OnlinePaymentStatus.Refunded or OnlinePaymentStatus.Pending)
-            .Select(p => new OnlinePaymentView(p.Key, p.Mode.ToString(), p.PayerName, p.Amount, p.Fee, p.Tip, p.Status.ToString(), p.CreatedAt, p.PaidAt, p.TransactionId, p.RefundedAt))
+            .Select(p => new OnlinePaymentView(p.Key, p.Mode.ToString(), p.PayerName, p.Amount, p.Fee, p.Status.ToString(), p.CreatedAt, p.PaidAt, p.TransactionId, p.RefundedAt))
             .ToList());
     }
 
@@ -285,7 +282,7 @@ public static class PaymentsApi
             var settings = await mediator.Send(new SavePaymentSettingsCommand(
                 request.Currency, request.SecretKey, request.PublicKey, request.HmacSecret,
                 request.CardIntegrationId, request.WalletIntegrationId, request.ApplePayIntegrationId,
-                request.FeeMode, request.FeePercent, request.FeeFixed, request.TipsEnabled, request.TipPercents ?? [],
+                request.FeeMode, request.FeePercent, request.FeeFixed,
                 request.AllowItems, request.AllowEqual, request.AllowCustom));
             return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value), providers.IsSimulated(settings)));
         }

@@ -164,7 +164,7 @@ public class Tenant
         ApplyFeatures(Features);
     }
 
-    /// <summary>How the owner's AI assistant speaks: its name, manner and language, and the café's own notes for it.</summary>
+    /// <summary>How the owner's AI assistant (always "Ninja") speaks: its tone, manner and language, and the café's own notes for it.</summary>
     public AssistantSettings Assistant { get; set; } = new();
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
@@ -187,17 +187,30 @@ public class TenantTheme
     /// <summary>How tall the customer app's header is, and with it the wordmark: a wide, thin wordmark reads at "sm"; a chunky one needs "lg".</summary>
     public static readonly string[] HeaderSizes = ["sm", "md", "lg"];
 
-    /// <summary>Latin families the surfaces know how to load.</summary>
+    /// <summary>
+    /// Latin families the surfaces know how to load, in the pickers' order
+    /// (the web apps' lib/brand-fonts.ts and the customer app's
+    /// brand_fonts.dart carry the same list, with each family's weights).
+    /// </summary>
     public static readonly string[] LatinFonts =
     [
-        "Inter", "Manrope", "DM Sans", "Nunito", "Poppins", "Plus Jakarta Sans", "Playfair Display",
+        "Geist", "Inter", "Satoshi", "General Sans", "Figtree", "Onest", "Plus Jakarta Sans",
+        "Manrope", "DM Sans", "Fraunces", "Instrument Serif", "Playfair Display",
     ];
 
     /// <summary>Arabic families, likewise.</summary>
     public static readonly string[] ArabicFonts =
     [
-        "Cairo", "Tajawal", "Almarai", "IBM Plex Sans Arabic", "Noto Kufi Arabic", "Changa",
+        "IBM Plex Sans Arabic", "Readex Pro", "Alexandria", "Noto Sans Arabic", "Noto Kufi Arabic",
+        "Cairo", "Tajawal", "Almarai",
     ];
+
+    /// <summary>
+    /// A stored family when the list still has it; one the catalog dropped
+    /// reads as null, the default, like any seed the surfaces cannot draw.
+    /// </summary>
+    public static string? KnownFont(string? value, string[] allowed)
+        => value is not null && allowed.Contains(value) ? value : null;
 
     /// <summary>Highlights, chips and hovers.</summary>
     public string? Accent { get; set; }
@@ -286,11 +299,7 @@ public class AssistantSettings
     /// <summary>"match" answers in whatever the owner writes in.</summary>
     public static readonly string[] Languages = ["match", "en", "ar-eg", "ar"];
 
-    public const int MaxName = 40;
     public const int MaxNotes = 1000;
-
-    /// <summary>What the assistant calls itself; null is simply "the assistant".</summary>
-    public string? Name { get; set; }
 
     /// <summary>One of <see cref="Tones"/>; null is brief.</summary>
     public string? Tone { get; set; }

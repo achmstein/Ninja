@@ -42,7 +42,7 @@ public class OnlinePaymentTest
     public void An_item_being_paid_by_someone_else_cannot_be_paid_again()
     {
         var (ticket, bill) = Table((1, 100m), (2, 120m));
-        var first = OnlinePayment.Start(1, 1, OnlineShares.Items(ticket, bill, [1], [], Now), 0, 0, "EGP", "guest-a", null, "paymob", Now);
+        var first = OnlinePayment.Start(1, 1, OnlineShares.Items(ticket, bill, [1], [], Now), 0, "EGP", "guest-a", null, "paymob", Now);
 
         var ex = Assert.ThrowsExactly<SalesDomainException>(() => OnlineShares.Items(ticket, bill, [1, 2], [first], Now.AddMinutes(1)));
         Assert.Contains("already paid", ex.Message);
@@ -77,7 +77,7 @@ public class OnlinePaymentTest
     public void A_custom_amount_can_never_be_more_than_is_left_counting_checkouts_in_progress()
     {
         var (_, bill) = Table((1, 100m));
-        var holding = OnlinePayment.Start(1, 1, OnlineShares.Custom(bill, 110m, [], Now), 0, 0, "EGP", "a", null, "paymob", Now);
+        var holding = OnlinePayment.Start(1, 1, OnlineShares.Custom(bill, 110m, [], Now), 0, "EGP", "a", null, "paymob", Now);
 
         var ex = Assert.ThrowsExactly<SalesDomainException>(() => OnlineShares.Custom(bill, 20m, [holding], Now));
         Assert.Contains("17.68", ex.Message, "only what is neither paid nor held is left");
@@ -102,8 +102,8 @@ public class OnlinePaymentTest
     public void The_providers_callback_marks_it_paid_once_and_a_repeat_is_nothing()
     {
         var (_, bill) = Table((1, 100m));
-        var payment = OnlinePayment.Start(1, 1, OnlineShares.Full(bill, [], Now), 2.5m, 10m, "EGP", "a", " Sara ", "paymob", Now);
-        Assert.AreEqual(140.18m, payment.Charged, "the share, the fee the guest carries and the tip");
+        var payment = OnlinePayment.Start(1, 1, OnlineShares.Full(bill, [], Now), 2.5m, "EGP", "a", " Sara ", "paymob", Now);
+        Assert.AreEqual(130.18m, payment.Charged, "the share and the fee the guest carries");
         Assert.AreEqual("Sara", payment.PayerName);
 
         Assert.IsTrue(payment.MarkPaid("tx-1", Now.AddMinutes(1)));
@@ -118,7 +118,7 @@ public class OnlinePaymentTest
     public void Money_that_arrives_after_the_hold_ran_out_is_still_paid()
     {
         var (_, bill) = Table((1, 100m));
-        var payment = OnlinePayment.Start(1, 1, OnlineShares.Full(bill, [], Now), 0, 0, "EGP", "a", null, "paymob", Now);
+        var payment = OnlinePayment.Start(1, 1, OnlineShares.Full(bill, [], Now), 0, "EGP", "a", null, "paymob", Now);
         payment.Expire(Now.AddHours(1));
 
         Assert.IsTrue(payment.MarkPaid("tx-1", Now.AddHours(1)));
@@ -160,7 +160,7 @@ public class OnlinePaymentTest
 
     private static OnlinePayment Pay(OnlineShare share, string payer)
     {
-        var payment = OnlinePayment.Start(1, 1, share, 0, 0, "EGP", payer, null, "paymob", Now);
+        var payment = OnlinePayment.Start(1, 1, share, 0, "EGP", payer, null, "paymob", Now);
         payment.MarkPaid($"tx-{payer}-{share.Amount}", Now);
         return payment;
     }

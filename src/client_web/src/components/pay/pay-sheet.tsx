@@ -4,13 +4,9 @@ import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
 import {
   CircleAlert,
-  CreditCard,
   Loader2,
   FlaskConical,
   Lock,
-  Minus,
-  Plus,
-  Smartphone,
 } from 'lucide-react'
 import { type PayLineView, type PayView } from '@/api/sales'
 import { startOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
@@ -18,13 +14,14 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import {
   customShare,
-  defaultParts,
   equalShare,
   itemsShare,
-  MAX_PARTS,
+  minSeats,
   paySummary,
+  pickedSeats,
+  seatPlan,
   SPLIT,
-  tipFor,
+  startSeats,
   type SplitKind,
 } from '@/lib/pay'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
@@ -43,6 +40,7 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PaidSoFar, PayWhy, SharesList } from './pay-progress'
+import { AmountPicker, SeatsTable } from './split-pickers'
 
 /** 'full' pays what is left, 'split' offers the café's ways to split, and
  *  'any' offers both (the table's sheet, a retry). */
@@ -70,7 +68,7 @@ function modesFor(view: PayView, start: PayStart): SplitKind[] {
 /**
  * Online payments (docs/online-payments-plan.md): the bill as it stands —
  * what is paid, what others are paying right now — the ways the café lets
- * a table split it, the tip and the fee, and one button that sends the
+ * a table split it, the fee, and one button that sends the
  * guest to the provider's checkout. Re-read every few seconds while open,
  * so shares others pay land here as they happen; the server re-checks
  * every sum when the guest confirms.
@@ -162,11 +160,12 @@ function PayForm({
   const [picked, setPicked] = useState<Set<string>>(
     () => new Set(view.lines.filter((l) => l.isMine && !l.claimed).map((l) => String(l.id)))
   )
-  // Equal: how many split it and how many of those this guest pays for
-  const [of, setOf] = useState(() => defaultParts(view.people))
-  const [parts, setParts] = useState(1)
+  // Equal: the seats at the table, and which of the free ones this guest
+  // pays for. Everyone who has paid, or is paying, keeps a seat of their own
+  const fewestSeats = minSeats(view.shares.length)
+  const [seats, setSeats] = useState(() => startSeats(view.people, view.shares.length))
+  const [chosenSeats, setChosenSeats] = useState<ReadonlySet<number>>(() => new Set([0]))
   const [amountText, setAmountText] = useState('')
-  const [tipPercent, setTipPercent] = useState(0)
   const [name, setName] = useState(
     () =>
       (auth.isAuthenticated
@@ -176,8 +175,12 @@ function PayForm({
 
   const total = num(view.total)
   const remaining = num(view.remaining)
-  const typed = customShare(amountText)
-  const tooMuch = mode === 'custom' && typed > remaining
+  const of = Math.max(seats, fewestSeats)
+  const mySeats = pickedSeats(chosenSeats, seatPlan(total, num(view.paid), num(view.held), of).free)
+  const parts = mySeats.length
+  // Past what is left cannot be picked; if the bill moved on since, the
+  // sum shrinks with it, as the picker shows
+  const typed = Math.min(customShare(amountText), remaining)
 
   const share =
     mode === 'full'
@@ -185,12 +188,9 @@ function PayForm({
       : mode === 'items'
         ? itemsShare(view.lines, picked, remaining)
         : mode === 'equal'
-          ? equalShare(total, remaining, Math.min(parts, of), of)
-          : tooMuch
-            ? 0
-            : typed
-  const tip = view.options.tipsEnabled ? tipFor(share, tipPercent) : 0
-  const summary = paySummary(share, tip, view.options)
+          ? equalShare(total, remaining, parts, of)
+          : typed
+  const summary = paySummary(share, view.options)
   const guestPaysFee = view.options.feeMode === 'Guest'
 
   const [problem, setProblem] = useState<string | null>(null)
@@ -223,10 +223,9 @@ function PayForm({
                 .filter((l) => !l.claimed && picked.has(String(l.id)))
                 .map((l) => Number(l.id))
             : null,
-        parts: mode === 'equal' ? Math.min(parts, of) : null,
+        parts: mode === 'equal' ? parts : null,
         of: mode === 'equal' ? of : null,
         amount: mode === 'custom' ? typed : null,
-        tip,
         payerName: name.trim() || null,
         payerPhone: null,
       },
@@ -287,63 +286,34 @@ function PayForm({
             )}
 
             {mode === 'equal' && (
-              <EqualSplit
-                of={of}
-                parts={Math.min(parts, of)}
-                onOf={(n) => {
-                  setOf(n)
-                  setParts((p) => Math.min(p, n))
-                }}
-                onParts={setParts}
+              <SeatsTable
+                total={total}
+                remaining={remaining}
+                paid={num(view.paid)}
+                held={num(view.held)}
+                seats={of}
+                minSeats={fewestSeats}
+                selected={new Set(mySeats)}
+                onSeats={setSeats}
+                onToggle={(seat) =>
+                  setChosenSeats(() => {
+                    const next = new Set(mySeats)
+                    // The last one stays: someone pays for something
+                    if (next.has(seat)) {
+                      if (next.size > 1) next.delete(seat)
+                    } else next.add(seat)
+                    return next
+                  })
+                }
               />
             )}
 
             {mode === 'custom' && (
-              <div className='flex flex-col gap-1.5'>
-                <Input
-                  inputMode='decimal'
-                  autoComplete='off'
-                  aria-invalid={tooMuch}
-                  placeholder={price(remaining)}
-                  className='h-12 rounded-xl text-lg font-semibold tabular-nums'
-                  value={amountText}
-                  onChange={(e) => setAmountText(e.target.value)}
-                />
-                <p
-                  className={cn(
-                    'text-[13px]',
-                    tooMuch ? 'text-destructive' : 'text-muted-foreground'
-                  )}
-                >
-                  {tooMuch
-                    ? t('customAmountTooMuch', { amount: price(remaining) })
-                    : t('customAmountHint', { amount: price(remaining) })}
-                </p>
-              </div>
-            )}
-
-            {view.options.tipsEnabled && view.options.tipPercents.length > 0 && (
-              <div className='flex flex-col gap-2'>
-                <span className='text-sm font-semibold'>{t('addTip')}</span>
-                <div className='flex flex-wrap gap-2'>
-                  {[0, ...view.options.tipPercents.map(Number)].map((pct) => (
-                    <button
-                      key={pct}
-                      type='button'
-                      aria-pressed={pct === tipPercent}
-                      onClick={() => setTipPercent(pct)}
-                      className={cn(
-                        'rounded-pill border px-3.5 py-1.5 text-[13px] font-semibold tabular-nums transition-colors',
-                        pct === tipPercent
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'hover:bg-accent'
-                      )}
-                    >
-                      {pct === 0 ? t('noTip') : `${pct}%`}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <AmountPicker
+                remaining={remaining}
+                text={amountText}
+                onText={setAmountText}
+              />
             )}
 
             <label className='flex flex-col gap-1.5'>
@@ -368,7 +338,6 @@ function PayForm({
         <div className='bg-background shrink-0 border-t px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]'>
           <div className='flex flex-col gap-1 text-sm tabular-nums'>
             <Row label={t('yourShare')} value={price(summary.share)} />
-            {summary.tip > 0 && <Row label={t('tip')} value={price(summary.tip)} />}
             {guestPaysFee && summary.fee > 0 && (
               <Row label={t('onlinePaymentFee')} value={price(summary.fee)} />
             )}
@@ -496,142 +465,8 @@ function ItemsPicker({
   )
 }
 
-/** Divide equally: how many split it, how many of those this guest pays
- *  for, and the ring that shows it. */
-function EqualSplit({
-  of,
-  parts,
-  onOf,
-  onParts,
-}: {
-  of: number
-  parts: number
-  onOf: (n: number) => void
-  onParts: (n: number) => void
-}) {
-  const t = useT()
-  return (
-    <div className='flex items-center gap-5'>
-      <SplitRing parts={parts} of={of} />
-      <div className='flex flex-1 flex-col gap-3'>
-        <Stepper
-          label={t('splitHowMany')}
-          value={of}
-          min={2}
-          max={MAX_PARTS}
-          onChange={onOf}
-        />
-        <Stepper
-          label={t('splitYouPayFor')}
-          value={parts}
-          min={1}
-          max={of}
-          onChange={onParts}
-        />
-      </div>
-    </div>
-  )
-}
-
-function Stepper({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  onChange: (n: number) => void
-}) {
-  return (
-    <div className='flex items-center justify-between gap-2'>
-      <span className='text-sm'>{label}</span>
-      <div className='flex items-center gap-1'>
-        <Button
-          variant='outline'
-          size='icon'
-          className='size-8 rounded-full'
-          aria-label='−'
-          disabled={value <= min}
-          onClick={() => onChange(value - 1)}
-        >
-          <Minus className='h-4 w-4' />
-        </Button>
-        <span className='w-7 text-center text-base font-bold tabular-nums'>
-          {value}
-        </span>
-        <Button
-          variant='outline'
-          size='icon'
-          className='size-8 rounded-full'
-          aria-label='+'
-          disabled={value >= max}
-          onClick={() => onChange(value + 1)}
-        >
-          <Plus className='h-4 w-4' />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-/** One segment per person splitting, this guest's filled in. Past a
- *  dozen the gaps would eat the ring, so it becomes one arc. */
-function SplitRing({ parts, of }: { parts: number; of: number }) {
-  const t = useT()
-  const size = 96
-  const stroke = 10
-  const r = (size - stroke) / 2
-  const circ = 2 * Math.PI * r
-  const segmented = of <= 12
-  const seg = circ / of
-  const gap = segmented ? Math.min(4, seg * 0.2) : 0
-
-  return (
-    <div className='relative shrink-0' style={{ width: size, height: size }}>
-      <svg width={size} height={size} className='-rotate-90'>
-        {segmented ? (
-          Array.from({ length: of }, (_, i) => (
-            <circle
-              key={i}
-              cx={size / 2}
-              cy={size / 2}
-              r={r}
-              fill='none'
-              strokeWidth={stroke}
-              strokeDasharray={`${seg - gap} ${circ}`}
-              strokeDashoffset={-i * seg}
-              className={i < parts ? 'stroke-primary' : 'stroke-muted'}
-            />
-          ))
-        ) : (
-          <>
-            <circle cx={size / 2} cy={size / 2} r={r} fill='none' strokeWidth={stroke} className='stroke-muted' />
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={r}
-              fill='none'
-              strokeWidth={stroke}
-              strokeLinecap='round'
-              strokeDasharray={`${(circ * parts) / of} ${circ}`}
-              className='stroke-primary'
-            />
-          </>
-        )}
-      </svg>
-      <span className='absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums'>
-        {t('splitPartsOf', { parts, of })}
-      </span>
-    </div>
-  )
-}
-
-/** How the provider's page will take the money, as the café set it up.
- *  Apple Pay only where the browser can offer it. */
+/** Where the money is taken: the provider's secure page, whatever ways
+ *  to pay the café set up there. */
 function Methods({ view }: { view: PayView }) {
   const t = useT()
   // A demo café: the next page is ours, and nothing is charged
@@ -643,28 +478,10 @@ function Methods({ view }: { view: PayView }) {
       </div>
     )
   }
-  const applePay =
-    view.options.applePay &&
-    typeof window !== 'undefined' &&
-    'ApplePaySession' in window
-  const methods = [
-    view.options.card && { icon: CreditCard, label: t('card') },
-    view.options.wallet && { icon: Smartphone, label: t('payWallet') },
-    applePay && { icon: Smartphone, label: t('payApplePay') },
-  ].filter((m): m is { icon: typeof CreditCard; label: string } => !!m)
-
   return (
-    <div className='text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs'>
-      <span className='flex items-center gap-1'>
-        <Lock className='h-3 w-3' />
-        {t('paySecureNote')}
-      </span>
-      {methods.map(({ icon: Icon, label }) => (
-        <span key={label} className='flex items-center gap-1'>
-          <Icon className='h-3 w-3' />
-          {label}
-        </span>
-      ))}
+    <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-xs'>
+      <Lock className='h-3 w-3' />
+      {t('paySecureNote')}
     </div>
   )
 }

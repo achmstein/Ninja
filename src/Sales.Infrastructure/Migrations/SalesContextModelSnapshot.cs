@@ -173,10 +173,6 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<int>("TicketId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Tip")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<string>("TransactionId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -259,13 +255,6 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<string>("SecretKeyHint")
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
-
-                    b.PrimitiveCollection<List<int>>("TipPercents")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
-
-                    b.Property<bool>("TipsEnabled")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

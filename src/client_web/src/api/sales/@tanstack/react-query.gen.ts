@@ -812,7 +812,7 @@ export const getPaymentSettingsOptions = (options: Options<GetPaymentSettingsDat
 });
 
 /**
- * Change the café's payment account, fee, tips and split options
+ * Change the café's payment account, fee and split options
  */
 export const savePaymentSettingsMutation = (options?: Partial<Options<SavePaymentSettingsData>>): UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> => {
     const mutationOptions: UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> = {

@@ -13,7 +13,7 @@ import {
 
 const cafe: BrandThemeInput = {
   primaryColor: '#0ea5e9',
-  theme: { accent: '#f59e0b', surface: '#fffbf5', radius: 'xl', fontLatin: 'Poppins', fontArabic: 'Tajawal' },
+  theme: { accent: '#f59e0b', surface: '#fffbf5', radius: 'xl', fontLatin: 'Satoshi', fontArabic: 'Tajawal' },
 }
 
 describe('brand tokens', () => {
@@ -58,7 +58,7 @@ describe('brand tokens', () => {
     expect(tokens.light['--primary']).toMatch(/^oklch\(/)
     expect(tokens.dark['--primary']).toMatch(/^oklch\(/)
     expect(tokens.light['--radius']).toBe('1.5rem')
-    expect(tokens.light['--font-latin']).toBe("'Poppins'")
+    expect(tokens.light['--font-latin']).toBe("'Satoshi'")
     expect(tokens.light['--font-arabic']).toBe("'Tajawal'")
     expect(brandTokens({ theme: { fontLatin: 'Comic Sans MS' } }).fontLatin).toBeNull()
     expect(brandThemeCss(cafe)).toContain('.dark{')

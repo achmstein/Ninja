@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:ninja_client/core/brand/brand_fonts.dart';
 import 'package:ninja_client/core/brand/brand_mark.dart';
 import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/brand/brand_service.dart';
@@ -88,7 +89,7 @@ void main() {
           'accent': '#F59E0B',
           'surface': '#fffbf5',
           'radius': 'lg',
-          'fontLatin': 'Poppins',
+          'fontLatin': 'Satoshi',
           'fontArabic': 'Tajawal',
           'dark': {'primary': null, 'accent': null, 'surface': '#1a1412'},
         },
@@ -104,7 +105,7 @@ void main() {
       expect(brand.theme.accent, const Color(0xFFF59E0B));
       expect(brand.theme.surface, const Color(0xFFFFFBF5));
       expect(brand.theme.radius, 'lg');
-      expect(brand.theme.fontLatin, 'Poppins');
+      expect(brand.theme.fontLatin, 'Satoshi');
       expect(brand.theme.fontArabic, 'Tajawal');
       expect(brand.theme.dark?.surfaceHex, '#1a1412');
       expect(brand.theme.dark?.primary, isNull);
@@ -181,14 +182,25 @@ void main() {
       expect(style.borderRadius.topLeft, const Radius.circular(16));
     });
 
-    test('a font google_fonts does not know falls back silently, and each script gets its own', () {
-      expect(brandFontFamily('Poppins'), 'Poppins');
+    test('a font the app cannot load falls back silently, and each script gets its own', () {
+      expect(brandFontFamily('Geist'), 'Geist');
+      expect(brandFontFamily('Satoshi'), 'Satoshi', reason: 'bundled, not fetched');
       expect(brandFontFamily('Comic Sans MS'), isNull);
       expect(brandFontFamily(null), isNull);
-      const theme = TenantTheme(fontLatin: 'Poppins', fontArabic: 'Tajawal');
-      expect(brandFontFor(theme, const Locale('en')), 'Poppins');
-      expect(brandFontFor(theme, const Locale('ar')), 'Tajawal');
-      expect(brandFontFor(const TenantTheme(fontLatin: 'Poppins'), const Locale('ar')), isNull);
+      const theme = TenantTheme(fontLatin: 'General Sans', fontArabic: 'Readex Pro');
+      expect(brandFontFor(theme, const Locale('en')), 'General Sans');
+      expect(brandFontFor(theme, const Locale('ar')), 'Readex Pro');
+      expect(brandFontFor(const TenantTheme(fontLatin: 'Satoshi'), const Locale('ar')), isNull);
+    });
+
+    test('every catalog family is one the app can set text in; the bundled ones set without a fetch', () {
+      for (final f in [...latinFonts, ...arabicFonts]) {
+        expect(isLoadableFont(f.family), isTrue, reason: f.family);
+        expect(f.weights, isNotEmpty);
+      }
+      for (final family in bundledBrandFonts) {
+        expect(brandFontStyle(family, const TextStyle(fontWeight: FontWeight.w500)).fontFamily, family);
+      }
     });
   });
 

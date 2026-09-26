@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'brand_fonts.dart';
 import 'tenant_brand.dart';
 
 /// A colour in OKLCH, the space the tokens are derived in: lightness 0–1,
@@ -179,9 +179,9 @@ FStyle brandedStyle(FStyle style, String? radius) {
   );
 }
 
-/// A family when google_fonts knows it, else null: an unknown family
-/// silently keeps the app's own
-String? brandFontFamily(String? font) => font != null && GoogleFonts.asMap().containsKey(font) ? font : null;
+/// A family when the app can set text in it (bundled, or one google_fonts
+/// knows), else null: an unknown family silently keeps the app's own
+String? brandFontFamily(String? font) => font != null && isLoadableFont(font) ? font : null;
 
 /// The tenant's family for text in [locale]: the Arabic one for Arabic, the
 /// Latin one otherwise; null keeps the bundled face
@@ -191,7 +191,7 @@ String? brandFontFor(TenantTheme theme, Locale locale) =>
 /// [typography] set in [font] (a family [brandFontFamily] accepted), weight
 /// by weight, so bold is the family's bold and not a synthesized one
 FTypography brandedTypography(FTypography typography, String font) {
-  TextStyle f(TextStyle style) => GoogleFonts.getFont(font, textStyle: style);
+  TextStyle f(TextStyle style) => brandFontStyle(font, style);
   return typography.copyWith(
     xs: f(typography.xs),
     sm: f(typography.sm),

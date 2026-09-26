@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -44,7 +43,7 @@ enum _Stage { bill, pay, status }
 
 /// Online payments (docs/online-payments-plan.md), the guest's side: the bill as
 /// the table has paid it so far, then the share they pick (everything left,
-/// their items, some equal parts, or an amount), the fee and tip on it, and
+/// their items, some equal parts, or an amount), the fee on it, and
 /// the provider's checkout. The payment is followed here until the provider
 /// says how it went; the server's callback, never the phone, decides.
 class PaySheet extends ConsumerStatefulWidget {
@@ -74,7 +73,6 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
   int _of = 2;
   int _parts = 1;
   final _amount = TextEditingController();
-  int _tipPercent = 0;
 
   bool _starting = false;
   String? _startError;
@@ -180,8 +178,6 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
 
   bool _customTooMuch(PayView view) => _mode == SplitKind.custom && customShare(_amount.text) > view.remaining;
 
-  double _tip(double share, PayOptions options) => options.tipsEnabled ? tipFor(share, _tipPercent) : 0;
-
   Future<void> _start(PayView view) async {
     final l10n = AppLocalizations.of(context)!;
     final share = _share(view);
@@ -198,7 +194,6 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
             parts: _mode == SplitKind.equal ? _parts : null,
             of: _mode == SplitKind.equal ? _of : null,
             amount: _mode == SplitKind.custom ? share : null,
-            tip: _tip(share, view.options),
           );
       if (!mounted) return;
       setState(() {
@@ -319,7 +314,6 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       checkoutUrl: url.toString(),
       amount: share.amount,
       fee: 0,
-      tip: 0,
       charged: 0,
     );
     setState(() {
@@ -521,18 +515,16 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     );
   }
 
-  // The share, the fee and tip on it, and the button that opens the checkout
+  // The share, the fee on it, and the button that opens the checkout
   Widget _payStage(BuildContext context, PayView view, MoneyFormat money) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.theme.colors;
     final options = view.options;
     final modes = _splitModes(options);
     final share = _share(view);
-    final tip = _tip(share, options);
-    final summary = paySummary(share, tip, options);
+    final summary = paySummary(share, options);
     final tooMuch = _customTooMuch(view);
     final canConfirm = view.canPay && share > 0 && !tooMuch && !_starting;
-    final applePay = options.applePay && defaultTargetPlatform == TargetPlatform.iOS;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -574,31 +566,11 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
         const SizedBox(height: 8),
         _AmountRow(label: l10n.payYourShare, value: money(summary.share)),
         if (options.guestPaysFee && summary.fee > 0) _AmountRow(label: l10n.payOnlineFee, value: money(summary.fee)),
-        if (options.tipsEnabled && options.tipPercents.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          AppText(l10n.payTip, style: TextStyle(fontSize: 13, color: colors.mutedForeground)),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final percent in [0, ...options.tipPercents.where((p) => p > 0)])
-                FButton(
-                  key: ValueKey('tip-$percent'),
-                  variant: percent == _tipPercent ? FButtonVariant.secondary : FButtonVariant.outline,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => setState(() => _tipPercent = percent),
-                  child: Text(percent == 0 ? l10n.payNoTip : '$percent%'),
-                ),
-            ],
-          ),
-          if (tip > 0) _AmountRow(label: l10n.payTip, value: money(tip)),
-        ],
         const SizedBox(height: 8),
         _AmountRow(label: l10n.payYouPay, value: money(summary.total), strong: true, big: true),
         const SizedBox(height: 4),
         AppText(
-          applePay ? l10n.payMethods : l10n.payMethodsNoApple,
+          l10n.paySecureNote,
           style: TextStyle(fontSize: 12, color: colors.mutedForeground),
         ),
         if (!view.canPay) ...[

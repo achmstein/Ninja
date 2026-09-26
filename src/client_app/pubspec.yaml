@@ -92,6 +92,25 @@ flutter:
         - asset: assets/fonts/NotoSansArabic-Regular.ttf
         - asset: assets/fonts/NotoSansArabic-Bold.ttf
           weight: 700
+    # Brand fonts google_fonts cannot fetch: Fontshare families under the ITF
+    # Free Font License (assets/fonts/LICENSE-FFL-Satoshi-GeneralSans.txt),
+    # which allows embedding them in an app (see lib/core/brand/brand_fonts.dart)
+    - family: Satoshi
+      fonts:
+        - asset: assets/fonts/Satoshi-Regular.ttf
+        - asset: assets/fonts/Satoshi-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Satoshi-Bold.ttf
+          weight: 700
+    - family: General Sans
+      fonts:
+        - asset: assets/fonts/GeneralSans-Regular.ttf
+        - asset: assets/fonts/GeneralSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/GeneralSans-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/GeneralSans-Bold.ttf
+          weight: 700
 
 # App icon configuration
 flutter_launcher_icons:

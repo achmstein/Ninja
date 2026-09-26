@@ -12,7 +12,7 @@ public sealed class PersonaTests
     {
         var brief = Persona.Write(null, null);
 
-        StringAssert.Contains(brief, "operations partner of this café");
+        StringAssert.StartsWith(brief, "You are Ninja, the operations partner of this café", "it is always Ninja");
         StringAssert.Contains(brief, "Never guess or invent a number");
         StringAssert.Contains(brief, "confirm=true and the same requestId", "the write rule is always there");
         StringAssert.Contains(brief, "- Brief:");
@@ -22,15 +22,15 @@ public sealed class PersonaTests
     }
 
     [TestMethod]
-    public void The_owners_settings_name_it_set_its_manner_and_language_and_add_their_notes()
+    public void The_owners_settings_set_its_manner_and_language_and_add_their_notes_and_it_stays_Ninja()
     {
-        var brief = Persona.Write("Olive & Bean", new AssistantSettingsDto("Zein", "detailed", "formal", "ar-eg", "The terrace tables are T1 to T4."));
+        var brief = Persona.Write("Olive & Bean", new AssistantSettingsDto("detailed", "formal", "ar-eg", "The terrace tables are T1 to T4."));
 
-        StringAssert.StartsWith(brief, "You are Zein, the operations partner of Olive & Bean");
+        StringAssert.StartsWith(brief, "You are Ninja, the operations partner of Olive & Bean");
         StringAssert.Contains(brief, "- Detailed:");
         StringAssert.Contains(brief, "Formal and precise");
         StringAssert.Contains(brief, "Egyptian Arabic");
-        StringAssert.Contains(brief, "you are Zein, Olive & Bean's assistant");
+        StringAssert.Contains(brief, "you are Ninja, Olive & Bean's assistant");
         StringAssert.EndsWith(brief, "The terrace tables are T1 to T4.");
         // The notes come after the rules, which they cannot unsay
         Assert.IsTrue(brief.IndexOf("The terrace tables", StringComparison.Ordinal) > brief.IndexOf("confirm=true", StringComparison.Ordinal));

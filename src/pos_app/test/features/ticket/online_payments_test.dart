@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:pos_app/core/motion/motion.dart';
 import 'package:pos_app/core/brand/brand_service.dart';
 import 'package:pos_app/core/brand/tenant_brand.dart';
 import 'package:pos_app/core/providers/branch_provider.dart';
@@ -79,11 +80,11 @@ void main() {
   setUpAll(_loadFonts);
 
   const payments = [
-    OnlinePaymentView(key: 'a', payerName: 'Sara', amount: 40, tip: 5, status: 'Paid'),
+    OnlinePaymentView(key: 'a', payerName: 'Sara', amount: 40, fee: 1.5, status: 'Paid'),
     OnlinePaymentView(key: 'b', amount: 30, status: 'Pending'),
   ];
 
-  testWidgets('each guest payment shows its payer, its status and the tip apart, then what is left', (tester) async {
+  testWidgets('each guest payment shows its payer, its status and the fee apart, then what is left', (tester) async {
     final refunded = <String>[];
     await tester.pumpWidget(_app(OnlinePaymentsCard(ticket: _bill, payments: payments, onRefund: (p) => refunded.add(p.key))));
     await tester.pump();
@@ -91,7 +92,7 @@ void main() {
     expect(find.text('Sara'), findsOneWidget);
     expect(find.text('Guest'), findsOneWidget);
     expect(find.text('Paying…'), findsOneWidget);
-    expect(find.textContaining('+ 5.00 EGP tip'), findsOneWidget);
+    expect(find.textContaining('fee 1.50 EGP'), findsOneWidget);
     // Paid online is the shares that landed; the pending one still owes
     expect(find.text('Remaining'), findsOneWidget);
     expect(find.text('60.00 EGP'), findsOneWidget);
@@ -185,7 +186,7 @@ void main() {
     expect(find.text('60'), findsOneWidget);
     expect(find.text('60.00 EGP'), findsOneWidget);
     // Nothing added yet: the till still owes the rest
-    final confirm = tester.widget<FButton>(find.ancestor(of: find.text('Confirm & settle'), matching: find.byType(FButton)));
-    expect(confirm.onPress, isNull);
+    final confirm = tester.widget<MorphButton>(find.ancestor(of: find.text('Confirm & settle'), matching: find.byType(MorphButton)));
+    expect(confirm.onPressed, isNull);
   });
 }

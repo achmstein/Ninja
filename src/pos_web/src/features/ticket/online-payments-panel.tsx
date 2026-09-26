@@ -19,9 +19,8 @@ import type { OnlineSummary } from './online-payments'
 
 /**
  * What guests paid on this bill from their phones, one row each: who (the
- * name they gave), their share of the bill, the tip on top, and where it
- * stands. A guest still at the checkout reads "Paying…" and holds the
- * settle. While the bill is open a paid one can be given back.
+ * name they gave), their share of the bill and where it stands. A guest
+ * still at the checkout reads "Paying…" and holds the settle. While the bill is open a paid one can be given back.
  */
 export function OnlinePaymentsPanel({
   payments,
@@ -82,7 +81,6 @@ export function OnlinePaymentsPanel({
       </h2>
       <div className='divide-y rounded-lg border'>
         {payments.map((payment) => {
-          const tip = toNumber(payment.tip)
           const status = payment.status
           return (
             <div
@@ -135,11 +133,6 @@ export function OnlinePaymentsPanel({
                 >
                   {money(payment.amount)}
                 </span>
-                {tip > 0 && (
-                  <span className='text-muted-foreground text-xs tabular-nums'>
-                    {t('onlineTip', { amount: money(tip) })}
-                  </span>
-                )}
               </div>
               {billOpen && status === 'Pending' && (
                 <Button
@@ -201,12 +194,8 @@ export function OnlinePaymentsPanel({
         })}
         description={
           refunding
-            ? // Everything the guest was charged goes back: share, fee and tip
-              money(
-                toNumber(refunding.amount) +
-                  toNumber(refunding.fee) +
-                  toNumber(refunding.tip)
-              )
+            ? // Everything the guest was charged goes back: share and fee
+              money(toNumber(refunding.amount) + toNumber(refunding.fee))
             : undefined
         }
         cancelLabel={t('goBack')}

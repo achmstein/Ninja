@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
@@ -43,6 +44,10 @@ class PlaceList extends StatefulWidget {
 class _PlaceListState extends State<PlaceList> {
   final _term = TextEditingController();
   Timer? _clock;
+  // Places that were busy on an earlier build and are free now: the bill
+  // there was just settled, so their row fades in and its dot turns green
+  Set<int>? _wasFree;
+  final Set<int> _freed = {};
 
   @override
   void initState() {
@@ -109,6 +114,13 @@ class _PlaceListState extends State<PlaceList> {
       for (final place in widget.places)
         if (place.isActive && matches(place.name) && !hasBill(place)) place,
     ];
+    final freeNow = {
+      for (final place in widget.places)
+        if (place.isActive && !hasBill(place)) place.id,
+    };
+    if (_wasFree case final before?) _freed.addAll(freeNow.difference(before));
+    _freed.retainAll(freeNow);
+    _wasFree = freeNow;
     final groups = [
       (PlaceKind.room, l10n.rooms),
       (PlaceKind.table, l10n.tables),
@@ -157,13 +169,29 @@ class _PlaceListState extends State<PlaceList> {
                         : maintenance
                             ? l10n.underMaintenance
                             : null;
-                return _PlaceRow(
+                final freed = _freed.contains(place.id);
+                final row = _PlaceRow(
                   leading: _StatusDot(
-                      color: timed || place.status == PlaceStatus.held ? _placeDot(place.status) : AppColors.successColor),
+                    color: timed || place.status == PlaceStatus.held ? _placeDot(place.status) : AppColors.successColor,
+                    // Was taken a moment ago: one soft turn from red to its colour
+                    from: freed && !reduceMotion(context) ? AppColors.red500 : null,
+                  ),
                   name: place.name.localized(context),
                   detail: detail,
                   icon: place.kind.icon,
                   onTap: maintenance || widget.busy ? null : () => widget.onPick(place),
+                );
+                return KeyedSubtree(
+                  key: ValueKey(place.id),
+                  child: freed
+                      ? TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: Motion.slow,
+                          curve: Motion.enter,
+                          child: row,
+                          builder: (context, t, child) => Opacity(opacity: t, child: child),
+                        )
+                      : row,
                 );
               }),
           ],
@@ -190,11 +218,19 @@ class _PlaceListState extends State<PlaceList> {
 
 class _StatusDot extends StatelessWidget {
   final Color color;
-  const _StatusDot({required this.color});
+
+  /// The colour it had a moment ago, to fade from once
+  final Color? from;
+  const _StatusDot({required this.color, this.from});
 
   @override
-  Widget build(BuildContext context) =>
-      Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+  Widget build(BuildContext context) => TweenAnimationBuilder<Color?>(
+        tween: ColorTween(begin: from ?? color, end: color),
+        duration: const Duration(milliseconds: 600),
+        curve: Motion.move,
+        builder: (context, value, _) =>
+            Container(width: 10, height: 10, decoration: BoxDecoration(color: value, shape: BoxShape.circle)),
+      );
 }
 
 /// One 48 dp row: a dot or icon, the name, an optional detail and the

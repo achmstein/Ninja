@@ -157,12 +157,11 @@ function Outcome({
   )
 }
 
-/** The payment as a slip: the share, the tip, the fee, what the card paid. */
+/** The payment as a slip: the share, the fee, what the card paid. */
 function Receipt({ payment }: { payment: PaymentStatusView }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
   const money = (value: number | string) => formatMoney(value, payment.currency, language)
-  const tip = Number(payment.tip)
   const fee = Number(payment.fee)
   const row = 'flex items-baseline justify-between gap-2 tabular-nums'
 
@@ -172,12 +171,6 @@ function Receipt({ payment }: { payment: PaymentStatusView }) {
         <span>{t('yourShare')}</span>
         <span>{money(payment.amount)}</span>
       </div>
-      {tip > 0 && (
-        <div className={`${row} text-muted-foreground`}>
-          <span>{t('tip')}</span>
-          <span>{money(tip)}</span>
-        </div>
-      )}
       {fee > 0 && (
         <div className={`${row} text-muted-foreground`}>
           <span>{t('onlinePaymentFee')}</span>

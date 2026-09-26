@@ -55,9 +55,6 @@ public class OnlinePayment : Entity, IAggregateRoot
     /// <summary>The provider's fee when the café passes it on to the guest; 0 when the café absorbs it.</summary>
     public decimal Fee { get; private set; }
 
-    /// <summary>For the staff; not part of the bill.</summary>
-    public decimal Tip { get; private set; }
-
     public string Currency { get; private set; } = string.Empty;
 
     public SplitMode Mode { get; private set; }
@@ -98,8 +95,8 @@ public class OnlinePayment : Entity, IAggregateRoot
 
     public string? RefundedBy { get; private set; }
 
-    /// <summary>What the guest is charged: their share, the fee they carry and their tip.</summary>
-    public decimal Charged => Amount + Fee + Tip;
+    /// <summary>What the guest is charged: their share and the fee they carry.</summary>
+    public decimal Charged => Amount + Fee;
 
     /// <summary>Holding a share of the bill: paid, or still in checkout at <paramref name="now"/>.</summary>
     public bool Holds(DateTime now)
@@ -112,7 +109,6 @@ public class OnlinePayment : Entity, IAggregateRoot
         int branchId,
         OnlineShare share,
         decimal fee,
-        decimal tip,
         string currency,
         string payerId,
         string? payerName,
@@ -121,8 +117,8 @@ public class OnlinePayment : Entity, IAggregateRoot
     {
         if (share.Amount <= 0)
             throw new SalesDomainException("There is nothing to pay.");
-        if (fee < 0 || tip < 0)
-            throw new SalesDomainException("A fee or a tip cannot be negative.");
+        if (fee < 0)
+            throw new SalesDomainException("A fee cannot be negative.");
         if (string.IsNullOrWhiteSpace(payerId))
             throw new SalesDomainException("A payment needs the guest paying it.");
         if (string.IsNullOrWhiteSpace(provider))
@@ -135,7 +131,6 @@ public class OnlinePayment : Entity, IAggregateRoot
             BranchId = branchId,
             Amount = share.Amount,
             Fee = OnlineShares.Money(fee),
-            Tip = OnlineShares.Money(tip),
             Currency = currency,
             Mode = share.Mode,
             LineIds = [.. share.LineIds],

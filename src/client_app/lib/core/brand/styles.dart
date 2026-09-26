@@ -165,7 +165,7 @@ const Map<StyleKey, StylePreset> styles = {
       density: DensityLayout.comfortable,
     ),
     headings: Headings(font: null, weight: 800, scale: 1.3, uppercase: false, tracking: -0.02),
-    defaults: StyleDefaults(radius: 'xl', fontLatin: 'Poppins', fontArabic: 'Changa', headerSize: 'md'),
+    defaults: StyleDefaults(radius: 'xl', fontLatin: 'Satoshi', fontArabic: 'Readex Pro', headerSize: 'md'),
     forceDark: false,
   ),
   // Warm: photo cards, serif headings, the cover up top
@@ -179,7 +179,7 @@ const Map<StyleKey, StylePreset> styles = {
       density: DensityLayout.comfortable,
     ),
     headings: Headings(font: 'Playfair Display', weight: 600, scale: 1.2, uppercase: false, tracking: 0),
-    defaults: StyleDefaults(radius: 'lg', fontLatin: 'Nunito', fontArabic: 'Almarai'),
+    defaults: StyleDefaults(radius: 'lg', fontLatin: 'Figtree', fontArabic: 'Almarai'),
     forceDark: false,
   ),
   // A bar at night: always dark, photo cards, pill buttons

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
@@ -32,6 +33,7 @@ import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../dialogs/new_ticket_dialog.dart';
+import '../just_settled.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/place_list.dart';
 
@@ -118,6 +120,15 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   bool _openingTable = false;
   // A second-hand, only while a session runs or a reservation counts down
   Timer? _clock;
+  // The bill just settled stays a moment, then folds away
+  Timer? _fold;
+
+  void _scheduleFold(Duration after) {
+    _fold ??= Timer(after, () {
+      _fold = null;
+      if (mounted) ref.read(justSettledProvider.notifier).shown();
+    });
+  }
 
   void _syncClock(bool running) {
     if (running && _clock == null) {
@@ -131,6 +142,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   @override
   void dispose() {
     _clock?.cancel();
+    _fold?.cancel();
     super.dispose();
   }
 
@@ -287,6 +299,15 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     Stay? stayForTicket(TicketSummary t) =>
         t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isRunning).firstOrNull;
     final bills = tickets.value ?? const <TicketSummary>[];
+    // The bill settled on the ticket screen is gone from the list by now:
+    // drawn once more where it was, it folds away and the grid closes up
+    final justSettled = ref.watch(justSettledProvider);
+    final leaving = justSettled != null && justSettled.fresh && tickets.hasValue && !bills.any((b) => b.id == justSettled.ticket.id)
+        ? justSettled.ticket
+        : null;
+    if (justSettled != null && (leaving != null || !justSettled.fresh)) {
+      _scheduleFold(leaving != null ? const Duration(milliseconds: 450) : Duration.zero);
+    }
     _syncClock(reserved.isNotEmpty || bills.any((b) => stayForTicket(b) != null));
     final above = <Widget>[
       // A customer in a room is waiting on each of these, so they lead the
@@ -326,7 +347,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                               places: sortedRooms,
                               sessions: placesState.openStays,
                               reservations: placesState.openReservations,
-                              tickets: tickets.value ?? const [],
+                              // Its place frees up as the card folds
+                              tickets: [...?tickets.value, ?leaving],
                               busy: _openingTable,
                               timeBilling: features.timeBilling,
                               onNewTab: _newTab,
@@ -452,7 +474,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                           style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                     ),
                     data: (list) => _Bills(
-                      bills: [...list]..sort(compareBills),
+                      bills: [...list, ?leaving]..sort(compareBills),
                       above: above,
                       // An order still waiting lights the bill it will land on
                       waitingIds: {
@@ -630,16 +652,25 @@ class _BillsState extends State<_Bills> {
               const gap = 12.0;
               final columns = math.max(1, ((constraints.maxWidth + gap) / (180 + gap)).floor());
               final width = math.min(220.0, (constraints.maxWidth - gap * (columns - 1)) / columns);
-              return Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                children: [
-                  for (final ticket in shown)
-                    SizedBox(
-                      width: width,
-                      child: BillCard(ticket: ticket, clock: clocks[ticket.id], waiting: waitingIds.contains(ticket.id), onTap: () => context.go('/ticket/${ticket.id}')),
-                    ),
-                ],
+              // A bill that closes folds away and the others slide up into
+              // its place; one that opens slides in. A filter or a search
+              // just redraws.
+              return ReflowScope(
+                child: Presence(
+                  epoch: (filter, q),
+                  exitDuration: Motion.slow,
+                  enter: (context, key, child) => SlideInItem(child: child),
+                  exit: (context, key, child, exit) => _FoldAway(animation: exit, child: child),
+                  builder: (context, children) => Wrap(spacing: gap, runSpacing: gap, children: children),
+                  children: [
+                    for (final ticket in shown)
+                      SizedBox(
+                        key: ValueKey(ticket.id),
+                        width: width,
+                        child: BillCard(ticket: ticket, clock: clocks[ticket.id], waiting: waitingIds.contains(ticket.id), onTap: () => context.go('/ticket/${ticket.id}')),
+                      ),
+                  ],
+                ),
               );
             },
           ),
@@ -781,6 +812,36 @@ class _EmptyFloor extends StatelessWidget {
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
         ],
       ),
+    );
+  }
+}
+
+/// A settled bill leaving the floor: it folds down from its top edge as it
+/// fades, then gives up its place
+class _FoldAway extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+  const _FoldAway({required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final t = Motion.exit.transform(animation.value);
+        return Opacity(
+          opacity: 1 - t,
+          child: Transform(
+            alignment: Alignment.topCenter,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0015)
+              ..rotateX(-t * 0.9)
+              ..scaleByDouble(1 - 0.06 * t, 1 - 0.06 * t, 1, 1),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

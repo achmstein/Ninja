@@ -127,7 +127,29 @@ public sealed class TenantScenarios
         Assert.Contains("header layout", detail);
     }
 
-    private record AssistantView(string? Name, string? Tone, string? Manner, string? Language, string? Notes);
+    private record FontsView(string? FontLatin, string? FontArabic);
+    private record WithFonts(FontsView Theme);
+
+    [TestMethod]
+    public async Task The_owner_picks_a_font_per_script_from_the_catalog()
+    {
+        await ResetAsync();
+        var anyone = Suite.TenantApi.AsAnonymous();
+
+        // A self-hosted family, spelt however the form sends it, and one of the new Arabic faces
+        await Owner.PutAsync<WithFonts>(Tenant, Styled(new { fontLatin = "general sans", fontArabic = "Readex Pro" }));
+        var saved = await anyone.GetAsync<WithFonts>(Tenant);
+        Assert.AreEqual(new FontsView("General Sans", "Readex Pro"), saved.Theme, "kept as the catalog spells it");
+
+        var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { fontLatin = "Poppins" }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, status, "a family the catalog dropped is refused like any other");
+        Assert.Contains("Instrument Serif", detail, "the refusal lists the catalog");
+
+        (status, _) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { fontArabic = "Inter" }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, status, "each script has its own list");
+    }
+
+    private record AssistantView(string? Tone, string? Manner, string? Language, string? Notes);
     private record WithAssistant(AssistantView Assistant);
 
     [TestMethod]
@@ -135,12 +157,12 @@ public sealed class TenantScenarios
     {
         await ResetAsync();
 
-        await Owner.PutAsync<WithAssistant>($"{Tenant}/assistant", new { name = " Zein ", tone = "Detailed", manner = "formal", language = "ar-eg", notes = "Flag any discount over 20%." });
+        await Owner.PutAsync<WithAssistant>($"{Tenant}/assistant", new { tone = "Detailed", manner = "formal", language = "ar-eg", notes = "Flag any discount over 20%." });
         var read = await Suite.TenantApi.AsAnonymous().GetAsync<WithAssistant>(Tenant);
-        Assert.AreEqual(new AssistantView("Zein", "detailed", "formal", "ar-eg", "Flag any discount over 20%."), read.Assistant, "the assistant reads it with the public brand");
+        Assert.AreEqual(new AssistantView("detailed", "formal", "ar-eg", "Flag any discount over 20%."), read.Assistant, "the assistant reads it with the public brand");
 
         var cleared = await Owner.PutAsync<WithAssistant>($"{Tenant}/assistant", new { });
-        Assert.AreEqual(new AssistantView(null, null, null, null, null), cleared.Assistant, "nothing set is the platform's default");
+        Assert.AreEqual(new AssistantView(null, null, null, null), cleared.Assistant, "nothing set is the platform's default");
 
         var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Tenant}/assistant", new { tone = "chatty" });
         Assert.AreEqual(HttpStatusCode.BadRequest, status);

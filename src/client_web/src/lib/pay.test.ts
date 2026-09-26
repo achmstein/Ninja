@@ -7,8 +7,16 @@ import {
   guestFee,
   itemsShare,
   money,
+  minSeats,
   paySummary,
-  tipFor,
+  pickedSeats,
+  quickAmounts,
+  seatPlan,
+  sliderAmount,
+  sliderPosition,
+  sliderStep,
+  sliderSteps,
+  startSeats,
 } from './pay'
 
 // A table pays its bill from their phones: the sums the sheet shows must be
@@ -32,8 +40,6 @@ const options = (extra: Partial<PayOptionsView> = {}): PayOptionsView => ({
   feeMode: 'Cafe',
   feePercent: 0,
   feeFixed: 0,
-  tipsEnabled: true,
-  tipPercents: [5, 10, 15],
   allowItems: true,
   allowEqual: true,
   allowCustom: true,
@@ -111,17 +117,16 @@ describe('customShare', () => {
 })
 
 describe('paySummary', () => {
-  it('adds the tip, and no fee when the café absorbs it', () => {
-    expect(paySummary(100, tipFor(100, 10), options())).toEqual({
+  it('charges the share alone when the café absorbs the fee', () => {
+    expect(paySummary(100, options())).toEqual({
       share: 100,
-      tip: 10,
       fee: 0,
-      total: 110,
+      total: 100,
     })
   })
 
-  it('puts the fee on share and tip when the guest pays it', () => {
-    const s = paySummary(90, 10, options({ feeMode: 'Guest', feePercent: 2.75, feeFixed: 3 }))
+  it('puts the fee on the share when the guest pays it', () => {
+    const s = paySummary(100, options({ feeMode: 'Guest', feePercent: 2.75, feeFixed: 3 }))
     expect(s.fee).toBe(5.91)
     expect(s.total).toBe(105.91)
   })
@@ -133,5 +138,70 @@ describe('defaultParts', () => {
     expect(defaultParts(null)).toBe(2)
     expect(defaultParts(1)).toBe(2)
     expect(defaultParts(80)).toBe(50)
+  })
+})
+
+describe('seats', () => {
+  it('starts from the party, never fewer than those who paid plus the guest', () => {
+    expect(startSeats(4, 0)).toBe(4)
+    expect(startSeats(null, 0)).toBe(2)
+    expect(startSeats(2, 3)).toBe(4)
+    expect(startSeats(30, 0)).toBe(12)
+    expect(minSeats(0)).toBe(2)
+    expect(minSeats(20)).toBe(12)
+  })
+
+  it('fills the table from what is paid and being paid, keeping a seat free', () => {
+    // 408.20 over 5 = 81.64 each; 81.64 paid is one seat, 90 held is one
+    expect(seatPlan(408.2, 81.64, 90, 5)).toEqual({ perPerson: 81.64, paid: 1, held: 1, free: 3 })
+    // Everything paid still leaves the guest a seat
+    expect(seatPlan(100, 100, 0, 2)).toEqual({ perPerson: 50, paid: 1, held: 0, free: 1 })
+    expect(seatPlan(100, 60, 40, 2)).toEqual({ perPerson: 50, paid: 1, held: 0, free: 1 })
+    expect(seatPlan(100, 0, 0, 3).free).toBe(3)
+  })
+
+  it('keeps the picked seats that are still free, and one at least', () => {
+    expect(pickedSeats(new Set([3, 0, 1]), 3)).toEqual([0, 1])
+    expect(pickedSeats(new Set([4]), 3)).toEqual([0])
+    expect(pickedSeats(new Set(), 3)).toEqual([0])
+  })
+
+  it('agrees with the server on what the picked seats cost', () => {
+    const plan = seatPlan(408.2, 81.64, 0, 5)
+    expect(equalShare(408.2, 326.56, 2, 5)).toBe(163.28)
+    // The last free seats take what is left, rounding and all
+    expect(equalShare(408.2, 326.56, plan.free, 5)).toBe(326.56)
+  })
+})
+
+describe('custom amount slider', () => {
+  it('steps by 1 for small bills and 5 past 200', () => {
+    expect(sliderStep(150)).toBe(1)
+    expect(sliderStep(326.56)).toBe(5)
+  })
+
+  it('ends exactly on what is left', () => {
+    expect(sliderSteps(326.56)).toBe(66)
+    expect(sliderAmount(65, 326.56)).toBe(325)
+    expect(sliderAmount(66, 326.56)).toBe(326.56)
+    expect(sliderAmount(0, 326.56)).toBe(0)
+    expect(sliderSteps(150)).toBe(150)
+    expect(sliderAmount(150, 150)).toBe(150)
+    expect(sliderSteps(0)).toBe(0)
+  })
+
+  it('finds the step nearest an amount', () => {
+    expect(sliderPosition(100, 326.56)).toBe(20)
+    expect(sliderPosition(326.56, 326.56)).toBe(66)
+    expect(sliderPosition(999, 326.56)).toBe(66)
+    expect(sliderPosition(0, 326.56)).toBe(0)
+  })
+})
+
+describe('quickAmounts', () => {
+  it('offers fractions, all, and the largest round sums below what is left', () => {
+    expect(quickAmounts(326.56).map((q) => q.amount)).toEqual([81.64, 108.85, 163.28, 326.56, 50, 100, 200])
+    expect(quickAmounts(40).map((q) => q.amount)).toEqual([10, 13.33, 20, 40])
+    expect(quickAmounts(0)).toEqual([])
   })
 })

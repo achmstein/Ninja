@@ -68,7 +68,6 @@ class PayRepository {
     int? parts,
     int? of,
     double? amount,
-    double tip = 0,
     String? payerName,
   }) async {
     try {
@@ -78,7 +77,6 @@ class PayRepository {
         'parts': parts,
         'of': of,
         'amount': amount,
-        'tip': tip,
         'payerName': payerName,
         'payerPhone': null,
       });

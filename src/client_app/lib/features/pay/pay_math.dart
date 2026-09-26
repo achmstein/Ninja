@@ -4,7 +4,7 @@ import 'models/pay_view.dart';
 
 /// Online payments (docs/online-payments-plan.md), the arithmetic the guest's
 /// phone shows before it asks the server: what a share comes to, the fee
-/// when the café passes the provider's on, and the tip. Each one mirrors
+/// when the café passes the provider's on. Each one mirrors
 /// Sales' OnlineShares, so the summary the guest confirms is the amount the
 /// server charges; the server decides in the end all the same.
 
@@ -35,13 +35,13 @@ double roundMoney(double value) {
 /// solved so that what the provider keeps (a percentage of the charge plus
 /// a fixed part) is what the fee covers. Zero when there is nothing to pay
 /// or no fee to pass on.
-double guestFee(double amountAndTip, double percent, double fixedFee) {
-  if (amountAndTip <= 0 || (percent <= 0 && fixedFee <= 0)) return 0;
+double guestFee(double amount, double percent, double fixedFee) {
+  if (amount <= 0 || (percent <= 0 && fixedFee <= 0)) return 0;
   final rate = percent / 100;
   if (rate >= 1) return 0;
   // charged = amount + fee, and the provider takes charged * rate + fixed
-  final charged = (amountAndTip + fixedFee) / (1 - rate);
-  return roundMoney(charged - amountAndTip);
+  final charged = (amount + fixedFee) / (1 - rate);
+  return roundMoney(charged - amount);
 }
 
 /// Paying [parts] of [of] equal parts: rounding leaves a piaster or two on
@@ -77,13 +77,9 @@ double customShare(String text) {
   return value != null && value.isFinite && value > 0 ? roundMoney(value) : 0;
 }
 
-/// A tip chip's amount on a share.
-double tipFor(double share, int percent) => percent > 0 ? roundMoney(share * percent / 100) : 0;
-
-/// The confirm button's arithmetic: the share, the tip, and the fee on both.
+/// The confirm button's arithmetic: the share and the fee on it.
 class PaySummary {
   final double share;
-  final double tip;
 
   /// The provider's fee the guest pays; 0 when the café absorbs it
   final double fee;
@@ -91,13 +87,12 @@ class PaySummary {
   /// What the card is charged
   final double total;
 
-  const PaySummary({required this.share, required this.tip, required this.fee, required this.total});
+  const PaySummary({required this.share, required this.fee, required this.total});
 }
 
-PaySummary paySummary(double share, double tip, PayOptions options) {
-  final base = roundMoney(share + tip);
-  final fee = options.guestPaysFee ? guestFee(base, options.feePercent, options.feeFixed) : 0.0;
-  return PaySummary(share: share, tip: tip, fee: fee, total: roundMoney(base + fee));
+PaySummary paySummary(double share, PayOptions options) {
+  final fee = options.guestPaysFee ? guestFee(share, options.feePercent, options.feeFixed) : 0.0;
+  return PaySummary(share: share, fee: fee, total: roundMoney(share + fee));
 }
 
 /// Whether the café takes payments at the table at all: "off" and

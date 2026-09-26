@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../brand/brand_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../brand/brand_provider.dart';
 import '../brand/brand_theme.dart';
@@ -20,7 +20,7 @@ String getFontFamily(Locale locale) {
 /// locale's script when it chose one, weight resolved by google_fonts;
 /// otherwise the bundled family
 TextStyle localeTextStyle(Locale locale, TextStyle style, {String? brandFont}) {
-  if (brandFont != null) return GoogleFonts.getFont(brandFont, textStyle: style);
+  if (brandFont != null) return brandFontStyle(brandFont, style);
   return style.copyWith(fontFamily: getFontFamily(locale));
 }
 

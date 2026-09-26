@@ -200,7 +200,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final name = (payment.payerName ?? '').trim().isNotEmpty ? payment.payerName!.trim() : l10n.guest;
     final sure = await showConfirmDialog(
       context,
-      title: l10n.refundOnlineTitle(money(context, payment.amount + payment.tip), name),
+      title: l10n.refundOnlineTitle(money(context, payment.amount + payment.fee), name),
       description: l10n.refundOnlineHint,
       cancelLabel: l10n.goBack,
       actionLabel: l10n.refundOnline,

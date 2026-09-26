@@ -103,21 +103,16 @@ void main() {
     const guestPays = PayOptions(feeMode: 'Guest', feePercent: 2.75, feeFixed: 3);
     const cafePays = PayOptions(feeMode: 'Cafe', feePercent: 2.75, feeFixed: 3);
 
-    test('the fee is on the share and the tip together', () {
-      final summary = paySummary(90, 10, guestPays);
+    test('the fee is on the share alone', () {
+      final summary = paySummary(100, guestPays);
       expect(summary.fee, guestFee(100, 2.75, 3));
       expect(summary.total, roundMoney(100 + summary.fee));
     });
 
-    test('the café absorbing the fee charges the share and tip only', () {
-      final summary = paySummary(90, 10, cafePays);
+    test('the café absorbing the fee charges the share only', () {
+      final summary = paySummary(100, cafePays);
       expect(summary.fee, 0);
       expect(summary.total, 100);
-    });
-
-    test('a tip chip is a percentage of the share', () {
-      expect(tipFor(85, 10), 8.5);
-      expect(tipFor(85, 0), 0);
     });
   });
 

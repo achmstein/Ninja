@@ -769,7 +769,6 @@
   "onlinePaying": "جارٍ الدفع…",
   "onlinePaid": "مدفوع",
   "onlineRefunded": "مُسترد",
-  "onlineTip": "+ {amount} إكرامية",
   "onlineFee": "رسوم {amount}",
   "refundOnline": "استرداد",
   "refundOnlineTitle": "إرجاع {amount} إلى {name}؟",

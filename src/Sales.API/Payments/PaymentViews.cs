@@ -20,8 +20,6 @@ public sealed record PayOptionsView(
     string FeeMode,
     decimal FeePercent,
     decimal FeeFixed,
-    bool TipsEnabled,
-    IReadOnlyList<int> TipPercents,
     bool AllowItems,
     bool AllowEqual,
     bool AllowCustom,
@@ -58,10 +56,10 @@ public sealed record PayView(
     string? Why);
 
 /// <summary>One payment, as the guest's return page follows it.</summary>
-public sealed record PaymentStatusView(Guid Key, int TicketId, string Status, decimal Amount, decimal Fee, decimal Tip, decimal Charged, string Currency, string? FailureReason, bool BillClosed);
+public sealed record PaymentStatusView(Guid Key, int TicketId, string Status, decimal Amount, decimal Fee, decimal Charged, string Currency, string? FailureReason, bool BillClosed);
 
 /// <summary>An online payment on a bill, as the till lists it.</summary>
-public sealed record OnlinePaymentView(Guid Key, string Mode, string? PayerName, decimal Amount, decimal Fee, decimal Tip, string Status, DateTime CreatedAt, DateTime? PaidAt, string? TransactionId, DateTime? RefundedAt);
+public sealed record OnlinePaymentView(Guid Key, string Mode, string? PayerName, decimal Amount, decimal Fee, string Status, DateTime CreatedAt, DateTime? PaidAt, string? TransactionId, DateTime? RefundedAt);
 
 /// <summary>The café's payment settings as the owner edits them; secrets only as whether they are set.</summary>
 public sealed record PaymentSettingsView(
@@ -77,8 +75,6 @@ public sealed record PaymentSettingsView(
     FeeMode FeeMode,
     decimal FeePercent,
     decimal FeeFixed,
-    bool TipsEnabled,
-    IReadOnlyList<int> TipPercents,
     bool AllowItems,
     bool AllowEqual,
     bool AllowCustom,
@@ -91,14 +87,14 @@ public sealed record PaymentSettingsView(
     public static PaymentSettingsView From(PaymentSettings s, bool canKeepSecrets, string callbackUrl, bool simulated = false) => new(
         s.Provider, s.Currency, s.SealedSecretKey is not null, s.SecretKeyHint, s.PublicKey, s.SealedHmacSecret is not null,
         s.CardIntegrationId, s.WalletIntegrationId, s.ApplePayIntegrationId, s.FeeMode, s.FeePercent, s.FeeFixed,
-        s.TipsEnabled, s.TipPercents, s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl, simulated);
+        s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl, simulated);
 }
 
 public static class PayViews
 {
     public static PayOptionsView Options(PaymentSettings s, bool simulated = false) => new(
         s.IsReady || simulated, s.Currency, s.FeeMode.ToString(), s.FeeMode == FeeMode.Guest ? s.FeePercent : 0, s.FeeMode == FeeMode.Guest ? s.FeeFixed : 0,
-        s.TipsEnabled, s.TipPercents, s.AllowItems, s.AllowEqual, s.AllowCustom,
+        s.AllowItems, s.AllowEqual, s.AllowCustom,
         s.CardIntegrationId is not null || simulated, s.WalletIntegrationId is not null, s.ApplePayIntegrationId is not null, simulated);
 
     public static PayView Build(Ticket ticket, Bill bill, IReadOnlyList<OnlinePayment> payments, PaymentSettings settings, bool enabled, string? userId, string? guestId, DateTime now, bool simulated = false)

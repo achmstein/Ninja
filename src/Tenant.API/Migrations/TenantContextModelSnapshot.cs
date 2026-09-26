@@ -255,8 +255,6 @@ namespace Ninja.Tenant.API.Migrations
 
                             b1.Property<string>("Manner");
 
-                            b1.Property<string>("Name");
-
                             b1.Property<string>("Notes");
 
                             b1.Property<string>("Tone");

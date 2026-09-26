@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../providers/kitchen_orders_provider.dart';
 import '../providers/station_provider.dart';
+import '../widgets/bump_exit.dart';
 import '../widgets/order_card.dart';
 import '../widgets/order_grid.dart';
 
@@ -30,6 +32,9 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
   // One second-hand for the whole board; every card reads the same `now`
   Timer? _clock;
   final Set<int> _acting = {};
+  // The board stays up while the last ticket is still leaving
+  bool _hadOrders = false;
+  DateTime? _emptySince;
 
   @override
   void initState() {
@@ -69,24 +74,47 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     final isLoading = async.isLoading && async.value == null;
     final now = DateTime.now();
     final open = openOrders(orders);
-    final onPass = ref.watch(selectedStationIdProvider) == null;
+    final stationId = ref.watch(selectedStationIdProvider);
+    final onPass = stationId == null;
+    final l10n = AppLocalizations.of(context)!;
+    final primary = context.theme.colors.primary;
 
-    if (!isLoading && open.isEmpty) return const _EmptyBoard();
+    if (!isLoading && open.isEmpty) {
+      // The last ticket bumped: let it leave before the empty board shows
+      final since = _emptySince ??= now;
+      if (!_hadOrders || now.difference(since) > bumpDuration) return const _EmptyBoard();
+    } else if (!isLoading) {
+      _emptySince = null;
+      _hadOrders = true;
+    }
 
-    return OrderGrid(
-      children: [
-        if (isLoading)
-          for (final items in const [2, 3, 1, 2]) _CardSkeleton(items: items),
-        for (final order in open)
-          OrderCard(
-            key: ValueKey(order.orderNumber),
-            order: order,
-            now: now,
-            acting: _acting.contains(order.orderNumber),
-            onReady: () => _markReady(order),
-            showParts: onPass,
-          ),
-      ],
+    // A new ticket slides in from the reading edge with one soft outline
+    // that fades; a bumped one draws in to a "Ready #123" chip that rises
+    // away, and the board closes up behind it. Another station, or the
+    // first load, just draws.
+    return ReflowScope(
+      child: Presence(
+        epoch: (stationId, isLoading),
+        exitDuration: bumpDuration,
+        enter: (context, key, child) => SlideInItem(distance: 40, highlight: primary.withValues(alpha: 0.55), child: child),
+        exit: (context, key, child, exit) => key is ValueKey<int>
+            ? BumpExit(exit: exit, label: '${l10n.ready} #${key.value}', child: child)
+            : FadeTransition(opacity: ReverseAnimation(exit), child: child),
+        builder: (context, children) => OrderGrid(children: children),
+        children: [
+          if (isLoading)
+            for (final (i, items) in const [2, 3, 1, 2].indexed) _CardSkeleton(key: ValueKey('skeleton-$i'), items: items),
+          for (final order in open)
+            OrderCard(
+              key: ValueKey(order.orderNumber),
+              order: order,
+              now: now,
+              acting: _acting.contains(order.orderNumber),
+              onReady: () => _markReady(order),
+              showParts: onPass,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -108,11 +136,19 @@ class _NotInPlan extends StatelessWidget {
           children: [
             Icon(FIcons.lock, size: 48, color: muted.withValues(alpha: 0.6)),
             const SizedBox(height: 12),
-            Text(l10n.kdsNotInPlan, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+            Text(
+              l10n.kdsNotInPlan,
+              style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Text(l10n.kdsNotInPlanNote, style: theme.typography.sm.copyWith(color: muted), textAlign: TextAlign.center),
+              child: Text(
+                l10n.kdsNotInPlanNote,
+                style: theme.typography.sm.copyWith(color: muted),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
@@ -127,16 +163,16 @@ class _NotInPlan extends StatelessWidget {
 class _CardSkeleton extends StatelessWidget {
   final int items;
 
-  const _CardSkeleton({this.items = 2});
+  const _CardSkeleton({super.key, this.items = 2});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     Widget bar({double? width, double height = 16, double radius = 4}) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(radius)),
-        );
+      width: width,
+      height: height,
+      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(radius)),
+    );
     return Container(
       decoration: BoxDecoration(
         color: theme.colors.card,
@@ -153,25 +189,22 @@ class _CardSkeleton extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
-                children: [
-                  bar(width: 40),
-                  const SizedBox(width: 8),
-                  bar(width: 80, height: 24, radius: 6),
-                  const Spacer(),
-                  bar(width: 48, height: 20),
-                ],
+                children: [bar(width: 40), const SizedBox(width: 8), bar(width: 80, height: 24, radius: 6), const Spacer(), bar(width: 48, height: 20)],
               ),
             ),
             Container(height: 1, color: theme.colors.border),
             for (var i = 0; i < items; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(children: [bar(width: 28, height: 20), const SizedBox(width: 8), Expanded(child: bar(height: 20))]),
+                child: Row(
+                  children: [
+                    bar(width: 28, height: 20),
+                    const SizedBox(width: 8),
+                    Expanded(child: bar(height: 20)),
+                  ],
+                ),
               ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: bar(height: 48, radius: 8),
-            ),
+            Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 12), child: bar(height: 48, radius: 8)),
           ],
         ),
       ),
@@ -196,7 +229,11 @@ class _EmptyBoard extends StatelessWidget {
           children: [
             Icon(FIcons.chefHat, size: 64, color: muted.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
-            Text(l10n.noOrders, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600, color: muted), textAlign: TextAlign.center),
+            Text(
+              l10n.noOrders,
+              style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600, color: muted),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

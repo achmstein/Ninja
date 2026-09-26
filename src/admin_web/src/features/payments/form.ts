@@ -17,10 +17,6 @@ export type SecretEdit =
 export const FEE_CAFE = 0
 export const FEE_GUEST = 1
 
-export const MAX_TIPS = 4
-export const TIP_MIN = 1
-export const TIP_MAX = 50
-
 export type PaymentsForm = {
   currency: string
   secretKey: SecretEdit
@@ -32,8 +28,6 @@ export type PaymentsForm = {
   feeMode: number
   feePercent: string
   feeFixed: string
-  tipsEnabled: boolean
-  tipPercents: number[]
   allowItems: boolean
   allowEqual: boolean
   allowCustom: boolean
@@ -57,8 +51,6 @@ export function toForm(view: PaymentSettingsView): PaymentsForm {
       : FEE_CAFE,
     feePercent: text(view.feePercent),
     feeFixed: text(view.feeFixed),
-    tipsEnabled: view.tipsEnabled,
-    tipPercents: view.tipPercents.map(Number),
     allowItems: view.allowItems,
     allowEqual: view.allowEqual,
     allowCustom: view.allowCustom,
@@ -72,18 +64,7 @@ export function secretValue(edit: SecretEdit): string | null {
   return null
 }
 
-/** A tip chip the owner may add: a whole percent in range, not already there, and room for it. */
-export function canAddTip(tips: readonly number[], value: number): boolean {
-  return (
-    Number.isInteger(value) &&
-    value >= TIP_MIN &&
-    value <= TIP_MAX &&
-    !tips.includes(value) &&
-    tips.length < MAX_TIPS
-  )
-}
-
-export type FormProblem = 'currency' | 'integrationId' | 'fee' | 'tips'
+export type FormProblem = 'currency' | 'integrationId' | 'fee'
 
 const optionalId = (v: string): number | null | undefined => {
   const trimmed = v.trim()
@@ -117,14 +98,6 @@ export function toRequest(
   if (feePercent === undefined || feeFixed === undefined || feePercent > 100)
     return { problem: 'fee' }
 
-  if (
-    form.tipPercents.length > MAX_TIPS ||
-    form.tipPercents.some(
-      (p) => !Number.isInteger(p) || p < TIP_MIN || p > TIP_MAX
-    )
-  )
-    return { problem: 'tips' }
-
   return {
     request: {
       currency,
@@ -137,8 +110,6 @@ export function toRequest(
       feeMode: form.feeMode,
       feePercent,
       feeFixed,
-      tipsEnabled: form.tipsEnabled,
-      tipPercents: [...form.tipPercents].sort((a, b) => a - b),
       allowItems: form.allowItems,
       allowEqual: form.allowEqual,
       allowCustom: form.allowCustom,

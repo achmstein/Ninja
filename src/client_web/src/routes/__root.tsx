@@ -4,6 +4,7 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { ThemeProvider, useTheme } from '@/context/theme-provider'
 import { useBrandEffects } from '@/lib/brand'
+import { useBrandLayout } from '@/lib/brand-layout'
 import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
@@ -11,6 +12,7 @@ import { usePushRegistration } from '@/lib/use-push'
 import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
 import { MobileTopBar } from '@/components/mobile-top-bar'
+import { OrderPill } from '@/components/order-pill'
 
 type RouterContext = {
   queryClient: QueryClient
@@ -43,6 +45,8 @@ function RootLayout() {
             <Outlet />
           </main>
           <BottomNav />
+          {/* The order just placed, live at the top of every page */}
+          <OrderPill />
           <AppToaster />
         </div>
       </ThemeProvider>
@@ -55,10 +59,15 @@ function RootLayout() {
 // the demo's expand/collapse physics for title + description toasts.
 function AppToaster() {
   const { resolvedTheme } = useTheme()
+  // The Counter chrome: toasts drop in just under the slim top bar (the
+  // order pill owns the bar's middle, the dock owns the bottom). Sileo
+  // already paints them opposite the page, as the dock is painted
+  const counter = useBrandLayout().chrome === 'counter'
   return (
     <Toaster
       position='top-center'
       theme={resolvedTheme}
+      offset={counter ? { top: 'calc(env(safe-area-inset-top) + 72px)' } : undefined}
       options={{ autopilot: true }}
     />
   )

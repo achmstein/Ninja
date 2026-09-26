@@ -35,7 +35,7 @@ public static partial class TenantApi
 
         api.MapPut("/assistant", SetAssistant)
             .WithName("SetTenantAssistant")
-            .WithSummary("How the owner's AI assistant speaks: its name, tone, manner, language and the café's notes for it")
+            .WithSummary("How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it")
             .RequireAuthorization("Owner");
 
         api.MapPut("/entitlements", SetEntitlements)
@@ -146,13 +146,11 @@ public static partial class TenantApi
         string? error = null;
         var settings = new AssistantSettings
         {
-            Name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim(),
             Tone = Pick(request.Tone, AssistantSettings.Tones, "tone", ref error),
             Manner = Pick(request.Manner, AssistantSettings.Manners, "manner", ref error),
             Language = Pick(request.Language, AssistantSettings.Languages, "language", ref error),
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
         };
-        if (settings.Name?.Length > AssistantSettings.MaxName) error ??= $"The name is at most {AssistantSettings.MaxName} characters.";
         if (settings.Notes?.Length > AssistantSettings.MaxNotes) error ??= $"The notes are at most {AssistantSettings.MaxNotes} characters.";
         if (error is not null) return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
 
@@ -517,7 +515,10 @@ public record TenantThemeDto(
 {
     public static TenantThemeDto From(TenantTheme t)
         => new(
-            t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic,
+            t.Accent, t.Surface, t.Radius,
+            // A family the catalog no longer has reads as the default
+            TenantTheme.KnownFont(t.FontLatin, TenantTheme.LatinFonts),
+            TenantTheme.KnownFont(t.FontArabic, TenantTheme.ArabicFonts),
             t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface),
             t.HeaderSize, t.Mode, t.Style,
             t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density) : null);
@@ -536,10 +537,10 @@ public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surfac
 /// <param name="Tone">brief or detailed; null is brief.</param>
 /// <param name="Manner">friendly or formal; null is friendly.</param>
 /// <param name="Language">match (the owner's own), en, ar-eg or ar; null is match.</param>
-public record AssistantDto(string? Name, string? Tone, string? Manner, string? Language, string? Notes)
+public record AssistantDto(string? Tone, string? Manner, string? Language, string? Notes)
 {
     public static AssistantDto From(AssistantSettings? s)
-        => new(s?.Name, s?.Tone, s?.Manner, s?.Language, s?.Notes);
+        => new(s?.Tone, s?.Manner, s?.Language, s?.Notes);
 }
 
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>

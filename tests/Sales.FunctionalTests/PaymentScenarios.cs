@@ -60,7 +60,7 @@ public record PayLine(int Id, decimal Total, decimal Share, bool Claimed, bool I
 public record PayShare(string? PayerName, decimal Amount, string Status, bool IsMine, Guid? Key);
 public record PayOptions(bool Ready, string Currency, bool AllowEqual, bool Simulated);
 public record PayBill(int TicketId, string Status, List<PayLine> Lines, decimal Total, decimal Paid, decimal Held, decimal Remaining, List<PayShare> Shares, PayOptions Options, bool CanPay, string? Why);
-public record Started(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Tip, decimal Charged);
+public record Started(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Charged);
 public record PaymentStatus(Guid Key, string Status, decimal Amount, bool BillClosed);
 public record SettingsView(bool SecretKeySet, string? SecretKeyHint, bool HmacSecretSet, bool Ready, bool CanKeepSecrets, string CallbackUrl, bool Simulated);
 
@@ -100,8 +100,6 @@ public sealed class PaymentScenarios
             feeMode = 0,
             feePercent = 0,
             feeFixed = 0,
-            tipsEnabled = true,
-            tipPercents = new[] { 10 },
             allowItems = true,
             allowEqual = true,
             allowCustom = true,
@@ -213,34 +211,34 @@ public sealed class PaymentScenarios
         Assert.AreEqual(200m, bill.Remaining);
         Assert.IsTrue(bill.CanPay, bill.Why);
 
-        // Sara pays her half, with a tip
-        var half = await sara.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 2, parts = 1, of = 2, tip = 10m, payerName = "Sara" });
+        // Sara pays her half
+        var half = await sara.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 2, parts = 1, of = 2, payerName = "Sara" });
         Assert.AreEqual(100m, half.Amount);
-        Assert.AreEqual(110m, half.Charged, "the tip is charged on top of her share");
+        Assert.AreEqual(100m, half.Charged, "her share, the café carrying the fee");
         StringAssert.StartsWith(half.CheckoutUrl, "https://paymob.test/unifiedcheckout/?publicKey=egy_pk_test&clientSecret=cs_test_secret");
         var intention = SalesUnderTest.Paymob.Requests.Last(r => r.Path == "/v1/intention/");
         Assert.AreEqual($"Token {SecretKey}", intention.Authorization, "the café's own account, opened only for the call");
-        Assert.AreEqual(11000, intention.Body!["amount"]!.GetValue<long>(), "in piasters");
+        Assert.AreEqual(10000, intention.Body!["amount"]!.GetValue<long>(), "in piasters");
 
         // While her checkout is open, Omar cannot take her half too
-        var (refused, why) = await omar.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 3, amount = 150m, tip = 0 });
+        var (refused, why) = await omar.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 3, amount = 150m });
         Assert.AreEqual(HttpStatusCode.BadRequest, refused);
         Assert.Contains("100.00", why);
 
         // A forged callback changes nothing
-        Assert.AreEqual(HttpStatusCode.Unauthorized, await CallbackAsync(OrderFor(half.Key), half.Key, 110m, secret: "forged"));
+        Assert.AreEqual(HttpStatusCode.Unauthorized, await CallbackAsync(OrderFor(half.Key), half.Key, 100m, secret: "forged"));
         Assert.AreEqual("Pending", (await sara.GetAsync<PaymentStatus>($"/api/sales/payments/{half.Key}?{Version}")).Status);
 
         // Paymob's real one marks it paid; a repeat is nothing
-        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(half.Key), half.Key, 110m));
-        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(half.Key), half.Key, 110m));
+        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(half.Key), half.Key, 100m));
+        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(half.Key), half.Key, 100m));
         bill = await AtTableAsync(omar, table);
         Assert.AreEqual(100m, bill.Paid);
         Assert.AreEqual(100m, bill.Remaining);
         Assert.AreEqual("Sara", bill.Shares.Single().PayerName, "the table sees who paid");
 
         // The till cannot settle while Omar is at the checkout
-        var rest = await omar.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+        var rest = await omar.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
         Assert.AreEqual(100m, rest.Amount);
         var (tillRefused, tillWhy) = await Till.RefusedAsync(HttpMethod.Post, $"/api/tickets/{ticketId}/settle?{Version}", new { payments = new[] { new { tender = 0, amount = 100m } } });
         Assert.AreEqual(HttpStatusCode.BadRequest, tillRefused);
@@ -254,7 +252,7 @@ public sealed class PaymentScenarios
         var settled = await Till.GetAsync<TicketView>($"/api/tickets/{ticketId}?{Version}");
         Assert.AreEqual("Settled", settled.Status);
         CollectionAssert.AreEqual(new[] { "Online", "Online" }, settled.Payments.Select(p => p.Tender).ToArray());
-        Assert.AreEqual(200m, settled.Payments.Sum(p => p.Amount), "the shares, not the tip, pay the bill");
+        Assert.AreEqual(200m, settled.Payments.Sum(p => p.Amount), "the shares pay the bill");
     }
 
     [TestMethod]
@@ -265,7 +263,7 @@ public sealed class PaymentScenarios
         var guest = Guest("guest-lina-" + table);
         var bill = await AtTableAsync(guest, table);
 
-        var mine = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 1, lineIds = new[] { bill.Lines.Single().Id }, tip = 0 });
+        var mine = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 1, lineIds = new[] { bill.Lines.Single().Id } });
         Assert.AreEqual(90m, mine.Amount);
         Assert.IsTrue((await AtTableAsync(guest, table)).Lines.Single().Claimed, "held while her checkout is open");
 
@@ -274,7 +272,7 @@ public sealed class PaymentScenarios
         Assert.IsFalse(bill.Lines.Single().Claimed, "a declined card lets the item go");
         Assert.AreEqual(90m, bill.Remaining);
 
-        var part = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 3, amount = 40m, tip = 0 });
+        var part = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 3, amount = 40m });
         Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(part.Key), part.Key, 40m));
         Assert.AreEqual("Open", (await Till.GetAsync<TicketView>($"/api/tickets/{ticketId}?{Version}")).Status, "part paid is not paid");
 
@@ -293,7 +291,7 @@ public sealed class PaymentScenarios
         var settings = await Owner.PutAsync<SettingsView>($"/api/sales/payments/settings?{Version}", new
         {
             currency = "EGP", secretKey = "", publicKey = (string?)null, hmacSecret = "", cardIntegrationId = (int?)null,
-            feeMode = 0, feePercent = 0, feeFixed = 0, tipsEnabled = false, tipPercents = Array.Empty<int>(),
+            feeMode = 0, feePercent = 0, feeFixed = 0,
             allowItems = true, allowEqual = true, allowCustom = true,
         });
         try
@@ -308,7 +306,7 @@ public sealed class PaymentScenarios
             Assert.IsTrue(bill.Options.Simulated, "the guest's phone says it is a demo");
 
             var intentions = SalesUnderTest.Paymob.Requests.Count;
-            var declined = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+            var declined = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
             StringAssert.StartsWith(declined.CheckoutUrl, $"https://cafe.test/pay/{declined.Key:N}?simulate=1", "the checkout is the app's own page");
             Assert.AreEqual(intentions, SalesUnderTest.Paymob.Requests.Count, "Paymob is never called");
 
@@ -318,7 +316,7 @@ public sealed class PaymentScenarios
             var (again, _) = await guest.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{declined.Key}/simulate?{Version}", new { paid = true });
             Assert.AreEqual(HttpStatusCode.BadRequest, again, "a finished payment stays as it finished");
 
-            var paid = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+            var paid = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
             var status = await guest.PostAsync<PaymentStatus>($"/api/sales/payments/{paid.Key}/simulate?{Version}", new { paid = true });
             Assert.AreEqual("Paid", status.Status);
             Assert.IsTrue(status.BillClosed, "and the bill settles itself as a real one would");
@@ -330,7 +328,7 @@ public sealed class PaymentScenarios
 
         // With the account back, payments go to Paymob and cannot be simulated
         var (ticket2, table2) = await ATableBillAsync(20m);
-        var real = await Guest("guest-real-" + table2).PostAsync<Started>($"/api/sales/payments/tickets/{ticket2}?{Version}", new { mode = 0, tip = 0 });
+        var real = await Guest("guest-real-" + table2).PostAsync<Started>($"/api/sales/payments/tickets/{ticket2}?{Version}", new { mode = 0 });
         StringAssert.StartsWith(real.CheckoutUrl, "https://paymob.test/");
         var (refused, _) = await Guest("guest-real-" + table2).RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{real.Key}/simulate?{Version}", new { paid = true });
         Assert.AreEqual(HttpStatusCode.NotFound, refused);
@@ -344,7 +342,7 @@ public sealed class PaymentScenarios
         var nour = Guest("guest-nour-" + table);
         var other = Guest("guest-other-" + table);
 
-        var started = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+        var started = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
         var bill = await AtTableAsync(nour, table);
         Assert.AreEqual(0m, bill.Remaining, "held while her checkout is open");
         Assert.IsNotNull(bill.Shares.Single().Key, "her own share comes with its key, to go back to it or cancel it");
@@ -358,7 +356,7 @@ public sealed class PaymentScenarios
         Assert.AreEqual(60m, (await AtTableAsync(other, table)).Remaining, "the share is free again at once");
 
         // Walked away again: this time the till lets it go
-        var again = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+        var again = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
         var (released, _) = await Till.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{again.Key}/cancel?{Version}");
         Assert.AreEqual(HttpStatusCode.NoContent, released);
         Assert.AreEqual(60m, (await AtTableAsync(other, table)).Remaining);
@@ -385,7 +383,7 @@ public sealed class PaymentScenarios
             var bill = await AtTableAsync(guest, table);
             Assert.IsFalse(bill.CanPay);
             Assert.AreEqual("off", bill.Why);
-            var (status, detail) = await guest.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+            var (status, detail) = await guest.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0 });
             Assert.AreEqual(HttpStatusCode.BadRequest, status);
             Assert.Contains("off", detail);
         }

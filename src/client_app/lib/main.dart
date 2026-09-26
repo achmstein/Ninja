@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'core/brand/brand_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/auth/auth_service.dart';
@@ -306,6 +306,6 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       extensions: [BrandStyle.fromTheme(brand.theme)],
     );
     if (brandFont == null) return theme;
-    return theme.copyWith(textTheme: GoogleFonts.getTextTheme(brandFont, theme.textTheme));
+    return theme.copyWith(textTheme: brandTextTheme(brandFont, theme.textTheme));
   }
 }

@@ -83,8 +83,8 @@ void main() {
     test("the style's seeds fill what the café left unset", () {
       final theme = withStyleDefaults(const TenantTheme(style: 'bold'));
       expect(theme.radius, 'xl');
-      expect(theme.fontLatin, 'Poppins');
-      expect(theme.fontArabic, 'Changa');
+      expect(theme.fontLatin, 'Satoshi');
+      expect(theme.fontArabic, 'Readex Pro');
       expect(theme.headerSize, 'md');
     });
 

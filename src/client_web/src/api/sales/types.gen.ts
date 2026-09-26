@@ -164,7 +164,6 @@ export type OnlinePaymentView = {
     payerName: null | string;
     amount: number | string;
     fee: number | string;
-    tip: number | string;
     status: string;
     createdAt: string;
     paidAt: null | string;
@@ -256,8 +255,6 @@ export type PaymentSettingsRequest = {
     feeMode: FeeMode;
     feePercent: number | string;
     feeFixed: number | string;
-    tipsEnabled: boolean;
-    tipPercents: Array<number | string>;
     allowItems: boolean;
     allowEqual: boolean;
     allowCustom: boolean;
@@ -276,8 +273,6 @@ export type PaymentSettingsView = {
     feeMode: FeeMode;
     feePercent: number | string;
     feeFixed: number | string;
-    tipsEnabled: boolean;
-    tipPercents: Array<number | string>;
     allowItems: boolean;
     allowEqual: boolean;
     allowCustom: boolean;
@@ -293,7 +288,6 @@ export type PaymentStatusView = {
     status: string;
     amount: number | string;
     fee: number | string;
-    tip: number | string;
     charged: number | string;
     currency: string;
     failureReason: null | string;
@@ -317,8 +311,6 @@ export type PayOptionsView = {
     feeMode: string;
     feePercent: number | string;
     feeFixed: number | string;
-    tipsEnabled: boolean;
-    tipPercents: Array<number | string>;
     allowItems: boolean;
     allowEqual: boolean;
     allowCustom: boolean;
@@ -569,7 +561,6 @@ export type StartedPayment = {
     checkoutUrl: string;
     amount: number | string;
     fee: number | string;
-    tip: number | string;
     charged: number | string;
 };
 
@@ -579,7 +570,6 @@ export type StartPaymentRequest = {
     parts: null | number | string;
     of: null | number | string;
     amount: null | number | string;
-    tip: number | string;
     payerName: null | string;
     payerPhone: null | string;
 };

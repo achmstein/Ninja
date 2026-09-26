@@ -163,7 +163,7 @@ export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>
 };
 
 /**
- * How the owner's AI assistant speaks: its name, tone, manner, language and the café's notes for it
+ * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
  */
 export const setTenantAssistantMutation = (options?: Partial<Options<SetTenantAssistantData>>): UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> => {
     const mutationOptions: UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> = {

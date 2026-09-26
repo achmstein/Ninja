@@ -179,11 +179,6 @@ body[data-scroll-locked][data-scroll-locked] {
   }
 }
 
-/* Punchy Arabic display face for the install headline */
-.font-display-ar {
-  font-family: 'Lalezar', 'Cairo', system-ui, sans-serif;
-}
-
 /* Framed by the control panel as a phone: scrollbars are overlays there, so none show here */
 html[data-preview],
 html[data-preview] * {
@@ -192,4 +187,196 @@ html[data-preview] * {
 html[data-preview]::-webkit-scrollbar,
 html[data-preview] *::-webkit-scrollbar {
   display: none;
+}
+
+/* ---- Templates (lib/styles.ts `home`, components/menu/home): the menu
+   page composed differently. Only the menu wears these: a composition marks
+   the page (data-page) while it is on screen. */
+
+/* Paper: ink on warm paper; at night chalk on a slate board. The page's own
+   tokens take the paper's colours so the header, the tab bar, the cart bar
+   and the item sheet all sit on the same sheet. */
+:root[data-page='menu-paper'] {
+  --paper: color-mix(in oklab, oklch(0.955 0.026 86) 96%, var(--primary));
+  --ink: color-mix(in oklab, oklch(0.25 0.035 55) 82%, var(--primary));
+  --ink-soft: color-mix(in oklab, var(--ink) 62%, var(--paper));
+  --ink-accent: color-mix(in oklab, var(--primary) 85%, var(--ink));
+  --rule: color-mix(in oklab, var(--ink) 22%, transparent);
+  --paper-grain: 0.09;
+  --background: var(--paper);
+  --card: var(--paper);
+  --popover: var(--paper);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover-foreground: var(--ink);
+  --muted-foreground: var(--ink-soft);
+  --border: var(--rule);
+  --input: var(--rule);
+}
+:root.dark[data-page='menu-paper'] {
+  --paper: color-mix(in oklab, oklch(0.255 0.014 175) 94%, var(--primary));
+  --ink: oklch(0.94 0.012 95);
+  --ink-soft: color-mix(in oklab, var(--ink) 60%, var(--paper));
+  --ink-accent: color-mix(in oklab, var(--primary) 55%, white);
+  --rule: color-mix(in oklab, var(--ink) 20%, transparent);
+  --muted: color-mix(in oklab, var(--paper) 88%, white);
+}
+:root[data-page='menu-paper'] body {
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .24 0 0 0 0 .1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Chalk dust: a light grain and a few pale smudges where the board was wiped */
+:root.dark[data-page='menu-paper'] body {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(60vmax 40vmax at 15% 10vmax, rgb(255 255 255 / 0.045), transparent),
+    radial-gradient(50vmax 40vmax at 90% 80vmax, rgb(255 255 255 / 0.035), transparent);
+  background-repeat: repeat, no-repeat, no-repeat;
+}
+.paper-sheet {
+  color: var(--ink);
+}
+.paper-display {
+  font-family: 'Playfair Display', var(--font-heading, var(--font-latin)), var(--font-arabic), Georgia, serif;
+}
+:root[dir='rtl'] .paper-display {
+  font-family: 'Amiri', var(--font-arabic), serif;
+}
+:root[dir='rtl'] h1.paper-display {
+  font-weight: 700;
+  line-height: 1.25;
+}
+.paper-italic {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+:root[dir='rtl'] .paper-italic {
+  font-family: 'Amiri', var(--font-arabic), serif;
+  font-style: normal;
+}
+/* Centred small capitals, spaced: a printed section title */
+.paper-caps {
+  font-family: 'Playfair Display', var(--font-heading, var(--font-latin)), Georgia, serif;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+:root[dir='rtl'] .paper-caps {
+  font-family: 'Amiri', var(--font-arabic), serif;
+  letter-spacing: 0;
+  font-weight: 700;
+  font-size: 1.2em;
+}
+.paper-soft {
+  color: var(--ink-soft);
+}
+.paper-accent {
+  color: var(--ink-accent);
+}
+.paper-leader {
+  border-bottom: 2px dotted color-mix(in oklab, var(--ink) 40%, transparent);
+  transform: translateY(-0.28em);
+}
+.paper-rule-b {
+  border-bottom: 1px solid var(--rule);
+}
+/* A printed insert: a double rule round it */
+.paper-frame {
+  border: 3px double color-mix(in oklab, var(--ink) 45%, transparent);
+}
+.paper-button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 55%, transparent);
+  color: var(--ink);
+  transition: background-color 150ms, color 150ms;
+}
+.paper-button:hover,
+.paper-button:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Poster: huge heavy type, blocks of the brand's colours, sticker prices,
+   presses that bounce. The darkened primary is the third colour block. */
+.poster-deep {
+  background-color: color-mix(in oklab, var(--primary) 42%, black);
+  color: white;
+}
+.poster-title {
+  font-family: var(--font-heading, var(--font-latin)), var(--font-arabic), system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+}
+.poster-name {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+/* Arabic has no capitals and needs its line height back */
+:root[dir='rtl'] .poster-title {
+  font-family: var(--font-heading, var(--font-arabic)), var(--font-arabic), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+:root[dir='rtl'] .poster-name {
+  letter-spacing: 0;
+}
+/* The price as a sticker slapped on: a pill in the accent, an outline, a hard shadow, a little crooked */
+.poster-sticker {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.3rem 0.8rem;
+  border: 2px solid var(--foreground);
+  border-radius: 9999px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-weight: 900;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 var(--foreground);
+  transform: rotate(-5deg);
+}
+:root[dir='rtl'] .poster-sticker {
+  box-shadow: -3px 3px 0 var(--foreground);
+  transform: rotate(5deg);
+}
+.poster-card {
+  box-shadow: 6px 6px 0 rgb(0 0 0 / 0.85);
+}
+:root[dir='rtl'] .poster-card {
+  box-shadow: -6px 6px 0 rgb(0 0 0 / 0.85);
+}
+.poster-tilt-left {
+  rotate: -1.2deg;
+}
+.poster-tilt-right {
+  rotate: 1deg;
+}
+.poster-press {
+  transition: transform 380ms cubic-bezier(0.34, 1.8, 0.64, 1);
+}
+.poster-press:hover {
+  transform: scale(1.06) rotate(-3deg);
+}
+.poster-press:active {
+  transform: scale(0.9);
+  transition-duration: 90ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-press,
+  .poster-press:hover,
+  .poster-press:active {
+    transition: none;
+    transform: none;
+  }
 }

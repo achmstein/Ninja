@@ -5,7 +5,6 @@ export type ClientOptions = {
 };
 
 export type AssistantDto = {
-    name: null | string;
     tone: null | string;
     manner: null | string;
     language: null | string;

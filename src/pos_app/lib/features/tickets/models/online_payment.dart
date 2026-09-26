@@ -16,9 +16,6 @@ class OnlinePaymentView {
   /// The provider's fee the guest paid on top; not the café's money
   final double fee;
 
-  /// On top of the share; the staff's, never the bill's
-  final double tip;
-
   /// "Pending", "Paid" or "Refunded"
   final String status;
   final DateTime? createdAt;
@@ -32,7 +29,6 @@ class OnlinePaymentView {
     this.payerName,
     required this.amount,
     this.fee = 0,
-    this.tip = 0,
     required this.status,
     this.createdAt,
     this.paidAt,
@@ -52,7 +48,6 @@ class OnlinePaymentView {
       payerName: json['payerName'] as String?,
       amount: toNumber(json['amount']),
       fee: toNumber(json['fee']),
-      tip: toNumber(json['tip']),
       status: json['status'] as String? ?? 'Pending',
       createdAt: date('createdAt'),
       paidAt: date('paidAt'),

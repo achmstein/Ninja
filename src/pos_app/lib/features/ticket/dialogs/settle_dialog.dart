@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/offline/offline_queue.dart';
@@ -16,6 +17,7 @@ import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/providers/customer_providers.dart';
+import '../../floor/just_settled.dart';
 import '../../receipt/receipt_sheet.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/settle.dart';
@@ -104,6 +106,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   String _amountStr = '';
   bool _settling = false;
   SettleOutcome? _result;
+  // The settle button's shape: in flight, ticked, the receipt chip
+  MorphPhase _phase = MorphPhase.idle;
+  String? _doneLabel;
   // One idempotency key per dialog: a retried settle is the same settle
   final String _requestId = const Uuid().v4();
 
@@ -230,7 +235,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   // drawer opens for cash exactly as it would online; the receipt, with a
   // number of the till's own, is a tap away on Print rather than automatic.
   Future<void> _settleOffline(OfflineSaleDraft draft) async {
-    setState(() => _settling = true);
+    setState(() {
+      _settling = true;
+      _phase = MorphPhase.busy;
+    });
     try {
       final number = await nextProvisionalReceiptNumber();
       final payments = List.of(_payments);
@@ -252,14 +260,42 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
       await ref.read(offlineQueueProvider.notifier).enqueue(sale);
       if (!mounted) return;
       final outcome = SettleOutcome(receiptNumber: 0, provisionalReceiptNumber: number, change: sale.change, payments: payments);
-      setState(() => _result = outcome);
       // Drawer for cash; the provisional receipt is on screen and one tap
       // away on Print, but does not come out on its own.
       _openDrawerForCash(payments);
+      await _land(outcome, AppLocalizations.of(context)!.provisionalReceipt(number));
+    } catch (_) {
+      if (mounted) _shakeBack();
+      rethrow;
     } finally {
       if (mounted) setState(() => _settling = false);
     }
   }
+
+  // The button tells the story before the settled view takes over: a tick,
+  // then the receipt number as a chip. The drawer has already opened.
+  Future<void> _land(SettleOutcome outcome, String receipt) async {
+    setState(() {
+      _phase = MorphPhase.success;
+      _doneLabel = receipt;
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) return;
+    setState(() => _phase = MorphPhase.done);
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+    if (!mounted) return;
+    setState(() => _result = outcome);
+  }
+
+  // A refusal: one small shake and the button is a button again
+  void _shakeBack() {
+    setState(() => _phase = MorphPhase.error);
+    Future<void>.delayed(Motion.slow, () {
+      if (mounted && _phase == MorphPhase.error) setState(() => _phase = MorphPhase.idle);
+    });
+  }
+
+  bool get _canSettle => (_payments.isNotEmpty || widget.onlinePaid > 0) && _remaining <= 0 && !_settling;
 
   static String _fmt(double v) {
     final s = v.toStringAsFixed(2);
@@ -310,7 +346,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   Future<void> _settle() async {
     final draft = widget.offline;
     if (draft != null) return _settleOffline(draft);
-    setState(() => _settling = true);
+    setState(() {
+      _settling = true;
+      _phase = MorphPhase.busy;
+    });
     try {
       final result = await ref
           .read(ticketsRepositoryProvider)
@@ -327,13 +366,16 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
         ..._payments,
         if (widget.onlinePaid > 0) SettlePayment(tender: PaymentTender.online, amount: widget.onlinePaid),
       ]);
-      setState(() => _result = outcome);
+      // The floor folds this bill away when it is next shown
+      ref.read(justSettledProvider.notifier).settled(widget.ticket);
       // No paper by default — many single-item orders never need one. Cash
       // still opens the drawer; the receipt waits for the Print button.
       _openDrawerForCash(outcome.payments);
+      await _land(outcome, AppLocalizations.of(context)!.receiptNumber(result.receiptNumber));
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
+      _shakeBack();
       showPosToast(context, PosToastType.error, e is SalesException ? e.message : l10n.failedToSettle);
     } finally {
       if (mounted) setState(() => _settling = false);
@@ -343,7 +385,24 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   @override
   Widget build(BuildContext context) {
     final result = _result;
-    if (result != null) return _SettledView(result: result, onPrint: () => _print(result));
+    // The form gives way to the settled view with a fade and the dialog
+    // resizing, not a cut
+    return AnimatedSize(
+      duration: Motion.slow,
+      curve: Motion.enter,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: Motion.base,
+        switchInCurve: Motion.enter,
+        switchOutCurve: Motion.exit,
+        child: result != null
+            ? KeyedSubtree(key: const ValueKey('settled'), child: _SettledView(result: result, onPrint: () => _print(result)))
+            : KeyedSubtree(key: const ValueKey('form'), child: _form(context)),
+      ),
+    );
+  }
+
+  Widget _form(BuildContext context) {
 
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
@@ -515,8 +574,28 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                             ),
                           )
                         else
-                          for (final (index, payment) in _payments.indexed) ...[
-                            Container(
+                          // A payment slides in from the reading edge; one
+                          // taken off folds away and the others close up
+                          Presence(
+                            exitDuration: Motion.base,
+                            enter: (context, key, child) => SlideInItem(distance: 16, child: child),
+                            exit: (context, key, child, exit) => AnimatedBuilder(
+                              animation: exit,
+                              child: child,
+                              builder: (context, child) => Opacity(
+                                opacity: 1 - Motion.exit.transform(exit.value),
+                                child: Transform.scale(scale: 1 - 0.06 * exit.value, child: child),
+                              ),
+                            ),
+                            builder: (context, children) => ReflowScope(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+                            ),
+                            children: [
+                          for (final (index, payment) in _payments.indexed)
+                            Padding(
+                            key: ObjectKey(payment),
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Container(
                               padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
                               decoration: BoxDecoration(
                                 color: theme.colors.secondary.withValues(alpha: 0.5),
@@ -565,25 +644,49 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                          ],
+                            ),
+                            ],
+                          ),
                         const SizedBox(height: 8),
                         _TotalsRow(
                           label: l10n.remaining,
                           value: money(context, _remaining),
+                          amount: _remaining,
                           color: _remaining > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
                         ),
-                        if (_changeDue > 0)
-                          _TotalsRow(label: l10n.changeDue, value: money(context, _changeDue), color: AppColors.emerald(brightness)),
+                        AnimatedSize(
+                          duration: Motion.base,
+                          curve: Motion.enter,
+                          child: _changeDue > 0
+                              ? _TotalsRow(
+                                  label: l10n.changeDue,
+                                  value: money(context, _changeDue),
+                                  amount: _changeDue,
+                                  color: AppColors.emerald(brightness))
+                              : const SizedBox(width: double.infinity),
+                        ),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 56,
-                          child: FButton(
-                            // Online payments alone may cover the bill: nothing to take here then
-                            onPress: (_payments.isNotEmpty || widget.onlinePaid > 0) && _remaining <= 0 && !_settling
-                                ? _settle
-                                : null,
-                            child: Text(l10n.confirmSettle, style: theme.typography.lg.forButton),
+                        // Outline until the money is all there, solid the
+                        // moment it can settle; then it becomes the settle
+                        // itself: spinner, tick, receipt number
+                        MorphButton(
+                          phase: _phase,
+                          solid: _canSettle || _phase != MorphPhase.idle,
+                          // Online payments alone may cover the bill: nothing to take here then
+                          onPressed: _canSettle ? _settle : null,
+                          doneLabel: _doneLabel,
+                          doneIcon: FIcons.receipt,
+                          color: theme.colors.primary,
+                          onColor: theme.colors.primaryForeground,
+                          successColor: AppColors.emerald(brightness),
+                          labelStyle: theme.typography.lg.forButton,
+                          semanticsLabel: l10n.confirmSettle,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: Text(l10n.confirmSettle, overflow: TextOverflow.ellipsis)),
+                              Text(' · ${money(context, _due)}'),
+                            ],
                           ),
                         ),
                       ],
@@ -651,9 +754,10 @@ class _HolderButton extends ConsumerWidget {
 class _TotalsRow extends StatelessWidget {
   final String label;
   final String value;
+  final double amount;
   final Color color;
 
-  const _TotalsRow({required this.label, required this.value, required this.color});
+  const _TotalsRow({required this.label, required this.value, required this.amount, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -664,12 +768,14 @@ class _TotalsRow extends StatelessWidget {
         children: [
           Text(label, style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
           const Spacer(),
-          Text(
-            value,
-            style: theme.typography.lg.copyWith(
-              fontWeight: FontWeight.w700,
-              color: color,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          // Rolls as tenders come and go; the colour eases red to green
+          TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: color),
+            duration: Motion.base,
+            builder: (context, ink, _) => RollingNumber(
+              value,
+              value: amount,
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: ink),
             ),
           ),
         ],

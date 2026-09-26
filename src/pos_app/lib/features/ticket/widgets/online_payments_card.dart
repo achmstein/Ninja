@@ -11,7 +11,7 @@ import '../../tickets/models/ticket_detail.dart';
 
 /// Online payments on the till: what guests paid (or are paying) for this bill
 /// from their phones. Each payment with its payer, its share of the bill and
-/// the tip on top, apart; a paid one can be given back while the bill is
+/// the fee on top, apart; a paid one can be given back while the bill is
 /// open. Under them, while open, what is paid online and what is left for
 /// the till to take.
 class OnlinePaymentsCard extends StatelessWidget {
@@ -114,7 +114,6 @@ class _OnlinePaymentRow extends StatelessWidget {
     final name = (payment.payerName ?? '').trim().isNotEmpty ? payment.payerName!.trim() : l10n.guest;
     final at = payment.refundedAt ?? payment.paidAt ?? payment.createdAt;
     final meta = [
-      if (payment.tip > 0) l10n.onlineTip(money(context, payment.tip)),
       if (payment.fee > 0) l10n.onlineFee(money(context, payment.fee)),
       if (at != null) formatDateTime(context, at),
     ].join(' · ');

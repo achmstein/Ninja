@@ -8,9 +8,9 @@ using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
 namespace Ninja.Sales.API.Payments;
 
 /// <summary>The guest's choice of share, as their phone sends it.</summary>
-public sealed record ShareRequest(SplitMode Mode, IReadOnlyList<int>? LineIds = null, int? Parts = null, int? Of = null, decimal? Amount = null, decimal Tip = 0);
+public sealed record ShareRequest(SplitMode Mode, IReadOnlyList<int>? LineIds = null, int? Parts = null, int? Of = null, decimal? Amount = null);
 
-public sealed record StartedPayment(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Tip, decimal Charged);
+public sealed record StartedPayment(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Charged);
 
 /// <summary>
 /// A guest starts paying their share: the share is worked out against what
@@ -60,17 +60,14 @@ public class StartOnlinePaymentCommandHandler(
             _ => throw new SalesDomainException("Choose how to pay."),
         };
 
-        var tip = settings.TipsEnabled ? OnlineShares.Money(Math.Max(0, command.Share.Tip)) : 0m;
-        if (tip > share.Amount) throw new SalesDomainException("A tip cannot be more than the share.");
-        var fee = settings.GuestFee(share.Amount + tip);
+        var fee = settings.GuestFee(share.Amount);
 
         var payment = payments.Add(OnlinePayment.Start(
-            ticket.Id, ticket.BranchId, share, fee, tip, settings.Currency,
+            ticket.Id, ticket.BranchId, share, fee, settings.Currency,
             command.PayerId, command.PayerName, provider.Name, now));
 
         var items = new List<CheckoutItem> { new(BillName(ticket), share.Amount) };
         if (fee > 0) items.Add(new("Online payment fee", fee));
-        if (tip > 0) items.Add(new("Tip", tip));
 
         var session = await provider.StartCheckoutAsync(
             provider is SimulatedPaymentProvider ? PayRules.NoAccount : PayRules.Account(settings, sealer),
@@ -88,10 +85,10 @@ public class StartOnlinePaymentCommandHandler(
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
 
         logger.LogInformation(
-            "Online payment {Key} started on ticket {TicketId}: {Mode} share {Amount}, fee {Fee}, tip {Tip} ({Provider} order {Reference})",
-            payment.Key, ticket.Id, share.Mode, share.Amount, fee, tip, provider.Name, session.ProviderReference);
+            "Online payment {Key} started on ticket {TicketId}: {Mode} share {Amount}, fee {Fee} ({Provider} order {Reference})",
+            payment.Key, ticket.Id, share.Mode, share.Amount, fee, provider.Name, session.ProviderReference);
 
-        return new StartedPayment(payment.Key, session.CheckoutUrl, payment.Amount, payment.Fee, payment.Tip, payment.Charged);
+        return new StartedPayment(payment.Key, session.CheckoutUrl, payment.Amount, payment.Fee, payment.Charged);
     }
 
     private static string BillName(Ticket ticket)
@@ -276,8 +273,6 @@ public sealed record SavePaymentSettingsCommand(
     FeeMode FeeMode,
     decimal FeePercent,
     decimal FeeFixed,
-    bool TipsEnabled,
-    IReadOnlyCollection<int> TipPercents,
     bool AllowItems,
     bool AllowEqual,
     bool AllowCustom) : IRequest<PaymentSettings>;
@@ -293,7 +288,7 @@ public class SavePaymentSettingsCommandHandler(
         var settings = await payments.GetSettingsAsync();
         settings.Update(
             command.Currency, command.PublicKey, command.CardIntegrationId, command.WalletIntegrationId, command.ApplePayIntegrationId,
-            command.FeeMode, command.FeePercent, command.FeeFixed, command.TipsEnabled, command.TipPercents,
+            command.FeeMode, command.FeePercent, command.FeeFixed,
             command.AllowItems, command.AllowEqual, command.AllowCustom, now);
 
         if (command.SecretKey is not null || command.HmacSecret is not null)

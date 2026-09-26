@@ -79,20 +79,22 @@ export function isIos(): boolean {
 }
 
 /**
- * Shows the native prompt. A prompt is single-use, so the event is dropped
- * whatever the customer picks — Chrome fires a fresh one when it is willing
- * to ask again.
+ * Shows the native prompt and says what the customer picked (null when
+ * there was nothing to show). A prompt is single-use, so the event is
+ * dropped whatever the customer picks — Chrome fires a fresh one when it is
+ * willing to ask again.
  */
-async function install(): Promise<void> {
+async function install(): Promise<'accepted' | 'dismissed' | null> {
   const event = deferredPrompt
-  if (!event) return
+  if (!event) return null
   setDeferredPrompt(null)
   try {
     await event.prompt()
-    await event.userChoice
+    return (await event.userChoice).outcome
   } catch {
     // Chrome refuses a prompt outside a user gesture or while another is
     // showing; there is nothing to recover
+    return null
   }
 }
 

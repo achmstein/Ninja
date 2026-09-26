@@ -299,7 +299,6 @@ const dictionary = {
   onlinePaid: { en: "Paid", ar: "مدفوع" },
   onlinePaying: { en: "Paying…", ar: "يدفع الآن…" },
   onlineRefundedBadge: { en: "Refunded", ar: "مُسترد" },
-  onlineTip: { en: "+ {amount} tip", ar: "+ {amount} بقشيش" },
   onlineRefund: { en: "Refund", ar: "استرداد" },
   onlineRefundTitle: { en: "Give {name}'s online payment back?", ar: "استرداد دفعة {name} الأونلاين؟" },
   onlineRefunded: { en: "Online payment refunded", ar: "تم استرداد الدفعة الأونلاين" },

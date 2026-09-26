@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -90,6 +90,19 @@ export const getTenant = <ThrowOnError extends boolean = false>(options?: Option
 export const updateTenant = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantData, ThrowOnError>): RequestResult<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tenant',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
+ */
+export const setTenantAssistant = <ThrowOnError extends boolean = false>(options: Options<SetTenantAssistantData, ThrowOnError>): RequestResult<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError> => (options.client ?? client).put<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/assistant',
     ...options,
     headers: {
         'Content-Type': 'application/json',

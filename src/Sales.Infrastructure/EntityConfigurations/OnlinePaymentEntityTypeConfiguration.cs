@@ -18,7 +18,6 @@ class OnlinePaymentEntityTypeConfiguration : IEntityTypeConfiguration<OnlinePaym
 
         builder.Property(p => p.Amount).HasPrecision(18, 2);
         builder.Property(p => p.Fee).HasPrecision(18, 2);
-        builder.Property(p => p.Tip).HasPrecision(18, 2);
         builder.Property(p => p.Currency).HasMaxLength(3).IsRequired();
         builder.Property(p => p.Mode).HasConversion<string>().HasMaxLength(10).IsRequired();
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(10).IsRequired();

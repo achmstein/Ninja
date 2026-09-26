@@ -113,7 +113,6 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
   }
 
   const fee = Number(payment.fee)
-  const tip = Number(payment.tip)
   const busy = processing || simulate.isPending || cancel.isPending
 
   return (
@@ -139,12 +138,6 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
               <span>{t('yourShare')}</span>
               <span>{money(payment.amount)}</span>
             </div>
-            {tip > 0 && (
-              <div className='text-muted-foreground flex justify-between gap-2'>
-                <span>{t('tip')}</span>
-                <span>{money(tip)}</span>
-              </div>
-            )}
             {fee > 0 && (
               <div className='text-muted-foreground flex justify-between gap-2'>
                 <span>{t('onlinePaymentFee')}</span>

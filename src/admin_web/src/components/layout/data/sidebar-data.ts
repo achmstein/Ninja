@@ -145,7 +145,7 @@ export const sidebarData: SidebarData = {
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
-        // Online payments: the café's own payment account, fee, tips and splits
+        // Online payments: the café's own payment account, fee and splits
         {
           title: 'onlinePaymentsNav',
           url: '/payments',

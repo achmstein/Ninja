@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
@@ -17,15 +17,11 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import {
   getAccountOptions,
   getPointsValueOptions,
 } from '@/api/loyalty/@tanstack/react-query.gen'
-import {
-  quotePromoOptions,
-  saveUserPreferencesMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { quotePromoOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import {
   AlertDialog,
@@ -37,24 +33,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
+import { ORDER_PILL_ID } from '@/components/order-pill'
+import { useOrderPill } from '@/lib/order-pill'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageWithFallback } from '@/components/image-fallback'
-import { useProfileGate } from '@/components/profile-gate'
-import { useGuestGate } from '@/components/guest-gate'
 import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
-import { useSelectedBranch } from '@/lib/branch'
-import { useOrderDestination } from '@/lib/order-destination'
-import { PlaceIcon, placeKindName } from '@/lib/places'
-import { useGuestStore } from '@/stores/guest-store'
-import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
+import { PlaceIcon } from '@/lib/places'
 import { StillHereCard } from '@/components/places/still-here'
 import { useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { usePlaceOrder } from '@/lib/use-place-order'
 
 export const Route = createFileRoute('/cart')({
   component: CartPage,
@@ -87,24 +81,6 @@ function CartPage() {
   // does not take signs in instead
   const cloudKitchen = useIsCloudKitchen()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  // Room-beats-table lives in useOrderDestination so the header chip and this
-  // payload can never disagree about where the order is going
-  const destination = useOrderDestination()
-  const branch = useSelectedBranch()
-  // A table carried over from an earlier session is asked about before an
-  // order goes to it (docs/visit-tab.html): a stale table is the one way an
-  // order-ahead could land on yesterday's seat
-  const activePlace = useActivePlace()
-  const placeConfirmed = useActivePlaceConfirmed()
-  const tableUnconfirmed =
-    destination?.kind === 'place' && activePlace != null && !placeConfirmed
-  const { ensureProfileComplete, profileGateDialog } = useProfileGate()
-  // Checking out without an account: the same name and phone, kept on the
-  // order instead of on a profile
-  const { ensureGuestDetails, guestGateDialog } = useGuestGate()
-  const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
-  const isGuest = !auth.isAuthenticated
 
   const { lines, setQuantity, clear } = useCart()
   const [note, setNote] = useState('')
@@ -191,134 +167,47 @@ function CartPage() {
       : 0
   const total = Math.max(0, subtotal - promoDiscount - discount)
 
-  const savePreferences = useMutation(saveUserPreferencesMutation())
+  // Place order is one button through the whole send: a spinner while it
+  // goes, a tick when it lands — and then the tick lifts off to become the
+  // status pill at the top, which follows the order from there
+  const [sent, setSent] = useState<'success' | 'error' | null>(null)
+  const followOrder = useOrderPill((s) => s.follow)
 
-  // Idempotency: the request id must survive retries of the SAME checkout,
-  // so a resubmit after a timeout (where the server actually processed the
-  // first attempt) is deduplicated server-side instead of creating a
-  // duplicate order. A new id is only issued when the payload changes.
-  const requestIdRef = useRef<{ signature: string; id: string } | null>(null)
-
-  const placeOrder = useMutation({
-    ...createOrderMutation(),
-    onSuccess: () => {
-      // The order landed — the next checkout is a new logical request
-      requestIdRef.current = null
-      // Remember the chosen customizations for next time (mobile parity).
-      // Preferences hang off an account, so there is nothing to save for a guest.
-      const customized = auth.isAuthenticated
-        ? lines.filter((line) => line.customizations.length > 0)
-        : []
-      if (customized.length > 0) {
-        savePreferences.mutate({
-          body: {
-            items: customized.map((line) => ({
-              catalogItemId: line.productId,
-              selectedOptions: line.customizations.map((c) => ({
-                customizationId: c.customizationId,
-                optionId: c.optionId,
-              })),
-            })),
-          },
-          query: { 'api-version': API_VERSION },
-        })
-      }
-      clear()
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
-      toast.success(t('orderPlacedSuccessfully'))
-      navigate({ to: '/bills' })
+  // The one ordering path (lib/use-place-order), the Counter's tray's too:
+  // the carried-over table asked about, the guest or profile gate, one
+  // request id per payload, the choices saved for next time
+  const order = usePlaceOrder({
+    onPlaced: (finish) => {
+      // The tick holds a beat; then, in one render, the cart empties and
+      // the pill takes the tick's place (same layoutId) at the top
+      setSent('success')
+      setTimeout(() => {
+        followOrder()
+        finish()
+        setSent(null)
+        navigate({ to: '/bills' })
+      }, 480)
     },
-    onError: () => toast.error(t('failedToPlaceOrder')),
+    onFailed: () => {
+      setSent('error')
+      setTimeout(() => setSent(null), 350)
+    },
   })
+  // Room-beats-table lives in useOrderDestination (through the hook) so the
+  // header chip and the payload can never disagree about where it goes
+  const { destination, tableUnconfirmed, activePlace, isGuest } = order
+  const orderPhase: MorphPhase = order.isPending ? 'busy' : (sent ?? 'idle')
 
-  const handleCheckout = async () => {
-    if (tableUnconfirmed) {
-      toast.info(t('confirmTableFirst'))
-      return
-    }
-    // Both paths ask for a name and a reachable phone; only where they are
-    // stored differs. A guest that dismisses the dialog has not ordered.
-    const guestContact = isGuest ? await ensureGuestDetails() : null
-    if (isGuest && !guestContact) return
-    if (!isGuest && !(await ensureProfileComplete())) return
-
-    const profile = auth.user?.profile
-    // Minted on the first order that needs it, so browsers that only browse
-    // are never tagged. Set before the request so the interceptor sends it.
-    const guestId = isGuest ? ensureGuestId() : null
-
-    // Same payload → same request id, so retrying a timed-out submit is
-    // deduplicated server-side instead of creating a duplicate order
-    const signature = JSON.stringify({
-      lines: lines.map((line) => [
-        line.productId,
-        line.quantity,
-        line.specialInstructions,
-        line.customizations.map((c) => [c.customizationId, c.optionId]),
-      ]),
-      note: note.trim(),
+  const handleCheckout = () =>
+    order.submit({
+      note,
+      // Only what the quotes accepted: the server drops a code that no
+      // longer applies rather than failing the order, and a guest's points
+      // never go (the payload leaves them out)
       points: discount > 0 ? debouncedPoints : 0,
       promo: promoDiscount > 0 ? promoCode : null,
-      // Signing in mid-cart makes it a different order, not a retry
-      guest: guestId,
-      // Moving between a table and a room makes it a different order, not a
-      // retry of the previous one
-      destination: destination
-        ? [destination.kind, destination.placeId, destination.sessionId ?? 0]
-        : null,
+      loyaltyDiscount: discount,
     })
-    if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
-      requestIdRef.current = { signature, id: crypto.randomUUID() }
-    }
-
-    placeOrder.mutate({
-      body: {
-        // The server identifies the customer from the token (or, for a guest,
-        // the X-Guest-Id header) and ignores these — they stay for the shape
-        userId: profile?.sub ?? '',
-        userName: profile?.name || profile?.preferred_username || '',
-        guestName: guestContact?.name ?? null,
-        guestPhone: guestContact?.phone ?? null,
-        // Where the order goes: the place, and the customer's running clock
-        // there if any, so the server lands it on the right bill.
-        placeId: destination?.placeId ?? null,
-        placeKind: destination ? placeKindName(destination.placeKind) : null,
-        placeName: destination
-          ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
-          : null,
-        sessionId: destination?.sessionId ?? null,
-        customerNote: note.trim() || null,
-        // Only a code the quote accepted; the server drops one that no
-        // longer applies rather than failing the order
-        promoCode: promoDiscount > 0 ? promoCode : null,
-        // Loyalty needs an account to redeem against; the server rejects a
-        // guest order that claims either
-        pointsToRedeem: !isGuest && discount > 0 ? debouncedPoints : 0,
-        loyaltyDiscount: isGuest ? 0 : discount,
-        items: lines.map((line) => ({
-          id: crypto.randomUUID(),
-          productId: line.productId,
-          productName: { en: line.nameEn, ar: line.nameAr || null },
-          unitPrice: line.price,
-          quantity: line.quantity,
-          pictureUrl: line.pictureUrl ?? null,
-          specialInstructions: line.specialInstructions ?? null,
-          selectedCustomizations: line.customizations.map((c) => ({
-            customizationId: c.customizationId,
-            customizationName: {
-              en: c.customizationNameEn,
-              ar: c.customizationNameAr ?? null,
-            },
-            optionId: c.optionId,
-            optionName: { en: c.optionNameEn, ar: c.optionNameAr ?? null },
-            priceAdjustment: c.priceAdjustment,
-          })),
-        })),
-      },
-      headers: { 'x-requestid': requestIdRef.current.id },
-      query: { 'api-version': API_VERSION },
-    })
-  }
 
   if (lines.length === 0) {
     return (
@@ -337,14 +226,11 @@ function CartPage() {
   // forward are to scan the table or to sign in — the server refuses it either
   // way, and finding that out after tapping Order would be the wrong lesson.
   // A café that takes guests' orders from anywhere lets it through, to collect.
-  const guestNeedsTable = isGuest && !destination && !guestOrdersAnywhere
+  const guestNeedsTable = order.block === 'table'
   // The branch wants a name it can hold to on a table order: a guest at a
   // table signs in first. Ordering refuses it too; this just says so
   // before the tap rather than after.
-  const guestNeedsAccount =
-    isGuest &&
-    destination?.kind === 'place' &&
-    (branch?.requireSignInForTableOrders ?? false)
+  const guestNeedsAccount = order.block === 'account'
 
   // Ordering never needs an account. Signing in is offered underneath rather
   // than in the way, since it is what earns points and keeps the order history.
@@ -382,17 +268,14 @@ function CartPage() {
       </div>
     ) : (
       <div className='flex flex-col gap-2'>
-        <Button
-          size='lg'
-          className='w-full rounded-pill'
-          disabled={placeOrder.isPending || tableUnconfirmed}
+        <MorphButton
+          phase={orderPhase}
+          layoutId={ORDER_PILL_ID}
+          disabled={tableUnconfirmed}
           onClick={handleCheckout}
         >
-          {placeOrder.isPending && (
-            <Loader2 className='me-2 h-4 w-4 animate-spin' />
-          )}
           {isGuest ? t('orderAsGuest') : t('placeOrder')}
-        </Button>
+        </MorphButton>
         {isGuest && (
           <Button
             variant='ghost'
@@ -676,8 +559,7 @@ function CartPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {profileGateDialog}
-      {guestGateDialog}
+      {order.dialogs}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   )

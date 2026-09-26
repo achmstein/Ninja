@@ -10,7 +10,8 @@ import {
 } from '@/api/tenant/@tanstack/react-query.gen'
 import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
-import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'
+import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
+import { RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { fromLayoutForm, toLayoutForm, type LayoutForm } from '@/lib/layout-form'
 import { toast } from '@/lib/toast'
@@ -47,6 +48,7 @@ import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { StylePicker } from '@/components/brand/style-picker'
+import { FontOptions } from '@/components/brand/font-options'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean; addon?: boolean }[] = [
   // Both hang off a place: a cloud kitchen, with none, is not offered them
@@ -117,8 +119,9 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   radius: t.radius ?? '',
   headerSize: t.headerSize ?? '',
   mode: t.mode ?? '',
-  fontLatin: t.fontLatin ?? '',
-  fontArabic: t.fontArabic ?? '',
+  // A family the catalog no longer has shows (and saves) as the default
+  fontLatin: knownFont(t.fontLatin, LATIN_FONTS) ?? '',
+  fontArabic: knownFont(t.fontArabic, ARABIC_FONTS) ?? '',
   darkPrimary: t.dark?.primary ?? '',
   darkAccent: t.dark?.accent ?? '',
   darkSurface: t.dark?.surface ?? '',
@@ -406,14 +409,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                   label={t('fontLatin')}
                   value={theme.fontLatin}
                   onChange={(fontLatin) => setTheme({ ...theme, fontLatin })}
-                  fonts={LATIN_FONTS}
+                  fonts={LATIN_FONT_CATALOG}
                 />
                 <FontSelect
                   id='brand-font-arabic'
                   label={t('fontArabic')}
                   value={theme.fontArabic}
                   onChange={(fontArabic) => setTheme({ ...theme, fontArabic })}
-                  fonts={ARABIC_FONTS}
+                  fonts={ARABIC_FONT_CATALOG}
                 />
               </div>
               <Collapsible defaultOpen={Boolean(theme.darkPrimary || theme.darkAccent || theme.darkSurface)}>
@@ -649,7 +652,7 @@ function FontSelect({
   label: string
   value: string
   onChange: (v: string) => void
-  fonts: readonly string[]
+  fonts: readonly BrandFont[]
 }) {
   const t = useT()
   return (
@@ -657,17 +660,17 @@ function FontSelect({
       <Label htmlFor={id} className='text-xs'>
         {label}
       </Label>
-      <Select value={value || NONE} onValueChange={(v) => onChange(v === NONE ? '' : v)}>
+      <Select
+        value={value || NONE}
+        onValueChange={(v) => onChange(v === NONE ? '' : v)}
+        onOpenChange={(open) => open && ensureFontPreviews(fonts)}
+      >
         <SelectTrigger id={id} className='w-full'>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={NONE}>{t('defaultOption')}</SelectItem>
-          {fonts.map((f) => (
-            <SelectItem key={f} value={f} style={{ fontFamily: `'${f}'` }}>
-              {f}
-            </SelectItem>
-          ))}
+          <FontOptions catalog={fonts} displayLabel={t('fontDisplayGroup')} />
         </SelectContent>
       </Select>
     </div>

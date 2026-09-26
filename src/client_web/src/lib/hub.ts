@@ -15,6 +15,7 @@ import {
   type ServiceRequestChangedEvent,
 } from './services/notifications'
 import { toast } from './toast'
+import { pillShowsOrder } from './order-pill'
 
 // One SignalR connection for the whole app (mobile parity: single hub with
 // OrderStatusChanged / RoomStatusChanged / BranchSettingsChanged /
@@ -165,9 +166,10 @@ export function useHub() {
         // a moment after this push: read the bills again once it has
         setTimeout(refreshBills, 1500)
         setTimeout(refreshBills, 5000)
-        toast.success(translate('orderConfirmedToast', { orderId }))
+        // The status pill at the top already says it, where it is looked at
+        if (!pillShowsOrder(orderId)) toast.success(translate('orderConfirmedToast', { orderId }))
       } else if (event?.type === 'order_cancelled') {
-        toast.error(translate('orderCancelledToast', { orderId }))
+        if (!pillShowsOrder(orderId)) toast.error(translate('orderCancelledToast', { orderId }))
       } else if (event?.type === 'order_paid') {
         // The bill at a scanned table is paid: the table clears itself, so
         // the next scan starts clean. The paid bill itself is on the

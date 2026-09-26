@@ -15,6 +15,7 @@ import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { StylePicker } from '@/components/brand/style-picker'
+import { FontOptions } from '@/components/brand/font-options'
 import {
   fromLocalizedValue,
   LocalizedInput,
@@ -44,7 +45,8 @@ import {
   type BrandImages,
   type ImageSlot,
 } from '@/lib/brand-slots'
-import { ARABIC_FONTS, LATIN_FONTS, RADII, type BrandThemeInput } from '@/lib/brand-theme'
+import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
+import { RADII, type BrandThemeInput } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { fromLayoutForm, toLayoutForm, type LayoutForm } from '@/lib/layout-form'
 import { problemDetail } from '@/lib/problem'
@@ -184,8 +186,8 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [surface, setSurface] = useState(brand.theme.surface ?? '')
   const [radius, setRadius] = useState(brand.theme.radius ?? DEFAULT)
   const [headerSize, setHeaderSize] = useState(brand.theme.headerSize ?? DEFAULT)
-  const [fontLatin, setFontLatin] = useState(brand.theme.fontLatin ?? DEFAULT)
-  const [fontArabic, setFontArabic] = useState(brand.theme.fontArabic ?? DEFAULT)
+  const [fontLatin, setFontLatin] = useState(knownFont(brand.theme.fontLatin, LATIN_FONTS) ?? DEFAULT)
+  const [fontArabic, setFontArabic] = useState(knownFont(brand.theme.fontArabic, ARABIC_FONTS) ?? DEFAULT)
   const [darkPrimary, setDarkPrimary] = useState(brand.theme.dark?.primary ?? '')
   const [darkAccent, setDarkAccent] = useState(brand.theme.dark?.accent ?? '')
   const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
@@ -244,8 +246,8 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         surface: brand.theme.surface ?? '',
         radius: brand.theme.radius ?? DEFAULT,
         headerSize: brand.theme.headerSize ?? DEFAULT,
-        fontLatin: brand.theme.fontLatin ?? DEFAULT,
-        fontArabic: brand.theme.fontArabic ?? DEFAULT,
+        fontLatin: knownFont(brand.theme.fontLatin, LATIN_FONTS) ?? DEFAULT,
+        fontArabic: knownFont(brand.theme.fontArabic, ARABIC_FONTS) ?? DEFAULT,
         darkPrimary: brand.theme.dark?.primary ?? '',
         darkAccent: brand.theme.dark?.accent ?? '',
         darkSurface: brand.theme.dark?.surface ?? '',
@@ -335,8 +337,8 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             </div>
           </div>
           <div className='grid gap-4 sm:grid-cols-2'>
-            <FontSelect id='brand-font-latin' label={t('fontLatin')} value={fontLatin} onChange={setFontLatin} fonts={LATIN_FONTS} />
-            <FontSelect id='brand-font-arabic' label={t('fontArabic')} value={fontArabic} onChange={setFontArabic} fonts={ARABIC_FONTS} />
+            <FontSelect id='brand-font-latin' label={t('fontLatin')} value={fontLatin} onChange={setFontLatin} fonts={LATIN_FONT_CATALOG} />
+            <FontSelect id='brand-font-arabic' label={t('fontArabic')} value={fontArabic} onChange={setFontArabic} fonts={ARABIC_FONT_CATALOG} />
           </div>
           <Collapsible defaultOpen={Boolean(darkPrimary || darkAccent || darkSurface)}>
             <CollapsibleTrigger asChild>
@@ -398,22 +400,18 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   )
 }
 
-function FontSelect({ id, label, value, onChange, fonts }: { id: string; label: string; value: string; onChange: (v: string) => void; fonts: readonly string[] }) {
+function FontSelect({ id, label, value, onChange, fonts }: { id: string; label: string; value: string; onChange: (v: string) => void; fonts: readonly BrandFont[] }) {
   const t = useT()
   return (
     <div className='grid gap-2'>
       <Label htmlFor={id} className='text-xs'>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} onOpenChange={(open) => open && ensureFontPreviews(fonts)}>
         <SelectTrigger id={id} className='w-full'>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={DEFAULT}>{t('defaultOption')}</SelectItem>
-          {fonts.map((f) => (
-            <SelectItem key={f} value={f} style={{ fontFamily: `'${f}'` }}>
-              {f}
-            </SelectItem>
-          ))}
+          <FontOptions catalog={fonts} displayLabel={t('fontDisplayGroup')} />
         </SelectContent>
       </Select>
     </div>

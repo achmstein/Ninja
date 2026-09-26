@@ -1074,12 +1074,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payOnlineFee => 'رسوم الدفع أونلاين';
 
   @override
-  String get payTip => 'بقشيش';
-
-  @override
-  String get payNoTip => 'من غير بقشيش';
-
-  @override
   String get payYouPay => 'هتدفع';
 
   @override
@@ -1088,10 +1082,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get payMethods => 'كارت أو محفظة أو Apple Pay في الصفحة الجاية';
-
-  @override
-  String get payMethodsNoApple => 'كارت أو محفظة في الصفحة الجاية';
+  String get paySecureNote => 'هتدفع في صفحة دفع آمنة';
 
   @override
   String get payShares => 'المدفوعات';
@@ -1929,12 +1920,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get payOnlineFee => 'رسوم الدفع الإلكتروني';
 
   @override
-  String get payTip => 'إكرامية';
-
-  @override
-  String get payNoTip => 'بدون إكرامية';
-
-  @override
   String get payYouPay => 'ستدفع';
 
   @override
@@ -1943,10 +1928,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String get payMethods => 'بطاقة أو محفظة أو Apple Pay في الصفحة التالية';
-
-  @override
-  String get payMethodsNoApple => 'بطاقة أو محفظة في الصفحة التالية';
+  String get paySecureNote => 'ستدفع عبر صفحة دفع آمنة';
 
   @override
   String get payShares => 'المدفوعات';

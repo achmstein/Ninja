@@ -19,6 +19,7 @@
  */
 
 import { presetOf, styleOf, withStyleDefaults, type LayoutOverrides } from './styles'
+import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from './brand-fonts'
 
 const STYLE_ID = 'brand-theme'
 const FONT_LINK_ID = 'brand-font'
@@ -75,29 +76,17 @@ export const HEADER_SIZES: Record<string, { header: string; wordmark: string }> 
   lg: { header: '5.5rem', wordmark: '3.75rem' },
 }
 
-/** Latin families the apps know how to load from Google Fonts. */
-export const LATIN_FONTS = [
-  'Inter',
-  'Manrope',
-  'DM Sans',
-  'Nunito',
-  'Poppins',
-  'Plus Jakarta Sans',
-  'Playfair Display',
-] as const
-
-/** Arabic families, likewise. */
-export const ARABIC_FONTS = [
-  'Cairo',
-  'Tajawal',
-  'Almarai',
-  'IBM Plex Sans Arabic',
-  'Noto Kufi Arabic',
-  'Changa',
-] as const
-
-export const DEFAULT_FONT_LATIN = 'Inter'
-export const DEFAULT_FONT_ARABIC = 'Cairo'
+export {
+  ARABIC_FONT_CATALOG,
+  ARABIC_FONTS,
+  DEFAULT_FONT_ARABIC,
+  DEFAULT_FONT_LATIN,
+  LATIN_FONT_CATALOG,
+  LATIN_FONTS,
+  fontStylesheetUrl,
+  knownFont,
+  type BrandFont,
+} from './brand-fonts'
 
 export type Scheme = 'light' | 'dark'
 
@@ -326,9 +315,6 @@ export type BrandTokens = {
   fontHeading: string | null
 }
 
-const knownFont = (value: string | null | undefined, list: readonly string[]) =>
-  value && list.includes(value) ? value : null
-
 /** The variables each scheme gets from these seeds; empty when nothing is set. */
 export function brandTokens(input: BrandThemeInput | null | undefined): BrandTokens {
   const colors = brandColors(input)
@@ -428,12 +414,6 @@ export function brandThemeColor(input: BrandThemeInput | null | undefined, schem
   return background ? oklchToHex(background) : null
 }
 
-/** Google Fonts stylesheet for one family, the four weights the app uses. */
-export function fontStylesheetUrl(family: string): string {
-  const name = encodeURIComponent(family).replace(/%20/g, '+')
-  return `https://fonts.googleapis.com/css2?family=${name}:wght@400;500;600;700&display=swap`
-}
-
 /** Loads the tenant's families once; a family already on the page is left alone, a dropped one is removed. */
 export function ensureFontsLoaded(families: { latin: string | null; arabic: string | null; heading?: string | null }) {
   for (const [script, family] of Object.entries(families)) {
@@ -444,7 +424,7 @@ export function ensureFontsLoaded(families: { latin: string | null; arabic: stri
       continue
     }
     const href = fontStylesheetUrl(family)
-    if (existing?.href === href) continue
+    if (existing?.getAttribute('href') === href) continue
     const link = existing ?? document.createElement('link')
     link.id = id
     link.rel = 'stylesheet'

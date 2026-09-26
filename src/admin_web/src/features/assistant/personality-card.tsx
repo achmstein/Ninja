@@ -8,7 +8,6 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -22,7 +21,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   LANGUAGES,
-  NAME_MAX,
   NOTES_MAX,
   samePersonality,
   toPersonalityForm,
@@ -103,15 +101,11 @@ function PersonalityFields({ brand }: { brand: Brand }) {
     save.mutate({ body: toPersonalityRequest(form) })
   }
 
-  const name = form.name.trim()
-  const pieces = {
+  const preview = t('assistantPreview', {
     tone: t(form.tone === 'detailed' ? 'assistantPreviewDetailed' : 'assistantPreviewBrief'),
     manner: t(form.manner === 'formal' ? 'assistantPreviewFormal' : 'assistantPreviewFriendly'),
     language: t(LANGUAGE_PREVIEW[form.language]),
-  }
-  const preview = name
-    ? t('assistantPreviewNamed', { name, ...pieces })
-    : t('assistantPreviewUnnamed', pieces)
+  })
 
   return (
     <form onSubmit={submit} className='space-y-5'>
@@ -126,17 +120,7 @@ function PersonalityFields({ brand }: { brand: Brand }) {
       </div>
 
       <div className='grid gap-4 sm:grid-cols-2'>
-        <div className='space-y-1.5'>
-          <Label htmlFor='assistant-name'>{t('assistantName')}</Label>
-          <Input
-            id='assistant-name'
-            value={form.name}
-            maxLength={NAME_MAX}
-            placeholder={t('assistantNamePlaceholder')}
-            onChange={(e) => set('name', e.target.value)}
-          />
-        </div>
-        <div className='space-y-1.5'>
+        <div className='space-y-1.5 sm:col-span-2'>
           <Label htmlFor='assistant-language'>{t('assistantLanguage')}</Label>
           <Select
             value={form.language}

@@ -793,14 +793,6 @@
   "onlinePaying": "Paying…",
   "onlinePaid": "Paid",
   "onlineRefunded": "Refunded",
-  "onlineTip": "+ {amount} tip",
-  "@onlineTip": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
   "onlineFee": "fee {amount}",
   "@onlineFee": {
     "placeholders": {

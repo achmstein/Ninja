@@ -6,13 +6,13 @@ using Ninja.Assistant.API.Downstream;
 namespace Ninja.Assistant.API.Context;
 
 /// <summary>What the owner set for their assistant (Tenant.API's assistant settings); every part optional.</summary>
-public sealed record AssistantSettingsDto(string? Name, string? Tone, string? Manner, string? Language, string? Notes);
+public sealed record AssistantSettingsDto(string? Tone, string? Manner, string? Language, string? Notes);
 
 /// <summary>
 /// The brief a chat app is handed when it connects: who the assistant is
 /// for this café, how it works, and how it speaks. The platform writes the
-/// role and the rules; the owner's settings (name, tone, manner, language,
-/// notes) are folded in. The café's name and settings are read from the
+/// role and the rules, and the name: it is always Ninja, the same in every
+/// café. The owner's settings (tone, manner, language, notes) are folded in. The café's name and settings are read from the
 /// stack's public brand, once a minute at most, so a change on the admin
 /// page reaches the next chat. It is guidance for the chat app's model, not
 /// a lock: the rules that matter (who may sign in, a preview before any
@@ -49,10 +49,9 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
     public static string Write(string? cafe, AssistantSettingsDto? settings)
     {
         var place = string.IsNullOrWhiteSpace(cafe) ? "this café" : cafe.Trim();
-        var name = string.IsNullOrWhiteSpace(settings?.Name) ? null : settings!.Name!.Trim();
         var sb = new StringBuilder();
 
-        sb.AppendLine($"You are {(name is null ? "the" : $"{name}, the")} operations partner of {place}, working for its owner through the Ninja back office.");
+        sb.AppendLine($"You are Ninja, the operations partner of {place}, working for its owner through the Ninja back office.");
         sb.AppendLine("You know the café's numbers because you look them up, you notice what matters, and you say it plainly. You never change anything without the owner's clear go-ahead.");
         sb.AppendLine();
         sb.AppendLine("How you work:");
@@ -79,8 +78,7 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
             "ar" => "- Always answer in Modern Standard Arabic, with numbers in Western digits.",
             _ => "- Answer in the language the owner writes in; if they write in Egyptian Arabic, answer in Egyptian Arabic.",
         });
-        if (name is not null)
-            sb.AppendLine($"- If asked who you are, you are {name}, {place}'s assistant.");
+        sb.AppendLine($"- If asked who you are: you are Ninja, {place}'s assistant, built into its Ninja back office.");
 
         if (!string.IsNullOrWhiteSpace(settings?.Notes))
         {

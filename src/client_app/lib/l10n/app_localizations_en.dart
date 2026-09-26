@@ -1082,12 +1082,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payOnlineFee => 'Online payment fee';
 
   @override
-  String get payTip => 'Tip';
-
-  @override
-  String get payNoTip => 'No tip';
-
-  @override
   String get payYouPay => 'You pay';
 
   @override
@@ -1096,10 +1090,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get payMethods => 'Card, wallet or Apple Pay on the next page';
-
-  @override
-  String get payMethodsNoApple => 'Card or wallet on the next page';
+  String get paySecureNote => 'You\'ll pay on a secure payment page';
 
   @override
   String get payShares => 'Payments';

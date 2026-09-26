@@ -26,12 +26,20 @@ export function InstallDialog({
         <DialogHeader>
           <DialogTitle>{t('installBrand', { name: brandName })}</DialogTitle>
         </DialogHeader>
-        <ol className='flex flex-col gap-3'>
-          <Step number={1} icon={Share} text={t('installIosStepShare')} />
-          <Step number={2} icon={SquarePlus} text={t('installIosStepAdd')} />
-        </ol>
+        <IosInstallSteps />
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** Safari's two steps, for the dialog and the home banner alike. */
+export function IosInstallSteps() {
+  const t = useT()
+  return (
+    <ol className='flex flex-col gap-3'>
+      <Step number={1} icon={Share} text={t('installIosStepShare')} />
+      <Step number={2} icon={SquarePlus} text={t('installIosStepAdd')} />
+    </ol>
   )
 }
 

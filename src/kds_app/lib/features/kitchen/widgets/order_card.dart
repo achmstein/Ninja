@@ -6,6 +6,8 @@ import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../status.dart';
+import 'dish_line.dart';
+import 'elapsed_ring.dart';
 
 /// One order as a kitchen ticket, as kds_web's order-card and the way every
 /// kitchen display lays one out:
@@ -154,6 +156,12 @@ class OrderCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // How far through its time, filling toward late; a
+                    // finished order has no clock to run
+                    if (!isReady) ...[
+                      ElapsedRing(since: order.since, now: now),
+                      const SizedBox(width: 8),
+                    ],
                     Text(
                       clock,
                       style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, color: clockColor, fontFeatures: tabular, height: 1),
@@ -196,34 +204,25 @@ class OrderCard extends StatelessWidget {
               children: [
                 for (final (index, item) in order.items.indexed) ...[
                   if (index > 0) Container(height: 1, color: theme.colors.border),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          child: Text('${item.units}×', style: theme.typography.base.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item.productName.localized(context), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25)),
-                              if (item.customizationsDescription != null) ...[
-                                const SizedBox(height: 2),
-                                Text(item.customizationsDescription!.localized(context), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, height: 1.35)),
-                              ],
-                              if (item.specialInstructions != null) ...[
-                                const SizedBox(height: 2),
-                                Text(item.specialInstructions!, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: amber, height: 1.35)),
-                              ],
-                            ],
-                          ),
-                        ),
+                  // A tap strikes the dish through while it is being worked
+                  DishLine(
+                    orderNumber: order.orderNumber,
+                    index: index,
+                    enabled: onReady != null,
+                    units: '${item.units}×',
+                    unitsStyle: theme.typography.base.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                    name: item.productName.localized(context),
+                    nameStyle: theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25, color: theme.colors.foreground),
+                    details: [
+                      if (item.customizationsDescription != null) ...[
+                        const SizedBox(height: 2),
+                        Text(item.customizationsDescription!.localized(context), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, height: 1.35)),
                       ],
-                    ),
+                      if (item.specialInstructions != null) ...[
+                        const SizedBox(height: 2),
+                        Text(item.specialInstructions!, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: amber, height: 1.35)),
+                      ],
+                    ],
                   ),
                 ],
                 if (order.customerNote != null) ...[

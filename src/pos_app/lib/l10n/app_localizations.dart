@@ -2936,12 +2936,6 @@ abstract class AppLocalizations {
   /// **'Refunded'**
   String get onlineRefunded;
 
-  /// No description provided for @onlineTip.
-  ///
-  /// In en, this message translates to:
-  /// **'+ {amount} tip'**
-  String onlineTip(String amount);
-
   /// No description provided for @onlineFee.
   ///
   /// In en, this message translates to:

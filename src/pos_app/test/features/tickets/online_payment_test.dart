@@ -24,7 +24,6 @@ void main() {
       'payerName': 'Sara',
       'amount': 33.34,
       'fee': 1.2,
-      'tip': '5',
       'status': 'Paid',
       'createdAt': '2026-09-26T10:00:00Z',
       'paidAt': '2026-09-26T10:01:00Z',
@@ -33,14 +32,14 @@ void main() {
     });
     expect(payment.payerName, 'Sara');
     expect(payment.amount, 33.34);
-    expect(payment.tip, 5);
+    expect(payment.fee, 1.2);
     expect(payment.isPaid, isTrue);
     expect(payment.paidAt, DateTime.utc(2026, 9, 26, 10, 1));
   });
 
-  test('paid online counts shares that landed, never tips, pending or refunded ones', () {
+  test('paid online counts shares that landed, never fees, pending or refunded ones', () {
     const payments = [
-      OnlinePaymentView(key: 'a', amount: 40, tip: 5, status: 'Paid'),
+      OnlinePaymentView(key: 'a', amount: 40, fee: 5, status: 'Paid'),
       OnlinePaymentView(key: 'b', amount: 30, status: 'Pending'),
       OnlinePaymentView(key: 'c', amount: 20, status: 'Refunded'),
       OnlinePaymentView(key: 'd', amount: 10.5, status: 'Paid'),

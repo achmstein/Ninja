@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'brand_fonts.dart';
 import '../theme/theme_provider.dart';
 import 'brand_theme.dart';
 import 'styles.dart';
@@ -104,7 +104,7 @@ class BrandStyle extends ThemeExtension<BrandStyle> {
     final family = brandFontFamily(headings.font);
     if (family == null) return context.localeText(style);
     final text = context.localeText(style);
-    final heading = GoogleFonts.getFont(family, textStyle: style);
+    final heading = brandFontStyle(family, style);
     return heading.copyWith(fontFamilyFallback: [if (text.fontFamily != null) text.fontFamily!]);
   }
 

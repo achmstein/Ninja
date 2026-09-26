@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { PaymentSettingsView } from '@/api/sales/types.gen'
 import {
   FEE_GUEST,
-  canAddTip,
   secretValue,
   toForm,
   toRequest,
@@ -22,8 +21,6 @@ const view: PaymentSettingsView = {
   feeMode: 1,
   feePercent: '2.75',
   feeFixed: 3,
-  tipsEnabled: true,
-  tipPercents: [15, 10],
   allowItems: true,
   allowEqual: true,
   allowCustom: false,
@@ -70,7 +67,6 @@ describe('toRequest', () => {
       feeMode: FEE_GUEST,
       feePercent: 2.75,
       feeFixed: 3,
-      tipPercents: [10, 15],
       allowCustom: false,
     })
   })
@@ -100,23 +96,5 @@ describe('toRequest', () => {
     expect(toRequest(form({ feeFixed: '-1' }))).toEqual({ problem: 'fee' })
     expect(toRequest(form({ feePercent: '101' }))).toEqual({ problem: 'fee' })
     expect(request({ feePercent: '' }).feePercent).toBe(0)
-  })
-
-  it('rejects tips out of range', () => {
-    expect(toRequest(form({ tipPercents: [5, 10, 15, 20, 25] }))).toEqual({
-      problem: 'tips',
-    })
-    expect(toRequest(form({ tipPercents: [60] }))).toEqual({ problem: 'tips' })
-  })
-})
-
-describe('canAddTip', () => {
-  it('takes up to four whole percents from 1 to 50, no repeats', () => {
-    expect(canAddTip([10], 15)).toBe(true)
-    expect(canAddTip([10], 10)).toBe(false)
-    expect(canAddTip([], 0)).toBe(false)
-    expect(canAddTip([], 51)).toBe(false)
-    expect(canAddTip([], 7.5)).toBe(false)
-    expect(canAddTip([5, 10, 15, 20], 25)).toBe(false)
   })
 })
