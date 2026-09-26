@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { forwardRef, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { ChevronLeft, Minus, Plus, X } from 'lucide-react'
+import { Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap, ease, springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
@@ -25,18 +25,13 @@ export type TuneResult = {
   unitPrice: number
 }
 
-/** How long a single choice shows as picked before the next question comes in, ms */
-const ADVANCE_MS = 380
-
 /**
  * A card opened in place: the card itself grows to fill the Ninja menu (it
  * shares its layout id with the card in the deck, so the photo never leaves
- * the screen) and its options come one question at a time under the photo:
- * the ones that must be answered first, the extras last. A single choice
- * moves on by itself a beat after it is picked; the rest have Next, or Skip
- * while nothing is picked in an optional one. What is chosen gathers under
- * the dish's name as chips, each a way back to its question, and the dots
- * over the question say where you are. The choices are the classic item
+ * the screen) and its options come in under the photo, all on the one
+ * scroll: the ones that must be answered first, the extras last, each with
+ * the control that suits it. What is chosen gathers under the dish's name
+ * as chips, each a way to its question. The choices are the classic item
  * sheet's: the customer's saved picks or the café's defaults, nothing sold
  * out, a required question must be answered; until they are, the button
  * names the one left and goes to it.
@@ -77,23 +72,19 @@ export function Tune({
   const scale = sizeScale(item.customizations, selections)
   const soldOut = item.isAvailable === false
 
-  // The questions: in the café's order, the ones that must be answered first
+  // The questions, all on the one scroll: in the café's order, the ones that must be answered first
   const byOrder = [...(item.customizations ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
   const steps = [...byOrder.filter((c) => c.isRequired), ...byOrder.filter((c) => !c.isRequired)]
   const picked = (c: ItemCustomizationDto) => selections[String(c.id)] ?? []
   const missing = steps.findIndex((c) => c.isRequired && picked(c).length === 0)
+  const ready = missing < 0
 
-  // The next question, a beat after a single choice is picked
-  const advance = useRef(0)
-  useEffect(() => () => window.clearTimeout(advance.current), [])
-
-  // Where the questions start: the first one left to answer, or the first when the defaults answer them all
-  const [at, setAt] = useState<{ index: number; dir: 1 | -1 } | null>(null)
-  const step = Math.min(at?.index ?? Math.max(0, missing), Math.max(0, steps.length - 1))
-  const dir = at?.dir ?? 1
-  const go = (index: number) => {
-    window.clearTimeout(advance.current)
-    setAt({ index, dir: index >= step ? 1 : -1 })
+  // A chip or the button sends the eye to a question: it scrolls into view and glows a moment
+  const sections = useRef<Array<HTMLElement | null>>([])
+  const [flash, setFlash] = useState<{ index: number; n: number } | null>(null)
+  const show = (index: number) => {
+    sections.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setFlash((f) => ({ index, n: (f?.n ?? 0) + 1 }))
   }
 
   const pick = (customization: ItemCustomizationDto, optionId: number) => {
@@ -106,14 +97,7 @@ export function Tune({
     // One choice: tapping it again clears it only when the question is optional
     const next = current.includes(optionId) && !customization.isRequired ? [] : [optionId]
     setOverrides({ ...selections, [key]: next })
-    // Picked, it moves on a beat later, to the next question
-    window.clearTimeout(advance.current)
-    const index = steps.indexOf(customization)
-    if (next.length > 0 && index < steps.length - 1) advance.current = window.setTimeout(() => setAt({ index: index + 1, dir: 1 }), ADVANCE_MS)
   }
-
-  const current = steps[step]
-  const ready = missing < 0
 
   return (
     <motion.div
@@ -163,22 +147,24 @@ export function Tune({
               <h2 className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</h2>
               {item.description && <p className='text-muted-foreground mt-1.5 text-sm leading-relaxed'>{localized(item.description)}</p>}
             </div>
-            {steps.length > 0 && !loadingPreference && <Recap steps={steps} selections={selections} onJump={go} />}
+            {steps.length > 0 && !loadingPreference && <Recap steps={steps} selections={selections} onJump={show} />}
           </div>
 
-          {current &&
-            (loadingPreference ? (
-              <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
-            ) : (
-              <Question
-                steps={steps}
-                step={step}
-                dir={dir}
-                selected={picked(current)}
-                onPick={(id) => pick(current, id)}
-                onGo={go}
-              />
-            ))}
+          {loadingPreference
+            ? steps.length > 0 && <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
+            : steps.map((customization, i) => (
+                <QuestionBlock
+                  key={String(customization.id)}
+                  ref={(el) => {
+                    sections.current[i] = el
+                  }}
+                  customization={customization}
+                  index={i}
+                  flash={flash?.index === i ? flash.n : 0}
+                  selected={picked(customization)}
+                  onPick={(id) => pick(customization, id)}
+                />
+              ))}
 
           <motion.div layout='position' transition={springOpen}>
             {noteOpen ? (
@@ -225,7 +211,7 @@ export function Tune({
           disabled={!canOrder || soldOut || loadingPreference}
           label={soldOut ? t('unavailable') : ready ? t('addToCart') : t('ninjaChoose', { name: localized(steps[missing]?.name) })}
           total={!soldOut && ready ? price(unitPrice * quantity) : null}
-          onClick={() => (ready ? onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current) : go(missing))}
+          onClick={() => (ready ? onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current) : show(missing))}
         />
       </motion.div>
 
@@ -293,118 +279,46 @@ function Recap({ steps, selections, onJump }: { steps: ItemCustomizationDto[]; s
 }
 
 /**
- * The question in view: dots for where you are among them (each a way
- * there), its name, and its control. A new question comes in from the side
- * it lies on with a short blur, the old one going out the other way. Under
- * it the way back, and the way on for a question that does not move on by
- * itself: Next, or Skip while an optional one has nothing picked.
+ * One question, on the scroll with the others: its name (and whether it
+ * must be answered) over its control, rising in a little after the one
+ * above it. Sent to by a chip or the button, it glows a moment.
  */
-function Question({
-  steps,
-  step,
-  dir,
-  selected,
-  onPick,
-  onGo,
-}: {
-  steps: ItemCustomizationDto[]
-  step: number
-  dir: 1 | -1
-  selected: number[]
-  onPick: (optionId: number) => void
-  onGo: (index: number) => void
-}) {
+const QuestionBlock = forwardRef<
+  HTMLFieldSetElement,
+  { customization: ItemCustomizationDto; index: number; flash: number; selected: number[]; onPick: (optionId: number) => void }
+>(function QuestionBlock({ customization, index, flash, selected, onPick }, ref) {
   const t = useT()
   const localized = useLocalized()
-  const reduced = useReducedMotion()
-  const rtl = useLanguage((s) => s.language) === 'ar'
-  const customization = steps[step]
-  const last = step === steps.length - 1
-  // A single choice moves on by itself once picked; everything else is moved on by hand
-  const byHand = customization.allowMultiple || !customization.isRequired || selected.length === 0
-  const shift = reduced ? 0 : 36 * dir * (rtl ? -1 : 1)
-
+  const unanswered = customization.isRequired && selected.length === 0
   return (
-    <div className='flex flex-col gap-3'>
-      {steps.length > 1 && (
-        <div className='flex items-center gap-1.5'>
-          {steps.map((c, i) => (
-            <button
-              key={String(c.id)}
-              type='button'
-              aria-label={localized(c.name)}
-              aria-current={i === step || undefined}
-              onClick={() => onGo(i)}
-              className='grid h-4 place-items-center'
-            >
-              <motion.span
-                className='block h-1.5 rounded-full'
-                initial={false}
-                animate={{ width: i === step ? 20 : 6 }}
-                transition={springOpen}
-                style={{ backgroundColor: 'currentColor' }}
-              >
-                <span className='sr-only'>{localized(c.name)}</span>
-              </motion.span>
-            </button>
-          ))}
-        </div>
+    <motion.fieldset
+      ref={ref}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...springOpen, delay: 0.1 + index * 0.05 }}
+      className='relative flex scroll-mt-24 flex-col gap-3'
+    >
+      {/* The glow: a ring that lights and fades, keyed so each send lights it again */}
+      {flash > 0 && (
+        <motion.span
+          key={flash}
+          aria-hidden
+          className='ring-primary pointer-events-none absolute -inset-2 rounded-[1.5rem] ring-2'
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 1.2, delay: 0.35, ease: ease.exit }}
+        />
       )}
-
-      <AnimatePresence mode='popLayout' initial={false} custom={shift}>
-        <motion.fieldset
-          key={String(customization.id)}
-          custom={shift}
-          variants={{
-            enter: (x: number) => ({ opacity: 0, x, filter: reduced ? 'none' : 'blur(4px)' }),
-            shown: { opacity: 1, x: 0, filter: 'blur(0px)' },
-            leave: (x: number) => ({ opacity: 0, x: -x, filter: reduced ? 'none' : 'blur(4px)' }),
-          }}
-          initial='enter'
-          animate='shown'
-          exit='leave'
-          transition={{ ...springOpen, opacity: { duration: 0.18 } }}
-          className='flex flex-col gap-3'
-        >
-          <legend className='mb-3 flex w-full items-baseline justify-between gap-3'>
-            <span className='heading text-[calc(1.2rem*var(--heading-scale))]'>{localized(customization.name)}</span>
-            <span className='text-muted-foreground shrink-0 text-xs font-medium'>
-              {customization.isRequired ? `${step + 1}/${steps.length}` : `${t('ninjaOptional')} · ${step + 1}/${steps.length}`}
-            </span>
-          </legend>
-          <Control customization={customization} selected={selected} onPick={onPick} />
-        </motion.fieldset>
-      </AnimatePresence>
-
-      {(step > 0 || (!last && byHand)) && (
-        <div className='flex items-center justify-between gap-3'>
-          {step > 0 ? (
-            <button
-              type='button'
-              aria-label={t('ninjaPrevious')}
-              onClick={() => onGo(step - 1)}
-              className='bg-muted grid size-10 place-items-center rounded-full'
-            >
-              <ChevronLeft className='size-5 rtl:rotate-180' />
-            </button>
-          ) : (
-            <span />
-          )}
-          {!last && byHand && (
-            <button
-              type='button'
-              disabled={customization.isRequired && selected.length === 0}
-              onClick={() => onGo(step + 1)}
-              className='bg-foreground text-background h-10 rounded-full px-5 text-sm font-semibold transition-opacity disabled:opacity-30'
-            >
-              {selected.length === 0 && !customization.isRequired ? t('ninjaSkip') : t('ninjaNext')}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+      <legend className='mb-3 flex w-full items-baseline justify-between gap-3'>
+        <span className='heading text-[calc(1.15rem*var(--heading-scale))]'>{localized(customization.name)}</span>
+        <span className={cn('shrink-0 text-xs font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}>
+          {customization.isRequired ? t('required') : t('ninjaOptional')}
+        </span>
+      </legend>
+      <Control customization={customization} selected={selected} onPick={onPick} />
+    </motion.fieldset>
   )
-}
+})
 
 /** Longest name a dial stop holds whole; longer ones make the question big rows instead, where a name has room */
 const DIAL_NAME_MAX = 9
