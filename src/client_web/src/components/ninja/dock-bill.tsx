@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Check, ChevronUp, CircleHelp, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -12,7 +11,9 @@ import { useServiceRequests } from '@/lib/service-requests'
 import { SERVICE_REQUEST } from '@/lib/services/notifications'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { TableView } from '@/components/places/table-view'
-import { StayRequests } from '@/components/places/stay-requests'
+import { RoomView } from '@/components/places/room-view'
+import { formatClock, useSecondTick } from '@/lib/clock'
+import { useDockSheet } from '@/lib/dock-sheet'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -36,8 +37,10 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Che
  * the clock running, the row is that place too: its name (the top bar keeps
  * only the brand), a dot while something is asked for, and a tap opens what
  * can be asked for there (the waiter, the bill, a controller, the rate)
- * with the bills under it. A room is a table with a clock: the same row,
- * the same tiles. Nothing at all while there is no bill, no order and no
+ * with the bills under it. A room is a table with a clock: the same row
+ * with its time ticking, the same tiles, and the clock as the sheet's hero.
+ * The sheet is one for the app (lib/dock-sheet.ts): the Book tab's "you're
+ * in" card opens it too. Nothing at all while there is no bill, no order and no
  * place.
  */
 export function DockBill({ live, trayEmpty, className }: { live: LiveBills; trayEmpty: boolean; className?: string }) {
@@ -47,7 +50,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const language = useLanguage((s) => s.language)
   const standard = useArabicStyle((s) => s.standard)
   const swap = blurSwap(useReducedMotion())
-  const [open, setOpen] = useState(false)
+  const open = useDockSheet((s) => s.open)
+  const setOpen = useDockSheet((s) => s.setOpen)
   const { stage, orderNumber } = useLiveOrder()
   const stay = useActiveStay()
   // A running room is where the customer is, over a table scanned before it
@@ -64,6 +68,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
     (table != null || stay != null) &&
     ASKED.some((type) => requests.stateOf(type).phase !== 'idle')
   const shown = useDockRowShown(live)
+  // The room's clock ticks in the row, so the tab it lived on can go back to booking
+  const now = useSecondTick(stay?.startedAt != null)
   if (!shown) return null
 
   const first = live.open[0]?.bill ?? live.forming?.bill
@@ -71,9 +77,10 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const place = (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
   // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
   // With nothing on the bill yet the place is the row's one line
+  const clock = stay?.startedAt ? formatClock((now - new Date(stay.startedAt).getTime()) / 1000) : null
   const line = stage
     ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
-    : total > 0
+    : total > 0 || clock
       ? place
       : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
@@ -121,14 +128,30 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               {asking && <span className='ring-foreground absolute end-0 top-0 size-2.5 rounded-full bg-amber-400 ring-2' />}
             </span>
             <span className='flex min-w-0 flex-1 flex-col'>
-              <AnimatePresence mode='popLayout' initial={false}>
-                {line && (
-                  <motion.span key={line} {...swap} className='truncate text-xs opacity-70'>
-                    {line}
-                  </motion.span>
+              <span className='flex min-w-0 items-center gap-1 text-xs'>
+                <AnimatePresence mode='popLayout' initial={false}>
+                  {line && (
+                    <motion.span key={line} {...swap} className='truncate opacity-70'>
+                      {line}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {/* With a bill to show, the room's time rides along the top line */}
+                {clock && total > 0 && !stage && (
+                  <span dir='ltr' className='shrink-0 opacity-70'>
+                    · <Odometer value={clock} />
+                  </span>
                 )}
-              </AnimatePresence>
-              {total > 0 ? <Odometer value={price(total)} className='text-base font-bold' /> : <span className='truncate text-base font-bold'>{place}</span>}
+              </span>
+              {total > 0 ? (
+                <Odometer value={price(total)} className='text-base font-bold' />
+              ) : clock ? (
+                <span dir='ltr' className='self-start text-base font-bold rtl:self-end'>
+                  <Odometer value={clock} />
+                </span>
+              ) : (
+                <span className='truncate text-base font-bold'>{place}</span>
+              )}
             </span>
             <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-sm font-semibold'>
               {label}
@@ -140,15 +163,12 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
 
       <Sheet open={open} onOpenChange={setOpen}>
         {stay ? (
-          // The room: what to ask for, then its bills
+          // The room: its clock, what to ask for, its bills, the way out
           <SheetContent>
             <SheetHeader>
               <SheetTitle>{localized(stay.placeName)}</SheetTitle>
             </SheetHeader>
-            <div className='flex flex-col gap-5'>
-              <StayRequests stay={stay} />
-              <OpenBills live={live} />
-            </div>
+            <RoomView stay={stay} live={live} onLeft={() => setOpen(false)} />
           </SheetContent>
         ) : table ? (
           // The table first (the waiter, the bill, the way out), then its bills

@@ -192,6 +192,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaBillOpen: 'فاتورتك',
   ninjaTableOpen: 'طاولتك',
   ninjaRoomOpen: 'غرفتك',
+  ninjaYoureIn: 'أنت في {name}',
   ninjaHideReceipt: 'إخفاء الإيصال',
   ninjaBillPrev: 'الفاتورة السابقة',
   ninjaBillNext: 'الفاتورة التالية',

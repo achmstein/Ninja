@@ -368,6 +368,7 @@ const webExtras = {
   ninjaBillOpen: { en: 'Your bill', ar: 'حسابك' },
   ninjaTableOpen: { en: 'Your table', ar: 'ترابيزتك' },
   ninjaRoomOpen: { en: 'Your room', ar: 'أوضتك' },
+  ninjaYoureIn: { en: "You're in {name}", ar: 'انت في {name}' },
   ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
   ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
   ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },

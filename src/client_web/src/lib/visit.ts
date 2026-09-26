@@ -6,7 +6,7 @@ import { type TenantFeatures } from '@/api/tenant'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
-import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, placeIcon } from '@/lib/places'
+import { PLACE_ROOM, placeIcon } from '@/lib/places'
 import { useActiveStay, useMyHold, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
 import { useFeatures } from '@/lib/brand'
@@ -106,17 +106,15 @@ export function visitTabVisible(
 }
 
 /**
- * What the visit tab keeps time for: a running clock (since when), or a
- * held place (from when it was made to when it lapses, where it lapses).
+ * What the visit tab keeps time for: a held place, from when it was made to
+ * when it lapses. A running clock is the dock's row, not the tab's.
  */
-export type VisitLive =
-  | { kind: 'stay'; since: number }
-  | { kind: 'hold'; made: number; until: number | null }
+export type VisitLive = { kind: 'hold'; made: number; until: number | null }
 
-/** The second tab, as the bars draw it: named after the clock's place when
- *  one runs, or the held place while it waits, else after what there is to
- *  book; absent where there is nothing to book (a running clock keeps it,
- *  whatever the list says). `live` is what the dock's tab counts. */
+/** The second tab, as the bars draw it: named after the held place while
+ *  it waits, else after what there is to book; absent where there is
+ *  nothing to book (a running clock keeps it, whatever the list says, for
+ *  its card over the places). `live` is what the dock's tab counts. */
 export function useVisitTab(): {
   label: string
   icon: LucideIcon
@@ -126,26 +124,10 @@ export function useVisitTab(): {
   const t = useT()
   const localized = useLocalized()
   const { seat, hasBookablePlaces, hasRooms } = useVisit()
+  const running = seat.kind === 'stay'
   const hold = useMyHold()
   const features = useFeatures()
 
-  if (seat.kind === 'stay') {
-    const kind = Number(seat.stay.placeKind ?? PLACE_ROOM)
-    return {
-      label:
-        localized(seat.stay.placeName) ||
-        t(
-          kind === PLACE_TABLE
-            ? 'yourTable'
-            : kind === PLACE_STATION
-              ? 'yourStation'
-              : 'yourRoom',
-        ),
-      icon: placeIcon(kind),
-      visible: true,
-      live: seat.stay.startedAt ? { kind: 'stay', since: new Date(seat.stay.startedAt).getTime() } : null,
-    }
-  }
   if (hold) {
     const kind = Number(hold.placeKind ?? PLACE_ROOM)
     return {
@@ -164,7 +146,7 @@ export function useVisitTab(): {
   return {
     label: t('rooms'),
     icon: hasRooms ? Gamepad2 : CalendarClock,
-    visible: visitTabVisible(hasBookablePlaces, features),
+    visible: running || visitTabVisible(hasBookablePlaces, features),
     live: null,
   }
 }

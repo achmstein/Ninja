@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
@@ -14,7 +14,7 @@ import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
-import { ActiveStayView } from '@/components/places/active-stay'
+import { StayBanner } from '@/components/places/stay-banner'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
 import { Reservation } from '@/components/places/reservation'
@@ -34,10 +34,10 @@ export const Route = createFileRoute('/places')({
 })
 
 /**
- * The second tab (docs/visit-tab.html): the places to book. A running
- * clock takes it over, since that is where the customer is. A scanned
- * table does not — people at a table book rooms — and lives behind its
- * chip in the bar instead. Where there is nothing to book the tab does not
+ * The second tab (docs/visit-tab.html): the places to book, always. Where
+ * the customer is now (a running clock, a scanned table) is the dock's row
+ * and its sheet; a running clock is also a slim card over the places, a tap
+ * away from the same sheet. Where there is nothing to book the tab does not
  * exist, and an old link to it goes home. Orders keep their own tab.
  */
 function PlacesPage() {
@@ -56,8 +56,7 @@ function PlacesPage() {
   const scanSheet = scan ? <ScanSheet placeId={scan} onDone={() => navigate({ to: '/places', search: {}, replace: true })} /> : null
 
   if (!visible) return null
-  // Until the stays answer, cards of nothing: the places flashing up and
-  // then giving way to the clock is worse than a moment of nothing
+  // Until the stays answer, cards of nothing: whether the room's card sits over the places is not known yet
   if (settling) {
     return (
       <NinjaPage title={t('rooms')}>
@@ -68,21 +67,10 @@ function PlacesPage() {
       </NinjaPage>
     )
   }
-  // A running clock takes the tab over from the places
-  const view = seat.kind === 'stay' ? 'stay' : 'list'
   return (
     <>
       <LayoutGroup>
-        <AnimatePresence mode='popLayout' initial={false}>
-          <motion.div
-            key={view}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: 24, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
-          >
-            {seat.kind === 'stay' ? <ActiveStayView stay={seat.stay} /> : <PlacesList atTable={seat.kind === 'table'} />}
-          </motion.div>
-        </AnimatePresence>
+        <PlacesList atTable={seat.kind === 'table'} stay={seat.kind === 'stay' ? seat.stay : undefined} />
       </LayoutGroup>
       {scanSheet}
     </>
@@ -96,7 +84,7 @@ const FORM_CLOSES_MS = 900
  *  clock, and any table the owner opened to reservations — as big cards,
  *  one open at a time with the booking under it. Once one is held its card
  *  opens into the reservation (Reservation): one hold is all anyone gets. */
-function PlacesList({ atTable }: { atTable: boolean }) {
+function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel }) {
   const t = useT()
   const auth = useAuth()
   const branch = useSelectedBranch()
@@ -154,6 +142,14 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     >
       <div inert={opened ? true : undefined} aria-hidden={opened ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
+          {stay && (
+            <RiseItem>
+              <Recede gone={held}>
+                <StayBanner stay={stay} />
+              </Recede>
+            </RiseItem>
+          )}
+
           {!reservationsEnabled && (
             <RiseItem>
               <Recede gone={held}>
