@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
@@ -323,11 +322,8 @@ export function NinjaHome({ menu }: HomeProps) {
             {columns.length > 0 && (
               <nav
                 aria-label={t('menu')}
-                // On the whole menu the tiles run on right up to it: a soft shadow along its top edge sets it apart
-                className={cn(
-                  'relative z-10 shrink-0 pb-1 transition-shadow duration-300',
-                  mode === 'grid' && 'bg-background shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)]'
-                )}
+                // A soft shadow along its top edge sets it apart from the cards or the tiles running up to it
+                className='bg-background relative z-10 shrink-0 pb-1 shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)]'
               >
                 {mode === 'deck' ? (
                   <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
