@@ -334,6 +334,21 @@ export function Tray({
                       >
                         <Odometer value={price(extras.total)} className='text-base font-bold' />
                       </motion.span>
+                      {/* What the code and the points take off, under the total they took it from */}
+                      <AnimatePresence initial={false}>
+                        {extras.promoDiscount + extras.pointsDiscount > 0 && (
+                          <motion.span
+                            key='saved'
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={SPRING}
+                            className='block text-[11px] font-semibold text-emerald-400 tabular-nums dark:text-emerald-600'
+                          >
+                            −{price(extras.promoDiscount + extras.pointsDiscount)}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </>
                   )}
                 </span>

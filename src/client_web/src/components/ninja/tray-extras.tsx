@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Award, Loader2, NotebookPen, Tag, X } from 'lucide-react'
+import { Award, Loader2, Minus, NotebookPen, Plus, Tag, X } from 'lucide-react'
 import { usePrice, useT } from '@/lib/i18n'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { cn } from '@/lib/utils'
-import { Slider } from '@/components/ui/slider'
+import { Odometer } from './odometer'
 import { POINTS_STEP, promoReasonKey } from '@/components/cart/savings-model'
 
 type Open = 'note' | 'promo' | 'points' | null
@@ -71,28 +71,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
                 />
               )}
               {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
-              {open === 'points' && (
-                <div className='bg-background/10 flex flex-col gap-3 rounded-2xl px-4 py-3'>
-                  <div className='flex items-center justify-between text-sm'>
-                    <span className='font-semibold tabular-nums'>
-                      {points.count} {t('pts')}
-                    </span>
-                    <span className='text-xs tabular-nums opacity-60'>
-                      {points.balance} {t('pts')}
-                    </span>
-                  </div>
-                  <Slider
-                    min={0}
-                    max={points.max}
-                    step={POINTS_STEP}
-                    value={[points.count]}
-                    onValueChange={([value]) => {
-                      points.setCount(value)
-                      points.setActive(value > 0)
-                    }}
-                  />
-                </div>
-              )}
+              {open === 'points' && <PointsField extras={extras} />}
             </div>
           </motion.div>
         )}
@@ -188,5 +167,60 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
         {t('apply')}
       </button>
     </form>
+  )
+}
+
+/**
+ * Points off the order, in steps: less and more either side of how many,
+ * the count and what it takes off rolling as it moves, and a way to use as
+ * many as the order takes. None is the same as not using them.
+ */
+function PointsField({ extras }: { extras: CheckoutExtras }) {
+  const t = useT()
+  const price = usePrice()
+  const { points } = extras
+  const set = (count: number) => {
+    const next = Math.max(0, Math.min(points.max, count))
+    points.setCount(next)
+    points.setActive(next > 0)
+  }
+  const all = points.count >= points.max
+  return (
+    <div className='bg-background/10 flex items-center gap-2 rounded-2xl p-1.5'>
+      <button
+        type='button'
+        aria-label={t('ninjaLess')}
+        disabled={points.count <= 0}
+        onClick={() => set(points.count - POINTS_STEP)}
+        className='bg-background/15 grid size-9 shrink-0 place-items-center rounded-full disabled:opacity-30'
+      >
+        <Minus className='size-4' />
+      </button>
+      <span className='flex min-w-0 flex-1 flex-col items-center leading-tight'>
+        <span className='text-sm font-bold'>
+          <Odometer value={String(points.count)} /> {t('pts')}
+        </span>
+        <span className='text-[11px] tabular-nums opacity-60'>
+          {extras.pointsDiscount > 0 ? `−${price(extras.pointsDiscount)}` : `${points.balance} ${t('pts')}`}
+        </span>
+      </span>
+      <button
+        type='button'
+        aria-label={t('ninjaMore')}
+        disabled={all}
+        onClick={() => set(points.count + POINTS_STEP)}
+        className='bg-background/15 grid size-9 shrink-0 place-items-center rounded-full disabled:opacity-30'
+      >
+        <Plus className='size-4' />
+      </button>
+      <button
+        type='button'
+        disabled={all}
+        onClick={() => set(points.max)}
+        className='bg-background text-foreground h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold disabled:opacity-40'
+      >
+        {t('ninjaUseAllPoints')}
+      </button>
+    </div>
   )
 }

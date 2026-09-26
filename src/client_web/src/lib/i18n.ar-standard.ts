@@ -196,6 +196,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaThisMonth: 'هذا الشهر',
   ninjaPlayedWith: 'مع',
   ninjaBackToCards: 'العودة إلى البطاقات',
+  ninjaUseAllPoints: 'استخدم الكل',
   ninjaRateOnceSwitched: '{price} بعد أن يحوّلها الموظفون',
   ninjaSwitchingTo: 'جارٍ التحويل إلى {option}',
   ninjaStaffSwitching: 'الموظفون يحوّلونها',
