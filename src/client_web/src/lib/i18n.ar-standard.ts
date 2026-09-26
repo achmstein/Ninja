@@ -14,6 +14,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   tableOrdersNeedAccount: 'الطلب على الطاولة هنا يتطلب حسابًا. سجّل الدخول لتطلب.',
   scanTableToOrder: 'امسح الرمز الموجود على الطاولة لتطلب',
   scanTable: 'امسح رمز الطاولة',
+  addingToBill: 'تم التأكيد، ويُضاف إلى فاتورتك',
   poweredBy: 'مدعوم من',
   demoCheckoutTitle: 'دفع تجريبي',
   demoCheckoutNote: 'يجرّب هذا المقهى الدفع من الطاولة. لن تُخصم أي مبالغ من بطاقتك.',

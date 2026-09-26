@@ -161,6 +161,10 @@ export function useHub() {
 
       const orderId = event?.orderId ?? 0
       if (event?.type === 'order_confirmed') {
+        // Sales puts the order on the bill off its own copy of the event,
+        // a moment after this push: read the bills again once it has
+        setTimeout(refreshBills, 1500)
+        setTimeout(refreshBills, 5000)
         toast.success(translate('orderConfirmedToast', { orderId }))
       } else if (event?.type === 'order_cancelled') {
         toast.error(translate('orderCancelledToast', { orderId }))

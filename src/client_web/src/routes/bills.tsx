@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -147,6 +147,24 @@ function BillsPage() {
     const status = order.status?.toLowerCase()
     return status !== 'confirmed' && status !== 'cancelled'
   })
+  // Confirmed, but Sales has not put it on a bill yet: it does so off its
+  // own copy of the event, a moment after this page hears the order was
+  // confirmed. Shown until the bill has it, rather than gone until a refresh
+  const onBills = new Set(
+    bills.flatMap((bill) => (bill.lines ?? []).map((line) => Number(line.orderId ?? 0)))
+  )
+  const addingToBill = todayOrders.filter(
+    (order) =>
+      order.status?.toLowerCase() === 'confirmed' &&
+      !onBills.has(Number(order.orderNumber))
+  )
+  const catchingUp = addingToBill.length > 0
+  const refetchBills = billsQuery.refetch
+  useEffect(() => {
+    if (!catchingUp) return
+    const timer = setInterval(() => void refetchBills(), 2000)
+    return () => clearInterval(timer)
+  }, [catchingUp, refetchBills])
   const cancelled = todayOrders.filter(
     (order) => order.status?.toLowerCase() === 'cancelled'
   )
@@ -181,12 +199,14 @@ function BillsPage() {
             <ErrorState onRetry={retry} />
           ) : todayBills.length === 0 &&
             waiting.length === 0 &&
+            addingToBill.length === 0 &&
             cancelled.length === 0 ? (
             <EmptyState title={t('nothingOnYouToday')} />
           ) : (
             <div className='flex flex-col'>
               <OnYourTab />
               <OrderGroup title={t('waitingToBeConfirmed')} orders={waiting} />
+              <OrderGroup title={t('addingToBill')} orders={addingToBill} />
               <OrderGroup title={t('statusCancelled')} orders={cancelled} />
               <div className='divide-y'>
                 {todayBills.map((bill) => (

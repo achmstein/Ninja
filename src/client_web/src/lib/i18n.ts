@@ -68,6 +68,11 @@ const webExtras = {
     en: 'Powered by',
     ar: 'بيشتغل على',
   },
+  // A confirmed order on its way onto the bill (Sales adds it a moment later)
+  addingToBill: {
+    en: 'Confirmed, adding to your bill',
+    ar: 'اتأكد، بيتضاف على حسابك',
+  },
   scanTable: {
     en: 'Scan table',
     ar: 'امسح الترابيزة',
