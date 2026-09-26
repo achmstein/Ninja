@@ -47,10 +47,13 @@ describe('brand tokens', () => {
     expect(light.background).toBeUndefined()
   })
 
-  it('nothing set sets nothing', () => {
-    expect(brandThemeCss(null)).toBeNull()
-    expect(brandThemeCss({ theme: { accent: null } })).toBeNull()
-    expect(brandTokens(undefined).fontLatin).toBeNull()
+  it('nothing set gets the Ninja seeds and nothing else', () => {
+    const none = brandTokens(undefined)
+    expect(none.light['--radius']).toBe('1.5rem')
+    expect(none.light['--heading-weight']).toBe('800')
+    expect(none.light['--primary']).toBeUndefined()
+    expect(none.dark).toEqual({})
+    expect(brandThemeCss({ theme: { accent: null } })).toBe(brandThemeCss(null))
   })
 
   it('writes the variables shadcn reads, the radius and a font per script', () => {
@@ -69,8 +72,8 @@ describe('brand tokens', () => {
     expect(brandTokens(cafe).light['--radius-pill']).toBe('9999px')
     expect(brandTokens({ theme: { radius: 'none' } }).light['--radius-pill']).toBe('0rem')
     expect(brandTokens({ theme: { radius: 'sm' } }).light['--radius-pill']).toBe('0.375rem')
-    // No radius seed, no pill token: the neutral theme's stays
-    expect(brandTokens({ theme: { accent: '#f59e0b' } }).light['--radius-pill']).toBeUndefined()
+    // No radius seed: Ninja's corners, and its full pills
+    expect(brandTokens({ theme: { accent: '#f59e0b' } }).light['--radius-pill']).toBe('9999px')
     const large = brandTokens({ theme: { headerSize: 'lg' } }).light
     expect(large['--header-h']).toBe('5.5rem')
     expect(large['--wordmark-h']).toBe('3.75rem')

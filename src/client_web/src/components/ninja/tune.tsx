@@ -5,7 +5,7 @@ import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { itemPictureUrl } from '@/components/menu/item-card'
+import { itemPictureUrl } from '@/components/menu/item-picture'
 import {
   effectiveBasePrice,
   preferenceSelections,

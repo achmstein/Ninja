@@ -3,16 +3,13 @@ import { AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, use
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
-import { useBrandLayout } from '@/lib/brand-layout'
 import { useCart } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
 import { usePlaceOrder } from '@/lib/use-place-order'
-import { cn } from '@/lib/utils'
 import { SignInSheet } from '@/components/sign-in-options'
-import { itemPictureUrl } from '@/components/menu/item-card'
-import { usePageMark } from '@/components/menu/home/page-effects'
+import { itemPictureUrl } from '@/components/menu/item-picture'
 import { OrderingPausedNote } from '@/components/menu/home/shared'
 import type { HomeProps } from '@/components/menu/home/use-menu'
 import { DOCK_INSET, DOCK_SIDE } from './chrome'
@@ -41,13 +38,10 @@ type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone'] }
  * The gestures are each shown once, on a first visit.
  */
 export function NinjaHome({ menu }: HomeProps) {
-  usePageMark('menu-ninja')
   const t = useT()
   const localized = useLocalized()
   const reduced = useReducedMotion()
   const cloudKitchen = useIsCloudKitchen()
-  // A café may keep the classic bars under the Ninja style: then the app's own tab bar sits under the dock
-  const ninjaChrome = useBrandLayout().chrome === 'ninja'
   const add = useCart((s) => s.add)
 
   const columns = useMemo(() => buildDeck(menu.sections), [menu.sections])
@@ -237,10 +231,7 @@ export function NinjaHome({ menu }: HomeProps) {
     <MotionConfig reducedMotion='user'>
       <LayoutGroup>
         <div
-          className={cn(
-            'bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] z-10 mx-auto flex max-w-lg flex-col md:top-(--header-h) md:bottom-0',
-            ninjaChrome ? 'bottom-0' : 'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]'
-          )}
+          className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col md:top-(--header-h)'
           onPointerDownCapture={noteInput}
           onTouchStartCapture={noteInput}
           onWheelCapture={noteInput}
@@ -358,8 +349,8 @@ export function NinjaHome({ menu }: HomeProps) {
 
           {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
           <div
-            className={'bg-foreground text-background relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'}
-            style={{ marginInline: DOCK_SIDE, marginBottom: ninjaChrome ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : DOCK_INSET }}
+            className='bg-foreground text-background relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
+            style={{ marginInline: DOCK_SIDE, marginBottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
           >
             <Tray
               targetRef={target}
@@ -373,7 +364,7 @@ export function NinjaHome({ menu }: HomeProps) {
               onSignIn={() => setSignInOpen(true)}
               onKeepHolding={onKeepHolding}
             />
-            {ninjaChrome && <NinjaNav className='border-background/10 border-t' />}
+            <NinjaNav className='border-background/10 border-t' />
           </div>
         </div>
 

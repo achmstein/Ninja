@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { ItemCustomizeForm } from '@/components/menu/item-form'
-import { itemPictureUrl } from '@/components/menu/item-card'
+import { itemPictureUrl } from '@/components/menu/item-picture'
 
 export const Route = createFileRoute('/item/$itemId')({
   component: ItemPage,

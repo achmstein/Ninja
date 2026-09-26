@@ -14,7 +14,6 @@ import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
-import { StylePicker } from '@/components/brand/style-picker'
 import { FontOptions } from '@/components/brand/font-options'
 import {
   fromLocalizedValue,
@@ -48,7 +47,6 @@ import {
 import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
 import { RADII, type BrandThemeInput } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import { fromLayoutForm, toLayoutForm, type LayoutForm } from '@/lib/layout-form'
 import { problemDetail } from '@/lib/problem'
 import { isHexColor, tenantStatus } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
@@ -178,9 +176,6 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const queryClient = useQueryClient()
 
   const [name, setName] = useState(toLocalizedValue(brand.name))
-  // Null until a style is picked: a café that never chose stays on classic without saying so
-  const [style, setStyle] = useState<string | null>(brand.theme.style ?? null)
-  const [layout, setLayout] = useState<LayoutForm>(toLayoutForm(brand.theme.layout))
   const [primary, setPrimary] = useState(brand.primaryColor ?? '')
   const [accent, setAccent] = useState(brand.theme.accent ?? '')
   const [surface, setSurface] = useState(brand.theme.surface ?? '')
@@ -205,7 +200,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (f: { style: string | null; layout: LayoutForm; accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
+  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
     return {
       accent: orNull(f.accent),
@@ -215,14 +210,15 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
       fontLatin: f.fontLatin === DEFAULT ? null : f.fontLatin,
       fontArabic: f.fontArabic === DEFAULT ? null : f.fontArabic,
       dark: dark.primary || dark.accent || dark.surface ? dark : null,
-      style: f.style,
-      layout: fromLayoutForm(f.layout),
+      // Ninja is the only style for now, worn whole
+      style: 'ninja',
+      layout: null,
     }
   }
   const theme = useMemo(
-    () => themeOf({ style, layout, accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
+    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [style, layout, accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
+    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
   )
   const draft = useMemo<PreviewDraft>(
     () => ({
@@ -240,8 +236,6 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
       name: toLocalizedValue(brand.name),
       primaryColor: orNull(brand.primaryColor ?? ''),
       theme: themeOf({
-        style: brand.theme.style ?? null,
-        layout: toLayoutForm(brand.theme.layout),
         accent: brand.theme.accent ?? '',
         surface: brand.theme.surface ?? '',
         radius: brand.theme.radius ?? DEFAULT,
@@ -288,7 +282,6 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
       <CardContent>
         <form onSubmit={submit} className='flex flex-col gap-5'>
           <LocalizedInput label={t('name')} value={name} onChange={setName} />
-          <StylePicker style={style} layout={layout} onStyleChange={setStyle} onLayoutChange={setLayout} />
           <ColorField
             id='brand-primary'
             label={t('brandColor')}

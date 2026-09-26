@@ -7,20 +7,19 @@
   --font-latin: 'Inter';
   --font-arabic: 'Cairo';
   --radius: 0.625rem;
-  /* Chips and pill buttons: a full pill until the brand's corner seed says otherwise (lib/brand-theme.ts) */
+  /* Chips and buttons are full pills; round add buttons and steppers are circles */
   --radius-pill: 9999px;
+  --radius-button: 9999px;
+  --radius-round: 9999px;
   /* The header and the wordmark in it; the brand's header size seed raises both */
   --header-h: 3.5rem;
   --wordmark-h: 1.75rem;
-  /* The style's parts (lib/styles.ts), at classic's values; index.css moves
-   * them per data-* attribute on <html>, so classic is exactly as before */
-  --radius-button: calc(var(--radius) - 2px);
-  /* Round add buttons and steppers: circles, unless the style squares its buttons */
-  --radius-round: 9999px;
+  /* Cards and panels are lifted, with no border (index.css gives them a hairline on dark) */
   --surface-bg: var(--card);
-  --surface-border: 1px;
-  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --surface-border: 0px;
+  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
   --space: 1;
+  /* Headings: the style's (lib/styles.ts), set by lib/brand-theme.ts */
   --heading-weight: 700;
   --heading-scale: 1;
   --heading-transform: none;

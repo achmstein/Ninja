@@ -45,7 +45,6 @@ import { BackHeader } from '@/components/back-header'
 import { InstallDialog } from '@/components/install-dialog'
 import { LanguageSwitch } from '@/components/language-switch'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { useForcedDark } from '@/lib/brand-layout'
 import { TileButton } from '@/components/tile-row'
 
 export const Route = createFileRoute('/settings')({
@@ -54,7 +53,6 @@ export const Route = createFileRoute('/settings')({
 
 function SettingsPage() {
   const t = useT()
-  const forcedDark = useForcedDark()
   const auth = useAuth()
   const queryClient = useQueryClient()
 
@@ -161,7 +159,7 @@ function SettingsPage() {
         <Card className='gap-0 divide-y p-0'>
           {/* Tiles like every other row here, the choice in a menu */}
           {/* Nothing to choose when the café's style is always dark */}
-          {!forcedDark && <ThemeSwitch />}
+          <ThemeSwitch />
           <LanguageSwitch />
           {/* Android: the native prompt. iOS: the share-sheet walkthrough.
               Nothing once installed, or where neither route exists */}

@@ -1,20 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { RECOMMENDED_STYLE, resolveLayout, styleOf, STYLE_KEYS, withStyleDefaults } from './styles'
+import { NINJA_LAYOUT, presetOf, styleOf, STYLE_KEYS, withStyleDefaults } from './styles'
 
 describe('styles', () => {
-  it('lists Ninja first, as the recommended style', () => {
-    expect(STYLE_KEYS[0]).toBe('ninja')
-    expect(RECOMMENDED_STYLE).toBe('ninja')
+  it('has Ninja as its only style', () => {
+    expect(STYLE_KEYS).toEqual(['ninja'])
   })
 
-  it('keeps classic for a café that never chose', () => {
-    expect(styleOf(null)).toBe('classic')
-    expect(styleOf({ style: 'neon' })).toBe('classic')
+  it('reads every theme as Ninja, whatever it names', () => {
+    for (const style of [undefined, null, 'ninja', 'classic', 'counter', 'cozy', 'neon']) {
+      expect(styleOf({ style })).toBe('ninja')
+    }
+    expect(styleOf(null)).toBe('ninja')
+    expect(styleOf(undefined)).toBe('ninja')
+    expect(presetOf({ style: 'minimal' }).layout).toEqual(NINJA_LAYOUT)
+    expect(NINJA_LAYOUT).toMatchObject({ menuItem: 'hero', categories: 'tabs', buttons: 'pill' })
   })
 
-  it('dresses Ninja in its own parts and faces, and reads the name it was built under', () => {
-    expect(resolveLayout({ style: 'ninja' })).toMatchObject({ menuItem: 'hero', categories: 'tabs', buttons: 'pill' })
-    expect(withStyleDefaults({ style: 'ninja' })).toMatchObject({ radius: 'xl', fontLatin: 'Plus Jakarta Sans' })
-    expect(styleOf({ style: 'counter' })).toBe('ninja')
+  it("fills the seeds a café left unset with Ninja's, and keeps the café's own", () => {
+    expect(withStyleDefaults({ style: 'classic' })).toMatchObject({
+      radius: 'xl',
+      fontLatin: 'Plus Jakarta Sans',
+      fontArabic: 'IBM Plex Sans Arabic',
+      headerSize: null,
+    })
+    expect(withStyleDefaults({ radius: 'sm', fontLatin: 'Manrope', headerSize: 'md' })).toMatchObject({
+      radius: 'sm',
+      fontLatin: 'Manrope',
+      fontArabic: 'IBM Plex Sans Arabic',
+      headerSize: 'md',
+    })
+    expect(withStyleDefaults(null)).toMatchObject({ radius: 'xl', fontLatin: 'Plus Jakarta Sans' })
   })
 })

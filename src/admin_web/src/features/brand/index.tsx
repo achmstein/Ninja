@@ -13,7 +13,6 @@ import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
 import { RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import { fromLayoutForm, toLayoutForm, type LayoutForm } from '@/lib/layout-form'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -47,7 +46,6 @@ import { PageHeader } from '@/components/page-header'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
-import { StylePicker } from '@/components/brand/style-picker'
 import { FontOptions } from '@/components/brand/font-options'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean; addon?: boolean }[] = [
@@ -96,9 +94,6 @@ function problemDetail(e: unknown): string | undefined {
 }
 
 type ThemeForm = {
-  /** Null until a style is picked: a café that never chose stays on classic without saying so */
-  style: string | null
-  layout: LayoutForm
   accent: string
   surface: string
   radius: string
@@ -112,8 +107,6 @@ type ThemeForm = {
 }
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
-  style: t.style ?? null,
-  layout: toLayoutForm(t.layout),
   accent: t.accent ?? '',
   surface: t.surface ?? '',
   radius: t.radius ?? '',
@@ -140,8 +133,9 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     fontLatin: f.fontLatin || null,
     fontArabic: f.fontArabic || null,
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
-    style: f.style,
-    layout: fromLayoutForm(f.layout),
+    // Ninja is the only style for now, worn whole
+    style: 'ninja',
+    layout: null,
   }
 }
 
@@ -291,13 +285,6 @@ function BrandForm({ brand }: { brand: Brand }) {
                 {VARIANT_SLOTS.map(imageSlot)}
               </CollapsibleContent>
             </Collapsible>
-
-            <StylePicker
-              style={theme.style}
-              layout={theme.layout}
-              onStyleChange={(style) => setTheme({ ...theme, style })}
-              onLayoutChange={(layout) => setTheme({ ...theme, layout })}
-            />
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>

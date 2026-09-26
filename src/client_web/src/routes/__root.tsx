@@ -4,7 +4,6 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { ThemeProvider, useTheme } from '@/context/theme-provider'
 import { useBrandEffects } from '@/lib/brand'
-import { useBrandLayout } from '@/lib/brand-layout'
 import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
@@ -59,15 +58,14 @@ function RootLayout() {
 // the demo's expand/collapse physics for title + description toasts.
 function AppToaster() {
   const { resolvedTheme } = useTheme()
-  // The Ninja chrome: toasts drop in just under the slim top bar (the
-  // order pill owns the bar's middle, the dock owns the bottom). Sileo
-  // already paints them opposite the page, as the dock is painted
-  const ninja = useBrandLayout().chrome === 'ninja'
+  // Toasts drop in just under the slim top bar (the order pill owns the
+  // bar's middle, the dock owns the bottom). Sileo already paints them
+  // opposite the page, as the dock is painted
   return (
     <Toaster
       position='top-center'
       theme={resolvedTheme}
-      offset={ninja ? { top: 'calc(env(safe-area-inset-top) + 72px)' } : undefined}
+      offset={{ top: 'calc(env(safe-area-inset-top) + 72px)' }}
       options={{ autopilot: true }}
     />
   )

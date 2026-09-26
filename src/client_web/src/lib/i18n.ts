@@ -15,10 +15,6 @@ const webExtras = {
   unavailable: { en: 'Unavailable', ar: 'غير متاح' },
   quantity: { en: 'Quantity', ar: 'الكمية' },
   items: { en: 'Items', ar: 'الأصناف' },
-  // The menu templates (components/menu/home)
-  seeAll: { en: 'See all', ar: 'شوف الكل' },
-  showLess: { en: 'Show less', ar: 'اعرض أقل' },
-  menuContents: { en: 'Contents', ar: 'الفهرس' },
   itemCount: {
     plural: 'count',
     en: { '=1': '1 item', other: '{count} items' },
@@ -323,9 +319,6 @@ const webExtras = {
   ninjaMore: { en: 'One more', ar: 'واحد كمان' },
   ninjaRemove: { en: 'Remove', ar: 'شيله' },
   ninjaHoldToOrder: { en: 'Hold to order', ar: 'دوس مطوّل واطلب' },
-  ninjaOrderSent: { en: 'Order sent', ar: 'الطلب اتبعت' },
-  ninjaOrderSentNote: { en: "We'll follow it on your bill", ar: 'هتلاقيه على حسابك' },
-  ninjaSeeBill: { en: 'See bill', ar: 'الحساب' },
   ninjaEmptyTray: { en: 'Tap a dish to open it. Hold one to add it.', ar: 'دوس على صنف تفتحه، ودوس مطوّل تضيفه.' },
   ninjaYourOrder: { en: 'Your order', ar: 'طلبك' },
   ninjaMoreAtCheckout: { en: 'Note, promo or points', ar: 'ملاحظة أو كود أو نقط' },

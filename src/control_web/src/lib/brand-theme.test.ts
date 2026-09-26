@@ -47,10 +47,13 @@ describe('brand tokens', () => {
     expect(light.background).toBeUndefined()
   })
 
-  it('nothing set sets nothing', () => {
-    expect(brandThemeCss(null)).toBeNull()
-    expect(brandThemeCss({ theme: { accent: null } })).toBeNull()
-    expect(brandTokens(undefined).fontLatin).toBeNull()
+  it('nothing set gets the Ninja seeds and nothing else', () => {
+    const none = brandTokens(undefined)
+    expect(none.light['--radius']).toBe('1.5rem')
+    expect(none.light['--heading-weight']).toBe('800')
+    expect(none.light['--primary']).toBeUndefined()
+    expect(none.dark).toEqual({})
+    expect(brandThemeCss({ theme: { accent: null } })).toBe(brandThemeCss(null))
   })
 
   it('writes the variables shadcn reads, the radius and a font per script', () => {

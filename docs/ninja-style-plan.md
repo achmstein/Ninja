@@ -17,6 +17,10 @@ The Ninja style (built as "Counter", renamed to Ninja on 2026-09-26) is the moti
   - When the cart opens, the dock circles fly to their rows (reversed on close), the item count collapses and the total grows.
 - **The owner has not yet signed off on the cart motion.** Start by asking what still looks off.
 
+## Ninja is the only style (2026-09-26)
+
+The owner chose to build Ninja out first and bring other styles back later. The other looks (classic, minimal, bold, cozy, night), the four templates (Showcase, Paper, Tiles, Poster) and the per-part layout overrides are gone from client_web, admin_web and control_web. The pickers are gone too, and the brand forms save `style: 'ninja'`. Every café gets Ninja whatever it has stored, and Ninja's seeds fill anything the café left unset. Tenant.API still accepts the old keys, and the Flutter app still has its own table. Git history (`934a0b9d` and before) has the removed code.
+
 ## Next, in order
 
 1. **End of a category flows into the next.** Scrolling past the last dish continues into the next category:
@@ -39,7 +43,6 @@ The Ninja style (built as "Counter", renamed to Ninja on 2026-09-26) is the moti
 6. **Known gaps from the build:**
    - Sileo capitalises toast titles, and toasts with an action are large.
    - Categories are not ordered by time of day.
-   - Ninja bars on a non-Ninja menu can overlap the classic "view cart" button.
    - The hold and press rings animate an SVG stroke.
 7. **Flutter customer app (`client_app`):** a Ninja home, after the web design settles.
 
@@ -56,6 +59,5 @@ The Ninja style (built as "Counter", renamed to Ninja on 2026-09-26) is the moti
   - Bottom navigation.
   - A waiter-handheld flow first.
 - **Waiting on the owner:**
-  - Which of the four templates (Showcase, Paper, Tiles, Poster) to keep: they're only in client_web and have no backend keys.
   - Whether to simplify "Divide equally".
   - Details for Cove's Till page showing zero.

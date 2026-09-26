@@ -18,7 +18,7 @@
  * seeds.
  */
 
-import { presetOf, styleOf, withStyleDefaults, type LayoutOverrides } from './styles'
+import { presetOf, withStyleDefaults } from './styles'
 import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from './brand-fonts'
 
 const STYLE_ID = 'brand-theme'
@@ -43,10 +43,8 @@ export type BrandThemeInput = {
     fontArabic?: string | null
     /** What the dark scheme must use instead of what is derived */
     dark?: BrandThemeDark | null
-    /** classic, minimal, bold, cozy or night (lib/styles.ts); its defaults fill the seeds left unset */
+    /** The style (lib/styles.ts): Ninja for now, whatever is stored; its defaults fill the seeds left unset */
     style?: string | null
-    /** Parts of the customer app dressed otherwise than the style does */
-    layout?: LayoutOverrides | null
   } | null
 }
 
@@ -339,17 +337,14 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   if (fontLatin) light['--font-latin'] = `'${fontLatin}'`
   if (fontArabic) light['--font-arabic'] = `'${fontArabic}'`
 
-  // Headings as the style sets them; classic leaves the stylesheet's
-  let fontHeading: string | null = null
-  if (styleOf(theme) !== 'classic') {
-    const h = presetOf(theme).headings
-    fontHeading = h.font
-    if (h.font) light['--font-heading'] = `'${h.font}'`
-    light['--heading-weight'] = String(h.weight)
-    light['--heading-scale'] = String(h.scale)
-    light['--heading-transform'] = h.uppercase ? 'uppercase' : 'none'
-    light['--heading-tracking'] = `${h.tracking}em`
-  }
+  // Headings as the style sets them
+  const h = presetOf(theme).headings
+  const fontHeading = h.font
+  if (h.font) light['--font-heading'] = `'${h.font}'`
+  light['--heading-weight'] = String(h.weight)
+  light['--heading-scale'] = String(h.scale)
+  light['--heading-transform'] = h.uppercase ? 'uppercase' : 'none'
+  light['--heading-tracking'] = `${h.tracking}em`
 
   return { light, dark, fontLatin, fontArabic, fontHeading }
 }

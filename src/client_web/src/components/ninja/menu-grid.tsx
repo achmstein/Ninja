@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { itemPictureUrl } from '@/components/menu/item-card'
+import { itemPictureUrl } from '@/components/menu/item-picture'
 import { DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 
 /** A tile's corner; the card it came from is rounder, and the morph carries it across */

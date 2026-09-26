@@ -8,7 +8,6 @@ import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
 import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme, type BrandThemeInput } from './brand-theme'
-import { applyBrandLayout } from './brand-layout'
 import { draftedTheme, onDraftedTheme } from './preview'
 
 /**
@@ -148,10 +147,9 @@ export function applyBrand(brand: Brand, language: Language) {
   usePhoneRule.getState().set(brand.locale.phonePattern, brand.locale.phonePlaceholder)
 }
 
-/** The seeds as tokens and the style as the page's layout, together, so a draft moves both. */
+/** The seeds as tokens on the page, so a draft moves them too. */
 function paint(input: BrandThemeInput | null | undefined) {
   applyBrandTheme(input)
-  applyBrandLayout(input)
 }
 
 function setLink(rel: string, href: string, type?: string) {

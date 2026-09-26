@@ -18,7 +18,7 @@
  * seeds.
  */
 
-import { presetOf, styleOf, withStyleDefaults, type LayoutOverrides } from './styles'
+import { NINJA, withStyleDefaults } from './styles'
 import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from './brand-fonts'
 
 const STYLE_ID = 'brand-theme'
@@ -43,10 +43,6 @@ export type BrandThemeInput = {
     fontArabic?: string | null
     /** What the dark scheme must use instead of what is derived */
     dark?: BrandThemeDark | null
-    /** classic, minimal, bold, cozy or night (lib/styles.ts); its defaults fill the seeds left unset */
-    style?: string | null
-    /** Parts of the customer app dressed otherwise than the style does */
-    layout?: LayoutOverrides | null
   } | null
 }
 
@@ -56,17 +52,6 @@ export const RADII: Record<string, string> = {
   md: '0.625rem',
   lg: '1rem',
   xl: '1.5rem',
-}
-
-/** A chip or a pill button under each corner seed: square corners get square chips, a small radius a
- *  small one, and from "md" up they are the full pills the neutral theme draws. Circles (dots, avatars,
- *  icon buttons) are not corners and never follow this. */
-export const PILL_RADII: Record<string, string> = {
-  none: '0rem',
-  sm: '0.375rem',
-  md: '9999px',
-  lg: '9999px',
-  xl: '9999px',
 }
 
 /** The customer app's header height and the wordmark's height inside it, per seed. */
@@ -325,10 +310,7 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
 
   // The style's defaults fill whatever seed the café left unset
   const theme = withStyleDefaults(input?.theme)
-  if (theme?.radius && RADII[theme.radius]) {
-    light['--radius'] = RADII[theme.radius]
-    light['--radius-pill'] = PILL_RADII[theme.radius]
-  }
+  if (theme?.radius && RADII[theme.radius]) light['--radius'] = RADII[theme.radius]
   if (theme?.headerSize && HEADER_SIZES[theme.headerSize]) {
     light['--header-h'] = HEADER_SIZES[theme.headerSize].header
     light['--wordmark-h'] = HEADER_SIZES[theme.headerSize].wordmark
@@ -339,17 +321,14 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   if (fontLatin) light['--font-latin'] = `'${fontLatin}'`
   if (fontArabic) light['--font-arabic'] = `'${fontArabic}'`
 
-  // Headings as the style sets them; classic leaves the stylesheet's
-  let fontHeading: string | null = null
-  if (styleOf(theme) !== 'classic') {
-    const h = presetOf(theme).headings
-    fontHeading = h.font
-    if (h.font) light['--font-heading'] = `'${h.font}'`
-    light['--heading-weight'] = String(h.weight)
-    light['--heading-scale'] = String(h.scale)
-    light['--heading-transform'] = h.uppercase ? 'uppercase' : 'none'
-    light['--heading-tracking'] = `${h.tracking}em`
-  }
+  // Headings as the style sets them
+  const h = NINJA.headings
+  const fontHeading = h.font
+  if (h.font) light['--font-heading'] = `'${h.font}'`
+  light['--heading-weight'] = String(h.weight)
+  light['--heading-scale'] = String(h.scale)
+  light['--heading-transform'] = h.uppercase ? 'uppercase' : 'none'
+  light['--heading-tracking'] = `${h.tracking}em`
 
   return { light, dark, fontLatin, fontArabic, fontHeading }
 }

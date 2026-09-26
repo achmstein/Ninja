@@ -5,7 +5,7 @@ import type { Language } from '@/lib/language'
 import { logoFor, wordmarkFor, type BrandImages, type Scheme } from '@/lib/brand-slots'
 import { brandTokens, ensureFontsLoaded, type BrandThemeInput } from '@/lib/brand-theme'
 import { formatMoney } from '@/lib/locale'
-import { resolveLayout } from '@/lib/styles'
+import { NINJA_LAYOUT } from '@/lib/styles'
 import { useTheme } from '@/context/theme-provider'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -75,7 +75,7 @@ export function PhonePreview({
   const t = useT()
   const tokens = brandTokens(draft)
   // Only the menu item's shape, roughly: the live preview is where the style shows in full
-  const menuItem = resolveLayout(draft.theme).menuItem
+  const menuItem = NINJA_LAYOUT.menuItem
   useEffect(() => ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic }), [tokens.fontLatin, tokens.fontArabic])
 
   const name = (language === 'ar' ? draft.name.ar : draft.name.en) || draft.name.en || draft.name.ar || ''
