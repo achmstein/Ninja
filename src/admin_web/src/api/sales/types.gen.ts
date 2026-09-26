@@ -124,6 +124,8 @@ export type DiscountRequest = {
     amount?: null | number | string;
 };
 
+export type FeeMode = number;
+
 export type HourTotal = {
     hour: number | string;
     count: number | string;
@@ -154,6 +156,20 @@ export type NewTicketRequest = {
     label?: null | string;
     placeId?: null | number | string;
     placeName?: null | LocalizedText;
+};
+
+export type OnlinePaymentView = {
+    key: string;
+    mode: string;
+    payerName: null | string;
+    amount: number | string;
+    fee: number | string;
+    tip: number | string;
+    status: string;
+    createdAt: string;
+    paidAt: null | string;
+    transactionId: null | string;
+    refundedAt: null | string;
 };
 
 export type OpenShiftRequest = {
@@ -203,6 +219,17 @@ export type PagedResultOfTicketHistoryRow = {
     pageSize: number | string;
 };
 
+export type PayLineView = {
+    id: number | string;
+    description: LocalizedText;
+    details: null | LocalizedText;
+    qty: number | string;
+    total: number | string;
+    share: number | string;
+    claimed: boolean;
+    isMine: boolean;
+};
+
 export type PaymentRow = {
     ticketId: number | string;
     receiptNumber: null | number | string;
@@ -218,6 +245,60 @@ export type PaymentRow = {
     settledAt: string;
 };
 
+export type PaymentSettingsRequest = {
+    currency: string;
+    secretKey: null | string;
+    publicKey: null | string;
+    hmacSecret: null | string;
+    cardIntegrationId: null | number | string;
+    walletIntegrationId: null | number | string;
+    applePayIntegrationId: null | number | string;
+    feeMode: FeeMode;
+    feePercent: number | string;
+    feeFixed: number | string;
+    tipsEnabled: boolean;
+    tipPercents: Array<number | string>;
+    allowItems: boolean;
+    allowEqual: boolean;
+    allowCustom: boolean;
+};
+
+export type PaymentSettingsView = {
+    provider: string;
+    currency: string;
+    secretKeySet: boolean;
+    secretKeyHint: null | string;
+    publicKey: null | string;
+    hmacSecretSet: boolean;
+    cardIntegrationId: null | number | string;
+    walletIntegrationId: null | number | string;
+    applePayIntegrationId: null | number | string;
+    feeMode: FeeMode;
+    feePercent: number | string;
+    feeFixed: number | string;
+    tipsEnabled: boolean;
+    tipPercents: Array<number | string>;
+    allowItems: boolean;
+    allowEqual: boolean;
+    allowCustom: boolean;
+    ready: boolean;
+    canKeepSecrets: boolean;
+    callbackUrl: string;
+};
+
+export type PaymentStatusView = {
+    key: string;
+    ticketId: number | string;
+    status: string;
+    amount: number | string;
+    fee: number | string;
+    tip: number | string;
+    charged: number | string;
+    currency: string;
+    failureReason: null | string;
+    billClosed: boolean;
+};
+
 export type PaymentTender = number;
 
 export type PaymentView = {
@@ -227,6 +308,51 @@ export type PaymentView = {
     customerId?: null | string;
     recordedBy?: string;
     recordedAt?: string;
+};
+
+export type PayOptionsView = {
+    ready: boolean;
+    currency: string;
+    feeMode: string;
+    feePercent: number | string;
+    feeFixed: number | string;
+    tipsEnabled: boolean;
+    tipPercents: Array<number | string>;
+    allowItems: boolean;
+    allowEqual: boolean;
+    allowCustom: boolean;
+    card: boolean;
+    wallet: boolean;
+    applePay: boolean;
+};
+
+export type PayShareView = {
+    payerName: null | string;
+    amount: number | string;
+    status: string;
+    paidAt: null | string;
+    isMine: boolean;
+};
+
+export type PayView = {
+    ticketId: number | string;
+    placeId: null | number | string;
+    locationName: null | LocalizedText;
+    status: string;
+    lines: Array<PayLineView>;
+    subtotal: number | string;
+    discount: number | string;
+    serviceCharge: number | string;
+    vat: number | string;
+    total: number | string;
+    paid: number | string;
+    held: number | string;
+    remaining: number | string;
+    shares: Array<PayShareView>;
+    people: null | number | string;
+    options: PayOptionsView;
+    canPay: boolean;
+    why: null | string;
 };
 
 export type PricingRequest = {
@@ -242,6 +368,14 @@ export type PricingView = {
     pricesIncludeVat: boolean;
     serviceChargeRate: number | string;
     maxCashierDiscountRate: number | string;
+};
+
+export type ProblemDetails = {
+    type?: null | string;
+    title?: null | string;
+    status?: null | number | string;
+    detail?: null | string;
+    instance?: null | string;
 };
 
 export type RangeReport = {
@@ -419,6 +553,28 @@ export type ShiftView = {
     tabPaymentTenderTotals?: Array<TenderTotal>;
     tabPayments?: Array<TabPaymentView>;
     expectedInDrawer?: number | string;
+};
+
+export type SplitMode = number;
+
+export type StartedPayment = {
+    key: string;
+    checkoutUrl: string;
+    amount: number | string;
+    fee: number | string;
+    tip: number | string;
+    charged: number | string;
+};
+
+export type StartPaymentRequest = {
+    mode: SplitMode;
+    lineIds: null | Array<number | string>;
+    parts: null | number | string;
+    of: null | number | string;
+    amount: null | number | string;
+    tip: number | string;
+    payerName: null | string;
+    payerPhone: null | string;
 };
 
 export type TabPaymentRequest = {
@@ -1830,3 +1986,273 @@ export type CloseShiftResponses = {
 };
 
 export type CloseShiftResponse = CloseShiftResponses[keyof CloseShiftResponses];
+
+export type GetPlaceBillToPayData = {
+    body?: never;
+    path: {
+        placeId: number;
+    };
+    query: {
+        /**
+         * The branch the table is in
+         */
+        branchId: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/places/{placeId}';
+};
+
+export type GetPlaceBillToPayErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetPlaceBillToPayResponses = {
+    /**
+     * OK
+     */
+    200: PayView;
+};
+
+export type GetPlaceBillToPayResponse = GetPlaceBillToPayResponses[keyof GetPlaceBillToPayResponses];
+
+export type GetBillToPayData = {
+    body?: never;
+    path: {
+        ticketId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/tickets/{ticketId}';
+};
+
+export type GetBillToPayErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetBillToPayResponses = {
+    /**
+     * OK
+     */
+    200: PayView;
+};
+
+export type GetBillToPayResponse = GetBillToPayResponses[keyof GetBillToPayResponses];
+
+export type StartOnlinePaymentData = {
+    body: StartPaymentRequest;
+    path: {
+        ticketId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/tickets/{ticketId}';
+};
+
+export type StartOnlinePaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type StartOnlinePaymentError = StartOnlinePaymentErrors[keyof StartOnlinePaymentErrors];
+
+export type StartOnlinePaymentResponses = {
+    /**
+     * OK
+     */
+    200: StartedPayment;
+};
+
+export type StartOnlinePaymentResponse = StartOnlinePaymentResponses[keyof StartOnlinePaymentResponses];
+
+export type GetOnlinePaymentData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}';
+};
+
+export type GetOnlinePaymentErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetOnlinePaymentResponses = {
+    /**
+     * OK
+     */
+    200: PaymentStatusView;
+};
+
+export type GetOnlinePaymentResponse = GetOnlinePaymentResponses[keyof GetOnlinePaymentResponses];
+
+export type ListOnlinePaymentsData = {
+    body?: never;
+    path: {
+        ticketId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/tickets/{ticketId}/online';
+};
+
+export type ListOnlinePaymentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListOnlinePaymentsResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnlinePaymentView>;
+};
+
+export type ListOnlinePaymentsResponse = ListOnlinePaymentsResponses[keyof ListOnlinePaymentsResponses];
+
+export type RefundOnlinePaymentData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/refund';
+};
+
+export type RefundOnlinePaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RefundOnlinePaymentError = RefundOnlinePaymentErrors[keyof RefundOnlinePaymentErrors];
+
+export type RefundOnlinePaymentResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RefundOnlinePaymentResponse = RefundOnlinePaymentResponses[keyof RefundOnlinePaymentResponses];
+
+export type GetPaymentSettingsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/settings';
+};
+
+export type GetPaymentSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPaymentSettingsResponses = {
+    /**
+     * OK
+     */
+    200: PaymentSettingsView;
+};
+
+export type GetPaymentSettingsResponse = GetPaymentSettingsResponses[keyof GetPaymentSettingsResponses];
+
+export type SavePaymentSettingsData = {
+    body: PaymentSettingsRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/settings';
+};
+
+export type SavePaymentSettingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SavePaymentSettingsError = SavePaymentSettingsErrors[keyof SavePaymentSettingsErrors];
+
+export type SavePaymentSettingsResponses = {
+    /**
+     * OK
+     */
+    200: PaymentSettingsView;
+};
+
+export type SavePaymentSettingsResponse = SavePaymentSettingsResponses[keyof SavePaymentSettingsResponses];

@@ -22,6 +22,7 @@ import { Route as StaysRouteImport } from './routes/stays'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as PPlaceIdRouteImport } from './routes/p/$placeId'
+import { Route as PayKeyRouteImport } from './routes/pay/$key'
 import { Route as ReceiptsTicketIdRouteImport } from './routes/receipts/$ticketId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -89,6 +90,11 @@ const PPlaceIdRoute = PPlaceIdRouteImport.update({
   path: '/p/$placeId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayKeyRoute = PayKeyRouteImport.update({
+  id: '/pay/$key',
+  path: '/pay/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReceiptsTicketIdRoute = ReceiptsTicketIdRouteImport.update({
   id: '/receipts/$ticketId',
   path: '/receipts/$ticketId',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
+  '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
+  '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
+  '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
+    | '/pay/$key'
     | '/receipts/$ticketId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
+    | '/pay/$key'
     | '/receipts/$ticketId'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
+    | '/pay/$key'
     | '/receipts/$ticketId'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
   PPlaceIdRoute: typeof PPlaceIdRoute
+  PayKeyRoute: typeof PayKeyRoute
   ReceiptsTicketIdRoute: typeof ReceiptsTicketIdRoute
 }
 
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PPlaceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pay/$key': {
+      id: '/pay/$key'
+      path: '/pay/$key'
+      fullPath: '/pay/$key'
+      preLoaderRoute: typeof PayKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/receipts/$ticketId': {
       id: '/receipts/$ticketId'
       path: '/receipts/$ticketId'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
   PPlaceIdRoute: PPlaceIdRoute,
+  PayKeyRoute: PayKeyRoute,
   ReceiptsTicketIdRoute: ReceiptsTicketIdRoute,
 }
 export const routeTree = rootRouteImport

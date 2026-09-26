@@ -126,12 +126,20 @@ var spacesApi = builder.AddProject<Projects.Spaces_API>("spaces-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
+// Pay at table: the key Sales seals the café's provider secrets with. A
+// stamped stack gets its own from the control plane (PAYMENTS_KEY); locally
+// a fixed one, so secrets saved yesterday still open today.
+var paymentsKey = builder.AddParameter("payments-key",
+    () => builder.Configuration["Parameters:payments-key"] ?? "local-payments-key",
+    secret: true);
+
 var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
     .WithReference(salesDb).WaitFor(salesDb)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(keycloak)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
-    .WithEnvironment("Keycloak__Realm", "chillax");
+    .WithEnvironment("Keycloak__Realm", "chillax")
+    .WithEnvironment("Payments__Key", paymentsKey);
 
 var inventoryApi = builder.AddProject<Projects.Inventory_API>("inventory-api")
     .WithReference(inventoryDb).WaitFor(inventoryDb)

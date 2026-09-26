@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getMyBills, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, removeTicketDiscount, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetMyBillsData, GetMyBillsResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBillToPay, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getMyBills, getOnlinePayment, getOpenTickets, getPayments, getPaymentSettings, getPlaceBillToPay, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, listOnlinePayments, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundOnlinePayment, refundTicket, removeTicketDiscount, savePaymentSettings, setBranchPricing, settleTicket, startOnlinePayment, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBillToPayData, GetBillToPayResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetMyBillsData, GetMyBillsResponse, GetOnlinePaymentData, GetOnlinePaymentResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentSettingsData, GetPaymentSettingsResponse, GetPaymentsResponse, GetPlaceBillToPayData, GetPlaceBillToPayResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, ListOnlinePaymentsData, ListOnlinePaymentsResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundOnlinePaymentData, RefundOnlinePaymentError, RefundOnlinePaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SavePaymentSettingsData, SavePaymentSettingsError, SavePaymentSettingsResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, StartOnlinePaymentData, StartOnlinePaymentError, StartOnlinePaymentResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -633,6 +633,153 @@ export const closeShiftMutation = (options?: Partial<Options<CloseShiftData>>): 
     const mutationOptions: UseMutationOptions<CloseShiftResponse, AxiosError<CloseShiftError>, Options<CloseShiftData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await closeShift({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPlaceBillToPayQueryKey = (options: Options<GetPlaceBillToPayData>) => createQueryKey('getPlaceBillToPay', options);
+
+/**
+ * The open bill at a table, as a guest pays it
+ *
+ * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.
+ */
+export const getPlaceBillToPayOptions = (options: Options<GetPlaceBillToPayData>) => queryOptions<GetPlaceBillToPayResponse, AxiosError<DefaultError>, GetPlaceBillToPayResponse, ReturnType<typeof getPlaceBillToPayQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlaceBillToPay({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlaceBillToPayQueryKey(options)
+});
+
+export const getBillToPayQueryKey = (options: Options<GetBillToPayData>) => createQueryKey('getBillToPay', options);
+
+/**
+ * A bill the caller is on, as they pay it
+ */
+export const getBillToPayOptions = (options: Options<GetBillToPayData>) => queryOptions<GetBillToPayResponse, AxiosError<DefaultError>, GetBillToPayResponse, ReturnType<typeof getBillToPayQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getBillToPay({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getBillToPayQueryKey(options)
+});
+
+/**
+ * Start paying a share of a bill; answers where to send the guest to pay
+ *
+ * Full: what is left. Items: the lines picked. Equal: parts of N. Custom: an amount up to what is left. The share is held for 15 minutes while the guest is at the provider's checkout.
+ */
+export const startOnlinePaymentMutation = (options?: Partial<Options<StartOnlinePaymentData>>): UseMutationOptions<StartOnlinePaymentResponse, AxiosError<StartOnlinePaymentError>, Options<StartOnlinePaymentData>> => {
+    const mutationOptions: UseMutationOptions<StartOnlinePaymentResponse, AxiosError<StartOnlinePaymentError>, Options<StartOnlinePaymentData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startOnlinePayment({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getOnlinePaymentQueryKey = (options: Options<GetOnlinePaymentData>) => createQueryKey('getOnlinePayment', options);
+
+/**
+ * How a payment stands, for the page the guest comes back to
+ *
+ * Only the provider's signed callback changes it; the guest's return proves nothing.
+ */
+export const getOnlinePaymentOptions = (options: Options<GetOnlinePaymentData>) => queryOptions<GetOnlinePaymentResponse, AxiosError<DefaultError>, GetOnlinePaymentResponse, ReturnType<typeof getOnlinePaymentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnlinePayment({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnlinePaymentQueryKey(options)
+});
+
+export const listOnlinePaymentsQueryKey = (options: Options<ListOnlinePaymentsData>) => createQueryKey('listOnlinePayments', options);
+
+/**
+ * Online payments on a bill, for the till
+ */
+export const listOnlinePaymentsOptions = (options: Options<ListOnlinePaymentsData>) => queryOptions<ListOnlinePaymentsResponse, AxiosError<DefaultError>, ListOnlinePaymentsResponse, ReturnType<typeof listOnlinePaymentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listOnlinePayments({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listOnlinePaymentsQueryKey(options)
+});
+
+/**
+ * Give an online payment back through the provider, while its bill is open
+ */
+export const refundOnlinePaymentMutation = (options?: Partial<Options<RefundOnlinePaymentData>>): UseMutationOptions<RefundOnlinePaymentResponse, AxiosError<RefundOnlinePaymentError>, Options<RefundOnlinePaymentData>> => {
+    const mutationOptions: UseMutationOptions<RefundOnlinePaymentResponse, AxiosError<RefundOnlinePaymentError>, Options<RefundOnlinePaymentData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await refundOnlinePayment({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPaymentSettingsQueryKey = (options: Options<GetPaymentSettingsData>) => createQueryKey('getPaymentSettings', options);
+
+/**
+ * How the café takes payments at the table; secrets only as whether they are set
+ */
+export const getPaymentSettingsOptions = (options: Options<GetPaymentSettingsData>) => queryOptions<GetPaymentSettingsResponse, AxiosError<DefaultError>, GetPaymentSettingsResponse, ReturnType<typeof getPaymentSettingsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPaymentSettings({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPaymentSettingsQueryKey(options)
+});
+
+/**
+ * Change the café's payment account, fee, tips and split options
+ */
+export const savePaymentSettingsMutation = (options?: Partial<Options<SavePaymentSettingsData>>): UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> => {
+    const mutationOptions: UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await savePaymentSettings({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

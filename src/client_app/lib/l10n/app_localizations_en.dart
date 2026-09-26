@@ -1008,4 +1008,175 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get claimFailed => 'Couldn\'t create your account. Try again.';
+
+  @override
+  String get payTheBill => 'Pay the bill';
+
+  @override
+  String get payPaidSoFar => 'Paid so far';
+
+  @override
+  String get payRemaining => 'Remaining';
+
+  @override
+  String get payFully => 'Pay fully';
+
+  @override
+  String get paySplitBill => 'Split bill';
+
+  @override
+  String get payHowToSplit => 'How do you want to split?';
+
+  @override
+  String get payForYourItems => 'Pay for your items';
+
+  @override
+  String get payDivideEqually => 'Divide equally';
+
+  @override
+  String get payCustomAmount => 'Custom amount';
+
+  @override
+  String get payPickItems => 'Pick what you\'re paying for';
+
+  @override
+  String get payItemTaken => 'Paid';
+
+  @override
+  String get paySplitBetween => 'Split between';
+
+  @override
+  String get payYouPayFor => 'You pay for';
+
+  @override
+  String payPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payAmountHint => 'Amount';
+
+  @override
+  String payUpTo(String amount) {
+    return 'Up to $amount';
+  }
+
+  @override
+  String payMoreThanLeft(String amount) {
+    return 'That\'s more than is left ($amount)';
+  }
+
+  @override
+  String get payYourShare => 'Your share';
+
+  @override
+  String get payOnlineFee => 'Online payment fee';
+
+  @override
+  String get payTip => 'Tip';
+
+  @override
+  String get payNoTip => 'No tip';
+
+  @override
+  String get payYouPay => 'You pay';
+
+  @override
+  String payConfirm(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get payMethods => 'Card, wallet or Apple Pay on the next page';
+
+  @override
+  String get payMethodsNoApple => 'Card or wallet on the next page';
+
+  @override
+  String get payShares => 'Payments';
+
+  @override
+  String get payYou => 'You';
+
+  @override
+  String get payGuest => 'Guest';
+
+  @override
+  String get payPaying => 'Paying…';
+
+  @override
+  String get payWaiting => 'Waiting for your payment…';
+
+  @override
+  String get payWaitingHint =>
+      'Finish paying on the page that opened. This updates by itself.';
+
+  @override
+  String get payOpenAgain => 'Open the payment page';
+
+  @override
+  String get payPaidTitle => 'Paid, thank you!';
+
+  @override
+  String payCharged(String amount) {
+    return '$amount charged';
+  }
+
+  @override
+  String get payBillClosed => 'The bill is fully paid.';
+
+  @override
+  String get payFailed => 'The payment didn\'t go through';
+
+  @override
+  String get payExpired => 'The payment timed out';
+
+  @override
+  String get payRefunded => 'This payment was refunded';
+
+  @override
+  String get payStillConfirming => 'Still confirming your payment';
+
+  @override
+  String get payStillConfirmingHint =>
+      'It can take a minute. Your bill updates as soon as it lands.';
+
+  @override
+  String get payCheckAgain => 'Check again';
+
+  @override
+  String get payTryAgain => 'Try again';
+
+  @override
+  String get payCouldNotOpen => 'Couldn\'t open the payment page';
+
+  @override
+  String get payFailedToStart => 'Couldn\'t start the payment. Try again.';
+
+  @override
+  String get payFailedToLoad => 'Couldn\'t load the bill';
+
+  @override
+  String get payNothingOpen => 'Nothing is on this table\'s bill yet';
+
+  @override
+  String get payWhyClosed => 'This bill is closed';
+
+  @override
+  String get payWhyClockRunning => 'You can pay once the time is stopped';
+
+  @override
+  String get payWhyEmpty => 'Nothing on the bill yet';
+
+  @override
+  String get payWhyPaid => 'This bill is fully paid';
+
+  @override
+  String get payWhyBeingPaid => 'Someone is paying the rest right now';
 }

@@ -147,6 +147,14 @@ export function brandDisplayName(brand: Brand | undefined, language: Language): 
   return (language === 'ar' ? brand.name.ar : brand.name.en) || brand.name.en || brand.name.ar || ''
 }
 
+/**
+ * Bought (in the plan or as an add-on), or already on: an add-on's setup
+ * page shows from then, before the owner switches it on.
+ */
+export function entitledTo(brand: Brand, key: FeatureKey): boolean {
+  return brand.entitlements?.[key] === true || brand.features[key] === true
+}
+
 /** Every switch on until the brand is known, so nothing flashes off and back. */
 export function useFeatures(): TenantFeatures {
   return useBrand()?.features ?? ALL_FEATURES

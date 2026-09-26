@@ -2899,6 +2899,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting…'**
   String get starting;
+
+  /// No description provided for @onlineTender.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get onlineTender;
+
+  /// No description provided for @onlinePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid online'**
+  String get onlinePayments;
+
+  /// No description provided for @paidOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid online'**
+  String get paidOnline;
+
+  /// No description provided for @onlinePaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Paying…'**
+  String get onlinePaying;
+
+  /// No description provided for @onlinePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get onlinePaid;
+
+  /// No description provided for @onlineRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get onlineRefunded;
+
+  /// No description provided for @onlineTip.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {amount} tip'**
+  String onlineTip(String amount);
+
+  /// No description provided for @onlineFee.
+  ///
+  /// In en, this message translates to:
+  /// **'fee {amount}'**
+  String onlineFee(String amount);
+
+  /// No description provided for @refundOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get refundOnline;
+
+  /// No description provided for @refundOnlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {amount} back to {name}?'**
+  String refundOnlineTitle(String amount, String name);
+
+  /// No description provided for @refundOnlineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The money goes back to their card through the payment provider.'**
+  String get refundOnlineHint;
+
+  /// No description provided for @onlineRefundedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Online payment refunded'**
+  String get onlineRefundedToast;
+
+  /// No description provided for @guestPayingOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'A guest is paying online. Settle once they finish.'**
+  String get guestPayingOnline;
+
+  /// No description provided for @settleRemainingOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests paid part online; take the rest here.'**
+  String get settleRemainingOnly;
 }
 
 class _AppLocalizationsDelegate

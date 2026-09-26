@@ -3,7 +3,7 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
+import { entitledTo, useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -25,6 +25,7 @@ export function AppSidebar() {
   const auth = useAuth()
   const isOwner = getRealmRoles(auth.user).includes('Owner')
   const features = useFeatures()
+  const brand = useBrand()
   const cloudKitchen = useIsCloudKitchen()
 
   // Pending-order count badge on Orders, kept fresh by SignalR
@@ -60,6 +61,13 @@ export function AppSidebar() {
         .filter((item) => item.items || !item.ownerOnly || isOwner)
         .filter((item) => item.items || !item.feature || features[item.feature])
         .filter((item) => item.items || !item.needsPlaces || !cloudKitchen)
+        // An add-on's setup, once bought
+        .filter(
+          (item) =>
+            item.items ||
+            !item.entitled ||
+            (brand != null && entitledTo(brand, item.entitled))
+        )
         .map((item): NavItem => {
           if (item.items) {
             return { ...item, items: item.items.map(withBadge) }

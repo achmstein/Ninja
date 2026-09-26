@@ -20,6 +20,7 @@ public record SettleTicketCommand(
 public class SettleTicketCommandHandler(
     ITicketRepository ticketRepository,
     Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
+    Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.IOnlinePaymentRepository onlinePayments,
     ISalesIntegrationEventService integrationEvents,
     ILogger<SettleTicketCommandHandler> logger) : IRequestHandler<SettleTicketCommand, SettleResult>
 {
@@ -34,8 +35,18 @@ public class SettleTicketCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
+        // What guests paid from their phones is part of the settle: the till
+        // takes only the rest. While one is still in the provider's checkout
+        // the bill waits, or their money would land on a closed bill.
+        var online = await onlinePayments.ListForTicketAsync(ticket.Id);
+        if (online.Any(p => p.Status == Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePaymentStatus.Pending && p.Holds(DateTime.UtcNow)))
+            throw new SalesDomainException("A guest is paying this bill online right now. Wait a moment and try again.");
+
         var payments = command.Payments
             .Select(p => new Payment(p.Tender, p.Amount, command.SettledBy, p.CustomerId, p.CustomerName))
+            .Concat(online
+                .Where(p => p.Status == Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePaymentStatus.Paid)
+                .Select(p => new Payment(PaymentTender.Online, p.Amount, p.PayerName ?? "online")))
             .ToList();
 
         // Attribute the settle to the branch's open drawer, if one is open —

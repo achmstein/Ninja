@@ -33,6 +33,9 @@ import '../../sale/models/sale_line.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/move_lines.dart';
+import '../../tickets/models/online_payment.dart';
+import '../../tickets/services/online_payments_service.dart';
+import '../widgets/online_payments_card.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
@@ -120,6 +123,13 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     List<StayMember> members = const [],
   }) async {
     final l10n = AppLocalizations.of(context)!;
+    // A guest at the provider's checkout: their money would land on a
+    // closed bill, so the server refuses the settle until they finish
+    final online = ref.read(onlinePaymentsProvider(ticket.id)).value ?? const <OnlinePaymentView>[];
+    if (online.anyPending) {
+      showPosToast(context, PosToastType.warning, l10n.guestPayingOnline);
+      return;
+    }
     // A running session cannot be settled past — its time is not on the
     // bill yet, so the only way forward is to end it
     if (activeSession != null) {
@@ -147,7 +157,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       if (!anyway || !mounted) return;
     }
     // The dialog refreshes the floor and this ticket itself on success
-    await showSettleDialog(context, ticket, members: members);
+    await showSettleDialog(context, ticket, members: members, onlinePaid: online.paidOnline);
   }
 
   // Same rule for Void, server-enforced too: time that has not landed yet
@@ -181,6 +191,33 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
   Future<void> _refund(TicketDetail ticket) async {
     await showRefundDialog(context, ticket);
+  }
+
+  // Money a guest paid from their phone goes back through the provider,
+  // while the bill is still open
+  Future<void> _refundOnline(OnlinePaymentView payment) async {
+    final l10n = AppLocalizations.of(context)!;
+    final name = (payment.payerName ?? '').trim().isNotEmpty ? payment.payerName!.trim() : l10n.guest;
+    final sure = await showConfirmDialog(
+      context,
+      title: l10n.refundOnlineTitle(money(context, payment.amount + payment.tip), name),
+      description: l10n.refundOnlineHint,
+      cancelLabel: l10n.goBack,
+      actionLabel: l10n.refundOnline,
+      destructive: true,
+    );
+    if (!sure || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await ref.read(onlinePaymentsRepositoryProvider).refund(payment.key);
+      ref.invalidate(onlinePaymentsProvider(widget.ticketId));
+      ref.invalidate(ticketProvider(widget.ticketId));
+      if (mounted) showPosToast(context, PosToastType.success, l10n.onlineRefundedToast);
+    } catch (e) {
+      if (mounted) showPosToast(context, PosToastType.error, describeError(e, l10n));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _print(TicketDetail ticket) async {
@@ -323,6 +360,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final async = ref.watch(ticketProvider(widget.ticketId));
     // Voiding and refunding are Owner-only (the server enforces the same rule)
     final isOwner = ref.watch(authServiceProvider.select((s) => s.isOwner));
+    // Pay at table: what guests paid, or are paying, from their phones
+    final online = ref.watch(onlinePaymentsProvider(widget.ticketId)).value ?? const <OnlinePaymentView>[];
+    // A payment that just landed may have settled the bill by itself
+    ref.listen(onlinePaymentsProvider(widget.ticketId), (previous, next) {
+      final before = previous?.value?.where((p) => p.isPaid).length ?? 0;
+      final after = next.value?.where((p) => p.isPaid).length ?? 0;
+      if (after != before) ref.invalidate(ticketProvider(widget.ticketId));
+    });
 
     // Redirecting to the floor — don't flash the stale bill on the way out
     if (async.error is TicketNotFound || _leaving) return const SizedBox.shrink();
@@ -534,6 +579,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                         ],
                       ],
                     ),
+                  if (online.isNotEmpty && !ticket.isVoided) ...[
+                    const SizedBox(height: 16),
+                    OnlinePaymentsCard(
+                      ticket: ticket,
+                      payments: online,
+                      onRefund: _busy ? null : _refundOnline,
+                    ),
+                  ],
                   if (ticket.isVoided) ...[
                     const SizedBox(height: 16),
                     _VoidTombstone(ticket: ticket),
@@ -565,7 +618,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
               selectedCount: _selected.length,
               busy: _busy,
               canRefund: isOwner && ticket.refundedTotal < ticket.total,
-              onSettle: lines.isEmpty
+              paidOnline: online.paidOnline,
+              // Not while a guest is at the provider's checkout
+              onSettle: lines.isEmpty || online.anyPending
                   ? null
                   : () => _settle(ticket, waiting: waiting, activeSession: activeSession, members: session?.members ?? const []),
               onPrint: () => _print(ticket),
@@ -1041,6 +1096,9 @@ class _ActionBar extends StatelessWidget {
   final int selectedCount;
   final bool busy;
   final bool canRefund;
+
+  /// What guests paid from their phones: the till takes the rest
+  final double paidOnline;
   final VoidCallback? onSettle;
   final VoidCallback onPrint;
   final VoidCallback onRefund;
@@ -1055,6 +1113,7 @@ class _ActionBar extends StatelessWidget {
     required this.selectedCount,
     required this.busy,
     required this.canRefund,
+    this.paidOnline = 0,
     required this.onSettle,
     required this.onPrint,
     required this.onRefund,
@@ -1152,6 +1211,11 @@ class _ActionBar extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                           fontFeatures: tabular,
                         ),
+                      ),
+                    if (paidOnline > 0 && ticket.isOpen)
+                      Text(
+                        '${l10n.remaining} ${money(context, (ticket.total - paidOnline) < 0 ? 0 : ticket.total - paidOnline)}',
+                        style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
                       ),
                     if (hasParts)
                       SizedBox(

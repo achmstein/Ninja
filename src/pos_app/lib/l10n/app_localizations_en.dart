@@ -1576,4 +1576,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get starting => 'Starting…';
+
+  @override
+  String get onlineTender => 'Online';
+
+  @override
+  String get onlinePayments => 'Paid online';
+
+  @override
+  String get paidOnline => 'Paid online';
+
+  @override
+  String get onlinePaying => 'Paying…';
+
+  @override
+  String get onlinePaid => 'Paid';
+
+  @override
+  String get onlineRefunded => 'Refunded';
+
+  @override
+  String onlineTip(String amount) {
+    return '+ $amount tip';
+  }
+
+  @override
+  String onlineFee(String amount) {
+    return 'fee $amount';
+  }
+
+  @override
+  String get refundOnline => 'Refund';
+
+  @override
+  String refundOnlineTitle(String amount, String name) {
+    return 'Give $amount back to $name?';
+  }
+
+  @override
+  String get refundOnlineHint =>
+      'The money goes back to their card through the payment provider.';
+
+  @override
+  String get onlineRefundedToast => 'Online payment refunded';
+
+  @override
+  String get guestPayingOnline =>
+      'A guest is paying online. Settle once they finish.';
+
+  @override
+  String get settleRemainingOnly =>
+      'Guests paid part online; take the rest here.';
 }

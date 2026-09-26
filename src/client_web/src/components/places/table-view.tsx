@@ -14,6 +14,7 @@ import {
   type StoredPlace,
 } from '@/stores/place-store'
 import { Button } from '@/components/ui/button'
+import { TablePayButton } from '@/components/pay/bill-pay'
 import { StillHereCard } from './still-here'
 
 /**
@@ -84,6 +85,13 @@ export function TableView({
             locked={!confirmed}
           />
         </div>
+
+        {/* The table's bill, whoever ordered it: a guest who ordered
+            nothing can still pay for the round. Once the session has
+            vouched for the table, like the requests */}
+        {confirmed && (
+          <TablePayButton placeId={place.id} branchId={place.branchId} />
+        )}
 
         <Button asChild size='lg' className='w-full rounded-pill'>
           <Link to='/' onClick={onClose}>

@@ -1,8 +1,10 @@
 import { type TranslationKey } from '@/lib/i18n'
 
 // PaymentTender as Sales.Domain numbers it (Cash=0, Card=1, InstaPay=2,
-// Account=3). Query params take the number; the read models spell the name.
-type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account'
+// Account=3, Online=4). Query params take the number; the read models spell
+// the name. Online is what guests paid from their phones (pay at table):
+// never cash, never in the drawer.
+type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online'
 
 export const TENDERS: {
   name: TenderName
@@ -13,7 +15,18 @@ export const TENDERS: {
   { name: 'Card', value: 1, labelKey: 'tenderCard' },
   { name: 'InstaPay', value: 2, labelKey: 'tenderInstaPay' },
   { name: 'Account', value: 3, labelKey: 'tenderOnAccount' },
+  { name: 'Online', value: 4, labelKey: 'tenderOnline' },
 ]
+
+/**
+ * The tenders worth offering: Online only where the café takes payments at
+ * the table, or where some was taken anyway (switched off since).
+ */
+export function tendersFor(payAtTable: boolean | undefined, hasOnline = false) {
+  return TENDERS.filter(
+    (tender) => tender.name !== 'Online' || payAtTable || hasOnline
+  )
+}
 
 export function tenderLabelKey(
   name: string | null | undefined

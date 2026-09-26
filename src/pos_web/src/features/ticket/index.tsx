@@ -68,6 +68,9 @@ import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
 import { KitchenReprintButton } from './kitchen-reprint'
 import { BreakdownDialog } from './breakdown-dialog'
+import { onlineSummary } from './online-payments'
+import { OnlinePaymentsPanel } from './online-payments-panel'
+import { useOnlinePayments } from './use-online-payments'
 
 const percent = (rate: number | string | undefined) =>
   Math.round(toNumber(rate) * 10000) / 100
@@ -274,6 +277,13 @@ export function TicketScreen({
     if (ticketGone) navigate({ to: backTo })
   }, [ticketGone, navigate, backTo])
 
+  // What guests paid from their phones (pay at table), while the bill is
+  // open: the till takes only what is left
+  const online = useOnlinePayments(
+    ticketId,
+    ticket != null && ticket.status !== 'Settled' && ticket.voidedAt == null,
+  )
+
   // App orders for this table or session that have not been accepted yet —
   // they are not on the bill until someone taps Confirm
   const { pending } = usePendingOrders()
@@ -433,6 +443,7 @@ export function TicketScreen({
   // editable so every share can find its tab
   const endedStay =
     liveStay && !isRunning(liveStay) ? liveStay : undefined
+  const onlinePaid = onlineSummary(ticket.total, online.payments)
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
   // order keeps the first person named at the top instead of reshuffling the
@@ -810,6 +821,14 @@ export function TicketScreen({
         </div>
       )}
 
+      {!isSettled && !isVoided && (
+        <OnlinePaymentsPanel
+          payments={online.payments}
+          summary={onlinePaid}
+          billOpen
+        />
+      )}
+
       {/* A voided ticket keeps its lines for the record but loses every
           action — what remains is the audit trail */}
       {isVoided && (
@@ -921,6 +940,23 @@ export function TicketScreen({
               {runningStay && (
                 <div className='text-muted-foreground truncate text-xs tabular-nums'>
                   + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
+                </div>
+              )}
+              {/* Guests paid part (or all) of it from their phones: what the
+                till still takes is the rest */}
+              {!isSettled && onlinePaid.paid > 0 && (
+                <div className='text-sm font-medium tabular-nums'>
+                  {onlinePaid.covered
+                    ? t('paidOnlineClosing')
+                    : t('remainingAfterOnline', {
+                        amount: money(onlinePaid.remaining),
+                      })}
+                </div>
+              )}
+              {!isSettled && onlinePaid.pending && (
+                <div className='flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500'>
+                  <Loader2 className='size-3 animate-spin' />
+                  {t('guestPayingOnline')}
                 </div>
               )}
             </div>
@@ -1079,6 +1115,7 @@ export function TicketScreen({
       />
       <SettleDialog
         ticket={ticket}
+        onlinePayments={online.payments}
         members={liveStay?.members}
         open={settleOpen}
         onOpenChange={setSettleOpen}

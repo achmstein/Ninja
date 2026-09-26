@@ -8,6 +8,10 @@ import '../../features/service_request/models/service_request.dart';
 import '../../features/service_request/services/service_request_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../brand/brand_provider.dart';
+import '../providers/branch_provider.dart';
+import '../../features/pay/services/pay_service.dart';
+import '../../features/pay/widgets/pay_sheet.dart';
 
 /// Standing reminder of where the order is going, mirroring the web client's
 /// top-bar chip.
@@ -144,6 +148,7 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final branchId = ref.watch(selectedBranchIdProvider);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,6 +167,22 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
           prefix: const Icon(FIcons.receipt),
           child: Text(l10n.getBill),
         ),
+        // Pay at table: the table's open bill, paid or split from the phone
+        if (ref.watch(featuresProvider).payAtTable && branchId != null) ...[
+          const SizedBox(height: 8),
+          FButton(
+            onPress: _busy
+                ? null
+                : () {
+                    final navigator = Navigator.of(context);
+                    final sheetContext = navigator.context;
+                    navigator.pop();
+                    showPaySheet(sheetContext, PaySource.place(widget.destination.placeId, branchId));
+                  },
+            prefix: const Icon(FIcons.creditCard),
+            child: Text(l10n.payTheBill),
+          ),
+        ],
       ],
     );
   }

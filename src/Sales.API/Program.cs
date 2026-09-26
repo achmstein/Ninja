@@ -1,5 +1,6 @@
 using Ninja.Sales.API.Apis;
 using Ninja.Sales.API.Extensions;
+using Ninja.Sales.API.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ app.UseAuthorization();
 
 app.MapTicketsApi();
 app.MapShiftsApi();
+app.MapPaymentsApi();
 
 app.UseDefaultOpenApi();
 app.Run();

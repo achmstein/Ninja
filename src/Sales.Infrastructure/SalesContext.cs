@@ -18,6 +18,8 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<BranchPricing> BranchPricings { get; set; }
     public DbSet<Refund> Refunds { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment> TabPayments { get; set; }
+    public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePayment> OnlinePayments { get; set; }
+    public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings> PaymentSettings { get; set; }
     /// <summary>The café's switches Sales owns a part of (pay at table), from Tenant.API's events.</summary>
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
 
@@ -47,6 +49,8 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new RefundEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RefundLineEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TabPaymentEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OnlinePaymentEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PaymentSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }

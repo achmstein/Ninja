@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text.Json.Serialization;
 using Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
@@ -16,6 +17,13 @@ public static class Extensions
         var services = builder.Services;
 
         builder.AddDefaultAuthentication();
+
+        // Pay at table: the café's own provider account, its secrets sealed with the stack's payments key
+        services.Configure<Ninja.Sales.API.Payments.PaymentsOptions>(builder.Configuration.GetSection("Payments"));
+        services.AddSingleton<Ninja.Sales.API.Payments.SecretSealer>();
+        services.AddHttpClient<Ninja.Sales.API.Payments.IPaymentProvider, Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));
+        services.AddScoped<Ninja.Sales.API.Payments.PayReader>();
+        services.TryAddSingleton(TimeProvider.System);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation
@@ -56,6 +64,7 @@ public static class Extensions
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
+        services.AddScoped<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.IOnlinePaymentRepository, OnlinePaymentRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();

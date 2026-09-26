@@ -1588,4 +1588,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get starting => 'جاري التشغيل…';
+
+  @override
+  String get onlineTender => 'أونلاين';
+
+  @override
+  String get onlinePayments => 'مدفوع أونلاين';
+
+  @override
+  String get paidOnline => 'مدفوع أونلاين';
+
+  @override
+  String get onlinePaying => 'جارٍ الدفع…';
+
+  @override
+  String get onlinePaid => 'مدفوع';
+
+  @override
+  String get onlineRefunded => 'مُسترد';
+
+  @override
+  String onlineTip(String amount) {
+    return '+ $amount إكرامية';
+  }
+
+  @override
+  String onlineFee(String amount) {
+    return 'رسوم $amount';
+  }
+
+  @override
+  String get refundOnline => 'استرداد';
+
+  @override
+  String refundOnlineTitle(String amount, String name) {
+    return 'إرجاع $amount إلى $name؟';
+  }
+
+  @override
+  String get refundOnlineHint => 'يعود المبلغ إلى بطاقته عبر مزوّد الدفع.';
+
+  @override
+  String get onlineRefundedToast => 'تم استرداد الدفعة الأونلاين';
+
+  @override
+  String get guestPayingOnline =>
+      'ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.';
+
+  @override
+  String get settleRemainingOnly =>
+      'دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا.';
 }

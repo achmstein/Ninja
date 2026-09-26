@@ -762,5 +762,19 @@
   "appLinkMessage": "مرحبًا {name}، نقاطك في {cafe} بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): {url}",
   "alreadyHasAccount": "لدى هذا العميل حساب خاص به بالفعل",
   "tooManyLinks": "روابط كثيرة خلال وقت قصير، حاول بعد دقيقة",
-  "starting": "جاري التشغيل…"
+  "starting": "جاري التشغيل…",
+  "onlineTender": "أونلاين",
+  "onlinePayments": "مدفوع أونلاين",
+  "paidOnline": "مدفوع أونلاين",
+  "onlinePaying": "جارٍ الدفع…",
+  "onlinePaid": "مدفوع",
+  "onlineRefunded": "مُسترد",
+  "onlineTip": "+ {amount} إكرامية",
+  "onlineFee": "رسوم {amount}",
+  "refundOnline": "استرداد",
+  "refundOnlineTitle": "إرجاع {amount} إلى {name}؟",
+  "refundOnlineHint": "يعود المبلغ إلى بطاقته عبر مزوّد الدفع.",
+  "onlineRefundedToast": "تم استرداد الدفعة الأونلاين",
+  "guestPayingOnline": "ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.",
+  "settleRemainingOnly": "دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا."
 }

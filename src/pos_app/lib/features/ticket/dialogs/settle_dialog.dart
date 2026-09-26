@@ -58,11 +58,16 @@ class SettleOutcome {
 ///
 /// `members` are the people in the room, for a room ticket: each is a tab
 /// the bill can go on, whether or not they ordered anything themselves.
+///
+/// `onlinePaid` is what guests already paid from their phones (pay at
+/// table): the server adds those as Online tenders at settle by itself, so
+/// the till only takes what is left.
 Future<SettleOutcome?> showSettleDialog(
   BuildContext context,
   TicketDetail ticket, {
   OfflineSaleDraft? offline,
   List<StayMember> members = const [],
+  double onlinePaid = 0,
 }) {
   return showFDialog<SettleOutcome>(
     context: context,
@@ -71,7 +76,7 @@ Future<SettleOutcome?> showSettleDialog(
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 672),
-      builder: (context, _) => _SettleDialog(ticket: ticket, offline: offline, members: members),
+      builder: (context, _) => _SettleDialog(ticket: ticket, offline: offline, members: members, onlinePaid: onlinePaid),
     ),
   );
 }
@@ -80,7 +85,8 @@ class _SettleDialog extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final OfflineSaleDraft? offline;
   final List<StayMember> members;
-  const _SettleDialog({required this.ticket, this.offline, this.members = const []});
+  final double onlinePaid;
+  const _SettleDialog({required this.ticket, this.offline, this.members = const [], this.onlinePaid = 0});
 
   @override
   ConsumerState<_SettleDialog> createState() => _SettleDialogState();
@@ -102,10 +108,12 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   final String _requestId = const Uuid().v4();
 
   double get _total => widget.ticket.total;
+  // What the till takes: the total less what guests paid online
+  double get _due => _round2(math.max(0, _total - widget.onlinePaid));
   double get _paid => _payments.fold(0, (sum, p) => sum + p.amount);
-  double get _remaining => _round2(math.max(0, _total - _paid));
+  double get _remaining => _round2(math.max(0, _due - _paid));
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
-  double get _changeDue => _round2(math.max(0, _paid + _entered - _total));
+  double get _changeDue => _round2(math.max(0, _paid + _entered - _due));
 
   // Account joins when someone on the bill has one — and the tenant runs tabs
   List<PaymentTender> get _tenders => _holders.isNotEmpty && widget.offline == null && ref.read(featuresProvider).tabs
@@ -314,7 +322,11 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
         if (p.customerId case final id? when id.isNotEmpty) invalidateCustomerFrom(ref, id);
       }
       if (!mounted) return;
-      final outcome = SettleOutcome(receiptNumber: result.receiptNumber, change: result.change, payments: List.of(_payments));
+      // The receipt lists what guests paid online beside the till's tenders
+      final outcome = SettleOutcome(receiptNumber: result.receiptNumber, change: result.change, payments: [
+        ..._payments,
+        if (widget.onlinePaid > 0) SettlePayment(tender: PaymentTender.online, amount: widget.onlinePaid),
+      ]);
       setState(() => _result = outcome);
       // No paper by default — many single-item orders never need one. Cash
       // still opens the drawer; the receipt waits for the Print button.
@@ -367,6 +379,28 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                 ],
               ),
             ),
+            // Guests paid part from their phones: the server adds it, the
+            // till takes the rest
+            if (widget.onlinePaid > 0)
+              Container(
+                padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 8),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Text(l10n.paidOnline, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                        const Spacer(),
+                        Text('−${money(context, widget.onlinePaid)}',
+                            style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w600, color: AppColors.emerald(brightness), fontFeatures: tabular)),
+                      ],
+                    ),
+                    Text(l10n.settleRemainingOnly, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                  ],
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -545,7 +579,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                         SizedBox(
                           height: 56,
                           child: FButton(
-                            onPress: _payments.isNotEmpty && _remaining <= 0 && !_settling ? _settle : null,
+                            // Online payments alone may cover the bill: nothing to take here then
+                            onPress: (_payments.isNotEmpty || widget.onlinePaid > 0) && _remaining <= 0 && !_settling
+                                ? _settle
+                                : null,
                             child: Text(l10n.confirmSettle, style: theme.typography.lg.forButton),
                           ),
                         ),

@@ -1,6 +1,21 @@
 # Pay at table (online payment and bill splitting)
 
-Status: planned 2026-09-25, not started. Implement in a fresh session.
+Status: built 2026-09-26; waiting on a Paymob sandbox account for the end-to-end test.
+Decided: Paymob; each café's own merchant account; PayAtTable is an add-on on
+every plan (included in none); fee and tips are the café's choice.
+
+As built (differences from the design below):
+- Payment settings and the provider secrets live in Sales (the only service
+  that calls Paymob), sealed with AES-GCM under a per-stack payments key the
+  control plane generates and passes as PAYMENTS_KEY (never in the database).
+- Routes: `/api/sales/payments/*` (places/{id}, tickets/{id}, {key}, settings,
+  {key}/refund, tickets/{id}/online) and the callback
+  `POST /api/sales/payments/paymob/callback?hmac=` (unversioned, never blocked).
+- Guests return to `{customer}/pay/{key}`; the page polls the payment.
+- Paid shares become `Online` tender when the ticket settles: by itself at
+  100% (settledBy "online") or at the till, which takes only the rest.
+- A refund through the provider is allowed while the bill is open; a closed
+  bill is refunded with a credit note and from Paymob's dashboard.
 Reference: Qlub (app.qlub.io) screenshots the user shared — view the table's
 bill, "Pay fully" or "Split bill" (pay for your items / divide equally / pay
 a custom amount), online payment fee line, Apple Pay / card / local debit.

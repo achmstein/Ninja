@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBillToPayData, GetBillToPayErrors, GetBillToPayResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOnlinePaymentData, GetOnlinePaymentErrors, GetOnlinePaymentResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentSettingsData, GetPaymentSettingsErrors, GetPaymentSettingsResponses, GetPaymentsResponses, GetPlaceBillToPayData, GetPlaceBillToPayErrors, GetPlaceBillToPayResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, ListOnlinePaymentsData, ListOnlinePaymentsErrors, ListOnlinePaymentsResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundOnlinePaymentData, RefundOnlinePaymentErrors, RefundOnlinePaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SavePaymentSettingsData, SavePaymentSettingsErrors, SavePaymentSettingsResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, StartOnlinePaymentData, StartOnlinePaymentErrors, StartOnlinePaymentResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -379,6 +379,88 @@ export const addCashMovement = <ThrowOnError extends boolean = false>(options: O
 export const closeShift = <ThrowOnError extends boolean = false>(options: Options<CloseShiftData, ThrowOnError>): RequestResult<CloseShiftResponses, CloseShiftErrors, ThrowOnError> => (options.client ?? client).post<CloseShiftResponses, CloseShiftErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/shifts/{id}/close',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The open bill at a table, as a guest pays it
+ *
+ * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.
+ */
+export const getPlaceBillToPay = <ThrowOnError extends boolean = false>(options: Options<GetPlaceBillToPayData, ThrowOnError>): RequestResult<GetPlaceBillToPayResponses, GetPlaceBillToPayErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceBillToPayResponses, GetPlaceBillToPayErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/places/{placeId}',
+    ...options
+});
+
+/**
+ * A bill the caller is on, as they pay it
+ */
+export const getBillToPay = <ThrowOnError extends boolean = false>(options: Options<GetBillToPayData, ThrowOnError>): RequestResult<GetBillToPayResponses, GetBillToPayErrors, ThrowOnError> => (options.client ?? client).get<GetBillToPayResponses, GetBillToPayErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/tickets/{ticketId}',
+    ...options
+});
+
+/**
+ * Start paying a share of a bill; answers where to send the guest to pay
+ *
+ * Full: what is left. Items: the lines picked. Equal: parts of N. Custom: an amount up to what is left. The share is held for 15 minutes while the guest is at the provider's checkout.
+ */
+export const startOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<StartOnlinePaymentData, ThrowOnError>): RequestResult<StartOnlinePaymentResponses, StartOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).post<StartOnlinePaymentResponses, StartOnlinePaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/tickets/{ticketId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * How a payment stands, for the page the guest comes back to
+ *
+ * Only the provider's signed callback changes it; the guest's return proves nothing.
+ */
+export const getOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<GetOnlinePaymentData, ThrowOnError>): RequestResult<GetOnlinePaymentResponses, GetOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).get<GetOnlinePaymentResponses, GetOnlinePaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/{key}',
+    ...options
+});
+
+/**
+ * Online payments on a bill, for the till
+ */
+export const listOnlinePayments = <ThrowOnError extends boolean = false>(options: Options<ListOnlinePaymentsData, ThrowOnError>): RequestResult<ListOnlinePaymentsResponses, ListOnlinePaymentsErrors, ThrowOnError> => (options.client ?? client).get<ListOnlinePaymentsResponses, ListOnlinePaymentsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/tickets/{ticketId}/online',
+    ...options
+});
+
+/**
+ * Give an online payment back through the provider, while its bill is open
+ */
+export const refundOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<RefundOnlinePaymentData, ThrowOnError>): RequestResult<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).post<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/refund', ...options });
+
+/**
+ * How the café takes payments at the table; secrets only as whether they are set
+ */
+export const getPaymentSettings = <ThrowOnError extends boolean = false>(options: Options<GetPaymentSettingsData, ThrowOnError>): RequestResult<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError> => (options.client ?? client).get<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/settings',
+    ...options
+});
+
+/**
+ * Change the café's payment account, fee, tips and split options
+ */
+export const savePaymentSettings = <ThrowOnError extends boolean = false>(options: Options<SavePaymentSettingsData, ThrowOnError>): RequestResult<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError> => (options.client ?? client).put<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/settings',
     ...options,
     headers: {
         'Content-Type': 'application/json',

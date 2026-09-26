@@ -1928,6 +1928,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t create your account. Try again.'**
   String get claimFailed;
+
+  /// No description provided for @payTheBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the bill'**
+  String get payTheBill;
+
+  /// No description provided for @payPaidSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid so far'**
+  String get payPaidSoFar;
+
+  /// No description provided for @payRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get payRemaining;
+
+  /// No description provided for @payFully.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay fully'**
+  String get payFully;
+
+  /// No description provided for @paySplitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Split bill'**
+  String get paySplitBill;
+
+  /// No description provided for @payHowToSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to split?'**
+  String get payHowToSplit;
+
+  /// No description provided for @payForYourItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay for your items'**
+  String get payForYourItems;
+
+  /// No description provided for @payDivideEqually.
+  ///
+  /// In en, this message translates to:
+  /// **'Divide equally'**
+  String get payDivideEqually;
+
+  /// No description provided for @payCustomAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom amount'**
+  String get payCustomAmount;
+
+  /// No description provided for @payPickItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick what you\'re paying for'**
+  String get payPickItems;
+
+  /// No description provided for @payItemTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get payItemTaken;
+
+  /// No description provided for @paySplitBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'Split between'**
+  String get paySplitBetween;
+
+  /// No description provided for @payYouPayFor.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay for'**
+  String get payYouPayFor;
+
+  /// No description provided for @payPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person} other{{count} people}}'**
+  String payPeople(int count);
+
+  /// No description provided for @payAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get payAmountHint;
+
+  /// No description provided for @payUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {amount}'**
+  String payUpTo(String amount);
+
+  /// No description provided for @payMoreThanLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s more than is left ({amount})'**
+  String payMoreThanLeft(String amount);
+
+  /// No description provided for @payYourShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get payYourShare;
+
+  /// No description provided for @payOnlineFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Online payment fee'**
+  String get payOnlineFee;
+
+  /// No description provided for @payTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get payTip;
+
+  /// No description provided for @payNoTip.
+  ///
+  /// In en, this message translates to:
+  /// **'No tip'**
+  String get payNoTip;
+
+  /// No description provided for @payYouPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay'**
+  String get payYouPay;
+
+  /// No description provided for @payConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount}'**
+  String payConfirm(String amount);
+
+  /// No description provided for @payMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Card, wallet or Apple Pay on the next page'**
+  String get payMethods;
+
+  /// No description provided for @payMethodsNoApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Card or wallet on the next page'**
+  String get payMethodsNoApple;
+
+  /// No description provided for @payShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get payShares;
+
+  /// No description provided for @payYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get payYou;
+
+  /// No description provided for @payGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get payGuest;
+
+  /// No description provided for @payPaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Paying…'**
+  String get payPaying;
+
+  /// No description provided for @payWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your payment…'**
+  String get payWaiting;
+
+  /// No description provided for @payWaitingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish paying on the page that opened. This updates by itself.'**
+  String get payWaitingHint;
+
+  /// No description provided for @payOpenAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the payment page'**
+  String get payOpenAgain;
+
+  /// No description provided for @payPaidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid, thank you!'**
+  String get payPaidTitle;
+
+  /// No description provided for @payCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} charged'**
+  String payCharged(String amount);
+
+  /// No description provided for @payBillClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The bill is fully paid.'**
+  String get payBillClosed;
+
+  /// No description provided for @payFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment didn\'t go through'**
+  String get payFailed;
+
+  /// No description provided for @payExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment timed out'**
+  String get payExpired;
+
+  /// No description provided for @payRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'This payment was refunded'**
+  String get payRefunded;
+
+  /// No description provided for @payStillConfirming.
+  ///
+  /// In en, this message translates to:
+  /// **'Still confirming your payment'**
+  String get payStillConfirming;
+
+  /// No description provided for @payStillConfirmingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It can take a minute. Your bill updates as soon as it lands.'**
+  String get payStillConfirmingHint;
+
+  /// No description provided for @payCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get payCheckAgain;
+
+  /// No description provided for @payTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get payTryAgain;
+
+  /// No description provided for @payCouldNotOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the payment page'**
+  String get payCouldNotOpen;
+
+  /// No description provided for @payFailedToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the payment. Try again.'**
+  String get payFailedToStart;
+
+  /// No description provided for @payFailedToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the bill'**
+  String get payFailedToLoad;
+
+  /// No description provided for @payNothingOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is on this table\'s bill yet'**
+  String get payNothingOpen;
+
+  /// No description provided for @payWhyClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This bill is closed'**
+  String get payWhyClosed;
+
+  /// No description provided for @payWhyClockRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pay once the time is stopped'**
+  String get payWhyClockRunning;
+
+  /// No description provided for @payWhyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on the bill yet'**
+  String get payWhyEmpty;
+
+  /// No description provided for @payWhyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'This bill is fully paid'**
+  String get payWhyPaid;
+
+  /// No description provided for @payWhyBeingPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone is paying the rest right now'**
+  String get payWhyBeingPaid;
 }
 
 class _AppLocalizationsDelegate

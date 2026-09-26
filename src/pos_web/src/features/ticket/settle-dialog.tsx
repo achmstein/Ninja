@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Printer, X } from 'lucide-react'
+import { CheckCircle2, Loader2, Printer, Smartphone, X } from 'lucide-react'
 import {
   assignTicketLinesCustomerMutation,
   settleTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { OnlinePaymentView, TicketDetail } from '@/api/sales/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,9 +22,11 @@ import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { canSettleWith, onlineSummary } from './online-payments'
 import {
   ACCOUNT_TENDER,
   BASE_TENDERS,
+  ONLINE_TENDER,
   tenderLabelKey,
   type TenderName,
 } from './tenders'
@@ -105,6 +107,12 @@ function HolderButton({
 type SettleDialogProps = {
   ticket: TicketDetail
   /**
+   * What guests paid from their phones. The server adds every paid one to
+   * the settle itself, so the till takes only the rest; while one is still
+   * at the checkout the bill cannot settle.
+   */
+  onlinePayments?: OnlinePaymentView[]
+  /**
    * The people in the room, for a room ticket: each is a tab the bill can go
    * on, whether or not they ordered anything themselves.
    */
@@ -124,6 +132,7 @@ type SettleDialogProps = {
  */
 export function SettleDialog({
   ticket,
+  onlinePayments,
   members,
   open,
   onOpenChange,
@@ -136,6 +145,9 @@ export function SettleDialog({
   const queryClient = useQueryClient()
 
   const total = toNumber(ticket.total)
+  // What the till takes: the total less what guests paid online
+  const online = onlineSummary(ticket.total, onlinePayments)
+  const due = online.remaining
 
   // Everyone this bill can go on, with their share. The people in the room
   // come first: a group splits the time between them however they agree,
@@ -207,11 +219,11 @@ export function SettleDialog({
   const [result, setResult] = useState<SettledView | null>(null)
 
   const paid = payments.reduce((sum, p) => sum + p.amount, 0)
-  const remaining = Math.max(0, +(total - paid).toFixed(2))
+  const remaining = Math.max(0, +(due - paid).toFixed(2))
   const enteredAmount = Number(amountStr || '0')
   // Live preview: committed payments plus whatever is typed right now
   const projectedPaid = paid + (Number.isFinite(enteredAmount) ? enteredAmount : 0)
-  const changeDue = Math.max(0, +(projectedPaid - total).toFixed(2))
+  const changeDue = Math.max(0, +(projectedPaid - due).toFixed(2))
 
   // Prefill the exact remainder whenever the dialog opens or a payment
   // lands — the one-cash-payment happy path is: open, add payment, settle.
@@ -223,7 +235,13 @@ export function SettleDialog({
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, paid])
+  }, [open, paid, due])
+
+  // Paid online in full while the dialog was open: the bill settled itself
+  // on the server, and the ticket screen now shows it closed
+  useEffect(() => {
+    if (open && !result && ticket.status === 'Settled') onOpenChange(false)
+  }, [open, result, ticket.status, onOpenChange])
 
   useEffect(() => {
     if (!open) {
@@ -241,11 +259,20 @@ export function SettleDialog({
       const outcome: SettleOutcome = {
         receiptNumber: toNumber(data.receiptNumber),
         change: toNumber(data.change),
-        payments: (variables.body?.payments ?? []).map((p, i) => ({
-          tender: payments[i]?.tenderName ?? 'Cash',
-          amount: toNumber(p.amount),
-          customerName: payments[i]?.customerName,
-        })),
+        payments: [
+          ...(variables.body?.payments ?? []).map((p, i) => ({
+            tender: payments[i]?.tenderName ?? 'Cash',
+            amount: toNumber(p.amount),
+            customerName: payments[i]?.customerName,
+          })),
+          // The server added these to the settle; the receipt shows them
+          ...(onlinePayments ?? [])
+            .filter((p) => p.status === 'Paid')
+            .map((p) => ({
+              tender: ONLINE_TENDER.name,
+              amount: toNumber(p.amount),
+            })),
+        ],
       }
       setResult({
         receiptNumber: outcome.receiptNumber,
@@ -327,7 +354,8 @@ export function SettleDialog({
   const removePayment = (index: number) =>
     setPayments((prev) => prev.filter((_, i) => i !== index))
 
-  const canSettle = payments.length > 0 && remaining <= 0 && !settle.isPending
+  const canSettle =
+    canSettleWith(online, paid, payments.length) && !settle.isPending
 
   const doSettle = () =>
     settle.mutate({
@@ -417,6 +445,33 @@ export function SettleDialog({
             <span className='text-xl font-bold tabular-nums'>{money(total)}</span>
           </DialogTitle>
         </DialogHeader>
+
+        {/* Guests paid part of it online: the till takes only what is due */}
+        {(online.paid > 0 || online.pending) && (
+          <div className='grid gap-1 border-b px-5 py-2 text-sm'>
+            {online.paid > 0 && (
+              <div className='flex items-center justify-between gap-4'>
+                <span className='text-muted-foreground flex items-center gap-2'>
+                  <Smartphone className='size-4' />
+                  {t('paidOnlineTotal')}
+                </span>
+                <span className='font-semibold tabular-nums'>
+                  −{money(online.paid)}
+                </span>
+              </div>
+            )}
+            <div className='flex items-center justify-between gap-4 text-base'>
+              <span className='font-medium'>{t('amountDue')}</span>
+              <span className='font-bold tabular-nums'>{money(due)}</span>
+            </div>
+            {online.pending && (
+              <div className='flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400'>
+                <Loader2 className='size-4 animate-spin' />
+                {t('guestPayingOnline')}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className='grid gap-4 p-4 sm:grid-cols-2'>
           <div className='flex flex-col gap-3'>

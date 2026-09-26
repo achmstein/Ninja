@@ -8,6 +8,7 @@ import {
   getRangeReportOptions,
 } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import {
   useLanguage,
   useLocale,
@@ -27,7 +28,7 @@ import {
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
 import { useTillWindow } from '../use-till-window'
-import { TENDERS } from './tender'
+import { TENDERS, tendersFor } from './tender'
 import { TenderBadge } from './tender-badge'
 import { TicketSheet } from './ticket-sheet'
 import { ticketTitle } from './ticket-title'
@@ -137,6 +138,7 @@ export function PaymentsList() {
     })
 
   const tender = TENDERS.find((item) => String(item.value) === search.tender)
+  const features = useFeatures()
 
   // The report's own query, already in the cache: how many tab payments
   // the filtered tender also took, since the bar above counts both
@@ -216,15 +218,17 @@ export function PaymentsList() {
           <ToggleGroupItem value='all' className='px-3'>
             {t('allTenders')}
           </ToggleGroupItem>
-          {TENDERS.map((item) => (
-            <ToggleGroupItem
-              key={item.value}
-              value={String(item.value)}
-              className='px-3'
-            >
-              {t(item.labelKey)}
-            </ToggleGroupItem>
-          ))}
+          {tendersFor(features.payAtTable, tender?.name === 'Online').map(
+            (item) => (
+              <ToggleGroupItem
+                key={item.value}
+                value={String(item.value)}
+                className='px-3'
+              >
+                {t(item.labelKey)}
+              </ToggleGroupItem>
+            )
+          )}
         </ToggleGroup>
 
         {tabPaymentsByTender && toNumber(tabPaymentsByTender.count) > 0 && (

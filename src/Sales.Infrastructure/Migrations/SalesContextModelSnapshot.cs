@@ -27,6 +27,9 @@ namespace Sales.Infrastructure.Migrations
             modelBuilder.HasSequence("cashmovementseq", "sales")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("onlinepaymentseq", "sales")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("paymentseq", "sales")
                 .IncrementsBy(10);
 
@@ -80,6 +83,199 @@ namespace Sales.Infrastructure.Migrations
                     b.HasKey("EventId");
 
                     b.ToTable("IntegrationEventLog", "sales");
+                });
+
+            modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "onlinepaymentseq", "sales");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("Key")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<List<int>>("LineIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int?>("Of")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("Parts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PayerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ProviderReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefundedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Tip")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("BranchId", "PaidAt");
+
+                    b.HasIndex("Provider", "ProviderReference");
+
+                    b.ToTable("online_payments", "sales");
+                });
+
+            modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("AllowCustom")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowEqual")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowItems")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("ApplePayIntegrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CardIntegrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("FeeFixed")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("FeeMode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<decimal>("FeePercent")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("numeric(6,3)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PublicKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("SealedHmacSecret")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SealedSecretKey")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SecretKeyHint")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.PrimitiveCollection<List<int>>("TipPercents")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<bool>("TipsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("WalletIntegrationId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("payment_settings", "sales");
                 });
 
             modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.CashMovement", b =>

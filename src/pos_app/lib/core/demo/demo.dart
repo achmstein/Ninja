@@ -25,6 +25,8 @@ import '../../features/tickets/models/tab_payment.dart';
 import '../../features/tickets/models/ticket_detail.dart';
 import '../../features/tickets/models/ticket_summary.dart';
 import '../../features/tickets/services/tickets_service.dart';
+import '../../features/tickets/services/online_payments_service.dart';
+import '../../features/tickets/models/online_payment.dart';
 import '../auth/auth_service.dart';
 import '../brand/brand_service.dart';
 import '../brand/tenant_brand.dart';
@@ -58,6 +60,7 @@ final demoOverrides = [
   tenantRepositoryProvider.overrideWithValue(_DemoTenantRepository()),
   branchRepositoryProvider.overrideWithValue(_DemoBranchRepository()),
   ticketsRepositoryProvider.overrideWithValue(_demoTickets),
+  onlinePaymentsRepositoryProvider.overrideWithValue(_DemoOnlinePaymentsRepository()),
   catalogRepositoryProvider.overrideWithValue(_DemoCatalogRepository()),
   orderRepositoryProvider.overrideWithValue(_DemoOrderRepository(_demoTickets)),
   tablesRepositoryProvider.overrideWithValue(_DemoTablesRepository()),
@@ -118,6 +121,15 @@ class _DemoBranchRepository implements BranchRepository {
   @override
   Future<Branch> updateBranchSettings(int id, Map<String, dynamic> data) async =>
       (await getBranches()).firstWhere((b) => b.id == id);
+}
+
+/// Nobody pays from their phone in the demo café
+class _DemoOnlinePaymentsRepository implements OnlinePaymentsRepository {
+  @override
+  Future<List<OnlinePaymentView>> list(int ticketId) async => const [];
+
+  @override
+  Future<void> refund(String key) async {}
 }
 
 class _DemoTicketsRepository implements TicketsRepository {

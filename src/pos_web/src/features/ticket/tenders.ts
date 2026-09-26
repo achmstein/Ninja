@@ -1,8 +1,8 @@
 import type { TranslationKey } from '@/lib/i18n'
 
 // PaymentTender enum values (Sales.Domain: Cash=0, Card=1, InstaPay=2,
-// Account=3).
-export type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account'
+// Account=3, Online=4).
+export type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online'
 
 type Tender = {
   value: number
@@ -25,9 +25,19 @@ export const ACCOUNT_TENDER: Tender = {
   labelKey: 'account',
 }
 
+// What guests paid from their phones (pay at table). Never offered on the
+// till: the server adds every paid online payment to the settle itself, and
+// it is never cash, so it never counts towards the drawer.
+export const ONLINE_TENDER: Tender = {
+  value: 4,
+  name: 'Online',
+  labelKey: 'online',
+}
+
 export const tenderLabelKey: Record<string, TranslationKey> = {
   Cash: 'cash',
   Card: 'card',
   InstaPay: 'instapay',
   Account: 'account',
+  Online: 'online',
 }

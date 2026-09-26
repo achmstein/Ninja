@@ -42,6 +42,9 @@ public class OnlinePayment : Entity, IAggregateRoot
     /// <summary>How long a checkout holds its share before it is let go.</summary>
     public static readonly TimeSpan Hold = TimeSpan.FromMinutes(15);
 
+    /// <summary>What the guest's phone and the provider know this payment by: unguessable, unlike the id.</summary>
+    public Guid Key { get; private set; }
+
     public int TicketId { get; private set; }
 
     public int BranchId { get; private set; }
@@ -127,6 +130,7 @@ public class OnlinePayment : Entity, IAggregateRoot
 
         return new OnlinePayment
         {
+            Key = Guid.NewGuid(),
             TicketId = ticketId,
             BranchId = branchId,
             Amount = share.Amount,

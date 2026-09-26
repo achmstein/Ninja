@@ -7,7 +7,7 @@ import { ErrorState } from '@/components/error-state'
 import { SegmentedBar } from '@/components/segmented-bar'
 import { Stat } from '@/components/stat-strip'
 import { formatEgp } from '@/features/orders/status'
-import { TENDERS } from '@/features/till/components/tender'
+import { tendersFor } from '@/features/till/components/tender'
 
 type TodaysTillProps = {
   report: RangeReport | undefined
@@ -38,7 +38,10 @@ export function TodaysTill({
   const tenderTotals = new Map(
     (report?.tenderTotals ?? []).map((row) => [row.tender, row])
   )
-  const segments = TENDERS.map(({ name, value, labelKey }) => {
+  const segments = tendersFor(
+    features.payAtTable,
+    Number(tenderTotals.get('Online')?.amount ?? 0) > 0
+  ).map(({ name, value, labelKey }) => {
     const row = tenderTotals.get(name)
     const amount = Number(row?.amount ?? 0)
     return {

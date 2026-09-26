@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   CircleAlert,
@@ -42,6 +42,8 @@ import {
 } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { RunningTimeLine } from '@/components/bills/bill-slip'
+import { BillPayBar } from '@/components/pay/bill-pay'
+import { PaySheet } from '@/components/pay/pay-sheet'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +60,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { useFeatures } from '@/lib/brand'
 
 export const Route = createFileRoute('/bills')({
+  // ?pay=<ticketId> opens the pay sheet on that bill: where a guest comes
+  // back to after a payment that did not go through
+  validateSearch: (search: Record<string, unknown>): { pay?: number } => {
+    const pay = Number(search.pay)
+    return Number.isInteger(pay) && pay > 0 ? { pay } : {}
+  },
   component: BillsRoute,
 })
 
@@ -205,7 +213,27 @@ function BillsPage() {
           )}
         </TabsContent>
       </Tabs>
+      <RetryPay />
     </div>
+  )
+}
+
+/** The pay sheet on the bill a failed payment came back from. Read by the
+ *  bill's id, which works for anyone who paid a share of it, so a guest who
+ *  paid from the table (not on the bill otherwise) gets it too. */
+function RetryPay() {
+  const { pay } = Route.useSearch()
+  const navigate = useNavigate()
+  if (pay == null) return null
+  return (
+    <PaySheet
+      source={{ ticketId: pay }}
+      start='any'
+      open
+      onOpenChange={(open) => {
+        if (!open) void navigate({ to: '/bills', search: {}, replace: true })
+      }}
+    />
   )
 }
 
@@ -513,6 +541,12 @@ function BillTile({
           )}
         </div>
       </Link>
+
+      {/* Paying from the phone, where the café takes it: under the bill,
+          outside its link, so the buttons are not a tap on the tile */}
+      <div className='ps-[18px] pt-1 empty:hidden'>
+        <BillPayBar bill={bill} />
+      </div>
 
       {/* A paid bill is the thanks: the stars for the rounds on it, at the
           one moment the customer is already looking */}

@@ -70,8 +70,10 @@ export function usePosNotifications() {
 
     const invalidateTickets = () =>
       // The sale pad polls the order → ticket lookup while the confirmation
-      // event is in flight; the signal short-circuits its 600ms wait
-      refresh('getOpenTickets', 'getTicket', 'getTicketByOrder')
+      // event is in flight; the signal short-circuits its 600ms wait. A
+      // guest paying the bill online nudges it too, so the bill's online
+      // payments come along.
+      refresh('getOpenTickets', 'getTicket', 'getTicketByOrder', 'listOnlinePayments')
 
     // Broadcast to the whole admin group; the branch filter lives in the
     // query layer (the refetch carries X-Branch-Id), so a blanket

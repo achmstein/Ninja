@@ -10,4 +10,5 @@ String tenderLabel(AppLocalizations l10n, PaymentTender tender) => switch (tende
       PaymentTender.card => l10n.card,
       PaymentTender.instaPay => l10n.instapay,
       PaymentTender.account => l10n.account,
+      PaymentTender.online => l10n.onlineTender,
     };

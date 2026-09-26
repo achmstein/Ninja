@@ -18,6 +18,8 @@ import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../service_request/models/service_request.dart';
 import '../../service_request/services/service_request_service.dart';
+import '../../pay/services/pay_service.dart';
+import '../../pay/widgets/pay_sheet.dart';
 import '../models/place.dart';
 import '../../../core/services/signalr_service.dart';
 import '../services/place_service.dart';
@@ -484,6 +486,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
 
   List<_QuickAction> _quickActions(Stay session) {
     final l10n = AppLocalizations.of(context)!;
+    final branchId = ref.watch(selectedBranchIdProvider);
     return [
       _QuickAction(
         icon: FIcons.bellRing,
@@ -504,6 +507,14 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
         cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
         onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
       ),
+      // Pay at table: the room's open bill, paid or split from here
+      if (ref.watch(featuresProvider).payAtTable && branchId != null)
+        _QuickAction(
+          icon: FIcons.creditCard,
+          label: l10n.payTheBill,
+          cooldownSeconds: 0,
+          onTap: () => showPaySheet(context, PaySource.place(session.placeId, branchId)),
+        ),
       if (session.hasOptions)
         for (final option in session.options.where((o) => o.code != session.currentOptionCode))
           _QuickAction(

@@ -998,6 +998,179 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get claimFailed => 'معرفناش نعمل حسابك. جرب تاني.';
+
+  @override
+  String get payTheBill => 'ادفع الشيك';
+
+  @override
+  String get payPaidSoFar => 'اندفع لحد دلوقتي';
+
+  @override
+  String get payRemaining => 'الباقي';
+
+  @override
+  String get payFully => 'ادفع الكل';
+
+  @override
+  String get paySplitBill => 'قسّم الشيك';
+
+  @override
+  String get payHowToSplit => 'عايز تقسم إزاي؟';
+
+  @override
+  String get payForYourItems => 'ادفع حاجتك بس';
+
+  @override
+  String get payDivideEqually => 'قسّم بالتساوي';
+
+  @override
+  String get payCustomAmount => 'مبلغ تختاره';
+
+  @override
+  String get payPickItems => 'اختار الحاجات اللي هتدفعها';
+
+  @override
+  String get payItemTaken => 'اندفع';
+
+  @override
+  String get paySplitBetween => 'مقسوم على';
+
+  @override
+  String get payYouPayFor => 'هتدفع عن';
+
+  @override
+  String payPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخص',
+      few: '$count أشخاص',
+      two: 'شخصين',
+      one: 'شخص واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payAmountHint => 'المبلغ';
+
+  @override
+  String payUpTo(String amount) {
+    return 'لحد $amount';
+  }
+
+  @override
+  String payMoreThanLeft(String amount) {
+    return 'ده أكتر من الباقي ($amount)';
+  }
+
+  @override
+  String get payYourShare => 'نصيبك';
+
+  @override
+  String get payOnlineFee => 'رسوم الدفع أونلاين';
+
+  @override
+  String get payTip => 'بقشيش';
+
+  @override
+  String get payNoTip => 'من غير بقشيش';
+
+  @override
+  String get payYouPay => 'هتدفع';
+
+  @override
+  String payConfirm(String amount) {
+    return 'ادفع $amount';
+  }
+
+  @override
+  String get payMethods => 'كارت أو محفظة أو Apple Pay في الصفحة الجاية';
+
+  @override
+  String get payMethodsNoApple => 'كارت أو محفظة في الصفحة الجاية';
+
+  @override
+  String get payShares => 'المدفوعات';
+
+  @override
+  String get payYou => 'إنت';
+
+  @override
+  String get payGuest => 'زائر';
+
+  @override
+  String get payPaying => 'بيدفع…';
+
+  @override
+  String get payWaiting => 'مستنيين دفعك…';
+
+  @override
+  String get payWaitingHint =>
+      'كمّل الدفع في الصفحة اللي اتفتحت. الشاشة دي هتتحدث لوحدها.';
+
+  @override
+  String get payOpenAgain => 'افتح صفحة الدفع';
+
+  @override
+  String get payPaidTitle => 'اندفع، شكرًا!';
+
+  @override
+  String payCharged(String amount) {
+    return 'اتخصم $amount';
+  }
+
+  @override
+  String get payBillClosed => 'الشيك اندفع كله.';
+
+  @override
+  String get payFailed => 'الدفع منجحش';
+
+  @override
+  String get payExpired => 'وقت الدفع خلص';
+
+  @override
+  String get payRefunded => 'الفلوس دي رجعت';
+
+  @override
+  String get payStillConfirming => 'لسه بنأكد دفعك';
+
+  @override
+  String get payStillConfirmingHint =>
+      'ممكن تاخد دقيقة. الشيك هيتحدث أول ما توصل.';
+
+  @override
+  String get payCheckAgain => 'شوف تاني';
+
+  @override
+  String get payTryAgain => 'جرب تاني';
+
+  @override
+  String get payCouldNotOpen => 'معرفناش نفتح صفحة الدفع';
+
+  @override
+  String get payFailedToStart => 'معرفناش نبدأ الدفع. جرب تاني.';
+
+  @override
+  String get payFailedToLoad => 'معرفناش نجيب الشيك';
+
+  @override
+  String get payNothingOpen => 'مفيش حاجة على شيك الترابيزة لسه';
+
+  @override
+  String get payWhyClosed => 'الشيك ده اتقفل';
+
+  @override
+  String get payWhyClockRunning => 'تقدر تدفع لما الوقت يقف';
+
+  @override
+  String get payWhyEmpty => 'مفيش حاجة على الشيك لسه';
+
+  @override
+  String get payWhyPaid => 'الشيك ده اندفع كله';
+
+  @override
+  String get payWhyBeingPaid => 'في حد بيدفع الباقي دلوقتي';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -1665,4 +1838,177 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get claimFailed => 'تعذّر إنشاء حسابك. حاول مرة أخرى.';
+
+  @override
+  String get payTheBill => 'ادفع الفاتورة';
+
+  @override
+  String get payPaidSoFar => 'المدفوع حتى الآن';
+
+  @override
+  String get payRemaining => 'المتبقي';
+
+  @override
+  String get payFully => 'ادفع بالكامل';
+
+  @override
+  String get paySplitBill => 'قسّم الفاتورة';
+
+  @override
+  String get payHowToSplit => 'كيف تريد التقسيم؟';
+
+  @override
+  String get payForYourItems => 'ادفع ثمن طلباتك';
+
+  @override
+  String get payDivideEqually => 'قسّم بالتساوي';
+
+  @override
+  String get payCustomAmount => 'مبلغ مخصص';
+
+  @override
+  String get payPickItems => 'اختر ما ستدفع ثمنه';
+
+  @override
+  String get payItemTaken => 'مدفوع';
+
+  @override
+  String get paySplitBetween => 'مقسومة على';
+
+  @override
+  String get payYouPayFor => 'ستدفع عن';
+
+  @override
+  String payPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخصًا',
+      few: '$count أشخاص',
+      two: 'شخصان',
+      one: 'شخص واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payAmountHint => 'المبلغ';
+
+  @override
+  String payUpTo(String amount) {
+    return 'حتى $amount';
+  }
+
+  @override
+  String payMoreThanLeft(String amount) {
+    return 'هذا أكثر من المتبقي ($amount)';
+  }
+
+  @override
+  String get payYourShare => 'حصتك';
+
+  @override
+  String get payOnlineFee => 'رسوم الدفع الإلكتروني';
+
+  @override
+  String get payTip => 'إكرامية';
+
+  @override
+  String get payNoTip => 'بدون إكرامية';
+
+  @override
+  String get payYouPay => 'ستدفع';
+
+  @override
+  String payConfirm(String amount) {
+    return 'ادفع $amount';
+  }
+
+  @override
+  String get payMethods => 'بطاقة أو محفظة أو Apple Pay في الصفحة التالية';
+
+  @override
+  String get payMethodsNoApple => 'بطاقة أو محفظة في الصفحة التالية';
+
+  @override
+  String get payShares => 'المدفوعات';
+
+  @override
+  String get payYou => 'أنت';
+
+  @override
+  String get payGuest => 'زائر';
+
+  @override
+  String get payPaying => 'جارٍ الدفع…';
+
+  @override
+  String get payWaiting => 'بانتظار دفعتك…';
+
+  @override
+  String get payWaitingHint =>
+      'أكمل الدفع في الصفحة التي فُتحت. تتحدث هذه الشاشة تلقائيًا.';
+
+  @override
+  String get payOpenAgain => 'افتح صفحة الدفع';
+
+  @override
+  String get payPaidTitle => 'تم الدفع، شكرًا لك!';
+
+  @override
+  String payCharged(String amount) {
+    return 'تم خصم $amount';
+  }
+
+  @override
+  String get payBillClosed => 'تم دفع الفاتورة بالكامل.';
+
+  @override
+  String get payFailed => 'لم تتم عملية الدفع';
+
+  @override
+  String get payExpired => 'انتهت مهلة الدفع';
+
+  @override
+  String get payRefunded => 'تم استرداد هذه الدفعة';
+
+  @override
+  String get payStillConfirming => 'ما زلنا نؤكد دفعتك';
+
+  @override
+  String get payStillConfirmingHint =>
+      'قد يستغرق ذلك دقيقة. تتحدث فاتورتك فور وصولها.';
+
+  @override
+  String get payCheckAgain => 'تحقق مرة أخرى';
+
+  @override
+  String get payTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get payCouldNotOpen => 'تعذّر فتح صفحة الدفع';
+
+  @override
+  String get payFailedToStart => 'تعذّر بدء الدفع. حاول مرة أخرى.';
+
+  @override
+  String get payFailedToLoad => 'تعذّر تحميل الفاتورة';
+
+  @override
+  String get payNothingOpen => 'لا شيء على فاتورة هذه الطاولة بعد';
+
+  @override
+  String get payWhyClosed => 'هذه الفاتورة مغلقة';
+
+  @override
+  String get payWhyClockRunning => 'يمكنك الدفع بعد إيقاف الوقت';
+
+  @override
+  String get payWhyEmpty => 'لا شيء على الفاتورة بعد';
+
+  @override
+  String get payWhyPaid => 'تم دفع هذه الفاتورة بالكامل';
+
+  @override
+  String get payWhyBeingPaid => 'هناك من يدفع المتبقي الآن';
 }

@@ -17,7 +17,7 @@ import { Stat, StatStrip } from '@/components/stat-strip'
 import { PaymentsList } from './components/payments-list'
 import { RefundsList } from './components/refunds-list'
 import { TabPaymentsList } from './components/tab-payments-list'
-import { TENDERS, TICKET_TYPES } from './components/tender'
+import { TICKET_TYPES, tendersFor } from './components/tender'
 import { TicketsList } from './components/tickets-list'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
@@ -272,7 +272,10 @@ export function TillReport() {
                 <Skeleton className='h-40' />
               ) : (
                 <SegmentedBar
-                  segments={TENDERS.map(({ name, value, labelKey }) => {
+                  segments={tendersFor(
+                    features.payAtTable,
+                    toNumber(tenderTotals.get('Online')?.amount) > 0
+                  ).map(({ name, value, labelKey }) => {
                     const payments = toNumber(tenderTotals.get(name)?.count)
                     const slips = toNumber(tabTenderTotals.get(name)?.count)
                     const amount =

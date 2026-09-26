@@ -786,5 +786,43 @@
   "@appLinkMessage": {"placeholders": {"name": {"type": "String"}, "cafe": {"type": "String"}, "url": {"type": "String"}}},
   "alreadyHasAccount": "This customer already has their own account",
   "tooManyLinks": "Too many links just now, try again in a minute",
-  "starting": "Starting…"
+  "starting": "Starting…",
+  "onlineTender": "Online",
+  "onlinePayments": "Paid online",
+  "paidOnline": "Paid online",
+  "onlinePaying": "Paying…",
+  "onlinePaid": "Paid",
+  "onlineRefunded": "Refunded",
+  "onlineTip": "+ {amount} tip",
+  "@onlineTip": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineFee": "fee {amount}",
+  "@onlineFee": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "refundOnline": "Refund",
+  "refundOnlineTitle": "Give {amount} back to {name}?",
+  "@refundOnlineTitle": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "refundOnlineHint": "The money goes back to their card through the payment provider.",
+  "onlineRefundedToast": "Online payment refunded",
+  "guestPayingOnline": "A guest is paying online. Settle once they finish.",
+  "settleRemainingOnly": "Guests paid part online; take the rest here."
 }

@@ -562,5 +562,91 @@
   "claimBadEmail": "Enter a valid email",
   "claimPasswordTooShort": "Password must be at least 8 characters.",
   "claimTooMany": "Too many tries. Wait a minute and try again.",
-  "claimFailed": "Couldn't create your account. Try again."
+  "claimFailed": "Couldn't create your account. Try again.",
+  "payTheBill": "Pay the bill",
+  "payPaidSoFar": "Paid so far",
+  "payRemaining": "Remaining",
+  "payFully": "Pay fully",
+  "paySplitBill": "Split bill",
+  "payHowToSplit": "How do you want to split?",
+  "payForYourItems": "Pay for your items",
+  "payDivideEqually": "Divide equally",
+  "payCustomAmount": "Custom amount",
+  "payPickItems": "Pick what you're paying for",
+  "payItemTaken": "Paid",
+  "paySplitBetween": "Split between",
+  "payYouPayFor": "You pay for",
+  "payPeople": "{count, plural, =1{1 person} other{{count} people}}",
+  "@payPeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "payAmountHint": "Amount",
+  "payUpTo": "Up to {amount}",
+  "@payUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payMoreThanLeft": "That's more than is left ({amount})",
+  "@payMoreThanLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payYourShare": "Your share",
+  "payOnlineFee": "Online payment fee",
+  "payTip": "Tip",
+  "payNoTip": "No tip",
+  "payYouPay": "You pay",
+  "payConfirm": "Pay {amount}",
+  "@payConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payMethods": "Card, wallet or Apple Pay on the next page",
+  "payMethodsNoApple": "Card or wallet on the next page",
+  "payShares": "Payments",
+  "payYou": "You",
+  "payGuest": "Guest",
+  "payPaying": "Paying…",
+  "payWaiting": "Waiting for your payment…",
+  "payWaitingHint": "Finish paying on the page that opened. This updates by itself.",
+  "payOpenAgain": "Open the payment page",
+  "payPaidTitle": "Paid, thank you!",
+  "payCharged": "{amount} charged",
+  "@payCharged": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payBillClosed": "The bill is fully paid.",
+  "payFailed": "The payment didn't go through",
+  "payExpired": "The payment timed out",
+  "payRefunded": "This payment was refunded",
+  "payStillConfirming": "Still confirming your payment",
+  "payStillConfirmingHint": "It can take a minute. Your bill updates as soon as it lands.",
+  "payCheckAgain": "Check again",
+  "payTryAgain": "Try again",
+  "payCouldNotOpen": "Couldn't open the payment page",
+  "payFailedToStart": "Couldn't start the payment. Try again.",
+  "payFailedToLoad": "Couldn't load the bill",
+  "payNothingOpen": "Nothing is on this table's bill yet",
+  "payWhyClosed": "This bill is closed",
+  "payWhyClockRunning": "You can pay once the time is stopped",
+  "payWhyEmpty": "Nothing on the bill yet",
+  "payWhyPaid": "This bill is fully paid",
+  "payWhyBeingPaid": "Someone is paying the rest right now"
 }

@@ -25,6 +25,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
 import { Route as AuthenticatedPromosIndexRouteImport } from './routes/_authenticated/promos/index'
 import { Route as AuthenticatedPlacesIndexRouteImport } from './routes/_authenticated/places/index'
+import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authenticated/menu/index'
@@ -140,6 +141,12 @@ const AuthenticatedPlacesIndexRoute =
   AuthenticatedPlacesIndexRouteImport.update({
     id: '/places/',
     path: '/places/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPaymentsIndexRoute =
+  AuthenticatedPaymentsIndexRouteImport.update({
+    id: '/payments/',
+    path: '/payments/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOrdersIndexRoute =
@@ -376,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
@@ -426,6 +434,7 @@ export interface FileRoutesByTo {
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
@@ -478,6 +487,7 @@ export interface FileRoutesById {
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/places/': typeof AuthenticatedPlacesIndexRoute
   '/_authenticated/promos/': typeof AuthenticatedPromosIndexRoute
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
@@ -530,6 +540,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/payments'
     | '/places'
     | '/promos'
     | '/requests'
@@ -580,6 +591,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/payments'
     | '/places'
     | '/promos'
     | '/requests'
@@ -631,6 +643,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu/'
     | '/_authenticated/notifications/'
     | '/_authenticated/orders/'
+    | '/_authenticated/payments/'
     | '/_authenticated/places/'
     | '/_authenticated/promos/'
     | '/_authenticated/requests/'
@@ -767,6 +780,13 @@ declare module '@tanstack/react-router' {
       path: '/places'
       fullPath: '/places'
       preLoaderRoute: typeof AuthenticatedPlacesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payments/': {
+      id: '/_authenticated/payments/'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/orders/': {
@@ -1034,6 +1054,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPlacesIndexRoute: typeof AuthenticatedPlacesIndexRoute
   AuthenticatedPromosIndexRoute: typeof AuthenticatedPromosIndexRoute
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
@@ -1077,6 +1098,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPlacesIndexRoute: AuthenticatedPlacesIndexRoute,
   AuthenticatedPromosIndexRoute: AuthenticatedPromosIndexRoute,
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
