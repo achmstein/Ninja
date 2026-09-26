@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { animate, AnimatePresence, LayoutGroup, motion, useMotionValue } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -8,6 +8,7 @@ import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
+import { ease, springSoft } from '@/lib/motion'
 import { useTickBeating } from '@/lib/tick-beat'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
@@ -27,8 +28,7 @@ export const Route = createFileRoute('/places')({
   component: PlacesPage,
   // ?scan={placeId}: a timed place's code just opened; the tab answers it
   // with a sheet from the bottom instead of a page of its own
-  validateSearch: (search: Record<string, unknown>): { scan?: number } =>
-    Number(search.scan) > 0 ? { scan: Number(search.scan) } : {},
+  validateSearch: (search: Record<string, unknown>): { scan?: number } => (Number(search.scan) > 0 ? { scan: Number(search.scan) } : {}),
 })
 
 /**
@@ -51,12 +51,7 @@ function PlacesPage() {
 
   // The scan's sheet sits over whatever the tab shows, and the address
   // forgets the scan once it has been answered
-  const scanSheet = scan ? (
-    <ScanSheet
-      placeId={scan}
-      onDone={() => navigate({ to: '/places', search: {}, replace: true })}
-    />
-  ) : null
+  const scanSheet = scan ? <ScanSheet placeId={scan} onDone={() => navigate({ to: '/places', search: {}, replace: true })} /> : null
 
   if (!visible) return null
   // Until the stays answer, cards of nothing: the places flashing up and
@@ -129,8 +124,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   useRoomsGroup()
   const { data: places = [], isLoading } = useBookablePlaces()
 
-  const reservationsEnabled =
-    features.reservations && (branch?.isReservationsEnabled ?? true)
+  const reservationsEnabled = features.reservations && (branch?.isReservationsEnabled ?? true)
   const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
   const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
   const allBusy = places.length > 0 && freeCount === 0
@@ -152,6 +146,14 @@ function PlacesList({ atTable }: { atTable: boolean }) {
 
   // Held, the reservation fills the space between the bars: the page does not scroll under it
   const held = opened != null
+  // Everything but the held place's own card goes, so the reservation can hand over to that
+  // card and back (the menu's crossfade); the title goes with the rest
+  const heldId = opened ? String(opened.placeId) : null
+  const titleShown = useMotionValue(held ? 0 : 1)
+  useEffect(() => {
+    const run = animate(titleShown, held ? 0 : 1, held ? { duration: 0.2, ease: ease.exit } : { ...springSoft, delay: 0.12 })
+    return () => run.stop()
+  }, [held, titleShown])
   useEffect(() => {
     if (!held) return
     const root = document.documentElement
@@ -164,24 +166,29 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   return (
     <NinjaPage
       title={t('rooms')}
+      fade={titleShown}
       subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
       <div inert={opened ? true : undefined} aria-hidden={opened ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
           {!reservationsEnabled && (
             <RiseItem>
-              <Panel className='text-destructive flex items-center gap-3 p-4'>
-                <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
-                  <Ban className='size-5' />
-                </span>
-                <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
-              </Panel>
+              <Recede gone={held}>
+                <Panel className='text-destructive flex items-center gap-3 p-4'>
+                  <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
+                    <Ban className='size-5' />
+                  </span>
+                  <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
+                </Panel>
+              </Recede>
             </RiseItem>
           )}
 
           {allBusy && !hold && auth.isAuthenticated && (
             <RiseItem>
-              <NotifyBanner />
+              <Recede gone={held}>
+                <NotifyBanner />
+              </Recede>
             </RiseItem>
           )}
 
@@ -195,14 +202,16 @@ function PlacesList({ atTable }: { atTable: boolean }) {
             <div className='flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start'>
               {places.map((place) => (
                 <RiseItem key={String(place.id)}>
-                  <PlaceCard
-                    place={place}
-                    canReserve={canReserve}
-                    open={openId === Number(place.id)}
-                    onToggle={handleToggle}
-                    // Booked, the form stays: the tick grows out of it (ReservationShape) and the hold closes it
-                    onDone={(outcome) => outcome === 'failed' && closeHold()}
-                  />
+                  <Recede gone={held && String(place.id) !== heldId}>
+                    <PlaceCard
+                      place={place}
+                      canReserve={canReserve}
+                      open={openId === Number(place.id)}
+                      onToggle={handleToggle}
+                      // Booked, the form stays until the hold opens the card into the reservation
+                      onDone={(outcome) => outcome === 'failed' && closeHold()}
+                    />
+                  </Recede>
                 </RiseItem>
               ))}
             </div>
@@ -211,7 +220,9 @@ function PlacesList({ atTable }: { atTable: boolean }) {
           {/* Telling someone already at a table to scan a table is noise */}
           {!atTable && (
             <RiseItem>
-              <ScanFooter />
+              <Recede gone={held}>
+                <ScanFooter />
+              </Recede>
             </RiseItem>
           )}
         </Rise>
@@ -221,5 +232,22 @@ function PlacesList({ atTable }: { atTable: boolean }) {
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </NinjaPage>
+  )
+}
+
+/**
+ * A part of the tab that goes while a reservation is open, a little smaller
+ * and fading, and comes back as it closes, a beat after the reservation
+ * starts to fold back into its card.
+ */
+function Recede({ gone, children }: { gone: boolean; children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={false}
+      animate={{ opacity: gone ? 0 : 1, scale: gone ? 0.96 : 1 }}
+      transition={gone ? { duration: 0.2, ease: ease.exit } : { ...springSoft, delay: 0.12 }}
+    >
+      {children}
+    </motion.div>
   )
 }
