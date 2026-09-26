@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as BillsRouteImport } from './routes/bills'
-import { Route as CartRouteImport } from './routes/cart'
 import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as LoyaltyRouteImport } from './routes/loyalty'
 import { Route as PlacesRouteImport } from './routes/places'
@@ -38,11 +37,6 @@ const AccountRoute = AccountRouteImport.update({
 const BillsRoute = BillsRouteImport.update({
   id: '/bills',
   path: '/bills',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CartRoute = CartRouteImport.update({
-  id: '/cart',
-  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClaimRoute = ClaimRouteImport.update({
@@ -105,7 +99,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
-  '/cart': typeof CartRoute
   '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
-  '/cart': typeof CartRoute
   '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/bills': typeof BillsRoute
-  '/cart': typeof CartRoute
   '/claim': typeof ClaimRoute
   '/loyalty': typeof LoyaltyRoute
   '/places': typeof PlacesRoute
@@ -159,7 +150,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/bills'
-    | '/cart'
     | '/claim'
     | '/loyalty'
     | '/places'
@@ -176,7 +166,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/bills'
-    | '/cart'
     | '/claim'
     | '/loyalty'
     | '/places'
@@ -193,7 +182,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/bills'
-    | '/cart'
     | '/claim'
     | '/loyalty'
     | '/places'
@@ -211,7 +199,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   BillsRoute: typeof BillsRoute
-  CartRoute: typeof CartRoute
   ClaimRoute: typeof ClaimRoute
   LoyaltyRoute: typeof LoyaltyRoute
   PlacesRoute: typeof PlacesRoute
@@ -246,13 +233,6 @@ declare module '@tanstack/react-router' {
       path: '/bills'
       fullPath: '/bills'
       preLoaderRoute: typeof BillsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cart': {
-      id: '/cart'
-      path: '/cart'
-      fullPath: '/cart'
-      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/claim': {
@@ -339,7 +319,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   BillsRoute: BillsRoute,
-  CartRoute: CartRoute,
   ClaimRoute: ClaimRoute,
   LoyaltyRoute: LoyaltyRoute,
   PlacesRoute: PlacesRoute,

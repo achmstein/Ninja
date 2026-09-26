@@ -6,7 +6,6 @@ import { QrCode } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { springSoft } from '@/lib/motion'
 import { getPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { cartHasItems } from '@/lib/cart'
 import { useBranchStore } from '@/stores/branch-store'
 import { usePlaceStore } from '@/stores/place-store'
 import { useT, useLocalized } from '@/lib/i18n'
@@ -49,7 +48,7 @@ function PlaceLinkPage() {
   const handled = useRef(false)
 
   const resume = () =>
-    navigate({ to: cartHasItems() ? '/cart' : '/', replace: true })
+    navigate({ to: '/', replace: true })
 
   useEffect(() => {
     if (handled.current || placeQuery.isLoading) return
