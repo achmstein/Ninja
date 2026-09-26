@@ -7,7 +7,7 @@ import { Clock } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { TICK_BEAT_MS, useTickBeat } from '@/lib/tick-beat'
+import { useTickBeat } from '@/lib/tick-beat'
 import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
@@ -24,8 +24,8 @@ const TICK = 48
  * Booking a place, as the app does it: the ten-minute window, the start-now
  * switch with the rate to start at, one button. It slides in under a place's
  * card on the tab, and sits in the sheet a scanned code opens. The button
- * becomes a spinner and then a tick, and the tick grows into the reservation
- * (components/places/reservation-shape).
+ * becomes a spinner and then a tick; once the tick has had its beat the
+ * place's card opens into the reservation (components/places/reservation).
  */
 export function HoldForm({
   place,
@@ -61,11 +61,11 @@ export function HoldForm({
     // Nothing is re-read until the tick has had its beat: the hold arriving
     // is what turns the card into the reservation, so it waits its turn
     // The tick has its beat, then the hold is read again, and its arriving
-    // opens the card into the reservation (ReservationShape)
+    // opens the card into the reservation (components/places/reservation)
     onSuccess: () => {
       setBooked(true)
       // The reservation waits out the beat however soon the hold comes back
-      startTickBeat(TICK_BEAT_MS)
+      startTickBeat()
       invalidate()
     },
     onError: (error) => {

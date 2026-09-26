@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { animate, AnimatePresence, LayoutGroup, motion, useMotionValue } from 'motion/react'
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -8,8 +8,8 @@ import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
-import { ease, springSoft } from '@/lib/motion'
-import { useTickBeating } from '@/lib/tick-beat'
+import { useAfterTickBeat } from '@/lib/tick-beat'
+import { useScrollLock } from '@/lib/use-scroll-lock'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
@@ -17,11 +17,13 @@ import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
-import { ReservationShape } from '@/components/places/reservation-shape'
+import { Reservation } from '@/components/places/reservation'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Panel } from '@/components/ninja/page/parts'
+import { Recede } from '@/components/motion/recede'
+import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/sign-in-options'
 
 export const Route = createFileRoute('/places')({
@@ -66,9 +68,7 @@ function PlacesPage() {
       </NinjaPage>
     )
   }
-  // One visit, one shape: a place's card becomes the reservation in the
-  // list itself, then the clock here, which takes the card over by its id
-  // (placeCardId) while the rest of the list falls away
+  // A running clock takes the tab over from the places
   const view = seat.kind === 'stay' ? 'stay' : 'list'
   return (
     <>
@@ -89,10 +89,13 @@ function PlacesPage() {
   )
 }
 
+/** How long after a reservation opens its card's booking form closes, ms: the card is out of sight by then */
+const FORM_CLOSES_MS = 900
+
 /** The bookable places of the branch — the rooms and stations with a
  *  clock, and any table the owner opened to reservations — as big cards,
- *  one open at a time with the booking under it. Once one is held the
- *  reservation grows over them (ReservationShape): one hold is all anyone gets. */
+ *  one open at a time with the booking under it. Once one is held its card
+ *  opens into the reservation (Reservation): one hold is all anyone gets. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const auth = useAuth()
@@ -102,21 +105,20 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [openId, setOpenId] = useState<number | null>(null)
-  // A hold closes whichever card was open, once the list has faded behind the
-  // reservation, so nothing shifts behind the tick as it starts to grow; by
-  // the time a cancel brings the list back the card is shut
-  // The reservation stays as it is while a tick has its beat, booking's or
-  // cancelling's, and follows the hold once the beat is over
-  const beating = useTickBeating()
-  const [kept, setKept] = useState(hold)
-  if (!beating && hold !== kept) setKept(hold)
-  const opened = beating ? kept : hold
-  const heldNow = opened != null
+  // The reservation shown: the hold, held still while a tick (booking's or
+  // cancelling's) has its beat. While it is open everything but its own
+  // place's card steps back and the page stays put under it
+  const opened = useAfterTickBeat(hold)
+  const held = opened != null
+  const heldId = opened ? String(opened.placeId) : null
+  const titleShown = useRecede(held)
+  useScrollLock(held)
+  // The card it opened out of closes its booking form once it is out of sight
   useEffect(() => {
-    if (!heldNow) return
-    const timer = window.setTimeout(() => setOpenId(null), 900)
+    if (!held) return
+    const timer = window.setTimeout(() => setOpenId(null), FORM_CLOSES_MS)
     return () => window.clearTimeout(timer)
-  }, [heldNow])
+  }, [held])
   const [signInOpen, setSignInOpen] = useState(false)
   const closeHold = useCallback(() => setOpenId(null), [])
 
@@ -143,25 +145,6 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     if (!(await ensureProfileComplete())) return
     setOpenId(Number(place.id))
   }
-
-  // Held, the reservation fills the space between the bars: the page does not scroll under it
-  const held = opened != null
-  // Everything but the held place's own card goes, so the reservation can hand over to that
-  // card and back (the menu's crossfade); the title goes with the rest
-  const heldId = opened ? String(opened.placeId) : null
-  const titleShown = useMotionValue(held ? 0 : 1)
-  useEffect(() => {
-    const run = animate(titleShown, held ? 0 : 1, held ? { duration: 0.2, ease: ease.exit } : { ...springSoft, delay: 0.12 })
-    return () => run.stop()
-  }, [held, titleShown])
-  useEffect(() => {
-    if (!held) return
-    const root = document.documentElement
-    root.style.overflow = 'hidden'
-    return () => {
-      root.style.overflow = ''
-    }
-  }, [held])
 
   return (
     <NinjaPage
@@ -229,26 +212,10 @@ function PlacesList({ atTable }: { atTable: boolean }) {
         </Rise>
       </div>
 
-      <ReservationShape hold={opened} />
+      <Reservation hold={opened} />
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </NinjaPage>
   )
 }
 
-/**
- * A part of the tab that goes while a reservation is open, a little smaller
- * and fading, and comes back as it closes, a beat after the reservation
- * starts to fold back into its card.
- */
-function Recede({ gone, children }: { gone: boolean; children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: gone ? 0 : 1, scale: gone ? 0.96 : 1 }}
-      transition={gone ? { duration: 0.2, ease: ease.exit } : { ...springSoft, delay: 0.12 }}
-    >
-      {children}
-    </motion.div>
-  )
-}

@@ -2,13 +2,12 @@ import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Plus } from 'lucide-react'
 import { type PlaceViewModel } from '@/api/spaces'
-import { spring, springSoft } from '@/lib/motion'
+import { spring, springOpen, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { canHold, hasOptions, PlaceIcon, placeStatusMeta, tariffOptions } from '@/lib/places'
+import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusMeta, tariffOptions } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
-import { OPEN_SPRING, placeCardId, placeNameId } from './reservation-shape'
 
 /**
  * One bookable place as a big card, the way the menu's deck shows a dish: a
@@ -54,10 +53,10 @@ export function PlaceCard({
   return (
     <motion.article
       ref={card}
-      // The reservation opens out of this card and closes back into it (ReservationShape)
+      // The reservation opens out of this card and closes back into it (components/places/reservation)
       layoutId={placeCardId(place.id)}
       layout
-      transition={OPEN_SPRING}
+      transition={springOpen}
       style={{ borderRadius: 28 }}
       className={cn(
         'relative isolate overflow-hidden',
@@ -104,7 +103,7 @@ export function PlaceCard({
 
         <span className='flex flex-col gap-1.5'>
           {/* The name travels into the reservation, the way a dish's photo stays on screen as it opens */}
-          <motion.span layoutId={placeNameId(place.id)} transition={OPEN_SPRING} className='heading w-fit text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>
+          <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>
             {localized(place.name)}
           </motion.span>
           {place.description && (

@@ -68,3 +68,29 @@ export function blurSwap(reduced: boolean | null) {
     transition: { duration: duration.base, ease: ease.enter },
   }
 }
+
+/**
+ * A view opening out of the card it came from, sharing its layout id: a
+ * dish into its options (components/ninja/tune.tsx), a place into its
+ * reservation. Quick and firm, so the card seems to become the view.
+ */
+export const springOpen: Transition = { type: 'spring', stiffness: 380, damping: 36 }
+
+/**
+ * Where `v` is inside the window `from`..`to` of a 0–1 progress, as 0–1. One
+ * progress can then drive several parts, each with its own entrance and
+ * exit, so they come in on their own beats and never overlap.
+ */
+export function progressWindow(v: number, from: number, to: number): number {
+  return Math.min(1, Math.max(0, (v - from) / (to - from)))
+}
+
+/**
+ * A part of a page stepping back while something opens over it, and coming
+ * back as that closes: going is quick and gathers pace; coming back waits
+ * a beat for what covered it to start closing, then springs
+ */
+export const recede = {
+  go: { duration: 0.2, ease: ease.exit },
+  back: { ...springSoft, delay: 0.12 },
+} satisfies Record<string, Transition>

@@ -139,3 +139,11 @@ export function optionName(
 export function placeKindOf(kind: string | null | undefined): number {
   return kind === 'Table' ? PLACE_TABLE : kind === 'Station' ? PLACE_STATION : PLACE_ROOM
 }
+
+/**
+ * The layout ids a place's card shares with its reservation, so the one
+ * opens out of the other (components/places/reservation.tsx): the card
+ * itself, and its name, which travels with it
+ */
+export const placeCardId = (placeId: number | string | null | undefined) => `place-${placeId}`
+export const placeNameId = (placeId: number | string | null | undefined) => `place-name-${placeId}`

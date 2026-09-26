@@ -4,6 +4,7 @@ import { Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import {
@@ -23,8 +24,6 @@ export type TuneResult = {
   instructions: string
   unitPrice: number
 }
-
-const SPRING = { type: 'spring', stiffness: 380, damping: 36 } as const
 
 /**
  * A card opened in place: the card itself grows to fill the Ninja menu (it
@@ -86,7 +85,7 @@ export function Tune({
     <motion.div
       layoutId={`card-${item.id}`}
       style={{ borderRadius: 0 }}
-      transition={SPRING}
+      transition={springOpen}
       role='dialog'
       aria-modal='true'
       aria-label={localized(item.name)}
@@ -97,7 +96,7 @@ export function Tune({
         <motion.div
           ref={photo}
           layoutId={`photo-${item.id}`}
-          transition={SPRING}
+          transition={springOpen}
           className={cn('relative h-[34svh] max-h-80 overflow-hidden', !hasPhoto && TONE_CLASS[tone])}
         >
           {hasPhoto ? (
@@ -120,7 +119,7 @@ export function Tune({
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
-          transition={{ ...SPRING, delay: 0.06 }}
+          transition={{ ...springOpen, delay: 0.06 }}
           className='flex flex-col gap-6 px-5 pt-5 pb-6'
         >
           <div>
@@ -133,7 +132,7 @@ export function Tune({
               key={String(customization.id)}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SPRING, delay: 0.1 + i * 0.05 }}
+              transition={{ ...springOpen, delay: 0.1 + i * 0.05 }}
               className='flex flex-col gap-2.5'
             >
               <legend className='mb-2.5 flex items-baseline gap-2 text-sm font-semibold'>
@@ -169,7 +168,7 @@ export function Tune({
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
-        transition={{ ...SPRING, delay: 0.08 }}
+        transition={{ ...springOpen, delay: 0.08 }}
         className='bg-background flex items-center gap-3 border-t px-4 py-3'
       >
         <div className='flex items-center gap-1'>
@@ -263,7 +262,7 @@ function SizeControl({ customization, selected, onPick }: ControlProps) {
             {on && (
               <motion.span
                 layoutId={`size-${customization.id}`}
-                transition={SPRING}
+                transition={springOpen}
                 aria-hidden
                 className='bg-primary/10 absolute inset-0 rounded-2xl'
               />
@@ -346,7 +345,7 @@ function DialControl({ customization, selected, onPick }: ControlProps) {
               on ? 'text-primary-foreground' : 'text-muted-foreground'
             )}
           >
-            {on && <motion.span layoutId={`dial-${customization.id}`} transition={SPRING} aria-hidden className='bg-primary absolute inset-0 rounded-full' />}
+            {on && <motion.span layoutId={`dial-${customization.id}`} transition={springOpen} aria-hidden className='bg-primary absolute inset-0 rounded-full' />}
             <span className='relative block truncate'>{name}</span>
           </button>
         )

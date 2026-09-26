@@ -5,7 +5,7 @@ import { usePrice, useT } from '@/lib/i18n'
 import { isOpen, useMyBills } from '@/lib/bills'
 import { cn } from '@/lib/utils'
 import { formatClock, useSecondTick } from '@/lib/clock'
-import { blurSwap } from '@/lib/motion'
+import { blurSwap, ease } from '@/lib/motion'
 import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
 import { DOCK_INSET, DOCK_SIDE } from './chrome'
@@ -135,7 +135,8 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
                 className={hurry ? 'text-red-400' : 'text-amber-400'}
                 initial={false}
                 animate={{ pathLength: Math.max(0.001, share) }}
-                transition={{ duration: 1, ease: 'linear' }}
+                // A short step once a second rather than a draw on every frame
+                transition={{ duration: 0.4, ease: ease.move }}
               />
             </svg>
           ) : (
