@@ -114,7 +114,9 @@ function ProfilePage() {
       <Rise className='flex flex-col gap-5'>
         {/* Who you are, on the dock's slab; a member's points ring round at its end */}
         <RiseItem>
-          <Slab className='flex items-center gap-4'>
+          <Slab className='isolate flex items-center gap-4'>
+            {/* Its mark large and faint in the corner, as the other slabs wear theirs */}
+            <User className='pointer-events-none absolute -end-6 -bottom-10 -z-10 size-44 -rotate-12 opacity-[0.07]' />
             <div className='bg-background/12 grid size-16 shrink-0 place-items-center rounded-full text-2xl font-extrabold'>
               {signedIn ? (displayName || '?')[0]?.toUpperCase() : guestContact ? guestContact.name[0]?.toUpperCase() : <User className='size-7 opacity-70' />}
             </div>
