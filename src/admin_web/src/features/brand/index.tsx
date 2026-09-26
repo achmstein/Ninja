@@ -104,7 +104,19 @@ type ThemeForm = {
   darkPrimary: string
   darkAccent: string
   darkSurface: string
+  /** How the menu lists the dishes: '' the swiped cards, 'row' the classic list */
+  menuItem: string
 }
+
+/** A start for the three colours: the brand's, the secondary, the page */
+const PALETTES: Array<{ key: TranslationKey; primary: string; accent: string; surface: string }> = [
+  { key: 'paletteEspresso', primary: '#6b4226', accent: '#d9a066', surface: '#faf6f1' },
+  { key: 'paletteOlive', primary: '#4d6b3c', accent: '#c9a227', surface: '#f6f7f1' },
+  { key: 'paletteOcean', primary: '#1f5f8b', accent: '#4fb3bf', surface: '#f3f8fb' },
+  { key: 'paletteBerry', primary: '#8e2c48', accent: '#e8a0b4', surface: '#fbf4f6' },
+  { key: 'paletteCharcoal', primary: '#2b2f36', accent: '#f2b705', surface: '#f7f7f8' },
+  { key: 'paletteTerracotta', primary: '#b4532a', accent: '#e9b872', surface: '#fbf5ef' },
+]
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   accent: t.accent ?? '',
@@ -118,6 +130,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkPrimary: t.dark?.primary ?? '',
   darkAccent: t.dark?.accent ?? '',
   darkSurface: t.dark?.surface ?? '',
+  menuItem: t.layout?.menuItem === 'row' ? 'row' : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
@@ -135,7 +148,8 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
     // Ninja is the only style for now, worn whole
     style: 'ninja',
-    layout: null,
+    // The one part the café picks for now: the classic list instead of the cards
+    layout: f.menuItem ? { menuItem: f.menuItem, categories: null, header: null, buttons: null, surface: null, density: null } : null,
   }
 }
 
@@ -288,6 +302,39 @@ function BrandForm({ brand }: { brand: Brand }) {
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
+              {/* Ready-made palettes: one tap sets the three colours, each still editable under them */}
+              <div className='space-y-1.5'>
+                <span className='text-xs font-medium'>{t('brandPalettes')}</span>
+                <div className='flex flex-wrap gap-2'>
+                  {PALETTES.map((p) => {
+                    const on = color.toLowerCase() === p.primary && theme.accent.toLowerCase() === p.accent && theme.surface.toLowerCase() === p.surface
+                    return (
+                      <button
+                        key={p.key}
+                        type='button'
+                        aria-pressed={on}
+                        onClick={() => {
+                          setColor(p.primary)
+                          // The dark scheme is derived from them again, rather than kept from before
+                          setTheme({ ...theme, accent: p.accent, surface: p.surface, darkPrimary: '', darkAccent: '', darkSurface: '' })
+                        }}
+                        className={cn(
+                          'flex items-center gap-2 rounded-full border py-1.5 ps-1.5 pe-3 text-xs font-medium transition-colors',
+                          on ? 'border-foreground' : 'hover:border-foreground/40'
+                        )}
+                      >
+                        <span className='flex -space-x-1.5 rtl:space-x-reverse'>
+                          {[p.primary, p.accent, p.surface].map((c) => (
+                            <span key={c} className='ring-background size-5 rounded-full ring-2' style={{ backgroundColor: c }} />
+                          ))}
+                        </span>
+                        {t(p.key)}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className='text-muted-foreground text-xs'>{t('brandPalettesHint')}</p>
+              </div>
               <div className='grid items-start gap-3 sm:grid-cols-2'>
                 <ColorField
                   id='brand-color'
@@ -334,6 +381,21 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-menu' className='text-xs'>
+                    {t('menuLayout')}
+                  </Label>
+                  <Select value={theme.menuItem || NONE} onValueChange={(v) => setTheme({ ...theme, menuItem: v === NONE ? '' : v })}>
+                    <SelectTrigger id='brand-menu' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t('menuLayoutCards')}</SelectItem>
+                      <SelectItem value='row'>{t('menuLayoutClassic')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-mode' className='text-xs'>
