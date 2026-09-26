@@ -84,8 +84,9 @@ function TableChip() {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
-          side='bottom'
-          className='mx-auto max-w-lg gap-0 overflow-hidden rounded-t-[1.75rem] border-t-0 p-0 pb-[env(safe-area-inset-bottom)] [&>button]:text-background'
+          // Opened from the chip in the top bar, so it drops from there
+          side='top'
+          className='gap-0 p-0'
         >
           <SheetTitle className='sr-only'>{localized(place.name)}</SheetTitle>
           <div className='max-h-[85svh] overflow-y-auto'>

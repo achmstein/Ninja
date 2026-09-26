@@ -21,7 +21,6 @@ import {
   startSeats,
   type SplitKind,
 } from '@/lib/pay'
-import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { usePayView, type PaySource } from '@/lib/use-pay'
 import { cn } from '@/lib/utils'
 import { useGuestStore } from '@/stores/guest-store'
@@ -87,17 +86,13 @@ export function PaySheet({
   const t = useT()
   const localized = useLocalized()
   const view = usePayView(source, { enabled: open })
-  const keyboardInset = useKeyboardInset(open)
   const data = view.data
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side='bottom'
-        style={keyboardInset ? { bottom: keyboardInset } : undefined}
-        className='mx-auto flex max-h-[92svh] max-w-lg flex-col gap-0 rounded-t-[1.75rem] border-t-0 p-0'
+        className='gap-0 p-0'
       >
-        <div className='bg-muted-foreground/40 mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full' />
         <SheetHeader className='shrink-0 px-5 pt-3 pb-0 text-start'>
           <SheetTitle className='heading pe-8 text-[calc(1.5rem*var(--heading-scale))] leading-tight'>
             {t(start === 'full' ? 'payFully' : start === 'split' ? 'splitBill' : 'payTheBill')}

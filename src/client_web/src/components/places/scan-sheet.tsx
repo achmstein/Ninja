@@ -123,13 +123,11 @@ export function ScanSheet({
         }}
       >
         <SheetContent
-          side='bottom'
-          className='mx-auto max-w-lg gap-0 rounded-t-[1.75rem] border-t-0 p-2 pb-[max(1rem,env(safe-area-inset-bottom))] [&>button]:end-5 [&>button]:top-5 [&>button]:text-primary-foreground'
+          className='gap-0 px-2 pb-2'
         >
           {/* The place on its card, as the tab shows it */}
           <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
             <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-            <div className='bg-primary-foreground/40 mx-auto mb-2 h-1 w-10 rounded-full' />
             <SheetTitle className='heading text-primary-foreground pe-8 text-[calc(1.75rem*var(--heading-scale))] leading-tight'>
               {localized(place.name)}
             </SheetTitle>

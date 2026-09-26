@@ -185,12 +185,9 @@ function RatingSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side='bottom'
-        className='mx-auto max-w-lg gap-0 rounded-t-2xl border-t-0 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]'
       >
-        <div className='bg-muted-foreground mx-auto mb-4 h-1 w-10 rounded-full' />
 
-        <SheetHeader className='p-0 text-start'>
+        <SheetHeader>
           <SheetTitle className='pe-8 text-xl font-bold'>
             {t('rateYourOrder')}
           </SheetTitle>
