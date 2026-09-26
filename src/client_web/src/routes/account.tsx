@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { AnimatePresence, motion } from 'motion/react'
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronRight, CircleAlert, Wallet } from 'lucide-react'
 import { type TransactionViewModel } from '@/api/accounts'
 import { getMyAccountOptions, getMyTransactionsOptions } from '@/api/accounts/@tanstack/react-query.gen'
@@ -11,7 +12,9 @@ import { RequireAuth } from '@/components/require-auth'
 import { RequireFeature } from '@/components/require-feature'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
+import { springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { BillReceipt } from '@/components/bills/receipt-view'
 
 export const Route = createFileRoute('/account')({
   component: () => (
@@ -117,6 +120,7 @@ function BalanceSlab({ balance }: { balance: number }) {
 function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
+  const [open, setOpen] = useState(false)
   const isCharge = (tx.type ?? '').toLowerCase() === 'charge'
 
   // App parity (_formatDate): relative for the first week, then "MMM d"
@@ -163,16 +167,37 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
     </>
   )
 
-  return tx.ticketId != null ? (
-    <Link
-      to='/receipts/$ticketId'
-      params={{ ticketId: String(tx.ticketId) }}
-      className='active:bg-foreground/[0.06] flex items-center gap-3 px-4 py-3 transition-colors'
-    >
-      {row}
-      <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />
-    </Link>
-  ) : (
-    <div className='flex items-center gap-3 px-4 py-3'>{row}</div>
+  // A charge from the till has its receipt: printed out under the row, as a bill's is, not a page of its own
+  if (tx.ticketId == null) return <div className='flex items-center gap-3 px-4 py-3'>{row}</div>
+  return (
+    <div className='flex flex-col'>
+      <button
+        type='button'
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className='active:bg-foreground/[0.06] flex items-center gap-3 px-4 py-3 text-start transition-colors'
+      >
+        {row}
+        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={springSoft} className='text-muted-foreground shrink-0 rtl:-scale-x-100'>
+          <ChevronRight className='size-4' />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key='paper'
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={springSoft}
+            className='overflow-hidden'
+          >
+            <div className='px-3 pb-4'>
+              <BillReceipt ticketId={Number(tx.ticketId)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
