@@ -129,8 +129,6 @@ function LoyaltyPage() {
         {/* The balance as a ring round towards the next tier, on the dock's slab */}
         <RiseItem>
           <Slab className='isolate flex flex-col items-center gap-4 py-7 text-center'>
-            {/* The programme's mark, large and faint in the corner, as a place's card wears its own */}
-            <Award className='pointer-events-none absolute -end-8 -bottom-10 -z-10 size-48 -rotate-12 opacity-[0.07]' />
             <PointsRing points={Number(account?.pointsBalance ?? 0)} progress={progress} label={t('pts')} size={148} />
             <div className='flex flex-col items-center gap-1.5'>
               <div className='inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300'>
