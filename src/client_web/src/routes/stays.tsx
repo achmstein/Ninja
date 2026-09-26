@@ -1,13 +1,11 @@
-import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Gamepad2 } from 'lucide-react'
 import { type StayViewModel } from '@/api/spaces'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
-import { businessDayStart } from '@/lib/business-day'
 import { useMyStays } from '@/lib/stays'
 import { useLanguage, useT } from '@/lib/i18n'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Empty, SectionLabel, Segment } from '@/components/ninja/page/parts'
+import { Empty, SectionLabel } from '@/components/ninja/page/parts'
 import { StayCard } from '@/components/places/stay-card'
 import { RequireAuth } from '@/components/require-auth'
 import { RequireFeature } from '@/components/require-feature'
@@ -29,55 +27,20 @@ function startOf(stay: StayViewModel): Date | null {
   return raw ? new Date(raw) : null
 }
 
-/** The customer's time at the café's rooms and stations: today's, and the
- *  ones before it by shift day, each a card (a running one the slab). */
+/** The customer's time at the café's rooms and stations, all of it in one
+ *  list by shift day (Today, Yesterday, a date), newest first, each a card
+ *  (a running one the slab). */
 function StaysPage() {
   const t = useT()
-  const branch = useSelectedBranch()
   const { data: stays = [], isLoading } = useMyStays()
-  const [tab, setTab] = useState<'today' | 'previous'>('today')
-
-  const dayStart = businessDayStart(branch).getTime()
-  const todaySessions = stays.filter((s) => {
-    const start = startOf(s)
-    return start != null && start.getTime() >= dayStart
-  })
-  const previousSessions = stays.filter((s) => {
-    const start = startOf(s)
-    return start == null || start.getTime() < dayStart
-  })
-
   return (
     <NinjaPage title={t('sessions')} back='/profile' push='stays'>
-      <Segment
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: 'today', label: t('today') },
-          { value: 'previous', label: t('earlier') },
-        ]}
-      />
-      {tab === 'today' ? (
-        <StayList key='today' stays={todaySessions} isLoading={isLoading} emptyTitle={t('noSessionsToday')} />
-      ) : (
-        <StayList key='previous' stays={previousSessions} isLoading={isLoading} emptyTitle={t('noSessionsYet')} grouped />
-      )}
+      <StayList stays={stays} isLoading={isLoading} />
     </NinjaPage>
   )
 }
 
-function StayList({
-  stays,
-  isLoading,
-  emptyTitle,
-  grouped = false,
-}: {
-  stays: StayViewModel[]
-  isLoading: boolean
-  emptyTitle: string
-  /** History: one heading per shift day (Today, Yesterday, a date), like the app */
-  grouped?: boolean
-}) {
+function StayList({ stays, isLoading }: { stays: StayViewModel[]; isLoading: boolean }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
   const branch = useSelectedBranch()
@@ -86,7 +49,7 @@ function StayList({
     return (
       <div className='flex flex-col gap-4'>
         {[...Array(3)].map((_, i) => (
-          <div key={i} className='surface flex flex-col gap-3 rounded-[1.5rem] p-5'>
+          <div key={i} className='bg-muted flex flex-col gap-3 rounded-[1.5rem] p-5'>
             <Skeleton className='h-4 w-32' />
             <Skeleton className='h-8 w-24' />
             <Skeleton className='h-3 w-20' />
@@ -96,19 +59,7 @@ function StayList({
     )
   }
 
-  if (stays.length === 0) return <Empty icon={Gamepad2} title={emptyTitle} />
-
-  if (!grouped) {
-    return (
-      <Rise className='flex flex-col gap-4'>
-        {stays.map((stay) => (
-          <RiseItem key={String(stay.id)}>
-            <StayCard stay={stay} />
-          </RiseItem>
-        ))}
-      </Rise>
-    )
-  }
+  if (stays.length === 0) return <Empty icon={Gamepad2} title={t('noSessionsYet')} />
 
   // Overnight shifts: a stay before the start hour belongs to the
   // previous day's shift (same rule as the bills page and the app)
