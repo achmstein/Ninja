@@ -67,14 +67,17 @@ export function ReservationFace({ reservation }: { reservation: ReservationViewM
         {t('ninjaHeldFor')}
       </span>
 
-      {left != null ? (
-        <CountdownRing left={left} total={total ?? left} hurry={hurry} />
-      ) : (
-        <div className='flex flex-col items-center gap-2'>
-          <PlaceIcon kind={kind} className='size-16' />
-          <span className='heading text-[calc(2.5rem*var(--heading-scale))] leading-none'>{forTime ?? placeName}</span>
+      {/* What is held, under the time it is held for: the card says whose room it is on its own */}
+      <div className='flex flex-col items-center gap-4'>
+        {left != null ? <CountdownRing left={left} total={total ?? left} hurry={hurry} /> : <PlaceIcon kind={kind} className='size-16' />}
+        <div className='flex flex-col items-center gap-1'>
+          <span className='flex items-center gap-2'>
+            {left != null && <PlaceIcon kind={kind} className='size-5 shrink-0 opacity-70' />}
+            <span className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{placeName}</span>
+          </span>
+          {forTime && <span className='text-muted-foreground text-sm font-medium'>{t('ninjaHoldFor', { time: forTime })}</span>}
         </div>
-      )}
+      </div>
 
       <div className='flex flex-col items-center gap-2'>
         <span className='flex items-center gap-2 text-[15px] font-semibold'>
