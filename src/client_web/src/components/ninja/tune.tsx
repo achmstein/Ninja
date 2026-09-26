@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Check, ChevronLeft, Minus, Plus, X } from 'lucide-react'
+import { ChevronLeft, Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -607,10 +607,9 @@ function PickControl({ customization, selected, onPick }: ControlProps) {
   )
 }
 
-/** Extras, as many as wanted: chips whose + turns into a tick when picked, with what each adds */
+/** Extras, as many as wanted: chips that fill when picked, with what each adds */
 function ExtrasControl({ customization, selected, onPick }: ControlProps) {
   const text = useOptionText()
-  const swap = blurSwap(useReducedMotion())
   return (
     <div className='flex flex-wrap gap-2' role='group'>
       {sortedOptions(customization).map((option) => {
@@ -626,17 +625,10 @@ function ExtrasControl({ customization, selected, onPick }: ControlProps) {
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
             className={cn(
-              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] py-1.5 ps-2 pe-4 text-start text-sm leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
+              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] px-4 py-1.5 text-start text-sm leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
               on ? 'bg-primary text-primary-foreground' : 'bg-muted'
             )}
           >
-            <span className={cn('grid size-7 shrink-0 place-items-center rounded-full transition-colors duration-200', on ? 'bg-primary-foreground/20' : 'bg-background')}>
-              <AnimatePresence mode='popLayout' initial={false}>
-                <motion.span key={on ? 'on' : 'off'} {...swap} className='grid place-items-center'>
-                  {on ? <Check className='size-4' /> : <Plus className='size-4' />}
-                </motion.span>
-              </AnimatePresence>
-            </span>
             <span className='min-w-0 break-words'>{name}</span>
             {extra && <span className='shrink-0 text-xs tabular-nums opacity-75'>{extra}</span>}
           </button>
