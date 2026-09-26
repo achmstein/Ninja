@@ -48,6 +48,13 @@
   z-index: 100;
 }
 
+/* The island sits on the top bar's middle line and at its edge, like the
+   logo opposite it: sileo pads its container by 0.75rem on every side, on
+   top of the offset the toaster gives it (routes/__root.tsx) */
+:root [data-sileo-viewport] {
+  padding: 0;
+}
+
 /* Sileo capitalises every word of a title; ours are sentences ("Tea added") */
 :root [data-sileo-title] {
   text-transform: none;
