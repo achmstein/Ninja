@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { type ReservationViewModel } from '@/api/spaces'
-import { springOpen } from '@/lib/motion'
+import { ease, springOpen } from '@/lib/motion'
 import { placeCardId } from '@/lib/places'
 import { useEntrance } from '@/components/motion/use-entrance'
 import { ReservationFace } from './reservation-face'
@@ -27,6 +27,9 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       // Solid from its first frame: a crossfade would show the room card's own content through it
       layoutCrossfade={false}
       transition={springOpen}
+      // Closing, it hands over at once: it fades as the room's card, already under it with its
+      // own face, runs back to its place, rather than shrinking empty over the card
+      exit={{ opacity: 0, transition: { duration: 0.16, ease: ease.exit } }}
       style={{ borderRadius: 32 }}
       role='dialog'
       aria-label={String(hold.placeName?.en ?? '')}
@@ -34,9 +37,9 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       className='bg-foreground text-background fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[84px] z-20 mx-auto max-w-lg overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] md:top-24 md:bottom-6 [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
     >
       {/* Contained: what changes inside (the clock each second) never lays out or repaints the page around it */}
-      <motion.div className='no-scrollbar size-full overflow-y-auto [contain:content]' exit={{ opacity: 0, transition: { duration: 0.12 } }}>
+      <div className='no-scrollbar size-full overflow-y-auto [contain:content]'>
         <ReservationFace reservation={hold} clock={clock} />
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
