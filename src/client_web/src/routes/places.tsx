@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { AnimatePresence, LayoutGroup, motion, useMotionValue } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -10,13 +10,12 @@ import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
-import { springSoft } from '@/lib/motion'
-import { cn } from '@/lib/utils'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
-import { BEAT, PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
+import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
+import { ReservationShape, useCamera } from '@/components/places/reservation-shape'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -96,8 +95,8 @@ function PlacesPage() {
 
 /** The bookable places of the branch — the rooms and stations with a
  *  clock, and any table the owner opened to reservations — as big cards,
- *  one open at a time with the booking under it. Once one is held its card
- *  becomes the reservation and the others go: one hold is all anyone gets. */
+ *  one open at a time with the booking under it. Once one is held the
+ *  reservation grows over them (ReservationShape): one hold is all anyone gets. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const localized = useLocalized()
@@ -145,94 +144,72 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     setOpenId(Number(place.id))
   }
 
-  // Held, only that place is left, fetched with the rest or, if it is not
-  // among them (booked from a scanned code), drawn from the hold itself
-  const heldId = hold ? String(hold.placeId) : null
-  const heldPlace = places.filter((p) => String(p.id) === heldId)
-  const shown = !hold
-    ? places
-    : heldPlace.length > 0
-      ? heldPlace
-      : [{ id: hold.placeId, name: hold.placeName, kind: hold.placeKind } as PlaceViewModel]
-  const heldIndex = heldId ? places.findIndex((p) => String(p.id) === heldId) : -1
+  // One progress for the whole move between the places and the reservation:
+  // the shape grows over the list and the list falls out of focus behind it
+  const progress = useMotionValue(hold ? 1 : 0)
+  const camera = useCamera(progress)
+  const placeCard = useCallback(
+    (placeId: number | string | undefined) => document.querySelector<HTMLElement>(`[data-place='${String(placeId)}']`),
+    []
+  )
 
   return (
     <NinjaPage
       title={hold ? localized(hold.placeName) || t('reserved') : t('rooms')}
-      subtitle={
-        hold
-          ? undefined
-          : !isLoading && places.length > 0 && reservationsEnabled
-            ? t('bookFreeNow', { count: freeCount })
-            : undefined
-      }
+      subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
-      <Rise className='flex flex-col gap-4'>
-        {!reservationsEnabled && !hold && (
-          <RiseItem>
-            <Panel className='text-destructive flex items-center gap-3 p-4'>
-              <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
-                <Ban className='size-5' />
-              </span>
-              <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
-            </Panel>
-          </RiseItem>
-        )}
+      <motion.div style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
+        <Rise className='flex flex-col gap-4'>
+          {!reservationsEnabled && (
+            <RiseItem>
+              <Panel className='text-destructive flex items-center gap-3 p-4'>
+                <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
+                  <Ban className='size-5' />
+                </span>
+                <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
+              </Panel>
+            </RiseItem>
+          )}
 
-        {allBusy && !hold && auth.isAuthenticated && (
-          <RiseItem>
-            <NotifyBanner />
-          </RiseItem>
-        )}
+          {allBusy && !hold && auth.isAuthenticated && (
+            <RiseItem>
+              <NotifyBanner />
+            </RiseItem>
+          )}
 
-        {isLoading ? (
-          <RiseItem className='flex flex-col gap-4'>
-            <PlaceCardSkeleton />
-            <PlaceCardSkeleton />
-            <PlaceCardSkeleton />
-          </RiseItem>
-        ) : (
-          <div className={cn('flex flex-col gap-4', !hold && 'md:grid md:grid-cols-2 md:items-start')}>
-            <AnimatePresence mode='popLayout'>
-              {shown.map((place, i) => (
-                <motion.div
-                  key={String(place.id)}
-                  // Only its place moves as the others go or come back; its size is the card's own spring
-                  layout='position'
-                  transition={{ layout: { ...springSoft, delay: BEAT.move } }}
-                  // The others slide away one after another, nearest the held one first
-                  exit={{
-                    opacity: 0,
-                    y: 48,
-                    scale: 0.94,
-                    filter: 'blur(4px)',
-                    transition: { duration: 0.24, ease: [0.4, 0, 1, 1], delay: Math.abs(i - Math.max(0, heldIndex)) * 0.04 },
-                  }}
-                  initial={{ opacity: 0, y: 48, scale: 0.94 }}
-                  animate={{ opacity: 1, y: 0, scale: 1, transition: { ...springSoft, delay: i * 0.04 } }}
-                >
+          {isLoading ? (
+            <RiseItem className='flex flex-col gap-4'>
+              <PlaceCardSkeleton />
+              <PlaceCardSkeleton />
+              <PlaceCardSkeleton />
+            </RiseItem>
+          ) : (
+            <div className='flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start'>
+              {places.map((place) => (
+                <RiseItem key={String(place.id)}>
                   <PlaceCard
                     place={place}
                     canReserve={canReserve}
                     open={openId === Number(place.id) && !hold}
                     onToggle={handleToggle}
-                    onDone={closeHold}
-                    reservation={heldId === String(place.id) ? hold : undefined}
+                    // Booked, the form stays until the hold arrives and the tick grows out of it (ReservationShape)
+                    onDone={(outcome) => outcome === 'failed' && closeHold()}
                   />
-                </motion.div>
+                </RiseItem>
               ))}
-            </AnimatePresence>
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* Telling someone already at a table to scan a table is noise */}
-        {!atTable && !hold && (
-          <RiseItem>
-            <ScanFooter />
-          </RiseItem>
-        )}
-      </Rise>
+          {/* Telling someone already at a table to scan a table is noise */}
+          {!atTable && (
+            <RiseItem>
+              <ScanFooter />
+            </RiseItem>
+          )}
+        </Rise>
+      </motion.div>
 
+      <ReservationShape hold={hold} progress={progress} placeCard={placeCard} />
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </NinjaPage>

@@ -1,29 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Plus } from 'lucide-react'
-import { type PlaceViewModel, type ReservationViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@/api/spaces'
 import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { canHold, hasOptions, PlaceIcon, placeStatusMeta, tariffOptions } from '@/lib/places'
-import { useMeasuredHeight } from '@/lib/use-measured-height'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
-import { ReservationFace } from './reservation-view'
-
-/**
- * The beats of a card becoming the reservation, and back, after the book
- * button's tick: the other places leave (0 s); this card slides to its new
- * place (BEAT.move) while its height springs open and its colour turns
- * (BEAT.grow); its face blurs out and the new one blurs in once the old has
- * gone (FACE_IN_DELAY), so the two never overlap. Height, not a layout
- * scale, so nothing inside stretches on the way.
- */
-export const BEAT = { move: 0.1, grow: 0.14 } as const
-const FACE_IN_DELAY = 0.26
-const FACE_OUT = { opacity: 0, scale: 0.97, filter: 'blur(6px)', transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } } as const
-const FACE_IN = { opacity: 0, scale: 0.97, filter: 'blur(6px)' } as const
-const FACE_SHOWN = { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ...springSoft, delay: FACE_IN_DELAY } } as const
 
 /**
  * One bookable place as a big card, the way the menu's deck shows a dish: a
@@ -31,11 +15,6 @@ const FACE_SHOWN = { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { ..
  * big behind it, a busy one quiet on a light card. A tap on a free one
  * grows the card and slides the booking in beneath its face, the way a
  * dish opens into its options; a second tap folds it away.
- *
- * Held (`reservation`), the same card becomes the reservation: it grows to
- * fill the screen, its colour turns to the dock's dark, and its face swaps
- * for the countdown with a short blur (BEAT). It is one element the whole
- * way, so booking never cuts; cancelling plays it back.
  */
 export function PlaceCard({
   place,
@@ -43,7 +22,6 @@ export function PlaceCard({
   open,
   onToggle,
   onDone,
-  reservation,
 }: {
   place: PlaceViewModel
   /** Signed in, no hold already, reservations on */
@@ -51,33 +29,15 @@ export function PlaceCard({
   open: boolean
   onToggle: (place: PlaceViewModel) => void
   /** The booking under the card went through or was turned down */
-  onDone: () => void
-  /** The customer's hold on this place, which the card turns into */
-  reservation?: ReservationViewModel
+  onDone: (outcome: 'booked' | 'failed') => void
 }) {
   const t = useT()
   const localized = useLocalized()
   const reduced = useReducedMotion()
   const card = useRef<HTMLElement>(null)
-  const [content, height] = useMeasuredHeight<HTMLDivElement>()
-  // The card springs its height on the beat only while it turns into the
-  // reservation or back; otherwise it follows its content at once (the
-  // booking form opening under it animates its own height already)
-  const [turning, setTurning] = useState(false)
-  const [wasHeld, setWasHeld] = useState(reservation != null)
-  if ((reservation != null) !== wasHeld) {
-    setWasHeld(reservation != null)
-    setTurning(true)
-  }
-  useEffect(() => {
-    if (!turning) return
-    const timer = window.setTimeout(() => setTurning(false), 900)
-    return () => window.clearTimeout(timer)
-  }, [turning])
 
-  const held = reservation != null
   const free = canHold(place)
-  const tappable = free && canReserve && !held
+  const tappable = free && canReserve
   const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
 
   // An opened card near the bottom brings its booking into view
@@ -90,101 +50,82 @@ export function PlaceCard({
   return (
     <motion.article
       ref={card}
-      initial={false}
-      animate={{ height }}
-      transition={turning ? { ...springSoft, delay: BEAT.grow } : { duration: 0 }}
+      // What a reservation shrinks back onto when it is cancelled (ReservationShape)
+      data-place={String(place.id)}
+      layout
+      transition={springSoft}
       style={{ borderRadius: 28 }}
       className={cn(
-        // The colour turns with the growth: the same start, about the spring's length
-        'relative isolate overflow-hidden transition-[background-color,color,box-shadow] delay-[140ms] duration-[380ms] ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none',
-        held
-          ? 'bg-foreground text-background shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
-          : free
-            ? 'bg-primary text-primary-foreground shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)]'
-            : 'surface text-foreground'
+        'relative isolate overflow-hidden',
+        free ? 'bg-primary text-primary-foreground shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)]' : 'surface text-foreground'
       )}
     >
-      {/* The place's kind, drawn big and faint behind either face */}
-      <PlaceIcon
-        kind={Number(place.kind)}
-        className={cn(
-          'pointer-events-none absolute -end-6 -bottom-8 -z-10 size-44 -rotate-12 transition-opacity duration-300',
-          held ? 'opacity-[0.07]' : free ? 'opacity-[0.12]' : 'opacity-[0.06]'
-        )}
-      />
+      <motion.button
+        layout='position'
+        type='button'
+        disabled={!tappable}
+        aria-expanded={tappable ? open : undefined}
+        onClick={() => onToggle(place)}
+        whileTap={tappable && !open ? { scale: 0.98 } : undefined}
+        transition={spring}
+        className='relative flex min-h-44 w-full flex-col justify-between gap-4 p-5 text-start disabled:cursor-default'
+      >
+        {/* The place's kind, drawn big and faint behind its name */}
+        <PlaceIcon
+          kind={Number(place.kind)}
+          className={cn('pointer-events-none absolute -end-6 -bottom-8 -z-10 size-44 -rotate-12', free ? 'opacity-[0.12]' : 'opacity-[0.06]')}
+        />
 
-      <div ref={content} className='relative'>
-        <AnimatePresence mode='popLayout' initial={false}>
-          {held ? (
-            <motion.div key='held' initial={FACE_IN} animate={FACE_SHOWN} exit={FACE_OUT}>
-              <ReservationFace reservation={reservation} />
-            </motion.div>
-          ) : (
-            <motion.div key='room' initial={FACE_IN} animate={FACE_SHOWN} exit={FACE_OUT}>
-              <motion.button
-                layout='position'
-                type='button'
-                disabled={!tappable}
-                aria-expanded={tappable ? open : undefined}
-                onClick={() => onToggle(place)}
-                whileTap={tappable && !open ? { scale: 0.98 } : undefined}
-                transition={spring}
-                className='relative flex min-h-44 w-full flex-col justify-between gap-4 p-5 text-start disabled:cursor-default'
-              >
-                <span className='flex w-full items-center justify-between gap-3'>
-                  <span
-                    className={cn(
-                      'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
-                      free ? 'bg-primary-foreground/15' : cn('bg-muted', status.className)
-                    )}
-                  >
-                    <span className={cn('size-1.5 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
-                    {t(status.key)}
-                  </span>
-                  {tappable && (
-                    <motion.span
-                      aria-hidden
-                      animate={{ rotate: open ? 45 : 0 }}
-                      transition={spring}
-                      className='bg-primary-foreground text-primary grid size-10 shrink-0 place-items-center rounded-full'
-                    >
-                      <Plus className='size-5' strokeWidth={2.5} />
-                    </motion.span>
-                  )}
-                </span>
-
-                <span className='flex flex-col gap-1.5'>
-                  <span className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>{localized(place.name)}</span>
-                  {place.description && (
-                    <span className={cn('line-clamp-2 max-w-[34ch] text-sm', free ? 'opacity-80' : 'text-muted-foreground')}>
-                      {localized(place.description)}
-                    </span>
-                  )}
-                  <RateChips place={place} free={free} />
-                </span>
-              </motion.button>
-
-              {/* The booking, beneath the card's face */}
-              <AnimatePresence initial={false}>
-                {open && (
-                  <motion.div
-                    key='hold'
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0, transition: { duration: 0.18 } }}
-                    transition={springSoft}
-                    className='overflow-hidden'
-                  >
-                    <div className='bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4'>
-                      <HoldForm place={place} onDone={onDone} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+        <span className='flex w-full items-center justify-between gap-3'>
+          <span
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
+              free ? 'bg-primary-foreground/15' : cn('bg-muted', status.className)
+            )}
+          >
+            <span className={cn('size-1.5 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
+            {t(status.key)}
+          </span>
+          {tappable && (
+            <motion.span
+              aria-hidden
+              animate={{ rotate: open ? 45 : 0 }}
+              transition={spring}
+              className='bg-primary-foreground text-primary grid size-10 shrink-0 place-items-center rounded-full'
+            >
+              <Plus className='size-5' strokeWidth={2.5} />
+            </motion.span>
           )}
-        </AnimatePresence>
-      </div>
+        </span>
+
+        <span className='flex flex-col gap-1.5'>
+          <span className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>{localized(place.name)}</span>
+          {place.description && (
+            <span className={cn('line-clamp-2 max-w-[34ch] text-sm', free ? 'opacity-80' : 'text-muted-foreground')}>
+              {localized(place.description)}
+            </span>
+          )}
+          <RateChips place={place} free={free} />
+        </span>
+      </motion.button>
+
+      {/* The booking, beneath the card's face */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key='hold'
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0, transition: { duration: 0.18 } }}
+            transition={springSoft}
+            className='overflow-hidden'
+          >
+            <div className='bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4'>
+              <HoldForm place={place} onDone={onDone} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.article>
   )
 }

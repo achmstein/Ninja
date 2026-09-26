@@ -61,7 +61,7 @@ export function ReservationFace({ reservation }: { reservation: ReservationViewM
   const hurry = left != null && left <= HURRY
 
   return (
-    <div className='flex min-h-[calc(100svh-17rem)] flex-col items-center justify-between gap-6 px-5 py-7 text-center'>
+    <div className='flex min-h-full flex-col items-center justify-between gap-6 px-5 py-7 text-center'>
       <span className='flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-500'>
         <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
         {t('ninjaHeldFor')}

@@ -7,6 +7,7 @@ import { Clock } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
+import { holdOrigin } from '@/lib/hold-origin'
 import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
@@ -21,8 +22,8 @@ const SUCCESS_HOLD_MS = 700
  * Booking a place, as the app does it: the ten-minute window, the start-now
  * switch with the rate to start at, one button. It slides in under a place's
  * card on the tab, and sits in the sheet a scanned code opens. The button
- * becomes a spinner and then a tick; after the tick the card it sits in
- * becomes the reservation.
+ * becomes a spinner and then a tick, and the tick grows into the reservation
+ * (components/places/reservation-shape).
  */
 export function HoldForm({
   place,
@@ -31,7 +32,7 @@ export function HoldForm({
 }: {
   place: PlaceViewModel
   /** The hold went through or was turned down; whoever showed the form puts it away */
-  onDone: () => void
+  onDone: (outcome: 'booked' | 'failed') => void
   className?: string
 }) {
   const t = useT()
@@ -44,6 +45,7 @@ export function HoldForm({
   // first option until the customer picks another
   const [optionCode, setOptionCode] = useState<string | null>(null)
   const [booked, setBooked] = useState(false)
+  const button = useRef<HTMLDivElement>(null)
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
@@ -65,7 +67,7 @@ export function HoldForm({
       const detail = isAxiosError(error) && (error.response?.data as { detail?: string } | undefined)?.detail
       toast.error(detail || t('failedToReserveRoom'))
       invalidate()
-      onDone()
+      onDone('failed')
     },
   })
 
@@ -78,8 +80,10 @@ export function HoldForm({
   useEffect(() => {
     if (!booked) return
     const timer = window.setTimeout(() => {
+      // Where the tick is now is where the reservation grows out of
+      holdOrigin.set(button.current?.querySelector('button')?.getBoundingClientRect())
       invalidate()
-      done.current()
+      done.current('booked')
     }, SUCCESS_HOLD_MS)
     return () => window.clearTimeout(timer)
   }, [booked, invalidate])
@@ -164,7 +168,7 @@ export function HoldForm({
         )}
       </AnimatePresence>
 
-      <motion.div {...step(2)} className='flex justify-center pt-1'>
+      <motion.div ref={button} {...step(2)} className='flex justify-center pt-1'>
         <MorphButton
           phase={phase}
           height={48}
