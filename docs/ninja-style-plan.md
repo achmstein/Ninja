@@ -15,6 +15,7 @@ Today, Add closes the options view by morphing its photo back into the tile, whi
 - The tile fades back in at its place as the photo lands.
 - Closing without adding keeps today's morph back into the card.
 - The same for the deck.
+- **The flight's shape.** Today the photo flies as a rounded rectangle that only shrinks, so it lands as a tiny squarish tile in the tray's round thumbnails. On the way it should become the circle it lands as: a clip that closes from the card's corners to a centred circle, while a transform carries it and scales it down. It arrives the same size and shape as the tray's thumbnail. No blur, and no animated width or height.
 
 ### 2. The menu, reviewed for best practice
 
