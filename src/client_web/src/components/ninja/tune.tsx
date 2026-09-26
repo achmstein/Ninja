@@ -1,10 +1,10 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { motion } from 'motion/react'
-import { Minus, Plus, X } from 'lucide-react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { Check, ChevronLeft, Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
-import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { ease, springOpen } from '@/lib/motion'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { blurSwap, ease, springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import {
@@ -25,13 +25,21 @@ export type TuneResult = {
   unitPrice: number
 }
 
+/** How long a single choice shows as picked before the next question comes in, ms */
+const ADVANCE_MS = 380
+
 /**
  * A card opened in place: the card itself grows to fill the Ninja menu (it
  * shares its layout id with the card in the deck, so the photo never leaves
- * the screen) and the item's options slide in under the photo, drawn from
- * its real option groups. The choices are the classic item sheet's: the
- * customer's saved picks or the café's defaults, nothing sold out, a required
- * group must be answered.
+ * the screen) and its options come one question at a time under the photo:
+ * the ones that must be answered first, the extras last. A single choice
+ * moves on by itself a beat after it is picked; the rest have Next, or Skip
+ * while nothing is picked in an optional one. What is chosen gathers under
+ * the dish's name as chips, each a way back to its question, and the dots
+ * over the question say where you are. The choices are the classic item
+ * sheet's: the customer's saved picks or the café's defaults, nothing sold
+ * out, a required question must be answered; until they are, the button
+ * names the one left and goes to it.
  */
 export function Tune({
   item,
@@ -66,9 +74,27 @@ export function Tune({
   const selections = withoutOutOfStock(item.customizations, overrides ?? preferenceSelections(item.customizations, preference))
   const chosen = selectionsToCustomizations(item, selections)
   const unitPrice = effectiveBasePrice(item) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
-  const missingRequired = (item.customizations ?? []).some((c) => c.isRequired && (selections[String(c.id)] ?? []).length === 0)
   const scale = sizeScale(item.customizations, selections)
   const soldOut = item.isAvailable === false
+
+  // The questions: in the café's order, the ones that must be answered first
+  const byOrder = [...(item.customizations ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+  const steps = [...byOrder.filter((c) => c.isRequired), ...byOrder.filter((c) => !c.isRequired)]
+  const picked = (c: ItemCustomizationDto) => selections[String(c.id)] ?? []
+  const missing = steps.findIndex((c) => c.isRequired && picked(c).length === 0)
+
+  // The next question, a beat after a single choice is picked
+  const advance = useRef(0)
+  useEffect(() => () => window.clearTimeout(advance.current), [])
+
+  // Where the questions start: the first one left to answer, or the first when the defaults answer them all
+  const [at, setAt] = useState<{ index: number; dir: 1 | -1 } | null>(null)
+  const step = Math.min(at?.index ?? Math.max(0, missing), Math.max(0, steps.length - 1))
+  const dir = at?.dir ?? 1
+  const go = (index: number) => {
+    window.clearTimeout(advance.current)
+    setAt({ index, dir: index >= step ? 1 : -1 })
+  }
 
   const pick = (customization: ItemCustomizationDto, optionId: number) => {
     const key = String(customization.id)
@@ -77,12 +103,17 @@ export function Tune({
       setOverrides({ ...selections, [key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId] })
       return
     }
-    // One choice: tapping it again clears it only when the group is optional
+    // One choice: tapping it again clears it only when the question is optional
     const next = current.includes(optionId) && !customization.isRequired ? [] : [optionId]
     setOverrides({ ...selections, [key]: next })
+    // Picked, it moves on a beat later, to the next question
+    window.clearTimeout(advance.current)
+    const index = steps.indexOf(customization)
+    if (next.length > 0 && index < steps.length - 1) advance.current = window.setTimeout(() => setAt({ index: index + 1, dir: 1 }), ADVANCE_MS)
   }
 
-  const groups = [...(item.customizations ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+  const current = steps[step]
+  const ready = missing < 0
 
   return (
     <motion.div
@@ -125,50 +156,49 @@ export function Tune({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
           transition={{ ...springOpen, delay: 0.06 }}
-          className='flex flex-col gap-6 px-5 pt-5 pb-6'
+          className='flex flex-col gap-5 px-5 pt-5 pb-6'
         >
-          <div>
-            <h2 className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</h2>
-            {item.description && <p className='text-muted-foreground mt-1.5 text-sm leading-relaxed'>{localized(item.description)}</p>}
+          <div className='flex flex-col gap-2.5'>
+            <div>
+              <h2 className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</h2>
+              {item.description && <p className='text-muted-foreground mt-1.5 text-sm leading-relaxed'>{localized(item.description)}</p>}
+            </div>
+            {steps.length > 0 && !loadingPreference && <Recap steps={steps} selections={selections} onJump={go} />}
           </div>
 
-          {groups.map((customization, i) => (
-            <motion.fieldset
-              key={String(customization.id)}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...springOpen, delay: 0.1 + i * 0.05 }}
-              className='flex flex-col gap-2.5'
-            >
-              <legend className='mb-2.5 flex items-baseline gap-2 text-sm font-semibold'>
-                {localized(customization.name)}
-                {customization.isRequired && <span className='text-destructive text-xs font-medium'>{t('required')}</span>}
-              </legend>
-              {loadingPreference ? (
-                <div className='bg-muted h-12 animate-pulse rounded-2xl motion-reduce:animate-none' />
-              ) : (
-                <Control customization={customization} selected={selections[String(customization.id)] ?? []} onPick={(id) => pick(customization, id)} />
-              )}
-            </motion.fieldset>
-          ))}
+          {current &&
+            (loadingPreference ? (
+              <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
+            ) : (
+              <Question
+                steps={steps}
+                step={step}
+                dir={dir}
+                selected={picked(current)}
+                onPick={(id) => pick(current, id)}
+                onGo={go}
+              />
+            ))}
 
-          {noteOpen ? (
-            <input
-              autoFocus
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder={t('anySpecialRequestsOptional')}
-              className='border-input bg-background focus-visible:ring-ring/50 h-11 rounded-2xl border px-4 text-sm outline-none focus-visible:ring-[3px]'
-            />
-          ) : (
-            <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-sm font-medium underline-offset-4 hover:underline'>
-              {t('ninjaAddNote')}
-            </button>
-          )}
+          <motion.div layout='position' transition={springOpen}>
+            {noteOpen ? (
+              <input
+                autoFocus
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder={t('anySpecialRequestsOptional')}
+                className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-sm outline-none focus-visible:ring-[3px]'
+              />
+            ) : (
+              <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-sm font-medium underline-offset-4 hover:underline'>
+                {t('ninjaAddNote')}
+              </button>
+            )}
+          </motion.div>
         </motion.div>
       </div>
 
-      {/* The one action: how many, and add at a price that rolls as the choices change */}
+      {/* The one action: how many, and add at a price that rolls as the choices change; until the answers are in, the one left */}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -191,15 +221,12 @@ export function Tune({
             <Plus className='size-4' />
           </button>
         </div>
-        <button
-          type='button'
-          disabled={!canOrder || soldOut || missingRequired || loadingPreference}
-          onClick={() => onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current)}
-          className='bg-primary text-primary-foreground flex h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-(--radius-pill) px-4 font-bold whitespace-nowrap transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
-        >
-          <span>{soldOut ? t('unavailable') : t('addToCart')}</span>
-          {!soldOut && <Odometer value={price(unitPrice * quantity)} />}
-        </button>
+        <AddButton
+          disabled={!canOrder || soldOut || loadingPreference}
+          label={soldOut ? t('unavailable') : ready ? t('addToCart') : t('ninjaChoose', { name: localized(steps[missing]?.name) })}
+          total={!soldOut && ready ? price(unitPrice * quantity) : null}
+          onClick={() => (ready ? onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current) : go(missing))}
+        />
       </motion.div>
 
       <button
@@ -214,14 +241,183 @@ export function Tune({
   )
 }
 
-function Control({ customization, selected, onPick }: { customization: ItemCustomizationDto; selected: number[]; onPick: (optionId: number) => void }) {
+/** The main button: Add at the price, or the question still to answer; its words swap with a short blur */
+function AddButton({ disabled, label, total, onClick }: { disabled: boolean; label: string; total: string | null; onClick: () => void }) {
+  const swap = blurSwap(useReducedMotion())
+  return (
+    <button
+      type='button'
+      disabled={disabled}
+      onClick={onClick}
+      className='bg-primary text-primary-foreground flex h-12 min-w-0 flex-1 items-center justify-between gap-2 overflow-hidden rounded-(--radius-pill) px-4 font-bold whitespace-nowrap transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
+    >
+      <AnimatePresence mode='popLayout' initial={false}>
+        <motion.span key={label} {...swap} className='truncate'>
+          {label}
+        </motion.span>
+      </AnimatePresence>
+      {total && <Odometer value={total} />}
+    </button>
+  )
+}
+
+/** What is chosen so far, as chips under the name: each springs in as it is picked, and a tap goes back to its question */
+function Recap({ steps, selections, onJump }: { steps: ItemCustomizationDto[]; selections: Selections; onJump: (index: number) => void }) {
+  const localized = useLocalized()
+  const chips = steps.flatMap((c, index) =>
+    sortedOptions(c)
+      .filter((o) => (selections[String(c.id)] ?? []).includes(Number(o.id)))
+      .map((o) => ({ key: `${c.id}-${o.id}`, name: localized(o.name), index }))
+  )
+  return (
+    <div className='flex min-h-7 flex-wrap gap-1.5'>
+      <AnimatePresence mode='popLayout' initial={false}>
+        {chips.map((chip) => (
+          <motion.button
+            key={chip.key}
+            type='button'
+            layout='position'
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            transition={springOpen}
+            onClick={() => onJump(chip.index)}
+            className='bg-muted h-7 rounded-full px-3 text-xs font-semibold'
+          >
+            {chip.name}
+          </motion.button>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/**
+ * The question in view: dots for where you are among them (each a way
+ * there), its name, and its control. A new question comes in from the side
+ * it lies on with a short blur, the old one going out the other way. Under
+ * it the way back, and the way on for a question that does not move on by
+ * itself: Next, or Skip while an optional one has nothing picked.
+ */
+function Question({
+  steps,
+  step,
+  dir,
+  selected,
+  onPick,
+  onGo,
+}: {
+  steps: ItemCustomizationDto[]
+  step: number
+  dir: 1 | -1
+  selected: number[]
+  onPick: (optionId: number) => void
+  onGo: (index: number) => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const reduced = useReducedMotion()
+  const rtl = useLanguage((s) => s.language) === 'ar'
+  const customization = steps[step]
+  const last = step === steps.length - 1
+  // A single choice moves on by itself once picked; everything else is moved on by hand
+  const byHand = customization.allowMultiple || !customization.isRequired || selected.length === 0
+  const shift = reduced ? 0 : 36 * dir * (rtl ? -1 : 1)
+
+  return (
+    <div className='flex flex-col gap-3'>
+      {steps.length > 1 && (
+        <div className='flex items-center gap-1.5'>
+          {steps.map((c, i) => (
+            <button
+              key={String(c.id)}
+              type='button'
+              aria-label={localized(c.name)}
+              aria-current={i === step || undefined}
+              onClick={() => onGo(i)}
+              className='grid h-4 place-items-center'
+            >
+              <motion.span
+                className='block h-1.5 rounded-full'
+                initial={false}
+                animate={{ width: i === step ? 20 : 6 }}
+                transition={springOpen}
+                style={{ backgroundColor: 'currentColor' }}
+              >
+                <span className='sr-only'>{localized(c.name)}</span>
+              </motion.span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <AnimatePresence mode='popLayout' initial={false} custom={shift}>
+        <motion.fieldset
+          key={String(customization.id)}
+          custom={shift}
+          variants={{
+            enter: (x: number) => ({ opacity: 0, x, filter: reduced ? 'none' : 'blur(4px)' }),
+            shown: { opacity: 1, x: 0, filter: 'blur(0px)' },
+            leave: (x: number) => ({ opacity: 0, x: -x, filter: reduced ? 'none' : 'blur(4px)' }),
+          }}
+          initial='enter'
+          animate='shown'
+          exit='leave'
+          transition={{ ...springOpen, opacity: { duration: 0.18 } }}
+          className='flex flex-col gap-3'
+        >
+          <legend className='mb-3 flex w-full items-baseline justify-between gap-3'>
+            <span className='heading text-[calc(1.2rem*var(--heading-scale))]'>{localized(customization.name)}</span>
+            <span className='text-muted-foreground shrink-0 text-xs font-medium'>
+              {customization.isRequired ? `${step + 1}/${steps.length}` : `${t('ninjaOptional')} · ${step + 1}/${steps.length}`}
+            </span>
+          </legend>
+          <Control customization={customization} selected={selected} onPick={onPick} />
+        </motion.fieldset>
+      </AnimatePresence>
+
+      {(step > 0 || (!last && byHand)) && (
+        <div className='flex items-center justify-between gap-3'>
+          {step > 0 ? (
+            <button
+              type='button'
+              aria-label={t('ninjaPrevious')}
+              onClick={() => onGo(step - 1)}
+              className='bg-muted grid size-10 place-items-center rounded-full'
+            >
+              <ChevronLeft className='size-5 rtl:rotate-180' />
+            </button>
+          ) : (
+            <span />
+          )}
+          {!last && byHand && (
+            <button
+              type='button'
+              disabled={customization.isRequired && selected.length === 0}
+              onClick={() => onGo(step + 1)}
+              className='bg-foreground text-background h-10 rounded-full px-5 text-sm font-semibold transition-opacity disabled:opacity-30'
+            >
+              {selected.length === 0 && !customization.isRequired ? t('ninjaSkip') : t('ninjaNext')}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Control({ customization, selected, onPick }: ControlProps) {
   switch (controlKind(customization)) {
     case 'size':
       return <SizeControl customization={customization} selected={selected} onPick={onPick} />
     case 'dial':
       return <DialControl customization={customization} selected={selected} onPick={onPick} />
     default:
-      return <ChipsControl customization={customization} selected={selected} onPick={onPick} />
+      return customization.allowMultiple ? (
+        <ExtrasControl customization={customization} selected={selected} onPick={onPick} />
+      ) : (
+        <PickControl customization={customization} selected={selected} onPick={onPick} />
+      )
   }
 }
 
@@ -240,50 +436,56 @@ function useOptionText() {
   }
 }
 
-/** Sizes as cups that grow: each option's glyph is drawn bigger than the last, the picked one filled. */
+/**
+ * Sizes: one cup over them that grows to the size picked, the drink inside
+ * rising with it, and the sizes under it, the picked one lit by a highlight
+ * that slides between them.
+ */
 function SizeControl({ customization, selected, onPick }: ControlProps) {
   const text = useOptionText()
   const options = sortedOptions(customization)
+  const index = Math.max(0, options.findIndex((o) => selected.includes(Number(o.id))))
+  const share = options.length > 1 ? index / (options.length - 1) : 1
   return (
-    <div className='flex gap-2.5' role='radiogroup'>
-      {options.map((option, i) => {
-        const id = Number(option.id)
-        const on = selected.includes(id)
-        const { name, extra } = text(option)
-        const glyph = 18 + i * 7
-        return (
-          <button
-            key={id}
-            type='button'
-            role='radio'
-            aria-checked={on}
-            disabled={!!option.isOutOfStock}
-            onClick={() => onPick(id)}
-            className={cn(
-              'relative flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-2xl border px-2 pt-3 pb-2.5 transition-colors disabled:opacity-40',
-              on ? 'border-primary' : 'border-border'
-            )}
-          >
-            {on && (
-              <motion.span
-                layoutId={`size-${customization.id}`}
-                transition={springOpen}
-                aria-hidden
-                className='bg-primary/10 absolute inset-0 rounded-2xl'
-              />
-            )}
-            <span className='relative grid h-10 place-items-end'>
-              <span
-                aria-hidden
-                className={cn('block rounded-b-[40%] rounded-t-md border-2 transition-colors', on ? 'bg-primary border-primary' : 'border-muted-foreground/50')}
-                style={{ width: glyph, height: glyph * 1.1 }}
-              />
-            </span>
-            <span className='relative text-sm font-semibold'>{name}</span>
-            {extra && <span className='text-muted-foreground relative text-xs tabular-nums'>{extra}</span>}
-          </button>
-        )
-      })}
+    <div className='flex flex-col items-center gap-4'>
+      {/* The cup: its size and its fill both by transform, so nothing lays out as it grows */}
+      <div className='grid h-24 place-items-end' aria-hidden>
+        <motion.div
+          className='border-foreground/70 relative h-20 w-16 origin-bottom overflow-hidden rounded-t-md rounded-b-[40%] border-[3px]'
+          initial={false}
+          animate={{ scale: 0.62 + share * 0.38 }}
+          transition={springOpen}
+        >
+          <motion.div
+            className='bg-primary absolute inset-x-0 bottom-0 h-full origin-bottom'
+            initial={false}
+            animate={{ scaleY: selected.length > 0 ? 0.45 + share * 0.4 : 0 }}
+            transition={springOpen}
+          />
+        </motion.div>
+      </div>
+      <div className='bg-muted flex w-full gap-1 rounded-[1.25rem] p-1' role='radiogroup'>
+        {options.map((option) => {
+          const id = Number(option.id)
+          const on = selected.includes(id)
+          const { name, extra } = text(option)
+          return (
+            <button
+              key={id}
+              type='button'
+              role='radio'
+              aria-checked={on}
+              disabled={!!option.isOutOfStock}
+              onClick={() => onPick(id)}
+              className='relative flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2.5 disabled:opacity-40'
+            >
+              {on && <motion.span layoutId={`size-${customization.id}`} transition={springOpen} aria-hidden className='bg-background absolute inset-0 rounded-2xl shadow-sm' />}
+              <span className='relative text-sm font-semibold'>{name}</span>
+              {extra && <span className='text-muted-foreground relative text-xs tabular-nums'>{extra}</span>}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -346,7 +548,7 @@ function DialControl({ customization, selected, onPick }: ControlProps) {
               if (e.detail === 0 && !on) onPick(id)
             }}
             className={cn(
-              'relative min-w-0 flex-1 rounded-full px-1 py-2.5 text-center text-xs font-semibold transition-colors duration-200 disabled:opacity-40',
+              'relative min-w-0 flex-1 rounded-full px-1 py-3 text-center text-xs font-semibold transition-colors duration-200 disabled:opacity-40',
               on ? 'text-primary-foreground' : 'text-muted-foreground'
             )}
           >
@@ -359,11 +561,11 @@ function DialControl({ customization, selected, onPick }: ControlProps) {
   )
 }
 
-/** Everything else: chips, filled when picked, with what each adds to the price. */
-function ChipsControl({ customization, selected, onPick }: ControlProps) {
+/** One of several (a milk, a sauce): big rows, the picked one lit by a highlight that slides to it and a dot that fills */
+function PickControl({ customization, selected, onPick }: ControlProps) {
   const text = useOptionText()
   return (
-    <div className='flex flex-wrap gap-2' role={customization.allowMultiple ? 'group' : 'radiogroup'}>
+    <div className='flex flex-col gap-1.5' role='radiogroup'>
       {sortedOptions(customization).map((option) => {
         const id = Number(option.id)
         const on = selected.includes(id)
@@ -372,15 +574,63 @@ function ChipsControl({ customization, selected, onPick }: ControlProps) {
           <button
             key={id}
             type='button'
-            role={customization.allowMultiple ? 'checkbox' : 'radio'}
+            role='radio'
+            aria-checked={on}
+            disabled={!!option.isOutOfStock}
+            onClick={() => onPick(id)}
+            className='bg-muted relative flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start transition-transform active:scale-[0.98] disabled:opacity-40 motion-reduce:transform-none'
+          >
+            {on && (
+              <motion.span
+                layoutId={`pick-${customization.id}`}
+                transition={springOpen}
+                aria-hidden
+                style={{ borderRadius: 20 }}
+                className='ring-primary bg-primary/10 absolute inset-0 ring-2'
+              />
+            )}
+            <span className='relative min-w-0 flex-1 text-[15px] font-semibold'>{name}</span>
+            {extra && <span className='text-muted-foreground relative text-sm tabular-nums'>{extra}</span>}
+            <span className={cn('relative grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors duration-200', on ? 'border-primary' : 'border-muted-foreground/40')}>
+              <motion.span className='bg-primary size-2.5 rounded-full' initial={false} animate={{ scale: on ? 1 : 0 }} transition={springOpen} />
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Extras, as many as wanted: chips whose + turns into a tick when picked, with what each adds */
+function ExtrasControl({ customization, selected, onPick }: ControlProps) {
+  const text = useOptionText()
+  const swap = blurSwap(useReducedMotion())
+  return (
+    <div className='flex flex-wrap gap-2' role='group'>
+      {sortedOptions(customization).map((option) => {
+        const id = Number(option.id)
+        const on = selected.includes(id)
+        const { name, extra } = text(option)
+        return (
+          <button
+            key={id}
+            type='button'
+            role='checkbox'
             aria-checked={on}
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
             className={cn(
-              'flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-[background-color,border-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
-              on ? 'bg-primary text-primary-foreground border-primary' : 'border-border'
+              'flex h-11 items-center gap-1.5 rounded-full ps-2 pe-4 text-sm font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
+              on ? 'bg-primary text-primary-foreground' : 'bg-muted'
             )}
           >
+            <span className={cn('grid size-7 place-items-center rounded-full transition-colors duration-200', on ? 'bg-primary-foreground/20' : 'bg-background')}>
+              <AnimatePresence mode='popLayout' initial={false}>
+                <motion.span key={on ? 'on' : 'off'} {...swap} className='grid place-items-center'>
+                  {on ? <Check className='size-4' /> : <Plus className='size-4' />}
+                </motion.span>
+              </AnimatePresence>
+            </span>
             {name}
             {extra && <span className='text-xs tabular-nums opacity-75'>{extra}</span>}
           </button>

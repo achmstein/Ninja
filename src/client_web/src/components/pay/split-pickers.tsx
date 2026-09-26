@@ -102,8 +102,9 @@ export function SeatsTable({
 
       <div className='relative mx-auto' style={{ width: BOX, height: BOX }}>
         {/* The table */}
+        {/* The table: light, with its own ink, since the dark slab it may sit on would lend it light text */}
         <div
-          className='surface absolute flex flex-col items-center justify-center rounded-full'
+          className='bg-background text-foreground absolute flex flex-col items-center justify-center rounded-full shadow-[0_8px_24px_-10px_rgb(0_0_0/0.35)]'
           style={{
             width: TABLE,
             height: TABLE,
@@ -111,11 +112,11 @@ export function SeatsTable({
             left: (BOX - TABLE) / 2,
           }}
         >
-          <span className='text-muted-foreground text-[11px] font-medium'>
+          <span className='text-foreground/60 text-[11px] font-medium'>
             {t('perPerson')}
           </span>
           <Odometer value={plan.perPerson.toFixed(2)} className='text-[20px] font-extrabold' />
-          <span className='text-muted-foreground text-xs font-semibold'>
+          <span className='text-foreground/60 text-xs font-semibold'>
             {currencyLabel(currency, language)}
           </span>
         </div>
