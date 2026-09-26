@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
+import { QrCode } from 'lucide-react'
 import { toast } from '@/lib/toast'
+import { springSoft } from '@/lib/motion'
 import { getPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { cartHasItems } from '@/lib/cart'
 import { useBranchStore } from '@/stores/branch-store'
@@ -17,7 +19,8 @@ export const Route = createFileRoute('/p/$placeId')({
 /**
  * What a place's QR opens: https://chillax.site/p/{id}. It never shows
  * anything itself — a spinner for the moment the place loads — and sends
- * the customer on:
+ * the customer on. While it loads, the code's glyph with a line sweeping
+ * over it, as if still being read — there is no page to put a title on:
  *
  * - a place that only takes orders is where their order goes: remembered,
  *   and back to the menu (or the cart they were in) with a toast;
@@ -94,9 +97,31 @@ function PlaceLinkPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placeQuery.isLoading, placeQuery.isError, place])
 
+  return <Reading label={t('loading')} />
+}
+
+/** The code's glyph in its tile, a line sweeping down it; still under reduced motion */
+function Reading({ label }: { label: string }) {
+  const reduced = useReducedMotion()
   return (
-    <div className='flex h-[60svh] items-center justify-center'>
-      <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
+    <div role='status' className='flex h-[70svh] flex-col items-center justify-center gap-4'>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={springSoft}
+        className='bg-foreground text-background relative grid size-24 place-items-center overflow-hidden rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
+      >
+        <QrCode className='size-11' />
+        {!reduced && (
+          <motion.span
+            aria-hidden
+            className='bg-background/70 absolute inset-x-3 top-0 h-0.5 rounded-full shadow-[0_0_12px_2px_var(--background)]'
+            animate={{ y: [12, 84, 12] }}
+            transition={{ duration: 1.6, ease: 'easeInOut', repeat: Infinity }}
+          />
+        )}
+      </motion.div>
+      <span className='text-muted-foreground text-sm font-medium'>{label}</span>
     </div>
   )
 }

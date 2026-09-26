@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
+import { ReceiptText } from 'lucide-react'
 import { getTicketReceiptOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { ReceiptView } from '@/api/sales'
 import { API_VERSION } from '@/lib/api-client'
@@ -13,9 +14,10 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
-import { BackHeader } from '@/components/back-header'
-import { BillSlip } from '@/components/bills/bill-slip'
+import { BillSlip, Paper } from '@/components/bills/bill-slip'
 import { ReceiptBrand } from '@/components/bills/receipt-brand'
+import { NinjaPage } from '@/components/ninja/page/page'
+import { Empty } from '@/components/ninja/page/parts'
 import { RequireAuth } from '@/components/require-auth'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useGuestStore } from '@/stores/guest-store'
@@ -53,7 +55,7 @@ const percent = (rate: number | string | null | undefined) =>
  * way, with the branch's header and footer. Otherwise — still open, or a
  * guest's — it is the bill as the slip the till would print, from the
  * customer's own bills. Sales says who was on it; anyone else sees the
- * not-found state.
+ * not-found state. Either way it is the paper, rising onto the page.
  */
 function ReceiptPage() {
   const { ticketId } = Route.useParams()
@@ -84,20 +86,17 @@ function ReceiptPage() {
       : localized(bill?.locationName) || t('receipt')
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <BackHeader to='/bills' title={title} />
+    <NinjaPage title={title} back='/bills'>
       {loading ? (
-        <Skeleton className='h-96 rounded-xl' />
+        <Skeleton className='mx-auto h-96 w-full max-w-[300px] rounded-t-[1.25rem]' />
       ) : printed.data ? (
         <Receipt receipt={printed.data} />
       ) : bill ? (
         <BillSlip bill={bill} />
       ) : (
-        <p className='text-muted-foreground py-16 text-center'>
-          {t('receiptUnavailable')}
-        </p>
+        <Empty icon={ReceiptText} title={t('receiptUnavailable')} />
       )}
-    </div>
+    </NinjaPage>
   )
 }
 
@@ -124,9 +123,8 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
   const footer = localized(branch?.receiptFooter)?.trim()
 
   return (
-    // The paper the till prints, on screen: black on white whatever the
-    // theme, the wordmark on top, 72mm wide
-    <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
+    // The paper the till prints, the wordmark on top
+    <Paper>
       <div className='flex flex-col items-center text-center'>
         <ReceiptBrand />
         {branch && (
@@ -279,6 +277,6 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
       )}
 
       <div className='pt-2 text-center'>{footer || t('receiptThanks')}</div>
-    </div>
+    </Paper>
   )
 }

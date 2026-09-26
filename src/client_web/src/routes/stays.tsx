@@ -1,26 +1,17 @@
-import { useEffect, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { Clock, Gamepad2, Timer, Users } from 'lucide-react'
-import { type StayViewModel, type StaySegmentViewModel } from '@/api/spaces'
+import { useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { Gamepad2 } from 'lucide-react'
+import { type StayViewModel } from '@/api/spaces'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
 import { businessDayStart } from '@/lib/business-day'
-import { hasOptions, optionColor, PlaceIcon } from '@/lib/places'
-import { STAY_RUNNING, useMyStays } from '@/lib/stays'
-import { BackHeader } from '@/components/back-header'
+import { useMyStays } from '@/lib/stays'
+import { useLanguage, useT } from '@/lib/i18n'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Empty, SectionLabel, Segment } from '@/components/ninja/page/parts'
+import { StayCard } from '@/components/places/stay-card'
 import { RequireAuth } from '@/components/require-auth'
 import { RequireFeature } from '@/components/require-feature'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  useLanguage,
-  useLocalized,
-  usePrice,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
-import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/stays')({
   component: () => (
@@ -32,44 +23,19 @@ export const Route = createFileRoute('/stays')({
   ),
 })
 
-const statusMeta: Record<number, { key: TranslationKey; className: string }> = {
-  [STAY_RUNNING]: {
-    key: 'statusActive',
-    className:
-      'border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
-  },
-  3: {
-    key: 'statusCompleted',
-    className: 'border-transparent bg-muted text-muted-foreground',
-  },
-  4: {
-    key: 'statusCancelled',
-    className:
-      'border-transparent bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-  },
-}
-
 /** When the stay's clock started */
 function startOf(stay: StayViewModel): Date | null {
   const raw = stay.startedAt ?? stay.createdAt
   return raw ? new Date(raw) : null
 }
 
-/** Ticks once a second while `on`, so a running stay's duration moves (mobile parity) */
-function useNow(on: boolean): number {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    if (!on) return
-    const id = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [on])
-  return now
-}
-
+/** The customer's time at the café's rooms and stations: today's, and the
+ *  ones before it by shift day, each a card (a running one the slab). */
 function StaysPage() {
   const t = useT()
   const branch = useSelectedBranch()
   const { data: stays = [], isLoading } = useMyStays()
+  const [tab, setTab] = useState<'today' | 'previous'>('today')
 
   const dayStart = businessDayStart(branch).getTime()
   const todaySessions = stays.filter((s) => {
@@ -82,36 +48,21 @@ function StaysPage() {
   })
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <BackHeader title={t('sessions')} />
-
-      <Tabs defaultValue='today'>
-        <TabsList className='w-full'>
-          <TabsTrigger value='today' className='flex-1'>
-            {t('todaysSessions')}
-          </TabsTrigger>
-          <TabsTrigger value='previous' className='flex-1'>
-            {t('previousSessions')}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value='today' className='mt-2'>
-          <StayList
-            stays={todaySessions}
-            isLoading={isLoading}
-            emptyTitle={t('noSessionsToday')}
-          />
-        </TabsContent>
-        <TabsContent value='previous' className='mt-2'>
-          <StayList
-            stays={previousSessions}
-            isLoading={isLoading}
-            emptyTitle={t('noSessionsYet')}
-            grouped
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <NinjaPage title={t('sessions')} back='/profile'>
+      <Segment
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'today', label: t('today') },
+          { value: 'previous', label: t('earlier') },
+        ]}
+      />
+      {tab === 'today' ? (
+        <StayList key='today' stays={todaySessions} isLoading={isLoading} emptyTitle={t('noSessionsToday')} />
+      ) : (
+        <StayList key='previous' stays={previousSessions} isLoading={isLoading} emptyTitle={t('noSessionsYet')} grouped />
+      )}
+    </NinjaPage>
   )
 }
 
@@ -133,30 +84,29 @@ function StayList({
 
   if (isLoading) {
     return (
-      <div className='flex flex-col gap-3 pt-2'>
+      <div className='flex flex-col gap-4'>
         {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className='h-20 rounded-xl' />
+          <div key={i} className='surface flex flex-col gap-3 rounded-[1.5rem] p-5'>
+            <Skeleton className='h-4 w-32' />
+            <Skeleton className='h-8 w-24' />
+            <Skeleton className='h-3 w-20' />
+          </div>
         ))}
       </div>
     )
   }
 
-  if (stays.length === 0) {
-    return (
-      <div className='text-muted-foreground flex h-[40svh] flex-col items-center justify-center gap-2 text-center'>
-        <Gamepad2 className='text-muted-foreground/40 h-10 w-10' />
-        <p>{emptyTitle}</p>
-      </div>
-    )
-  }
+  if (stays.length === 0) return <Empty icon={Gamepad2} title={emptyTitle} />
 
   if (!grouped) {
     return (
-      <div className='divide-y'>
+      <Rise className='flex flex-col gap-4'>
         {stays.map((stay) => (
-          <StayTile key={String(stay.id)} stay={stay} />
+          <RiseItem key={String(stay.id)}>
+            <StayCard stay={stay} />
+          </RiseItem>
         ))}
-      </div>
+      </Rise>
     )
   }
 
@@ -192,176 +142,21 @@ function StayList({
   }
 
   return (
-    <div className='flex flex-col'>
+    <Rise className='flex flex-col gap-4'>
       {groups.map((group) => (
-        <div key={group.label} className='flex flex-col'>
-          <h3 className='text-muted-foreground pt-4 pb-1 text-[13px] font-semibold'>
-            {group.label}
-          </h3>
-          <div className='divide-y'>
-            {group.stays.map((stay) => (
-              <StayTile key={String(stay.id)} stay={stay} />
-            ))}
-          </div>
+        <div key={group.label} className='flex flex-col gap-3'>
+          {group.label && (
+            <RiseItem>
+              <SectionLabel className='pt-1'>{group.label}</SectionLabel>
+            </RiseItem>
+          )}
+          {group.stays.map((stay) => (
+            <RiseItem key={String(stay.id)}>
+              <StayCard stay={stay} />
+            </RiseItem>
+          ))}
         </div>
       ))}
-    </div>
-  )
-}
-
-// ── Stay tile (app parity): place + status, time + live duration, the
-//    rate-option timeline, the other people there ──
-
-function StayTile({ stay }: { stay: StayViewModel }) {
-  const t = useT()
-  const localized = useLocalized()
-  const price = usePrice()
-  const language = useLanguage((s) => s.language)
-  const auth = useAuth()
-  const active = Number(stay.status ?? 0) === STAY_RUNNING
-  const now = useNow(active)
-
-  const timeOf = (raw: string | null | undefined) =>
-    raw
-      ? new Date(raw).toLocaleTimeString(
-          language === 'ar' ? 'ar-EG' : 'en-US',
-          {
-            hour: 'numeric',
-            minute: '2-digit',
-          },
-        )
-      : ''
-  const durationOf = (
-    start: string | null | undefined,
-    end: string | null | undefined,
-  ) => {
-    if (!start) return ''
-    const endMs = end ? new Date(end).getTime() : now
-    const minutes = Math.max(
-      0,
-      Math.floor((endMs - new Date(start).getTime()) / 60000),
-    )
-    const h = Math.floor(minutes / 60)
-    const m = minutes % 60
-    return h > 0
-      ? `${t('hoursShort', { count: h })} ${t('minutesShort', { count: m })}`
-      : t('minutesShort', { count: m })
-  }
-  const color = (code: string | undefined) => optionColor(stay.tariff, code)
-
-  const start = startOf(stay)
-  const started = stay.startedAt != null
-  const duration = started ? durationOf(stay.startedAt, stay.endedAt) : ''
-  const segments: StaySegmentViewModel[] = stay.segments ?? []
-  // A one-rate place has nothing to tell apart: no option pill, no timeline
-  const showOptions = hasOptions(stay.tariff)
-  const myId = auth.user?.profile?.sub
-  const others = (stay.members ?? []).filter((m) => m.customerId !== myId)
-  const status = statusMeta[Number(stay.status ?? 0)]
-
-  return (
-    <div className='flex flex-col gap-2 py-3'>
-      <div className='flex items-center gap-2'>
-        <PlaceIcon kind={Number(stay.placeKind)} className='h-5 w-5 shrink-0' />
-        <span className='min-w-0 flex-1 truncate font-bold'>
-          {localized(stay.placeName)}
-        </span>
-        {stay.paidAt != null ? (
-          // Sales' receipt, projected onto the stay by Spaces; a tap opens it
-          <Link
-            to='/receipts/$ticketId'
-            params={{ ticketId: String(stay.ticketId ?? '') }}
-            disabled={stay.ticketId == null}
-          >
-            <Badge variant='secondary' className='tabular-nums'>
-              {stay.paidWith === 'Account' ? t('onYourTab') : t('paid')}
-              {stay.receiptNumber != null &&
-                ` ${t('receiptShort', { number: Number(stay.receiptNumber) })}`}
-            </Badge>
-          </Link>
-        ) : (
-          status && <Badge className={status.className}>{t(status.key)}</Badge>
-        )}
-      </div>
-
-      <div className='text-muted-foreground flex items-center gap-3 text-[13px] tabular-nums'>
-        <span className='flex items-center gap-1'>
-          <Clock className='h-3.5 w-3.5' />
-          {start && timeOf(start.toISOString())}
-        </span>
-        {duration && (
-          <span className='flex items-center gap-1'>
-            <Timer className='h-3.5 w-3.5' />
-            {duration}
-          </span>
-        )}
-        {stay.totalCost != null && (
-          <span className='ms-auto font-medium'>
-            {price(Number(stay.totalCost))}
-          </span>
-        )}
-      </div>
-
-      {showOptions && segments.length > 1 ? (
-        <ol className='flex flex-col'>
-          {segments.map((segment, i) => {
-            const last = i === segments.length - 1
-            return (
-              <li key={i} className='flex items-stretch gap-2'>
-                <span className='flex w-3 flex-col items-center'>
-                  <span
-                    className={cn(
-                      'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                      color(segment.optionCode).dot,
-                    )}
-                  />
-                  {!last && <span className='bg-border w-px flex-1' />}
-                </span>
-                <span
-                  className={cn(
-                    'flex items-baseline gap-2 text-[13px]',
-                    !last && 'pb-1.5',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'font-medium',
-                      color(segment.optionCode).text,
-                    )}
-                  >
-                    {localized(segment.optionName)}
-                  </span>
-                  <span className='text-muted-foreground text-xs tabular-nums'>
-                    {timeOf(segment.startTime)} ·{' '}
-                    {durationOf(segment.startTime, segment.endTime)}
-                  </span>
-                </span>
-              </li>
-            )
-          })}
-        </ol>
-      ) : (
-        showOptions &&
-        segments.length === 1 && (
-          <span
-            className={cn(
-              'w-fit rounded px-1.5 py-0.5 text-[11px] font-semibold',
-              color(segments[0].optionCode).chip,
-            )}
-          >
-            {localized(segments[0].optionName)}
-          </span>
-        )
-      )}
-
-      {others.length > 0 && (
-        <div className='text-muted-foreground flex items-center gap-1 text-[13px]'>
-          <Users className='h-3.5 w-3.5 shrink-0' />
-          <span className='truncate'>
-            {others.map((m) => m.customerName ?? '?').join(', ')}
-          </span>
-        </div>
-      )}
-    </div>
+    </Rise>
   )
 }

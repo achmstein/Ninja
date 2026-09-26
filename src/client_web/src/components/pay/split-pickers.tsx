@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { Check, Loader2, Minus, Plus } from 'lucide-react'
 import { currencyLabel, useCurrency } from '@/lib/currency'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
@@ -14,8 +15,9 @@ import {
   sliderPosition,
   sliderSteps,
 } from '@/lib/pay'
+import { spring, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Odometer } from '@/components/ninja/odometer'
 import { Slider } from '@/components/ui/slider'
 
 /** The table's drawing: a square this wide, the table in the middle and
@@ -30,7 +32,8 @@ const ORBIT = (BOX - SEAT) / 2
  * price in the middle, the seats paid or being paid filled in (a guess
  * from the money, and said to be one), and the guest taps the seats
  * they are paying for. The seats picked are the parts, the seats the
- * whole: the same `parts` of `of` the server takes.
+ * whole: the same `parts` of `of` the server takes. Seats glide round
+ * the table on a spring as it grows, and the per-person sum rolls.
  */
 export function SeatsTable({
   total,
@@ -55,6 +58,7 @@ export function SeatsTable({
 }) {
   const t = useT()
   const price = usePrice()
+  const reduced = useReducedMotion()
   const language = useLanguage((s) => s.language)
   const currency = useCurrency((s) => s.code)
   const rtl = language === 'ar'
@@ -66,34 +70,33 @@ export function SeatsTable({
   return (
     <div className='flex flex-col gap-3'>
       <div className='flex items-center justify-between gap-2'>
-        <span className='text-sm font-semibold'>{t('seatsAtTable')}</span>
-        <div className='flex items-center gap-1'>
-          <Button
-            variant='outline'
-            size='icon'
-            className='size-10 rounded-full'
+        <span className='px-1 text-[13px] font-semibold'>{t('seatsAtTable')}</span>
+        <div className='bg-muted flex items-center rounded-full p-1'>
+          <motion.button
+            type='button'
+            whileTap={reduced ? undefined : { scale: 0.85 }}
+            transition={spring}
+            className='grid size-9 place-items-center rounded-full disabled:opacity-40'
             aria-label={t('removeSeat')}
             disabled={seats <= minSeats}
             onClick={() => onSeats(seats - 1)}
           >
-            <Minus className='h-4 w-4' />
-          </Button>
-          <span
-            className='w-8 text-center text-lg font-bold tabular-nums'
-            aria-live='polite'
-          >
-            {seats}
+            <Minus className='size-4' />
+          </motion.button>
+          <span className='w-8 text-center' aria-live='polite'>
+            <Odometer value={String(seats)} className='text-[15px] font-bold' />
           </span>
-          <Button
-            variant='outline'
-            size='icon'
-            className='size-10 rounded-full'
+          <motion.button
+            type='button'
+            whileTap={reduced ? undefined : { scale: 0.85 }}
+            transition={spring}
+            className='grid size-9 place-items-center rounded-full disabled:opacity-40'
             aria-label={t('addSeat')}
             disabled={seats >= MAX_SEATS}
             onClick={() => onSeats(seats + 1)}
           >
-            <Plus className='h-4 w-4' />
-          </Button>
+            <Plus className='size-4' />
+          </motion.button>
         </div>
       </div>
 
@@ -111,9 +114,7 @@ export function SeatsTable({
           <span className='text-muted-foreground text-[11px] font-medium'>
             {t('perPerson')}
           </span>
-          <span className='text-[22px] leading-tight font-bold tabular-nums'>
-            {plan.perPerson.toFixed(2)}
-          </span>
+          <Odometer value={plan.perPerson.toFixed(2)} className='text-[20px] font-extrabold' />
           <span className='text-muted-foreground text-xs font-semibold'>
             {currencyLabel(currency, language)}
           </span>
@@ -137,13 +138,16 @@ export function SeatsTable({
                 : t(picked ? 'seatYours' : 'seatFree', { n: i + 1 })
 
           return (
-            // Placed with a transform so seats glide when the table grows
-            <div
+            // Placed with a transform so seats glide round when the table grows
+            <motion.div
               key={i}
-              className='absolute top-0 left-0 transition-transform duration-300 ease-out motion-reduce:transition-none'
-              style={{ transform: `translate(${x}px, ${y}px)` }}
+              className='absolute top-0 left-0'
+              initial={reduced ? { x, y, opacity: 0 } : { x: ORBIT, y: ORBIT, opacity: 0, scale: 0.5 }}
+              animate={{ x, y, opacity: 1, scale: 1 }}
+              transition={springSoft}
             >
-              <button
+              <motion.button
+                whileTap={reduced || kind !== 'free' ? undefined : { scale: 0.9 }}
                 type='button'
                 title={label}
                 aria-label={label}
@@ -151,15 +155,14 @@ export function SeatsTable({
                 disabled={kind !== 'free'}
                 onClick={() => onToggle(i)}
                 className={cn(
-                  'animate-in fade-in-0 zoom-in-50 flex items-center justify-center rounded-full border-2 text-xs font-bold duration-300 motion-reduce:animate-none',
-                  'focus-visible:ring-ring/50 transition-colors outline-none focus-visible:ring-4',
-                  kind === 'paid' &&
-                    'border-green-600/40 bg-green-600/15 text-green-700 dark:border-green-500/40 dark:bg-green-500/15 dark:text-green-400',
-                  kind === 'held' && 'border-primary/60 text-primary border-dashed',
+                  'flex items-center justify-center rounded-full border-2 text-xs font-bold',
+                  'focus-visible:ring-ring/50 transition-colors duration-200 outline-none focus-visible:ring-4',
+                  kind === 'paid' && 'border-emerald-500 bg-emerald-500 text-white',
+                  kind === 'held' && 'border-dashed border-amber-400 text-amber-500',
                   kind === 'free' &&
                     (picked
-                      ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                      : 'border-border bg-background text-muted-foreground hover:border-primary/60')
+                      ? 'border-foreground bg-foreground text-background shadow-md'
+                      : 'border-border bg-background text-muted-foreground hover:border-foreground/40')
                 )}
                 style={{ width: SEAT, height: SEAT }}
               >
@@ -176,8 +179,8 @@ export function SeatsTable({
                 ) : (
                   <Plus className='h-4 w-4 opacity-60' />
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )
         })}
       </div>
@@ -186,7 +189,7 @@ export function SeatsTable({
         <p className='text-[15px] font-semibold tabular-nums'>
           {t('youPayForSeats', { parts: mine.length, of: seats })}
           <span className='text-muted-foreground'> · </span>
-          <span className='text-primary'>{price(share)}</span>
+          <Odometer value={price(share)} className='text-[15px] font-bold' />
         </p>
         <p className='text-muted-foreground text-[13px] tabular-nums'>
           {t('leftAfterYou', { amount: price(left) })}
@@ -250,11 +253,9 @@ export function AmountPicker({
         aria-pressed={active}
         onClick={() => set(value)}
         className={cn(
-          'min-h-10 rounded-pill border px-3 font-semibold tabular-nums transition-colors',
+          'min-h-10 rounded-full border px-3 font-semibold tabular-nums transition-[background-color,border-color,color,scale] duration-200 active:scale-[0.96] motion-reduce:transform-none',
           big ? 'text-lg leading-none' : 'text-[13px]',
-          active
-            ? 'border-primary bg-primary/10 text-primary'
-            : 'hover:bg-accent'
+          active ? 'border-foreground bg-foreground text-background' : 'hover:bg-accent'
         )}
       >
         {label}
@@ -264,11 +265,11 @@ export function AmountPicker({
 
   return (
     <div className='flex flex-col gap-4'>
-      <span className='text-sm font-semibold'>{t('chooseAmount')}</span>
+      <span className='px-1 text-[13px] font-semibold'>{t('chooseAmount')}</span>
 
       {/* The figure is drawn big; the input over it takes the typing
           (phones keep inputs at 16px so they never zoom) */}
-      <label className='surface group focus-within:ring-primary/60 relative flex cursor-text flex-col items-center gap-1 rounded-2xl px-4 pt-3 pb-4 transition-shadow focus-within:ring-2'>
+      <label className='bg-muted group focus-within:ring-ring/50 relative flex cursor-text flex-col items-center gap-1 rounded-[1.5rem] px-4 pt-3 pb-4 transition-shadow focus-within:ring-[3px]'>
         <span className='text-muted-foreground text-xs'>{t('tapToType')}</span>
         <input
           inputMode='decimal'
@@ -277,7 +278,7 @@ export function AmountPicker({
           aria-label={t('amountToPay')}
           value={text}
           onChange={(e) => type(e.target.value)}
-          className='absolute inset-0 h-full w-full cursor-text rounded-2xl opacity-0'
+          className='absolute inset-0 h-full w-full cursor-text rounded-[1.5rem] opacity-0'
         />
         <span
           aria-hidden

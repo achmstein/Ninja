@@ -1,94 +1,89 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Coffee } from 'lucide-react'
+import { MotionConfig } from 'motion/react'
+import { Coffee } from 'lucide-react'
 import { getItemOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import { useSelectedBranch } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
-import { useLocalized } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
+import { itemPictureUrl } from '@/components/menu/item-picture'
+import { NinjaPage } from '@/components/ninja/page/page'
+import { Empty } from '@/components/ninja/page/parts'
+import { Tune } from '@/components/ninja/tune'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ImageWithFallback } from '@/components/image-fallback'
-import { ItemCustomizeForm } from '@/components/menu/item-form'
-import { itemPictureUrl } from '@/components/menu/item-picture'
 
 export const Route = createFileRoute('/item/$itemId')({
   component: ItemPage,
 })
 
-/** Deep-linkable item page; the menu itself uses the customize dialog. */
+/**
+ * A dish by its link: the menu's own card opened in place, filling the
+ * screen as it does over the menu, with its options under the photo and
+ * the price rolling on the one button. Added, or closed, it goes back to
+ * the menu, where the tray has it.
+ */
 function ItemPage() {
   const { itemId } = Route.useParams()
+  const t = useT()
   const navigate = useNavigate()
-  const localized = useLocalized()
   const addToCart = useCart((s) => s.add)
+  // As the menu: a branch that has paused ordering shows the dish but will not add it
+  const canOrder = useSelectedBranch()?.isOrderingEnabled ?? true
 
-  const { data: item, isLoading } = useQuery(
-    getItemOptions({ path: { id: Number(itemId) } })
-  )
+  const { data: item, isLoading } = useQuery(getItemOptions({ path: { id: Number(itemId) } }))
 
-  if (isLoading) {
+  if (!isLoading && !item) {
     return (
-      <div className='p-4'>
-        <Skeleton className='aspect-square w-full rounded-xl md:aspect-video' />
-      </div>
+      <NinjaPage title={t('menu')} back='/'>
+        <Empty icon={Coffee} title={t('itemNotFound')}>
+          <Button className='rounded-full px-8' onClick={() => navigate({ to: '/' })}>
+            {t('browseMenu')}
+          </Button>
+        </Empty>
+      </NinjaPage>
     )
   }
 
-  if (!item) {
-    return (
-      <div className='text-muted-foreground flex h-[60svh] items-center justify-center'>
-        Not found
-      </div>
-    )
-  }
+  const toMenu = () => navigate({ to: '/' })
 
   return (
-    <div className='flex flex-col md:flex-row md:gap-6 md:p-4'>
-      <div className='relative md:w-1/2'>
-        <ImageWithFallback
-          src={item.pictureUri ? itemPictureUrl(item.id) : null}
-          className='aspect-square w-full md:rounded-xl'
-          fallbackIcon={
-            <Coffee className='text-muted-foreground/40 h-16 w-16' />
-          }
-        />
-        <Button
-          variant='secondary'
-          size='icon'
-          aria-label='Back'
-          className='bg-background/90 absolute start-4 top-4 rounded-full shadow backdrop-blur'
-          onClick={() => navigate({ to: '/' })}
-        >
-          <ArrowLeft className='h-5 w-5 rtl:rotate-180' />
-        </Button>
-      </div>
-
-      <div className='flex flex-col gap-4 p-4 md:w-1/2 md:p-0'>
-        <div>
-          <h1 className='text-xl font-bold'>{localized(item.name)}</h1>
-          {item.description && (
-            <p className='text-muted-foreground mt-1 text-sm'>
-              {localized(item.description)}
-            </p>
+    <MotionConfig reducedMotion='user'>
+      {/* Over everything, the dock included, as the card is over the menu */}
+      <div className='bg-background fixed inset-0 z-50'>
+        <div className='relative mx-auto h-full max-w-lg overflow-hidden'>
+          {item ? (
+            <Tune
+              item={item}
+              tone='primary'
+              canOrder={canOrder}
+              onClose={toMenu}
+              onAdd={(result) => {
+                addToCart({
+                  productId: Number(item.id),
+                  nameEn: item.name?.en ?? '',
+                  nameAr: item.name?.ar ?? '',
+                  price: result.unitPrice,
+                  pictureUrl: item.pictureUri ? itemPictureUrl(item.id) : undefined,
+                  quantity: result.quantity,
+                  specialInstructions: result.instructions || undefined,
+                  customizations: result.customizations,
+                })
+                toMenu()
+              }}
+            />
+          ) : (
+            <div className='flex flex-col gap-5'>
+              <Skeleton className='h-[34svh] max-h-80 w-full rounded-none' />
+              <div className='flex flex-col gap-3 px-5'>
+                <Skeleton className='h-8 w-2/3' />
+                <Skeleton className='h-4 w-full' />
+                <Skeleton className='h-12 w-full rounded-2xl' />
+              </div>
+            </div>
           )}
         </div>
-
-        <ItemCustomizeForm
-          item={item}
-          onAdd={(customizations, quantity, instructions, unitPrice) => {
-            addToCart({
-              productId: Number(item.id),
-              nameEn: item.name?.en ?? '',
-              nameAr: item.name?.ar ?? '',
-              price: unitPrice,
-              pictureUrl: item.pictureUri ? itemPictureUrl(item.id) : undefined,
-              quantity,
-              specialInstructions: instructions || undefined,
-              customizations,
-            })
-            navigate({ to: '/' })
-          }}
-        />
       </div>
-    </div>
+    </MotionConfig>
   )
 }

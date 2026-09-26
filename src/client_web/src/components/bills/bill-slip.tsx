@@ -1,3 +1,5 @@
+import { type ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { Timer } from 'lucide-react'
 import { type BillLineView, type BillView } from '@/api/sales'
 import {
@@ -15,6 +17,7 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
+import { springSoft } from '@/lib/motion'
 import { useActiveStay } from '@/lib/stays'
 import { cn } from '@/lib/utils'
 import { ReceiptBrand } from './receipt-brand'
@@ -28,11 +31,38 @@ const tenderKey: Record<string, TranslationKey> = {
 }
 
 /**
+ * The paper the till prints, on screen: black on white whatever the theme,
+ * 72mm wide, its foot torn the way a slip comes off the roll. It rises into
+ * place like a page's blocks, and what is printed on it settles a beat
+ * later, as if it were still coming out of the printer.
+ */
+export function Paper({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springSoft}
+      // The shadow follows the torn edge, which a box-shadow would not
+      className={cn('mx-auto w-full max-w-[300px] drop-shadow-[0_10px_24px_rgb(0_0_0/0.14)]', className)}
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ ...springSoft, delay: 0.08 }}
+        className='flex flex-col gap-2 rounded-t-[1.25rem] bg-white px-4 pt-5 pb-3 text-[12px] leading-snug text-black'
+      >
+        {children}
+      </motion.div>
+      <div aria-hidden className='h-2 bg-[radial-gradient(circle_at_7px_0,white_6px,transparent_6.5px)] bg-[length:14px_8px] bg-repeat-x' />
+    </motion.div>
+  )
+}
+
+/**
  * The bill as the slip the till would print: every line on the ticket
  * with the name the till put on it, the room's time, the discount,
- * service and VAT, the total, and how it was paid. Black on white
- * whatever the theme, 72mm wide. The customer is on this bill, so nobody
- * on it is hidden from them.
+ * service and VAT, the total, and how it was paid, on the Paper. The
+ * customer is on this bill, so nobody on it is hidden from them.
  */
 export function BillSlip({ bill }: { bill: BillView }) {
   const t = useT()
@@ -59,7 +89,7 @@ export function BillSlip({ bill }: { bill: BillView }) {
   const rule = <div className='border-t border-dashed border-black' />
 
   return (
-    <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
+    <Paper>
       <div className='flex flex-col items-center text-center'>
         <ReceiptBrand />
         <div className='text-[13px] font-semibold'>
@@ -162,7 +192,7 @@ export function BillSlip({ bill }: { bill: BillView }) {
           <span>−{price(refunded)}</span>
         </div>
       )}
-    </div>
+    </Paper>
   )
 }
 

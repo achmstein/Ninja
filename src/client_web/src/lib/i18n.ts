@@ -330,7 +330,16 @@ const webExtras = {
   ninjaKeepHolding: { en: 'Keep holding until the ring closes', ar: 'فضل دايس لحد ما الدايرة تقفل' },
   ninjaRemoved: { en: '{name} removed', ar: 'اتشال {name}' },
   ninjaUndo: { en: 'Undo', ar: 'رجّعه' },
+  ninjaUpNext: { en: 'Up next', ar: 'اللي بعده' },
   ninjaSoldOut: { en: '{name} is sold out right now', ar: '{name} خلص دلوقتي' },
+  // Book (places)
+  bookFreeNow: {
+    plural: 'count',
+    en: { '=0': 'Nothing free right now', '=1': '1 free now', other: '{count} free now' },
+    ar: { '=0': 'مفيش حاجة فاضية دلوقتي', '=1': 'واحدة فاضية دلوقتي', '=2': 'اتنين فاضيين دلوقتي', other: '{count} فاضيين دلوقتي' },
+  },
+  bookClockRunning: { en: 'Clock running', ar: 'العداد شغال' },
+  bookStartAt: { en: 'Start at', ar: 'ابدأ بـ' },
   // Bills: each bill a stack of its rounds
   ninjaRoundCount: {
     plural: 'count',
@@ -338,6 +347,11 @@ const webExtras = {
     ar: { '=1': 'طلب واحد', '=2': 'طلبين', other: '{count} طلبات' },
   },
   ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
+  // Cart and pay
+  payModeItems: { en: 'My items', ar: 'حاجاتي' },
+  payModeEqual: { en: 'Equally', ar: 'بالتساوي' },
+  payModeCustom: { en: 'Amount', ar: 'مبلغ' },
+  itemNotFound: { en: "This item isn't on the menu", ar: 'الصنف ده مش في المنيو' },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

@@ -53,14 +53,15 @@ export function TableView({
 
   return (
     <div className='flex flex-col gap-4 pb-4'>
-      {/* The table card, in the clock card's clothes, flush with the
-          sheet's top and carrying its drag handle */}
-      <div className='from-primary to-primary/85 text-primary-foreground flex flex-col items-center gap-3 bg-gradient-to-br p-6 pt-3'>
-        <div className='mb-3 h-1 w-10 rounded-full bg-white/40' />
-        <div className='flex size-14 items-center justify-center rounded-full bg-white/15'>
+      {/* The table card, in the clock's dark slab, flush with the sheet's
+          top and carrying its drag handle */}
+      <div className='bg-foreground text-background relative isolate flex flex-col items-center gap-3 overflow-hidden p-6 pt-3'>
+        <PlaceIcon kind={place.kind} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.08]' />
+        <div className='bg-background/40 mb-3 h-1 w-10 rounded-full' />
+        <div className='bg-background/15 flex size-14 items-center justify-center rounded-full'>
           <PlaceIcon kind={place.kind} className='h-7 w-7' />
         </div>
-        <span className='text-2xl font-bold'>{localized(place.name)}</span>
+        <span className='heading text-[calc(1.75rem*var(--heading-scale))]'>{localized(place.name)}</span>
         <span className='text-sm opacity-80'>
           {t('sinceTime', { time: since })}
         </span>
@@ -140,7 +141,7 @@ function RequestPill({
     <Button
       variant='outline'
       className={cn(
-        'h-16 flex-col gap-0.5 rounded-2xl text-sm font-semibold',
+        'h-16 flex-col gap-0.5 rounded-[1.25rem] text-sm font-semibold transition-transform active:scale-[0.97] motion-reduce:transform-none',
         state.phase === 'sent' && 'border-primary/30 bg-primary/5',
         state.phase === 'onTheWay' &&
           'border-primary/30 bg-primary/10 text-primary',

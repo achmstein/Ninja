@@ -10,7 +10,6 @@ import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
 import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
-import { MobileTopBar } from '@/components/mobile-top-bar'
 import { OrderPill } from '@/components/order-pill'
 
 type RouterContext = {
@@ -39,7 +38,6 @@ function RootLayout() {
               bar so scrolled content doesn't show through behind it */}
           <div className='bg-background fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)]' />
           <AppHeader />
-          <MobileTopBar />
           <main className='mx-auto w-full max-w-lg flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:max-w-6xl md:pb-8'>
             <Outlet />
           </main>

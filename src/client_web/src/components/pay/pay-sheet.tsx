@@ -2,16 +2,13 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
-import {
-  CircleAlert,
-  Loader2,
-  FlaskConical,
-  Lock,
-} from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { Check, CircleAlert, FlaskConical, Lock } from 'lucide-react'
 import { type PayLineView, type PayView } from '@/api/sales'
 import { startOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
+import { blurSwap, springSoft } from '@/lib/motion'
 import {
   customShare,
   equalShare,
@@ -28,16 +25,11 @@ import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { usePayView, type PaySource } from '@/lib/use-pay'
 import { cn } from '@/lib/utils'
 import { useGuestStore } from '@/stores/guest-store'
+import { MorphButton } from '@/components/motion/morph-button'
+import { Odometer } from '@/components/ninja/odometer'
+import { Segment, Slab } from '@/components/ninja/page/parts'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PaidSoFar, PayWhy, SharesList } from './pay-progress'
 import { AmountPicker, SeatsTable } from './split-pickers'
@@ -46,6 +38,13 @@ import { AmountPicker, SeatsTable } from './split-pickers'
  *  'any' offers both (the table's sheet, a retry). */
 export type PayStart = 'full' | 'split' | 'any'
 
+/** Each way in a word or two, to fit four to a track on a phone; the whole name is its label for a screen reader */
+const MODE_SHORT: Record<SplitKind, TranslationKey> = {
+  full: 'all',
+  items: 'payModeItems',
+  equal: 'payModeEqual',
+  custom: 'payModeCustom',
+}
 const MODE_LABEL: Record<SplitKind, TranslationKey> = {
   full: 'payWholeBill',
   items: 'payYourItems',
@@ -66,12 +65,13 @@ function modesFor(view: PayView, start: PayStart): SplitKind[] {
 }
 
 /**
- * Online payments (docs/online-payments-plan.md): the bill as it stands —
- * what is paid, what others are paying right now — the ways the café lets
- * a table split it, the fee, and one button that sends the
- * guest to the provider's checkout. Re-read every few seconds while open,
- * so shares others pay land here as they happen; the server re-checks
- * every sum when the guest confirms.
+ * Online payments (docs/online-payments-plan.md): the bill as it stands on
+ * the dock's slab (what is left, rolling; the bar filling as shares land;
+ * who is paying right now), the ways the café lets a table split it on
+ * one liquid track, the fee, and one button that sends the guest to the
+ * provider's checkout. Re-read every few seconds while open, so shares
+ * others pay land here as they happen; the server re-checks every sum
+ * when the guest confirms.
  */
 export function PaySheet({
   source,
@@ -95,60 +95,44 @@ export function PaySheet({
       <SheetContent
         side='bottom'
         style={keyboardInset ? { bottom: keyboardInset } : undefined}
-        className='mx-auto flex max-h-[92svh] max-w-lg flex-col gap-0 rounded-t-2xl border-t-0 p-0'
+        className='mx-auto flex max-h-[92svh] max-w-lg flex-col gap-0 rounded-t-[1.75rem] border-t-0 p-0'
       >
-        <div className='bg-muted-foreground mx-auto mt-3 h-1 w-10 shrink-0 rounded-full' />
+        <div className='bg-muted-foreground/40 mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full' />
         <SheetHeader className='shrink-0 px-5 pt-3 pb-0 text-start'>
-          <SheetTitle className='pe-8 text-xl font-bold'>
+          <SheetTitle className='heading pe-8 text-[calc(1.5rem*var(--heading-scale))] leading-tight'>
             {t(start === 'full' ? 'payFully' : start === 'split' ? 'splitBill' : 'payTheBill')}
           </SheetTitle>
-          <SheetDescription>
-            {data ? localized(data.locationName) : ' '}
-          </SheetDescription>
+          <SheetDescription>{data ? localized(data.locationName) : ' '}</SheetDescription>
         </SheetHeader>
 
         {view.isLoading ? (
           <div className='flex flex-col gap-3 p-5'>
-            <Skeleton className='h-14 w-full rounded-xl' />
-            <Skeleton className='h-10 w-full rounded-pill' />
-            <Skeleton className='h-32 w-full rounded-xl' />
+            <Skeleton className='h-32 w-full rounded-[1.75rem]' />
+            <Skeleton className='h-11 w-full rounded-full' />
+            <Skeleton className='h-32 w-full rounded-[1.5rem]' />
           </div>
         ) : !data ? (
           <div className='flex flex-col items-center gap-3 p-8 text-center'>
-            <CircleAlert className='text-muted-foreground h-10 w-10' />
-            <p className='text-muted-foreground text-sm'>
-              {t('failedToLoadBills')}
-            </p>
+            <CircleAlert className='text-muted-foreground size-10' />
+            <p className='text-muted-foreground text-sm'>{t('failedToLoadBills')}</p>
             <Button variant='outline' className='rounded-full' onClick={() => view.refetch()}>
               {t('retry')}
             </Button>
           </div>
         ) : (
           // Keyed by the bill so a new one starts with a clean choice
-          <PayForm
-            key={String(data.ticketId)}
-            view={data}
-            start={start}
-            onRefetch={() => view.refetch()}
-          />
+          <PayForm key={String(data.ticketId)} view={data} start={start} onRefetch={() => view.refetch()} />
         )}
       </SheetContent>
     </Sheet>
   )
 }
 
-function PayForm({
-  view,
-  start,
-  onRefetch,
-}: {
-  view: PayView
-  start: PayStart
-  onRefetch: () => void
-}) {
+function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; onRefetch: () => void }) {
   const t = useT()
   const price = usePrice()
   const auth = useAuth()
+  const reduced = useReducedMotion()
   const guestContact = useGuestStore((s) => s.contact)
   const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
 
@@ -167,10 +151,7 @@ function PayForm({
   const [chosenSeats, setChosenSeats] = useState<ReadonlySet<number>>(() => new Set([0]))
   const [amountText, setAmountText] = useState('')
   const [name, setName] = useState(
-    () =>
-      (auth.isAuthenticated
-        ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username)
-        : guestContact?.name) ?? ''
+    () => (auth.isAuthenticated ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username) : guestContact?.name) ?? ''
   )
 
   const total = num(view.total)
@@ -199,9 +180,7 @@ function PayForm({
     // The provider's hosted checkout: the guest comes back to /pay/{key}
     onSuccess: (started) => window.location.assign(started.checkoutUrl),
     onError: (error) => {
-      const detail =
-        isAxiosError(error) &&
-        (error.response?.data as { detail?: string } | undefined)?.detail
+      const detail = isAxiosError(error) && (error.response?.data as { detail?: string } | undefined)?.detail
       setProblem(detail || t('payFailedToStart'))
       onRefetch()
     },
@@ -217,12 +196,7 @@ function PayForm({
       body: {
         mode: SPLIT[mode],
         // A line someone took since it was ticked is not asked for
-        lineIds:
-          mode === 'items'
-            ? view.lines
-                .filter((l) => !l.claimed && picked.has(String(l.id)))
-                .map((l) => Number(l.id))
-            : null,
+        lineIds: mode === 'items' ? view.lines.filter((l) => !l.claimed && picked.has(String(l.id))).map((l) => Number(l.id)) : null,
         parts: mode === 'equal' ? parts : null,
         of: mode === 'equal' ? of : null,
         amount: mode === 'custom' ? typed : null,
@@ -232,103 +206,90 @@ function PayForm({
     })
   }
 
+  const swap = blurSwap(reduced)
+
   return (
     <>
-      <div className='flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5'>
-        <PaidSoFar view={view} />
-        <SharesList shares={view.shares} simulated={!!view.options.simulated} />
+      {/* Nothing in here gives up height to fit: it scrolls instead */}
+      <div className='flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5 *:shrink-0'>
+        {/* The bill as it stands, and everyone paying it */}
+        <Slab className='flex flex-col gap-4'>
+          <PaidSoFar view={view} hero />
+          <SharesList shares={view.shares} simulated={!!view.options.simulated} />
+        </Slab>
 
         {!view.canPay ? (
           <PayWhy why={view.why} />
         ) : (
           <>
             {modes.length > 1 && (
-              <div
-                role='tablist'
-                className='bg-muted grid gap-1 rounded-pill p-1'
-                style={{ gridTemplateColumns: `repeat(${modes.length}, minmax(0, 1fr))` }}
-              >
-                {modes.map((m) => (
-                  <button
-                    key={m}
-                    type='button'
-                    role='tab'
-                    aria-selected={m === mode}
-                    onClick={() => setMode(m)}
-                    className={cn(
-                      'truncate rounded-pill px-2 py-2 text-[13px] font-semibold transition-colors',
-                      m === mode
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground'
-                    )}
-                  >
-                    {t(MODE_LABEL[m])}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {mode === 'items' && (
-              <ItemsPicker
-                lines={view.lines}
-                picked={picked}
-                beingPaid={num(view.held) > 0}
-                anyPaid={num(view.paid) > 0}
-                onToggle={(id) =>
-                  setPicked((prev) => {
-                    const next = new Set(prev)
-                    if (next.has(id)) next.delete(id)
-                    else next.add(id)
-                    return next
-                  })
-                }
+              <Segment
+                value={mode}
+                onChange={setMode}
+                options={modes.map((m) => ({ value: m, label: <span className='truncate'>{t(MODE_SHORT[m])}</span>, ariaLabel: t(MODE_LABEL[m]) }))}
               />
             )}
 
-            {mode === 'equal' && (
-              <SeatsTable
-                total={total}
-                remaining={remaining}
-                paid={num(view.paid)}
-                held={num(view.held)}
-                seats={of}
-                minSeats={fewestSeats}
-                selected={new Set(mySeats)}
-                onSeats={setSeats}
-                onToggle={(seat) =>
-                  setChosenSeats(() => {
-                    const next = new Set(mySeats)
-                    // The last one stays: someone pays for something
-                    if (next.has(seat)) {
-                      if (next.size > 1) next.delete(seat)
-                    } else next.add(seat)
-                    return next
-                  })
-                }
-              />
-            )}
+            {/* One way at a time, each sharpening in where the last one was */}
+            <AnimatePresence mode='popLayout' initial={false}>
+              {mode !== 'full' && (
+                <motion.div key={mode} {...swap}>
+                  {mode === 'items' && (
+                    <ItemsPicker
+                      lines={view.lines}
+                      picked={picked}
+                      beingPaid={num(view.held) > 0}
+                      anyPaid={num(view.paid) > 0}
+                      onToggle={(id) =>
+                        setPicked((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(id)) next.delete(id)
+                          else next.add(id)
+                          return next
+                        })
+                      }
+                    />
+                  )}
 
-            {mode === 'custom' && (
-              <AmountPicker
-                remaining={remaining}
-                text={amountText}
-                onText={setAmountText}
-              />
-            )}
+                  {mode === 'equal' && (
+                    <SeatsTable
+                      total={total}
+                      remaining={remaining}
+                      paid={num(view.paid)}
+                      held={num(view.held)}
+                      seats={of}
+                      minSeats={fewestSeats}
+                      selected={new Set(mySeats)}
+                      onSeats={setSeats}
+                      onToggle={(seat) =>
+                        setChosenSeats(() => {
+                          const next = new Set(mySeats)
+                          // The last one stays: someone pays for something
+                          if (next.has(seat)) {
+                            if (next.size > 1) next.delete(seat)
+                          } else next.add(seat)
+                          return next
+                        })
+                      }
+                    />
+                  )}
+
+                  {mode === 'custom' && <AmountPicker remaining={remaining} text={amountText} onText={setAmountText} />}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <label className='flex flex-col gap-1.5'>
-              <span className='text-sm font-semibold'>{t('payerNameLabel')}</span>
-              <Input
+              <span className='px-1 text-[13px] font-semibold'>{t('payerNameLabel')}</span>
+              <input
                 autoComplete='given-name'
                 maxLength={60}
-                className='h-11 rounded-xl'
+                className='bg-muted placeholder:text-muted-foreground focus-visible:ring-ring/50 h-12 rounded-2xl px-4 text-base outline-none focus-visible:ring-[3px]'
                 placeholder={t('payerGuest')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-              <span className='text-muted-foreground text-xs'>
-                {t('payerNameHint')}
-              </span>
+              <span className='text-muted-foreground px-1 text-xs'>{t('payerNameHint')}</span>
             </label>
           </>
         )}
@@ -337,38 +298,49 @@ function PayForm({
       {view.canPay && (
         <div className='bg-background shrink-0 border-t px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]'>
           <div className='flex flex-col gap-1 text-sm tabular-nums'>
-            <Row label={t('yourShare')} value={price(summary.share)} />
             {guestPaysFee && summary.fee > 0 && (
-              <Row label={t('onlinePaymentFee')} value={price(summary.fee)} />
+              <>
+                <Row label={t('yourShare')} value={price(summary.share)} />
+                <Row label={t('onlinePaymentFee')} value={price(summary.fee)} />
+              </>
             )}
-            <div className='flex items-baseline justify-between pt-1 text-base font-bold'>
-              <span>{t('youPay')}</span>
-              <span>{price(summary.total)}</span>
+            <div className='flex items-baseline justify-between gap-2'>
+              <span className='font-bold'>{t('youPay')}</span>
+              <Odometer value={price(summary.total)} className='text-[20px] font-extrabold' />
             </div>
           </div>
 
-          {problem && (
-            <div className='bg-destructive/10 text-destructive mt-3 flex items-center gap-2 rounded-lg p-3 text-[13px]'>
-              <CircleAlert className='h-4 w-4 shrink-0' />
-              {problem}
-            </div>
-          )}
-
-          <Button
-            size='lg'
-            className='mt-3 w-full rounded-pill font-bold'
-            disabled={summary.share <= 0 || pay.isPending || pay.isSuccess}
-            onClick={confirm}
-          >
-            {pay.isPending || pay.isSuccess ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
-            ) : (
-              <>
-                <Lock className='h-4 w-4' />
-                {t('payAmount', { amount: price(summary.total) })}
-              </>
+          <AnimatePresence initial={false}>
+            {problem && (
+              <motion.div
+                key='problem'
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={springSoft}
+                className='overflow-hidden'
+              >
+                <div className='bg-destructive/10 text-destructive mt-3 flex items-center gap-2 rounded-2xl p-3 text-[13px]'>
+                  <CircleAlert className='size-4 shrink-0' />
+                  {problem}
+                </div>
+              </motion.div>
             )}
-          </Button>
+          </AnimatePresence>
+
+          {/* The button becomes the spinner, and stays it while the provider's page loads */}
+          <div className='mt-3'>
+            <MorphButton
+              phase={pay.isPending || pay.isSuccess ? 'busy' : pay.isError ? 'error' : 'idle'}
+              disabled={summary.share <= 0}
+              onClick={confirm}
+              height={52}
+              className='text-[15px] font-bold'
+            >
+              <Lock className='size-4' />
+              {t('payAmount', { amount: price(summary.total) })}
+            </MorphButton>
+          </div>
           <Methods view={view} />
         </div>
       )}
@@ -385,8 +357,9 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-/** The bill's lines to tick. Lines someone else has paid for, or is paying
- *  for right now, are shown but cannot be picked. */
+/** The bill's lines to tick, each a card whose mark fills when picked.
+ *  Lines someone else has paid for, or is paying for right now, are shown
+ *  but cannot be picked. */
 function ItemsPicker({
   lines,
   picked,
@@ -407,60 +380,57 @@ function ItemsPicker({
   const price = usePrice()
   // A claimed line does not say by which share; where only one kind
   // exists, it says which, and otherwise just that it is taken
-  const claimedLabel = t(
-    beingPaid && anyPaid ? 'lineTaken' : beingPaid ? 'lineBeingPaid' : 'paid'
-  )
+  const claimedLabel = t(beingPaid && anyPaid ? 'lineTaken' : beingPaid ? 'lineBeingPaid' : 'paid')
 
   return (
-    <div className='flex flex-col gap-1'>
-      <span className='text-sm font-semibold'>{t('pickItemsToPay')}</span>
-      <div className='divide-y'>
-        {lines.map((line) => {
-          const id = String(line.id)
-          const qty = num(line.qty)
-          return (
-            <label
-              key={id}
+    <div className='flex flex-col gap-2'>
+      <span className='px-1 text-[13px] font-semibold'>{t('pickItemsToPay')}</span>
+      {lines.map((line) => {
+        const id = String(line.id)
+        const qty = num(line.qty)
+        const on = line.claimed || picked.has(id)
+        return (
+          <button
+            key={id}
+            type='button'
+            role='checkbox'
+            aria-checked={on}
+            disabled={line.claimed}
+            onClick={() => onToggle(id)}
+            className={cn(
+              'flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-start transition-[background-color,border-color] duration-200',
+              line.claimed ? 'opacity-60' : on ? 'border-foreground/80 bg-muted' : 'border-border'
+            )}
+          >
+            <span
               className={cn(
-                'flex items-start gap-3 py-2.5',
-                line.claimed ? 'opacity-60' : 'cursor-pointer'
+                'grid size-6 shrink-0 place-items-center rounded-full border-2 transition-colors duration-200',
+                on ? 'border-foreground bg-foreground text-background' : 'border-muted-foreground/40'
               )}
             >
-              <Checkbox
-                className='mt-0.5 size-5'
-                checked={line.claimed || picked.has(id)}
-                disabled={line.claimed}
-                onCheckedChange={() => onToggle(id)}
-              />
-              <div className='flex min-w-0 flex-1 flex-col'>
-                <span className='text-sm'>
-                  {qty !== 1 && (
-                    <span className='text-muted-foreground'>{qty}x </span>
-                  )}
-                  {localized(line.description)}
-                </span>
-                {line.claimed ? (
-                  <span className='text-muted-foreground text-xs'>{claimedLabel}</span>
-                ) : (
-                  localized(line.details) && (
-                    <span className='text-muted-foreground truncate text-xs'>
-                      {localized(line.details)}
-                    </span>
-                  )
+              <AnimatePresence initial={false}>
+                {on && (
+                  <motion.span key='tick' initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={springSoft} className='grid place-items-center'>
+                    <Check className='size-3.5' strokeWidth={3} />
+                  </motion.span>
                 )}
-              </div>
-              <span
-                className={cn(
-                  'shrink-0 text-sm tabular-nums',
-                  line.claimed && 'line-through'
-                )}
-              >
-                {price(line.share)}
+              </AnimatePresence>
+            </span>
+            <span className='flex min-w-0 flex-1 flex-col'>
+              <span className='text-sm font-medium'>
+                {qty !== 1 && <span className='text-muted-foreground'>{qty}× </span>}
+                {localized(line.description)}
               </span>
-            </label>
-          )
-        })}
-      </div>
+              {line.claimed ? (
+                <span className='text-muted-foreground text-xs'>{claimedLabel}</span>
+              ) : (
+                localized(line.details) && <span className='text-muted-foreground truncate text-xs'>{localized(line.details)}</span>
+              )}
+            </span>
+            <span className={cn('shrink-0 text-sm font-semibold tabular-nums', line.claimed && 'line-through')}>{price(line.share)}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -470,18 +440,11 @@ function ItemsPicker({
 function Methods({ view }: { view: PayView }) {
   const t = useT()
   // A demo café: the next page is ours, and nothing is charged
-  if (view.options.simulated) {
-    return (
-      <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-xs'>
-        <FlaskConical className='h-3 w-3' />
-        {t('demoPaymentsBadge')}
-      </div>
-    )
-  }
+  const Icon = view.options.simulated ? FlaskConical : Lock
   return (
     <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-xs'>
-      <Lock className='h-3 w-3' />
-      {t('paySecureNote')}
+      <Icon className='size-3' />
+      {t(view.options.simulated ? 'demoPaymentsBadge' : 'paySecureNote')}
     </div>
   )
 }

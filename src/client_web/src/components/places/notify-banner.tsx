@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'motion/react'
 import { Bell, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import {
@@ -10,10 +11,12 @@ import {
 import { ensurePushToken, pushConfigured } from '@/lib/push'
 import { useBranchStore } from '@/stores/branch-store'
 import { useLanguage, useT } from '@/lib/i18n'
-import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+import { Panel } from '@/components/ninja/page/parts'
 import { Switch } from '@/components/ui/switch'
 
-/** "All rooms busy — notify me when one frees up" banner (web push). */
+/** "All rooms busy — notify me when one frees up" (web push), as a panel
+ *  whose bell rings once when the switch goes on. */
 export function NotifyBanner() {
   const t = useT()
   const language = useLanguage((s) => s.language)
@@ -54,16 +57,24 @@ export function NotifyBanner() {
   }
 
   return (
-    <Card className='flex-row items-center gap-3 p-4'>
-      <Bell className='h-5 w-5 shrink-0' />
-      <div className='min-w-0 flex-1'>
-        <div className='text-sm font-bold'>{t('allRoomsBusy')}</div>
-      </div>
+    <Panel className='flex items-center gap-3 p-4'>
+      <motion.span
+        key={String(isSubscribed)}
+        animate={isSubscribed ? { rotate: [0, -16, 14, -8, 0] } : undefined}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className={cn(
+          'grid size-10 shrink-0 place-items-center rounded-full transition-colors',
+          isSubscribed ? 'bg-primary text-primary-foreground' : 'bg-muted'
+        )}
+      >
+        <Bell className='size-5' />
+      </motion.span>
+      <div className='min-w-0 flex-1 text-[15px] font-semibold'>{t('allRoomsBusy')}</div>
       {busy || subscriptionQuery.isLoading ? (
         <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
       ) : (
         <Switch checked={isSubscribed} onCheckedChange={handleChange} />
       )}
-    </Card>
+    </Panel>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -13,13 +13,13 @@ import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
-import { HoldSheet } from '@/components/places/hold-sheet'
-import { HeldBanner } from '@/components/places/held-banner'
-import { PlaceRow, PlaceRowSkeleton } from '@/components/places/place-row'
+import { HeldCard } from '@/components/places/held-card'
+import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Panel } from '@/components/ninja/page/parts'
 import { SignInSheet } from '@/components/sign-in-options'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/places')({
   component: PlacesPage,
@@ -37,6 +37,7 @@ export const Route = createFileRoute('/places')({
  * exist, and an old link to it goes home. Orders keep their own tab.
  */
 function PlacesPage() {
+  const t = useT()
   const { seat, settling } = useVisit()
   const { visible } = useVisitTab()
   const navigate = useNavigate()
@@ -56,18 +57,16 @@ function PlacesPage() {
   ) : null
 
   if (!visible) return null
-  // Until the stays answer, a skeleton: the list flashing up and then
-  // giving way to the clock is worse than a moment of nothing
+  // Until the stays answer, cards of nothing: the places flashing up and
+  // then giving way to the clock is worse than a moment of nothing
   if (settling) {
     return (
-      <div className='flex flex-col gap-4 p-4'>
-        <Skeleton className='mt-2 h-8 w-40' />
-        <Skeleton className='h-44 w-full rounded-2xl' />
-        <div className='grid grid-cols-2 gap-3'>
-          <Skeleton className='h-16 rounded-2xl' />
-          <Skeleton className='h-16 rounded-2xl' />
+      <NinjaPage title={t('rooms')}>
+        <div className='flex flex-col gap-4'>
+          <PlaceCardSkeleton />
+          <PlaceCardSkeleton />
         </div>
-      </div>
+      </NinjaPage>
     )
   }
   return (
@@ -83,8 +82,9 @@ function PlacesPage() {
 }
 
 /** The bookable places of the branch — the rooms and stations with a
- *  clock, and any table the owner opened to reservations — and the
- *  customer's reservation on one while they walk over. */
+ *  clock, and any table the owner opened to reservations — as big cards,
+ *  one open at a time with the booking under it, and the customer's
+ *  reservation on one as the slab on top while they walk over. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const auth = useAuth()
@@ -93,8 +93,9 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const features = useFeatures()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
-  const [reservePlace, setReservePlace] = useState<PlaceViewModel | null>(null)
+  const [openId, setOpenId] = useState<number | null>(null)
   const [signInOpen, setSignInOpen] = useState(false)
+  const closeHold = useCallback(() => setOpenId(null), [])
 
   // Live RoomStatusChanged updates + 30s fallback poll (app parity)
   useRoomsGroup()
@@ -103,11 +104,14 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const reservationsEnabled =
     features.reservations && (branch?.isReservationsEnabled ?? true)
   const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
-  const allBusy =
-    places.length > 0 &&
-    places.every((p) => Number(p.status) !== PLACE_AVAILABLE)
+  const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+  const allBusy = places.length > 0 && freeCount === 0
 
-  const handleReserve = async (place: PlaceViewModel) => {
+  const handleToggle = async (place: PlaceViewModel) => {
+    if (openId === Number(place.id)) {
+      setOpenId(null)
+      return
+    }
     if (!auth.isAuthenticated) {
       setSignInOpen(true)
       return
@@ -115,53 +119,71 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     // One hold at a time (app parity; the backend enforces it too)
     if (hold) return
     if (!(await ensureProfileComplete())) return
-    setReservePlace(place)
+    setOpenId(Number(place.id))
   }
 
   return (
-    <div className='flex flex-col gap-3 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('rooms')}</h1>
+    <NinjaPage
+      title={t('rooms')}
+      subtitle={!isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
+    >
+      <Rise className='flex flex-col gap-4'>
+        {!reservationsEnabled && (
+          <RiseItem>
+            <Panel className='text-destructive flex items-center gap-3 p-4'>
+              <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
+                <Ban className='size-5' />
+              </span>
+              <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
+            </Panel>
+          </RiseItem>
+        )}
 
-      {!reservationsEnabled && (
-        <div className='bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg p-3 text-sm font-medium'>
-          <Ban className='h-4 w-4 shrink-0' />
-          {t('reservationsUnavailable')}
-        </div>
-      )}
+        {hold && (
+          <RiseItem>
+            <HeldCard reservation={hold} />
+          </RiseItem>
+        )}
+        {allBusy && !hold && auth.isAuthenticated && (
+          <RiseItem>
+            <NotifyBanner />
+          </RiseItem>
+        )}
 
-      {hold && <HeldBanner reservation={hold} />}
-      {allBusy && !hold && auth.isAuthenticated && <NotifyBanner />}
+        {isLoading ? (
+          <RiseItem className='flex flex-col gap-4'>
+            <PlaceCardSkeleton />
+            <PlaceCardSkeleton />
+            <PlaceCardSkeleton />
+          </RiseItem>
+        ) : (
+          <div className='flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start'>
+            {places.map((place) => (
+              <RiseItem key={String(place.id)}>
+                <PlaceCard
+                  place={place}
+                  canReserve={canReserve}
+                  // The hold arriving folds the card at once, so the tick
+                  // it leaves behind grows straight into the hold card
+                  open={openId === Number(place.id) && !hold}
+                  onToggle={handleToggle}
+                  onDone={closeHold}
+                />
+              </RiseItem>
+            ))}
+          </div>
+        )}
 
-      {isLoading ? (
-        <div className='flex flex-col'>
-          {[...Array(4)].map((_, i) => (
-            <PlaceRowSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <div className='md:grid md:grid-cols-2 md:gap-x-10'>
-          {places.map((place) => (
-            <PlaceRow
-              key={String(place.id)}
-              place={place}
-              canReserve={canReserve}
-              onReserve={handleReserve}
-            />
-          ))}
-        </div>
-      )}
+        {/* Telling someone already at a table to scan a table is noise */}
+        {!atTable && (
+          <RiseItem>
+            <ScanFooter />
+          </RiseItem>
+        )}
+      </Rise>
 
-      {/* Telling someone already at a table to scan a table is noise */}
-      {!atTable && <ScanFooter />}
-
-      <HoldSheet
-        place={reservePlace}
-        onOpenChange={(open) => {
-          if (!open) setReservePlace(null)
-        }}
-      />
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
-    </div>
+    </NinjaPage>
   )
 }

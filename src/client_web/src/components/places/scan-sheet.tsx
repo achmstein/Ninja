@@ -12,7 +12,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { PLACE_AVAILABLE, PlaceIcon, STAY_RUNNING } from '@/lib/places'
 import { useProfileGate } from '@/components/profile-gate'
 import { SignInOptions } from '@/components/sign-in-options'
-import { Button } from '@/components/ui/button'
+import { MorphButton } from '@/components/motion/morph-button'
 import {
   Sheet,
   SheetContent,
@@ -21,7 +21,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { HoldSheet } from './hold-sheet'
-import { TariffLine } from './place-row'
+import { TariffLine } from './place-card'
 
 /**
  * What a timed place's code opens, on the places tab rather than a page of
@@ -124,55 +124,46 @@ export function ScanSheet({
       >
         <SheetContent
           side='bottom'
-          className='mx-auto max-w-lg gap-0 rounded-t-2xl border-t-0 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]'
+          className='mx-auto max-w-lg gap-0 rounded-t-[1.75rem] border-t-0 p-2 pb-[max(1rem,env(safe-area-inset-bottom))] [&>button]:end-5 [&>button]:top-5 [&>button]:text-primary-foreground'
         >
-          <div className='bg-muted-foreground mx-auto mb-4 h-1 w-10 rounded-full' />
-
-          <SheetHeader className='p-0 text-start'>
-            <SheetTitle className='flex items-center gap-2 pe-8 text-xl font-bold'>
-              <PlaceIcon
-                kind={Number(place.kind)}
-                className='text-primary h-5 w-5'
-              />
+          {/* The place on its card, as the tab shows it */}
+          <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
+            <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
+            <div className='bg-primary-foreground/40 mx-auto mb-2 h-1 w-10 rounded-full' />
+            <SheetTitle className='heading text-primary-foreground pe-8 text-[calc(1.75rem*var(--heading-scale))] leading-tight'>
               {localized(place.name)}
             </SheetTitle>
-            <SheetDescription>
+            <SheetDescription className='text-primary-foreground/80'>
               <TariffLine place={place} />
             </SheetDescription>
+            {running && memberCount != null && (
+              <span className='bg-primary-foreground/15 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold'>
+                <Users className='size-3.5' />
+                {t('memberCountFormat', { count: Number(memberCount) })}
+              </span>
+            )}
           </SheetHeader>
 
-          <div className='mt-6 flex flex-col items-center gap-3 text-center'>
+          <div className='flex flex-col items-center gap-3 p-3 pt-5 text-center'>
             {!auth.isAuthenticated ? (
               <>
-                <p className='text-muted-foreground text-sm'>
-                  {t('signInPrompt')}
-                </p>
+                <p className='text-muted-foreground text-sm'>{t('signInPrompt')}</p>
                 <SignInOptions />
               </>
             ) : running ? (
-              <>
-                {memberCount != null && (
-                  <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
-                    <Users className='h-4 w-4' />
-                    {t('memberCountFormat', { count: Number(memberCount) })}
-                  </p>
-                )}
-                <Button
-                  size='lg'
-                  className='w-full rounded-pill font-bold'
-                  disabled={joinStay.isPending}
-                  onClick={async () => {
-                    if (!(await ensureProfileComplete())) return
-                    joinStay.mutate({ path: { id: placeId } })
-                  }}
-                >
-                  {t('join')}
-                </Button>
-              </>
+              <MorphButton
+                phase={joinStay.isPending ? 'busy' : joinStay.isSuccess ? 'success' : 'idle'}
+                height={48}
+                className='font-bold'
+                onClick={async () => {
+                  if (!(await ensureProfileComplete())) return
+                  joinStay.mutate({ path: { id: placeId } })
+                }}
+              >
+                {t('join')}
+              </MorphButton>
             ) : (
-              <p className='text-muted-foreground text-sm'>
-                {t('roomNotAvailable')}
-              </p>
+              <p className='text-muted-foreground text-sm'>{t('roomNotAvailable')}</p>
             )}
           </div>
         </SheetContent>

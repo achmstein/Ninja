@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { CircleAlert, CircleCheck, Clock, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
+import { CircleAlert, Clock, Loader2 } from 'lucide-react'
 import { type PaymentStatusView } from '@/api/sales'
 import { getOnlinePaymentOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
-import { Button } from '@/components/ui/button'
+import { blurSwap, springSoft } from '@/lib/motion'
+import { cn } from '@/lib/utils'
+import { Paper } from '@/components/bills/bill-slip'
+import { DrawnCheck } from '@/components/motion/morph-button'
+import { Odometer } from '@/components/ninja/odometer'
+import { Rise, RiseItem } from '@/components/ninja/page/page'
+import { Slab } from '@/components/ninja/page/parts'
 import { DemoCheckout } from '@/components/pay/demo-checkout'
 
 export const Route = createFileRoute('/pay/$key')({
   // simulate: a demo café's pretend checkout, which is this page itself
   validateSearch: (search: Record<string, unknown>): { simulate?: boolean } =>
-    search.simulate === 1 || search.simulate === '1' || search.simulate === true
-      ? { simulate: true }
-      : {},
+    search.simulate === 1 || search.simulate === '1' || search.simulate === true ? { simulate: true } : {},
   component: PayReturnPage,
 })
 
@@ -25,7 +30,7 @@ const POLL_MS = 2_000
 
 /**
  * Where the provider's checkout sends the guest back to (/pay/{key}). The
- * trip back proves nothing — anyone can type the address — so the page
+ * trip back proves nothing (anyone can type the address), so the page
  * asks Sales until the provider's signed callback has settled the payment
  * one way or the other, then shows the receipt or the way back to try
  * again. Past two minutes it stops asking and says the bill will tell.
@@ -34,6 +39,7 @@ function PayReturnPage() {
   const { key } = Route.useParams()
   const { simulate } = Route.useSearch()
   const t = useT()
+  const language = useLanguage((s) => s.language)
   const queryClient = useQueryClient()
   const [gaveUp, setGaveUp] = useState(false)
 
@@ -43,15 +49,9 @@ function PayReturnPage() {
   }, [])
 
   const query = useQuery({
-    ...getOnlinePaymentOptions({
-      path: { key },
-      query: { 'api-version': API_VERSION },
-    }),
+    ...getOnlinePaymentOptions({ path: { key }, query: { 'api-version': API_VERSION } }),
     retry: 2,
-    refetchInterval: (q) =>
-      !gaveUp && (q.state.data == null || q.state.data.status === 'Pending')
-        ? POLL_MS
-        : false,
+    refetchInterval: (q) => (!gaveUp && (q.state.data == null || q.state.data.status === 'Pending') ? POLL_MS : false),
   })
   const payment = query.data
   const status = payment?.status
@@ -67,7 +67,7 @@ function PayReturnPage() {
 
   if (query.isError && !payment) {
     return (
-      <Outcome icon={CircleAlert} tone='muted' title={t('paymentNotFound')}>
+      <Outcome state='muted' title={t('paymentNotFound')}>
         <BackToBills />
       </Outcome>
     )
@@ -80,22 +80,24 @@ function PayReturnPage() {
 
   if (!payment || status === 'Pending') {
     return gaveUp ? (
-      <Outcome icon={Clock} tone='muted' title={t('paymentStillConfirming')}>
+      <Outcome state='waited' title={t('paymentStillConfirming')}>
         <BackToBills />
       </Outcome>
     ) : (
-      <Outcome icon={Loader2} tone='spin' title={t('confirmingPayment')} />
+      <Outcome state='waiting' title={t('confirmingPayment')} />
     )
   }
 
   if (status === 'Paid') {
     return (
-      <Outcome icon={CircleCheck} tone='good' title={t('paymentPaid')}>
-        <p className='text-muted-foreground -mt-2 text-sm'>{t('paymentPaidThanks')}</p>
-        <Receipt payment={payment} />
-        {payment.billClosed && (
-          <p className='text-muted-foreground text-sm'>{t('billClosedNote')}</p>
-        )}
+      <Outcome
+        state='good'
+        title={t('paymentPaid')}
+        note={t('paymentPaidThanks')}
+        amount={formatMoney(payment.charged, payment.currency, language)}
+        payment={payment}
+      >
+        {payment.billClosed && <p className='text-muted-foreground px-2 text-center text-sm'>{t('billClosedNote')}</p>}
         <BackToBills />
       </Outcome>
     )
@@ -103,61 +105,103 @@ function PayReturnPage() {
 
   return (
     <Outcome
-      icon={CircleAlert}
-      tone='bad'
-      title={t(
-        status === 'Expired'
-          ? 'paymentExpired'
-          : status === 'Refunded'
-            ? 'paymentRefunded'
-            : 'paymentFailed'
-      )}
+      state='bad'
+      title={t(status === 'Expired' ? 'paymentExpired' : status === 'Refunded' ? 'paymentRefunded' : 'paymentFailed')}
+      note={payment.failureReason ?? undefined}
     >
-      {payment.failureReason && (
-        <p className='text-muted-foreground -mt-2 text-sm'>{payment.failureReason}</p>
-      )}
       {status !== 'Refunded' && !payment.billClosed && (
-        <Button asChild size='lg' className='w-full rounded-pill font-bold'>
-          <Link to='/bills' search={{ pay: Number(payment.ticketId) }} replace>
-            {t('tryAgain')}
-          </Link>
-        </Button>
+        <Link
+          to='/bills'
+          search={{ pay: Number(payment.ticketId) }}
+          replace
+          className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-[15px] font-bold'
+        >
+          {t('tryAgain')}
+        </Link>
       )}
       <BackToBills />
     </Outcome>
   )
 }
 
-const TONES = {
-  spin: 'text-primary animate-spin',
-  good: 'text-green-600 dark:text-green-500',
-  bad: 'text-destructive',
-  muted: 'text-muted-foreground',
-} as const
+type State = 'waiting' | 'waited' | 'muted' | 'good' | 'bad'
 
+const MARK: Record<State, { icon: ComponentType<{ className?: string }> | null; tone: string }> = {
+  waiting: { icon: Loader2, tone: 'bg-background/10' },
+  waited: { icon: Clock, tone: 'bg-background/10' },
+  muted: { icon: CircleAlert, tone: 'bg-background/10' },
+  // The tick is drawn, not an icon
+  good: { icon: null, tone: 'bg-emerald-500 text-white' },
+  bad: { icon: CircleAlert, tone: 'bg-destructive text-white' },
+}
+
+/**
+ * The one slab the page is about, which stays put while what it says
+ * changes: the spinner while the provider's word is awaited becomes the
+ * drawn tick (or the warning) in place, and the title sharpens in with it.
+ * What was charged rolls in under a paid one, and the paper slip rises
+ * below it.
+ */
 function Outcome({
-  icon: Icon,
-  tone,
+  state,
   title,
+  note,
+  amount,
+  payment,
   children,
 }: {
-  icon: React.ComponentType<{ className?: string }>
-  tone: keyof typeof TONES
+  state: State
   title: string
-  children?: React.ReactNode
+  note?: string
+  /** What the card paid, on a paid one */
+  amount?: string
+  payment?: PaymentStatusView
+  children?: ReactNode
 }) {
+  const reduced = useReducedMotion()
+  const swap = blurSwap(reduced)
+  const { icon: Icon, tone } = MARK[state]
+
   return (
-    <div className='mx-auto flex min-h-[70svh] w-full max-w-lg flex-col items-center justify-center gap-4 p-6 text-center'>
-      <Icon className={`h-14 w-14 ${TONES[tone]}`} />
-      <h1 className='text-xl font-bold' aria-live='polite'>
-        {title}
-      </h1>
-      {children}
-    </div>
+    <MotionConfig reducedMotion='user'>
+      {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
+      <div className='mx-auto -mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] w-full max-w-lg flex-col justify-center px-4 py-8 md:mb-0'>
+        <Rise className='flex flex-col gap-4'>
+          <RiseItem>
+            <Slab layout transition={springSoft} className='flex flex-col items-center gap-4 px-6 py-9 text-center'>
+              <AnimatePresence mode='popLayout' initial={false}>
+                <motion.div key={state} {...swap} className={cn('grid size-20 place-items-center rounded-full', tone)}>
+                  {Icon ? (
+                    <Icon className={cn('size-9', state === 'waiting' && 'animate-spin motion-reduce:animate-none')} />
+                  ) : (
+                    <DrawnCheck reduced={!!reduced} className='size-10' />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+              <AnimatePresence mode='popLayout' initial={false}>
+                <motion.div key={title} {...swap} className='flex flex-col items-center gap-1.5'>
+                  <h1 className='heading text-[calc(1.5rem*var(--heading-scale))] leading-tight' aria-live='polite'>
+                    {title}
+                  </h1>
+                  {note && <p className='text-muted-foreground text-sm'>{note}</p>}
+                </motion.div>
+              </AnimatePresence>
+              {amount && <Odometer value={amount} className='text-[30px] font-extrabold' />}
+            </Slab>
+          </RiseItem>
+          {payment && (
+            <RiseItem>
+              <Receipt payment={payment} />
+            </RiseItem>
+          )}
+          {children && <RiseItem className='flex flex-col gap-2'>{children}</RiseItem>}
+        </Rise>
+      </div>
+    </MotionConfig>
   )
 }
 
-/** The payment as a slip: the share, the fee, what the card paid. */
+/** The payment on paper: the share, the fee, what the card paid. */
 function Receipt({ payment }: { payment: PaymentStatusView }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
@@ -166,30 +210,31 @@ function Receipt({ payment }: { payment: PaymentStatusView }) {
   const row = 'flex items-baseline justify-between gap-2 tabular-nums'
 
   return (
-    <div className='bg-muted/50 flex w-full flex-col gap-1.5 rounded-xl border border-dashed p-4 text-sm'>
-      <div className={`${row} text-muted-foreground`}>
+    <Paper>
+      <div className={row}>
         <span>{t('yourShare')}</span>
         <span>{money(payment.amount)}</span>
       </div>
       {fee > 0 && (
-        <div className={`${row} text-muted-foreground`}>
+        <div className={row}>
           <span>{t('onlinePaymentFee')}</span>
           <span>{money(fee)}</span>
         </div>
       )}
-      <div className={`${row} border-t pt-2 text-base font-bold`}>
+      <div className='border-t border-dashed border-black' />
+      <div className={cn(row, 'text-[15px] font-bold')}>
         <span>{t('charged')}</span>
         <span>{money(payment.charged)}</span>
       </div>
-    </div>
+    </Paper>
   )
 }
 
 function BackToBills() {
   const t = useT()
   return (
-    <Button asChild size='lg' variant='outline' className='w-full rounded-pill font-bold'>
-      <Link to='/bills'>{t('backToBills')}</Link>
-    </Button>
+    <Link to='/bills' className='bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-[15px] font-bold'>
+      {t('backToBills')}
+    </Link>
   )
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { CreditCard, FlaskConical, Loader2, Lock, Smartphone } from 'lucide-react'
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
+import { CreditCard, FlaskConical, Lock, Smartphone } from 'lucide-react'
 import { type PaymentStatusView } from '@/api/sales'
 import {
   cancelOnlinePaymentMutation,
@@ -12,8 +13,10 @@ import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { blurSwap, springSoft } from '@/lib/motion'
+import { MorphButton } from '@/components/motion/morph-button'
+import { Odometer } from '@/components/ninja/odometer'
+import { Panel, Segment, Slab } from '@/components/ninja/page/parts'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -54,10 +57,12 @@ export function checkCard(
  * merchant, what is being paid, a card form or a wallet number, Pay and
  * Cancel. Nothing is charged: the test card 4242… goes through, 4000…0002
  * is declined, and Sales marks the payment just as a provider's callback
- * would, so everything after it is the real flow.
+ * would, so everything after it is the real flow. Drawn in the app's own
+ * style, with the demo banner over it all so it never passes for a bank's.
  */
 export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const language = useLanguage((s) => s.language)
   const merchant = useBrandName()
   const navigate = useNavigate()
@@ -113,187 +118,191 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
   }
 
   const fee = Number(payment.fee)
-  const busy = processing || simulate.isPending || cancel.isPending
+  const busy = processing || simulate.isPending
+  const swap = blurSwap(reduced)
 
   return (
-    <div className='bg-muted/40 min-h-svh'>
-      {/* What this page is, said plainly above everything else */}
-      <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-xs font-semibold text-amber-950'>
-        <FlaskConical className='h-3.5 w-3.5' />
-        {t('demoBanner')}
-      </div>
-
-      <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-4 pb-10'>
-        <div className='text-muted-foreground flex items-center justify-center gap-1.5 pt-2 text-xs'>
-          <Lock className='h-3.5 w-3.5' />
-          {t('demoSecureCheckout')}
+    <MotionConfig reducedMotion='user'>
+      {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
+      <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] min-h-svh md:mb-0'>
+        {/* What this page is, said plainly above everything else */}
+        <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-xs font-semibold text-amber-950'>
+          <FlaskConical className='size-3.5' />
+          {t('demoBanner')}
         </div>
 
-        {/* The merchant and what is being paid */}
-        <section className='bg-card rounded-2xl border p-5 shadow-sm'>
-          <div className='text-muted-foreground text-xs'>{t('demoPayTo')}</div>
-          <div className='truncate text-lg font-semibold'>{merchant}</div>
-          <div className='mt-4 flex flex-col gap-1.5 text-sm tabular-nums'>
-            <div className='text-muted-foreground flex justify-between gap-2'>
-              <span>{t('yourShare')}</span>
-              <span>{money(payment.amount)}</span>
-            </div>
-            {fee > 0 && (
-              <div className='text-muted-foreground flex justify-between gap-2'>
-                <span>{t('onlinePaymentFee')}</span>
-                <span>{money(fee)}</span>
-              </div>
-            )}
-            <div className='mt-1 flex items-baseline justify-between gap-2 border-t pt-3'>
-              <span className='font-semibold'>{t('demoTotal')}</span>
-              <span className='text-2xl font-bold'>{money(payment.charged)}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* How to pay */}
-        <section className='bg-card flex flex-col gap-4 rounded-2xl border p-5 shadow-sm'>
-          <div className='bg-muted grid grid-cols-2 gap-1 rounded-xl p-1'>
-            {(
-              [
-                ['card', CreditCard, t('card')],
-                ['wallet', Smartphone, t('payWallet')],
-              ] as const
-            ).map(([key, Icon, label]) => (
-              <button
-                key={key}
-                type='button'
-                onClick={() => {
-                  setMethod(key)
-                  setError(null)
-                }}
-                className={cn(
-                  'flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors',
-                  method === key ? 'bg-background shadow-sm' : 'text-muted-foreground'
-                )}
-              >
-                <Icon className='h-4 w-4' />
-                {label}
-              </button>
-            ))}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springSoft}
+          className='mx-auto flex w-full max-w-md flex-col gap-4 p-4 pb-10'
+        >
+          <div className='text-muted-foreground flex items-center justify-center gap-1.5 pt-2 text-xs'>
+            <Lock className='size-3.5' />
+            {t('demoSecureCheckout')}
           </div>
 
-          {method === 'card' ? (
-            <div className='flex flex-col gap-3' dir='ltr'>
-              <div className='flex flex-col gap-1.5'>
-                <Label htmlFor='demo-number'>{t('demoCardNumber')}</Label>
-                <div className='relative'>
-                  <Input
-                    id='demo-number'
-                    inputMode='numeric'
-                    autoComplete='off'
-                    placeholder='1234 5678 9012 3456'
-                    value={card.number}
-                    onChange={(e) => setCard({ ...card, number: formatCardNumber(e.target.value) })}
-                    className='pe-10 font-mono tracking-wider'
-                  />
-                  <CreditCard className='text-muted-foreground absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2' />
-                </div>
-              </div>
-              <div className='grid grid-cols-2 gap-3'>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='demo-expiry'>{t('demoExpiry')}</Label>
-                  <Input
-                    id='demo-expiry'
-                    inputMode='numeric'
-                    autoComplete='off'
-                    placeholder='MM/YY'
-                    value={card.expiry}
-                    onChange={(e) => setCard({ ...card, expiry: formatExpiry(e.target.value) })}
-                    className='font-mono'
-                  />
-                </div>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='demo-cvc'>CVC</Label>
-                  <Input
-                    id='demo-cvc'
-                    inputMode='numeric'
-                    autoComplete='off'
-                    placeholder='123'
-                    value={card.cvc}
-                    onChange={(e) => setCard({ ...card, cvc: digits(e.target.value).slice(0, 3) })}
-                    className='font-mono'
-                  />
-                </div>
-              </div>
-              <div className='flex flex-col gap-1.5'>
-                <Label htmlFor='demo-name'>{t('demoNameOnCard')}</Label>
-                <Input
-                  id='demo-name'
-                  autoComplete='off'
-                  value={card.name}
-                  onChange={(e) => setCard({ ...card, name: e.target.value })}
-                />
-              </div>
-              <div className='bg-muted/60 text-muted-foreground flex flex-col gap-1 rounded-lg p-3 text-xs'>
-                <span>
-                  {t('demoTestApproved')} <span className='font-mono'>4242 4242 4242 4242</span>
-                </span>
-                <span>
-                  {t('demoTestDeclined')} <span className='font-mono'>4000 0000 0000 0002</span>
-                </span>
-                <button
-                  type='button'
-                  className='text-primary self-start font-medium underline-offset-2 hover:underline'
-                  onClick={() => {
-                    setCard({ number: formatCardNumber(APPROVED_CARD), expiry: '12/30', cvc: '123', name: 'Demo Guest' })
-                    setError(null)
-                  }}
-                >
-                  {t('demoUseTestCard')}
-                </button>
+          {/* The merchant and what is being paid */}
+          <Slab className='flex flex-col gap-4'>
+            <div className='min-w-0'>
+              <div className='text-muted-foreground text-xs font-semibold'>{t('demoPayTo')}</div>
+              <div className='heading truncate text-xl'>{merchant}</div>
+            </div>
+            <div className='flex flex-col gap-1.5 text-sm tabular-nums'>
+              {fee > 0 && (
+                <>
+                  <div className='text-muted-foreground flex justify-between gap-2'>
+                    <span>{t('yourShare')}</span>
+                    <span>{money(payment.amount)}</span>
+                  </div>
+                  <div className='text-muted-foreground flex justify-between gap-2'>
+                    <span>{t('onlinePaymentFee')}</span>
+                    <span>{money(fee)}</span>
+                  </div>
+                </>
+              )}
+              <div className='flex items-baseline justify-between gap-2'>
+                <span className='font-semibold'>{t('demoTotal')}</span>
+                <Odometer value={money(payment.charged)} className='text-[30px] font-extrabold' />
               </div>
             </div>
-          ) : (
-            <div className='flex flex-col gap-1.5'>
-              <Label htmlFor='demo-phone'>{t('demoWalletNumber')}</Label>
-              <Input
-                id='demo-phone'
-                dir='ltr'
-                inputMode='tel'
-                placeholder='01xxxxxxxxx'
-                value={phone}
-                onChange={(e) => setPhone(digits(e.target.value).slice(0, 11))}
-                className='font-mono'
-              />
-              <span className='text-muted-foreground text-xs'>{t('demoWalletHint')}</span>
-            </div>
-          )}
+          </Slab>
 
-          {error && <p className='text-destructive text-sm'>{error}</p>}
+          {/* How to pay */}
+          <Panel className='flex flex-col gap-4 p-5'>
+            <Segment
+              value={method}
+              onChange={(key) => {
+                setMethod(key)
+                setError(null)
+              }}
+              options={[
+                { value: 'card', label: <><CreditCard className='size-4' />{t('card')}</> },
+                { value: 'wallet', label: <><Smartphone className='size-4' />{t('payWallet')}</> },
+              ]}
+            />
 
-          <Button size='lg' className='h-12 w-full rounded-xl text-base font-bold' disabled={busy} onClick={pay}>
-            {processing || simulate.isPending ? (
-              <>
-                <Loader2 className='h-4 w-4 animate-spin' />
+            <AnimatePresence mode='popLayout' initial={false}>
+              {method === 'card' ? (
+                <motion.div key='card' {...swap} className='flex flex-col gap-3' dir='ltr'>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='demo-number'>{t('demoCardNumber')}</Label>
+                    <div className='relative'>
+                      <Input
+                        id='demo-number'
+                        inputMode='numeric'
+                        autoComplete='off'
+                        placeholder='1234 5678 9012 3456'
+                        value={card.number}
+                        onChange={(e) => setCard({ ...card, number: formatCardNumber(e.target.value) })}
+                        className='h-11 rounded-xl pe-10 font-mono tracking-wider'
+                      />
+                      <CreditCard className='text-muted-foreground absolute end-3 top-1/2 size-4 -translate-y-1/2' />
+                    </div>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div className='flex flex-col gap-1.5'>
+                      <Label htmlFor='demo-expiry'>{t('demoExpiry')}</Label>
+                      <Input
+                        id='demo-expiry'
+                        inputMode='numeric'
+                        autoComplete='off'
+                        placeholder='MM/YY'
+                        value={card.expiry}
+                        onChange={(e) => setCard({ ...card, expiry: formatExpiry(e.target.value) })}
+                        className='h-11 rounded-xl font-mono'
+                      />
+                    </div>
+                    <div className='flex flex-col gap-1.5'>
+                      <Label htmlFor='demo-cvc'>CVC</Label>
+                      <Input
+                        id='demo-cvc'
+                        inputMode='numeric'
+                        autoComplete='off'
+                        placeholder='123'
+                        value={card.cvc}
+                        onChange={(e) => setCard({ ...card, cvc: digits(e.target.value).slice(0, 3) })}
+                        className='h-11 rounded-xl font-mono'
+                      />
+                    </div>
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='demo-name'>{t('demoNameOnCard')}</Label>
+                    <Input
+                      id='demo-name'
+                      autoComplete='off'
+                      value={card.name}
+                      onChange={(e) => setCard({ ...card, name: e.target.value })}
+                      className='h-11 rounded-xl'
+                    />
+                  </div>
+                  <div className='bg-muted text-muted-foreground flex flex-col gap-1 rounded-2xl p-3 text-xs'>
+                    <span>
+                      {t('demoTestApproved')} <span className='font-mono'>4242 4242 4242 4242</span>
+                    </span>
+                    <span>
+                      {t('demoTestDeclined')} <span className='font-mono'>4000 0000 0000 0002</span>
+                    </span>
+                    <button
+                      type='button'
+                      className='text-foreground self-start font-semibold underline-offset-2 hover:underline'
+                      onClick={() => {
+                        setCard({ number: formatCardNumber(APPROVED_CARD), expiry: '12/30', cvc: '123', name: 'Demo Guest' })
+                        setError(null)
+                      }}
+                    >
+                      {t('demoUseTestCard')}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key='wallet' {...swap} className='flex flex-col gap-1.5'>
+                  <Label htmlFor='demo-phone'>{t('demoWalletNumber')}</Label>
+                  <Input
+                    id='demo-phone'
+                    dir='ltr'
+                    inputMode='tel'
+                    placeholder='01xxxxxxxxx'
+                    value={phone}
+                    onChange={(e) => setPhone(digits(e.target.value).slice(0, 11))}
+                    className='h-11 rounded-xl font-mono'
+                  />
+                  <span className='text-muted-foreground text-xs'>{t('demoWalletHint')}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {error && <p className='text-destructive text-sm'>{error}</p>}
+
+            {/* The button is the bank's moment too: a spinner while "the bank" decides */}
+            <MorphButton
+              phase={busy ? 'busy' : error ? 'error' : 'idle'}
+              disabled={cancel.isPending}
+              onClick={pay}
+              height={52}
+              className='text-[15px] font-bold'
+            >
+              <Lock className='size-4' />
+              {t('payAmount', { amount: money(payment.charged) })}
+            </MorphButton>
+            {busy && (
+              <p className='text-muted-foreground -mt-2 text-center text-xs' aria-live='polite'>
                 {t('demoProcessing')}
-              </>
-            ) : (
-              <>
-                <Lock className='h-4 w-4' />
-                {t('payAmount', { amount: money(payment.charged) })}
-              </>
+              </p>
             )}
-          </Button>
-          <Button
-            variant='ghost'
-            className='w-full'
-            disabled={busy}
-            onClick={() =>
-              cancel.mutate({ path: { key: payment.key }, query: { 'api-version': API_VERSION } })
-            }
-          >
-            {t('demoCancelReturn')}
-          </Button>
-        </section>
+            <button
+              type='button'
+              className='text-muted-foreground h-10 w-full rounded-full text-sm font-semibold disabled:opacity-50'
+              disabled={busy || cancel.isPending}
+              onClick={() => cancel.mutate({ path: { key: payment.key }, query: { 'api-version': API_VERSION } })}
+            >
+              {t('demoCancelReturn')}
+            </button>
+          </Panel>
 
-        <p className='text-muted-foreground text-center text-xs'>{t('demoFooter')}</p>
+          <p className='text-muted-foreground text-center text-xs'>{t('demoFooter')}</p>
+        </motion.div>
       </div>
-    </div>
+    </MotionConfig>
   )
 }

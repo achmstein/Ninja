@@ -6,7 +6,7 @@ import { useFeatures } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'
 import { offersPay } from '@/lib/pay'
 import { usePayView, type PaySource } from '@/lib/use-pay'
-import { Button } from '@/components/ui/button'
+import { Odometer } from '@/components/ninja/odometer'
 import { PaidSoFar, PayWhy } from './pay-progress'
 import { PaySheet, type PayStart } from './pay-sheet'
 
@@ -15,6 +15,8 @@ import { PaySheet, type PayStart } from './pay-sheet'
  * the table: paid so far, what is left, and the two ways in — the whole
  * of what is left, or a split. Nothing at all where the café does not
  * offer it, so a guest is never told about a feature they cannot use.
+ * It reads on its own as a light card, and tucked under the bill's slab
+ * as the slab's lower lip.
  */
 export function BillPayBar({ bill }: { bill: BillView }) {
   const features = useFeatures()
@@ -45,23 +47,27 @@ function PayBar({
     view.options.allowItems || view.options.allowEqual || view.options.allowCustom
 
   return (
-    <div className='bg-muted/50 flex flex-col gap-3 rounded-xl p-3'>
+    <div className='bg-muted flex flex-col gap-3 rounded-[1.5rem] p-4'>
       <PaidSoFar view={view} />
       {view.canPay ? (
         <div className='grid grid-cols-2 gap-2'>
-          <Button className='rounded-pill font-semibold' onClick={() => openAs('full')}>
-            <CreditCard className='h-4 w-4' />
+          <button
+            type='button'
+            onClick={() => openAs('full')}
+            className='bg-foreground text-background flex h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition-transform active:scale-[0.97] motion-reduce:transform-none'
+          >
+            <CreditCard className='size-4' />
             {t('payFully')}
-          </Button>
-          <Button
-            variant='outline'
-            className='rounded-pill font-semibold'
+          </button>
+          <button
+            type='button'
             disabled={!canSplit}
             onClick={() => openAs('split')}
+            className='bg-background flex h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition-transform active:scale-[0.97] disabled:opacity-50 motion-reduce:transform-none'
           >
-            <Split className='h-4 w-4' />
+            <Split className='size-4' />
             {t('splitBill')}
-          </Button>
+          </button>
         </div>
       ) : (
         <PayWhy why={view.why} className='bg-background' />
@@ -95,18 +101,17 @@ export function TablePayButton({ placeId, branchId }: { placeId: number; branchI
 
   return (
     <>
-      <Button
-        variant='outline'
-        size='lg'
-        className='w-full justify-between rounded-pill font-semibold'
+      <button
+        type='button'
         onClick={() => setOpen(true)}
+        className='bg-muted flex h-12 w-full items-center justify-between gap-2 rounded-full ps-5 pe-4 font-semibold transition-transform active:scale-[0.98] motion-reduce:transform-none'
       >
         <span className='flex items-center gap-2'>
-          <CreditCard className='h-4 w-4' />
+          <CreditCard className='size-4' />
           {t('payTheBill')}
         </span>
-        <span className='text-muted-foreground tabular-nums'>{price(data.remaining)}</span>
-      </Button>
+        <Odometer value={price(data.remaining)} className='text-muted-foreground text-[15px]' />
+      </button>
       <PaySheet source={source} start='any' open={open} onOpenChange={setOpen} />
     </>
   )
