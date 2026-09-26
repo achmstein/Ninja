@@ -48,6 +48,11 @@
   z-index: 100;
 }
 
+/* Sileo capitalises every word of a title; ours are sentences ("Tea added") */
+:root [data-sileo-title] {
+  text-transform: none;
+}
+
 /* Sileo ships no RTL support and measures its pill geometry in LTR
    coordinates: keep the toast box LTR so the autopilot expansion stays
    correct, and flip the content instead — icon to the reading start via

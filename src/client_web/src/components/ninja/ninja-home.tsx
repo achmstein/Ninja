@@ -122,7 +122,10 @@ export function NinjaHome({ menu }: HomeProps) {
   const onRowChange = (c: number, row: number) => {
     rows.current[c] = row
     if (c !== column) return
-    if (row !== activeRow) setActiveRow(row)
+    // Only the first visit's "hold to add" cue needs the row as state; a
+    // re-render here on every card scrolled past re-measured the whole deck
+    // for its shared layouts and made the scroll stutter
+    if (row !== activeRow && holdHint.pending) setActiveRow(row)
     if (row > 0 && swipeHint.pending && byGuest()) swipeHint.done()
   }
 

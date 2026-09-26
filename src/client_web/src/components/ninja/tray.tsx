@@ -158,7 +158,8 @@ export function Tray({
   // Open, the dock is just the total: the circles' place closes up, the count goes and the total grows into the room
   const thumbsWidth = useRef(0)
   const thumbsSize = useTransform(openness, (v): number | string => (v <= 0.001 || !thumbsWidth.current ? 'auto' : thumbsWidth.current * (1 - v)))
-  const thumbsGap = useTransform(openness, (v) => -12 * v)
+  // A little room past the stack at rest (its +N badge hangs over its end), closing up as the sheet opens
+  const thumbsGap = useTransform(openness, (v) => 6 - 18 * v)
   const countOpacity = useTransform(openness, (v) => Math.max(0, 1 - v * 2.5))
   const countHeight = useTransform(openness, (v): number | string => (v <= 0.001 ? 'auto' : 16 * (1 - v)))
   const totalScale = useTransform(openness, (v) => 1 + 0.3 * v)
@@ -343,7 +344,8 @@ export function Tray({
 function Thumbs({ summary, shown }: { summary: ReturnType<typeof traySummary>; shown: MotionValue<number> | number }) {
   const language = useLanguage((s) => s.language)
   return (
-    <motion.span className='relative flex items-center -space-x-3 rtl:space-x-reverse' style={{ opacity: shown }}>
+    // space-x is logical in Tailwind v4: it overlaps the right way in Arabic without a reverse
+    <motion.span className='relative flex items-center -space-x-3' style={{ opacity: shown }}>
       {summary.thumbs.map((thumb) => (
         <span key={thumb.key} data-thumb={thumb.key} className='bg-background/15 ring-foreground relative size-11 shrink-0 overflow-hidden rounded-full ring-2'>
           {thumb.pictureUrl ? (
@@ -405,12 +407,12 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   const y = useTransform(progress, (p) => lerp(from.y, to.y)(p) - Math.sin(p * Math.PI) * 18)
   const width = useTransform(progress, lerp(from.width, to.width))
   const height = useTransform(progress, lerp(from.height, to.height))
-  const radius = useTransform(progress, lerp(from.width / 2, 12))
   const opacity = useTransform(progress, (p) => (seat.fromDock ? 1 : Math.min(1, p * 3)))
   return (
     <motion.span
       className='bg-foreground text-background ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-sm font-bold shadow-lg ring-2'
-      style={{ x, y, width, height, borderRadius: radius, opacity }}
+      // A circle the whole way, as in the dock and on the row: only its size changes
+      style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >
       {seat.src ? <img src={seat.src} alt='' className='size-full object-cover' draggable={false} /> : seat.label}
     </motion.span>
@@ -543,7 +545,7 @@ function SwipeLine({ line }: { line: CartLine }) {
           data-seat={key}
           data-src={line.pictureUrl ?? ''}
           data-label={name.charAt(0)}
-          className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl text-base font-bold'
+          className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-base font-bold'
           style={{ opacity: seatShown }}
         >
           {line.pictureUrl ? <img src={line.pictureUrl} alt='' className='size-full object-cover' draggable={false} /> : name.charAt(0)}

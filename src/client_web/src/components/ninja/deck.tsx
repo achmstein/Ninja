@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Plus, Repeat2 } from 'lucide-react'
+import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,8 @@ import { LONG_PRESS_MS, usePress } from './use-press'
 
 /** The gap between cards, px */
 const GAP = 12
+/** How long the deck must rest on the next category's card before it moves on, ms */
+const ADVANCE_AFTER = 160
 
 export type DeckPosition = { column: number; row: number }
 
@@ -85,6 +87,32 @@ export function Deck({
     }
   }, [column, reduced])
 
+  // Resting on a column's last card, the "up next" one, moves on to the next
+  // category the way a sideways swipe does; the column left behind goes back
+  // to its last dish, so coming back lands on a dish rather than the way on
+  const advanceTimer = useRef<number | null>(null)
+  useEffect(() => () => {
+    if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
+  }, [])
+  const watchForNext = (c: number, el: HTMLElement) => {
+    if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
+    advanceTimer.current = null
+    // The card is shorter than a dish, so the column cannot bring it to the
+    // top: reaching the end of the column is resting on it
+    const next = el.querySelector<HTMLElement>('[data-up-next]')
+    if (!next || el.scrollTop + el.clientHeight < el.scrollHeight - 4) return
+    advanceTimer.current = window.setTimeout(() => {
+      advanceTimer.current = null
+      const nextColumn = columnEls.current[c + 1]
+      if (nextColumn) nextColumn.scrollTop = 0
+      onColumnChange(c + 1)
+      window.setTimeout(() => {
+        const last = next.previousElementSibling as HTMLElement | null
+        if (last) el.scrollTop = last.offsetTop - DECK_TOP
+      }, 700)
+    }, ADVANCE_AFTER)
+  }
+
   // Two fingers closing zoom out to the whole menu
   useEffect(() => {
     const el = pager.current
@@ -143,7 +171,8 @@ export function Deck({
             const el = e.currentTarget
             const first = el.firstElementChild as HTMLElement | null
             const step = (first?.offsetHeight ?? 0) + GAP
-            if (step > GAP) onRowChange(c, Math.round(el.scrollTop / step))
+            if (step > GAP) onRowChange(c, Math.min(col.items.length - 1, Math.round(el.scrollTop / step)))
+            if (c === column) watchForNext(c, el)
           }}
         >
           {col.items.map((item) => (
@@ -159,10 +188,58 @@ export function Deck({
               onQuickAdd={onQuickAdd}
             />
           ))}
+          {columns[c + 1] && <UpNext column={columns[c + 1]} onGo={() => onColumnChange(c + 1)} />}
           <div aria-hidden className='h-10 shrink-0' />
         </motion.div>
       ))}
     </motion.div>
+  )
+}
+
+/**
+ * The card after a category's last dish: the next category's name on its
+ * colour and a few of its dishes, rising as it comes into view. Resting on
+ * it, or tapping it, carries on into that category. The last category has
+ * none, so the deck ends there with a plain stop.
+ */
+function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
+  const t = useT()
+  const reduced = useReducedMotion()
+  const faces = column.items.filter((item) => item.pictureUri).slice(0, 3)
+  return (
+    <motion.button
+      type='button'
+      data-up-next
+      onClick={onGo}
+      initial={reduced ? false : { y: 40, opacity: 0.3, scale: 0.94 }}
+      whileInView={{ y: 0, opacity: 1, scale: 1 }}
+      viewport={{ amount: 0.25 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+      className={cn('mb-3 flex w-full shrink-0 snap-start flex-col justify-between p-6 text-start', TONE_CLASS[column.tone])}
+      style={{ height: `calc((100% - ${DECK_TOP + 44}px) * 0.5)`, borderRadius: CARD_RADIUS }}
+    >
+      <span className='text-sm font-semibold opacity-70'>{t('ninjaUpNext')}</span>
+      <span className='flex items-end justify-between gap-4'>
+        <span className='heading min-w-0 text-[calc(2.25rem*var(--heading-scale))] leading-[1] break-words'>{column.label}</span>
+        <span className='grid size-12 shrink-0 place-items-center rounded-full bg-black/15'>
+          <ArrowRight className='size-6 rtl:rotate-180' />
+        </span>
+      </span>
+      {faces.length > 0 && (
+        <span className='flex -space-x-3 rtl:space-x-reverse'>
+          {faces.map((item) => (
+            <img
+              key={String(item.id)}
+              src={itemPictureUrl(item.id)}
+              alt=''
+              loading='lazy'
+              draggable={false}
+              className='size-12 rounded-full object-cover ring-2 ring-current/20'
+            />
+          ))}
+        </span>
+      )}
+    </motion.button>
   )
 }
 

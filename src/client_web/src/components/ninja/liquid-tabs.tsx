@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
 import { LayoutGrid } from 'lucide-react'
 import { useT } from '@/lib/i18n'
@@ -29,6 +29,14 @@ export function LiquidTabs({
   const row = useRef<HTMLDivElement>(null)
   const tabs = useRef<Array<HTMLButtonElement | null>>([])
   const edges = useLiquidEdges(active, tabs, row)
+  const scroller = useRef<HTMLDivElement>(null)
+  const [more, setMore] = useState(false)
+  // scrollLeft runs negative in a right-to-left row, so its size is what counts
+  const measureMore = () => {
+    const el = scroller.current
+    if (el) setMore(Math.abs(el.scrollLeft) + el.clientWidth < el.scrollWidth - 2)
+  }
+  useLayoutEffect(measureMore, [labels.length])
 
   useLayoutEffect(() => {
     tabs.current[active]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' })
@@ -36,7 +44,18 @@ export function LiquidTabs({
 
   return (
     <div className='flex items-center gap-1 ps-2 pe-1'>
-      <div className='no-scrollbar min-w-0 flex-1 overflow-x-auto'>
+      {/* While more categories wait past the end, the row fades out before the
+          whole-menu button rather than running under it; at the end it does
+          not, so the last category's pill is never washed out */}
+      <div
+        ref={scroller}
+        onScroll={measureMore}
+        className={cn(
+          'no-scrollbar min-w-0 flex-1 overflow-x-auto',
+          more &&
+            '[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] rtl:[mask-image:linear-gradient(to_left,black_calc(100%-28px),transparent)]'
+        )}
+      >
         <div ref={row} role='tablist' className='relative flex w-max items-center py-1'>
           <LiquidPill edges={edges} height={PILL_H} top={4} className='bg-primary' />
           {labels.map((label, i) => (

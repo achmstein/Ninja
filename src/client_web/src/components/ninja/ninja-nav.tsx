@@ -4,6 +4,7 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useVisitTab } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
+import { DOCK_INSET, DOCK_SIDE } from './chrome'
 import { LiquidPill } from './liquid-pill'
 import { useLiquidEdges } from './use-liquid'
 
@@ -63,7 +64,11 @@ export function NinjaNav({ className }: { className?: string }) {
  */
 export function NinjaNavDock() {
   return (
-    <div className='pointer-events-none fixed inset-x-0 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-40 mx-auto max-w-lg px-2 md:hidden'>
+    // The menu's dock's own margins, so the bar does not shift when the page changes
+    <div
+      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg md:hidden'
+      style={{ paddingInline: DOCK_SIDE, bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
+    >
       <div className='bg-foreground text-background pointer-events-auto rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
         <NinjaNav />
       </div>

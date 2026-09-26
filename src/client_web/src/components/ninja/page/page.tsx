@@ -47,7 +47,8 @@ export function NinjaPage({
         chips={!back}
         start={back ? <BackButton to={back} title={folded ? title : null} /> : undefined}
       />
-      <div className={cn('flex flex-col gap-5 px-4 pt-2 pb-6 md:pt-8', className)}>
+      {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
+      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-6 md:pt-8', className)}>
         <motion.header style={{ opacity, scale }} className='flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]'>
           <div className='min-w-0'>
             <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>{title}</h1>
