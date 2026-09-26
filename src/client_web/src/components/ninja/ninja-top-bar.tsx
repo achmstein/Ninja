@@ -66,7 +66,7 @@ export function NinjaTopBar({
         >
           {/* Where the customer is (the table, the branch they are at) the dock's row says; here, while they are at
               none, the way to scan a table's or a room's code, and the switch of branch */}
-          <BranchSwitcher quiet />
+          <BranchSwitcher />
           <ScanCodeButton />
         </motion.div>
       )}

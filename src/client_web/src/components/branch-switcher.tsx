@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { motion } from 'motion/react'
 import { Check, ChevronDown, MapPin } from 'lucide-react'
 import { isOpen, useMyBills } from '@/lib/bills'
 import { useBranches } from '@/lib/branch'
@@ -8,7 +9,7 @@ import { useActiveStay, useMyHold } from '@/lib/stays'
 import { useBranchStore } from '@/stores/branch-store'
 import { useActivePlace, usePlaceStore } from '@/stores/place-store'
 import { useLocalized, useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { springOpen } from '@/lib/motion'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,25 +19,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 /**
- * The branch the customer is looking at, in the top bar. While they are at
- * one (an open bill, a held place, a running clock, a scanned table) it is
- * just where they are, a label: another branch's menu and prices over a
- * bill that is here would only mislead. Otherwise it switches, asking first
- * when there are dishes in the order, since the other branch's menu is not
- * this one's and the order is emptied. `quiet` leaves the label out, for
- * a bar whose dock already says where the customer is.
+ * The branch the customer is looking at, as a pill in the top bar that
+ * opens the branches as a sheet. While they are at one (an open bill, a
+ * held place, a running clock, a scanned table) there is none: another
+ * branch's menu and prices over a bill that is here would only mislead, and
+ * the dock says where they are. Otherwise it switches, asking first when
+ * there are dishes in the order, since the other branch's menu is not this
+ * one's and the order is emptied.
  */
-export function BranchSwitcher({ quiet = false }: { quiet?: boolean }) {
+export function BranchSwitcher() {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -49,6 +43,7 @@ export function BranchSwitcher({ quiet = false }: { quiet?: boolean }) {
   const there = useAtBranch()
   // A switch asked for with dishes in the order, waiting for the answer
   const [pendingId, setPendingId] = useState<number | null>(null)
+  const [open, setOpen] = useState(false)
 
   // Single-branch setups don't need a switcher
   if (branches.length < 2) return null
@@ -73,36 +68,67 @@ export function BranchSwitcher({ quiet = false }: { quiet?: boolean }) {
     switchTo(id)
   }
 
-  if (there) {
-    if (quiet) return null
-    return (
-      <span className='text-muted-foreground flex items-center gap-1.5 px-2 text-sm font-medium'>
-        <MapPin className='size-4' />
-        <span className='max-w-28 truncate'>{localized(activeBranch?.name)}</span>
-      </span>
-    )
-  }
+  // At the branch, the dock's row says where the customer is; there is nothing to switch
+  if (there) return null
 
   return (
     <>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' size='sm' className='rounded-pill gap-1.5'>
-            <MapPin className='h-4 w-4' />
-            <span className='max-w-28 truncate'>{localized(activeBranch?.name)}</span>
-            <ChevronDown className='h-3.5 w-3.5 opacity-60' />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' className='min-w-44'>
-          <DropdownMenuLabel>{t('selectBranch')}</DropdownMenuLabel>
-          {branches.map((branch) => (
-            <DropdownMenuItem key={String(branch.id)} onClick={() => handleSelect(Number(branch.id))}>
-              {localized(branch.name)}
-              <Check size={14} className={cn('ms-auto', Number(branch.id) !== branchId && 'hidden')} />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* A pill in the bar, like the scan button beside it */}
+      <button
+        type='button'
+        onClick={() => setOpen(true)}
+        className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-sm font-semibold transition-colors'
+      >
+        <MapPin className='size-4 shrink-0' />
+        <span className='truncate'>{localized(activeBranch?.name)}</span>
+        <ChevronDown className='size-3.5 shrink-0 opacity-60' />
+      </button>
+
+      {/* The branches as a sheet from the bottom, the one looked at lit */}
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{t('selectBranch')}</SheetTitle>
+          </SheetHeader>
+          <div className='flex flex-col gap-1.5' role='radiogroup'>
+            {branches.map((branch) => {
+              const id = Number(branch.id)
+              const on = id === branchId
+              return (
+                <button
+                  key={String(branch.id)}
+                  type='button'
+                  role='radio'
+                  aria-checked={on}
+                  onClick={() => {
+                    setOpen(false)
+                    handleSelect(id)
+                  }}
+                  className='relative flex min-h-16 items-center gap-3 rounded-[1.25rem] px-4 py-3 text-start'
+                >
+                  {on && (
+                    <motion.span
+                      layoutId='branch-on'
+                      transition={springOpen}
+                      aria-hidden
+                      style={{ borderRadius: 20 }}
+                      className='bg-muted absolute inset-0'
+                    />
+                  )}
+                  <span className='bg-muted relative grid size-10 shrink-0 place-items-center rounded-full'>
+                    <MapPin className='size-5' />
+                  </span>
+                  <span className='relative flex min-w-0 flex-1 flex-col'>
+                    <span className='text-[15px] font-semibold'>{localized(branch.name)}</span>
+                    {localized(branch.address) && <span className='text-muted-foreground text-[13px]'>{localized(branch.address)}</span>}
+                  </span>
+                  {on && <Check className='relative size-5 shrink-0' />}
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={pendingId != null} onOpenChange={(open) => !open && setPendingId(null)}>
         <AlertDialogContent>
