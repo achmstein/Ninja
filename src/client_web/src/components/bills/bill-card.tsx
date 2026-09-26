@@ -279,7 +279,7 @@ export function BillCard({
                     transition={springSoft}
                     className='overflow-hidden'
                   >
-                    <div className='pt-3'>
+                    <div className='px-1 pt-3 pb-3 [&_[data-paper]]:drop-shadow-[0_2px_6px_rgb(0_0_0/0.12)]'>
                       <BillReceipt ticketId={Number(bill.id)} bill={bill} />
                     </div>
                   </motion.div>

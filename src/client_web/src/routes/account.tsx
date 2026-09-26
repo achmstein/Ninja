@@ -192,7 +192,8 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
             transition={springSoft}
             className='overflow-hidden'
           >
-            <div className='px-3 pb-4'>
+            {/* Printed inside the row's card, the paper's shadow kept tight enough for the card not to cut it */}
+            <div className='px-3 pb-4 [&_[data-paper]]:drop-shadow-[0_2px_6px_rgb(0_0_0/0.12)]'>
               <BillReceipt ticketId={Number(tx.ticketId)} />
             </div>
           </motion.div>

@@ -39,10 +39,11 @@ const tenderKey: Record<string, TranslationKey> = {
 export function Paper({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
+      data-paper
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={springSoft}
-      // The shadow follows the torn edge, which a box-shadow would not
+      // The shadow follows the torn edge, which a box-shadow would not (a card it prints out in keeps it tight, through data-paper)
       className={cn('mx-auto w-full max-w-[300px] drop-shadow-[0_10px_24px_rgb(0_0_0/0.14)]', className)}
     >
       <motion.div
