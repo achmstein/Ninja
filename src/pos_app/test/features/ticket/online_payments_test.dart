@@ -17,7 +17,7 @@ import 'package:pos_app/features/tickets/models/ticket_detail.dart';
 import 'package:pos_app/features/tickets/services/tickets_service.dart';
 import 'package:pos_app/l10n/app_localizations.dart';
 
-/// Pay at table on the till's ticket screen: the guests' payments, what is
+/// Online payments on the till's ticket screen: the guests' payments, what is
 /// left for the till, and a settle that takes only the rest.
 
 class _Tenant implements TenantRepository {
@@ -103,6 +103,24 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('refund-a')));
     await tester.pump(const Duration(seconds: 2));
     expect(refunded, ['a']);
+  });
+
+  testWidgets('a payment still in checkout can be released, a paid one cannot', (tester) async {
+    final released = <String>[];
+    await tester.pumpWidget(_app(OnlinePaymentsCard(
+      ticket: _bill,
+      payments: payments,
+      onRefund: (_) {},
+      onRelease: (p) => released.add(p.key),
+    )));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('release-a')), findsNothing);
+    expect(find.byKey(const ValueKey('release-b')), findsOneWidget);
+    expect(find.text('Release'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('release-b')));
+    await tester.pump(const Duration(seconds: 2));
+    expect(released, ['b']);
   });
 
   testWidgets('a settled bill lists its online payments with nothing to refund or take', (tester) async {

@@ -823,6 +823,8 @@
   },
   "refundOnlineHint": "The money goes back to their card through the payment provider.",
   "onlineRefundedToast": "Online payment refunded",
+  "releaseOnline": "Release",
+  "onlineReleasedToast": "Released: the share is free to pay again",
   "guestPayingOnline": "A guest is paying online. Settle once they finish.",
   "settleRemainingOnly": "Guests paid part online; take the rest here."
 }

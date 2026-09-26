@@ -92,6 +92,20 @@ class PayRepository {
     }
   }
 
+  /// Lets a payment still in checkout go, so its share is free again.
+  /// Throws [PayException] with the server's reason when it refuses.
+  Future<void> cancel(String key) async {
+    try {
+      await _api.post<void>('$key/cancel');
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (e.response?.statusCode == 400 && data is Map && data['detail'] is String) {
+        throw PayException(data['detail'] as String);
+      }
+      rethrow;
+    }
+  }
+
   Future<PaymentStatus> status(String key) async {
     final response = await _api.get<Map<String, dynamic>>(key);
     return PaymentStatus.fromJson(response.data!);
@@ -104,6 +118,15 @@ final paymentsApiProvider = Provider<ApiClient>((ref) {
 });
 
 final payRepositoryProvider = Provider<PayRepository>((ref) => PayRepository(ref.read(paymentsApiProvider)));
+
+/// The guest's pretend checkout on a demo café's customer site, for a
+/// payment still in checkout; null when the site is not known
+Uri? simulatedCheckoutUrl(String? customerUrl, String key) {
+  final origin = customerUrl?.trim();
+  if (origin == null || origin.isEmpty) return null;
+  final base = origin.endsWith('/') ? origin.substring(0, origin.length - 1) : origin;
+  return Uri.tryParse('$base/pay/${key.replaceAll('-', '')}?simulate=1');
+}
 
 /// How often a bill on the bills tab re-reads what the table has paid
 const _tileRefresh = Duration(seconds: 15);

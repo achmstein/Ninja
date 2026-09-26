@@ -775,6 +775,8 @@
   "refundOnlineTitle": "إرجاع {amount} إلى {name}؟",
   "refundOnlineHint": "يعود المبلغ إلى بطاقته عبر مزوّد الدفع.",
   "onlineRefundedToast": "تم استرداد الدفعة الأونلاين",
+  "releaseOnline": "إلغاء الحجز",
+  "onlineReleasedToast": "تم إلغاء الحجز: الحصة متاحة للدفع من جديد",
   "guestPayingOnline": "ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.",
   "settleRemainingOnly": "دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا."
 }

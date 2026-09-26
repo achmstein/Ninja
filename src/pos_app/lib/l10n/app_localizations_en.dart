@@ -1621,6 +1621,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlineRefundedToast => 'Online payment refunded';
 
   @override
+  String get releaseOnline => 'Release';
+
+  @override
+  String get onlineReleasedToast => 'Released: the share is free to pay again';
+
+  @override
   String get guestPayingOnline =>
       'A guest is paying online. Settle once they finish.';
 

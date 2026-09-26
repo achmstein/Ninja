@@ -1152,6 +1152,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payCouldNotOpen => 'معرفناش نفتح صفحة الدفع';
 
   @override
+  String get payCancelShare => 'إلغاء';
+
+  @override
+  String get payContinueShare => 'كمّل';
+
+  @override
+  String get payCancelPayment => 'إلغاء الدفع';
+
+  @override
+  String get payCancelFailed => 'معرفناش نلغي الدفع';
+
+  @override
   String get payFailedToStart => 'معرفناش نبدأ الدفع. جرب تاني.';
 
   @override
@@ -1993,6 +2005,18 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get payCouldNotOpen => 'تعذّر فتح صفحة الدفع';
+
+  @override
+  String get payCancelShare => 'إلغاء';
+
+  @override
+  String get payContinueShare => 'متابعة';
+
+  @override
+  String get payCancelPayment => 'إلغاء الدفع';
+
+  @override
+  String get payCancelFailed => 'تعذّر إلغاء الدفع';
 
   @override
   String get payFailedToStart => 'تعذّر بدء الدفع. حاول مرة أخرى.';

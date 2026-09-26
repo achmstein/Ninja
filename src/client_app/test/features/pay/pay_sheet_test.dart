@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
 import 'package:ninja_client/core/theme/theme_provider.dart';
@@ -28,7 +29,18 @@ class _Started {
 class _FakePay implements PayRepository {
   PayView view;
   final started = <_Started>[];
+  final cancelled = <String>[];
+
+  /// What the next cancel throws, or null to let it go
+  Object? cancelError;
   _FakePay(this.view);
+
+  @override
+  Future<void> cancel(String key) async {
+    final error = cancelError;
+    if (error != null) throw error;
+    cancelled.add(key);
+  }
 
   @override
   Future<PayView> getBill(PaySource source) async => view;
@@ -92,10 +104,16 @@ PayView _view({
       why: why,
     );
 
-Widget _app(_FakePay pay, {bool split = false, Locale locale = const Locale('en')}) => ProviderScope(
+Widget _app(_FakePay pay,
+        {bool split = false,
+        Locale locale = const Locale('en'),
+        String? customerUrl,
+        List<Uri>? opened}) =>
+    ProviderScope(
       overrides: [
         payRepositoryProvider.overrideWithValue(pay),
         localeProvider.overrideWith(_English.new),
+        customerUrlProvider.overrideWithValue(customerUrl),
       ],
       child: MaterialApp(
         locale: locale,
@@ -108,13 +126,16 @@ Widget _app(_FakePay pay, {bool split = false, Locale locale = const Locale('en'
         ],
         builder: (context, child) => FTheme(
           data: const ThemeState(themeMode: AppThemeMode.dark).getForuiTheme(context, locale: locale),
-          child: child!,
+          child: FToaster(child: child!),
         ),
         home: Scaffold(
           body: PaySheet(
             source: const PaySource.ticket(9),
             startSplit: split,
-            openCheckout: (_) async => true,
+            openCheckout: (url) async {
+              opened?.add(url);
+              return true;
+            },
           ),
         ),
       ),
@@ -150,6 +171,74 @@ void main() {
     expect(find.text('Paying…'), findsOneWidget);
     expect(find.text('Pay fully'), findsOneWidget);
     expect(find.text('Split bill'), findsOneWidget);
+    await _close(tester);
+  });
+
+  testWidgets("only the guest's own share in checkout can be cancelled, and the bill is read again", (tester) async {
+    const mine = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    final pay = _FakePay(_view(shares: const [
+      PayShare(amount: 30, status: 'Pending', isMine: true, key: mine),
+      PayShare(payerName: 'Sara', amount: 20, status: 'Pending'),
+    ]));
+    await tester.pumpWidget(_app(pay, customerUrl: 'https://cafe.example'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('share-cancel-$mine')), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    // A café that takes real payments has no pretend checkout to go back to
+    expect(find.text('Continue'), findsNothing);
+
+    pay.view = _view();
+    await tester.tap(find.byKey(const ValueKey('share-cancel-$mine')));
+    await tester.pump();
+    await tester.pump();
+    expect(pay.cancelled, [mine]);
+    expect(find.text('Cancel'), findsNothing);
+    await _close(tester);
+  });
+
+  testWidgets("a demo café's own pending share continues on the pretend checkout, and can be cancelled there",
+      (tester) async {
+    const mine = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    final opened = <Uri>[];
+    final pay = _FakePay(_view(
+      options: const PayOptions(ready: true, allowItems: true, simulated: true),
+      shares: const [PayShare(amount: 30, status: 'Pending', isMine: true, key: mine)],
+    ));
+    await tester.pumpWidget(_app(pay, customerUrl: 'https://cafe.example/', opened: opened));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('share-continue-$mine')));
+    await tester.pump();
+    expect(opened.single.toString(), 'https://cafe.example/pay/aaaaaaaabbbbccccddddeeeeeeeeeeee?simulate=1');
+    expect(find.text('Cancel payment'), findsOneWidget);
+
+    // Refused: the guest is told, and the sheet keeps following it
+    pay.cancelError = const PayException('Already paid');
+    await tester.tap(find.byKey(const ValueKey('pay-cancel')));
+    await tester.pump();
+    expect(find.text('Already paid'), findsOneWidget);
+
+    pay.cancelError = null;
+    await tester.tap(find.byKey(const ValueKey('pay-cancel')));
+    await tester.pump();
+    await tester.pump();
+    expect(pay.cancelled, [mine]);
+    // Back on the bill
+    expect(find.text('Pay fully'), findsOneWidget);
+    await _close(tester);
+  });
+
+  testWidgets('without the customer site a demo share offers no Continue', (tester) async {
+    const mine = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+    final pay = _FakePay(_view(
+      options: const PayOptions(ready: true, simulated: true),
+      shares: const [PayShare(amount: 30, status: 'Pending', isMine: true, key: mine)],
+    ));
+    await tester.pumpWidget(_app(pay));
+    await tester.pump();
+    expect(find.text('Continue'), findsNothing);
+    expect(find.text('Cancel'), findsOneWidget);
     await _close(tester);
   });
 

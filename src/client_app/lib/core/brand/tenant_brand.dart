@@ -17,7 +17,7 @@ class TenantFeatures {
   /// Guests pay or split the bill online. An add-on the café buys and turns
   /// on, so off until the brand says otherwise (and when a stack older than
   /// it says nothing).
-  final bool payAtTable;
+  final bool onlinePayments;
 
   const TenantFeatures({
     this.reservations = true,
@@ -28,7 +28,7 @@ class TenantFeatures {
     this.finance = true,
     this.payroll = true,
     this.kds = true,
-    this.payAtTable = false,
+    this.onlinePayments = false,
   });
 
   static const all = TenantFeatures();
@@ -43,7 +43,8 @@ class TenantFeatures {
         finance: json['finance'] as bool? ?? true,
         payroll: json['payroll'] as bool? ?? true,
         kds: json['kds'] as bool? ?? true,
-        payAtTable: json['payAtTable'] as bool? ?? false,
+        // A cache from before the rename says "payAtTable"
+        onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -55,7 +56,7 @@ class TenantFeatures {
         'finance': finance,
         'payroll': payroll,
         'kds': kds,
-        'payAtTable': payAtTable,
+        'onlinePayments': onlinePayments,
       };
 
   @override
@@ -70,10 +71,10 @@ class TenantFeatures {
           other.finance == finance &&
           other.payroll == payroll &&
           other.kds == kds &&
-          other.payAtTable == payAtTable;
+          other.onlinePayments == onlinePayments;
 
   @override
-  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, payAtTable);
+  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, onlinePayments);
 }
 
 /// The wide logo for headers and sign-in. [width] and [height] are the
@@ -451,6 +452,10 @@ class TenantBrand {
   final TenantFeatures features;
   final int version;
 
+  /// The customer site ("https://cafe.example.com"), or null when the stack
+  /// was not told
+  final String? customerUrl;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -463,6 +468,7 @@ class TenantBrand {
     this.defaultThemeMode,
     this.features = TenantFeatures.all,
     this.version = 0,
+    this.customerUrl,
   });
 
   /// What shows until anything is known: a neutral name, no color, no logo,
@@ -488,6 +494,7 @@ class TenantBrand {
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
       version: (json['version'] as num?)?.toInt() ?? 0,
+      customerUrl: json['customerUrl'] as String?,
     );
   }
 
@@ -507,6 +514,7 @@ class TenantBrand {
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
         version: (json['version'] as num?)?.toInt() ?? 0,
+        customerUrl: json['customerUrl'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -521,6 +529,7 @@ class TenantBrand {
         'defaultThemeMode': defaultThemeMode,
         'features': features.toJson(),
         'version': version,
+        'customerUrl': customerUrl,
       };
 
   Color? get primaryColor => _color(primaryColorHex);
@@ -552,10 +561,11 @@ class TenantBrand {
           other.theme == theme &&
           other.locale == locale &&
           other.features == features &&
-          other.version == version;
+          other.version == version &&
+          other.customerUrl == customerUrl;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

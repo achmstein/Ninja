@@ -220,6 +220,22 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     }
   }
 
+  // A guest who left the checkout without paying holds their share for a
+  // while; the till lets it go so the share can be paid again
+  Future<void> _releaseOnline(OnlinePaymentView payment) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _busy = true);
+    try {
+      await ref.read(onlinePaymentsRepositoryProvider).cancel(payment.key);
+      ref.invalidate(onlinePaymentsProvider(widget.ticketId));
+      if (mounted) showPosToast(context, PosToastType.success, l10n.onlineReleasedToast);
+    } catch (e) {
+      if (mounted) showPosToast(context, PosToastType.error, describeError(e, l10n));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _print(TicketDetail ticket) async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -360,7 +376,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final async = ref.watch(ticketProvider(widget.ticketId));
     // Voiding and refunding are Owner-only (the server enforces the same rule)
     final isOwner = ref.watch(authServiceProvider.select((s) => s.isOwner));
-    // Pay at table: what guests paid, or are paying, from their phones
+    // Online payments: what guests paid, or are paying, from their phones
     final online = ref.watch(onlinePaymentsProvider(widget.ticketId)).value ?? const <OnlinePaymentView>[];
     // A payment that just landed may have settled the bill by itself
     ref.listen(onlinePaymentsProvider(widget.ticketId), (previous, next) {
@@ -585,6 +601,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                       ticket: ticket,
                       payments: online,
                       onRefund: _busy ? null : _refundOnline,
+                      onRelease: _busy ? null : _releaseOnline,
                     ),
                   ],
                   if (ticket.isVoided) ...[

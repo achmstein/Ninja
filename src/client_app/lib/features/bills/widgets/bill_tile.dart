@@ -143,7 +143,7 @@ class BillTile extends ConsumerWidget {
               ],
             ),
           ),
-          // Pay at table: what the table paid online and the way to pay the rest
+          // Online payments: what the table paid online and the way to pay the rest
           if (bill.isOpen) PayBillBar(ticketId: bill.id),
           // A paid bill is the thanks: the stars for the rounds on it, at the
           // one moment the customer is already looking

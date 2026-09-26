@@ -34,7 +34,7 @@ class AppConfig {
   static String get catalogApiUrl => '$bffBaseUrl/api/catalog/';
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
   static String get ticketsApiUrl => '$bffBaseUrl/api/tickets/';
-  /// Sales' pay at table: a bill as a guest pays it, and their payments
+  /// Sales' online payments: a bill as a guest pays it, and their payments
   static String get paymentsApiUrl => '$bffBaseUrl/api/sales/payments/';
   /// Spaces' places: the rooms, the tables, the stations
   static String get placesApiUrl => '$bffBaseUrl/api/places/';

@@ -2972,6 +2972,18 @@ abstract class AppLocalizations {
   /// **'Online payment refunded'**
   String get onlineRefundedToast;
 
+  /// No description provided for @releaseOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Release'**
+  String get releaseOnline;
+
+  /// No description provided for @onlineReleasedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Released: the share is free to pay again'**
+  String get onlineReleasedToast;
+
   /// No description provided for @guestPayingOnline.
   ///
   /// In en, this message translates to:

@@ -46,7 +46,8 @@ class BranchSwitcher extends ConsumerWidget {
                     color: theme.colors.foreground,
                   ),
                 ),
-                if (cafe.isNotEmpty)
+                // One branch: the café is the place, and its branch says nothing more
+                if (cafe.isNotEmpty && switchable)
                   Text(
                     branchLabel,
                     style: theme.typography.xs.copyWith(

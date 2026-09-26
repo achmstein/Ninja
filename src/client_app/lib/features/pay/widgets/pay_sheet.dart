@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -41,7 +42,7 @@ Future<void> showPaySheet(BuildContext context, PaySource source, {bool split = 
 
 enum _Stage { bill, pay, status }
 
-/// Pay at table (docs/pay-at-table-plan.md), the guest's side: the bill as
+/// Online payments (docs/online-payments-plan.md), the guest's side: the bill as
 /// the table has paid it so far, then the share they pick (everything left,
 /// their items, some equal parts, or an amount), the fee and tip on it, and
 /// the provider's checkout. The payment is followed here until the provider
@@ -82,6 +83,9 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
   Timer? _statusTimer;
   DateTime? _giveUpAt;
   bool _timedOut = false;
+
+  /// Keys of the guest's own payments being let go right now
+  final Set<String> _cancelling = {};
 
   @override
   void initState() {
@@ -291,6 +295,74 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     _load();
   }
 
+  // The guest's own share still in checkout: let it go, so it is free again
+  Future<void> _cancelShare(String key) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _cancelling.add(key));
+    try {
+      await ref.read(payRepositoryProvider).cancel(key);
+      ref.invalidate(payViewProvider);
+    } catch (e) {
+      if (mounted) {
+        showFToast(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
+      }
+    } finally {
+      if (mounted) setState(() => _cancelling.remove(key));
+    }
+    await _load();
+  }
+
+  // Back to a demo café's pretend checkout for a share already started
+  Future<void> _continueShare(PayShare share, Uri url) async {
+    final started = StartedPayment(
+      key: share.key!,
+      checkoutUrl: url.toString(),
+      amount: share.amount,
+      fee: 0,
+      tip: 0,
+      charged: 0,
+    );
+    setState(() {
+      _started = started;
+      _status = null;
+      _timedOut = false;
+      _stage = _Stage.status;
+      _giveUpAt = DateTime.now().add(_statusPatience);
+    });
+    _scheduleStatus();
+    await _openCheckout(started);
+  }
+
+  // The guest closed the checkout without finishing: let the payment go
+  // and show the bill again, the share free for anyone
+  Future<void> _cancelStarted() async {
+    final started = _started;
+    if (started == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _cancelling.add(started.key));
+    try {
+      await ref.read(payRepositoryProvider).cancel(started.key);
+      _statusTimer?.cancel();
+      _closeCheckout();
+      ref.invalidate(payViewProvider);
+      if (!mounted) return;
+      setState(() {
+        _stage = _Stage.bill;
+        _started = null;
+        _status = null;
+        _timedOut = false;
+      });
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      showFToast(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
+      // It may have gone through meanwhile: say how it stands
+      _pollStatus();
+    } finally {
+      if (mounted) setState(() => _cancelling.remove(started.key));
+    }
+  }
+
   void _back() {
     setState(() {
       _stage = _Stage.bill;
@@ -410,7 +482,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
           AppText(l10n.payShares,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.mutedForeground)),
           const SizedBox(height: 4),
-          for (final share in view.shares) _ShareRow(share: share, money: money),
+          for (final share in view.shares) _shareRow(view, share, money),
         ],
         const SizedBox(height: 16),
         if (!view.canPay)
@@ -432,6 +504,20 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
           ],
         ],
       ],
+    );
+  }
+
+  Widget _shareRow(PayView view, PayShare share, MoneyFormat money) {
+    if (!share.isMyPending) return _ShareRow(share: share, money: money);
+    final key = share.key!;
+    final busy = _cancelling.contains(key);
+    final url = view.options.simulated ? simulatedCheckoutUrl(ref.watch(customerUrlProvider), key) : null;
+    return _ShareRow(
+      share: share,
+      money: money,
+      onCancel: busy ? null : () => _cancelShare(key),
+      onContinue: url == null || busy ? null : () => _continueShare(share, url),
+      showContinue: url != null,
     );
   }
 
@@ -660,6 +746,18 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
                 ),
               ],
             ];
+      if (started != null) {
+        children.addAll([
+          const SizedBox(height: 8),
+          FButton(
+            key: const ValueKey('pay-cancel'),
+            variant: FButtonVariant.ghost,
+            onPress: _cancelling.contains(started.key) ? null : _cancelStarted,
+            prefix: Icon(FIcons.x, color: colors.destructive),
+            child: Text(l10n.payCancelPayment, style: TextStyle(color: colors.destructive)),
+          ),
+        ]);
+      }
     } else if (status.isPaid) {
       children = [
         Icon(FIcons.circleCheck, size: 56, color: AppTheme.successColor),
@@ -820,7 +918,14 @@ class _ShareRow extends StatelessWidget {
   final PayShare share;
   final MoneyFormat money;
 
-  const _ShareRow({required this.share, required this.money});
+  /// The guest's own share in checkout: let it go (null while it goes)
+  final VoidCallback? onCancel;
+
+  /// A demo café's pretend checkout, opened again
+  final VoidCallback? onContinue;
+  final bool showContinue;
+
+  const _ShareRow({required this.share, required this.money, this.onCancel, this.onContinue, this.showContinue = false});
 
   @override
   Widget build(BuildContext context) {
@@ -831,7 +936,7 @@ class _ShareRow extends StatelessWidget {
         : (share.payerName ?? '').trim().isNotEmpty
             ? share.payerName!.trim()
             : l10n.payGuest;
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
@@ -847,6 +952,42 @@ class _ShareRow extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: colors.foreground, fontFeatures: const [FontFeature.tabularFigures()])),
         ],
       ),
+    );
+    if (!share.isMyPending) return row;
+    final key = share.key!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 24, bottom: 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              if (showContinue)
+                FButton(
+                  key: ValueKey('share-continue-$key'),
+                  variant: FButtonVariant.outline,
+                  size: FButtonSizeVariant.sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: onContinue,
+                  prefix: const Icon(FIcons.externalLink),
+                  child: Text(l10n.payContinueShare),
+                ),
+              FButton(
+                key: ValueKey('share-cancel-$key'),
+                variant: FButtonVariant.ghost,
+                size: FButtonSizeVariant.sm,
+                mainAxisSize: MainAxisSize.min,
+                onPress: onCancel,
+                prefix: Icon(FIcons.x, color: colors.destructive),
+                child: Text(l10n.payCancelShare, style: TextStyle(color: colors.destructive)),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -9,7 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/online_payment.dart';
 import '../../tickets/models/ticket_detail.dart';
 
-/// Pay at table on the till: what guests paid (or are paying) for this bill
+/// Online payments on the till: what guests paid (or are paying) for this bill
 /// from their phones. Each payment with its payer, its share of the bill and
 /// the tip on top, apart; a paid one can be given back while the bill is
 /// open. Under them, while open, what is paid online and what is left for
@@ -21,7 +21,11 @@ class OnlinePaymentsCard extends StatelessWidget {
   /// Gives a paid payment back; null hides the action
   final ValueChanged<OnlinePaymentView>? onRefund;
 
-  const OnlinePaymentsCard({super.key, required this.ticket, required this.payments, this.onRefund});
+  /// Lets a payment still in checkout go, so its share is free to pay
+  /// again; null hides the action
+  final ValueChanged<OnlinePaymentView>? onRelease;
+
+  const OnlinePaymentsCard({super.key, required this.ticket, required this.payments, this.onRefund, this.onRelease});
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +62,7 @@ class OnlinePaymentsCard extends StatelessWidget {
         _OnlinePaymentRow(
           payment: payment,
           onRefund: ticket.isOpen && payment.isPaid && onRefund != null ? () => onRefund!(payment) : null,
+          onRelease: payment.isPending && onRelease != null ? () => onRelease!(payment) : null,
         ),
       if (ticket.isOpen) ...[
         totalRow(l10n.paidOnline, money(context, paid), color: AppColors.emerald(brightness)),
@@ -97,8 +102,9 @@ class OnlinePaymentsCard extends StatelessWidget {
 class _OnlinePaymentRow extends StatelessWidget {
   final OnlinePaymentView payment;
   final VoidCallback? onRefund;
+  final VoidCallback? onRelease;
 
-  const _OnlinePaymentRow({required this.payment, this.onRefund});
+  const _OnlinePaymentRow({required this.payment, this.onRefund, this.onRelease});
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +163,20 @@ class _OnlinePaymentRow extends StatelessWidget {
               color: payment.isRefunded || payment.isPending ? theme.colors.mutedForeground : null,
             ),
           ),
+          if (onRelease != null) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 40,
+              child: FButton(
+                key: ValueKey('release-${payment.key}'),
+                variant: FButtonVariant.outline,
+                mainAxisSize: MainAxisSize.min,
+                onPress: onRelease,
+                prefix: const Icon(FIcons.lockOpen, size: 16),
+                child: Text(l10n.releaseOnline, style: theme.typography.sm),
+              ),
+            ),
+          ],
           if (onRefund != null) ...[
             const SizedBox(width: 4),
             SizedBox(

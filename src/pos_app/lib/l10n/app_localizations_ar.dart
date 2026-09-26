@@ -1632,6 +1632,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onlineRefundedToast => 'تم استرداد الدفعة الأونلاين';
 
   @override
+  String get releaseOnline => 'إلغاء الحجز';
+
+  @override
+  String get onlineReleasedToast => 'تم إلغاء الحجز: الحصة متاحة للدفع من جديد';
+
+  @override
   String get guestPayingOnline =>
       'ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.';
 

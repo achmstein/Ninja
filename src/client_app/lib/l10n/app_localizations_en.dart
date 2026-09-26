@@ -1160,6 +1160,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payCouldNotOpen => 'Couldn\'t open the payment page';
 
   @override
+  String get payCancelShare => 'Cancel';
+
+  @override
+  String get payContinueShare => 'Continue';
+
+  @override
+  String get payCancelPayment => 'Cancel payment';
+
+  @override
+  String get payCancelFailed => 'Couldn\'t cancel the payment';
+
+  @override
   String get payFailedToStart => 'Couldn\'t start the payment. Try again.';
 
   @override

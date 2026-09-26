@@ -10,13 +10,18 @@ import '../models/online_payment.dart';
 import '../providers/tickets_provider.dart';
 import 'tickets_service.dart';
 
-/// Pay at table, the till's side: the payments guests made on a bill from
-/// their phones, and giving one back while the bill is open.
+/// Online payments, the till's side: the payments guests made on a bill from
+/// their phones, giving one back while the bill is open, and letting one
+/// still in checkout go.
 abstract class OnlinePaymentsRepository {
   Future<List<OnlinePaymentView>> list(int ticketId);
 
   /// Throws [SalesException] with the server's reason when it refuses
   Future<void> refund(String key);
+
+  /// Lets a payment still in checkout go, so its share is free to pay
+  /// again. Throws [SalesException] with the server's reason when it refuses.
+  Future<void> cancel(String key);
 }
 
 class ApiOnlinePaymentsRepository implements OnlinePaymentsRepository {
@@ -45,6 +50,20 @@ class ApiOnlinePaymentsRepository implements OnlinePaymentsRepository {
       throw asSalesException(e);
     }
   }
+
+  @override
+  Future<void> cancel(String key) async {
+    try {
+      await _api.post('sales/payments/$key/cancel');
+    } on DioException catch (e) {
+      // A ProblemDetails whose detail is the reason (no longer in checkout)
+      final data = e.response?.data;
+      if (e.response?.statusCode == 400 && data is Map && data['detail'] is String) {
+        throw SalesException(data['detail'] as String);
+      }
+      throw asSalesException(e);
+    }
+  }
 }
 
 final onlinePaymentsRepositoryProvider = Provider<OnlinePaymentsRepository>((ref) {
@@ -60,7 +79,7 @@ const onlinePendingPoll = Duration(seconds: 5);
 /// Re-read on the till's own ticket nudges (SignalR, and the open-bills
 /// poll behind it), and every few seconds while one is still paying.
 final onlinePaymentsProvider = FutureProvider.autoDispose.family<List<OnlinePaymentView>, int>((ref, ticketId) async {
-  if (!ref.watch(featuresProvider).payAtTable) return const [];
+  if (!ref.watch(featuresProvider).onlinePayments) return const [];
   ref.watch(selectedBranchIdProvider);
   // A hub event about any bill refreshes the open bills; this one follows
   ref.listen(openTicketsProvider, (_, _) => ref.invalidateSelf());

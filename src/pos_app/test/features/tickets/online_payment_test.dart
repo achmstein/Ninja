@@ -4,7 +4,7 @@ import 'package:pos_app/features/tickets/models/enums.dart';
 import 'package:pos_app/features/tickets/models/online_payment.dart';
 import 'package:pos_app/l10n/app_localizations_en.dart';
 
-/// Pay at table on the till: an Online tender is its own money, never the
+/// Online payments on the till: an Online tender is its own money, never the
 /// drawer's cash, and the online list says what is paid and who is paying.
 void main() {
   test('an Online tender reads as online, not as the cash a stranger would default to', () {

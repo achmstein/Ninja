@@ -68,3 +68,9 @@ final brandNameProvider = Provider<String>((ref) {
 final featuresProvider = Provider<TenantFeatures>((ref) {
   return ref.watch(brandProvider).features;
 });
+
+/// The customer site, where a demo café's pretend checkout lives; null
+/// until the brand says
+final customerUrlProvider = Provider<String?>((ref) {
+  return ref.watch(brandProvider).customerUrl;
+});

@@ -130,6 +130,9 @@ class _DemoOnlinePaymentsRepository implements OnlinePaymentsRepository {
 
   @override
   Future<void> refund(String key) async {}
+
+  @override
+  Future<void> cancel(String key) async {}
 }
 
 class _DemoTicketsRepository implements TicketsRepository {

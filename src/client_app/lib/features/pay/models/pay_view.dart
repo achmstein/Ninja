@@ -52,9 +52,23 @@ class PayShare {
   final DateTime? paidAt;
   final bool isMine;
 
-  const PayShare({this.payerName, required this.amount, required this.status, this.paidAt, this.isMine = false});
+  /// The payment's key; only on the guest's own shares
+  final String? key;
+
+  const PayShare({
+    this.payerName,
+    required this.amount,
+    required this.status,
+    this.paidAt,
+    this.isMine = false,
+    this.key,
+  });
 
   bool get isPaid => status == 'Paid';
+  bool get isPending => status == 'Pending';
+
+  /// The guest's own share still held in checkout: theirs to cancel or finish
+  bool get isMyPending => isMine && isPending && key != null;
 
   factory PayShare.fromJson(Map<String, dynamic> json) => PayShare(
         payerName: json['payerName'] as String?,
@@ -62,6 +76,7 @@ class PayShare {
         status: json['status'] as String? ?? '',
         paidAt: json['paidAt'] == null ? null : DateTime.tryParse(json['paidAt'] as String),
         isMine: json['isMine'] as bool? ?? false,
+        key: json['key'] as String?,
       );
 }
 
@@ -83,6 +98,9 @@ class PayOptions {
   final bool wallet;
   final bool applePay;
 
+  /// A demo café without a provider: its checkout is a pretend page
+  final bool simulated;
+
   const PayOptions({
     this.ready = false,
     this.currency = 'EGP',
@@ -97,6 +115,7 @@ class PayOptions {
     this.card = false,
     this.wallet = false,
     this.applePay = false,
+    this.simulated = false,
   });
 
   bool get guestPaysFee => feeMode == 'Guest';
@@ -116,6 +135,7 @@ class PayOptions {
         card: json['card'] as bool? ?? false,
         wallet: json['wallet'] as bool? ?? false,
         applePay: json['applePay'] as bool? ?? false,
+        simulated: json['simulated'] as bool? ?? false,
       );
 }
 

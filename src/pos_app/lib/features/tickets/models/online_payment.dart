@@ -1,7 +1,7 @@
 import '../../../core/models/money.dart';
 
 /// A guest's payment from their phone on a bill (Sales `OnlinePaymentView`):
-/// pay at table. Pending while they are at the provider's checkout, Paid
+/// online payments. Pending while they are at the provider's checkout, Paid
 /// once the provider confirmed it, Refunded when the till gave it back.
 class OnlinePaymentView {
   final String key;

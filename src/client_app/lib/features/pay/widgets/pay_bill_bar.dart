@@ -28,7 +28,7 @@ class PayBillBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(featuresProvider).payAtTable) return const SizedBox.shrink();
+    if (!ref.watch(featuresProvider).onlinePayments) return const SizedBox.shrink();
     final view = ref.watch(payViewProvider(PaySource.ticket(ticketId))).value;
     if (view == null || view.why == 'closed') return const SizedBox.shrink();
 

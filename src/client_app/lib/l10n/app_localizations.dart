@@ -2193,6 +2193,30 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open the payment page'**
   String get payCouldNotOpen;
 
+  /// No description provided for @payCancelShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get payCancelShare;
+
+  /// No description provided for @payContinueShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get payContinueShare;
+
+  /// No description provided for @payCancelPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel payment'**
+  String get payCancelPayment;
+
+  /// No description provided for @payCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel the payment'**
+  String get payCancelFailed;
+
   /// No description provided for @payFailedToStart.
   ///
   /// In en, this message translates to:

@@ -16,7 +16,7 @@ class TenantFeatures {
   /// Guests pay or split the bill online. An add-on the café buys and turns
   /// on, so off until the brand says otherwise (and when a stack older than
   /// it says nothing).
-  final bool payAtTable;
+  final bool onlinePayments;
 
   const TenantFeatures({
     this.reservations = true,
@@ -27,7 +27,7 @@ class TenantFeatures {
     this.finance = true,
     this.payroll = true,
     this.kds = true,
-    this.payAtTable = false,
+    this.onlinePayments = false,
   });
 
   static const all = TenantFeatures();
@@ -42,7 +42,8 @@ class TenantFeatures {
         finance: json['finance'] as bool? ?? true,
         payroll: json['payroll'] as bool? ?? true,
         kds: json['kds'] as bool? ?? true,
-        payAtTable: json['payAtTable'] as bool? ?? false,
+        // A cache from before the rename says "payAtTable"
+        onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,7 +55,7 @@ class TenantFeatures {
         'finance': finance,
         'payroll': payroll,
         'kds': kds,
-        'payAtTable': payAtTable,
+        'onlinePayments': onlinePayments,
       };
 }
 

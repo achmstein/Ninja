@@ -167,8 +167,8 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
           prefix: const Icon(FIcons.receipt),
           child: Text(l10n.getBill),
         ),
-        // Pay at table: the table's open bill, paid or split from the phone
-        if (ref.watch(featuresProvider).payAtTable && branchId != null) ...[
+        // Online payments: the table's open bill, paid or split from the phone
+        if (ref.watch(featuresProvider).onlinePayments && branchId != null) ...[
           const SizedBox(height: 8),
           FButton(
             onPress: _busy

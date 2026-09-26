@@ -507,8 +507,8 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
         cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
         onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
       ),
-      // Pay at table: the room's open bill, paid or split from here
-      if (ref.watch(featuresProvider).payAtTable && branchId != null)
+      // Online payments: the room's open bill, paid or split from here
+      if (ref.watch(featuresProvider).onlinePayments && branchId != null)
         _QuickAction(
           icon: FIcons.creditCard,
           label: l10n.payTheBill,
