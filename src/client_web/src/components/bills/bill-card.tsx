@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, ReceiptText, Timer } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -9,7 +9,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { billParts, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
-import { spring, springSoft } from '@/lib/motion'
+import { ease, spring, springSoft } from '@/lib/motion'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
 import { useActiveStay, useMyStays } from '@/lib/stays'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -20,10 +20,6 @@ import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Slab } from '@/components/ninja/page/parts'
 import { BillPayBar } from '@/components/pay/bill-pay'
 
-/** How far each round behind the front one peeks out under it, px */
-const PEEK = 8
-/** Rounds drawn behind the front one while the stack is closed */
-const BEHIND = 2
 
 type Round = {
   key: string
@@ -102,8 +98,24 @@ export function BillCard({
   const headline = parts.shared ? parts.ownLines : parts.total
   const hasTime = time.length > 0 || running != null
   const stackSize = rounds.length + (hasTime ? 1 : 0)
-  // The room under the front card that the ones behind it peek into
-  const peekRoom = Math.min(stackSize - 1, BEHIND) * PEEK
+  const cards: Array<{ key: string; node: React.ReactNode }> = [
+    ...rounds.map((round) => ({ key: round.key, node: <RoundCard round={round} dark={open} /> })),
+    ...(hasTime
+      ? [
+          {
+            key: 'time',
+            node: (
+              <RoundShell dark={open}>
+                {time.map((line) => (
+                  <LineRow key={String(line.id)} line={line} />
+                ))}
+                {running && <RunningTimeLine bill={bill} running={running} />}
+              </RoundShell>
+            ),
+          },
+        ]
+      : []),
+  ]
 
   const opened = bill.openedAt
     ? new Date(bill.openedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' })
@@ -114,7 +126,7 @@ export function BillCard({
 
   return (
     <div className='flex flex-col'>
-      <Surface layout className={cn('relative z-10 flex flex-col gap-4', !open && 'p-5')} transition={springSoft}>
+      <Surface className={cn('relative z-10 flex flex-col gap-4', !open && 'p-5')}>
         {/* Where and when, and what the till did with it */}
         <div className='flex items-center gap-2'>
           <span className='text-muted-foreground flex min-w-0 flex-1 items-center gap-1.5 text-[13px] font-semibold'>
@@ -149,31 +161,51 @@ export function BillCard({
         </div>
 
         {stackSize > 0 && (
-          <LayoutGroup id={`bill-${bill.id}`}>
-            <motion.div
-              layout
-              transition={springSoft}
-              role='button'
-              tabIndex={-1}
-              onClick={() => setFanned((f) => !f)}
-              className='relative flex cursor-pointer flex-col gap-2'
-              style={{ paddingBottom: fanned ? 0 : peekRoom }}
-            >
-              <AnimatePresence initial={false}>
-                {rounds.map((round, i) => (
-                  <RoundCard key={round.key} round={round} index={i} fanned={fanned} dark={open} peekRoom={peekRoom} />
-                ))}
-              </AnimatePresence>
-              {hasTime && (
-                <StackCard index={rounds.length} fanned={fanned} dark={open} peekRoom={peekRoom}>
-                  {time.map((line) => (
-                    <LineRow key={String(line.id)} line={line} />
-                  ))}
-                  {running && <RunningTimeLine bill={bill} running={running} />}
-                </StackCard>
+          <div role='button' tabIndex={-1} onClick={() => setFanned((f) => !f)} className='flex cursor-pointer flex-col'>
+            {/* The newest round in full; a new one takes its place with a short fade */}
+            <AnimatePresence mode='popLayout' initial={false}>
+              <motion.div
+                key={cards[0].key}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0, transition: springSoft }}
+                // A round leaving the bill (turned down) slides off to the side
+                exit={{ opacity: 0, x: 60, transition: { duration: 0.24, ease: ease.exit } }}
+              >
+                {cards[0].node}
+              </motion.div>
+            </AnimatePresence>
+            {/* Closed: the rounds behind it show as edges under it, and nothing of what is on them */}
+            <AnimatePresence initial={false}>
+              {!fanned && cards.length > 1 && (
+                <motion.div
+                  key='edges'
+                  aria-hidden
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto', transition: { ...springSoft, delay: 0.12 } }}
+                  exit={{ opacity: 0, height: 0, transition: { duration: 0.14, ease: ease.exit } }}
+                  className='flex flex-col items-stretch overflow-hidden'
+                >
+                  <span className={cn('mx-3 h-2 rounded-b-[0.9rem] opacity-70', cardFill(open))} />
+                  {cards.length > 2 && <span className={cn('mx-6 h-1.5 rounded-b-[0.75rem] opacity-40', cardFill(open))} />}
+                </motion.div>
               )}
-            </motion.div>
-          </LayoutGroup>
+            </AnimatePresence>
+            {/* Open: the rest one under the other, sliding down in turn, and back up in reverse */}
+            <AnimatePresence initial={false}>
+              {fanned &&
+                cards.slice(1).map((card, i, rest) => (
+                  <motion.div
+                    key={card.key}
+                    initial={{ opacity: 0, height: 0, y: -12 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0, transition: { ...springSoft, delay: i * 0.04 } }}
+                    exit={{ opacity: 0, height: 0, y: -12, transition: { duration: 0.2, ease: ease.exit, delay: (rest.length - 1 - i) * 0.03 } }}
+                    className='overflow-hidden'
+                  >
+                    <div className='pt-2'>{card.node}</div>
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+          </div>
         )}
 
         {/* What the till added, and the whole bill's total when others are on it: with the stack open */}
@@ -281,64 +313,24 @@ function timeOf(date: string | null | undefined, language: string): string | nul
   return date ? new Date(date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : null
 }
 
-/**
- * One card of the stack. Closed, the front card shows in full and the next
- * ones sit behind it, each a step smaller and a step lower so their edges
- * peek out under it; open, they stand one under the other. Moving between
- * the two is one layout animation, so the stack fans rather than cuts.
- */
-function StackCard({
-  index,
-  fanned,
-  dark,
-  peekRoom,
-  pending = false,
-  children,
-}: {
-  index: number
-  fanned: boolean
-  dark: boolean
-  /** The room left under the front card, which the cards behind it are cut short by */
-  peekRoom: number
-  /** On its way to the bill: an outline, not yet a solid card */
-  pending?: boolean
-  children: React.ReactNode
-}) {
-  const behind = !fanned && index > 0
-  const hidden = !fanned && index > BEHIND
+/** A round's own fill: lighter than the dark slab, or the page's muted on a light card */
+const cardFill = (dark: boolean) => (dark ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]' : 'bg-muted')
+
+/** One round's card: an outline while it is on its way to the bill, solid once it is on it */
+function RoundShell({ dark, pending = false, children }: { dark: boolean; pending?: boolean; children: React.ReactNode }) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: -18, scale: 0.96 }}
-      animate={{
-        opacity: hidden ? 0 : 1,
-        y: behind ? index * PEEK : 0,
-        scale: behind ? 1 - index * 0.05 : 1,
-      }}
-      // A round leaving the bill (turned down) slides off to the side
-      exit={{ opacity: 0, x: 60, scale: 0.94, transition: { duration: 0.24, ease: [0.4, 0, 1, 1] } }}
-      transition={springSoft}
-      style={{ zIndex: 10 - index, originY: 1, bottom: behind ? peekRoom : undefined }}
-      aria-hidden={behind || undefined}
+    <div
       className={cn(
-        'overflow-hidden rounded-[1.25rem] p-3 transition-[background-color,box-shadow] duration-300',
-        pending
-          ? 'bg-transparent shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,currentColor_30%,transparent)]'
-          : dark
-            ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]'
-            : 'bg-muted',
-        behind && 'absolute inset-x-0 top-0'
+        'flex flex-col gap-1 rounded-[1.25rem] p-3 transition-[background-color,box-shadow] duration-300',
+        pending ? 'bg-transparent shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,currentColor_30%,transparent)]' : cardFill(dark)
       )}
     >
-      {/* Behind the front card only an edge shows; what is on it waits for the stack to open */}
-      <motion.div layout='position' className='flex flex-col gap-1' animate={{ opacity: behind ? 0 : 1 }} transition={springSoft}>
-        {children}
-      </motion.div>
-    </motion.div>
+      {children}
+    </div>
   )
 }
 
-function RoundCard({ round, ...card }: { round: Round; index: number; fanned: boolean; dark: boolean; peekRoom: number }) {
+function RoundCard({ round, dark }: { round: Round; dark: boolean }) {
   const t = useT()
   // A round still on its way has no bill lines yet: its order says what is in it
   const detail = useQuery({
@@ -355,7 +347,7 @@ function RoundCard({ round, ...card }: { round: Round; index: number; fanned: bo
       }))
     : round.lines
   return (
-    <StackCard {...card} pending={round.pending != null}>
+    <RoundShell dark={dark} pending={round.pending != null}>
       <span className='flex items-center justify-between gap-2 empty:hidden'>
         {round.at && <span className='text-muted-foreground text-xs font-semibold'>{round.at}</span>}
         {round.pending && (
@@ -370,7 +362,7 @@ function RoundCard({ round, ...card }: { round: Round; index: number; fanned: bo
           <LineRow key={String(line.id)} line={line} />
         ))}
       </div>
-    </StackCard>
+    </RoundShell>
   )
 }
 
