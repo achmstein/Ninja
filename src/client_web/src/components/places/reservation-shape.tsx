@@ -93,6 +93,8 @@ export function ReservationShape({
         return
       }
       const run = animate(progress, 1, MORPH)
+      // Landed: a touch under the thumb, as a dish going into the tray gives
+      run.then(() => navigator.vibrate?.(10))
       return () => run.stop()
     }
     if (progress.get() === 0) return
@@ -115,8 +117,8 @@ export function ReservationShape({
     (p) => `color-mix(in oklab, ${start.current?.color ?? 'var(--foreground)'} ${((1 - p) * 100).toFixed(1)}%, var(--foreground))`
   )
   const tick = useTransform(progress, (p) => 1 - within(p, 0, 0.18))
-  const face = useTransform(progress, (p) => within(p, 0.45, 0.9))
-  const faceScale = useTransform(face, (v) => 0.95 + v * 0.05)
+  // The content's own clock: from about halfway, when the shape is big enough to hold it
+  const face = useTransform(progress, (p) => within(p, 0.4, 1))
   // Only the small tick blurs as it goes: a blur over the whole face, redrawn each frame, stutters on a phone
   const tickBlur = useTransform(progress, (p) => `blur(${(within(p, 0, 0.18) * 6).toFixed(2)}px)`)
   const shownAtAll = useTransform(progress, (p) => (p > 0.001 ? 'block' : 'none'))
@@ -135,9 +137,9 @@ export function ReservationShape({
       {/* Laid out at the reservation's own size from the start, so it never reflows; the shape clips it */}
       <motion.div
         className='absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-y-auto'
-        style={{ width: size.width, height: size.height, opacity: face, scale: faceScale }}
+        style={{ width: size.width, height: size.height }}
       >
-        <ReservationFace reservation={shown} />
+        <ReservationFace reservation={shown} enter={face} />
       </motion.div>
     </motion.div>
   )

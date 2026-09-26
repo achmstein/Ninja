@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion } from 'motion/react'
+import { useEffect, type ReactNode } from 'react'
+import { animate, motion, useMotionValue, useTransform, type MotionValue } from 'motion/react'
 import { Footprints, Loader2, TimerReset, X } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type ReservationViewModel } from '@/api/spaces'
@@ -24,12 +25,14 @@ import {
 const HURRY = 120
 
 /**
- * What a place's card shows once it is held, while the customer walks over:
- * the hold's time running down round a ring with its digits rolling, what
- * to do, and the way to cancel. It is the card's other face, not a page of
- * its own (PlaceCard swaps to it), so booking never cuts to something new.
+ * The reservation's content, while the customer walks over: the hold's
+ * time running down round a ring with its digits rolling, the place, what
+ * to do, and the way to cancel. `enter` (0 to 1, off the shape's progress in
+ * ReservationShape) brings the parts in one after another, one on each
+ * beat, the ring drawing itself round on the way; without it they are
+ * simply there.
  */
-export function ReservationFace({ reservation }: { reservation: ReservationViewModel }) {
+export function ReservationFace({ reservation, enter }: { reservation: ReservationViewModel; enter?: MotionValue<number> }) {
   const t = useT()
   const localized = useLocalized()
   const language = useLanguage((s) => s.language)
@@ -62,24 +65,28 @@ export function ReservationFace({ reservation }: { reservation: ReservationViewM
 
   return (
     <div className='flex min-h-full flex-col items-center justify-between gap-6 px-5 py-7 text-center'>
-      <span className='flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-500'>
-        <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
-        {t('ninjaHeldFor')}
-      </span>
+      <Beat enter={enter} at={0}>
+        <span className='flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-bold text-amber-500'>
+          <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
+          {t('ninjaHeldFor')}
+        </span>
+      </Beat>
 
       {/* What is held, under the time it is held for: the card says whose room it is on its own */}
       <div className='flex flex-col items-center gap-4'>
-        {left != null ? <CountdownRing left={left} total={total ?? left} hurry={hurry} /> : <PlaceIcon kind={kind} className='size-16' />}
-        <div className='flex flex-col items-center gap-1'>
+        <Beat enter={enter} at={0.1}>
+          {left != null ? <CountdownRing left={left} total={total ?? left} hurry={hurry} enter={enter} /> : <PlaceIcon kind={kind} className='size-16' />}
+        </Beat>
+        <Beat enter={enter} at={0.3} className='flex flex-col items-center gap-1'>
           <span className='flex items-center gap-2'>
             {left != null && <PlaceIcon kind={kind} className='size-5 shrink-0 opacity-70' />}
             <span className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{placeName}</span>
           </span>
           {forTime && <span className='text-muted-foreground text-sm font-medium'>{t('ninjaHoldFor', { time: forTime })}</span>}
-        </div>
+        </Beat>
       </div>
 
-      <div className='flex flex-col items-center gap-2'>
+      <Beat enter={enter} at={0.45} className='flex flex-col items-center gap-2'>
         <span className='flex items-center gap-2 text-[15px] font-semibold'>
           <Footprints className='size-4 shrink-0' />
           {left === 0 ? t('ninjaHoldRanOut') : t('ninjaHoldWalkOver')}
@@ -94,34 +101,36 @@ export function ReservationFace({ reservation }: { reservation: ReservationViewM
             )}
           </span>
         )}
-      </div>
+      </Beat>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button
-            type='button'
-            className='bg-muted flex h-11 items-center gap-1.5 rounded-full ps-4 pe-5 text-sm font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none'
-            disabled={cancelHold.isPending}
-          >
-            {cancelHold.isPending ? <Loader2 className='size-4 animate-spin' /> : <X className='size-4' />}
-            {t('cancelReservation')}
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('cancelReservationQuestion')}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className='bg-destructive hover:bg-destructive/90 text-white'
-              onClick={() => cancelHold.mutate({ path: { id: Number(reservation.id) } })}
+      <Beat enter={enter} at={0.6}>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              type='button'
+              className='bg-muted flex h-11 items-center gap-1.5 rounded-full ps-4 pe-5 text-sm font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none'
+              disabled={cancelHold.isPending}
             >
+              {cancelHold.isPending ? <Loader2 className='size-4 animate-spin' /> : <X className='size-4' />}
               {t('cancelReservation')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('cancelReservationQuestion')}</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className='bg-destructive hover:bg-destructive/90 text-white'
+                onClick={() => cancelHold.mutate({ path: { id: Number(reservation.id) } })}
+              >
+                {t('cancelReservation')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </Beat>
     </div>
   )
 }
@@ -131,7 +140,17 @@ export function ReservationFace({ reservation }: { reservation: ReservationViewM
  * that drains with it. The ring moves once a second, eased across the
  * second, so it runs down rather than ticks.
  */
-function CountdownRing({ left, total, hurry }: { left: number; total: number; hurry: boolean }) {
+function CountdownRing({ left, total, hurry, enter }: { left: number; total: number; hurry: boolean; enter?: MotionValue<number> }) {
+  // The share left, eased across each second so it drains rather than ticks,
+  // times how far the ring has drawn itself in as the reservation arrives
+  const share = useMotionValue(Math.max(0.001, left / total))
+  useEffect(() => {
+    const run = animate(share, Math.max(0.001, left / total), { duration: 1, ease: 'linear' })
+    return () => run.stop()
+  }, [share, left, total])
+  const still = useMotionValue(1)
+  const drawn = useTransform(enter ?? still, (v) => within(v, 0.15, 0.8))
+  const pathLength = useTransform([drawn, share], ([d, s]: number[]) => d * s)
   const size = 216
   const stroke = 10
   const r = (size - stroke) / 2
@@ -148,9 +167,7 @@ function CountdownRing({ left, total, hurry }: { left: number; total: number; hu
           strokeWidth={stroke}
           strokeLinecap='round'
           className={cn('transition-colors duration-300', hurry ? 'text-destructive' : 'text-amber-400')}
-          initial={{ pathLength: 1 }}
-          animate={{ pathLength: Math.max(0.001, left / total) }}
-          transition={{ duration: 1, ease: 'linear' }}
+          style={{ pathLength }}
         />
       </svg>
       <Odometer
@@ -158,5 +175,20 @@ function CountdownRing({ left, total, hurry }: { left: number; total: number; hu
         className={cn('text-[3.25rem] font-extrabold tracking-tight transition-colors duration-300', hurry && 'text-destructive')}
       />
     </div>
+  )
+}
+
+/** A progress window of 0..1: where a part starts coming in, and where it has arrived */
+const within = (v: number, from: number, to: number) => Math.min(1, Math.max(0, (v - from) / (to - from)))
+
+/** One part of the content on its own beat: it rises and fades in over its window of `enter`, and back out the same way */
+function Beat({ enter, at, className, children }: { enter?: MotionValue<number>; at: number; className?: string; children: ReactNode }) {
+  const still = useMotionValue(1)
+  const shown = useTransform(enter ?? still, (v) => within(v, at, at + 0.35))
+  const y = useTransform(shown, (v) => (1 - v) * 14)
+  return (
+    <motion.div className={className} style={{ opacity: shown, y }}>
+      {children}
+    </motion.div>
   )
 }
