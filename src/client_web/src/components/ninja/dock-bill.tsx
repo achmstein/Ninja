@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { BellRing, Check, ChefHat, ChevronUp, ReceiptText, Send, X } from 'lucide-react'
+import { Check, ChevronUp, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useLiveOrder } from '@/lib/live-order'
 import { STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
@@ -13,11 +13,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Odometer } from './odometer'
 import { DOCK_H } from './chrome'
 
-const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, preparing: ChefHat, ready: BellRing, paid: Check, cancelled: X }
+const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Check, paid: ReceiptText, cancelled: X }
 
 /**
  * The bill running now and the order on its way, on the dock: the row says
- * where the order has got to (Sent, Preparing, Ready) above what the bill
+ * where the order has got to (Sent, Confirmed) above what the bill
  * comes to, rolling as rounds land, each change swapping in with a short
  * blur. A tap opens the bill out of the dock as its sheet, its rounds
  * standing open, the way to pay under them. On the menu a dish going into
@@ -64,13 +64,13 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             <span
               className={cn(
                 'grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-300',
-                stage === 'ready' || stage === 'paid' ? 'bg-emerald-500 text-white' : stage === 'cancelled' ? 'bg-red-500 text-white' : 'bg-background/12'
+                stage === 'confirmed' || stage === 'paid' ? 'bg-emerald-500 text-white' : stage === 'cancelled' ? 'bg-red-500 text-white' : 'bg-background/12'
               )}
             >
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.span key={stage ?? 'place'} {...swap} className='grid place-items-center'>
                   {StageIcon ? (
-                    <StageIcon className={cn('size-5', (stage === 'sent' || stage === 'preparing') && 'animate-pulse motion-reduce:animate-none')} />
+                    <StageIcon className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')} />
                   ) : first?.placeId != null ? (
                     <PlaceIcon kind={placeKindOf(first.placeKind)} className='size-5' />
                   ) : (

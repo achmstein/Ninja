@@ -27,13 +27,9 @@ describe('stageOf', () => {
     expect(stageOf({})).toBe('sent')
   })
 
-  it('is preparing once confirmed', () => {
-    expect(stageOf({ status: 'Confirmed' })).toBe('preparing')
-  })
-
-  it('is ready when the kitchen says so, paid once the bill is', () => {
-    expect(stageOf({ status: 'Confirmed', readyAt: iso(60_000) })).toBe('ready')
-    expect(stageOf({ status: 'Confirmed', readyAt: iso(60_000), paidAt: iso(90_000) })).toBe('paid')
+  it('is confirmed once the till takes it on, and paid once the bill is', () => {
+    expect(stageOf({ status: 'Confirmed' })).toBe('confirmed')
+    expect(stageOf({ status: 'Confirmed', paidAt: iso(90_000) })).toBe('paid')
   })
 
   it('is cancelled when turned down or when its bill was voided', () => {
@@ -42,12 +38,12 @@ describe('stageOf', () => {
   })
 
   it('has words in both languages and an icon for every stage', () => {
-    for (const stage of ['sent', 'preparing', 'ready', 'paid', 'cancelled'] as const) {
+    for (const stage of ['sent', 'confirmed', 'paid', 'cancelled'] as const) {
       expect(STAGE_ICON[stage]).toBeTruthy()
       expect(words(STAGE_LABEL[stage], 'en', false)).toMatch(/\w/)
       expect(words(STAGE_LABEL[stage], 'ar', false)).not.toBe(STAGE_LABEL[stage].en)
     }
-    expect(words(STAGE_LABEL.preparing, 'ar', true)).toBe('قيد التحضير')
+    expect(words(STAGE_LABEL.confirmed, 'ar', true)).toBe('تم التأكيد')
   })
 })
 
@@ -88,17 +84,15 @@ describe('pillVisible', () => {
     expect(pillVisible({ ...base, order: null, now: placedAt + NOT_FOUND_AFTER_MS + 1 })).toBe(false)
   })
 
-  it('stays while the order is sent or preparing', () => {
+  it('stays while the order is sent', () => {
     const sent = { status: 'Submitted' }
     expect(pillVisible({ ...base, order: sent, now: placedAt + 10 * 60_000 })).toBe(true)
-    const preparing = { status: 'Confirmed' }
-    expect(pillVisible({ ...base, order: preparing, now: placedAt + 5 * 60_000 })).toBe(true)
   })
 
-  it('goes a while after ready, and soon after paid or cancelled', () => {
-    const ready = { status: 'Confirmed', readyAt: iso(1) }
-    expect(pillVisible({ ...base, order: ready, now: placedAt + LINGER_MS.ready! - 1 })).toBe(true)
-    expect(pillVisible({ ...base, order: ready, now: placedAt + LINGER_MS.ready! + 1 })).toBe(false)
+  it('goes a while after confirmed, and soon after paid or cancelled', () => {
+    const confirmed = { status: 'Confirmed' }
+    expect(pillVisible({ ...base, order: confirmed, now: placedAt + LINGER_MS.confirmed! - 1 })).toBe(true)
+    expect(pillVisible({ ...base, order: confirmed, now: placedAt + LINGER_MS.confirmed! + 1 })).toBe(false)
     const paid = { status: 'Confirmed', paidAt: iso(1) }
     expect(pillVisible({ ...base, order: paid, now: placedAt + 1_000 })).toBe(true)
     expect(pillVisible({ ...base, order: paid, now: placedAt + LINGER_MS.paid! + 1 })).toBe(false)

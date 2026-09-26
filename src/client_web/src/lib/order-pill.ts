@@ -2,14 +2,17 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 /**
- * The live status pill: after Place order, the order that was just sent
- * follows the customer around the app as a small pill at the top — sent,
- * being prepared, ready — until it is done with. This file is the pill's
- * pure logic (which order, what it says, when it goes) and the little
- * store that remembers there is an order to follow.
+ * The order being followed: after Place order, the order that was just sent
+ * shows on the dock beside the bill (sent, then confirmed by the till, or
+ * turned down) until it is done with. The customer app says only what the
+ * till has said: that it has the order, and that it confirmed it. Whether
+ * the kitchen has finished it is not the customer's to be told, since not
+ * every café has a kitchen screen to say so. This file is the pure logic
+ * (which order, what it says, when it goes) and the little store that
+ * remembers there is an order to follow.
  */
 
-export type PillStage = 'sent' | 'preparing' | 'ready' | 'paid' | 'cancelled'
+export type PillStage = 'sent' | 'confirmed' | 'paid' | 'cancelled'
 
 /** What the pill needs from an order (the Ordering OrderSummary shape) */
 export type PillOrder = {
@@ -18,8 +21,6 @@ export type PillOrder = {
   status?: string
   paidAt?: string | null
   voidedAt?: string | null
-  /** Not sent to customers today; honoured if Ordering ever sends it */
-  readyAt?: string | null
 }
 
 /** How far back of the tap an order may be dated: the server's clock is not the phone's */
@@ -32,8 +33,8 @@ export const NOT_FOUND_AFTER_MS = 2 * 60_000
 /** How long each end state stays on screen once reached */
 export const LINGER_MS: Record<PillStage, number | null> = {
   sent: null,
-  preparing: 20 * 60_000,
-  ready: 90_000,
+  // Confirmed, the round is on the bill: the dock says so for a moment, then the bill carries it
+  confirmed: 3 * 60_000,
   paid: 4_000,
   cancelled: 8_000,
 }
@@ -49,8 +50,7 @@ export function stageOf(order: PillOrder): PillStage {
   const status = order.status?.toLowerCase()
   if (status === 'cancelled' || order.voidedAt) return 'cancelled'
   if (order.paidAt) return 'paid'
-  if (order.readyAt) return 'ready'
-  if (status === 'confirmed') return 'preparing'
+  if (status === 'confirmed') return 'confirmed'
   // AwaitingValidation / Submitted: with the café, not yet taken on
   return 'sent'
 }
@@ -116,11 +116,10 @@ export function nextCheck(v: PillVisibility): number | null {
 }
 
 /** Icon for a stage, by lucide name, resolved by the component */
-export const STAGE_ICON: Record<PillStage, 'send' | 'flame' | 'bell' | 'check' | 'x'> = {
+export const STAGE_ICON: Record<PillStage, 'send' | 'check' | 'receipt' | 'x'> = {
   sent: 'send',
-  preparing: 'flame',
-  ready: 'bell',
-  paid: 'check',
+  confirmed: 'check',
+  paid: 'receipt',
   cancelled: 'x',
 }
 
@@ -129,8 +128,7 @@ type Words = { en: string; ar: string; arStandard: string }
 /** The pill's words; kept here rather than in the app dictionary */
 export const STAGE_LABEL: Record<PillStage, Words> = {
   sent: { en: 'Sent', ar: 'اتبعت', arStandard: 'أُرسل' },
-  preparing: { en: 'Preparing', ar: 'بيتحضر', arStandard: 'قيد التحضير' },
-  ready: { en: 'Ready', ar: 'جاهز', arStandard: 'جاهز' },
+  confirmed: { en: 'Confirmed', ar: 'اتأكد', arStandard: 'تم التأكيد' },
   paid: { en: 'Paid', ar: 'اتدفع', arStandard: 'مدفوع' },
   cancelled: { en: 'Cancelled', ar: 'اتلغى', arStandard: 'أُلغي' },
 }
@@ -144,12 +142,11 @@ export const PILL_WORDS = {
     ar: 'الطلب وصل للكافيه وهيتأكد حالًا.',
     arStandard: 'وصل الطلب إلى المقهى وسيُؤكَّد بعد قليل.',
   },
-  preparingNote: {
-    en: 'Confirmed. The kitchen is on it.',
-    ar: 'اتأكد والمطبخ شغال عليه.',
-    arStandard: 'تم التأكيد والمطبخ يُحضّره.',
+  confirmedNote: {
+    en: 'Confirmed. It is on your bill.',
+    ar: 'اتأكد وبقى على حسابك.',
+    arStandard: 'تم التأكيد وأُضيف إلى فاتورتك.',
   },
-  readyNote: { en: 'It is ready.', ar: 'طلبك جاهز.', arStandard: 'طلبك جاهز.' },
   paidNote: { en: 'Paid. Thank you.', ar: 'اتدفع. شكرًا.', arStandard: 'تم الدفع. شكرًا لك.' },
   cancelledNote: {
     en: 'The café could not take this order.',

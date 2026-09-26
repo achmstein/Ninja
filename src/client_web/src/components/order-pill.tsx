@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
-import { BellRing, Check, ChefHat, Send, X } from 'lucide-react'
+import { Check, ReceiptText, Send, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -23,16 +23,14 @@ import {
 
 const ICONS: Record<PillStage, typeof Send> = {
   sent: Send,
-  preparing: ChefHat,
-  ready: BellRing,
-  paid: Check,
+  confirmed: Check,
+  paid: ReceiptText,
   cancelled: X,
 }
 
 const NOTES = {
   sent: PILL_WORDS.sentNote,
-  preparing: PILL_WORDS.preparingNote,
-  ready: PILL_WORDS.readyNote,
+  confirmed: PILL_WORDS.confirmedNote,
   paid: PILL_WORDS.paidNote,
   cancelled: PILL_WORDS.cancelledNote,
 } as const
@@ -40,24 +38,23 @@ const NOTES = {
 /** How long the island stays open to say that the order has moved on, ms */
 const ANNOUNCE_MS = 4200
 
-/** The stages worth interrupting for; the others only change the dock quietly */
-const LOUD: PillStage[] = ['ready', 'cancelled']
+/** The stages worth interrupting for (the café turned the order down); the others only change the dock quietly */
+const LOUD: PillStage[] = ['cancelled']
 
 /** A stage in the island's colours: waiting on the café, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
   sent: 'loading',
-  preparing: 'loading',
-  ready: 'success',
+  confirmed: 'success',
   paid: 'success',
   cancelled: 'error',
 }
 
 /**
  * The order just placed, followed: which order it is and where it has got
- * to (Sent, Preparing, Ready), for the dock to show quietly beside the bill
- * (useLiveOrder, components/ninja/dock-bill.tsx). When it is ready or
- * turned down, the island (lib/island.ts) says so out loud for a moment,
- * opened with the dishes and the way to the bill. It is let go a little
+ * to (Sent, Confirmed), for the dock to show quietly beside the bill
+ * (useLiveOrder, components/ninja/dock-bill.tsx). When it is turned down,
+ * the island (lib/island.ts) says so out loud for a moment, opened with the
+ * dishes and the way to the bill. It is let go a little
  * after the order is done with. Draws nothing itself; mounted once, in the
  * root layout.
  */
@@ -117,7 +114,7 @@ export function OrderPill() {
   }, [visible, stage, orderNumber])
   useEffect(() => () => useLiveOrder.setState({ stage: null, orderNumber: null }), [])
 
-  // What is worth interrupting for (ready, turned down) the island says out loud, opened with the order's
+  // What is worth interrupting for (turned down) the island says out loud, opened with the order's
   // dishes; the rest of the way the dock's quiet change is enough
   const say = (w: Parameters<typeof words>[0]) => words(w, language, standard)
   const items = order?.items ?? []
@@ -143,7 +140,7 @@ export function OrderPill() {
       ANNOUNCE_MS
     )
     try {
-      navigator.vibrate?.(stage === 'ready' ? [60, 60, 60] : 40)
+      navigator.vibrate?.(40)
     } catch {
       // Not every browser lets a page buzz the phone
     }
