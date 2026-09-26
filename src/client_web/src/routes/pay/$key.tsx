@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { CircleAlert, CircleCheck, Clock, Loader2 } from 'lucide-react'
+import { CircleAlert, CircleCheck, Clock, FlaskConical, Loader2 } from 'lucide-react'
 import { type PaymentStatusView } from '@/api/sales'
-import { getOnlinePaymentOptions } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  getOnlinePaymentOptions,
+  simulateOnlinePaymentMutation,
+} from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/pay/$key')({
+  // simulate: a demo café's pretend checkout, which is this page itself
+  validateSearch: (search: Record<string, unknown>): { simulate?: boolean } =>
+    search.simulate === 1 || search.simulate === '1' || search.simulate === true
+      ? { simulate: true }
+      : {},
   component: PayReturnPage,
 })
 
@@ -26,6 +34,7 @@ const POLL_MS = 2_000
  */
 function PayReturnPage() {
   const { key } = Route.useParams()
+  const { simulate } = Route.useSearch()
   const t = useT()
   const queryClient = useQueryClient()
   const [gaveUp, setGaveUp] = useState(false)
@@ -64,6 +73,11 @@ function PayReturnPage() {
         <BackToBills />
       </Outcome>
     )
+  }
+
+  // A demo café takes pretend payments: the guest says how the payment went
+  if (simulate && payment && status === 'Pending') {
+    return <DemoCheckout payment={payment} />
   }
 
   if (!payment || status === 'Pending') {
@@ -177,6 +191,60 @@ function Receipt({ payment }: { payment: PaymentStatusView }) {
         <span>{money(payment.charged)}</span>
       </div>
     </div>
+  )
+}
+
+/**
+ * A demo café's checkout: no provider, no card, no money. The guest sees
+ * what they would be charged and says whether it went through; Sales marks
+ * the payment just as the provider's callback would, and the page carries
+ * on as it would after a real checkout.
+ */
+function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
+  const t = useT()
+  const language = useLanguage((s) => s.language)
+  const queryClient = useQueryClient()
+  const options = getOnlinePaymentOptions({
+    path: { key: payment.key },
+    query: { 'api-version': API_VERSION },
+  })
+  const simulate = useMutation({
+    ...simulateOnlinePaymentMutation(),
+    onSuccess: (result) => queryClient.setQueryData(options.queryKey, result),
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: options.queryKey }),
+  })
+  const answer = (paid: boolean) =>
+    simulate.mutate({
+      path: { key: payment.key },
+      query: { 'api-version': API_VERSION },
+      body: { paid },
+    })
+
+  return (
+    <Outcome icon={FlaskConical} tone='muted' title={t('demoCheckoutTitle')}>
+      <p className='text-muted-foreground -mt-2 text-sm'>{t('demoCheckoutNote')}</p>
+      <div className='bg-muted/50 w-full rounded-xl border border-dashed p-4 text-3xl font-bold tabular-nums'>
+        {formatMoney(payment.charged, payment.currency, language)}
+      </div>
+      <Button
+        size='lg'
+        className='w-full rounded-pill font-bold'
+        disabled={simulate.isPending}
+        onClick={() => answer(true)}
+      >
+        {simulate.isPending && <Loader2 className='h-4 w-4 animate-spin' />}
+        {t('demoPay')}
+      </Button>
+      <Button
+        size='lg'
+        variant='outline'
+        className='w-full rounded-pill font-bold'
+        disabled={simulate.isPending}
+        onClick={() => answer(false)}
+      >
+        {t('demoDecline')}
+      </Button>
+    </Outcome>
   )
 }
 

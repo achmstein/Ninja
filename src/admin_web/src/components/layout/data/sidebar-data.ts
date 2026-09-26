@@ -18,6 +18,7 @@ import {
   Receipt,
   ReceiptText,
   ShieldCheck,
+  Sparkles,
   TabletSmartphone,
   Ticket,
   TrendingUp,
@@ -152,6 +153,8 @@ export const sidebarData: SidebarData = {
         },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
+        // The owner's assistant: this café's MCP server in their own Claude or ChatGPT, in every plan
+        { title: 'assistantNav', url: '/assistant', icon: Sparkles },
       ],
     },
   ],

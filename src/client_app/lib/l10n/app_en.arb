@@ -170,6 +170,7 @@
   "previousSessions": "Previous Sessions",
   "favorites": "Favorites",
   "about": "About",
+  "poweredBy": "Powered by",
   "version": "Version {version}",
   "@version": {
     "placeholders": {

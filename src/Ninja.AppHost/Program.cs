@@ -139,7 +139,9 @@ var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
     .WithReference(keycloak)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax")
-    .WithEnvironment("Payments__Key", paymentsKey);
+    .WithEnvironment("Payments__Key", paymentsKey)
+    // Locally, pay at table works without a Paymob account: the checkout is pretend
+    .WithEnvironment("Payments__Simulated", "true");
 
 var inventoryApi = builder.AddProject<Projects.Inventory_API>("inventory-api")
     .WithReference(inventoryDb).WaitFor(inventoryDb)

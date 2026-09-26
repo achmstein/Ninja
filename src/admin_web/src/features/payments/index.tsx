@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, Plus, X } from 'lucide-react'
+import { AlertTriangle, Copy, FlaskConical, Plus, X } from 'lucide-react'
 import {
   getPaymentSettingsOptions,
   getPaymentSettingsQueryKey,
@@ -75,6 +75,8 @@ export function PaymentSettingsPage() {
               <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
                 {t('payReady')}
               </Badge>
+            ) : settings.simulated ? (
+              <Badge variant='secondary'>{t('payDemoBadge')}</Badge>
             ) : (
               <Badge variant='outline'>{t('payNotReady')}</Badge>
             ))
@@ -145,6 +147,16 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
 
   return (
     <form onSubmit={submit} className='space-y-6'>
+      {/* A demo café without its own account yet: guests' payments are pretend until the keys are in */}
+      {settings.simulated && (
+        <Alert>
+          <FlaskConical />
+          <AlertDescription className='text-foreground'>
+            {t('payDemoNotice')}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {secretsLocked && (
         <Alert variant='destructive'>
           <AlertTriangle />

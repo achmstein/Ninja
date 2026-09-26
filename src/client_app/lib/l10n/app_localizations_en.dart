@@ -383,6 +383,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
+  String get poweredBy => 'Powered by';
+
+  @override
   String version(String version) {
     return 'Version $version';
   }

@@ -26,7 +26,8 @@ public sealed record PayOptionsView(
     bool AllowCustom,
     bool Card,
     bool Wallet,
-    bool ApplePay);
+    bool ApplePay,
+    bool Simulated = false);
 
 /// <summary>
 /// A bill as a guest pays it: what is on it, what is paid, what is held,
@@ -82,22 +83,24 @@ public sealed record PaymentSettingsView(
     bool AllowCustom,
     bool Ready,
     bool CanKeepSecrets,
-    string CallbackUrl)
+    string CallbackUrl,
+    bool Simulated = false)
 {
-    public static PaymentSettingsView From(PaymentSettings s, bool canKeepSecrets, string callbackUrl) => new(
+    /// <param name="simulated">A demo taking pretend payments until a real account is entered.</param>
+    public static PaymentSettingsView From(PaymentSettings s, bool canKeepSecrets, string callbackUrl, bool simulated = false) => new(
         s.Provider, s.Currency, s.SealedSecretKey is not null, s.SecretKeyHint, s.PublicKey, s.SealedHmacSecret is not null,
         s.CardIntegrationId, s.WalletIntegrationId, s.ApplePayIntegrationId, s.FeeMode, s.FeePercent, s.FeeFixed,
-        s.TipsEnabled, s.TipPercents, s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl);
+        s.TipsEnabled, s.TipPercents, s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl, simulated);
 }
 
 public static class PayViews
 {
-    public static PayOptionsView Options(PaymentSettings s) => new(
-        s.IsReady, s.Currency, s.FeeMode.ToString(), s.FeeMode == FeeMode.Guest ? s.FeePercent : 0, s.FeeMode == FeeMode.Guest ? s.FeeFixed : 0,
+    public static PayOptionsView Options(PaymentSettings s, bool simulated = false) => new(
+        s.IsReady || simulated, s.Currency, s.FeeMode.ToString(), s.FeeMode == FeeMode.Guest ? s.FeePercent : 0, s.FeeMode == FeeMode.Guest ? s.FeeFixed : 0,
         s.TipsEnabled, s.TipPercents, s.AllowItems, s.AllowEqual, s.AllowCustom,
-        s.CardIntegrationId is not null, s.WalletIntegrationId is not null, s.ApplePayIntegrationId is not null);
+        s.CardIntegrationId is not null || simulated, s.WalletIntegrationId is not null, s.ApplePayIntegrationId is not null, simulated);
 
-    public static PayView Build(Ticket ticket, Bill bill, IReadOnlyList<OnlinePayment> payments, PaymentSettings settings, bool enabled, string? userId, string? guestId, DateTime now)
+    public static PayView Build(Ticket ticket, Bill bill, IReadOnlyList<OnlinePayment> payments, PaymentSettings settings, bool enabled, string? userId, string? guestId, DateTime now, bool simulated = false)
     {
         var claimed = OnlineShares.ClaimedLines(payments, now);
         var paid = OnlineShares.Paid(payments);
@@ -106,7 +109,7 @@ public static class PayViews
 
         string? why = null;
         if (!enabled) why = "off";
-        else if (!settings.IsReady) why = "not-set-up";
+        else if (!settings.IsReady && !simulated) why = "not-set-up";
         else if (ticket.Status != TicketStatus.Open) why = "closed";
         else if (ticket.HasSession && ticket.SessionEndedAt is null) why = "clock-running";
         else if (ticket.Lines.Count == 0) why = "empty";
@@ -130,7 +133,7 @@ public static class PayViews
                 .Select(p => new PayShareView(p.PayerName, p.Amount, p.Status.ToString(), p.PaidAt, Mine(p.PayerId)))
                 .ToList(),
             ticket.MemberIds.Count > 1 ? ticket.MemberIds.Count : null,
-            Options(settings),
+            Options(settings, simulated),
             why is null,
             why);
     }

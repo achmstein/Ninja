@@ -25,7 +25,7 @@ public class StartOnlinePaymentCommandHandler(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,
     ITenantFeaturesQueries features,
-    IPaymentProvider provider,
+    PaymentProviders providers,
     SecretSealer sealer,
     IOptions<PaymentsOptions> options,
     TimeProvider clock,
@@ -36,8 +36,8 @@ public class StartOnlinePaymentCommandHandler(
         if (!await features.PayAtTableAsync())
             throw new SalesDomainException("Paying at the table is off here.");
         var settings = await payments.GetSettingsAsync();
-        if (!settings.IsReady)
-            throw new SalesDomainException("This café has not set up online payments yet.");
+        var provider = providers.For(settings)
+            ?? throw new SalesDomainException("This café has not set up online payments yet.");
         if (!settings.Allows(command.Share.Mode))
             throw new SalesDomainException("This café does not split bills that way.");
 
@@ -73,7 +73,7 @@ public class StartOnlinePaymentCommandHandler(
         if (tip > 0) items.Add(new("Tip", tip));
 
         var session = await provider.StartCheckoutAsync(
-            PayRules.Account(settings, sealer),
+            provider is SimulatedPaymentProvider ? PayRules.NoAccount : PayRules.Account(settings, sealer),
             new CheckoutRequest(
                 payment.Key.ToString("N"),
                 payment.Charged,
@@ -210,7 +210,7 @@ public sealed record RefundOnlinePaymentCommand(Guid Key, string By) : IRequest<
 public class RefundOnlinePaymentCommandHandler(
     IOnlinePaymentRepository payments,
     ITicketRepository tickets,
-    IPaymentProvider provider,
+    PaymentProviders providers,
     SecretSealer sealer,
     ISalesIntegrationEventService integrationEvents,
     TimeProvider clock) : IRequestHandler<RefundOnlinePaymentCommand, Unit>
@@ -225,8 +225,9 @@ public class RefundOnlinePaymentCommandHandler(
         if (payment.Status != OnlinePaymentStatus.Paid || payment.TransactionId is null)
             throw new SalesDomainException("Only a paid payment can be refunded.");
 
-        var settings = await payments.GetSettingsAsync();
-        await provider.RefundAsync(PayRules.Account(settings, sealer), payment.TransactionId, payment.Charged, ct);
+        var provider = providers.ByName(payment.Provider);
+        var account = provider is SimulatedPaymentProvider ? PayRules.NoAccount : PayRules.Account(await payments.GetSettingsAsync(), sealer);
+        await provider.RefundAsync(account, payment.TransactionId, payment.Charged, ct);
         payment.Refund(command.By, clock.GetUtcNow().UtcDateTime);
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
         if (ticket is not null)
@@ -297,6 +298,9 @@ public static class PayRules
         if (ticket.Lines.Count == 0)
             throw new SalesDomainException("There is nothing on this bill yet.");
     }
+
+    /// <summary>What a simulated payment is made on: no account at all.</summary>
+    public static readonly ProviderAccount NoAccount = new("", null, null, []);
 
     public static ProviderAccount Account(PaymentSettings settings, SecretSealer sealer)
     {

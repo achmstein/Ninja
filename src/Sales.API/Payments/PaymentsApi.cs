@@ -80,6 +80,13 @@ public static class PaymentsApi
             .WithName("ListOnlinePayments")
             .WithSummary("Online payments on a bill, for the till");
 
+        // A demo's pretend checkout: the guest's own page says how it went
+        api.MapPost("/{key:guid}/simulate", Simulate)
+            .AllowAnonymous()
+            .WithName("SimulateOnlinePayment")
+            .WithSummary("A demo café's pretend payment: paid or declined, as the guest picks")
+            .WithDescription("Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.");
+
         api.MapPost("/{key:guid}/refund", Refund)
             .RequireAuthorization("Pos")
             .WithName("RefundOnlinePayment")
@@ -198,15 +205,51 @@ public static class PaymentsApi
     public static async Task<Ok<PaymentSettingsView>> GetSettings(
         [FromServices] IOnlinePaymentRepository payments,
         [FromServices] SecretSealer sealer,
+        [FromServices] PaymentProviders providers,
         [FromServices] IOptions<PaymentsOptions> options)
     {
         var settings = await payments.GetSettingsAsync();
-        return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value)));
+        return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value), providers.IsSimulated(settings)));
+    }
+
+    public sealed record SimulateRequest(bool Paid);
+
+    public static async Task<Results<Ok<PaymentStatusView>, NotFound, BadRequest<ProblemDetails>>> Simulate(
+        [FromServices] IOnlinePaymentRepository payments,
+        [FromServices] ITicketRepository tickets,
+        [FromServices] PaymentProviders providers,
+        [FromServices] IMediator mediator,
+        Guid key,
+        SimulateRequest request)
+    {
+        var payment = await payments.GetByKeyAsync(key);
+        if (payment is null || !providers.SimulationAllowed || payment.Provider != SimulatedPaymentProvider.ProviderName)
+            return TypedResults.NotFound();
+        if (payment.Status != OnlinePaymentStatus.Pending)
+            return TypedResults.BadRequest(new ProblemDetails { Detail = "This payment is already " + payment.Status.ToString().ToLowerInvariant() + "." });
+
+        var reference = payment.Key.ToString("N");
+        var confirmed = await mediator.Send(new ConfirmOnlinePaymentCommand(
+            new CallbackOutcome(reference, reference, $"sim-{reference}", request.Paid, false, payment.Charged, request.Paid ? null : "Declined in the demo"),
+            SimulatedPaymentProvider.ProviderName));
+        if (confirmed is { Paid: true })
+        {
+            try
+            {
+                await mediator.Send(new SettlePaidOnlineCommand(confirmed.TicketId));
+            }
+            catch (SalesDomainException)
+            {
+                // Paid is paid; the till settles what could not settle itself
+            }
+        }
+        return (await GetPayment(payments, tickets, key)).Result is Ok<PaymentStatusView> ok ? ok : TypedResults.NotFound();
     }
 
     public static async Task<Results<Ok<PaymentSettingsView>, BadRequest<ProblemDetails>>> SaveSettings(
         [FromServices] IMediator mediator,
         [FromServices] SecretSealer sealer,
+        [FromServices] PaymentProviders providers,
         [FromServices] IOptions<PaymentsOptions> options,
         PaymentSettingsRequest request)
     {
@@ -217,7 +260,7 @@ public static class PaymentsApi
                 request.CardIntegrationId, request.WalletIntegrationId, request.ApplePayIntegrationId,
                 request.FeeMode, request.FeePercent, request.FeeFixed, request.TipsEnabled, request.TipPercents ?? [],
                 request.AllowItems, request.AllowEqual, request.AllowCustom));
-            return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value)));
+            return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value), providers.IsSimulated(settings)));
         }
         catch (SalesDomainException ex)
         {
@@ -234,7 +277,7 @@ public static class PaymentsApi
     public static async Task<Results<Ok, UnauthorizedHttpResult, BadRequest>> Callback(
         HttpContext http,
         [FromServices] IOnlinePaymentRepository payments,
-        [FromServices] IPaymentProvider provider,
+        [FromServices] PaymobProvider provider,
         [FromServices] SecretSealer sealer,
         [FromServices] IMediator mediator,
         [FromServices] ILoggerFactory loggers,
@@ -302,6 +345,7 @@ public sealed class PayReader(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,
     ITenantFeaturesQueries features,
+    PaymentProviders providers,
     TimeProvider clock)
 {
     public async Task<PayView> ReadAsync(Ticket ticket, HttpContext http)
@@ -310,6 +354,6 @@ public sealed class PayReader(
         var list = await payments.ListForTicketAsync(ticket.Id);
         var settings = await payments.GetSettingsAsync();
         var userId = http.User.GetUserId();
-        return PayViews.Build(ticket, bill, list, settings, await features.PayAtTableAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime);
+        return PayViews.Build(ticket, bill, list, settings, await features.PayAtTableAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime, providers.IsSimulated(settings));
     }
 }

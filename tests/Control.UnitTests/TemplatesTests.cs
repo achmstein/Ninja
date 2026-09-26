@@ -257,6 +257,18 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
+    public void Only_a_demo_takes_pretend_payments()
+    {
+        var demo = Blue();
+        demo.Kind = TenantKind.Demo;
+        StringAssert.Contains(Templates.Compose(demo, TenantHosts.For(demo, Platform), Platform), "Payments__Simulated: \"true\"");
+
+        var customer = Blue();
+        customer.Kind = TenantKind.Customer;
+        Assert.DoesNotContain("Payments__Simulated", Templates.Compose(customer, TenantHosts.For(customer, Platform), Platform), "a café with real guests takes real money or none");
+    }
+
+    [TestMethod]
     public void Env_carries_the_tenants_own_secrets_and_none_of_the_platforms()
     {
         var env = Templates.Env(Blue(), Platform);

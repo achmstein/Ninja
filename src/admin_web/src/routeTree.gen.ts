@@ -34,6 +34,7 @@ import { Route as AuthenticatedInventoryIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedBrandIndexRouteImport } from './routes/_authenticated/brand/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
+import { Route as AuthenticatedAssistantIndexRouteImport } from './routes/_authenticated/assistant/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
 import { Route as AuthenticatedTillTicketsRouteImport } from './routes/_authenticated/till/tickets'
@@ -193,6 +194,12 @@ const AuthenticatedBranchesIndexRoute =
   AuthenticatedBranchesIndexRouteImport.update({
     id: '/branches/',
     path: '/branches/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAssistantIndexRoute =
+  AuthenticatedAssistantIndexRouteImport.update({
+    id: '/assistant/',
+    path: '/assistant/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
@@ -375,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
+  '/assistant': typeof AuthenticatedAssistantIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -426,6 +434,7 @@ export interface FileRoutesByTo {
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
+  '/assistant': typeof AuthenticatedAssistantIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -479,6 +488,7 @@ export interface FileRoutesById {
   '/_authenticated/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
+  '/_authenticated/assistant/': typeof AuthenticatedAssistantIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/brand/': typeof AuthenticatedBrandIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/till/tickets'
     | '/accounts'
     | '/apps'
+    | '/assistant'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -583,6 +594,7 @@ export interface FileRouteTypes {
     | '/till/tickets'
     | '/accounts'
     | '/apps'
+    | '/assistant'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
     | '/_authenticated/till/tickets'
     | '/_authenticated/accounts/'
     | '/_authenticated/apps/'
+    | '/_authenticated/assistant/'
     | '/_authenticated/branches/'
     | '/_authenticated/brand/'
     | '/_authenticated/customers/'
@@ -845,6 +858,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBranchesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assistant/': {
+      id: '/_authenticated/assistant/'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
       path: '/apps'
@@ -1046,6 +1066,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTillTicketsRoute: typeof AuthenticatedTillTicketsRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
+  AuthenticatedAssistantIndexRoute: typeof AuthenticatedAssistantIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedBrandIndexRoute: typeof AuthenticatedBrandIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
@@ -1090,6 +1111,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTillTicketsRoute: AuthenticatedTillTicketsRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
+  AuthenticatedAssistantIndexRoute: AuthenticatedAssistantIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedBrandIndexRoute: AuthenticatedBrandIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,

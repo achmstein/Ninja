@@ -187,3 +187,19 @@ export function defaultCustomerOrigin(): string {
   const { protocol, host } = window.location
   return `${protocol}//${host.replace(/^admin\./, '')}`
 }
+
+/** The café's API host: the brand's apiUrl, else the platform's default for this host. */
+export function useApiOrigin(): string {
+  return (useBrand()?.apiUrl ?? defaultApiOrigin()).replace(/\/+$/, '')
+}
+
+/**
+ * The API host when the brand does not say: on the platform the café's API
+ * is this host with `api.` for its `admin.` label. A dev server has no such
+ * host; the AppHost's BFF stands in.
+ */
+export function defaultApiOrigin(): string {
+  const { protocol, host } = window.location
+  if (host.startsWith('admin.')) return `${protocol}//${host.replace(/^admin\./, 'api.')}`
+  return 'http://localhost:5000'
+}

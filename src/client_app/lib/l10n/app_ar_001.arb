@@ -87,6 +87,7 @@
   "statusCompleted": "مكتمل",
   "statusCancelled": "ملغى",
   "about": "حول التطبيق",
+  "poweredBy": "مدعوم من",
   "version": "الإصدار {version}",
   "notifications": "الإشعارات",
   "appearance": "المظهر",

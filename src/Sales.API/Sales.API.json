@@ -2569,6 +2569,72 @@
         ]
       }
     },
+    "/api/sales/payments/{key}/simulate": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "A demo café's pretend payment: paid or declined, as the guest picks",
+        "description": "Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.",
+        "operationId": "SimulateOnlinePayment",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatusView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sales/payments/{key}/refund": {
       "post": {
         "tags": [
@@ -4288,6 +4354,10 @@
           },
           "callbackUrl": {
             "type": "string"
+          },
+          "simulated": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4479,6 +4549,10 @@
           },
           "applePay": {
             "type": "boolean"
+          },
+          "simulated": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5845,6 +5919,17 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "SimulateRequest": {
+        "required": [
+          "paid"
+        ],
+        "type": "object",
+        "properties": {
+          "paid": {
+            "type": "boolean"
           }
         }
       },

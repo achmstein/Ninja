@@ -1,7 +1,7 @@
 import { Copy, Download, Printer, Smartphone } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { QRCodeSVG } from 'qrcode.react'
-import { useBrand, useFeatures } from '@/lib/brand'
+import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,11 @@ import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
  * connect code below, which is nothing more than this café's API host. The
  * web versions stay a link away for iPads and for a browser on anything.
  */
+/** A camera opens only a full URL; the platform's download page may be given relative to this host. */
+function absoluteUrl(url: string): string {
+  return new URL(url, window.location.href).href
+}
+
 export function AppsPage() {
   const t = useT()
   const brand = useBrand()
@@ -65,6 +70,22 @@ export function AppsPage() {
                   <div className='text-base font-semibold'>{app.title}</div>
                 </div>
                 <p className='text-muted-foreground text-sm'>{app.about}</p>
+                {/* Scanned with the tablet's camera, it opens the download straight away: nothing to type */}
+                {appsUrl && (
+                  <div className='bg-muted/50 flex items-center gap-3 rounded-lg border p-3'>
+                    <div className='shrink-0 rounded-md bg-white p-1.5'>
+                      <QRCodeSVG
+                        value={absoluteUrl(`${appsUrl}/${app.file}`)}
+                        size={88}
+                        level='M'
+                        marginSize={0}
+                        bgColor='#ffffff'
+                        fgColor='#000000'
+                      />
+                    </div>
+                    <p className='text-muted-foreground text-xs'>{t('appsScanToDownload')}</p>
+                  </div>
+                )}
                 <div className='mt-auto flex flex-wrap gap-2 pt-2'>
                   {appsUrl ? (
                     <Button asChild>
@@ -151,15 +172,4 @@ export function AppsPage() {
       </div>
     </Main>
   )
-}
-
-/**
- * The API host when the brand does not say: on the platform the café's API
- * is this host with `api.` for its `admin.` label. A dev server has no such
- * host; the AppHost's BFF stands in.
- */
-function defaultApiOrigin(): string {
-  const { protocol, host } = window.location
-  if (host.startsWith('admin.')) return `${protocol}//${host.replace(/^admin\./, 'api.')}`
-  return 'http://localhost:5000'
 }

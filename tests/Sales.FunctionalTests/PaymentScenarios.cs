@@ -18,12 +18,14 @@ public sealed class SalesUnderTest() : ServiceUnderTest<Program>("salesdb", new(
     ["Payments:CallbackBaseUrl"] = "https://api.cafe.test",
     ["Payments:ReturnBaseUrl"] = "https://cafe.test",
     ["Payments:Paymob:BaseUrl"] = "https://paymob.test",
+    // A demo stack: pretend payments until the café enters a Paymob account
+    ["Payments:Simulated"] = "true",
 })
 {
     public static readonly FakePaymob Paymob = new();
 
     protected override void ConfigureServices(IServiceCollection services)
-        => services.AddHttpClient<IPaymentProvider, PaymobProvider>().ConfigurePrimaryHttpMessageHandler(() => Paymob);
+        => services.AddHttpClient<PaymobProvider>().ConfigurePrimaryHttpMessageHandler(() => Paymob);
 }
 
 /// <summary>Paymob as far as Sales talks to it: an intention answers with an order and a client secret; a refund answers OK.</summary>
@@ -56,11 +58,11 @@ public sealed class FakePaymob : HttpMessageHandler
 
 public record PayLine(int Id, decimal Total, decimal Share, bool Claimed, bool IsMine);
 public record PayShare(string? PayerName, decimal Amount, string Status, bool IsMine);
-public record PayOptions(bool Ready, string Currency, bool AllowEqual);
+public record PayOptions(bool Ready, string Currency, bool AllowEqual, bool Simulated);
 public record PayBill(int TicketId, string Status, List<PayLine> Lines, decimal Total, decimal Paid, decimal Held, decimal Remaining, List<PayShare> Shares, PayOptions Options, bool CanPay, string? Why);
 public record Started(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Tip, decimal Charged);
 public record PaymentStatus(Guid Key, string Status, decimal Amount, bool BillClosed);
-public record SettingsView(bool SecretKeySet, string? SecretKeyHint, bool HmacSecretSet, bool Ready, bool CanKeepSecrets, string CallbackUrl);
+public record SettingsView(bool SecretKeySet, string? SecretKeyHint, bool HmacSecretSet, bool Ready, bool CanKeepSecrets, string CallbackUrl, bool Simulated);
 
 /// <summary>
 /// A table paying its bill from its phones through the café's own Paymob
@@ -281,6 +283,57 @@ public sealed class PaymentScenarios
         var settled = await Till.GetAsync<TicketView>($"/api/tickets/{ticketId}?{Version}");
         Assert.AreEqual("Settled", settled.Status);
         CollectionAssert.AreEquivalent(new[] { "Cash", "Online" }, settled.Payments.Select(p => p.Tender).ToArray());
+    }
+
+    [TestMethod]
+    public async Task A_demo_without_a_paymob_account_pays_with_pretend_money_and_nothing_else_can()
+    {
+        await SetUpCafeAsync();
+        // The demo has no Paymob account yet
+        var settings = await Owner.PutAsync<SettingsView>($"/api/sales/payments/settings?{Version}", new
+        {
+            currency = "EGP", secretKey = "", publicKey = (string?)null, hmacSecret = "", cardIntegrationId = (int?)null,
+            feeMode = 0, feePercent = 0, feeFixed = 0, tipsEnabled = false, tipPercents = Array.Empty<int>(),
+            allowItems = true, allowEqual = true, allowCustom = true,
+        });
+        try
+        {
+            Assert.IsFalse(settings.Ready);
+            Assert.IsTrue(settings.Simulated, "the owner is told payments are pretend until the account is in");
+
+            var (ticketId, table) = await ATableBillAsync(80m);
+            var guest = Guest("guest-demo-" + table);
+            var bill = await AtTableAsync(guest, table);
+            Assert.IsTrue(bill.CanPay, bill.Why);
+            Assert.IsTrue(bill.Options.Simulated, "the guest's phone says it is a demo");
+
+            var intentions = SalesUnderTest.Paymob.Requests.Count;
+            var declined = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+            StringAssert.StartsWith(declined.CheckoutUrl, $"https://cafe.test/pay/{declined.Key:N}?simulate=1", "the checkout is the app's own page");
+            Assert.AreEqual(intentions, SalesUnderTest.Paymob.Requests.Count, "Paymob is never called");
+
+            // Paymob's callback cannot touch a pretend payment, and a real one cannot be simulated
+            var decline = await guest.PostAsync<PaymentStatus>($"/api/sales/payments/{declined.Key}/simulate?{Version}", new { paid = false });
+            Assert.AreEqual("Failed", decline.Status);
+            var (again, _) = await guest.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{declined.Key}/simulate?{Version}", new { paid = true });
+            Assert.AreEqual(HttpStatusCode.BadRequest, again, "a finished payment stays as it finished");
+
+            var paid = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+            var status = await guest.PostAsync<PaymentStatus>($"/api/sales/payments/{paid.Key}/simulate?{Version}", new { paid = true });
+            Assert.AreEqual("Paid", status.Status);
+            Assert.IsTrue(status.BillClosed, "and the bill settles itself as a real one would");
+        }
+        finally
+        {
+            await SetUpCafeAsync();
+        }
+
+        // With the account back, payments go to Paymob and cannot be simulated
+        var (ticket2, table2) = await ATableBillAsync(20m);
+        var real = await Guest("guest-real-" + table2).PostAsync<Started>($"/api/sales/payments/tickets/{ticket2}?{Version}", new { mode = 0, tip = 0 });
+        StringAssert.StartsWith(real.CheckoutUrl, "https://paymob.test/");
+        var (refused, _) = await Guest("guest-real-" + table2).RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{real.Key}/simulate?{Version}", new { paid = true });
+        Assert.AreEqual(HttpStatusCode.NotFound, refused);
     }
 
     [TestMethod]

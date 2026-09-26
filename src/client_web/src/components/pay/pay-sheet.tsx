@@ -6,6 +6,7 @@ import {
   CircleAlert,
   CreditCard,
   Loader2,
+  FlaskConical,
   Lock,
   Minus,
   Plus,
@@ -633,6 +634,15 @@ function SplitRing({ parts, of }: { parts: number; of: number }) {
  *  Apple Pay only where the browser can offer it. */
 function Methods({ view }: { view: PayView }) {
   const t = useT()
+  // A demo café: the next page is ours, and nothing is charged
+  if (view.options.simulated) {
+    return (
+      <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-xs'>
+        <FlaskConical className='h-3 w-3' />
+        {t('demoPaymentsBadge')}
+      </div>
+    )
+  }
   const applePay =
     view.options.applePay &&
     typeof window !== 'undefined' &&

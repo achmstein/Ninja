@@ -42,6 +42,32 @@ const webExtras = {
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
   // The in-app scanner: an installed app cannot be reached by the phone's camera
+  // A demo café's pretend checkout (pay at table without a payment account)
+  demoCheckoutTitle: {
+    en: 'Demo payment',
+    ar: 'دفع تجريبي',
+  },
+  demoCheckoutNote: {
+    en: 'This café is trying out paying at the table. No card is charged and no money moves.',
+    ar: 'الكافيه بيجرب الدفع من الترابيزة. مفيش كارت هيتسحب منه ولا فلوس هتتحول.',
+  },
+  demoPay: {
+    en: 'Pay (demo)',
+    ar: 'ادفع (تجربة)',
+  },
+  demoDecline: {
+    en: 'Decline',
+    ar: 'ارفض',
+  },
+  demoPaymentsBadge: {
+    en: 'Demo: no money moves',
+    ar: 'تجربة: مفيش فلوس بتتحول',
+  },
+  // The About dialog's line under the version
+  poweredBy: {
+    en: 'Powered by',
+    ar: 'بيشتغل على',
+  },
   scanTable: {
     en: 'Scan table',
     ar: 'امسح الترابيزة',

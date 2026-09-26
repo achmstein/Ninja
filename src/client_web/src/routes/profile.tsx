@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { PoweredByNinja } from '@/components/powered-by-ninja'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -317,6 +318,7 @@ function AboutDialog({
           <Badge variant='secondary'>
             {t('version', { version: __APP_VERSION__ })}
           </Badge>
+          <PoweredByNinja className='pt-2' />
         </div>
       </DialogContent>
     </Dialog>

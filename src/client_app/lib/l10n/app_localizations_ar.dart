@@ -378,6 +378,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get about => 'عن التطبيق';
 
   @override
+  String get poweredBy => 'بيشتغل على';
+
+  @override
   String version(String version) {
     return 'الاصدار $version';
   }
@@ -1447,6 +1450,9 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get about => 'حول التطبيق';
+
+  @override
+  String get poweredBy => 'مدعوم من';
 
   @override
   String version(String version) {

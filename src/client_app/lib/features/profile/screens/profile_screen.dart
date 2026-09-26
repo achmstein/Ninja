@@ -9,6 +9,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/app_text.dart';
+import '../../../core/widgets/powered_by_ninja.dart';
 import '../../../l10n/app_localizations.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/loyalty_card.dart';
@@ -360,6 +361,8 @@ class _AboutSheet extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  const PoweredByNinja(),
                 ],
               ),
             ),

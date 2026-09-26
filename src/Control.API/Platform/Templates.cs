@@ -333,6 +333,8 @@ public static partial class Templates
                     sb.AppendLine("      Payments__Key: \"${PAYMENTS_KEY}\"");
                     sb.AppendLine($"      Payments__CallbackBaseUrl: \"{hosts.ApiUrl}\"");
                     sb.AppendLine($"      Payments__ReturnBaseUrl: \"{hosts.CustomerUrl}\"");
+                    // A demo tries pay at table with pretend payments until it has a Paymob account; a customer never can
+                    if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
                     break;
                 case "tenant":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");

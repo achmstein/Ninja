@@ -21,7 +21,9 @@ public static class Extensions
         // Pay at table: the café's own provider account, its secrets sealed with the stack's payments key
         services.Configure<Ninja.Sales.API.Payments.PaymentsOptions>(builder.Configuration.GetSection("Payments"));
         services.AddSingleton<Ninja.Sales.API.Payments.SecretSealer>();
-        services.AddHttpClient<Ninja.Sales.API.Payments.IPaymentProvider, Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient<Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));
+        services.AddSingleton<Ninja.Sales.API.Payments.SimulatedPaymentProvider>();
+        services.AddScoped<Ninja.Sales.API.Payments.PaymentProviders>();
         services.AddScoped<Ninja.Sales.API.Payments.PayReader>();
         services.TryAddSingleton(TimeProvider.System);
 
