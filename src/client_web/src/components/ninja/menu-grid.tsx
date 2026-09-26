@@ -27,6 +27,7 @@ export function MenuGrid({
   onOpen,
   onQuickAdd,
   onZoomIn,
+  landingId,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -36,6 +37,8 @@ export function MenuGrid({
   onOpen: (item: CatalogItemDto) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onZoomIn: () => void
+  /** The dish whose photo is flying to the tray from its open card: its tile waits for it to land */
+  landingId: number | null
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const categories = columns.filter((c) => c.kind === 'category')
@@ -96,6 +99,7 @@ export function MenuGrid({
                 item={item}
                 tone={col.tone}
                 shared={sharedIds.has(Number(item.id))}
+                landing={Number(item.id) === landingId}
                 onOpen={onOpen}
                 onQuickAdd={onQuickAdd}
               />
@@ -111,12 +115,15 @@ function Tile({
   item,
   tone,
   shared,
+  landing,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
   tone: DeckColumn['tone']
   shared: boolean
+  /** Its photo is in the air: the tile is out of sight until it lands, then fades back */
+  landing: boolean
   onOpen: (item: CatalogItemDto) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
@@ -142,10 +149,10 @@ function Tile({
     >
       <motion.div
         ref={photo}
-        layoutId={`card-${item.id}`}
+        layoutId={landing ? undefined : `card-${item.id}`}
         initial={shared ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.28 }}
+        animate={{ opacity: landing ? 0 : 1, scale: 1 }}
+        transition={landing ? { duration: 0 } : { duration: 0.28 }}
         style={{ borderRadius: TILE_RADIUS }}
         className={cn(
           'relative aspect-[4/5] w-full overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',

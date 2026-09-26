@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import type { PosterTone } from '@/components/menu/home/sections'
@@ -33,6 +34,7 @@ export function Deck({
   onOpen,
   onQuickAdd,
   onZoom,
+  landingId,
 }: {
   columns: DeckColumn[]
   column: number
@@ -47,6 +49,8 @@ export function Deck({
   onOpen: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onZoom: (direction: 'out' | 'in') => void
+  /** The dish whose photo is flying to the tray from its open card: its card waits for it to land */
+  landingId: number | null
 }) {
   const reduced = useReducedMotion()
   const pager = useRef<HTMLDivElement>(null)
@@ -181,7 +185,8 @@ export function Deck({
               item={item}
               tone={col.tone}
               // Only the column on screen morphs; the rest simply appear, which keeps a zoom cheap on a slow phone
-              shared={c === column}
+              shared={c === column && Number(item.id) !== landingId}
+              landing={Number(item.id) === landingId}
               usual={col.kind === 'usuals' && Number(item.id) === usualId}
               hint={Number(item.id) === holdHintId}
               onOpen={onOpen}
@@ -249,12 +254,15 @@ function DeckCard({
   shared,
   usual,
   hint,
+  landing,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
   tone: PosterTone
   shared: boolean
+  /** Its photo is in the air: the card is out of sight until it lands, then fades back */
+  landing: boolean
   usual: boolean
   hint: boolean
   onOpen: (item: CatalogItemDto, photo: HTMLElement | null) => void
@@ -275,6 +283,9 @@ function DeckCard({
     >
       <motion.article
         layoutId={shared ? `card-${item.id}` : undefined}
+        initial={false}
+        animate={{ opacity: landing ? 0 : 1 }}
+        transition={landing ? { duration: 0 } : { duration: 0.25, ease: ease.enter }}
         style={{ borderRadius: CARD_RADIUS }}
         className='relative isolate h-full w-full cursor-pointer overflow-hidden select-none [-webkit-touch-callout:none]'
         {...handlers}

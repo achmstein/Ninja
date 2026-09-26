@@ -4,7 +4,7 @@ import { Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { springOpen } from '@/lib/motion'
+import { ease, springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import {
@@ -39,12 +39,15 @@ export function Tune({
   canOrder,
   onClose,
   onAdd,
+  leaving = false,
 }: {
   item: CatalogItemDto
   tone: DeckColumn['tone']
   canOrder: boolean
   onClose: () => void
   onAdd: (result: TuneResult, photo: HTMLElement | null) => void
+  /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of folding back into the card */
+  leaving?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -86,6 +89,7 @@ export function Tune({
       layoutId={`card-${item.id}`}
       style={{ borderRadius: 0 }}
       transition={springOpen}
+      exit={leaving ? { opacity: 0, scale: 0.97, transition: { duration: 0.18, ease: ease.exit } } : undefined}
       role='dialog'
       aria-modal='true'
       aria-label={localized(item.name)}
@@ -95,8 +99,9 @@ export function Tune({
         {/* The photo keeps its place on screen through the morph; a bigger size draws it a little bigger */}
         <motion.div
           ref={photo}
-          layoutId={`photo-${item.id}`}
+          layoutId={leaving ? undefined : `photo-${item.id}`}
           transition={springOpen}
+          style={{ opacity: leaving ? 0 : undefined }}
           className={cn('relative h-[34svh] max-h-80 overflow-hidden', !hasPhoto && TONE_CLASS[tone])}
         >
           {hasPhoto ? (

@@ -25,7 +25,8 @@ import { Tray } from './tray'
 import { Tune, type TuneResult } from './tune'
 import { useHint, useTimeout } from './use-hint'
 
-type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone'] }
+/** The dish open in place; `leaving` once it was added and its photo has taken off */
+type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone']; leaving?: boolean }
 
 /**
  * Ninja: ordering as one surface that never leaves the page. Dishes
@@ -67,6 +68,8 @@ export function NinjaHome({ menu }: HomeProps) {
   const [scrim, setScrim] = useState(false)
   useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
   const [flights, setFlights] = useState<Flight[]>([])
+  // The dish added from its open card: that card sits out while its photo flies, and comes back as it lands
+  const [landing, setLanding] = useState<number | null>(null)
   const [bump, setBump] = useState(0)
   const [signInOpen, setSignInOpen] = useState(false)
   const [announce, setAnnounce] = useState('')
@@ -177,6 +180,7 @@ export function NinjaHome({ menu }: HomeProps) {
         to: { x: to.x, y: to.y, width: 44, height: 44 },
         src: item.pictureUri ? itemPictureUrl(item.id) : null,
         toneClass: TONE_CLASS[tone],
+        radius: cornerOf(from),
         land,
       },
     ])
@@ -268,6 +272,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
                   onQuickAdd={onQuickAdd}
                   onZoomIn={() => zoomIn()}
+                  landingId={landing}
                 />
               ) : (
                 <Deck
@@ -282,6 +287,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
                   onQuickAdd={onQuickAdd}
                   onZoom={onZoom}
+                  landingId={landing}
                 />
               )}
             </motion.div>
@@ -338,10 +344,18 @@ export function NinjaHome({ menu }: HomeProps) {
                   tone={tuning.tone}
                   canOrder={canOrder}
                   onClose={() => setTuning(null)}
+                  leaving={tuning.leaving}
                   onAdd={(result, photo) => {
+                    // The photo itself goes to the tray: the open card lets go of it and fades,
+                    // rather than folding back into its card while a copy flies
                     const item = tuning.item
-                    fly(item, photo, tuning.tone, () => addLine(item, result))
-                    setTuning(null)
+                    setLanding(Number(item.id))
+                    fly(item, photo, tuning.tone, () => {
+                      addLine(item, result)
+                      setLanding(null)
+                    })
+                    setTuning({ ...tuning, leaving: true })
+                    requestAnimationFrame(() => setTuning(null))
                   }}
                 />
               )}
@@ -395,4 +409,17 @@ export function NinjaHome({ menu }: HomeProps) {
       </LayoutGroup>
     </MotionConfig>
   )
+}
+
+/**
+ * The corner a photo is seen with: its own, or that of the card clipping it
+ * (a deck card rounds its photo; an open card's photo is square), so a
+ * flight starts with exactly the corners that were on screen
+ */
+function cornerOf(el: HTMLElement | null): number {
+  for (let node = el, depth = 0; node && depth < 3; node = node.parentElement, depth++) {
+    const radius = parseFloat(getComputedStyle(node).borderTopLeftRadius)
+    if (radius > 0) return radius
+  }
+  return 0
 }
