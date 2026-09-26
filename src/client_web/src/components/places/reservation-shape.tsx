@@ -7,7 +7,7 @@ import { NINJA_BAR_H } from '@/components/ninja/chrome'
 import { ReservationFace } from './reservation-view'
 
 /** The one spring the whole move runs on: every size, corner, colour and fade below is read off its progress */
-const MORPH = { type: 'spring', stiffness: 170, damping: 26, mass: 1 } as const
+const MORPH = { type: 'spring', stiffness: 280, damping: 32, mass: 1 } as const
 
 /** Where the shape starts (at progress 0): a box on screen, its corner and its colour */
 type Start = { rect: { x: number; y: number; width: number; height: number }; radius: number; color: string }
@@ -22,7 +22,7 @@ function frame() {
   return { x, y: top, width, height: window.innerHeight - top - bottom }
 }
 
-type Box = { x: number; y: number; width: number; height: number }
+export type Box = { x: number; y: number; width: number; height: number }
 
 const mix = (a: number, b: number, p: number) => a + (b - a) * p
 
@@ -54,8 +54,8 @@ export function ReservationShape({
   hold: ReservationViewModel | undefined
   /** Shared with the page, which reads its camera off it */
   progress: MotionValue<number>
-  /** The card of a place in the list, to shrink back onto */
-  placeCard: (placeId: number | string | undefined) => HTMLElement | null
+  /** Where the card of a place sits in the list at rest (the camera undone), to shrink back onto */
+  placeCard: (placeId: number | string | undefined) => Box | null
 }) {
   const reduced = useReducedMotion()
   // The reservation drawn: the hold, and the last one while it shrinks away after a cancel
@@ -77,10 +77,8 @@ export function ReservationShape({
 
   useEffect(() => {
     const card = (placeId: number | string | undefined): Start | null => {
-      const el = placeCard(placeId)
-      if (!el) return null
-      const r = el.getBoundingClientRect()
-      return { rect: { x: r.x, y: r.y, width: r.width, height: r.height }, radius: 28, color: 'var(--primary)' }
+      const rect = placeCard(placeId)
+      return rect ? { rect, radius: 28, color: 'var(--primary)' } : null
     }
     if (holdId != null) {
       // Grows out of the tick where it was; else (a hold that was already there, one made
@@ -117,25 +115,27 @@ export function ReservationShape({
     (p) => `color-mix(in oklab, ${start.current?.color ?? 'var(--foreground)'} ${((1 - p) * 100).toFixed(1)}%, var(--foreground))`
   )
   const tick = useTransform(progress, (p) => 1 - within(p, 0, 0.18))
-  const face = useTransform(progress, (p) => within(p, 0.5, 0.95))
-  const faceBlur = useTransform(face, (v) => `blur(${((1 - v) * 8).toFixed(2)}px)`)
-  const faceScale = useTransform(face, (v) => 0.96 + v * 0.04)
+  const face = useTransform(progress, (p) => within(p, 0.45, 0.9))
+  const faceScale = useTransform(face, (v) => 0.95 + v * 0.05)
+  // Only the small tick blurs as it goes: a blur over the whole face, redrawn each frame, stutters on a phone
+  const tickBlur = useTransform(progress, (p) => `blur(${(within(p, 0, 0.18) * 6).toFixed(2)}px)`)
   const shownAtAll = useTransform(progress, (p) => (p > 0.001 ? 'block' : 'none'))
 
   if (!shown) return null
 
   return (
     <motion.div
-      className='text-background fixed z-20 overflow-hidden shadow-[0_24px_60px_-16px_rgb(0_0_0/0.5)] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
+      // Contained, so its size changing each frame never lays out or repaints the page around it
+      className='text-background fixed z-20 overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] [contain:strict] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
       style={{ left: x, top: y, width, height, borderRadius: radius, background, display: shownAtAll }}
     >
-      <motion.span className='absolute inset-0 grid place-items-center text-white' style={{ opacity: tick }} aria-hidden>
+      <motion.span className='absolute inset-0 grid place-items-center text-white' style={{ opacity: tick, filter: tickBlur }} aria-hidden>
         <Check className='size-6' strokeWidth={3} />
       </motion.span>
       {/* Laid out at the reservation's own size from the start, so it never reflows; the shape clips it */}
       <motion.div
         className='absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-y-auto'
-        style={{ width: size.width, height: size.height, opacity: face, filter: faceBlur, scale: faceScale }}
+        style={{ width: size.width, height: size.height, opacity: face, scale: faceScale }}
       >
         <ReservationFace reservation={shown} />
       </motion.div>
@@ -143,10 +143,14 @@ export function ReservationShape({
   )
 }
 
-/** The places behind the reservation: out of focus as it grows over them, back as it goes */
+/**
+ * The places behind the reservation: they recede, a little smaller and
+ * fading, as it grows over them, and come back as it goes. Transform and
+ * opacity only, which the compositor moves without redrawing the list.
+ */
 export function useCamera(progress: MotionValue<number>) {
-  const opacity = useTransform(progress, (p) => 1 - within(p, 0.05, 0.55))
-  const filter = useTransform(progress, (p) => `blur(${(within(p, 0, 0.6) * 6).toFixed(2)}px)`)
-  return { opacity, filter }
+  const opacity = useTransform(progress, (p) => 1 - within(p, 0.05, 0.5))
+  const scale = useTransform(progress, (p) => 1 - within(p, 0, 0.6) * 0.06)
+  return { opacity, scale, originY: 0 }
 }
 

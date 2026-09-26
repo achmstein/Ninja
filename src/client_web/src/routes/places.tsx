@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useMotionValue } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -15,7 +15,7 @@ import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
-import { ReservationShape, useCamera } from '@/components/places/reservation-shape'
+import { ReservationShape, useCamera, type Box } from '@/components/places/reservation-shape'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -159,9 +159,20 @@ function PlacesList({ atTable }: { atTable: boolean }) {
       root.style.overflow = ''
     }
   }, [held])
+  const list = useRef<HTMLDivElement>(null)
+  // A card as it sits with the list at rest: the list is shrunk about its top
+  // centre while the reservation covers it, so that is undone from where it is on screen
   const placeCard = useCallback(
-    (placeId: number | string | undefined) => document.querySelector<HTMLElement>(`[data-place='${String(placeId)}']`),
-    []
+    (placeId: number | string | undefined): Box | null => {
+      const card = document.querySelector<HTMLElement>(`[data-place='${String(placeId)}']`)
+      const frame = list.current?.getBoundingClientRect()
+      if (!card || !frame) return null
+      const r = card.getBoundingClientRect()
+      const s = camera.scale.get() || 1
+      const cx = frame.x + frame.width / 2
+      return { x: cx + (r.x - cx) / s, y: frame.y + (r.y - frame.y) / s, width: r.width / s, height: r.height / s }
+    },
+    [camera.scale]
   )
 
   return (
@@ -169,7 +180,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
       title={t('rooms')}
       subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
-      <motion.div style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
+      <motion.div ref={list} style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
           {!reservationsEnabled && (
             <RiseItem>
