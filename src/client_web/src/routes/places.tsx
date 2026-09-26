@@ -16,7 +16,7 @@ import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
-import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
+import { BEAT, PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -197,8 +197,9 @@ function PlacesList({ atTable }: { atTable: boolean }) {
               {shown.map((place, i) => (
                 <motion.div
                   key={String(place.id)}
-                  layout
-                  transition={springSoft}
+                  // Only its place moves as the others go or come back; its size is the card's own spring
+                  layout='position'
+                  transition={{ layout: { ...springSoft, delay: BEAT.move } }}
                   // The others slide away one after another, nearest the held one first
                   exit={{
                     opacity: 0,

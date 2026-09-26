@@ -139,9 +139,3 @@ export function optionName(
 export function placeKindOf(kind: string | null | undefined): number {
   return kind === 'Table' ? PLACE_TABLE : kind === 'Station' ? PLACE_STATION : PLACE_ROOM
 }
-
-/**
- * The one shape a visit is drawn as, per place: its card on the tab, which
- * becomes the reservation, which becomes the running clock
- */
-export const placeCardId = (placeId: number | string | null | undefined) => `place-${placeId}`
