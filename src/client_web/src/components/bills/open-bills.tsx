@@ -28,7 +28,8 @@ function Swipe({ children }: { children: ReactNode }) {
   const cards = Children.toArray(children).filter(Boolean)
   if (cards.length <= 1) return <>{cards}</>
   return (
-    <div className='no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4'>
+    // items-start: each bill keeps its own height, rather than stretching to the tallest
+    <div className='no-scrollbar -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4'>
       {cards.map((card, i) => (
         <div key={i} className='w-[88%] shrink-0 snap-center'>
           {card}
