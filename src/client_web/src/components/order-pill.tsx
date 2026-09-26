@@ -19,6 +19,7 @@ import {
   words,
   type PillStage,
 } from '@/lib/order-pill'
+import { useIsland } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 /** Shared with the Place order button, which grows into the pill */
@@ -53,6 +54,7 @@ export function OrderPill() {
   const dismissed = useOrderPill((s) => s.dismissed)
   const dismiss = useOrderPill((s) => s.dismiss)
   const setShown = useOrderPill((s) => s.setShown)
+  const toasting = useIsland((s) => s.toast != null)
   const reduced = useReducedMotion()
   const language = useLanguage((s) => s.language)
   const standard = useArabicStyle((s) => s.standard)
@@ -128,7 +130,12 @@ export function OrderPill() {
   const total = order?.total
 
   return (
-    <div className='pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+10px)] z-[60] flex justify-center px-4 md:top-20'>
+    <motion.div
+      className='pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+10px)] z-[60] flex justify-center px-4 md:top-20'
+      // A toast holds the island for a moment: the pill steps aside, and comes back when it goes
+      animate={toasting ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
+      transition={toasting ? { duration: duration.fast, ease: ease.exit } : { duration: duration.base, ease: ease.enter }}
+    >
       <AnimatePresence>
         {visible && (
           <motion.div
@@ -245,6 +252,6 @@ export function OrderPill() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }

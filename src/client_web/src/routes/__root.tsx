@@ -54,16 +54,20 @@ function RootLayout() {
 // Sileo derives the toast pill fill from its theme prop — keep it in sync
 // with the app's resolved theme (not just the OS preference). Autopilot is
 // the demo's expand/collapse physics for title + description toasts.
+/**
+ * The toasts are the island (lib/toast.ts): in the middle of the top bar,
+ * the slot the order pill uses, one at a time. The pill is 44 px, 10 px down
+ * the 64 px bar; a toast is 40 px, so 12 px down sits it in the same place.
+ * Sileo paints them opposite the page, as the dock is painted; autopilot is
+ * its open-and-close for a toast with a line under its title.
+ */
 function AppToaster() {
   const { resolvedTheme } = useTheme()
-  // Toasts drop in just under the slim top bar (the order pill owns the
-  // bar's middle, the dock owns the bottom). Sileo already paints them
-  // opposite the page, as the dock is painted
   return (
     <Toaster
       position='top-center'
       theme={resolvedTheme}
-      offset={{ top: 'calc(env(safe-area-inset-top) + 72px)' }}
+      offset={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
       options={{ autopilot: true }}
     />
   )
