@@ -190,6 +190,19 @@ public class OnlinePayment : Entity, IAggregateRoot
         return true;
     }
 
+    /// <summary>
+    /// The guest walked away from the checkout, or the till let the share
+    /// go: it is free again at once instead of when the hold runs out. If the
+    /// provider still reports it paid, it is paid (<see cref="MarkPaid"/>).
+    /// </summary>
+    public bool Cancel(string reason)
+    {
+        if (Status != OnlinePaymentStatus.Pending) return false;
+        Status = OnlinePaymentStatus.Failed;
+        FailureReason = reason;
+        return true;
+    }
+
     /// <summary>Lets the share go once the hold has run out without a word from the provider.</summary>
     public bool Expire(DateTime now)
     {

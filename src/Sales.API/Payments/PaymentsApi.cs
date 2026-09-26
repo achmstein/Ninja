@@ -87,6 +87,13 @@ public static class PaymentsApi
             .WithSummary("A demo café's pretend payment: paid or declined, as the guest picks")
             .WithDescription("Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.");
 
+        // A checkout left unfinished: its payer takes it back, or the till lets it go
+        api.MapPost("/{key:guid}/cancel", Cancel)
+            .AllowAnonymous()
+            .WithName("CancelOnlinePayment")
+            .WithSummary("Let a pending payment go, so its share is free again at once")
+            .WithDescription("The guest who started it (signed in, or by X-Guest-Id), or the till. A payment the provider later reports paid is still paid.");
+
         api.MapPost("/{key:guid}/refund", Refund)
             .RequireAuthorization("Pos")
             .WithName("RefundOnlinePayment")
@@ -187,6 +194,26 @@ public static class PaymentsApi
             .Where(p => p.Status is OnlinePaymentStatus.Paid or OnlinePaymentStatus.Refunded or OnlinePaymentStatus.Pending)
             .Select(p => new OnlinePaymentView(p.Key, p.Mode.ToString(), p.PayerName, p.Amount, p.Fee, p.Tip, p.Status.ToString(), p.CreatedAt, p.PaidAt, p.TransactionId, p.RefundedAt))
             .ToList());
+    }
+
+    public static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>, UnauthorizedHttpResult>> Cancel(
+        HttpContext http, [FromServices] IMediator mediator, Guid key)
+    {
+        // The till may let any checkout go; a guest only their own
+        var staff = ClaimsPrincipalExtensions.PosRoles.Any(http.User.IsInRole);
+        var (userId, guestId) = Caller(http);
+        var payer = staff ? null : userId ?? guestId;
+        if (!staff && payer is null) return TypedResults.Unauthorized();
+        try
+        {
+            return await mediator.Send(new CancelOnlinePaymentCommand(key, payer, staff ? http.GetActor() : payer!))
+                ? TypedResults.NoContent()
+                : TypedResults.NotFound();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(new ProblemDetails { Detail = ex.Message });
+        }
     }
 
     public static async Task<Results<NoContent, BadRequest<ProblemDetails>>> Refund(HttpContext http, [FromServices] IMediator mediator, Guid key)

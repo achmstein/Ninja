@@ -200,6 +200,33 @@ public class SettlePaidOnlineCommandHandler(
 }
 
 /// <summary>
+/// A checkout nobody finished: its payer took it back, or the till let it
+/// go. The share is free again at once rather than when the hold runs out.
+/// </summary>
+/// <param name="PayerId">The guest asking, who must be the one paying; null when the till asks.</param>
+public sealed record CancelOnlinePaymentCommand(Guid Key, string? PayerId, string By) : IRequest<bool>;
+
+public class CancelOnlinePaymentCommandHandler(
+    IOnlinePaymentRepository payments,
+    ITicketRepository tickets,
+    ISalesIntegrationEventService integrationEvents,
+    ILogger<CancelOnlinePaymentCommandHandler> logger) : IRequestHandler<CancelOnlinePaymentCommand, bool>
+{
+    public async Task<bool> Handle(CancelOnlinePaymentCommand command, CancellationToken ct)
+    {
+        var payment = await payments.GetByKeyAsync(command.Key);
+        if (payment is null || (command.PayerId is not null && payment.PayerId != command.PayerId)) return false;
+        if (!payment.Cancel(command.PayerId is null ? "Released at the till" : "Cancelled by the guest"))
+            throw new SalesDomainException("This payment is already " + payment.Status.ToString().ToLowerInvariant() + ".");
+        await payments.UnitOfWork.SaveEntitiesAsync(ct);
+        if (await tickets.GetAsync(payment.TicketId) is { } ticket)
+            await integrationEvents.AddAndSaveEventAsync(new TicketUpdatedIntegrationEvent(ticket.Id, ticket.BranchId));
+        logger.LogInformation("Online payment {Key} on ticket {TicketId} let go by {By}", payment.Key, payment.TicketId, command.By);
+        return true;
+    }
+}
+
+/// <summary>
 /// Gives a guest's online payment back through the provider, while the
 /// bill is still open (the share is owed again). A settled bill is refunded
 /// the usual way, with a credit note, and the money from the provider's

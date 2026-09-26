@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
 import { Loader2, Smartphone, Undo2 } from 'lucide-react'
-import { refundOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  cancelOnlinePaymentMutation,
+  refundOnlinePaymentMutation,
+} from '@/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView } from '@/api/sales/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
@@ -51,6 +54,17 @@ export function OnlinePaymentsPanel({
           : undefined
       toast.error(t('onlineRefundFailed'), detail ? { description: detail } : undefined)
     },
+  })
+
+  // A guest who closed the checkout without paying or declining holds their
+  // share until the hold runs out; the till can let it go now
+  const release = useMutation({
+    ...cancelOnlinePaymentMutation(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listOnlinePayments' }] })
+      toast.success(t('onlineReleased'))
+    },
+    onError: () => toast.error(t('onlineReleaseFailed')),
   })
 
   if (payments.length === 0) return null
@@ -127,6 +141,22 @@ export function OnlinePaymentsPanel({
                   </span>
                 )}
               </div>
+              {billOpen && status === 'Pending' && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='shrink-0'
+                  disabled={release.isPending}
+                  onClick={() =>
+                    release.mutate({
+                      path: { key: payment.key },
+                      query: { 'api-version': API_VERSION },
+                    })
+                  }
+                >
+                  {t('onlineRelease')}
+                </Button>
+              )}
               {billOpen && status === 'Paid' && (
                 <Button
                   variant='ghost'

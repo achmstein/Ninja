@@ -284,6 +284,7 @@ export type PaymentSettingsView = {
     ready: boolean;
     canKeepSecrets: boolean;
     callbackUrl: string;
+    simulated?: boolean;
 };
 
 export type PaymentStatusView = {
@@ -324,6 +325,7 @@ export type PayOptionsView = {
     card: boolean;
     wallet: boolean;
     applePay: boolean;
+    simulated?: boolean;
 };
 
 export type PayShareView = {
@@ -332,6 +334,7 @@ export type PayShareView = {
     status: string;
     paidAt: null | string;
     isMine: boolean;
+    key?: null | string;
 };
 
 export type PayView = {
@@ -553,6 +556,10 @@ export type ShiftView = {
     tabPaymentTenderTotals?: Array<TenderTotal>;
     tabPayments?: Array<TabPaymentView>;
     expectedInDrawer?: number | string;
+};
+
+export type SimulateRequest = {
+    paid: boolean;
 };
 
 export type SplitMode = number;
@@ -2146,6 +2153,78 @@ export type ListOnlinePaymentsResponses = {
 };
 
 export type ListOnlinePaymentsResponse = ListOnlinePaymentsResponses[keyof ListOnlinePaymentsResponses];
+
+export type SimulateOnlinePaymentData = {
+    body: SimulateRequest;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/simulate';
+};
+
+export type SimulateOnlinePaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SimulateOnlinePaymentError = SimulateOnlinePaymentErrors[keyof SimulateOnlinePaymentErrors];
+
+export type SimulateOnlinePaymentResponses = {
+    /**
+     * OK
+     */
+    200: PaymentStatusView;
+};
+
+export type SimulateOnlinePaymentResponse = SimulateOnlinePaymentResponses[keyof SimulateOnlinePaymentResponses];
+
+export type CancelOnlinePaymentData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/cancel';
+};
+
+export type CancelOnlinePaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelOnlinePaymentError = CancelOnlinePaymentErrors[keyof CancelOnlinePaymentErrors];
+
+export type CancelOnlinePaymentResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type CancelOnlinePaymentResponse = CancelOnlinePaymentResponses[keyof CancelOnlinePaymentResponses];
 
 export type RefundOnlinePaymentData = {
     body?: never;

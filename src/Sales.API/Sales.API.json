@@ -2635,6 +2635,55 @@
         }
       }
     },
+    "/api/sales/payments/{key}/cancel": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Let a pending payment go, so its share is free again at once",
+        "description": "The guest who started it (signed in, or by X-Guest-Id), or the till. A payment the provider later reports paid is still paid.",
+        "operationId": "CancelOnlinePayment",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sales/payments/{key}/refund": {
       "post": {
         "tags": [
@@ -4592,6 +4641,13 @@
           },
           "isMine": {
             "type": "boolean"
+          },
+          "key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

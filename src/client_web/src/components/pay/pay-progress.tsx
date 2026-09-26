@@ -1,5 +1,11 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Check, CircleAlert, Loader2 } from 'lucide-react'
 import { type PayShareView, type PayView } from '@/api/sales'
+import { cancelOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import { usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { type PayWhy as Why } from '@/lib/pay'
 import { cn } from '@/lib/utils'
@@ -54,10 +60,24 @@ export function PaidSoFar({ view, className }: { view: PayView; className?: stri
   )
 }
 
-/** Who has paid what, and who is paying right now; the guest's own as "You". */
-export function SharesList({ shares }: { shares: PayShareView[] }) {
+/**
+ * Who has paid what, and who is paying right now; the guest's own as "You".
+ * A checkout of their own left unfinished (the page closed without paying
+ * or declining) holds its share until it runs out; they can go back to it
+ * (a demo's checkout is ours to reopen) or cancel it, freeing it at once.
+ */
+export function SharesList({ shares, simulated = false }: { shares: PayShareView[]; simulated?: boolean }) {
   const t = useT()
   const price = usePrice()
+  const queryClient = useQueryClient()
+  const cancel = useMutation({
+    ...cancelOnlinePaymentMutation(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [{ _id: 'getBillToPay' }] })
+      void queryClient.invalidateQueries({ queryKey: [{ _id: 'getPlaceBillToPay' }] })
+    },
+    onError: () => toast.error(t('cancelPaymentFailed')),
+  })
   if (shares.length === 0) return null
 
   return (
@@ -87,6 +107,31 @@ export function SharesList({ shares }: { shares: PayShareView[] }) {
               )}
             </span>
             <span className='shrink-0 tabular-nums'>{price(share.amount)}</span>
+            {share.isMine && !paid && share.key && (
+              <span className='flex shrink-0 gap-1'>
+                {simulated && (
+                  <Button asChild size='sm' variant='outline' className='h-7 rounded-pill px-2.5 text-xs'>
+                    <Link to='/pay/$key' params={{ key: String(share.key).replace(/-/g, '') }} search={{ simulate: true }}>
+                      {t('continuePayment')}
+                    </Link>
+                  </Button>
+                )}
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='text-destructive h-7 rounded-pill px-2.5 text-xs'
+                  disabled={cancel.isPending}
+                  onClick={() =>
+                    cancel.mutate({
+                      path: { key: String(share.key) },
+                      query: { 'api-version': API_VERSION },
+                    })
+                  }
+                >
+                  {t('cancelPayment')}
+                </Button>
+              </span>
+            )}
           </li>
         )
       })}

@@ -10,7 +10,8 @@ namespace Ninja.Sales.API.Payments;
 public sealed record PayLineView(int Id, LocalizedText Description, LocalizedText? Details, decimal Qty, decimal Total, decimal Share, bool Claimed, bool IsMine);
 
 /// <summary>One share paid or in progress, as the table sees it: the name the payer gave and how much.</summary>
-public sealed record PayShareView(string? PayerName, decimal Amount, string Status, DateTime? PaidAt, bool IsMine);
+/// <param name="Key">The caller's own payment only, so they can go back to its checkout or cancel it; null for anyone else's.</param>
+public sealed record PayShareView(string? PayerName, decimal Amount, string Status, DateTime? PaidAt, bool IsMine, Guid? Key = null);
 
 /// <summary>How the café takes payments, as the guest's phone needs it.</summary>
 public sealed record PayOptionsView(
@@ -130,7 +131,7 @@ public static class PayViews
             paid, held, OnlineShares.Remaining(bill.Total, payments, now),
             payments
                 .Where(p => p.Holds(now))
-                .Select(p => new PayShareView(p.PayerName, p.Amount, p.Status.ToString(), p.PaidAt, Mine(p.PayerId)))
+                .Select(p => new PayShareView(p.PayerName, p.Amount, p.Status.ToString(), p.PaidAt, Mine(p.PayerId), Mine(p.PayerId) ? p.Key : null))
                 .ToList(),
             ticket.MemberIds.Count > 1 ? ticket.MemberIds.Count : null,
             Options(settings, simulated),

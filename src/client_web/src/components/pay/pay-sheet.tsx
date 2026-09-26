@@ -237,7 +237,7 @@ function PayForm({
     <>
       <div className='flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5'>
         <PaidSoFar view={view} />
-        <SharesList shares={view.shares} />
+        <SharesList shares={view.shares} simulated={!!view.options.simulated} />
 
         {!view.canPay ? (
           <PayWhy why={view.why} />

@@ -57,7 +57,7 @@ public sealed class FakePaymob : HttpMessageHandler
 }
 
 public record PayLine(int Id, decimal Total, decimal Share, bool Claimed, bool IsMine);
-public record PayShare(string? PayerName, decimal Amount, string Status, bool IsMine);
+public record PayShare(string? PayerName, decimal Amount, string Status, bool IsMine, Guid? Key);
 public record PayOptions(bool Ready, string Currency, bool AllowEqual, bool Simulated);
 public record PayBill(int TicketId, string Status, List<PayLine> Lines, decimal Total, decimal Paid, decimal Held, decimal Remaining, List<PayShare> Shares, PayOptions Options, bool CanPay, string? Why);
 public record Started(Guid Key, string CheckoutUrl, decimal Amount, decimal Fee, decimal Tip, decimal Charged);
@@ -334,6 +334,38 @@ public sealed class PaymentScenarios
         StringAssert.StartsWith(real.CheckoutUrl, "https://paymob.test/");
         var (refused, _) = await Guest("guest-real-" + table2).RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{real.Key}/simulate?{Version}", new { paid = true });
         Assert.AreEqual(HttpStatusCode.NotFound, refused);
+    }
+
+    [TestMethod]
+    public async Task A_checkout_left_unfinished_is_let_go_by_its_payer_or_the_till_not_by_anyone_else()
+    {
+        await SetUpCafeAsync();
+        var (ticketId, table) = await ATableBillAsync(60m);
+        var nour = Guest("guest-nour-" + table);
+        var other = Guest("guest-other-" + table);
+
+        var started = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+        var bill = await AtTableAsync(nour, table);
+        Assert.AreEqual(0m, bill.Remaining, "held while her checkout is open");
+        Assert.IsNotNull(bill.Shares.Single().Key, "her own share comes with its key, to go back to it or cancel it");
+        Assert.IsNull((await AtTableAsync(other, table)).Shares.Single().Key, "nobody else sees it");
+
+        var (notHers, _) = await other.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{started.Key}/cancel?{Version}");
+        Assert.AreEqual(HttpStatusCode.NotFound, notHers, "only the payer takes a checkout back");
+
+        var (cancelled, _) = await nour.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{started.Key}/cancel?{Version}");
+        Assert.AreEqual(HttpStatusCode.NoContent, cancelled);
+        Assert.AreEqual(60m, (await AtTableAsync(other, table)).Remaining, "the share is free again at once");
+
+        // Walked away again: this time the till lets it go
+        var again = await nour.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 0, tip = 0 });
+        var (released, _) = await Till.RefusedAsync(HttpMethod.Post, $"/api/sales/payments/{again.Key}/cancel?{Version}");
+        Assert.AreEqual(HttpStatusCode.NoContent, released);
+        Assert.AreEqual(60m, (await AtTableAsync(other, table)).Remaining);
+
+        // The money came through after all: paid is paid
+        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(again.Key), again.Key, 60m));
+        Assert.AreEqual("Paid", (await nour.GetAsync<PaymentStatus>($"/api/sales/payments/{again.Key}?{Version}")).Status);
     }
 
     [TestMethod]

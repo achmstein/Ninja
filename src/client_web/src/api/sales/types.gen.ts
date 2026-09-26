@@ -334,6 +334,7 @@ export type PayShareView = {
     status: string;
     paidAt: null | string;
     isMine: boolean;
+    key?: null | string;
 };
 
 export type PayView = {
@@ -2188,6 +2189,42 @@ export type SimulateOnlinePaymentResponses = {
 };
 
 export type SimulateOnlinePaymentResponse = SimulateOnlinePaymentResponses[keyof SimulateOnlinePaymentResponses];
+
+export type CancelOnlinePaymentData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/cancel';
+};
+
+export type CancelOnlinePaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelOnlinePaymentError = CancelOnlinePaymentErrors[keyof CancelOnlinePaymentErrors];
+
+export type CancelOnlinePaymentResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type CancelOnlinePaymentResponse = CancelOnlinePaymentResponses[keyof CancelOnlinePaymentResponses];
 
 export type RefundOnlinePaymentData = {
     body?: never;
