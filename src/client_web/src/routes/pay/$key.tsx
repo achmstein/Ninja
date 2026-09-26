@@ -10,7 +10,8 @@ import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { blurSwap, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { Paper } from '@/components/bills/bill-slip'
+import { BrandMark, BrandWordmark } from '@/components/brand-mark'
+import { useBrandName, useBrandWordmark } from '@/lib/brand'
 import { DrawnCheck } from '@/components/motion/morph-button'
 import { Odometer } from '@/components/ninja/odometer'
 import { Rise, RiseItem } from '@/components/ninja/page/page'
@@ -139,8 +140,8 @@ const MARK: Record<State, { icon: ComponentType<{ className?: string }> | null; 
  * The one slab the page is about, which stays put while what it says
  * changes: the spinner while the provider's word is awaited becomes the
  * drawn tick (or the warning) in place, and the title sharpens in with it.
- * What was charged rolls in under a paid one, and the paper slip rises
- * below it.
+ * What was charged rolls in under a paid one (with the online fee in it,
+ * where there was one), under the café's own mark.
  */
 function Outcome({
   state,
@@ -167,6 +168,10 @@ function Outcome({
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
       <div className='mx-auto -mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] w-full max-w-lg flex-col justify-center px-4 py-8 md:mb-0'>
         <Rise className='flex flex-col gap-4'>
+          {/* Whose payment it was: the café's own mark over it */}
+          <RiseItem className='flex justify-center pb-2'>
+            <CafeMark />
+          </RiseItem>
           <RiseItem>
             <Slab layout transition={springSoft} className='flex flex-col items-center gap-4 px-6 py-9 text-center'>
               <AnimatePresence mode='popLayout' initial={false}>
@@ -187,13 +192,10 @@ function Outcome({
                 </motion.div>
               </AnimatePresence>
               {amount && <Odometer value={amount} className='text-[30px] font-extrabold' />}
+              {/* What the card paid over the share, said once rather than printed as a slip */}
+              {payment && Number(payment.fee) > 0 && <FeeNote payment={payment} />}
             </Slab>
           </RiseItem>
-          {payment && (
-            <RiseItem>
-              <Receipt payment={payment} />
-            </RiseItem>
-          )}
           {children && <RiseItem className='flex flex-col gap-2'>{children}</RiseItem>}
         </Rise>
       </div>
@@ -201,32 +203,28 @@ function Outcome({
   )
 }
 
-/** The payment on paper: the share, the fee, what the card paid. */
-function Receipt({ payment }: { payment: PaymentStatusView }) {
+/** The café's logo, or its mark and name where it has no wordmark */
+function CafeMark() {
+  const wordmark = useBrandWordmark()
+  const name = useBrandName()
+  return wordmark ? (
+    <BrandWordmark className='h-12 max-w-[60vw]' />
+  ) : (
+    <span className='flex flex-col items-center gap-2'>
+      <BrandMark className='size-14 rounded-2xl text-2xl' />
+      <span className='text-sm font-bold'>{name}</span>
+    </span>
+  )
+}
+
+/** "Includes 3.00 EGP online payment fee" */
+function FeeNote({ payment }: { payment: PaymentStatusView }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
-  const money = (value: number | string) => formatMoney(value, payment.currency, language)
-  const fee = Number(payment.fee)
-  const row = 'flex items-baseline justify-between gap-2 tabular-nums'
-
   return (
-    <Paper>
-      <div className={row}>
-        <span>{t('yourShare')}</span>
-        <span>{money(payment.amount)}</span>
-      </div>
-      {fee > 0 && (
-        <div className={row}>
-          <span>{t('onlinePaymentFee')}</span>
-          <span>{money(fee)}</span>
-        </div>
-      )}
-      <div className='border-t border-dashed border-black' />
-      <div className={cn(row, 'text-[15px] font-bold')}>
-        <span>{t('charged')}</span>
-        <span>{money(payment.charged)}</span>
-      </div>
-    </Paper>
+    <p className='text-muted-foreground -mt-2 text-xs tabular-nums'>
+      {t('onlinePaymentFee')} · {formatMoney(payment.fee, payment.currency, language)}
+    </p>
   )
 }
 
