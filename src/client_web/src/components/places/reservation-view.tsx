@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { animate, motion, useMotionValue, useTransform, type MotionValue } from 'motion/react'
-import { Footprints, Loader2, TimerReset, X } from 'lucide-react'
+import { Footprints, TimerReset, X } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type ReservationViewModel } from '@/api/spaces'
 import { cancelMyReservationMutation } from '@/api/spaces/@tanstack/react-query.gen'
@@ -10,6 +10,7 @@ import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
+import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,8 +19,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+
+/** How long the cancel button's tick shows before the reservation goes back onto its card, ms */
+const CANCEL_TICK_MS = 650
 
 /** Under this many seconds left, the ring and the time turn to a warning */
 const HURRY = 120
@@ -38,15 +41,25 @@ export function ReservationFace({ reservation, enter }: { reservation: Reservati
   const language = useLanguage((s) => s.language)
   const queryClient = useQueryClient()
 
+  const [asking, setAsking] = useState(false)
+  const [cancelled, setCancelled] = useState(false)
   const cancelHold = useMutation({
     ...cancelMyReservationMutation(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
-      toast.success(t('reservationCancelled'))
-    },
+    // The tick is the answer, on the button itself; nothing is re-read until
+    // it has had its beat, since the hold going is what sends the
+    // reservation back onto its room's card
+    onSuccess: () => setCancelled(true),
     onError: () => toast.error(t('failedToCancelReservation')),
   })
+  useEffect(() => {
+    if (!cancelled) return
+    const timer = window.setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
+    }, CANCEL_TICK_MS)
+    return () => window.clearTimeout(timer)
+  }, [cancelled, queryClient])
+  const cancelPhase: MorphPhase = cancelled ? 'success' : cancelHold.isPending ? 'busy' : 'idle'
 
   const locale = language === 'ar' ? 'ar-EG' : 'en-US'
   const placeName = localized(reservation.placeName)
@@ -103,18 +116,13 @@ export function ReservationFace({ reservation, enter }: { reservation: Reservati
         )}
       </Beat>
 
-      <Beat enter={enter} at={0.6}>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              type='button'
-              className='bg-muted flex h-11 items-center gap-1.5 rounded-full ps-4 pe-5 text-sm font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none'
-              disabled={cancelHold.isPending}
-            >
-              {cancelHold.isPending ? <Loader2 className='size-4 animate-spin' /> : <X className='size-4' />}
-              {t('cancelReservation')}
-            </button>
-          </AlertDialogTrigger>
+      <Beat enter={enter} at={0.6} className='w-60'>
+        {/* One button through the whole cancel: the question, a spinner, then the tick */}
+        <MorphButton phase={cancelPhase} height={44} onClick={() => setAsking(true)} className={cancelPhase === 'success' ? undefined : 'bg-muted text-foreground font-semibold shadow-none'}>
+          <X className='size-4' />
+          {t('cancelReservation')}
+        </MorphButton>
+        <AlertDialog open={asking} onOpenChange={setAsking}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t('cancelReservationQuestion')}</AlertDialogTitle>

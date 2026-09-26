@@ -62,6 +62,8 @@ export function ReservationShape({
   const [shown, setShown] = useState(hold)
   if (hold && hold !== shown) setShown(hold)
   const start = useRef<Start | null>(null)
+  // Going back onto the card (a cancel): the booking's tick is not part of that way
+  const returning = useRef(false)
   // The frame it fills: as state for the layout inside, as a ref for the transforms; both follow the window
   const [size, setSize] = useState(frame)
   const target = useRef<Box>(size)
@@ -81,6 +83,7 @@ export function ReservationShape({
       return rect ? { rect, radius: 28, color: 'var(--primary)' } : null
     }
     if (holdId != null) {
+      returning.current = false
       // Grows out of the tick where it was; else (a hold that was already there, one made
       // elsewhere) out of its place's card, or it is simply there
       const tick = holdOrigin.take()
@@ -99,6 +102,7 @@ export function ReservationShape({
     }
     if (progress.get() === 0) return
     // Cancelled (or the hold lapsed): back onto its own card, then gone
+    returning.current = true
     start.current = card(shown?.placeId) ?? start.current
     const run = animate(progress, 0, reduced ? { duration: 0 } : MORPH)
     run.then(() => setShown(undefined))
@@ -116,7 +120,7 @@ export function ReservationShape({
     progress,
     (p) => `color-mix(in oklab, ${start.current?.color ?? 'var(--foreground)'} ${((1 - p) * 100).toFixed(1)}%, var(--foreground))`
   )
-  const tick = useTransform(progress, (p) => 1 - within(p, 0, 0.18))
+  const tick = useTransform(progress, (p) => (returning.current ? 0 : 1 - within(p, 0, 0.18)))
   // The content's own clock: from about halfway, when the shape is big enough to hold it
   const face = useTransform(progress, (p) => within(p, 0.4, 1))
   // Only the small tick blurs as it goes: a blur over the whole face, redrawn each frame, stutters on a phone
