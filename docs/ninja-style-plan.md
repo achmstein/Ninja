@@ -65,11 +65,11 @@ Once the live bill is on the menu (step 3), a Bills tab only repeats it.
 
 The steps go in this order, 1 → 5 → 4 → 3 → 6, smallest and safest first.
 
-Waiting on the owner:
+Decided by the owner on 2026-09-27:
 
-- A or B for notifications.
-- Whether to drop the Bills tab (step 6).
-- Whether the branch lock (step 5) is right.
+- Notifications: A, the island in the top bar.
+- The Bills tab goes (step 6).
+- The branch is locked while the customer is there (step 5).
 
 ## State at hand-off (2026-09-26)
 
