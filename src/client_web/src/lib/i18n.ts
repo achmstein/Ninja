@@ -353,6 +353,10 @@ const webExtras = {
   },
   ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
   ninjaEarlierBills: { en: 'Earlier bills', ar: 'الحسابات اللي فاتت' },
+  // The branch: fixed while the customer is there; switching empties the order
+  ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
+  ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },
+  ninjaKeepOrder: { en: 'Keep my order', ar: 'خلّي طلبي' },
   // Cart and pay
   payModeItems: { en: 'My items', ar: 'حاجاتي' },
   payModeEqual: { en: 'Equally', ar: 'بالتساوي' },
