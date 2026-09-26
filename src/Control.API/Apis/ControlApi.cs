@@ -31,6 +31,7 @@ public static partial class ControlApi
         api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Running tenants (all, or the slugs given) onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
         api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/demo-data", FillDemo).WithName("FillDemoData").WithSummary("Fill a running demo with a month of a café's life (suppliers, stock, recipes, staff, expenses, sales), once").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
@@ -217,6 +218,16 @@ public static partial class ControlApi
 
     private static string NoRoom(CapacityCache capacity, PlatformOptions options)
         => $"No room for another stack: {(capacity.Latest is { } s ? capacity.WhyNoRoom(s) : "the box has not been read yet.")} Pass force=true to stamp anyway.";
+
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> FillDemo(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        // A customer's café holds its own records; pretend ones never go in
+        if (tenant.Kind != TenantKind.Demo)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = "Only a demo is filled with demo data." });
+        return await Enqueue(context, queue, audit, slug, "demo-data", [TenantStatus.Running], ct);
+    }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
         => Enqueue(context, queue, audit, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);

@@ -21,7 +21,8 @@ public sealed class Provisioner(
     ITenantStack stack,
     IAuditWriter audit,
     BackupService backups,
-    ILogger<Provisioner> logger)
+    ILogger<Provisioner> logger,
+    DemoData? demoData = null)
 {
     private const string Source = "provisioner";
 
@@ -134,6 +135,10 @@ public sealed class Provisioner(
             }, ct);
 
             await BrokerLockdownStepAsync(tenant, runId, ct);
+
+            // A new demo gets a month of a café's life; a restore brings its own
+            if (restore is null && tenant.Kind == TenantKind.Demo && tenant.Seed == TenantSeed.Sample)
+                await DemoDataStepAsync(tenant, runId, ct);
 
             tenant.Status = TenantStatus.Running;
             tenant.ProvisionedAt ??= DateTimeOffset.UtcNow;
@@ -376,6 +381,39 @@ public sealed class Provisioner(
             }
             return string.Join("; ", said);
         }, ct);
+
+    /// <summary>
+    /// A month of a café's life in a demo (<see cref="DemoData"/>), once: a
+    /// marker in the tenant's folder keeps a re-provision from filling it
+    /// twice. Never fails the run it is part of; what did not land is said.
+    /// </summary>
+    private Task<string> DemoDataStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
+        => Step(tenant, runId, "demo-data", async () =>
+        {
+            var marker = Path.Combine(Dir(tenant), "demo-data.filled");
+            if (File.Exists(marker)) return "filled before";
+            if (demoData is null) return "not available here";
+            try
+            {
+                var said = await demoData.FillAsync(tenant, ct);
+                Directory.CreateDirectory(Dir(tenant));
+                await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} {said}", ct);
+                return said;
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "Demo data for {Slug} did not land", tenant.Slug);
+                return $"not filled: {ex.Message}";
+            }
+        }, ct);
+
+    /// <summary>By hand, for a demo made before there was demo data: fills it once, while it runs.</summary>
+    public async Task DemoDataAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        var said = await DemoDataStepAsync(tenant, Guid.NewGuid(), ct);
+        await audit.WriteAsync("tenant.demo-data", tenant.Slug, new { output = said }, ct, Source);
+    }
 
     /// <summary>The shared broker user off the vhost: what a stack stamped before it had a user of its own still connected as. Nothing to do for a fresh one.</summary>
     private Task<string> BrokerLockdownStepAsync(Tenant tenant, Guid runId, CancellationToken ct)

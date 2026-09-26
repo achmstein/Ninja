@@ -52,6 +52,7 @@ public static class Extensions
         builder.Services.AddSingleton<WorkerHeartbeat>();
         builder.Services.AddSingleton<PlatformWarnings>();
         builder.Services.AddScoped<Provisioner>();
+        builder.Services.AddScoped<DemoData>();
         builder.Services.AddScoped<SubscriptionService>();
         builder.Services.AddSingleton<CapacityCache>();
         builder.Services.AddSingleton<UpdateCache>();

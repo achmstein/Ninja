@@ -256,6 +256,7 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
         "entitlements" => provisioner.EntitlementsAsync(job.TenantId, ct),
         "upgrade" => provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, ct),
         "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
+        "demo-data" => provisioner.DemoDataAsync(job.TenantId, ct),
         _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
     };
 

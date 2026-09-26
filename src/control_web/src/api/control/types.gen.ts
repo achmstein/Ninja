@@ -1163,6 +1163,43 @@ export type SecureTenantResponses = {
     202: unknown;
 };
 
+export type FillDemoDataData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/demo-data';
+};
+
+export type FillDemoDataErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type FillDemoDataError = FillDemoDataErrors[keyof FillDemoDataErrors];
+
+export type FillDemoDataResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
 export type ExtendDemoData = {
     body: ExtendRequest;
     path: {

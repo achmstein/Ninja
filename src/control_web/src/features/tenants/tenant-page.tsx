@@ -16,6 +16,7 @@ import {
   Trash2,
   Undo2,
   UserCheck,
+  DatabaseZap,
 } from 'lucide-react'
 import {
   convertTenantMutation,
@@ -23,6 +24,7 @@ import {
   forgetTenantMutation,
   dismissTenantErrorMutation,
   extendDemoMutation,
+  fillDemoDataMutation,
   getTenantOptions,
   getTenantQueryKey,
   impersonateOwnerMutation,
@@ -158,6 +160,8 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     onError: failed,
   })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
+  // A month of a café's life in a demo, once; the steps say what landed
+  const fillDemo = useMutation({ ...fillDemoDataMutation(), onSuccess: queued, onError: failed })
   // The record is gone: back to the list, which no longer has it
   const forget = useMutation({
     ...forgetTenantMutation(),
@@ -320,6 +324,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                     <DropdownMenuItem onSelect={() => setDialog('extend')}>
                       <CalendarPlus />
                       {t('extend')}
+                    </DropdownMenuItem>
+                  )}
+                  {kind === 'Demo' && status === 'Running' && (
+                    <DropdownMenuItem disabled={busy || fillDemo.isPending} onSelect={() => fillDemo.mutate({ path: { slug } })}>
+                      <DatabaseZap />
+                      {t('fillDemoData')}
                     </DropdownMenuItem>
                   )}
                   {canUpgrade(status) && (

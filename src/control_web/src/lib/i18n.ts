@@ -206,6 +206,7 @@ const dictionary = {
   rotateTitle: "New passwords for {name}?",
   rotateNote: "The database role and broker user get new passwords and the stack restarts on them: about a minute of downtime.",
   extend: "Extend",
+  fillDemoData: "Fill with demo data",
   destroy: "Destroy",
   forget: "Remove from the list",
   forgetTitle: "Remove {name} from the list?",
