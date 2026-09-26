@@ -67,7 +67,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
                   value={extras.note}
                   onChange={(e) => extras.setNote(e.target.value)}
                   placeholder={t('orderNoteOptional')}
-                  className='bg-background/10 placeholder:text-background/50 focus-visible:ring-background/30 w-full resize-none rounded-2xl px-4 py-3 text-base outline-none focus-visible:ring-2 md:text-sm'
+                  className='bg-background/10 placeholder:text-background/50 focus:bg-background/15 block w-full resize-none rounded-2xl px-4 py-3 text-base transition-colors outline-none md:text-sm'
                 />
               )}
               {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
@@ -165,7 +165,7 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
   }
   return (
     <form
-      className='bg-background/10 flex items-center gap-2 rounded-2xl py-1.5 ps-4 pe-1.5'
+      className='bg-background/10 focus-within:bg-background/15 flex items-center gap-2 rounded-2xl py-1.5 ps-4 pe-1.5 transition-colors'
       onSubmit={(e) => {
         e.preventDefault()
         const typed = input.trim().toUpperCase()
