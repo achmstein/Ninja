@@ -22,6 +22,7 @@ import { unregisterPush } from '@/lib/use-push'
 import { usePrice, useT } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
 import { closedAt, useMyBills } from '@/lib/bills'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +43,7 @@ import { PoweredByNinja } from '@/components/powered-by-ninja'
 import { Badge } from '@/components/ui/badge'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
-import { TileAnchor, TileButton, TileCard, TileGroup, TileLink } from '@/components/tile-row'
+import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/tile-row'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Slab } from '@/components/ninja/page/parts'
 import { PointsRing } from '@/components/ninja/page/points-ring'
@@ -56,9 +57,9 @@ export const Route = createFileRoute('/profile')({
 
 /**
  * The You tab: who you are on the dock's slab (a member's points as a ring),
- * then what you come back to as cards (your bills, your sessions, your tab,
- * your points), each opening its page as one shape, then the settings and
- * the way out.
+ * then what you come back to (your bills, your sessions, your tab, your
+ * points), each row opening its page as one shape, then the settings and
+ * the way out. Flat groups, no shadows: the slab is the one dark thing.
  */
 function ProfilePage() {
   const t = useT()
@@ -157,41 +158,43 @@ function ProfilePage() {
           </RiseItem>
         )}
 
-        {/* What you come back to, as cards: each opens its page, its icon and name travelling into the title */}
+        {/* What you come back to, each row saying what it holds; its icon and name travel into the page it opens */}
         {signedIn && (
-          <RiseItem className='grid grid-cols-2 gap-3'>
-            <TileCard
-              to='/bills'
-              push='bills'
-              icon={ReceiptText}
-              label={t('ninjaYourBills')}
-              value={monthVisits > 0 ? `${t('ninjaMonthVisits', { count: String(monthVisits) })} ${t('ninjaThisMonth')}` : undefined}
-            />
-            {features.timeBilling && <TileCard to='/stays' push='stays' icon={Timer} label={t('sessions')} />}
-            {features.tabs && (
-              <TileCard
-                to='/account'
-                push='account'
-                icon={Wallet}
-                label={t('transactions')}
-                value={
-                  houseBalance !== 0 ? (
-                    <span className={houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {houseBalance > 0 ? t('amountDue') : t('creditBalance')} · {price(Math.abs(houseBalance))}
-                    </span>
-                  ) : undefined
-                }
+          <RiseItem>
+            <TileGroup>
+              <TileLink
+                to='/bills'
+                push='bills'
+                icon={ReceiptText}
+                label={t('ninjaYourBills')}
+                value={monthVisits > 0 ? `${t('ninjaMonthVisits', { count: String(monthVisits) })} ${t('ninjaThisMonth')}` : undefined}
               />
-            )}
-            {features.loyalty && (
-              <TileCard
-                to='/loyalty'
-                push='loyalty'
-                icon={Award}
-                label={loyaltyQuery.isError ? t('joinOurLoyaltyProgram') : t('loyaltyRewards')}
-                value={loyalty ? `${points} ${t('pts')}` : undefined}
-              />
-            )}
+              {features.timeBilling && <TileLink to='/stays' push='stays' icon={Timer} label={t('sessions')} />}
+              {features.tabs && (
+                <TileLink
+                  to='/account'
+                  push='account'
+                  icon={Wallet}
+                  label={t('transactions')}
+                  value={
+                    houseBalance !== 0 ? (
+                      <span className={cn('font-semibold tabular-nums', houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}>
+                        {price(Math.abs(houseBalance))}
+                      </span>
+                    ) : undefined
+                  }
+                />
+              )}
+              {features.loyalty && (
+                <TileLink
+                  to='/loyalty'
+                  push='loyalty'
+                  icon={Award}
+                  label={loyaltyQuery.isError ? t('joinOurLoyaltyProgram') : t('loyaltyRewards')}
+                  value={loyalty ? <span className='tabular-nums'>{`${points} ${t('pts')}`}</span> : undefined}
+                />
+              )}
+            </TileGroup>
           </RiseItem>
         )}
 

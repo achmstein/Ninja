@@ -64,7 +64,7 @@ export function NotifyBanner() {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className={cn(
           'grid size-10 shrink-0 place-items-center rounded-full transition-colors',
-          isSubscribed ? 'bg-primary text-primary-foreground' : 'bg-muted'
+          isSubscribed ? 'bg-primary text-primary-foreground' : 'bg-background'
         )}
       >
         <Bell className='size-5' />

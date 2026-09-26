@@ -3,23 +3,24 @@ import { motion } from 'motion/react'
 import { ChevronRight } from 'lucide-react'
 import { springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { pushIds } from '@/components/ninja/page/push'
+import { pushTitleId } from '@/components/ninja/page/push'
 
 /**
- * Tiles in the Ninja style: rows in one lifted group, each an icon in a
- * round tile, a label (and a line under it), the row's current setting and
- * a chevron. A press darkens the row; nothing jumps.
+ * Tiles in the Ninja style: rows in one filled group, flat like the request
+ * tiles and the dock (no shadow), each an icon in a round tile, a label (and
+ * a line under it), the row's current setting and a chevron. A press shades
+ * the row; nothing jumps.
  */
 export function TileGroup({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('surface divide-border/60 flex flex-col divide-y overflow-hidden rounded-[1.5rem]', className)}>
+    <div className={cn('bg-muted divide-background/70 flex flex-col divide-y overflow-hidden rounded-[1.5rem]', className)}>
       {children}
     </div>
   )
 }
 
 const rowClasses =
-  'active:bg-muted/70 hover:bg-muted/40 flex min-h-16 w-full items-center gap-3 px-4 py-3 text-start transition-colors'
+  'active:bg-foreground/[0.06] hover:bg-foreground/[0.03] flex min-h-16 w-full items-center gap-3 px-4 py-3 text-start transition-colors'
 
 type TileContentProps = {
   icon: React.ComponentType<{ className?: string }>
@@ -30,26 +31,25 @@ type TileContentProps = {
   destructive?: boolean
   /** In place of the chevron: a switch, a badge; null for nothing */
   trailing?: React.ReactNode
-  /** The page it opens, whose title its icon and name travel into (components/ninja/page/push.ts) */
+  /** The page it opens, whose title its name travels into (components/ninja/page/push.ts) */
   push?: string
 }
 
 function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing, push }: TileContentProps) {
-  const ids = push ? pushIds(push) : null
   return (
     <>
-      <motion.span
-        layoutId={ids?.icon}
-        transition={springOpen}
-        style={{ borderRadius: 999 }}
-        className={cn('grid size-9 shrink-0 place-items-center', destructive ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground')}
+      <span
+        className={cn(
+          'grid size-9 shrink-0 place-items-center rounded-full',
+          destructive ? 'bg-destructive/10 text-destructive' : 'bg-background text-foreground'
+        )}
       >
         <Icon className='size-[18px]' />
-      </motion.span>
+      </span>
       <span className='min-w-0 flex-1'>
         {/* Sized to its words, so the name grows into the title without stretching */}
         <motion.span
-          layoutId={ids?.title}
+          layoutId={push ? pushTitleId(push) : undefined}
           transition={springOpen}
           className={cn('inline-block max-w-full truncate align-top text-[15px] font-semibold', destructive && 'text-destructive')}
         >
@@ -111,44 +111,3 @@ export function TileRow({ className, ...content }: TileContentProps & { classNam
   )
 }
 
-/**
- * A tile as a card of its own, for what the customer comes back to (their
- * bills, their tab): the icon at the top, the name and what it holds now at
- * the bottom. Pushes its page the way a row does.
- */
-export function TileCard({
-  to,
-  icon: Icon,
-  label,
-  value,
-  push,
-  className,
-}: {
-  to: LinkProps['to']
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value?: React.ReactNode
-  push?: string
-  className?: string
-}) {
-  const ids = push ? pushIds(push) : null
-  return (
-    <Link
-      to={to}
-      className={cn(
-        'surface flex min-h-32 flex-col justify-between gap-4 rounded-[1.5rem] p-4 transition-transform active:scale-[0.98] motion-reduce:transform-none',
-        className
-      )}
-    >
-      <motion.span layoutId={ids?.icon} transition={springOpen} style={{ borderRadius: 999 }} className='bg-muted grid size-10 place-items-center'>
-        <Icon className='size-5' />
-      </motion.span>
-      <span className='flex min-w-0 flex-col'>
-        <motion.span layoutId={ids?.title} transition={springOpen} className='inline-block max-w-full truncate self-start text-[15px] font-semibold'>
-          {label}
-        </motion.span>
-        {value != null && <span className='text-muted-foreground truncate text-[13px] tabular-nums'>{value}</span>}
-      </span>
-    </Link>
-  )
-}

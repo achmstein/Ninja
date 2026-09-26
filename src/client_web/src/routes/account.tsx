@@ -42,7 +42,7 @@ function AccountPage() {
   const [nowMs] = useState(() => Date.now())
 
   return (
-    <NinjaPage title={t('transactions')} back='/profile' push={{ id: 'account', icon: Wallet }}>
+    <NinjaPage title={t('transactions')} back='/profile' push='account'>
       {accountQuery.isLoading ? (
         <Skeleton className='h-40 rounded-[1.75rem]' />
       ) : (
@@ -165,7 +165,7 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
     <Link
       to='/receipts/$ticketId'
       params={{ ticketId: String(tx.ticketId) }}
-      className='active:bg-muted flex items-center gap-3 px-4 py-3 transition-colors'
+      className='active:bg-foreground/[0.06] flex items-center gap-3 px-4 py-3 transition-colors'
     >
       {row}
       <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />

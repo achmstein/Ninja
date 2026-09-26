@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useCanGoBack, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
 import { AnimatePresence, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
@@ -6,7 +6,7 @@ import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NinjaTopBar } from '../ninja-top-bar'
-import { pushIds } from './push'
+import { pushTitleId } from './push'
 
 /** How far the page scrolls before its large title has gone up into the bar, px */
 const TITLE_FOLD = 44
@@ -17,8 +17,8 @@ const TITLE_FOLD = 44
  * until the bar takes the title over. A tab page keeps the brand and the
  * place chips in its bar; a pushed page (`back`) has a way back instead,
  * to where it came from, or to `back` when it was opened fresh. `push`: the
- * tile it was opened from gave it its icon and name, which travel into the
- * icon beside the title and the title itself, and back (./push.ts).
+ * row it was opened from gave it its name, which travels into the title and
+ * back (./push.ts).
  */
 export function NinjaPage({
   title,
@@ -39,7 +39,7 @@ export function NinjaPage({
   children: ReactNode
   /** How far the large title stays shown (1) or goes (0) besides the scroll: a page's camera moving past it */
   fade?: MotionValue<number>
-  push?: { id: string; icon: ComponentType<{ className?: string }> }
+  push?: string
 }) {
   const { scrollY } = useScroll()
   const [folded, setFolded] = useState(false)
@@ -62,10 +62,9 @@ export function NinjaPage({
       <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-24 md:pt-8 md:pb-6', className)}>
         <motion.header style={{ opacity, scale }} className='flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]'>
           <div className='min-w-0'>
-            {push && <PushIcon push={push} />}
             {/* A new title swaps in with a short blur, the page itself staying put */}
             <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>
-              <motion.span layoutId={push ? pushIds(push.id).title : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
+              <motion.span layoutId={push ? pushTitleId(push) : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
                 <AnimatePresence mode='popLayout' initial={false}>
                   <motion.span key={title} className='block' {...swap}>
                     {title}
@@ -80,21 +79,6 @@ export function NinjaPage({
         {children}
       </div>
     </MotionConfig>
-  )
-}
-
-/** The tile's icon, arrived: over the title, where the eye lands first */
-function PushIcon({ push }: { push: { id: string; icon: ComponentType<{ className?: string }> } }) {
-  const Icon = push.icon
-  return (
-    <motion.span
-      layoutId={pushIds(push.id).icon}
-      transition={springOpen}
-      style={{ borderRadius: 999 }}
-      className='bg-muted mb-3 grid size-12 place-items-center'
-    >
-      <Icon className='size-6' />
-    </motion.span>
   )
 }
 

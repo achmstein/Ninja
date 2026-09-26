@@ -99,7 +99,7 @@ function LoyaltyPage() {
   // card never flashes at 0 points before the way to join appears
   if (accountQuery.isLoading) {
     return (
-      <NinjaPage title={t('loyaltyRewards')} back='/profile' push={{ id: 'loyalty', icon: Award }}>
+      <NinjaPage title={t('loyaltyRewards')} back='/profile' push='loyalty'>
         <Skeleton className='h-44 rounded-[1.75rem]' />
       </NinjaPage>
     )
@@ -107,7 +107,7 @@ function LoyaltyPage() {
 
   if (accountQuery.isError) {
     return (
-      <NinjaPage title={t('loyaltyRewards')} back='/profile' push={{ id: 'loyalty', icon: Award }}>
+      <NinjaPage title={t('loyaltyRewards')} back='/profile' push='loyalty'>
         <Empty icon={Award} title={t('joinOurLoyaltyProgram')}>
           <Button
             size='lg'
@@ -124,7 +124,7 @@ function LoyaltyPage() {
   }
 
   return (
-    <NinjaPage title={t('loyaltyRewards')} back='/profile' push={{ id: 'loyalty', icon: Award }}>
+    <NinjaPage title={t('loyaltyRewards')} back='/profile' push='loyalty'>
       <Rise className='flex flex-col gap-5'>
         {/* The balance as a ring round towards the next tier, on the dock's slab */}
         <RiseItem>

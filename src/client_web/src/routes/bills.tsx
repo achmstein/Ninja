@@ -40,7 +40,7 @@ function BillsRoute() {
 
   if (!auth.isAuthenticated && !auth.isLoading && !guestId) {
     return (
-      <NinjaPage title={t('ninjaYourBills')} back='/profile' push={{ id: 'bills', icon: ReceiptText }}>
+      <NinjaPage title={t('ninjaYourBills')} back='/profile' push='bills'>
         <Empty icon={ReceiptText} title={t('signInForBills')} className='pb-4'>
           <div className='w-full max-w-sm'>
             <SignInOptions />
@@ -66,7 +66,7 @@ function BillsPage() {
   const live = useLiveBills()
 
   return (
-    <NinjaPage title={t('ninjaYourBills')} back='/profile' push={{ id: 'bills', icon: ReceiptText }}>
+    <NinjaPage title={t('ninjaYourBills')} back='/profile' push='bills'>
       {live.loading ? (
         <BillsSkeleton />
       ) : live.failed ? (

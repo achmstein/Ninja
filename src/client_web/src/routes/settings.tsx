@@ -3,7 +3,7 @@ import { usePhoneRule } from '@/lib/brand'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { BellRing, Download, KeyRound, Loader2, Megaphone, Pencil, Settings, Trash2 } from 'lucide-react'
+import { BellRing, Download, KeyRound, Loader2, Megaphone, Pencil, Trash2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import {
   getNotificationPreferences,
@@ -105,7 +105,7 @@ function SettingsPage() {
   const preferences = preferencesQuery.data
 
   return (
-    <NinjaPage title={t('settings')} back='/profile' push={{ id: 'settings', icon: Settings }}>
+    <NinjaPage title={t('settings')} back='/profile' push='settings'>
       <Rise className='flex flex-col gap-5'>
         {/* Notifications: rows with switches, like the app */}
         {auth.isAuthenticated && preferences && (

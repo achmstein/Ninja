@@ -25,10 +25,10 @@ export function Slab({ className, children, ...props }: HTMLMotionProps<'div'>) 
   )
 }
 
-/** A lifted card at the slab's corners, for everything else */
+/** A filled card at the slab's corners, for everything else: flat like the tiles, the slab the one thing lifted */
 export function Panel({ className, children, ...props }: HTMLMotionProps<'div'>) {
   return (
-    <motion.div className={cn('surface rounded-[1.5rem]', className)} {...props}>
+    <motion.div className={cn('bg-muted rounded-[1.5rem]', className)} {...props}>
       {children}
     </motion.div>
   )

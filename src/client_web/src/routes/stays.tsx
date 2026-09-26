@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Gamepad2, Timer } from 'lucide-react'
+import { Gamepad2 } from 'lucide-react'
 import { type StayViewModel } from '@/api/spaces'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
 import { businessDayStart } from '@/lib/business-day'
@@ -48,7 +48,7 @@ function StaysPage() {
   })
 
   return (
-    <NinjaPage title={t('sessions')} back='/profile' push={{ id: 'stays', icon: Timer }}>
+    <NinjaPage title={t('sessions')} back='/profile' push='stays'>
       <Segment
         value={tab}
         onChange={setTab}
