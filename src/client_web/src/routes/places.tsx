@@ -115,7 +115,8 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
   const { data: places = [], isLoading } = useBookablePlaces()
 
   const reservationsEnabled = features.reservations && (branch?.isReservationsEnabled ?? true)
-  const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
+  // One place at a time: a hold, or a clock running (the server refuses a second either way)
+  const canReserve = auth.isAuthenticated && !hold && !stay && reservationsEnabled
   const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
   const allBusy = places.length > 0 && freeCount === 0
 
@@ -128,8 +129,8 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
       setSignInOpen(true)
       return
     }
-    // One hold at a time (app parity; the backend enforces it too)
-    if (hold) return
+    // One place at a time (app parity; the backend enforces it too)
+    if (hold || stay) return
     if (!(await ensureProfileComplete())) return
     setOpenId(Number(place.id))
   }
@@ -138,7 +139,7 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
     <NinjaPage
       title={t('rooms')}
       fade={titleShown}
-      subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
+      subtitle={!hold && !stay && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
       <div inert={opened ? true : undefined} aria-hidden={opened ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
