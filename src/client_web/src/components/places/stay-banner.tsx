@@ -22,7 +22,7 @@ export function StayBanner({ stay }: { stay: StayViewModel }) {
     <button
       type='button'
       onClick={() => open(true)}
-      className='bg-foreground text-background flex w-full items-center gap-3 rounded-[1.5rem] p-3 ps-4 text-start transition-transform active:scale-[0.98] motion-reduce:transform-none'
+      className='slab flex w-full items-center gap-3 rounded-[1.5rem] p-3 ps-4 text-start transition-transform active:scale-[0.98] motion-reduce:transform-none'
     >
       <span className='bg-background/12 relative grid size-11 shrink-0 place-items-center rounded-full'>
         <PlaceIcon kind={Number(stay.placeKind)} className='size-5' />

@@ -405,7 +405,7 @@ export function NinjaHome({ menu }: HomeProps) {
 
           {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
           <div
-            className='bg-foreground text-background relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
+            className='slab relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
             style={{ marginInline: DOCK_SIDE, marginBottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
           >
             <Tray

@@ -40,7 +40,7 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       role='dialog'
       aria-label={String(hold.placeName?.en ?? '')}
       // Between the top bar (64 px) and the dock, at the dock's side margins; the slab's tints for what is inside
-      className='bg-foreground text-background fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto max-w-lg overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
+      className='slab fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto max-w-lg overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
     >
       {/* Contained: what changes inside (the clock each second) never lays out or repaints the page around it */}
       <div className='no-scrollbar size-full overflow-y-auto [contain:content]'>

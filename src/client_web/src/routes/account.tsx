@@ -83,7 +83,7 @@ function BalanceSlab({ balance }: { balance: number }) {
   const price = usePrice()
   const owes = balance > 0
   const hasCredit = balance < 0
-  const tone = owes ? 'text-red-400 dark:text-red-600' : hasCredit ? 'text-emerald-400 dark:text-emerald-600' : ''
+  const tone = owes ? 'text-red-400' : hasCredit ? 'text-emerald-400' : ''
   const Icon = owes ? CircleAlert : hasCredit ? Check : Wallet
 
   return (

@@ -261,7 +261,7 @@ export function Tray({
             ref={sheetRef}
             role='dialog'
             aria-label={t('ninjaYourOrder')}
-            className='bg-foreground text-background pointer-events-auto absolute inset-x-0 bottom-0 flex max-h-full flex-col rounded-t-[1.75rem] pb-7'
+            className='slab pointer-events-auto absolute inset-x-0 bottom-0 flex max-h-full flex-col rounded-t-[1.75rem] pb-7'
             style={{ y }}
           >
             <SheetHandle
@@ -343,7 +343,7 @@ export function Tray({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
                             transition={SPRING}
-                            className='block text-[11px] font-semibold text-emerald-400 tabular-nums dark:text-emerald-600'
+                            className='block text-[11px] font-semibold text-emerald-400 tabular-nums'
                           >
                             −{price(extras.promoDiscount + extras.pointsDiscount)}
                           </motion.span>
@@ -428,7 +428,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   const opacity = useTransform(progress, (p) => (seat.fromDock ? 1 : Math.min(1, p * 3)))
   return (
     <motion.span
-      className='bg-foreground text-background ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-sm font-bold shadow-lg ring-2'
+      className='slab ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-sm font-bold shadow-lg ring-2'
       // A circle the whole way, as in the dock and on the row: only its size changes
       style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >

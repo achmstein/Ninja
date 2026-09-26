@@ -42,6 +42,10 @@
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.704 0.04 256.788);
+  /* The slab (the dock, the tray, the dark cards) and its ink: near-black on a light page. The
+     brand's theme gives it a deep shade of its own colour (lib/brand-theme.ts) */
+  --slab: oklch(0.129 0.042 264.695);
+  --slab-ink: oklch(1 0 0);
 }
 
 .dark {
@@ -63,6 +67,9 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.551 0.027 264.364);
+  /* On a dark page the slab is a raised dark surface, not the page turned inside out */
+  --slab: oklch(0.235 0.035 262);
+  --slab-ink: oklch(0.984 0.003 247.858);
 }
 
 @theme inline {

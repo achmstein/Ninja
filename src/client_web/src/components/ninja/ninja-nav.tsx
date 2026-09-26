@@ -91,7 +91,7 @@ export function NinjaNavDock() {
       className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg'
       style={{ paddingInline: DOCK_SIDE, bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
     >
-      <div className='bg-foreground text-background pointer-events-auto relative rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
+      <div className='slab pointer-events-auto relative rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
         {/* The bill and the order on its way, above the tabs, on every tab */}
         <DockRow />
         <NinjaNav className={live ? 'border-background/10 border-t' : undefined} />

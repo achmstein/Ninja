@@ -33,7 +33,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
         </Pill>
         <Pill icon={Tag} on={open === 'promo'} set={promoOn} onClick={() => toggle('promo')}>
           {promo.code ? (
-            <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300 dark:text-red-600')}>
+            <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300')}>
               {promo.code}
             </span>
           ) : (
@@ -81,7 +81,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
       {/* Why a code does not apply, said under the row whether its field is open or not */}
       <AnimatePresence initial={false}>
         {promo.code && promo.reason && (
-          <motion.p key='reason' {...swap} className='px-1 text-xs text-red-300 dark:text-red-600'>
+          <motion.p key='reason' {...swap} className='px-1 text-xs text-red-300'>
             {t(promoReasonKey(promo.reason))}
           </motion.p>
         )}
@@ -115,7 +115,7 @@ function Pill({
       onClick={onClick}
       className={cn(
         'flex h-9 max-w-full items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200',
-        set ? 'bg-emerald-500/20 text-emerald-300 dark:text-emerald-700' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
+        set ? 'bg-emerald-500/20 text-emerald-300' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
       )}
     >
       <Icon className='size-3.5 shrink-0' />

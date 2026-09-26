@@ -37,7 +37,7 @@ export function CheckoutDock({
   const t = useT()
   const price = usePrice()
   const discounted = promoDiscount > 0 || pointsDiscount > 0
-  const saving = 'flex items-baseline justify-between text-[13px] tabular-nums text-emerald-400 dark:text-emerald-600'
+  const saving = 'flex items-baseline justify-between text-[13px] tabular-nums text-emerald-400'
 
   return (
     <div className='sticky bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 mt-auto'>

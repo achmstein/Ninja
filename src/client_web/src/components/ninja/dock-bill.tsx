@@ -99,7 +99,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             {...swap}
             // Over the tray's own row, in the dock's colour, so the empty tray does not show under it
             className={cn(
-              'bg-foreground text-background absolute inset-x-0 top-0 z-10 flex items-center gap-3 rounded-t-[1.75rem] ps-6 pe-3 text-start',
+              'slab absolute inset-x-0 top-0 z-10 flex items-center gap-3 rounded-t-[1.75rem] ps-6 pe-3 text-start',
               className
             )}
             style={{ height: DOCK_H }}

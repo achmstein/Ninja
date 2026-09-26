@@ -120,6 +120,17 @@ body[data-scroll-locked][data-scroll-locked] {
   --surface-shadow: none;
 }
 
+/* The slab: the dock, the tray and the dark cards. Inside it the page's two
+   inks swap for the slab's own, so what sits on it (text-background, a
+   bg-background/12 tint) reads right on either scheme and on a brand's
+   colour, without a class of its own */
+@utility slab {
+  --foreground: var(--slab);
+  --background: var(--slab-ink);
+  background-color: var(--slab);
+  color: var(--slab-ink);
+}
+
 /* A card, a tile, a panel: whatever the style calls a surface */
 @utility surface {
   background-color: var(--surface-bg);

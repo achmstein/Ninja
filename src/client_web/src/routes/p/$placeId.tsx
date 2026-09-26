@@ -109,7 +109,7 @@ function Reading({ label }: { label: string }) {
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={springSoft}
-        className='bg-foreground text-background relative grid size-24 place-items-center overflow-hidden rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
+        className='slab relative grid size-24 place-items-center overflow-hidden rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
       >
         <QrCode className='size-11' />
         {!reduced && (
