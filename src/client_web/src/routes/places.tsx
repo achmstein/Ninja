@@ -9,7 +9,7 @@ import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
@@ -99,7 +99,6 @@ function PlacesPage() {
  *  reservation grows over them (ReservationShape): one hold is all anyone gets. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
-  const localized = useLocalized()
   const auth = useAuth()
   const branch = useSelectedBranch()
   const hold = useMyHold()
@@ -148,6 +147,18 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   // the shape grows over the list and the list falls out of focus behind it
   const progress = useMotionValue(hold ? 1 : 0)
   const camera = useCamera(progress)
+  // Held, the reservation fills the screen: the page goes back to its top and
+  // stays there, so its title never folds into the bar in the brand's place
+  const held = hold != null
+  useEffect(() => {
+    if (!held) return
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const root = document.documentElement
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = ''
+    }
+  }, [held])
   const placeCard = useCallback(
     (placeId: number | string | undefined) => document.querySelector<HTMLElement>(`[data-place='${String(placeId)}']`),
     []
@@ -155,7 +166,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
 
   return (
     <NinjaPage
-      title={hold ? localized(hold.placeName) || t('reserved') : t('rooms')}
+      title={t('rooms')}
       subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
       <motion.div style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
