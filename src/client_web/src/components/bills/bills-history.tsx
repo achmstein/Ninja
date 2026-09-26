@@ -1,3 +1,4 @@
+import { type OrderSummary } from '@/api/ordering'
 import { type BillView } from '@/api/sales'
 import { closedAt } from '@/lib/bills'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
@@ -6,7 +7,7 @@ import { SectionLabel } from '@/components/ninja/page/parts'
 import { BillCard } from './bill-card'
 
 /** Earlier bills grouped by business day (shift-aware, like the app) */
-export function HistoryList({ bills }: { bills: BillView[] }) {
+export function HistoryList({ bills, ordersById }: { bills: BillView[]; ordersById?: Map<number, OrderSummary> }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
   const branch = useSelectedBranch()
@@ -53,7 +54,7 @@ export function HistoryList({ bills }: { bills: BillView[] }) {
           <SectionLabel>{group.label}</SectionLabel>
           <div className='flex flex-col gap-3'>
             {group.bills.map((bill) => (
-              <BillCard key={String(bill.id)} bill={bill} />
+              <BillCard key={String(bill.id)} bill={bill} ordersById={ordersById} />
             ))}
           </div>
         </div>

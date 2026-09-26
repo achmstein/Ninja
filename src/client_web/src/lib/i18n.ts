@@ -352,6 +352,7 @@ const webExtras = {
     ar: { '=1': 'طلب واحد', '=2': 'طلبين', other: '{count} طلبات' },
   },
   ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
+  ninjaEarlierBills: { en: 'Earlier bills', ar: 'الحسابات اللي فاتت' },
   // Cart and pay
   payModeItems: { en: 'My items', ar: 'حاجاتي' },
   payModeEqual: { en: 'Equally', ar: 'بالتساوي' },

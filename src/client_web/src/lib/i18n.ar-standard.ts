@@ -181,6 +181,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaHoldRanOut: 'انتهت مدة الحجز. قد يظل المقهى محتفظًا به لك.',
   ninjaHoldLeft: 'متبقٍ {time} للوصول',
   ninjaRoundCount: { '=1': 'طلب واحد', '=2': 'طلبان', other: '{count} طلبات' },
+  ninjaEarlierBills: 'الفواتير السابقة',
   ninjaOpenBill: 'اعرض الفاتورة',
   payModeItems: 'أصنافي',
   payModeEqual: 'بالتساوي',

@@ -1,23 +1,26 @@
+import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CircleAlert, ReceiptText, Wallet } from 'lucide-react'
+import { CircleAlert, History, ReceiptText, Wallet } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { closedAt, useMyBills } from '@/lib/bills'
+import { type BillView } from '@/api/sales'
+import { closedAt, isOpen, useMyBills, useNow } from '@/lib/bills'
 import { useFeatures } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'
-import { BillCard } from '@/components/bills/bill-card'
+import { BillCard, FORMING_BILL, type PendingRound } from '@/components/bills/bill-card'
 import { HistoryList } from '@/components/bills/bills-history'
 import { OrderGroup } from '@/components/bills/waiting-orders'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Empty, Segment } from '@/components/ninja/page/parts'
+import { Empty } from '@/components/ninja/page/parts'
 import { PaySheet } from '@/components/pay/pay-sheet'
 import { SignInOptions } from '@/components/sign-in-options'
-import { TileGroup, TileLink } from '@/components/tile-row'
+import { TileButton, TileGroup, TileLink } from '@/components/tile-row'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useGuestStore } from '@/stores/guest-store'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -61,9 +64,10 @@ function BillsRoute() {
  * The bills tab (docs/visit-tab.html): the customer's bills, not their orders.
  * everything the cafe charges — the rounds, a room's time, a discount,
  * service and VAT — lands on a Sales ticket, and the till's own arithmetic
- * is what the customer sees. One card per bill they are on today, open ones
- * first; an order the till has not confirmed yet waits above, since it is
- * on no bill until then.
+ * is what the customer sees. An open bill has the tab to itself, its rounds
+ * standing open, an order still on its way already on it as a faint round;
+ * closed bills wait behind one row that opens them in a sheet. With nothing
+ * open the tab is the history.
  */
 function BillsPage() {
   const t = useT()
@@ -130,62 +134,124 @@ function BillsPage() {
     void ordersQuery.refetch()
   }
 
-  const [tab, setTab] = useState<'today' | 'earlier'>('today')
-  const orderGroups: Array<{ title: string; orders: OrderSummary[] }> = [
-    { title: t('waitingToBeConfirmed'), orders: waiting },
-    { title: t('addingToBill'), orders: addingToBill },
-    { title: t('statusCancelled'), orders: cancelled },
-  ]
+  const openBills = todayBills.filter(isOpen)
+  const closedBills = [...todayBills.filter((bill) => !isOpen(bill)), ...pastBills]
+  const { byBill, forming } = placeRounds(openBills, waiting, addingToBill)
+  // A round turned down says so for a while, then leaves the page
+  const now = useNow()
+  const turnedDown = cancelled.filter((order) => order.date && now - new Date(order.date).getTime() < TURNED_DOWN_MS)
+  const live = openBills.length > 0 || forming != null
+  const [earlierOpen, setEarlierOpen] = useState(false)
 
   return (
     <NinjaPage title={t('bills')}>
-      <Segment
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: 'today', label: t('today') },
-          { value: 'earlier', label: t('earlier') },
-        ]}
-      />
-      {tab === 'today' ? (
-        loading ? (
-          <BillsSkeleton />
-        ) : billsQuery.isError && ordersQuery.isError ? (
-          <ErrorState onRetry={retry} />
-        ) : todayBills.length === 0 && waiting.length === 0 && addingToBill.length === 0 && cancelled.length === 0 ? (
-          <Empty icon={ReceiptText} title={t('nothingOnYouToday')} />
-        ) : (
-          <Rise key='today' className='flex flex-col gap-5'>
-            <OnYourTab />
-            {orderGroups.map((group) =>
-              group.orders.length > 0 ? (
-                <RiseItem key={group.title}>
-                  <OrderGroup title={group.title} orders={group.orders} />
-                </RiseItem>
-              ) : null
-            )}
-            {todayBills.map((bill) => (
-              <RiseItem key={String(bill.id)}>
-                <BillCard bill={bill} ordersById={ordersById} />
-              </RiseItem>
-            ))}
-          </Rise>
-        )
-      ) : billsQuery.isLoading ? (
+      {loading ? (
         <BillsSkeleton />
-      ) : billsQuery.isError ? (
+      ) : billsQuery.isError && ordersQuery.isError ? (
         <ErrorState onRetry={retry} />
-      ) : pastBills.length === 0 ? (
-        <Empty icon={ReceiptText} title={t('noBillsYet')} />
-      ) : (
-        <Rise key='earlier'>
+      ) : live ? (
+        // An open bill has the tab to itself; what is closed waits behind one row
+        <Rise key='live' className='flex flex-col gap-5'>
           <RiseItem>
-            <HistoryList bills={pastBills} />
+            <OpenBills>
+              {forming && <BillCard key={FORMING_BILL} bill={forming.bill} pending={forming.rounds} ordersById={ordersById} takeover />}
+              {openBills.map((bill) => (
+                <BillCard key={String(bill.id)} bill={bill} pending={byBill.get(String(bill.id))} ordersById={ordersById} takeover />
+              ))}
+            </OpenBills>
+          </RiseItem>
+          {turnedDown.length > 0 && (
+            <RiseItem>
+              <OrderGroup title={t('statusCancelled')} orders={turnedDown} />
+            </RiseItem>
+          )}
+          <OnYourTab />
+          {closedBills.length > 0 && (
+            <RiseItem>
+              <TileGroup>
+                <TileButton icon={History} label={t('ninjaEarlierBills')} value={String(closedBills.length)} onClick={() => setEarlierOpen(true)} />
+              </TileGroup>
+            </RiseItem>
+          )}
+        </Rise>
+      ) : closedBills.length === 0 && turnedDown.length === 0 ? (
+        <Empty icon={ReceiptText} title={t('nothingOnYouToday')} />
+      ) : (
+        // Nothing open: the tab is the history, today's first
+        <Rise key='quiet' className='flex flex-col gap-5'>
+          <OnYourTab />
+          {turnedDown.length > 0 && (
+            <RiseItem>
+              <OrderGroup title={t('statusCancelled')} orders={turnedDown} />
+            </RiseItem>
+          )}
+          <RiseItem>
+            <HistoryList bills={closedBills} ordersById={ordersById} />
           </RiseItem>
         </Rise>
       )}
+
+      <Sheet open={earlierOpen} onOpenChange={setEarlierOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{t('ninjaEarlierBills')}</SheetTitle>
+          </SheetHeader>
+          <HistoryList bills={closedBills} ordersById={ordersById} />
+        </SheetContent>
+      </Sheet>
       <RetryPay />
     </NinjaPage>
+  )
+}
+
+/** How long a turned-down round stays on the page, ms */
+const TURNED_DOWN_MS = 30 * 60_000
+
+/**
+ * The rounds on their way, each put with the open bill it will land on:
+ * the one at the same place, else the first open one. With no open bill at
+ * all they wait on a bill of their own that the till has not opened yet,
+ * named after where they were sent, adding up to what was ordered.
+ */
+function placeRounds(openBills: BillView[], waiting: OrderSummary[], adding: OrderSummary[]) {
+  const byBill = new Map<string, PendingRound[]>()
+  const orphans: Array<{ round: PendingRound; order: OrderSummary }> = []
+  const all = [
+    ...waiting.map((order) => ({ order, stage: 'waiting' as const })),
+    ...adding.map((order) => ({ order, stage: 'adding' as const })),
+  ].sort((x, y) => new Date(y.order.date ?? 0).getTime() - new Date(x.order.date ?? 0).getTime())
+  for (const { order, stage } of all) {
+    const round: PendingRound = { orderId: Number(order.orderNumber), date: order.date, stage }
+    const bill = openBills.find((b) => b.placeId != null && String(b.placeId) === String(order.placeId)) ?? openBills[0]
+    if (bill) byBill.set(String(bill.id), [...(byBill.get(String(bill.id)) ?? []), round])
+    else orphans.push({ round, order })
+  }
+  if (orphans.length === 0) return { byBill, forming: null }
+  const first = orphans[0].order
+  const bill: BillView = {
+    id: FORMING_BILL,
+    status: 'Open',
+    placeId: first.placeId,
+    placeKind: first.placeKind,
+    locationName: first.placeName,
+    lines: [],
+    total: orphans.reduce((sum, o) => sum + Number(o.order.total ?? 0) - Number(o.order.loyaltyDiscount ?? 0), 0),
+  }
+  return { byBill, forming: { bill, rounds: orphans.map((o) => o.round) } }
+}
+
+/** One open bill fills the width; two or more (a table and a room) sit side by side and swipe, like the menu's categories */
+function OpenBills({ children }: { children: React.ReactNode }) {
+  const cards = React.Children.toArray(children).filter(Boolean)
+  if (cards.length <= 1) return <>{cards}</>
+  return (
+    <div className='no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4'>
+      {cards.map((card, i) => (
+        <div key={i} className='w-[88%] shrink-0 snap-center'>
+          {card}
+        </div>
+      ))}
+    </div>
   )
 }
 

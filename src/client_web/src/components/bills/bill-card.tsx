@@ -1,8 +1,11 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
 import { ChevronDown, ReceiptText, Timer } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
+import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { billParts, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
 import { spring, springSoft } from '@/lib/motion'
@@ -28,23 +31,44 @@ type Round = {
   lines: BillLineView[]
   /** The till put it on the bill without a name: there, but not read as theirs */
   unnamed: boolean
+  /** Sent but not on the bill yet: the till has still to confirm it, or has and the bill is catching up */
+  pending?: PendingStage
+  orderId?: number
 }
+
+export type PendingStage = 'waiting' | 'adding'
+
+/** An order of the customer's on its way to this bill */
+export type PendingRound = { orderId: number; date: string | null | undefined; stage: PendingStage }
+
+/** The id of a bill the till has not opened yet: the card a first round waits on */
+export const FORMING_BILL = 'forming'
 
 /**
  * A bill as a stack of its rounds. The total sits on top and rolls to each
  * new value like the tray's; a tap fans the stack open to every round and
- * what the till added to them, and folds it back. A round that lands on
- * the bill slides onto the front of the stack. An open bill is the dock's
- * dark slab with the way to pay tucked under it; a closed one is a light
- * card, with the stars once it is paid.
+ * what the till added to them, and folds it back. An open bill is the
+ * dock's dark slab with the way to pay tucked under it; a closed one is a
+ * light card, with the stars once it is paid.
+ *
+ * A round has one life: sent from the tray it is already on the front of
+ * the stack, faint and marked as waiting; when the till confirms it and the
+ * bill has it, the same card (the same key) turns solid and the total rolls
+ * up. One the till turns down slides off. `takeover` is the bill that has
+ * the tab to itself: its stack stands open.
  */
 export function BillCard({
   bill,
   ordersById,
+  pending = [],
+  takeover = false,
 }: {
   bill: BillView
   /** Today's orders by number: when each round was sent, and the stars on a paid bill */
   ordersById?: Map<number, OrderSummary>
+  /** The customer's orders on their way to this bill, newest first */
+  pending?: PendingRound[]
+  takeover?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -53,7 +77,7 @@ export function BillCard({
   const stay = useActiveStay()
   const now = useNow()
   const { data: stays = [] } = useMyStays()
-  const [fanned, setFanned] = useState(false)
+  const [fanned, setFanned] = useState(takeover)
 
   const settled = isSettled(bill)
   const voided = bill.status === 'Voided'
@@ -61,11 +85,18 @@ export function BillCard({
 
   const lines = bill.lines ?? []
   const time = lines.filter(isTimeLine)
-  const rounds = roundsOf(
+  const onBill = roundsOf(
     lines.filter((line) => (line.isMine || isUnassigned(line)) && !isTimeLine(line)),
     ordersById,
     language
   )
+  // The rounds still on their way lead the stack, keyed as they will be once on the bill
+  const landed = new Set(onBill.map((r) => r.key))
+  const onTheirWay = pending
+    .filter((p) => !landed.has(`o${p.orderId}`))
+    .map((p): Round => ({ key: `o${p.orderId}`, at: timeOf(p.date, language), lines: [], unnamed: false, pending: p.stage, orderId: p.orderId }))
+  const rounds = [...onTheirWay, ...onBill]
+  const forming = String(bill.id) === FORMING_BILL
   const running = runningTime(bill, stay, now)
   const sessionStay = bill.sessionId == null ? undefined : stays.find((s) => Number(s.id) === Number(bill.sessionId))
   const parts = billParts(bill, running, sessionStay)
@@ -97,7 +128,7 @@ export function BillCard({
             <span className='truncate'>{localized(bill.locationName) || t('atTheCounter')}</span>
             {opened && <span className='shrink-0'>· {opened}</span>}
           </span>
-          <StatusChip bill={bill} />
+          {!forming && <StatusChip bill={bill} />}
         </div>
 
         <div className='flex items-end justify-between gap-3'>
@@ -198,21 +229,23 @@ export function BillCard({
                   <span>−{price(refunded)}</span>
                 </div>
               )}
-              <Link
-                to='/receipts/$ticketId'
-                params={{ ticketId: String(bill.id) }}
-                className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-sm font-semibold'
-              >
-                <ReceiptText className='size-4' />
-                {t('ninjaOpenBill')}
-              </Link>
+              {!forming && (
+                <Link
+                  to='/receipts/$ticketId'
+                  params={{ ticketId: String(bill.id) }}
+                  className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-sm font-semibold'
+                >
+                  <ReceiptText className='size-4' />
+                  {t('ninjaOpenBill')}
+                </Link>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </Surface>
 
       {/* Paying from the phone, where the café takes it: tucked under the slab, as the order sheet tucks under the dock */}
-      {open && (
+      {open && !forming && (
         <div className='-mt-6 empty:hidden [&>*]:bg-muted [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9'>
           <BillPayBar bill={bill} />
         </div>
@@ -238,7 +271,7 @@ function roundsOf(lines: BillLineView[], ordersById: Map<number, OrderSummary> |
       const date = line.orderId != null ? ordersById?.get(Number(line.orderId))?.date : null
       round = {
         key,
-        at: date ? new Date(date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : null,
+        at: timeOf(date, language),
         lines: [],
         unnamed: true,
       }
@@ -248,6 +281,10 @@ function roundsOf(lines: BillLineView[], ordersById: Map<number, OrderSummary> |
     if (!isUnassigned(line)) round.unnamed = false
   }
   return [...byOrder.values()].reverse()
+}
+
+function timeOf(date: string | null | undefined, language: string): string | null {
+  return date ? new Date(date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : null
 }
 
 /**
@@ -261,6 +298,7 @@ function StackCard({
   fanned,
   dark,
   peekRoom,
+  pending = false,
   children,
 }: {
   index: number
@@ -268,6 +306,8 @@ function StackCard({
   dark: boolean
   /** The room left under the front card, which the cards behind it are cut short by */
   peekRoom: number
+  /** On its way to the bill: an outline, not yet a solid card */
+  pending?: boolean
   children: React.ReactNode
 }) {
   const behind = !fanned && index > 0
@@ -281,13 +321,18 @@ function StackCard({
         y: behind ? index * PEEK : 0,
         scale: behind ? 1 - index * 0.05 : 1,
       }}
-      exit={{ opacity: 0, scale: 0.96 }}
+      // A round leaving the bill (turned down) slides off to the side
+      exit={{ opacity: 0, x: 60, scale: 0.94, transition: { duration: 0.24, ease: [0.4, 0, 1, 1] } }}
       transition={springSoft}
       style={{ zIndex: 10 - index, originY: 1, bottom: behind ? peekRoom : undefined }}
       aria-hidden={behind || undefined}
       className={cn(
-        'overflow-hidden rounded-[1.25rem] p-3',
-        dark ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]' : 'bg-muted',
+        'overflow-hidden rounded-[1.25rem] p-3 transition-[background-color,box-shadow] duration-300',
+        pending
+          ? 'bg-transparent shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,currentColor_30%,transparent)]'
+          : dark
+            ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]'
+            : 'bg-muted',
         behind && 'absolute inset-x-0 top-0'
       )}
     >
@@ -300,11 +345,34 @@ function StackCard({
 }
 
 function RoundCard({ round, ...card }: { round: Round; index: number; fanned: boolean; dark: boolean; peekRoom: number }) {
+  const t = useT()
+  // A round still on its way has no bill lines yet: its order says what is in it
+  const detail = useQuery({
+    ...getOrderOptions({ path: { orderId: round.orderId ?? 0 }, query: { 'api-version': API_VERSION } }),
+    enabled: round.pending != null && round.orderId != null,
+  })
+  const lines: BillLineView[] = round.pending
+    ? (detail.data?.orderItems ?? []).map((item, i) => ({
+        id: `${round.key}-${i}`,
+        description: item.productName,
+        details: item.customizationsDescription,
+        qty: item.units,
+        total: Number(item.units ?? 0) * Number(item.unitPrice ?? 0),
+      }))
+    : round.lines
   return (
-    <StackCard {...card}>
-      {round.at && <span className='text-muted-foreground text-xs font-semibold'>{round.at}</span>}
-      <div className={cn('flex flex-col gap-1', round.unnamed && 'opacity-60')}>
-        {round.lines.map((line) => (
+    <StackCard {...card} pending={round.pending != null}>
+      <span className='flex items-center justify-between gap-2 empty:hidden'>
+        {round.at && <span className='text-muted-foreground text-xs font-semibold'>{round.at}</span>}
+        {round.pending && (
+          <span className='ms-auto flex items-center gap-1.5 text-xs font-bold text-amber-500'>
+            <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
+            {t(round.pending === 'waiting' ? 'waitingToBeConfirmed' : 'addingToBill')}
+          </span>
+        )}
+      </span>
+      <div className={cn('flex flex-col gap-1 transition-opacity duration-300', (round.unnamed || round.pending) && 'opacity-60')}>
+        {lines.map((line) => (
           <LineRow key={String(line.id)} line={line} />
         ))}
       </div>
