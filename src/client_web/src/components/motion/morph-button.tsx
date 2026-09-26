@@ -37,7 +37,6 @@ export function MorphButton({
   const reduced = useReducedMotion()
   const width =
     phase === 'busy' ? height * 2 : phase === 'success' ? height : '100%'
-  const round = phase === 'busy' || phase === 'success'
   const swap = blurSwap(reduced)
 
   return (
@@ -57,12 +56,13 @@ export function MorphButton({
       onClick={phase === 'idle' || phase === 'error' ? onClick : undefined}
       disabled={disabled}
       aria-busy={phase === 'busy'}
-      style={{ height, borderRadius: round ? height / 2 : undefined }}
+      // Always a pill, and its corner always stated as a value: a shared layout (the order pill
+      // growing out of it) carries corners across only when both ends state them
+      style={{ height, borderRadius: height / 2 }}
       className={cn(
         'relative mx-auto inline-flex shrink-0 items-center justify-center overflow-hidden text-sm font-medium whitespace-nowrap outline-none',
         'transition-[background-color,color,opacity] duration-250',
         'focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50',
-        !round && 'rounded-pill',
         phase === 'success'
           ? 'bg-emerald-600 text-white'
           : 'bg-primary text-primary-foreground shadow-xs',

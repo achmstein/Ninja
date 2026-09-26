@@ -631,6 +631,9 @@ function HoldButton({
       aria-busy={busy}
       // The order pill grows out of this button once the order lands (as from the cart's)
       layoutId={ORDER_PILL_ID}
+      // Its corner as a value, not only a class: a shared layout carries corners across only
+      // when both ends state them, and without one this landed with square corners
+      style={{ borderRadius: 24 }}
       animate={early > 0 && !reduced ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
       transition={{ duration: 0.36 }}
       key={early}
@@ -653,7 +656,7 @@ function HoldButton({
       }}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        'bg-primary text-primary-foreground relative flex h-12 shrink-0 touch-none items-center gap-2 rounded-full ps-1 pe-5 font-bold select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
+        'bg-primary text-primary-foreground relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
         holding && 'scale-[0.96]'
       )}
     >
