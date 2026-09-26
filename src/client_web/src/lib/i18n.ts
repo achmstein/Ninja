@@ -315,6 +315,12 @@ const webExtras = {
   // The Ninja style (components/ninja)
   ninjaWholeMenu: { en: 'Whole menu', ar: 'المنيو كله' },
   ninjaAddNote: { en: 'Add a note', ar: 'ضيف ملاحظة' },
+  // The options, one question at a time
+  ninjaOptional: { en: 'Optional', ar: 'اختياري' },
+  ninjaNext: { en: 'Next', ar: 'التالي' },
+  ninjaSkip: { en: 'Skip', ar: 'تخطّى' },
+  ninjaChoose: { en: 'Choose {name}', ar: 'اختار {name}' },
+  ninjaPrevious: { en: 'Previous question', ar: 'السؤال اللي فات' },
   ninjaLess: { en: 'One less', ar: 'واحد أقل' },
   ninjaMore: { en: 'One more', ar: 'واحد كمان' },
   ninjaRemove: { en: 'Remove', ar: 'شيله' },
@@ -351,7 +357,7 @@ const webExtras = {
     en: { '=1': '1 round', other: '{count} rounds' },
     ar: { '=1': 'طلب واحد', '=2': 'طلبين', other: '{count} طلبات' },
   },
-  ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
+  ninjaOpenBill: { en: 'Receipt', ar: 'الإيصال' },
   ninjaEarlierBills: { en: 'Earlier bills', ar: 'الحسابات اللي فاتت' },
   ninjaYourBills: { en: 'Your bills', ar: 'حساباتك' },
   ninjaMonthVisits: {
@@ -360,6 +366,10 @@ const webExtras = {
     ar: { '=1': 'زيارة واحدة', '=2': 'زيارتين', other: '{count} زيارات' },
   },
   ninjaBillOpen: { en: 'Your bill', ar: 'حسابك' },
+  ninjaTableOpen: { en: 'Your table', ar: 'ترابيزتك' },
+  ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
+  ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
+  ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },
   // The branch: fixed while the customer is there; switching empties the order
   ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
   ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },

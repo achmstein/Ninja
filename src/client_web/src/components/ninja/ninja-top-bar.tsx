@@ -5,7 +5,6 @@ import { blurSwap, spring } from '@/lib/motion'
 import { useIsland } from '@/lib/island'
 import { cn } from '@/lib/utils'
 import { BrandWordmark } from '@/components/brand-mark'
-import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from '@/components/branch-switcher'
 import { NINJA_BAR_H } from './chrome'
 
@@ -64,8 +63,8 @@ export function NinjaTopBar({
           style={{ pointerEvents: pill ? 'none' : undefined }}
           aria-hidden={pill || undefined}
         >
-          <DestinationChip />
-          <BranchSwitcher />
+          {/* Where the customer is (the table, the branch they are at) the dock's row says; here only the switch, while they are at none */}
+          <BranchSwitcher quiet />
         </motion.div>
       )}
     </div>

@@ -13,6 +13,7 @@ import {
   nextCheck,
   PILL_WORDS,
   pickOrder,
+  LINGER_MS,
   pillVisible,
   STAGE_LABEL,
   stageOf,
@@ -102,6 +103,13 @@ export function OrderPill() {
     const timer = setTimeout(() => setNow(Date.now()), Math.max(0, wakeAt - Date.now()) + 50)
     return () => clearTimeout(timer)
   }, [wakeAt])
+
+  // An end stage that has had its moment is done with for good: the stage's clock lives only in
+  // memory, so a reload would otherwise start it over and say Confirmed again for an old order
+  const settledOut = following && order != null && LINGER_MS[stage] != null && !pillVisible(visibility)
+  useEffect(() => {
+    if (settledOut) useOrderPill.getState().dismiss()
+  }, [settledOut])
 
   // The island says it: the hub need not say it as well
   useEffect(() => {

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, ReceiptText, Timer } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
@@ -16,6 +15,7 @@ import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { RunningTimeLine } from '@/components/bills/bill-slip'
 import { BillStars } from '@/components/bills/bill-rating'
+import { BillReceipt } from '@/components/bills/receipt-view'
 import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Slab } from '@/components/ninja/page/parts'
 import { BillPayBar } from '@/components/pay/bill-pay'
@@ -68,6 +68,8 @@ export function BillCard({
   const now = useNow()
   const { data: stays = [] } = useMyStays()
   const [fanned, setFanned] = useState(takeover)
+  // The receipt, printed out under the card
+  const [paper, setPaper] = useState(false)
 
   const settled = isSettled(bill)
   const voided = bill.status === 'Voided'
@@ -256,19 +258,38 @@ export function BillCard({
                 </div>
               )}
               {!forming && (
-                <Link
-                  to='/receipts/$ticketId'
-                  params={{ ticketId: String(bill.id) }}
+                <button
+                  type='button'
+                  aria-expanded={paper}
+                  onClick={() => setPaper((on) => !on)}
                   className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-sm font-semibold'
                 >
                   <ReceiptText className='size-4' />
-                  {t('ninjaOpenBill')}
-                </Link>
+                  {t(paper ? 'ninjaHideReceipt' : 'ninjaOpenBill')}
+                </button>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </Surface>
+
+      {/* The receipt, printed out under the card as the till prints it, rather than a page of its own */}
+      <AnimatePresence initial={false}>
+        {paper && !forming && (
+          <motion.div
+            key='paper'
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={springSoft}
+            className='overflow-hidden'
+          >
+            <div className='pt-3'>
+              <BillReceipt ticketId={Number(bill.id)} bill={bill} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Paying from the phone, where the café takes it: tucked under the slab, as the order sheet tucks under the dock */}
       {open && !forming && (

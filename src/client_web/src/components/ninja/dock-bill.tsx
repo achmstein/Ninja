@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Check, ChevronUp, ReceiptText, Send, X } from 'lucide-react'
+import { Check, ChevronUp, CircleHelp, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useLiveOrder } from '@/lib/live-order'
 import { STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
@@ -8,10 +8,15 @@ import { cn } from '@/lib/utils'
 import { type LiveBills } from '@/lib/live-bills'
 import { blurSwap } from '@/lib/motion'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
+import { useServiceRequests } from '@/lib/service-requests'
+import { SERVICE_REQUEST } from '@/lib/services/notifications'
+import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
+import { TableView } from '@/components/places/table-view'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Odometer } from './odometer'
 import { DOCK_H } from './chrome'
+import { useDockRowShown } from './use-dock-row'
 
 const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Check, paid: ReceiptText, cancelled: X }
 
@@ -22,8 +27,10 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Che
  * blur. A tap opens the bill out of the dock as its sheet, its rounds
  * standing open, the way to pay under them. On the menu a dish going into
  * the tray takes the row back, and it returns when the tray is empty again;
- * on the other tabs it sits above the tabs. Nothing at all while there is
- * no bill and no order.
+ * on the other tabs it sits above the tabs. At a table the row is the
+ * table too: its name (the top bar keeps only the brand), a dot while the waiter or the bill is asked for, and a tap opens
+ * the table (the waiter, the bill, the way out) with the bills under it.
+ * Nothing at all while there is no bill, no order and no table.
  */
 export function DockBill({ live, trayEmpty, className }: { live: LiveBills; trayEmpty: boolean; className?: string }) {
   const t = useT()
@@ -34,14 +41,28 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const swap = blurSwap(useReducedMotion())
   const [open, setOpen] = useState(false)
   const { stage, orderNumber } = useLiveOrder()
-  if (!hasLiveBill(live) && stage == null) return null
+  const table = useActivePlace()
+  const confirmed = useActivePlaceConfirmed()
+  // A dot on the table while the waiter or the bill is asked for, so the answer is one tap away
+  const requests = useServiceRequests({ placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} })
+  const asking =
+    table != null &&
+    (requests.stateOf(SERVICE_REQUEST.callWaiter).phase !== 'idle' || requests.stateOf(SERVICE_REQUEST.receiptToPay).phase !== 'idle')
+  const shown = useDockRowShown(live)
+  if (!shown) return null
 
   const first = live.open[0]?.bill ?? live.forming?.bill
   const total = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
-  const place = localized(first?.locationName) || t('atTheCounter')
-  // The order on its way says where it is in the row's top line; otherwise the line is the place
-  const line = stage ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}` : place
+  const place = (table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
+  // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
+  // With nothing on the bill yet the place is the row's one line
+  const line = stage
+    ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
+    : total > 0
+      ? place
+      : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
+  const placeKind = table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
 
   return (
     <>
@@ -51,7 +72,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             key='bill'
             type='button'
             onClick={() => setOpen(true)}
-            aria-label={t('ninjaBillOpen')}
+            aria-label={t(table ? 'ninjaTableOpen' : 'ninjaBillOpen')}
             {...swap}
             // Over the tray's own row, in the dock's colour, so the empty tray does not show under it
             className={cn(
@@ -63,7 +84,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
-                'grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-300',
+                'relative grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-300',
                 stage === 'confirmed' || stage === 'paid' ? 'bg-emerald-500 text-white' : stage === 'cancelled' ? 'bg-red-500 text-white' : 'bg-background/12'
               )}
             >
@@ -71,24 +92,30 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 <motion.span key={stage ?? 'place'} {...swap} className='grid place-items-center'>
                   {StageIcon ? (
                     <StageIcon className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')} />
-                  ) : first?.placeId != null ? (
-                    <PlaceIcon kind={placeKindOf(first.placeKind)} className='size-5' />
+                  ) : table && !confirmed ? (
+                    // A table from an earlier session shows as a question until answered
+                    <CircleHelp className='size-5' />
+                  ) : placeKind != null ? (
+                    <PlaceIcon kind={placeKind} className='size-5' />
                   ) : (
                     <ReceiptText className='size-5' />
                   )}
                 </motion.span>
               </AnimatePresence>
+              {asking && <span className='ring-foreground absolute end-0 top-0 size-2.5 rounded-full bg-amber-400 ring-2' />}
             </span>
             <span className='flex min-w-0 flex-1 flex-col'>
               <AnimatePresence mode='popLayout' initial={false}>
-                <motion.span key={line} {...swap} className='truncate text-xs opacity-70'>
-                  {line}
-                </motion.span>
+                {line && (
+                  <motion.span key={line} {...swap} className='truncate text-xs opacity-70'>
+                    {line}
+                  </motion.span>
+                )}
               </AnimatePresence>
               {total > 0 ? <Odometer value={price(total)} className='text-base font-bold' /> : <span className='truncate text-base font-bold'>{place}</span>}
             </span>
             <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-sm font-semibold'>
-              {t('ninjaBillOpen')}
+              {t(table ? 'ninjaTableOpen' : 'ninjaBillOpen')}
               <ChevronUp className='size-4' />
             </span>
           </motion.button>
@@ -96,13 +123,29 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       </AnimatePresence>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>{t('ninjaBillOpen')}</SheetTitle>
-          </SheetHeader>
-          <OpenBills live={live} />
-        </SheetContent>
+        {table ? (
+          // The table first (the waiter, the bill, the way out), then its bills
+          <SheetContent className='gap-0 p-0'>
+            <SheetTitle className='sr-only'>{localized(table.name)}</SheetTitle>
+            <div className='max-h-[85svh] overflow-y-auto'>
+              <TableView place={table} onClose={() => setOpen(false)} />
+              {hasLiveBill(live) && (
+                <div className='px-4 pb-6'>
+                  <OpenBills live={live} />
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        ) : (
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>{t('ninjaBillOpen')}</SheetTitle>
+            </SheetHeader>
+            <OpenBills live={live} />
+          </SheetContent>
+        )}
       </Sheet>
     </>
   )
 }
+

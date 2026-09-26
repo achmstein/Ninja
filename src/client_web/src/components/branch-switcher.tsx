@@ -33,9 +33,10 @@ import {
  * just where they are, a label: another branch's menu and prices over a
  * bill that is here would only mislead. Otherwise it switches, asking first
  * when there are dishes in the order, since the other branch's menu is not
- * this one's and the order is emptied.
+ * this one's and the order is emptied. `quiet` leaves the label out, for
+ * a bar whose dock already says where the customer is.
  */
-export function BranchSwitcher() {
+export function BranchSwitcher({ quiet = false }: { quiet?: boolean }) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -73,6 +74,7 @@ export function BranchSwitcher() {
   }
 
   if (there) {
+    if (quiet) return null
     return (
       <span className='text-muted-foreground flex items-center gap-1.5 px-2 text-sm font-medium'>
         <MapPin className='size-4' />
