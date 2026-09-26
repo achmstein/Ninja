@@ -63,11 +63,24 @@ export function useLiquidEdges(
     }
   }, [active, reduced, items, left, right, layout, memory])
 
+  // The observer below reads the tab that is active now, without being made again for each one
+  const current = useRef(active)
+  useLayoutEffect(() => {
+    current.current = active
+  }, [active])
+
   useLayoutEffect(() => {
     const el = row.current
     if (!el || typeof ResizeObserver === 'undefined') return
+    // A new observer reports every size at once when it starts; that is not a change, and
+    // jumping on it would cut the slide to a new tab short, so the first report is let go
+    let started = false
     const observer = new ResizeObserver(() => {
-      const item = items.current?.[active]
+      if (!started) {
+        started = true
+        return
+      }
+      const item = items.current?.[current.current]
       if (!item) return
       left.jump(item.offsetLeft)
       right.jump(item.offsetLeft + item.offsetWidth)
@@ -75,7 +88,7 @@ export function useLiquidEdges(
     observer.observe(el)
     for (const item of items.current ?? []) if (item) observer.observe(item)
     return () => observer.disconnect()
-  }, [active, items, row, left, right, layout])
+  }, [items, row, left, right, layout])
 
   return { left, right }
 }

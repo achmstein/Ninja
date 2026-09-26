@@ -4,7 +4,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { formatClock, useSecondTick } from '@/lib/clock'
-import { ease } from '@/lib/motion'
+import { ease, spring } from '@/lib/motion'
 import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
 import { DOCK_H, DOCK_INSET, DOCK_SIDE } from './chrome'
@@ -57,7 +57,15 @@ export function NinjaNav({ className }: { className?: string }) {
                 <LiveVisit live={visitTab.live} icon={Icon} label={visitTab.label} />
               ) : (
                 <>
-                  <Icon className='size-[18px] shrink-0' />
+                  {/* The tab arrived at lifts its icon a touch as the pill slides under it */}
+                  <motion.span
+                    className='grid shrink-0 place-items-center'
+                    initial={false}
+                    animate={on ? { y: -1, scale: 1.12 } : { y: 0, scale: 1 }}
+                    transition={spring}
+                  >
+                    <Icon className='size-[18px]' />
+                  </motion.span>
                   {/* A place's name can be long; the tab keeps its width */}
                   <span className='truncate'>{isVisit ? visitTab.label : t(tab.key)}</span>
                 </>
