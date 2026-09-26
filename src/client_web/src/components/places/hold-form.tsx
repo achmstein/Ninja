@@ -7,7 +7,7 @@ import { Clock } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { useTickBeat } from '@/lib/tick-beat'
+import { TICK_BEAT_MS, useTickBeat } from '@/lib/tick-beat'
 import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
@@ -17,8 +17,6 @@ import { Switch } from '@/components/ui/switch'
 
 /** How long the tick shows before whoever showed the form puts it away (the scan sheet), ms */
 const SUCCESS_HOLD_MS = 700
-/** The tick's own beat, ms: the button becomes the green circle (about 300 ms) and the tick is there to be seen */
-const TICK_BEAT_MS = 1000
 /** The book button's height, and so the tick circle's size, px */
 const TICK = 48
 

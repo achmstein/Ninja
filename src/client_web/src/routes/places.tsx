@@ -110,9 +110,12 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   // A hold closes whichever card was open, once the list has faded behind the
   // reservation, so nothing shifts behind the tick as it starts to grow; by
   // the time a cancel brings the list back the card is shut
-  // The reservation opens only once the book button's tick has had its beat
+  // The reservation stays as it is while a tick has its beat, booking's or
+  // cancelling's, and follows the hold once the beat is over
   const beating = useTickBeating()
-  const opened = beating ? undefined : hold
+  const [kept, setKept] = useState(hold)
+  if (!beating && hold !== kept) setKept(hold)
+  const opened = beating ? kept : hold
   const heldNow = opened != null
   useEffect(() => {
     if (!heldNow) return

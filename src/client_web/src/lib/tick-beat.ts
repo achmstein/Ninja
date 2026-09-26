@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 
+/** A tick's beat, ms: its button becomes the green circle (about 300 ms), and the tick is there to be seen */
+export const TICK_BEAT_MS = 1000
+
 /**
- * The book button's tick has its beat before anything else moves: until
- * `until` (performance.now(), ms) the reservation stays shut, however soon
- * the hold comes back from the server or a live update brings it.
+ * A tick has its beat before anything else moves: until `until`
+ * (performance.now(), ms) the reservation stays as it is, shut while the
+ * book button's tick shows, open while the cancel button's does, however
+ * soon the change comes back from the server or a live update brings it.
  */
 export const useTickBeat = create<{ until: number; start: (ms: number) => void }>((set) => ({
   until: 0,

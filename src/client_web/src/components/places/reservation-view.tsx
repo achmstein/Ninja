@@ -6,6 +6,7 @@ import { toast } from '@/lib/toast'
 import { type ReservationViewModel } from '@/api/spaces'
 import { cancelMyReservationMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { formatClock, useSecondTick } from '@/lib/clock'
+import { TICK_BEAT_MS, useTickBeat } from '@/lib/tick-beat'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { cn } from '@/lib/utils'
@@ -22,8 +23,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-/** How long the cancel button's tick shows before the reservation goes back onto its card, ms */
-const CANCEL_TICK_MS = 650
 
 /** Under this many seconds left, the ring and the time turn to a warning */
 const HURRY = 120
@@ -44,22 +43,20 @@ export function ReservationFace({ reservation, enter }: { reservation: Reservati
 
   const [asking, setAsking] = useState(false)
   const [cancelled, setCancelled] = useState(false)
+  const startTickBeat = useTickBeat((s) => s.start)
   const cancelHold = useMutation({
     ...cancelMyReservationMutation(),
-    // The tick is the answer, on the button itself; nothing is re-read until
-    // it has had its beat, since the hold going is what sends the
-    // reservation back onto its room's card
-    onSuccess: () => setCancelled(true),
-    onError: () => toast.error(t('failedToCancelReservation')),
-  })
-  useEffect(() => {
-    if (!cancelled) return
-    const timer = window.setTimeout(() => {
+    // The tick is the answer, on the button itself, and it has the same beat
+    // as the book button's: the reservation stays as it is until the beat is
+    // over, however soon the hold's going comes back, then closes into its card
+    onSuccess: () => {
+      setCancelled(true)
+      startTickBeat(TICK_BEAT_MS)
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
-    }, CANCEL_TICK_MS)
-    return () => window.clearTimeout(timer)
-  }, [cancelled, queryClient])
+    },
+    onError: () => toast.error(t('failedToCancelReservation')),
+  })
   const cancelPhase: MorphPhase = cancelled ? 'success' : cancelHold.isPending ? 'busy' : 'idle'
 
   const locale = language === 'ar' ? 'ar-EG' : 'en-US'

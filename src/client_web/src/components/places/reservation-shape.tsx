@@ -43,6 +43,9 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       />
       <motion.div
         layoutId={placeCardId(hold.placeId)}
+        // Solid the whole way: a crossfade with the room's card would leave it half
+        // see-through over the page going white behind it, a grey flash
+        layoutCrossfade={false}
         transition={OPEN_SPRING}
         style={{ borderRadius: 32 }}
         role='dialog'
