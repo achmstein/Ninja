@@ -42,6 +42,15 @@ export function MenuGrid({
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const categories = columns.filter((c) => c.kind === 'category')
+  // The tile being opened takes its layout id a frame before its card opens, so the card grows
+  // out of it; every other tile outside the deck's column has none, which keeps the zoom's first
+  // frame cheap (each id is a box to measure)
+  const [openingId, setOpeningId] = useState<number | null>(null)
+  const open = (item: CatalogItemDto) => {
+    setOpeningId(Number(item.id))
+    requestAnimationFrame(() => onOpen(item))
+  }
+  const focusColumn = categories.find((c) => c.items.some((i) => Number(i.id) === focusId))?.id
 
   // Arrive with the dish we were on in view, before the morph measures it
   useLayoutEffect(() => {
@@ -83,7 +92,13 @@ export function MenuGrid({
       style={{ paddingTop: DECK_TOP }}
     >
       {categories.map((col) => (
-        <section key={col.id} className='mb-6'>
+        <section
+          key={col.id}
+          className='mb-6'
+          // Off-screen categories are not drawn until scrolled to; the one the deck was on always is,
+          // so the grid can land on the dish it came from
+          style={col.id === focusColumn ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 480px' }}
+        >
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -99,8 +114,9 @@ export function MenuGrid({
                 item={item}
                 tone={col.tone}
                 shared={sharedIds.has(Number(item.id))}
+                opening={Number(item.id) === openingId}
                 landing={Number(item.id) === landingId}
-                onOpen={onOpen}
+                onOpen={open}
                 onQuickAdd={onQuickAdd}
               />
             ))}
@@ -115,13 +131,17 @@ function Tile({
   item,
   tone,
   shared,
+  opening,
   landing,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
   tone: DeckColumn['tone']
+  /** Its card was on screen in the deck: it morphs from it rather than appearing */
   shared: boolean
+  /** Tapped: its card opens out of it and closes back into it */
+  opening: boolean
   /** Its photo is in the air: the tile is out of sight until it lands, then fades back */
   landing: boolean
   onOpen: (item: CatalogItemDto) => void
@@ -135,6 +155,8 @@ function Tile({
   const onOffer = item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
   const photo = useRef<HTMLDivElement>(null)
   const quick = canQuickAdd(item)
+  // Only a tile that morphs has layout ids; one whose photo is flying to the tray sits out
+  const morph = (shared || opening) && !landing
   const { pressing, handlers } = usePress({
     onTap: () => onOpen(item),
     onLongPress: () => onQuickAdd(item, photo.current),
@@ -149,7 +171,7 @@ function Tile({
     >
       <motion.div
         ref={photo}
-        layoutId={landing ? undefined : `card-${item.id}`}
+        layoutId={morph ? `card-${item.id}` : undefined}
         initial={shared ? false : { opacity: 0, scale: 0.92 }}
         animate={{ opacity: landing ? 0 : 1, scale: 1 }}
         transition={landing ? { duration: 0 } : { duration: 0.28 }}
@@ -168,7 +190,7 @@ function Tile({
           </span>
         )}
         {hasPhoto ? (
-          <motion.div layoutId={`photo-${item.id}`} className='bg-muted absolute inset-0'>
+          <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='bg-muted absolute inset-0'>
             <img
               src={itemPictureUrl(item.id)}
               alt=''
@@ -180,7 +202,7 @@ function Tile({
             />
           </motion.div>
         ) : (
-          <motion.div layoutId={`photo-${item.id}`} className='absolute inset-0 flex items-end p-2.5'>
+          <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 flex items-end p-2.5'>
             <span className='heading line-clamp-3 text-base leading-[1.05] break-words'>{localized(item.name)}</span>
           </motion.div>
         )}
