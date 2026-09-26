@@ -30,6 +30,8 @@ export function BottomNav() {
   // The cart is a pushed full-screen page on mobile (no tab bar) —
   // mobile parity. (The menu's "view cart" pill lives in ViewCartBar.)
   if (pathname.startsWith('/cart')) return null
+  // Paying is a page of its own too, like a provider's checkout
+  if (pathname.startsWith('/pay/')) return null
 
   return (
     <nav className='bg-background/95 fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t backdrop-blur md:hidden'>
