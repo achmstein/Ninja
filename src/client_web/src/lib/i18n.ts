@@ -353,6 +353,13 @@ const webExtras = {
   },
   ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
   ninjaEarlierBills: { en: 'Earlier bills', ar: 'الحسابات اللي فاتت' },
+  ninjaYourBills: { en: 'Your bills', ar: 'حساباتك' },
+  ninjaMonthVisits: {
+    plural: 'count',
+    en: { '=1': '1 visit', other: '{count} visits' },
+    ar: { '=1': 'زيارة واحدة', '=2': 'زيارتين', other: '{count} زيارات' },
+  },
+  ninjaBillOpen: { en: 'Your bill', ar: 'حسابك' },
   // The branch: fixed while the customer is there; switching empties the order
   ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
   ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },

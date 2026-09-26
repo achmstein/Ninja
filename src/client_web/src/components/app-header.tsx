@@ -26,13 +26,12 @@ import { BrandWordmark } from '@/components/brand-mark'
 // Mobile IA: primary nav is Menu / Places / Bills; everything else lives
 // under Profile. The places link is named after the visit.
 const navLinks: ReadonlyArray<{
-  to: '/' | '/places' | '/bills'
+  to: '/' | '/places'
   key: TranslationKey
   exact?: boolean
 }> = [
   { to: '/', key: 'menu', exact: true },
   { to: '/places', key: 'rooms' },
-  { to: '/bills', key: 'bills' },
 ]
 
 export function AppHeader() {

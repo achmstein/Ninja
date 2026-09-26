@@ -6,6 +6,7 @@ import { ChevronDown, ReceiptText, Timer } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { billParts, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
 import { spring, springSoft } from '@/lib/motion'
@@ -36,13 +37,6 @@ type Round = {
   orderId?: number
 }
 
-export type PendingStage = 'waiting' | 'adding'
-
-/** An order of the customer's on its way to this bill */
-export type PendingRound = { orderId: number; date: string | null | undefined; stage: PendingStage }
-
-/** The id of a bill the till has not opened yet: the card a first round waits on */
-export const FORMING_BILL = 'forming'
 
 /**
  * A bill as a stack of its rounds. The total sits on top and rolls to each

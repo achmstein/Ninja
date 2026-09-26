@@ -180,7 +180,7 @@ function ProfilePage() {
         {signedIn && (
           <RiseItem>
             <TileGroup>
-              <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
+              <TileLink to='/bills' icon={ReceiptText} label={t('ninjaYourBills')} />
               {features.timeBilling && <TileLink to='/stays' icon={Timer} label={t('sessions')} />}
               {features.tabs && <TileLink to='/account' icon={Wallet} label={t('transactions')} />}
             </TileGroup>

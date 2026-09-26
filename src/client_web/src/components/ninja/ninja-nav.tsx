@@ -1,8 +1,7 @@
 import { useRef, type ComponentType } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { usePrice, useT } from '@/lib/i18n'
-import { isOpen, useMyBills } from '@/lib/bills'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { blurSwap, ease } from '@/lib/motion'
@@ -21,9 +20,7 @@ import { useLiquidEdges } from './use-liquid'
  */
 export function NinjaNav({ className }: { className?: string }) {
   const t = useT()
-  const price = usePrice()
   const visitTab = useVisitTab()
-  const openTotal = useOpenBillsTotal()
   const pathname = useRouterState({ select: (s) => (s.resolvedLocation ?? s.location).pathname })
   // No places to book, no tab: the chip is the table's door
   const tabs = NAV_TABS.filter((tab) => tab.key !== 'rooms' || visitTab.visible)
@@ -55,12 +52,6 @@ export function NinjaNav({ className }: { className?: string }) {
             >
               {isVisit && visitTab.live ? (
                 <LiveVisit live={visitTab.live} icon={Icon} label={visitTab.label} />
-              ) : tab.key === 'bills' && openTotal > 0 ? (
-                // An open bill: the tab is its running total, rolling as each round lands
-                <span className='flex min-w-0 items-center gap-1.5' aria-label={t('bills')}>
-                  <Icon className='size-[18px] shrink-0' />
-                  <Odometer value={price.whole(openTotal)} />
-                </span>
               ) : (
                 <>
                   <Icon className='size-[18px] shrink-0' />
@@ -155,10 +146,4 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
       </motion.span>
     </AnimatePresence>
   )
-}
-
-/** What the customer's open bills come to now, for the dock's Bills tab; 0 with none open */
-function useOpenBillsTotal(): number {
-  const { data: bills = [] } = useMyBills()
-  return bills.filter(isOpen).reduce((sum, bill) => sum + Number(bill.total ?? 0), 0)
 }
