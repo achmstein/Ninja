@@ -210,6 +210,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
                       onToggle={handleToggle}
                       // Booked, the form stays until the hold opens the card into the reservation
                       onDone={(outcome) => outcome === 'failed' && closeHold()}
+                      handedOver={String(place.id) === heldId}
                     />
                   </Recede>
                 </RiseItem>

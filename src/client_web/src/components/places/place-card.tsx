@@ -23,6 +23,7 @@ export function PlaceCard({
   open,
   onToggle,
   onDone,
+  handedOver = false,
 }: {
   place: PlaceViewModel
   /** Signed in, no hold already, reservations on */
@@ -31,6 +32,8 @@ export function PlaceCard({
   onToggle: (place: PlaceViewModel) => void
   /** The booking under the card went through or was turned down */
   onDone: (outcome: 'booked' | 'failed') => void
+  /** The reservation has opened out of this card: what the card held (the form and its tick) goes at once, so none of it shows through the crossfade */
+  handedOver?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -124,7 +127,7 @@ export function PlaceCard({
             transition={springSoft}
             className='overflow-hidden'
           >
-            <div className='bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4'>
+            <div className={cn('bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4', handedOver && 'invisible')}>
               <HoldForm place={place} onDone={onDone} />
             </div>
           </motion.div>
