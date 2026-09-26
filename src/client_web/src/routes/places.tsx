@@ -9,13 +9,14 @@ import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useFeatures } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
+import { springSoft } from '@/lib/motion'
+import { cn } from '@/lib/utils'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
-import { ReservationView } from '@/components/places/reservation-view'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -41,7 +42,6 @@ function PlacesPage() {
   const t = useT()
   const { seat, settling } = useVisit()
   const { visible } = useVisitTab()
-  const hold = useMyHold()
   const navigate = useNavigate()
   const { scan } = Route.useSearch()
 
@@ -71,10 +71,10 @@ function PlacesPage() {
       </NinjaPage>
     )
   }
-  // One visit, one shape: the places; then only the one held, grown out of
-  // the book button; then its clock, grown out of the hold. Each view hands
-  // its slab to the next (VISIT_CARD_ID) while the rest of it falls away
-  const view = seat.kind === 'stay' ? 'stay' : hold ? 'held' : 'list'
+  // One visit, one shape: a place's card becomes the reservation in the
+  // list itself, then the clock here, which takes the card over by its id
+  // (placeCardId) while the rest of the list falls away
+  const view = seat.kind === 'stay' ? 'stay' : 'list'
   return (
     <>
       <LayoutGroup>
@@ -85,13 +85,7 @@ function PlacesPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: 24, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
           >
-            {seat.kind === 'stay' ? (
-              <ActiveStayView stay={seat.stay} />
-            ) : hold ? (
-              <ReservationView reservation={hold} />
-            ) : (
-              <PlacesList atTable={seat.kind === 'table'} />
-            )}
+            {seat.kind === 'stay' ? <ActiveStayView stay={seat.stay} /> : <PlacesList atTable={seat.kind === 'table'} />}
           </motion.div>
         </AnimatePresence>
       </LayoutGroup>
@@ -102,10 +96,11 @@ function PlacesPage() {
 
 /** The bookable places of the branch — the rooms and stations with a
  *  clock, and any table the owner opened to reservations — as big cards,
- *  one open at a time with the booking under it. Once one is held the
- *  tab shows only that (ReservationView). */
+ *  one open at a time with the booking under it. Once one is held its card
+ *  becomes the reservation and the others go: one hold is all anyone gets. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
+  const localized = useLocalized()
   const auth = useAuth()
   const branch = useSelectedBranch()
   const hold = useMyHold()
@@ -113,6 +108,15 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [openId, setOpenId] = useState<number | null>(null)
+  // A hold arriving closes whichever card was open, whether or not its
+  // form lived to say it was done (a live update can bring the hold before
+  // the tick has had its beat, and the form goes with the card's face).
+  // Else cancelling brought the form back inside a card that looked shut
+  const [wasHeld, setWasHeld] = useState(hold != null)
+  if ((hold != null) !== wasHeld) {
+    setWasHeld(hold != null)
+    if (hold) setOpenId(null)
+  }
   const [signInOpen, setSignInOpen] = useState(false)
   const closeHold = useCallback(() => setOpenId(null), [])
 
@@ -141,13 +145,30 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     setOpenId(Number(place.id))
   }
 
+  // Held, only that place is left, fetched with the rest or, if it is not
+  // among them (booked from a scanned code), drawn from the hold itself
+  const heldId = hold ? String(hold.placeId) : null
+  const heldPlace = places.filter((p) => String(p.id) === heldId)
+  const shown = !hold
+    ? places
+    : heldPlace.length > 0
+      ? heldPlace
+      : [{ id: hold.placeId, name: hold.placeName, kind: hold.placeKind } as PlaceViewModel]
+  const heldIndex = heldId ? places.findIndex((p) => String(p.id) === heldId) : -1
+
   return (
     <NinjaPage
-      title={t('rooms')}
-      subtitle={!isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
+      title={hold ? localized(hold.placeName) || t('reserved') : t('rooms')}
+      subtitle={
+        hold
+          ? undefined
+          : !isLoading && places.length > 0 && reservationsEnabled
+            ? t('bookFreeNow', { count: freeCount })
+            : undefined
+      }
     >
       <Rise className='flex flex-col gap-4'>
-        {!reservationsEnabled && (
+        {!reservationsEnabled && !hold && (
           <RiseItem>
             <Panel className='text-destructive flex items-center gap-3 p-4'>
               <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
@@ -171,25 +192,40 @@ function PlacesList({ atTable }: { atTable: boolean }) {
             <PlaceCardSkeleton />
           </RiseItem>
         ) : (
-          <div className='flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start'>
-            {places.map((place) => (
-              <RiseItem key={String(place.id)}>
-                <PlaceCard
-                  place={place}
-                  canReserve={canReserve}
-                  // The hold arriving folds the card at once, so the tick
-                  // it leaves behind grows straight into the hold card
-                  open={openId === Number(place.id) && !hold}
-                  onToggle={handleToggle}
-                  onDone={closeHold}
-                />
-              </RiseItem>
-            ))}
+          <div className={cn('flex flex-col gap-4', !hold && 'md:grid md:grid-cols-2 md:items-start')}>
+            <AnimatePresence mode='popLayout'>
+              {shown.map((place, i) => (
+                <motion.div
+                  key={String(place.id)}
+                  layout
+                  transition={springSoft}
+                  // The others slide away one after another, nearest the held one first
+                  exit={{
+                    opacity: 0,
+                    y: 48,
+                    scale: 0.94,
+                    filter: 'blur(4px)',
+                    transition: { duration: 0.24, ease: [0.4, 0, 1, 1], delay: Math.abs(i - Math.max(0, heldIndex)) * 0.04 },
+                  }}
+                  initial={{ opacity: 0, y: 48, scale: 0.94 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, transition: { ...springSoft, delay: i * 0.04 } }}
+                >
+                  <PlaceCard
+                    place={place}
+                    canReserve={canReserve}
+                    open={openId === Number(place.id) && !hold}
+                    onToggle={handleToggle}
+                    onDone={closeHold}
+                    reservation={heldId === String(place.id) ? hold : undefined}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
         {/* Telling someone already at a table to scan a table is noise */}
-        {!atTable && (
+        {!atTable && !hold && (
           <RiseItem>
             <ScanFooter />
           </RiseItem>

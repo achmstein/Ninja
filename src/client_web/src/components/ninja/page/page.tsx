@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { useCanGoBack, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
-import { motion, MotionConfig, useMotionValueEvent, useScroll, useTransform } from 'motion/react'
+import { AnimatePresence, motion, MotionConfig, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
-import { springSoft } from '@/lib/motion'
+import { blurSwap, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NinjaTopBar } from '../ninja-top-bar'
@@ -38,6 +38,7 @@ export function NinjaPage({
   useMotionValueEvent(scrollY, 'change', (y) => setFolded(y > TITLE_FOLD))
   const opacity = useTransform(scrollY, [0, TITLE_FOLD], [1, 0])
   const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
+  const swap = blurSwap(useReducedMotion())
 
   return (
     <MotionConfig reducedMotion='user'>
@@ -51,7 +52,14 @@ export function NinjaPage({
       <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-6 md:pt-8', className)}>
         <motion.header style={{ opacity, scale }} className='flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]'>
           <div className='min-w-0'>
-            <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>{title}</h1>
+            {/* A new title swaps in with a short blur, the page itself staying put */}
+            <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>
+              <AnimatePresence mode='popLayout' initial={false}>
+                <motion.span key={title} className='block' {...swap}>
+                  {title}
+                </motion.span>
+              </AnimatePresence>
+            </h1>
             {subtitle && <div className='text-muted-foreground mt-1 text-[15px]'>{subtitle}</div>}
           </div>
           {action && <div className='shrink-0'>{action}</div>}

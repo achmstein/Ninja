@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
@@ -14,20 +14,15 @@ import { cn } from '@/lib/utils'
 import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { Switch } from '@/components/ui/switch'
 
-/**
- * The one shape a visit is drawn as: the book button's tick grows into the
- * reservation, and the reservation into the running clock
- */
-export const VISIT_CARD_ID = 'visit-card'
-
-/** How long the tick stays before the card folds, ms: long enough for the hold card to grow out of it */
+/** How long the tick shows before anything else moves, ms: the card only becomes the reservation after it */
 const SUCCESS_HOLD_MS = 700
 
 /**
  * Booking a place, as the app does it: the ten-minute window, the start-now
  * switch with the rate to start at, one button. It slides in under a place's
  * card on the tab, and sits in the sheet a scanned code opens. The button
- * becomes a spinner and then a tick, which the hold card grows out of.
+ * becomes a spinner and then a tick; after the tick the card it sits in
+ * becomes the reservation.
  */
 export function HoldForm({
   place,
@@ -50,17 +45,18 @@ export function HoldForm({
   const [optionCode, setOptionCode] = useState<string | null>(null)
   const [booked, setBooked] = useState(false)
 
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getPlace' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'scanPlace' }] })
-  }
+  }, [queryClient])
 
   const hold = useMutation({
     ...reservePlaceMutation(),
+    // Nothing is re-read until the tick has had its beat: the hold arriving
+    // is what turns the card into the reservation, so it waits its turn
     onSuccess: () => {
-      invalidate()
       toast.success(t('roomReservedSuccess'))
       setBooked(true)
     },
@@ -81,9 +77,12 @@ export function HoldForm({
   })
   useEffect(() => {
     if (!booked) return
-    const timer = window.setTimeout(() => done.current(), SUCCESS_HOLD_MS)
+    const timer = window.setTimeout(() => {
+      invalidate()
+      done.current()
+    }, SUCCESS_HOLD_MS)
     return () => window.clearTimeout(timer)
-  }, [booked])
+  }, [booked, invalidate])
 
   const options = tariffOptions(place.tariff)
   const pickRate = startOnConfirm && hasOptions(place.tariff)
@@ -169,7 +168,6 @@ export function HoldForm({
         <MorphButton
           phase={phase}
           height={48}
-          layoutId={VISIT_CARD_ID}
           className='font-bold'
           onClick={() =>
             hold.mutate({

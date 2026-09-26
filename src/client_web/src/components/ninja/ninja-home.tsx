@@ -157,12 +157,13 @@ export function NinjaHome({ menu }: HomeProps) {
 
   const onZoom = useCallback((direction: 'out' | 'in') => (direction === 'out' ? zoomOut() : zoomIn()), [zoomOut, zoomIn])
 
-  /** A photo lifts off where it is and flies into the tray */
-  const fly = (item: CatalogItemDto, from: HTMLElement | null, tone: DeckColumn['tone']) => {
+  /** A photo lifts off where it is and flies into the tray; `land` runs as it gets there */
+  const fly = (item: CatalogItemDto, from: HTMLElement | null, tone: DeckColumn['tone'], land: () => void) => {
     setAnnounce(t('ninjaAdded', { name: localized(item.name) }))
     const to = target.current?.getBoundingClientRect()
     const box = from?.getBoundingClientRect()
     if (reduced || !to || !box || box.width === 0) {
+      land()
       setBump((b) => b + 1)
       return
     }
@@ -176,6 +177,7 @@ export function NinjaHome({ menu }: HomeProps) {
         to: { x: to.x, y: to.y, width: 44, height: 44 },
         src: item.pictureUri ? itemPictureUrl(item.id) : null,
         toneClass: TONE_CLASS[tone],
+        land,
       },
     ])
   }
@@ -214,8 +216,7 @@ export function NinjaHome({ menu }: HomeProps) {
     navigator.vibrate?.(8)
     if (holdHint.pending) holdHint.done()
     const { customizations, unitPrice } = quickAddChoice(item)
-    addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' })
-    fly(item, photo, toneOf(item))
+    fly(item, photo, toneOf(item), () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
     // Nothing opened to show what went in: the toast names it, with its photo
     toast.success(t('ninjaAdded', { name: localized(item.name) }), {
       icon: item.pictureUri ? <img src={itemPictureUrl(item.id)} alt='' className='size-5 rounded-full object-cover' /> : undefined,
@@ -338,8 +339,8 @@ export function NinjaHome({ menu }: HomeProps) {
                   canOrder={canOrder}
                   onClose={() => setTuning(null)}
                   onAdd={(result, photo) => {
-                    addLine(tuning.item, result)
-                    fly(tuning.item, photo, tuning.tone)
+                    const item = tuning.item
+                    fly(item, photo, tuning.tone, () => addLine(item, result))
                     setTuning(null)
                   }}
                 />
@@ -381,6 +382,7 @@ export function NinjaHome({ menu }: HomeProps) {
         <FlightLayer
           flights={flights}
           onLand={(id) => {
+            flights.find((x) => x.id === id)?.land()
             setFlights((f) => f.filter((x) => x.id !== id))
             setBump((b) => b + 1)
           }}

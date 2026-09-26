@@ -9,13 +9,16 @@ export type Flight = {
   /** The photo, or null for a dish without one (its colour flies instead) */
   src: string | null
   toneClass: string
+  /** What happens as it lands: the dish goes into the order then, not before */
+  land: () => void
 }
 
 /**
  * The photo of a dish just added, flying into the tray. It starts exactly
  * over the photo it came from and lands on the tray's first thumbnail,
- * rising a little on the way, moved only by transform. Each flight removes
- * itself when it lands, so nothing is left running.
+ * rising a little on the way, moved only by transform. The dish joins the
+ * order as it lands (its `land`), so the tray changes when the photo gets
+ * there; each flight then removes itself, so nothing is left running.
  */
 export function FlightLayer({ flights, onLand }: { flights: Flight[]; onLand: (id: number) => void }) {
   return (
