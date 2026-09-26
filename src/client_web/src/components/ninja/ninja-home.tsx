@@ -9,6 +9,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
 import { usePlaceOrder } from '@/lib/use-place-order'
+import { useCheckoutExtras } from '@/lib/use-checkout-extras'
 import { SignInSheet } from '@/components/sign-in-options'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { OrderingPausedNote } from '@/components/menu/home/shared'
@@ -89,9 +90,13 @@ export function NinjaHome({ menu }: HomeProps) {
   }
   const byGuest = () => performance.now() - lastInput.current < 1500
 
+  // The note, the code and the points, set in the tray's order and sent with it
+  const extras = useCheckoutExtras()
+
   const order = usePlaceOrder({
     onPlaced: (finish) => {
       setExpanded(false)
+      extras.reset()
       setAnnounce(t('orderPlacedSuccessfully'))
       // In one render the tray empties (the hold button goes) and the pill at
       // the top grows out of it, to follow the order from here
@@ -410,7 +415,9 @@ export function NinjaHome({ menu }: HomeProps) {
               onExpandedChange={setExpanded}
               openness={openness}
               canOrder={canOrder}
-              order={order}
+              // The hold sends the note, the code and the points set in the order with it
+              order={{ ...order, submit: () => order.submit(extras.payload()) }}
+              extras={extras}
               cloudKitchen={cloudKitchen}
               onSignIn={() => setSignInOpen(true)}
               onKeepHolding={onKeepHolding}

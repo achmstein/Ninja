@@ -1,15 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { AnimatePresence, motion } from 'motion/react'
 import { ShoppingBag, Trash2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import { getAccountOptions, getPointsValueOptions } from '@/api/loyalty/@tanstack/react-query.gen'
-import { quotePromoOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
-import { useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
-import { cartCount, cartTotal, lineKey, useCart } from '@/lib/cart'
+import { useBrand, useIsCloudKitchen } from '@/lib/brand'
+import { cartCount, lineKey, useCart } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
 import { useOrderPill } from '@/lib/order-pill'
@@ -17,8 +11,8 @@ import { PlaceIcon } from '@/lib/places'
 import { usePlaceOrder } from '@/lib/use-place-order'
 import { CartLineCard } from '@/components/cart/cart-line'
 import { CheckoutAction, CheckoutDock } from '@/components/cart/checkout-dock'
-import { NoteRow, PointsRow, PromoRow } from '@/components/cart/savings'
-import { POINTS_STEP, useDebounced } from '@/components/cart/savings-model'
+import { CheckoutExtrasRows } from '@/components/cart/checkout-extras'
+import { useCheckoutExtras } from '@/lib/use-checkout-extras'
 import { type MorphPhase } from '@/components/motion/morph-button'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Empty, Panel } from '@/components/ninja/page/parts'
@@ -39,9 +33,6 @@ export const Route = createFileRoute('/cart')({
   component: CartPage,
 })
 
-/** Mobile parity: at most 100 points per EGP of the order total */
-const POINTS_PER_EGP = 100
-
 /**
  * The order, full screen: the tray's sheet grown to a page. Each line is a
  * card that steps up and down or swipes away, the extras (a note, a code,
@@ -51,68 +42,18 @@ const POINTS_PER_EGP = 100
 function CartPage() {
   const t = useT()
   const localized = useLocalized()
-  const auth = useAuth()
   const navigate = useNavigate()
-  // Points are loyalty's: without the module there is no balance to ask for and nothing to redeem
-  const { loyalty: loyaltyOn } = useFeatures()
   // The café takes a guest's order without a table, to collect
   const guestOrdersAnywhere = useBrand()?.guestOrdersAnywhere ?? false
   // No tables to scan: every order is collected, and a guest the café does not take signs in instead
   const cloudKitchen = useIsCloudKitchen()
 
   const { lines, clear } = useCart()
-  const [note, setNote] = useState('')
   const [signInOpen, setSignInOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
-  const [redeemEnabled, setRedeemEnabled] = useState(false)
-  const [pointsToRedeem, setPointsToRedeem] = useState(0)
-  // The code as applied; Catalog quotes it against the live subtotal and
-  // redeems it when the order's items check out
-  const [promoCode, setPromoCode] = useState<string | null>(null)
-
-  const userId = auth.user?.profile?.sub ?? ''
-
-  // Loyalty balance (a customer may not have an account yet; treat as 0)
-  const { data: loyaltyAccount } = useQuery({
-    ...getAccountOptions({ path: { userId }, query: { 'api-version': API_VERSION } }),
-    enabled: loyaltyOn && auth.isAuthenticated && !!userId && lines.length > 0,
-    retry: false,
-  })
-  const pointsBalance = loyaltyOn ? Number(loyaltyAccount?.pointsBalance ?? 0) : 0
-
-  const subtotal = cartTotal(lines)
-  const maxRedeemable = Math.min(pointsBalance, Math.floor(subtotal * POINTS_PER_EGP))
-
-  const effectivePoints = redeemEnabled ? pointsToRedeem : 0
-  const debouncedPoints = useDebounced(effectivePoints, 300)
-
-  const pointsValueQuery = useQuery({
-    ...getPointsValueOptions({ query: { 'api-version': API_VERSION, points: debouncedPoints } }),
-    enabled: debouncedPoints > 0,
-  })
-
-  const promoQuery = useQuery({
-    ...quotePromoOptions({ query: { 'api-version': API_VERSION, code: promoCode ?? '', subtotal } }),
-    enabled: !!promoCode && subtotal > 0,
-    retry: false,
-  })
-  const promoQuote = promoCode ? promoQuery.data : undefined
-  const promoDiscount = promoQuote && !promoQuote.reason ? Math.min(Number(promoQuote.discount ?? 0), subtotal) : 0
-  const promoReason = promoQuery.isError ? 'error' : (promoQuote?.reason ?? null)
-
-  // The server owns the discount math; on failure redemption is inert until
-  // the customer toggles it again (derived, no state sync needed)
-  useEffect(() => {
-    if (pointsValueQuery.isError) toast.error(t('anErrorOccurred'))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pointsValueQuery.isError])
-  const redeemActive = redeemEnabled && !pointsValueQuery.isError
-
-  const discount =
-    redeemActive && debouncedPoints > 0 && debouncedPoints === effectivePoints
-      ? Math.min(Number(pointsValueQuery.data?.discountValue ?? 0), subtotal)
-      : 0
-  const total = Math.max(0, subtotal - promoDiscount - discount)
+  // The note, the code and the points, on the same rules as the tray's
+  const extras = useCheckoutExtras()
+  const { subtotal, promoDiscount, pointsDiscount: discount, total } = extras
 
   // Place order is one button through the whole send: a spinner while it
   // goes, a tick when it lands, and then the tick lifts off to become the
@@ -145,16 +86,7 @@ function CartPage() {
   const { destination, tableUnconfirmed, activePlace, isGuest } = order
   const orderPhase: MorphPhase = order.isPending ? 'busy' : (sent ?? 'idle')
 
-  const placeOrder = () =>
-    order.submit({
-      note,
-      // Only what the quotes accepted: the server drops a code that no
-      // longer applies rather than failing the order, and a guest's points
-      // never go (the payload leaves them out)
-      points: discount > 0 ? debouncedPoints : 0,
-      promo: promoDiscount > 0 ? promoCode : null,
-      loyaltyDiscount: discount,
-    })
+  const placeOrder = () => order.submit(extras.payload())
 
   if (lines.length === 0) {
     return (
@@ -222,21 +154,7 @@ function CartPage() {
           <RiseItem>
             <motion.div layout='position' transition={springSoft}>
               <Panel className='divide-border/60 flex flex-col divide-y'>
-                <NoteRow note={note} onNote={setNote} />
-                <PromoRow code={promoCode} reason={promoReason} checking={promoQuery.isFetching} onApply={setPromoCode} onClear={() => setPromoCode(null)} />
-                {loyaltyOn && auth.isAuthenticated && maxRedeemable > 0 && (
-                  <PointsRow
-                    active={redeemActive}
-                    points={pointsToRedeem}
-                    max={maxRedeemable}
-                    balance={pointsBalance}
-                    onPoints={setPointsToRedeem}
-                    onActive={(checked) => {
-                      setRedeemEnabled(checked)
-                      setPointsToRedeem(checked ? Math.min(POINTS_STEP, maxRedeemable) : 0)
-                    }}
-                  />
-                )}
+                <CheckoutExtrasRows extras={extras} />
               </Panel>
             </motion.div>
           </RiseItem>

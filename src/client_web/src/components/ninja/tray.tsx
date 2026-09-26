@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { Link } from '@tanstack/react-router'
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue, type PanInfo } from 'motion/react'
 import { ArrowUp, Check, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { lineKey, useCart, type CartLine } from '@/lib/cart'
@@ -9,6 +8,8 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
+import type { CheckoutExtras } from '@/lib/use-checkout-extras'
+import { CheckoutExtrasRows } from '@/components/cart/checkout-extras'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
@@ -52,6 +53,7 @@ export function Tray({
   openness,
   canOrder,
   order,
+  extras,
   cloudKitchen,
   onSignIn,
   onKeepHolding,
@@ -66,6 +68,8 @@ export function Tray({
   openness: MotionValue<number>
   canOrder: boolean
   order: TrayOrder
+  /** The note, the code and the points, set in the open order */
+  extras: CheckoutExtras
   cloudKitchen: boolean
   onSignIn: () => void
   /** The hold was let go before the ring closed */
@@ -267,7 +271,7 @@ export function Tray({
               onPanEnd={(info) => pan.end('sheet', info)}
             />
             <SeatShown.Provider value={seatShown}>
-              <OrderSheet order={order} cloudKitchen={cloudKitchen} />
+              <OrderSheet order={order} extras={extras} cloudKitchen={cloudKitchen} />
             </SeatShown.Provider>
           </motion.div>
         </div>
@@ -328,7 +332,7 @@ export function Tray({
                         className='block origin-[0%_50%] rtl:origin-[100%_50%]'
                         style={reduced ? undefined : { scale: totalScale }}
                       >
-                        <Odometer value={price(summary.total)} className='text-base font-bold' />
+                        <Odometer value={price(extras.total)} className='text-base font-bold' />
                       </motion.span>
                     </>
                   )}
@@ -445,23 +449,46 @@ function SheetHandle({
   )
 }
 
-function OrderSheet({ order, cloudKitchen }: { order: TrayOrder; cloudKitchen: boolean }) {
+function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras: CheckoutExtras; cloudKitchen: boolean }) {
   const t = useT()
   const localized = useLocalized()
+  const price = usePrice()
   const lines = useCart((s) => s.lines)
 
   return (
     <div className='flex min-h-0 flex-1 flex-col'>
       <div className='flex items-baseline justify-between px-5 pb-2'>
         <h2 className='heading text-[calc(1.35rem*var(--heading-scale))]'>{t('ninjaYourOrder')}</h2>
-        <Link to='/cart' className='text-xs font-semibold underline-offset-4 opacity-70 hover:underline'>
-          {t('ninjaMoreAtCheckout')}
-        </Link>
       </div>
       <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-12'>
         {lines.map((line) => (
           <SwipeLine key={lineKey(line)} line={line} />
         ))}
+        {/* The note, a code, points: right here in the order, on a light card as the bills sit in their sheet */}
+        <div className='bg-background text-foreground divide-border/60 mt-3 flex flex-col divide-y overflow-hidden rounded-[1.25rem]'>
+          <CheckoutExtrasRows extras={extras} />
+        </div>
+        {/* What they take off, and what the hold will send */}
+        {(extras.promoDiscount > 0 || extras.pointsDiscount > 0) && (
+          <div className='mt-3 flex flex-col gap-1 px-2 text-sm tabular-nums'>
+            <div className='flex justify-between opacity-70'>
+              <span>{t('subtotal')}</span>
+              <span>{price(extras.subtotal)}</span>
+            </div>
+            {extras.promoDiscount > 0 && (
+              <div className='flex justify-between text-emerald-400 dark:text-emerald-600'>
+                <span>{extras.promo.code}</span>
+                <span>−{price(extras.promoDiscount)}</span>
+              </div>
+            )}
+            {extras.pointsDiscount > 0 && (
+              <div className='flex justify-between text-emerald-400 dark:text-emerald-600'>
+                <span>{t('useLoyaltyPoints')}</span>
+                <span>−{price(extras.pointsDiscount)}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className='mt-3 flex flex-col gap-2 px-2 text-sm'>
           {order.tableUnconfirmed && order.activePlace ? (
             <div className='text-foreground rounded-2xl'>
