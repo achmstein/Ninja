@@ -23,14 +23,21 @@ export const useIsland = create<{ busy: boolean }>(() => ({ busy: false }))
 let live: IslandFace | null = null
 let flashing: number | null = null
 
-function put(face: IslandFace) {
-  // Sileo reads an id it does not declare: the same id updates the toast in place
-  sileo.show({ ...face, duration: null, id: ISLAND } as SileoOptions)
+/**
+ * Sileo reads an id it does not declare: the same id updates the toast in
+ * place. Sticky (the live face) it stays collapsed until tapped; timed (a
+ * flash) it opens on its own to say its line, then collapses (autopilot).
+ */
+function put(face: IslandFace, duration: number | null) {
+  sileo.show({ ...face, duration, id: ISLAND } as SileoOptions)
 }
+
+/** A flash outlasts its own hold on sileo's side, so the island goes back to the live face before sileo would take it away */
+const OUTLAST_MS = 800
 
 /** Back to the live face, or away */
 function settle() {
-  if (live) put(live)
+  if (live) put(live, null)
   else sileo.dismiss(ISLAND)
   useIsland.setState({ busy: live != null })
 }
@@ -44,7 +51,7 @@ export const island = {
   /** Something to say now, for `ms`; the island then goes back to the live face */
   flash(face: IslandFace, ms: number): string {
     if (flashing != null) window.clearTimeout(flashing)
-    put(face)
+    put(face, ms + OUTLAST_MS)
     useIsland.setState({ busy: true })
     flashing = window.setTimeout(() => {
       flashing = null

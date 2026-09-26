@@ -4,16 +4,15 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { blurSwap, spring } from '@/lib/motion'
 import { useIsland } from '@/lib/island'
 import { cn } from '@/lib/utils'
-import { BrandMark, BrandWordmark } from '@/components/brand-mark'
+import { BrandWordmark } from '@/components/brand-mark'
 import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from '@/components/branch-switcher'
 import { NINJA_BAR_H } from './chrome'
 
 /**
  * The top bar in the Ninja style's chrome: slim and see-through, so the page
- * runs on under it. The order pill lives in its middle: while the pill is on
- * screen the wordmark folds to the mark and the place chips step aside, and
- * they come back when it goes. `start` replaces the brand (a way back);
+ * runs on under it. The island (lib/island.ts) lives in its end corner:
+ * while it is up the place chips step aside, and they come back when it goes. `start` replaces the brand (a way back);
  * `title`, once set, takes the wordmark's place (a page's own title, handed
  * up as its large title scrolls away). `chips` off leaves the end empty, for
  * a pushed page.
@@ -30,17 +29,13 @@ export function NinjaTopBar({
   className?: string
 }) {
   // The island's slot is taken: by the order pill, or by a toast for a moment
-  // The island is up (the order's status, or a message for a moment)
+  // The island is up in the chips' corner (the order's status, or a message for a moment)
   const pill = useIsland((s) => s.busy)
   const swap = blurSwap(useReducedMotion())
   const brand = (
     <Link to='/' className='flex min-w-0 items-center'>
       <AnimatePresence mode='popLayout' initial={false}>
-        {pill ? (
-          <motion.span key='mark' {...swap}>
-            <BrandMark className='size-9 rounded-xl text-base' />
-          </motion.span>
-        ) : title ? (
+        {title ? (
           <motion.span key='title' {...swap} className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>
             {title}
           </motion.span>

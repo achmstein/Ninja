@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { BellRing, Check, ChefHat, Send, X } from 'lucide-react'
@@ -35,6 +35,9 @@ const NOTES = {
   paid: PILL_WORDS.paidNote,
   cancelled: PILL_WORDS.cancelledNote,
 } as const
+
+/** How long the island stays open to say that the order has moved on, ms */
+const ANNOUNCE_MS = 4200
 
 /** A stage in the island's colours: waiting on the café, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
@@ -108,20 +111,35 @@ export function OrderPill() {
   const say = (w: Parameters<typeof words>[0]) => words(w, language, standard)
   const items = order?.items ?? []
   const total = order?.total
+  // The stage the island last said out loud
+  const told = useRef<PillStage | null>(null)
   const itemsKey = items.map((line) => `${line.units}:${localized(line.productName)}`).join('|')
   useEffect(() => {
     if (!visible) {
       island.live(null)
+      told.current = null
       return
     }
     const Icon = ICONS[stage]
-    island.live({
+    const face: IslandFace = {
       type: TYPES[stage],
-      title: orderNumber != null ? `${say(STAGE_LABEL[stage])} · #${orderNumber}` : say(STAGE_LABEL[stage]),
+      // Collapsed it is small: the stage's icon and the order's number; opened, the stage says itself
+      title: orderNumber != null ? `#${orderNumber}` : say(STAGE_LABEL[stage]),
       icon: <Icon className='size-4' />,
-      description: <OrderDetails note={say(NOTES[stage])} items={items} total={total != null && Number(total) > 0 ? price(total) : null} />,
+      description: (
+        <OrderDetails
+          stage={say(STAGE_LABEL[stage])}
+          note={say(NOTES[stage])}
+          items={items}
+          total={total != null && Number(total) > 0 ? price(total) : null}
+        />
+      ),
       button: { title: say(PILL_WORDS.seeBills), onClick: () => void navigate({ to: '/bills' }) },
-    })
+    }
+    island.live(face)
+    // Something new (the order moving on) opens the island to say it, then it collapses back to the number
+    if (told.current != null && told.current !== stage) island.flash({ ...face, title: say(STAGE_LABEL[stage]) }, ANNOUNCE_MS)
+    told.current = stage
     // Re-said only when what it says changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, stage, orderNumber, itemsKey, total, language, standard])
@@ -131,11 +149,14 @@ export function OrderPill() {
 }
 
 /** The island opened: where the order is, what is in it, and what it comes to */
-function OrderDetails({ note, items, total }: { note: string; items: NonNullable<OrderSummary['items']>; total: string | null }) {
+function OrderDetails({ stage, note, items, total }: { stage: string; note: string; items: NonNullable<OrderSummary['items']>; total: string | null }) {
   const localized = useLocalized()
   return (
     <span className='flex flex-col gap-2 text-start'>
-      <span>{note}</span>
+      <span className='flex flex-col'>
+        <span className='font-semibold'>{stage}</span>
+        <span className='opacity-70'>{note}</span>
+      </span>
       {items.length > 0 && (
         <span className='flex flex-col gap-0.5'>
           {items.slice(0, 4).map((line, i) => (
