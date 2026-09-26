@@ -301,9 +301,10 @@ function DeckCard({
 const RING_R = 18
 const RING_C = 2 * Math.PI * RING_R
 
-function PressRing({ pressing }: { pressing: boolean }) {
+/** A ring that fills round a plus while a press is held, full when the long press lands */
+export function PressRing({ pressing, small = false }: { pressing: boolean; small?: boolean }) {
   return (
-    <span className='relative grid size-11 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'>
+    <span className={cn('relative grid place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm', small ? 'size-9' : 'size-11')}>
       <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90'>
         <circle
           cx='22'
@@ -320,7 +321,7 @@ function PressRing({ pressing }: { pressing: boolean }) {
           }}
         />
       </svg>
-      <Plus className='size-5' strokeWidth={2.5} />
+      <Plus className={small ? 'size-4' : 'size-5'} strokeWidth={2.5} />
     </span>
   )
 }

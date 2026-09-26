@@ -4,7 +4,9 @@ import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
-import { DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+import { PressRing } from './deck'
+import { canQuickAdd, DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+import { usePress } from './use-press'
 
 /** A tile's corner; the card it came from is rounder, and the morph carries it across */
 const TILE_RADIUS = 18
@@ -12,14 +14,18 @@ const TILE_RADIUS = 18
 /**
  * The whole menu at a glance: the deck zoomed out. Each category is a short
  * heading over a grid of small tiles; the cards that were on screen morph
- * into their tiles, the rest fade in. A tap grows a tile back into its card.
- * The usuals are not repeated here: each of them is a tile in its category.
+ * into their tiles, the rest fade in. The grid orders too, the way the deck
+ * does: a tap opens the dish's options over the grid, grown out of its tile,
+ * and a held press puts one straight in the tray. Pinching open, or the way
+ * back in the bar, returns to the cards. The usuals are not repeated here:
+ * each of them is a tile in its category.
  */
 export function MenuGrid({
   columns,
   focusId,
   sharedIds,
-  onPick,
+  onOpen,
+  onQuickAdd,
   onZoomIn,
 }: {
   columns: DeckColumn[]
@@ -27,7 +33,8 @@ export function MenuGrid({
   focusId: number | null
   /** The items whose card was on screen and so morph rather than appear */
   sharedIds: ReadonlySet<number>
-  onPick: (item: CatalogItemDto) => void
+  onOpen: (item: CatalogItemDto) => void
+  onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onZoomIn: () => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
@@ -89,7 +96,8 @@ export function MenuGrid({
                 item={item}
                 tone={col.tone}
                 shared={sharedIds.has(Number(item.id))}
-                onPick={onPick}
+                onOpen={onOpen}
+                onQuickAdd={onQuickAdd}
               />
             ))}
           </div>
@@ -103,12 +111,14 @@ function Tile({
   item,
   tone,
   shared,
-  onPick,
+  onOpen,
+  onQuickAdd,
 }: {
   item: CatalogItemDto
   tone: DeckColumn['tone']
   shared: boolean
-  onPick: (item: CatalogItemDto) => void
+  onOpen: (item: CatalogItemDto) => void
+  onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
   const localized = useLocalized()
   const price = usePrice()
@@ -116,17 +126,40 @@ function Tile({
   const hasPhoto = !!item.pictureUri && !failed
   const soldOut = item.isAvailable === false
   const onOffer = item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
+  const photo = useRef<HTMLDivElement>(null)
+  const quick = canQuickAdd(item)
+  const { pressing, handlers } = usePress({
+    onTap: () => onOpen(item),
+    onLongPress: () => onQuickAdd(item, photo.current),
+  })
 
   return (
-    <button type='button' data-item={String(item.id)} onClick={() => onPick(item)} className='flex min-w-0 flex-col text-start'>
+    <button
+      type='button'
+      data-item={String(item.id)}
+      {...handlers}
+      className='flex min-w-0 flex-col text-start select-none [-webkit-touch-callout:none]'
+    >
       <motion.div
+        ref={photo}
         layoutId={`card-${item.id}`}
         initial={shared ? false : { opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.28 }}
         style={{ borderRadius: TILE_RADIUS }}
-        className={cn('relative aspect-[4/5] w-full overflow-hidden', !hasPhoto && TONE_CLASS[tone], soldOut && 'opacity-50 grayscale')}
+        className={cn(
+          'relative aspect-[4/5] w-full overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
+          !hasPhoto && TONE_CLASS[tone],
+          soldOut && 'opacity-50 grayscale',
+          pressing && 'scale-[0.95]'
+        )}
       >
+        {/* Held, a dish that needs no choosing fills a ring and drops into the tray */}
+        {quick && (
+          <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-200', pressing ? 'opacity-100' : 'opacity-0')}>
+            <PressRing pressing={pressing} small />
+          </span>
+        )}
         {hasPhoto ? (
           <motion.div layoutId={`photo-${item.id}`} className='bg-muted absolute inset-0'>
             <img

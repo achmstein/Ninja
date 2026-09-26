@@ -260,7 +260,14 @@ export function NinjaHome({ menu }: HomeProps) {
               ) : columns.length === 0 ? (
                 <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
               ) : mode === 'grid' ? (
-                <MenuGrid columns={columns} focusId={gridFocus.id} sharedIds={gridFocus.shared} onPick={(item) => zoomIn(item)} onZoomIn={() => zoomIn()} />
+                <MenuGrid
+                  columns={columns}
+                  focusId={gridFocus.id}
+                  sharedIds={gridFocus.shared}
+                  onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
+                  onQuickAdd={onQuickAdd}
+                  onZoomIn={() => zoomIn()}
+                />
               ) : (
                 <Deck
                   key={deckKey}
