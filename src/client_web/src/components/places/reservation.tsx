@@ -1,8 +1,12 @@
+import { type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { type ReservationViewModel } from '@/api/spaces'
 import { ease, springOpen } from '@/lib/motion'
 import { placeCardId } from '@/lib/places'
 import { useEntrance } from '@/components/motion/use-entrance'
+import { useLiveBills } from '@/lib/live-bills'
+import { DOCK_H } from '@/components/ninja/chrome'
+import { useDockRowShown } from '@/components/ninja/use-dock-row'
 import { ReservationFace } from './reservation-face'
 
 /**
@@ -21,6 +25,8 @@ export function Reservation({ hold }: { hold: ReservationViewModel | undefined }
 
 function Opened({ hold }: { hold: ReservationViewModel }) {
   const clock = useEntrance()
+  // The dock grows by a row when it carries the bill, the order or the table: the card ends above that too
+  const row = useDockRowShown(useLiveBills()) ? DOCK_H : 0
   return (
     <motion.div
       layoutId={placeCardId(hold.placeId)}
@@ -30,11 +36,11 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       // Closing, it hands over at once: it fades as the room's card, already under it with its
       // own face, runs back to its place, rather than shrinking empty over the card
       exit={{ opacity: 0, transition: { duration: 0.16, ease: ease.exit } }}
-      style={{ borderRadius: 32 }}
+      style={{ borderRadius: 32, '--dock-row': `${row}px` } as CSSProperties}
       role='dialog'
       aria-label={String(hold.placeName?.en ?? '')}
       // Between the top bar (64 px) and the dock, at the dock's side margins; the slab's tints for what is inside
-      className='bg-foreground text-background fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[84px] z-20 mx-auto max-w-lg overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] md:top-24 md:bottom-6 [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
+      className='bg-foreground text-background fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto max-w-lg overflow-hidden shadow-[0_16px_36px_-18px_rgb(0_0_0/0.45)] md:top-24 md:bottom-6 [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
     >
       {/* Contained: what changes inside (the clock each second) never lays out or repaints the page around it */}
       <div className='no-scrollbar size-full overflow-y-auto [contain:content]'>
