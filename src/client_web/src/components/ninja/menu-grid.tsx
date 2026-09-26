@@ -28,6 +28,8 @@ export function MenuGrid({
   onQuickAdd,
   onZoomIn,
   landingId,
+  jump,
+  onSection,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -39,6 +41,10 @@ export function MenuGrid({
   onZoomIn: () => void
   /** The dish whose photo is flying to the tray from its open card: its tile waits for it to land */
   landingId: number | null
+  /** A category to scroll to (its index among the categories), asked for by the jump bar; `n` tells two asks apart */
+  jump: { index: number; n: number } | null
+  /** The category in view changed, as the jump bar lights it */
+  onSection: (index: number) => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const categories = columns.filter((c) => c.kind === 'category')
@@ -51,6 +57,47 @@ export function MenuGrid({
     requestAnimationFrame(() => onOpen(item))
   }
   const focusColumn = categories.find((c) => c.items.some((i) => Number(i.id) === focusId))?.id
+
+  // Which category is in view: the last one whose heading has reached the bar. While a jump
+  // scrolls there, the bar keeps the one asked for, rather than lighting each one passed
+  const sections = useRef<Array<HTMLElement | null>>([])
+  const shown = useRef(-1)
+  const jumping = useRef(false)
+  const spy = () => {
+    const el = scroller.current
+    if (!el || jumping.current) return
+    const line = el.scrollTop + DECK_TOP + 24
+    let index = 0
+    sections.current.forEach((section, i) => {
+      if (section && section.offsetTop <= line) index = i
+    })
+    // At the very end the last one is in view, however short it is
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) index = categories.length - 1
+    if (index !== shown.current) {
+      shown.current = index
+      onSection(index)
+    }
+  }
+  useLayoutEffect(spy)
+
+  useEffect(() => {
+    const el = scroller.current
+    const section = jump ? sections.current[jump.index] : null
+    if (!el || !section) return
+    jumping.current = true
+    shown.current = jump!.index
+    el.scrollTo({ top: Math.max(0, section.offsetTop - DECK_TOP + 4), behavior: 'smooth' })
+    const done = () => {
+      jumping.current = false
+    }
+    // Let go once the scroll settles (scrollend where there is one, a timer where there is not)
+    el.addEventListener('scrollend', done, { once: true })
+    const timer = window.setTimeout(done, 900)
+    return () => {
+      el.removeEventListener('scrollend', done)
+      window.clearTimeout(timer)
+    }
+  }, [jump])
 
   // Arrive with the dish we were on in view, before the morph measures it
   useLayoutEffect(() => {
@@ -88,12 +135,16 @@ export function MenuGrid({
     <motion.div
       ref={scroller}
       layoutScroll
+      onScroll={spy}
       className='no-scrollbar h-full overflow-y-auto overscroll-y-contain px-4 pb-6 [touch-action:pan-y]'
       style={{ paddingTop: DECK_TOP }}
     >
-      {categories.map((col) => (
+      {categories.map((col, index) => (
         <section
           key={col.id}
+          ref={(el) => {
+            sections.current[index] = el
+          }}
           className='mb-6'
           // Off-screen categories are not drawn until scrolled to; the one the deck was on always is,
           // so the grid can land on the dish it came from

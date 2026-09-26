@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { LayoutGrid } from 'lucide-react'
+import { GalleryVertical, LayoutGrid } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { LiquidPill } from './liquid-pill'
@@ -12,17 +12,23 @@ const PILL_H = 36
  * The categories above the dock, in the thumb's reach. The active one sits
  * in a pill whose two edges move on different springs. Tapping the active
  * category again, or the whole-menu button, zooms out to the whole menu.
+ * On the whole menu (`zoomed`) the same row is a jump bar: a tap scrolls to
+ * that category, the pill follows the one in view, and the button at the
+ * end goes back to the cards.
  */
 export function LiquidTabs({
   labels,
   active,
   onSelect,
   onZoomOut,
+  zoomed = false,
 }: {
   labels: string[]
   active: number
   onSelect: (index: number) => void
+  /** The button at the end: to the whole menu, or (zoomed) back to the cards */
   onZoomOut: () => void
+  zoomed?: boolean
 }) {
   const t = useT()
   const reduced = useReducedMotion()
@@ -67,7 +73,7 @@ export function LiquidTabs({
               type='button'
               role='tab'
               aria-selected={i === active}
-              onClick={() => (i === active ? onZoomOut() : onSelect(i))}
+              onClick={() => (i === active && !zoomed ? onZoomOut() : onSelect(i))}
               className={cn(
                 'relative z-10 h-9 shrink-0 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-200',
                 i === active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -81,11 +87,11 @@ export function LiquidTabs({
       <button
         type='button'
         onClick={onZoomOut}
-        aria-label={t('ninjaWholeMenu')}
-        data-hint-anchor='zoom'
+        aria-label={t(zoomed ? 'ninjaBackToCards' : 'ninjaWholeMenu')}
+        data-hint-anchor={zoomed ? undefined : 'zoom'}
         className='bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-full'
       >
-        <LayoutGrid className='size-4' />
+        {zoomed ? <GalleryVertical className='size-4' /> : <LayoutGrid className='size-4' />}
       </button>
     </div>
   )

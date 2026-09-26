@@ -148,6 +148,10 @@ export function NinjaHome({ menu }: HomeProps) {
     if (zoomHint.pending) zoomHint.done()
   }, [columns, column, zoomHint])
 
+  // On the whole menu: the category in view, and the one the jump bar asked to scroll to
+  const [gridColumn, setGridColumn] = useState(0)
+  const [jump, setJump] = useState<{ index: number; n: number } | null>(null)
+
   const zoomIn = useCallback(
     (item?: CatalogItemDto) => {
       const position = item ? positionOf(columns, item.id) : { column, row: rows.current[column] ?? 0 }
@@ -233,6 +237,9 @@ export function NinjaHome({ menu }: HomeProps) {
   }
 
   const labels = columns.map((c) => c.label)
+  // The whole menu shows the categories alone (each usual is a tile in its own category)
+  const gridCategories = columns.filter((c) => c.kind === 'category')
+  const gridLabels = gridCategories.map((c) => c.label)
 
   return (
     <MotionConfig reducedMotion='user'>
@@ -272,6 +279,8 @@ export function NinjaHome({ menu }: HomeProps) {
                   onQuickAdd={onQuickAdd}
                   onZoomIn={() => zoomIn()}
                   landingId={landing}
+                  jump={jump}
+                  onSection={setGridColumn}
                 />
               ) : (
                 <Deck
@@ -309,10 +318,24 @@ export function NinjaHome({ menu }: HomeProps) {
               </div>
             )}
 
-            {/* The categories, in the thumb's reach */}
-            {mode === 'deck' && columns.length > 0 && (
+            {/* The categories, in the thumb's reach: on the cards they turn the deck, on the whole menu they jump to their heading */}
+            {columns.length > 0 && (
               <nav aria-label={t('menu')} className='shrink-0 pb-1'>
-                <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
+                {mode === 'deck' ? (
+                  <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
+                ) : (
+                  <LiquidTabs
+                    zoomed
+                    labels={gridLabels}
+                    active={gridColumn}
+                    onSelect={(index) => setJump((j) => ({ index, n: (j?.n ?? 0) + 1 }))}
+                    // Back to the cards at the category in view, or where the deck was if that is the one
+                    onZoomOut={() => {
+                      const shown = gridCategories[gridColumn]
+                      zoomIn(shown && shown.id !== columns[column]?.id ? shown.items[0] : undefined)
+                    }}
+                  />
+                )}
               </nav>
             )}
 
