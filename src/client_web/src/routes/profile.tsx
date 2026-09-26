@@ -21,7 +21,7 @@ import { useSelectedBranch } from '@/lib/branch'
 import { unregisterPush } from '@/lib/use-push'
 import { usePrice, useT } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
-import { cn } from '@/lib/utils'
+import { closedAt, useMyBills } from '@/lib/bills'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +42,7 @@ import { PoweredByNinja } from '@/components/powered-by-ninja'
 import { Badge } from '@/components/ui/badge'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
-import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/tile-row'
+import { TileAnchor, TileButton, TileCard, TileGroup, TileLink } from '@/components/tile-row'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Slab } from '@/components/ninja/page/parts'
 import { PointsRing } from '@/components/ninja/page/points-ring'
@@ -56,7 +56,9 @@ export const Route = createFileRoute('/profile')({
 
 /**
  * The You tab: who you are on the dock's slab (a member's points as a ring),
- * then your activity, the settings and the way out.
+ * then what you come back to as cards (your bills, your sessions, your tab,
+ * your points), each opening its page as one shape, then the settings and
+ * the way out.
  */
 function ProfilePage() {
   const t = useT()
@@ -104,6 +106,7 @@ function ProfilePage() {
   const points = Number(loyalty?.pointsBalance ?? 0)
   const lifetime = Number(loyalty?.lifetimePoints ?? 0)
   const { nextTier, progress } = useTierProgress(lifetime, !!loyalty)
+  const monthVisits = useMonthVisits()
 
   return (
     <NinjaPage title={t('youTab')}>
@@ -154,42 +157,47 @@ function ProfilePage() {
           </RiseItem>
         )}
 
-        {/* What the café holds for you: a balance, the loyalty programme to join */}
-        {signedIn && ((features.tabs && houseBalance !== 0) || (features.loyalty && loyaltyQuery.isError)) && (
-          <RiseItem>
-            <TileGroup>
-              {features.tabs && houseBalance !== 0 && (
-                <TileLink
-                  to='/account'
-                  icon={Wallet}
-                  label={houseBalance > 0 ? t('amountDue') : t('creditBalance')}
-                  value={
-                    <span className={cn('text-[15px] font-bold tabular-nums', houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}>
-                      {price(Math.abs(houseBalance))}
-                    </span>
-                  }
-                />
-              )}
-              {features.loyalty && loyaltyQuery.isError && (
-                <TileLink to='/loyalty' icon={Award} label={t('joinOurLoyaltyProgram')} />
-              )}
-            </TileGroup>
-          </RiseItem>
-        )}
-
+        {/* What you come back to, as cards: each opens its page, its icon and name travelling into the title */}
         {signedIn && (
-          <RiseItem>
-            <TileGroup>
-              <TileLink to='/bills' icon={ReceiptText} label={t('ninjaYourBills')} />
-              {features.timeBilling && <TileLink to='/stays' icon={Timer} label={t('sessions')} />}
-              {features.tabs && <TileLink to='/account' icon={Wallet} label={t('transactions')} />}
-            </TileGroup>
+          <RiseItem className='grid grid-cols-2 gap-3'>
+            <TileCard
+              to='/bills'
+              push='bills'
+              icon={ReceiptText}
+              label={t('ninjaYourBills')}
+              value={monthVisits > 0 ? `${t('ninjaMonthVisits', { count: String(monthVisits) })} ${t('ninjaThisMonth')}` : undefined}
+            />
+            {features.timeBilling && <TileCard to='/stays' push='stays' icon={Timer} label={t('sessions')} />}
+            {features.tabs && (
+              <TileCard
+                to='/account'
+                push='account'
+                icon={Wallet}
+                label={t('transactions')}
+                value={
+                  houseBalance !== 0 ? (
+                    <span className={houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}>
+                      {houseBalance > 0 ? t('amountDue') : t('creditBalance')} · {price(Math.abs(houseBalance))}
+                    </span>
+                  ) : undefined
+                }
+              />
+            )}
+            {features.loyalty && (
+              <TileCard
+                to='/loyalty'
+                push='loyalty'
+                icon={Award}
+                label={loyaltyQuery.isError ? t('joinOurLoyaltyProgram') : t('loyaltyRewards')}
+                value={loyalty ? `${points} ${t('pts')}` : undefined}
+              />
+            )}
           </RiseItem>
         )}
 
         <RiseItem>
           <TileGroup>
-            <TileLink to='/settings' icon={Settings} label={t('settings')} />
+            <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />
             {branch?.phone && (
               <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
             )}
@@ -279,4 +287,14 @@ function AboutDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+/** How many visits this month closed a bill: what the bills card says it holds */
+function useMonthVisits(): number {
+  const { data: bills = [] } = useMyBills()
+  const now = new Date()
+  return bills.filter((bill) => {
+    const closed = closedAt(bill)
+    return closed != null && closed.getMonth() === now.getMonth() && closed.getFullYear() === now.getFullYear()
+  }).length
 }

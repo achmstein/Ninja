@@ -1,6 +1,9 @@
 import { Link, type LinkProps } from '@tanstack/react-router'
+import { motion } from 'motion/react'
 import { ChevronRight } from 'lucide-react'
+import { springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { pushIds } from '@/components/ninja/page/push'
 
 /**
  * Tiles in the Ninja style: rows in one lifted group, each an icon in a
@@ -27,21 +30,31 @@ type TileContentProps = {
   destructive?: boolean
   /** In place of the chevron: a switch, a badge; null for nothing */
   trailing?: React.ReactNode
+  /** The page it opens, whose title its icon and name travel into (components/ninja/page/push.ts) */
+  push?: string
 }
 
-function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing }: TileContentProps) {
+function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing, push }: TileContentProps) {
+  const ids = push ? pushIds(push) : null
   return (
     <>
-      <span
-        className={cn(
-          'grid size-9 shrink-0 place-items-center rounded-full',
-          destructive ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'
-        )}
+      <motion.span
+        layoutId={ids?.icon}
+        transition={springOpen}
+        style={{ borderRadius: 999 }}
+        className={cn('grid size-9 shrink-0 place-items-center', destructive ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground')}
       >
         <Icon className='size-[18px]' />
-      </span>
+      </motion.span>
       <span className='min-w-0 flex-1'>
-        <span className={cn('block truncate text-[15px] font-semibold', destructive && 'text-destructive')}>{label}</span>
+        {/* Sized to its words, so the name grows into the title without stretching */}
+        <motion.span
+          layoutId={ids?.title}
+          transition={springOpen}
+          className={cn('inline-block max-w-full truncate align-top text-[15px] font-semibold', destructive && 'text-destructive')}
+        >
+          {label}
+        </motion.span>
         {sublabel && <span className='text-muted-foreground block text-[13px]'>{sublabel}</span>}
       </span>
       {value && <span className='text-muted-foreground shrink-0 text-[13px]'>{value}</span>}
@@ -95,5 +108,47 @@ export function TileRow({ className, ...content }: TileContentProps & { classNam
     <div className={cn(rowClasses, 'hover:bg-transparent active:bg-transparent', className)}>
       <TileContent {...content} />
     </div>
+  )
+}
+
+/**
+ * A tile as a card of its own, for what the customer comes back to (their
+ * bills, their tab): the icon at the top, the name and what it holds now at
+ * the bottom. Pushes its page the way a row does.
+ */
+export function TileCard({
+  to,
+  icon: Icon,
+  label,
+  value,
+  push,
+  className,
+}: {
+  to: LinkProps['to']
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value?: React.ReactNode
+  push?: string
+  className?: string
+}) {
+  const ids = push ? pushIds(push) : null
+  return (
+    <Link
+      to={to}
+      className={cn(
+        'surface flex min-h-32 flex-col justify-between gap-4 rounded-[1.5rem] p-4 transition-transform active:scale-[0.98] motion-reduce:transform-none',
+        className
+      )}
+    >
+      <motion.span layoutId={ids?.icon} transition={springOpen} style={{ borderRadius: 999 }} className='bg-muted grid size-10 place-items-center'>
+        <Icon className='size-5' />
+      </motion.span>
+      <span className='flex min-w-0 flex-col'>
+        <motion.span layoutId={ids?.title} transition={springOpen} className='inline-block max-w-full truncate self-start text-[15px] font-semibold'>
+          {label}
+        </motion.span>
+        {value != null && <span className='text-muted-foreground truncate text-[13px] tabular-nums'>{value}</span>}
+      </span>
+    </Link>
   )
 }

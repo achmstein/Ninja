@@ -42,7 +42,7 @@ function AccountPage() {
   const [nowMs] = useState(() => Date.now())
 
   return (
-    <NinjaPage title={t('transactions')} back='/profile'>
+    <NinjaPage title={t('transactions')} back='/profile' push={{ id: 'account', icon: Wallet }}>
       {accountQuery.isLoading ? (
         <Skeleton className='h-40 rounded-[1.75rem]' />
       ) : (
