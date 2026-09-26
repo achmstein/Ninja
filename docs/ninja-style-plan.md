@@ -2,6 +2,74 @@
 
 The Ninja style (built as "Counter", renamed to Ninja on 2026-09-26) is the motion-first customer menu in `src/client_web/src/components/ninja/`: a swipeable deck of dish cards, zoom out to a grid of the whole menu, cards that open in place into their options, a tray the dishes fly into, hold to order, and the order status pill. Motion tokens live in `src/client_web/src/lib/motion.ts`; the same values are used by the till and kitchen apps (`lib/core/motion/`). Try it locally at `http://localhost:5174/?layout=ninja` in a phone-size window.
 
+## Plan: the menu, the live bill and notifications (2026-09-27)
+
+Everything up to `50602f21` is committed on `main` locally, not pushed; the deploy is still on hold. Each step below gets its own commit, so it can be checked on the local stack before the next one starts. The motion follows the owner's prompt and the menu's own open (shared `layoutId`, `springOpen`, no crossfade where contents differ, transform and opacity only, nothing covering the card a view closes back into). The shared parts are in `components/motion/` and `lib/motion.ts`.
+
+### 1. Adding from the grid (and the deck): one image, not two
+
+Today, Add closes the options view by morphing its photo back into the tile, while a copy of the photo flies to the tray. Two images move at once, and one of them squeezes into a small tile inside a scrolling grid.
+
+- On Add, the photo itself flies to the tray; it does not go back to the tile.
+- The options view folds away without its photo, its content leaving first.
+- The tile fades back in at its place as the photo lands.
+- Closing without adding keeps today's morph back into the card.
+- The same for the deck.
+
+### 2. The menu, reviewed for best practice
+
+- `ninja-home.tsx` (386 lines) and `tray.tsx` (681) split into hooks and parts: the deck state, the flights, the tray row, the order sheet and the seat flights.
+- Every spring and duration comes from `lib/motion.ts`; no local numbers.
+- What animates is only transform and opacity. The press rings stop animating an SVG stroke (a known gap).
+- The top bar's backdrop blur over moving photos is checked on a mid-range phone, and replaced with a plain fade if it costs frames.
+
+### 3. The live bill on the menu
+
+While a bill is open, it is part of the menu, not a tab away:
+
+- **The dock's row shows the bill.** When the tray is empty, the row shows the bill: the place, the rounds, and the total rolling. When a dish is added, the tray takes the row over with a blur swap, and the bill comes back once the tray is empty again.
+- **The bill opens out of the dock.** Pulling up or tapping opens it as the dock's sheet: the stack of rounds, and Pay and Split, as on the Bills card today.
+- **An order lands on it.** A held order's photos fly from the tray into the bill row, where they become a faint "waiting" round. When the till confirms, the round turns solid and the total rolls up.
+- **The pill stays.** The order pill at the top keeps the kitchen's side (preparing, ready); the bill row keeps the money.
+
+### 4. Notifications: one island
+
+Toasts are pinned 72 px from the top today, just under the top bar, so they land on the content, next to the order pill and the chips.
+
+- **Proposed (A):** toasts become an island that grows out of the middle of the top bar, the same slot the order pill uses.
+  - A toast briefly morphs the island, then the island goes back to the order's status.
+  - One toast at a time. One with an action (Undo) opens downward in place.
+  - Sileo already draws toasts as morphing pills, so it is kept and placed and sized to fit the bar.
+- **Alternative (B):** toasts rise out of the dock at the bottom, as sheets do.
+
+### 5. Branch: fixed while you are there
+
+With an open bill, a held place, a running clock or a scanned table, the customer is at that branch. Switching would show another branch's menu and prices over a bill that is here.
+
+- The branch chip becomes a plain label while any of those is on.
+- Switching with dishes in the tray asks first.
+
+### 6. The Bills tab
+
+Once the live bill is on the menu (step 3), a Bills tab only repeats it.
+
+- **Proposed:** the dock's tabs become Menu · Book · You, and bill history moves to You as "Your bills":
+  - a strip of months with each month's total;
+  - each visit as a small receipt card (the place, when, the total, the stars), which opens the receipt;
+  - "On your tab" as a row above it.
+- The link a failed payment returns to (`/bills?pay=`) stays as a route and opens the bill's pay sheet over the menu.
+- Guests get the same history under You.
+
+### Order and decisions
+
+The steps go in this order, 1 → 5 → 4 → 3 → 6, smallest and safest first.
+
+Waiting on the owner:
+
+- A or B for notifications.
+- Whether to drop the Bills tab (step 6).
+- Whether the branch lock (step 5) is right.
+
 ## State at hand-off (2026-09-26)
 
 - **Released to main, not deployed:** commit `2b196935`, tag `v2026.09.26.6`. The images are built, but the owner said to hold the deploy. They still use the old "counter" name.
