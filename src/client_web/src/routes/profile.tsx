@@ -4,7 +4,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   Award,
-  ChevronRight,
   Info,
   LogOut,
   Phone,
@@ -20,7 +19,9 @@ import { getMyProfile } from '@/lib/services/identity'
 import { API_VERSION } from '@/lib/api-client'
 import { useSelectedBranch } from '@/lib/branch'
 import { unregisterPush } from '@/lib/use-push'
-import { useT, type TranslationKey } from '@/lib/i18n'
+import { usePrice, useT } from '@/lib/i18n'
+import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,12 +40,12 @@ import {
 } from '@/components/ui/dialog'
 import { PoweredByNinja } from '@/components/powered-by-ninja'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
-import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
+import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/tile-row'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Slab } from '@/components/ninja/page/parts'
+import { PointsRing } from '@/components/ninja/page/points-ring'
 import { useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
 import { BrandMark, BrandWordmark } from '@/components/brand-mark'
 
@@ -52,17 +53,14 @@ export const Route = createFileRoute('/profile')({
   component: ProfilePage,
 })
 
-const tierKeys: Record<string, TranslationKey> = {
-  bronze: 'tierBronze',
-  silver: 'tierSilver',
-  gold: 'tierGold',
-  platinum: 'tierPlatinum',
-}
 
-// Mirrors the app's profile screen: centered identity, loyalty card,
-// activity tiles, settings/contact tiles, sign out, version.
+/**
+ * The You tab: who you are on the dock's slab (a member's points as a ring),
+ * then your activity, the settings and the way out.
+ */
 function ProfilePage() {
   const t = useT()
+  const price = usePrice()
   const auth = useAuth()
   // What a guest gave at their last checkout, remembered in this browser
   const guestContact = useGuestStore((s) => s.contact)
@@ -101,154 +99,119 @@ function ProfilePage() {
     ? 0
     : Number(houseAccountQuery.data?.balance ?? 0)
 
+  const signedIn = auth.isAuthenticated
+  const displayName = myProfileQuery.data?.name || name
+  const points = Number(loyalty?.pointsBalance ?? 0)
+  const lifetime = Number(loyalty?.lifetimePoints ?? 0)
+  const { nextTier, progress } = useTierProgress(lifetime, !!loyalty)
+
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('youTab')}</h1>
-
-      {/* Identity — plain and centered like the app, no card */}
-      {auth.isAuthenticated ? (
-        <div className='flex flex-col items-center gap-1 pt-2 text-center'>
-          <div className='bg-muted flex h-20 w-20 items-center justify-center rounded-full'>
-            <span className='text-3xl font-semibold'>
-              {(myProfileQuery.data?.name || name || '?')[0]?.toUpperCase()}
-            </span>
-          </div>
-          <div className='max-w-[18rem] truncate pt-3 text-xl font-bold'>
-            {myProfileQuery.data?.name || name}
-          </div>
-          {myProfileQuery.data?.phoneNumber && (
-            <div className='text-muted-foreground truncate text-sm'>
-              {myProfileQuery.data.phoneNumber}
+    <NinjaPage title={t('youTab')}>
+      <Rise className='flex flex-col gap-5'>
+        {/* Who you are, on the dock's slab; a member's points ring round at its end */}
+        <RiseItem>
+          <Slab className='flex items-center gap-4'>
+            <div className='bg-background/12 grid size-16 shrink-0 place-items-center rounded-full text-2xl font-extrabold'>
+              {signedIn ? (displayName || '?')[0]?.toUpperCase() : guestContact ? guestContact.name[0]?.toUpperCase() : <User className='size-7 opacity-70' />}
             </div>
-          )}
-        </div>
-      ) : guestContact ? (
-        // Someone who already ordered as a guest: the name and phone they gave, marked as a guest
-        <div className='flex flex-col items-center gap-1 pt-2 text-center'>
-          <div className='bg-muted flex h-20 w-20 items-center justify-center rounded-full'>
-            <span className='text-3xl font-semibold'>{guestContact.name[0]?.toUpperCase()}</span>
-          </div>
-          <div className='max-w-[18rem] truncate pt-3 text-xl font-bold'>{guestContact.name}</div>
-          <div className='text-muted-foreground truncate text-sm' dir='ltr'>
-            {guestContact.phone}
-          </div>
-          <Badge variant='secondary' className='mt-1'>
-            {t('orderingAsGuest')}
-          </Badge>
-          <p className='text-muted-foreground pt-2 text-sm'>{t('guestSignInPrompt')}</p>
-          <div className='w-full max-w-sm pt-2'>
-            <SignInOptions />
-          </div>
-        </div>
-      ) : (
-        <div className='flex flex-col items-center gap-2 pt-2 text-center'>
-          <div className='bg-muted flex h-20 w-20 items-center justify-center rounded-full'>
-            <User className='text-muted-foreground h-8 w-8' />
-          </div>
-          <div className='pt-3 text-xl font-bold'>{t('guestUser')}</div>
-          <p className='text-muted-foreground text-sm'>{t('signInPrompt')}</p>
-          <div className='w-full max-w-sm pt-2'>
-            <SignInOptions />
-          </div>
-        </div>
-      )}
-
-      {/* Balance card, like the app's — only with an outstanding balance;
-          tap opens the account history */}
-      {auth.isAuthenticated && features.tabs && houseBalance !== 0 && (
-        <Link to='/account'>
-          <BalanceCard balance={houseBalance} chevron />
-        </Link>
-      )}
-
-      {/* Loyalty card, like the app's — only once the member has joined, so a
-          non-member never sees a zeroed-out card; tap for details */}
-      {auth.isAuthenticated && features.loyalty && loyalty && (
-        <Link to='/loyalty'>
-          <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
-            <div className='flex items-center gap-2 border-b px-4 py-3'>
-              <Award className='h-5 w-5 text-amber-500' />
-              <span className='flex-1 text-[15px] font-medium'>
-                {t('loyaltyRewards')}
-              </span>
-              <Badge variant='secondary'>
-                {tierKeys[tier] ? t(tierKeys[tier]) : loyalty.currentTier}
-              </Badge>
-            </div>
-            <div className='flex items-end justify-between p-4'>
-              <div className='text-2xl font-bold'>
-                {Number(loyalty.pointsBalance ?? 0)}{' '}
-                <span className='text-muted-foreground text-sm font-normal'>
-                  {t('pts')}
-                </span>
+            <div className='min-w-0 flex-1'>
+              <div className='heading truncate text-xl'>
+                {signedIn ? displayName : guestContact ? guestContact.name : t('guestUser')}
               </div>
-              <div className='text-muted-foreground text-xs'>
-                {t('lifetimePoints', {
-                  points: Number(loyalty.lifetimePoints ?? 0),
-                })}
-              </div>
-            </div>
-          </Card>
-        </Link>
-      )}
-
-      {/* Not a member yet — a join prompt instead of an empty card */}
-      {auth.isAuthenticated && features.loyalty && loyaltyQuery.isError && (
-        <Link to='/loyalty'>
-          <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
-            <div className='flex items-center gap-3 px-4 py-3'>
-              <Award className='h-5 w-5 text-amber-500' />
-              <div className='min-w-0 flex-1'>
-                <div className='text-[15px] font-medium'>
-                  {t('joinOurLoyaltyProgram')}
+              {signedIn && myProfileQuery.data?.phoneNumber && (
+                <div className='truncate text-sm opacity-60' dir='ltr'>{myProfileQuery.data.phoneNumber}</div>
+              )}
+              {!signedIn && guestContact && (
+                <div className='truncate text-sm opacity-60' dir='ltr'>{guestContact.phone}</div>
+              )}
+              {loyalty && (
+                <div className='mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-bold text-amber-300'>
+                  <Award className='size-3.5' />
+                  {TIER_KEYS[tier] ? t(TIER_KEYS[tier]) : loyalty.currentTier}
                 </div>
-              </div>
-              <ChevronRight className='text-muted-foreground h-5 w-5 shrink-0 rtl:rotate-180' />
+              )}
+              {!signedIn && guestContact && (
+                <div className='bg-background/12 mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold'>{t('orderingAsGuest')}</div>
+              )}
             </div>
-          </Card>
-        </Link>
-      )}
-
-      {/* Activity */}
-      {auth.isAuthenticated && (
-        <Card className='gap-0 divide-y p-0'>
-          <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
-          {features.timeBilling && (
-            <TileLink to='/stays' icon={Timer} label={t('sessions')} />
+            {loyalty && (
+              <Link to='/loyalty' aria-label={t('loyaltyRewards')}>
+                <PointsRing points={points} progress={progress} label={t('pts')} size={96} />
+              </Link>
+            )}
+          </Slab>
+          {loyalty && nextTier && (
+            <p className='text-muted-foreground px-2 pt-2 text-[13px]'>
+              {t('pointsToNextTier', { points: Number(nextTier.pointsRequired) - lifetime, tier: nextTier.name })}
+            </p>
           )}
-          {features.tabs && (
-            <TileLink to='/account' icon={Wallet} label={t('transactions')} />
-          )}
-        </Card>
-      )}
+        </RiseItem>
 
-      {/* Settings / contact / about — same group as the app */}
-      <Card className='gap-0 divide-y p-0'>
-        <TileLink to='/settings' icon={Settings} label={t('settings')} />
-        {branch?.phone && (
-          <TileAnchor
-            href={`tel:${branch.phone}`}
-            icon={Phone}
-            label={t('callUs')}
-            sublabel={<span dir='ltr'>{branch.phone}</span>}
-          />
+        {!signedIn && (
+          <RiseItem className='flex flex-col gap-3'>
+            <p className='text-muted-foreground px-1 text-[15px]'>{guestContact ? t('guestSignInPrompt') : t('signInPrompt')}</p>
+            <SignInOptions />
+          </RiseItem>
         )}
-        <TileButton
-          icon={Info}
-          label={t('about')}
-          onClick={() => setAboutOpen(true)}
-        />
-      </Card>
 
-      {/* Sign out — full-width destructive button, app style */}
-      {auth.isAuthenticated && <SignOutButton />}
+        {/* What the café holds for you: a balance, the loyalty programme to join */}
+        {signedIn && ((features.tabs && houseBalance !== 0) || (features.loyalty && loyaltyQuery.isError)) && (
+          <RiseItem>
+            <TileGroup>
+              {features.tabs && houseBalance !== 0 && (
+                <TileLink
+                  to='/account'
+                  icon={Wallet}
+                  label={houseBalance > 0 ? t('amountDue') : t('creditBalance')}
+                  value={
+                    <span className={cn('text-[15px] font-bold tabular-nums', houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}>
+                      {price(Math.abs(houseBalance))}
+                    </span>
+                  }
+                />
+              )}
+              {features.loyalty && loyaltyQuery.isError && (
+                <TileLink to='/loyalty' icon={Award} label={t('joinOurLoyaltyProgram')} />
+              )}
+            </TileGroup>
+          </RiseItem>
+        )}
 
-      <p className='text-muted-foreground pb-2 text-center text-xs'>
-        {t('version', { version: __APP_VERSION__ })}
-      </p>
+        {signedIn && (
+          <RiseItem>
+            <TileGroup>
+              <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
+              {features.timeBilling && <TileLink to='/stays' icon={Timer} label={t('sessions')} />}
+              {features.tabs && <TileLink to='/account' icon={Wallet} label={t('transactions')} />}
+            </TileGroup>
+          </RiseItem>
+        )}
+
+        <RiseItem>
+          <TileGroup>
+            <TileLink to='/settings' icon={Settings} label={t('settings')} />
+            {branch?.phone && (
+              <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
+            )}
+            <TileButton icon={Info} label={t('about')} onClick={() => setAboutOpen(true)} />
+          </TileGroup>
+        </RiseItem>
+
+        {signedIn && (
+          <RiseItem>
+            <TileGroup>
+              <SignOutButton />
+            </TileGroup>
+          </RiseItem>
+        )}
+
+        <RiseItem>
+          <p className='text-muted-foreground text-center text-xs'>{t('version', { version: __APP_VERSION__ })}</p>
+        </RiseItem>
+      </Rise>
 
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
-    </div>
+    </NinjaPage>
   )
 }
 
@@ -266,14 +229,7 @@ function SignOutButton() {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant='destructive'
-          className='mt-2 w-full rounded-pill'
-          disabled={signOut.isPending}
-        >
-          <LogOut className='h-4 w-4' />
-          {t('signOut')}
-        </Button>
+        <TileButton icon={LogOut} label={t('signOut')} destructive trailing={null} disabled={signOut.isPending} />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

@@ -171,4 +171,6 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaRemoved: 'تمت إزالة {name}',
   ninjaUndo: 'تراجع',
   ninjaSoldOut: 'نفد {name} حاليًا',
+  ninjaRoundCount: { '=1': 'طلب واحد', '=2': 'طلبان', other: '{count} طلبات' },
+  ninjaOpenBill: 'اعرض الفاتورة',
 }

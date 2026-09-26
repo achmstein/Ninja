@@ -1,7 +1,7 @@
 import { useRouterState } from '@tanstack/react-router'
 import { NinjaTopBar } from './ninja/ninja-top-bar'
 
-const tabPaths = ['/places', '/bills', '/profile']
+const tabPaths = ['/places']
 
 /**
  * The slim see-through bar on a phone's tabs, staying put while the page

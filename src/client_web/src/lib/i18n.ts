@@ -331,6 +331,13 @@ const webExtras = {
   ninjaRemoved: { en: '{name} removed', ar: 'اتشال {name}' },
   ninjaUndo: { en: 'Undo', ar: 'رجّعه' },
   ninjaSoldOut: { en: '{name} is sold out right now', ar: '{name} خلص دلوقتي' },
+  // Bills: each bill a stack of its rounds
+  ninjaRoundCount: {
+    plural: 'count',
+    en: { '=1': '1 round', other: '{count} rounds' },
+    ar: { '=1': 'طلب واحد', '=2': 'طلبين', other: '{count} طلبات' },
+  },
+  ninjaOpenBill: { en: 'Open bill', ar: 'افتح الحساب' },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

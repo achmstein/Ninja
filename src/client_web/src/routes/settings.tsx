@@ -3,7 +3,7 @@ import { usePhoneRule } from '@/lib/brand'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Download, KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { BellRing, Download, KeyRound, Loader2, Megaphone, Pencil, Trash2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import {
   getNotificationPreferences,
@@ -37,15 +37,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { BackHeader } from '@/components/back-header'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { SectionLabel } from '@/components/ninja/page/parts'
 import { InstallDialog } from '@/components/install-dialog'
 import { LanguageSwitch } from '@/components/language-switch'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { TileButton } from '@/components/tile-row'
+import { TileButton, TileGroup, TileRow } from '@/components/tile-row'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -105,125 +105,86 @@ function SettingsPage() {
   const preferences = preferencesQuery.data
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <BackHeader title={t('settings')} />
-
-      {/* Notifications — tile rows with switches, like the app */}
-      {auth.isAuthenticated && preferences && (
-        <section className='flex flex-col gap-2'>
-          <h2 className='text-muted-foreground px-1 text-sm font-semibold'>
-            {t('notifications')}
-          </h2>
-          <Card className='gap-0 divide-y p-0'>
-            <div className='flex items-center justify-between gap-3 p-4'>
-              <div className='min-w-0'>
-                <div className='text-[15px] font-medium'>
-                  {t('orderStatusUpdates')}
-                </div>
-              </div>
-              <Switch
-                checked={preferences.orderStatusUpdates}
-                onCheckedChange={(checked) =>
-                  savePreferences.mutate({
-                    ...preferences,
-                    orderStatusUpdates: checked,
-                  })
+    <NinjaPage title={t('settings')} back='/profile'>
+      <Rise className='flex flex-col gap-5'>
+        {/* Notifications: rows with switches, like the app */}
+        {auth.isAuthenticated && preferences && (
+          <RiseItem className='flex flex-col gap-2'>
+            <SectionLabel>{t('notifications')}</SectionLabel>
+            <TileGroup>
+              <TileRow
+                icon={BellRing}
+                label={t('orderStatusUpdates')}
+                trailing={
+                  <Switch
+                    checked={preferences.orderStatusUpdates}
+                    onCheckedChange={(checked) => savePreferences.mutate({ ...preferences, orderStatusUpdates: checked })}
+                  />
                 }
               />
-            </div>
-            <div className='flex items-center justify-between gap-3 p-4'>
-              <div className='min-w-0'>
-                <div className='text-[15px] font-medium'>
-                  {t('promotionsAndOffers')}
-                </div>
-              </div>
-              <Switch
-                checked={preferences.promotionsAndOffers}
-                onCheckedChange={(checked) =>
-                  savePreferences.mutate({
-                    ...preferences,
-                    promotionsAndOffers: checked,
-                  })
+              <TileRow
+                icon={Megaphone}
+                label={t('promotionsAndOffers')}
+                trailing={
+                  <Switch
+                    checked={preferences.promotionsAndOffers}
+                    onCheckedChange={(checked) => savePreferences.mutate({ ...preferences, promotionsAndOffers: checked })}
+                  />
                 }
               />
-            </div>
-          </Card>
-        </section>
-      )}
+            </TileGroup>
+          </RiseItem>
+        )}
 
-      {/* Appearance & language */}
-      <section className='flex flex-col gap-2'>
-        <h2 className='text-muted-foreground px-1 text-sm font-semibold'>
-          {t('appearance')}
-        </h2>
-        <Card className='gap-0 divide-y p-0'>
-          {/* Tiles like every other row here, the choice in a menu */}
-          {/* Nothing to choose when the café's style is always dark */}
-          <ThemeSwitch />
-          <LanguageSwitch />
-          {/* Android: the native prompt. iOS: the share-sheet walkthrough.
-              Nothing once installed, or where neither route exists */}
-          {(canInstall || (isIos && !isStandalone)) && (
-            <TileButton
-              icon={Download}
-              label={t('installApp')}
-              onClick={() => {
-                if (canInstall) void install()
-                else setInstallOpen(true)
-              }}
-            />
-          )}
-        </Card>
-      </section>
+        <RiseItem className='flex flex-col gap-2'>
+          <SectionLabel>{t('appearance')}</SectionLabel>
+          <TileGroup>
+            <ThemeSwitch />
+            <LanguageSwitch />
+            {/* Android: the native prompt. iOS: the share-sheet walkthrough.
+                Nothing once installed, or where neither route exists */}
+            {(canInstall || (isIos && !isStandalone)) && (
+              <TileButton
+                icon={Download}
+                label={t('installApp')}
+                onClick={() => {
+                  if (canInstall) void install()
+                  else setInstallOpen(true)
+                }}
+              />
+            )}
+          </TileGroup>
+        </RiseItem>
 
-      {/* The profile itself: edit it, its password, delete it. Named as the
-          tab is, never "account" — that word is the house tab's */}
-      {auth.isAuthenticated && (
-        <section className='flex flex-col gap-2'>
-          <h2 className='text-muted-foreground px-1 text-sm font-semibold'>
-            {t('profile')}
-          </h2>
-          <Card className='gap-0 divide-y p-0'>
-            <TileButton
-              icon={Pencil}
-              label={t('updateProfile')}
-              onClick={() => setEditOpen(true)}
-            />
-            <TileButton
-              icon={KeyRound}
-              label={t('changePassword')}
-              onClick={() => setPasswordOpen(true)}
-            />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <TileButton
-                  icon={Trash2}
-                  label={t('deleteAccount')}
-                  destructive
-                  disabled={removeAccount.isPending}
-                />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('deleteAccountQuestion')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('cannotBeUndone')}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                  <AlertDialogAction
-                    className='bg-destructive text-white hover:bg-destructive/90'
-                    onClick={() => removeAccount.mutate()}
-                  >
-                    {t('delete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </Card>
-        </section>
-      )}
+        {/* The profile itself: edit it, its password, delete it. Named as the
+            tab is, never "account": that word is the house tab's */}
+        {auth.isAuthenticated && (
+          <RiseItem className='flex flex-col gap-2'>
+            <SectionLabel>{t('profile')}</SectionLabel>
+            <TileGroup>
+              <TileButton icon={Pencil} label={t('updateProfile')} onClick={() => setEditOpen(true)} />
+              <TileButton icon={KeyRound} label={t('changePassword')} onClick={() => setPasswordOpen(true)} />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <TileButton icon={Trash2} label={t('deleteAccount')} destructive disabled={removeAccount.isPending} />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('deleteAccountQuestion')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('cannotBeUndone')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction className='bg-destructive hover:bg-destructive/90 text-white' onClick={() => removeAccount.mutate()}>
+                      {t('delete')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </TileGroup>
+          </RiseItem>
+        )}
+      </Rise>
 
       <UpdateProfileDialog
         open={editOpen}
@@ -239,7 +200,7 @@ function SettingsPage() {
         onOpenChange={setPasswordOpen}
       />
       <InstallDialog open={installOpen} onOpenChange={setInstallOpen} />
-    </div>
+    </NinjaPage>
   )
 }
 

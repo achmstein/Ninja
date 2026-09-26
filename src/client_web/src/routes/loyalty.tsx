@@ -7,17 +7,19 @@ import { toast } from '@/lib/toast'
 import {
   createAccountMutation,
   getAccountOptions,
-  getTierInfoOptions,
   getTransactionsOptions,
 } from '@/api/loyalty/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { BackHeader } from '@/components/back-header'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Empty, Panel, SectionLabel, Slab } from '@/components/ninja/page/parts'
+import { PointsRing } from '@/components/ninja/page/points-ring'
 import { RequireAuth } from '@/components/require-auth'
 import { RequireFeature } from '@/components/require-feature'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
+import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
+import { cn } from '@/lib/utils'
 
 const pointsFormat = new Intl.NumberFormat('en-US')
 
@@ -40,12 +42,6 @@ const transactionTypeKeys: Record<string, TranslationKey> = {
   adjustment: 'transactionTypeAdjustment',
 }
 
-const tierKeys: Record<string, TranslationKey> = {
-  bronze: 'tierBronze',
-  silver: 'tierSilver',
-  gold: 'tierGold',
-  platinum: 'tierPlatinum',
-}
 
 function LoyaltyPage() {
   const t = useT()
@@ -79,11 +75,6 @@ function LoyaltyPage() {
   const account = accountQuery.data
   const hasAccount = !accountQuery.isError && account != null
 
-  const { data: tiers = [] } = useQuery({
-    ...getTierInfoOptions({ query: { 'api-version': API_VERSION } }),
-    enabled: hasAccount,
-  })
-
   const { data: transactions = [] } = useQuery({
     ...getTransactionsOptions({
       path: { userId },
@@ -101,147 +92,98 @@ function LoyaltyPage() {
     onError: () => toast.error(t('anErrorOccurred')),
   })
 
-  // Still resolving whether this user has an account — hold a skeleton so the
-  // membership card never flashes at 0 points before the join CTA appears
+  const lifetime = Number(account?.lifetimePoints ?? 0)
+  const { nextTier, progress } = useTierProgress(lifetime, hasAccount)
+  const tier = (account?.currentTier ?? 'Bronze').toLowerCase()
+
+  // Still resolving whether this user has an account: a skeleton, so the
+  // card never flashes at 0 points before the way to join appears
   if (accountQuery.isLoading) {
     return (
-      <div className='flex flex-col gap-4 p-4'>
-        <BackHeader title={t('loyaltyRewards')} />
-        <Skeleton className='h-40 rounded-xl' />
-      </div>
+      <NinjaPage title={t('loyaltyRewards')} back='/profile'>
+        <Skeleton className='h-44 rounded-[1.75rem]' />
+      </NinjaPage>
     )
   }
 
-  // Join CTA when no loyalty account exists yet
   if (accountQuery.isError) {
     return (
-      <div className='flex flex-col gap-4 p-4'>
-        <BackHeader title={t('loyaltyRewards')} />
-        <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
-        <Award className='text-muted-foreground/40 h-12 w-12' />
-        <h1 className='text-xl font-bold'>{t('joinOurLoyaltyProgram')}</h1>
-        <Button
-          size='lg'
-          className='rounded-full px-8'
-          disabled={joinProgram.isPending}
-          onClick={() =>
-            joinProgram.mutate({
-              body: { userId },
-              query: { 'api-version': API_VERSION },
-            })
-          }
-        >
-          {joinProgram.isPending && (
-            <Loader2 className='me-2 h-4 w-4 animate-spin' />
-          )}
-          {t('joinNow')}
-        </Button>
-        </div>
-      </div>
+      <NinjaPage title={t('loyaltyRewards')} back='/profile'>
+        <Empty icon={Award} title={t('joinOurLoyaltyProgram')}>
+          <Button
+            size='lg'
+            className='rounded-full px-8'
+            disabled={joinProgram.isPending}
+            onClick={() => joinProgram.mutate({ body: { userId }, query: { 'api-version': API_VERSION } })}
+          >
+            {joinProgram.isPending && <Loader2 className='size-4 animate-spin' />}
+            {t('joinNow')}
+          </Button>
+        </Empty>
+      </NinjaPage>
     )
   }
 
-  const lifetime = Number(account?.lifetimePoints ?? 0)
-  const currentTier = (account?.currentTier ?? 'Bronze').toLowerCase()
-  const sortedTiers = [...tiers].sort(
-    (a, b) => Number(a.pointsRequired) - Number(b.pointsRequired)
-  )
-  const nextTier = sortedTiers.find((tier) => Number(tier.pointsRequired) > lifetime)
-  const progress = nextTier
-    ? Math.min(100, Math.round((lifetime / Number(nextTier.pointsRequired)) * 100))
-    : 100
-
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <BackHeader title={t('loyaltyRewards')} />
-
-      {/* Membership card */}
-      <div className='bg-primary text-primary-foreground flex flex-col items-center gap-1 rounded-xl p-6 shadow-sm'>
-        <Award className='h-8 w-8' />
-        <div className='text-4xl font-bold tabular-nums'>
-          {Number(account?.pointsBalance ?? 0)}
-        </div>
-        <div className='text-sm opacity-90'>{t('pointsBalance')}</div>
-        <div className='mt-2 flex gap-4 text-xs opacity-75'>
-          {/* The key carries its own "{points}" placeholder and label */}
-          <span>{t('lifetimePoints', { points: lifetime })}</span>
-          <span>
-            ·{' '}
-            {tierKeys[currentTier] ? t(tierKeys[currentTier]) : account?.currentTier}
-          </span>
-        </div>
-      </div>
-
-      {/* Progress to next tier */}
-      {nextTier && (
-        <Card className='gap-2 p-4'>
-          <div className='flex items-center justify-between text-sm'>
-            <span className='text-muted-foreground'>
-              {t('pointsToNextTier', {
-                points: Number(nextTier.pointsRequired) - lifetime,
-                tier: nextTier.name,
-              })}
-            </span>
-            <span className='tabular-nums'>
-              {lifetime} / {Number(nextTier.pointsRequired)}
-            </span>
-          </div>
-          <div className='bg-muted h-2 overflow-hidden rounded-full'>
-            <div
-              className='bg-primary h-full rounded-full transition-all'
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </Card>
-      )}
-
-      <h2 className='text-base font-semibold'>{t('recentActivity')}</h2>
-      {transactions.length === 0 ? (
-        <p className='text-muted-foreground py-8 text-center text-sm'>
-          {t('noTransactionsYet')}
-        </p>
-      ) : (
-        /* App parity: plain rows with dividers; a tinted points pill leads
-           each row — +green for points earned, −red for points spent */
-        <div className='divide-y'>
-          {transactions.map((tx) => {
-            const points = Number(tx.points ?? 0)
-            const earned = points >= 0
-            const typeKey = transactionTypeKeys[(tx.type ?? '').toLowerCase()]
-            return (
-              <div key={String(tx.id)} className='flex items-start gap-3 py-3'>
-                <span
-                  className={`w-24 shrink-0 rounded-md px-2 py-1 text-center text-sm font-semibold tabular-nums ${
-                    earned
-                      ? 'bg-green-600/10 text-green-600 dark:text-green-500'
-                      : 'bg-destructive/10 text-destructive'
-                  }`}
-                >
-                  {earned ? '+' : '−'}
-                  {pointsFormat.format(Math.abs(points))}
-                </span>
-                <div className='min-w-0 flex-1'>
-                  <div className='flex items-baseline justify-between gap-2'>
-                    <span className='text-[15px] font-medium'>
-                      {typeKey ? t(typeKey) : tx.type}
-                    </span>
-                    {tx.createdAt && (
-                      <span className='text-muted-foreground shrink-0 text-xs'>
-                        {relativeDate(tx.createdAt)}
-                      </span>
-                    )}
-                  </div>
-                  {tx.description && (
-                    <div className='text-muted-foreground line-clamp-2 text-[13px]'>
-                      {tx.description}
-                    </div>
-                  )}
-                </div>
+    <NinjaPage title={t('loyaltyRewards')} back='/profile'>
+      <Rise className='flex flex-col gap-5'>
+        {/* The balance as a ring round towards the next tier, on the dock's slab */}
+        <RiseItem>
+          <Slab className='flex flex-col items-center gap-4 py-7 text-center'>
+            <PointsRing points={Number(account?.pointsBalance ?? 0)} progress={progress} label={t('pts')} size={148} />
+            <div className='flex flex-col items-center gap-1.5'>
+              <div className='inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300'>
+                <Award className='size-4' />
+                {TIER_KEYS[tier] ? t(TIER_KEYS[tier]) : account?.currentTier}
               </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
+              {/* The key carries its own "{points}" placeholder and label */}
+              <span className='text-sm opacity-60'>{t('lifetimePoints', { points: lifetime })}</span>
+              {nextTier && (
+                <span className='text-sm opacity-80'>
+                  {t('pointsToNextTier', { points: Number(nextTier.pointsRequired) - lifetime, tier: nextTier.name })}
+                </span>
+              )}
+            </div>
+          </Slab>
+        </RiseItem>
+
+        <RiseItem className='flex flex-col gap-2'>
+          <SectionLabel>{t('recentActivity')}</SectionLabel>
+          {transactions.length === 0 ? (
+            <Panel>
+              <p className='text-muted-foreground py-8 text-center text-sm'>{t('noTransactionsYet')}</p>
+            </Panel>
+          ) : (
+            <Panel className='divide-border/60 flex flex-col divide-y overflow-hidden'>
+              {transactions.map((tx) => {
+                const points = Number(tx.points ?? 0)
+                const earned = points >= 0
+                const typeKey = transactionTypeKeys[(tx.type ?? '').toLowerCase()]
+                return (
+                  <div key={String(tx.id)} className='flex items-center gap-3 px-4 py-3'>
+                    <div className='min-w-0 flex-1'>
+                      <div className='text-[15px] font-semibold'>{typeKey ? t(typeKey) : tx.type}</div>
+                      <div className='text-muted-foreground line-clamp-2 text-[13px]'>
+                        {[tx.createdAt && relativeDate(tx.createdAt), tx.description].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                    {/* Earned in green, spent in red, like the app */}
+                    <span
+                      className={cn(
+                        'shrink-0 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums',
+                        earned ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'
+                      )}
+                    >
+                      {earned ? '+' : '−'}
+                      {pointsFormat.format(Math.abs(points))}
+                    </span>
+                  </div>
+                )
+              })}
+            </Panel>
+          )}
+        </RiseItem>
+      </Rise>
+    </NinjaPage>
   )
 }

@@ -134,3 +134,8 @@ export function optionName(
 ): LocalizedText | undefined {
   return tariffOptions(tariff).find((o) => o.code === code)?.name
 }
+
+/** Ordering and Sales spell the kind by name ("Table"); the icons go by number. */
+export function placeKindOf(kind: string | null | undefined): number {
+  return kind === 'Table' ? PLACE_TABLE : kind === 'Station' ? PLACE_STATION : PLACE_ROOM
+}

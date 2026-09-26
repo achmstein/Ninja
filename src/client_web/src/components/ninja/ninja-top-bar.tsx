@@ -10,15 +10,46 @@ import { BranchSwitcher } from '@/components/branch-switcher'
 import { NINJA_BAR_H } from './chrome'
 
 /**
- * The top bar in the Ninja style's chrome: slim and see-through, so the cards
- * run on under it. The order pill lives in its middle: while the pill is on
+ * The top bar in the Ninja style's chrome: slim and see-through, so the page
+ * runs on under it. The order pill lives in its middle: while the pill is on
  * screen the wordmark folds to the mark and the place chips step aside, and
- * they come back when it goes. `start` replaces the brand (the way back from
- * the whole menu).
+ * they come back when it goes. `start` replaces the brand (a way back);
+ * `title`, once set, takes the wordmark's place (a page's own title, handed
+ * up as its large title scrolls away). `chips` off leaves the end empty, for
+ * a pushed page.
  */
-export function NinjaTopBar({ start, className }: { start?: ReactNode; className?: string }) {
+export function NinjaTopBar({
+  start,
+  title,
+  chips = true,
+  className,
+}: {
+  start?: ReactNode
+  title?: string | null
+  chips?: boolean
+  className?: string
+}) {
   const pill = useOrderPill((s) => s.onScreen)
   const swap = blurSwap(useReducedMotion())
+  const brand = (
+    <Link to='/' className='flex min-w-0 items-center'>
+      <AnimatePresence mode='popLayout' initial={false}>
+        {pill ? (
+          <motion.span key='mark' {...swap}>
+            <BrandMark className='size-9 rounded-xl text-base' />
+          </motion.span>
+        ) : title ? (
+          <motion.span key='title' {...swap} className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>
+            {title}
+          </motion.span>
+        ) : (
+          <motion.span key='word' {...swap} className='flex min-w-0 items-center gap-2'>
+            <BrandWordmark className='max-w-[50vw]' />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
+  )
   return (
     <div
       className={cn(
@@ -27,33 +58,19 @@ export function NinjaTopBar({ start, className }: { start?: ReactNode; className
       )}
       style={{ height: NINJA_BAR_H }}
     >
-      <div className='flex min-w-0 items-center'>
-        {start ?? (
-          <Link to='/' className='flex min-w-0 items-center'>
-            <AnimatePresence mode='popLayout' initial={false}>
-              {pill ? (
-                <motion.span key='mark' {...swap}>
-                  <BrandMark className='size-9 rounded-xl text-base' />
-                </motion.span>
-              ) : (
-                <motion.span key='word' {...swap} className='flex min-w-0 items-center gap-2'>
-                  <BrandWordmark className='max-w-[50vw]' />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
-        )}
-      </div>
-      <motion.div
-        className='flex shrink-0 items-center gap-2 empty:hidden'
-        animate={{ opacity: pill ? 0 : 1, scale: pill ? 0.9 : 1 }}
-        transition={spring}
-        style={{ pointerEvents: pill ? 'none' : undefined }}
-        aria-hidden={pill || undefined}
-      >
-        <DestinationChip />
-        <BranchSwitcher />
-      </motion.div>
+      <div className='flex min-w-0 items-center gap-1'>{start ?? brand}</div>
+      {chips && (
+        <motion.div
+          className='flex shrink-0 items-center gap-2 empty:hidden'
+          animate={{ opacity: pill ? 0 : 1, scale: pill ? 0.9 : 1 }}
+          transition={spring}
+          style={{ pointerEvents: pill ? 'none' : undefined }}
+          aria-hidden={pill || undefined}
+        >
+          <DestinationChip />
+          <BranchSwitcher />
+        </motion.div>
+      )}
     </div>
   )
 }
