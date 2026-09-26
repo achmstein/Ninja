@@ -145,9 +145,10 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
   const [seats, setSeats] = useState(() => startSeats(view.people, view.shares.length))
   const [chosenSeats, setChosenSeats] = useState<ReadonlySet<number>>(() => new Set([0]))
   const [amountText, setAmountText] = useState('')
-  const [name, setName] = useState(
-    () => (auth.isAuthenticated ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username) : guestContact?.name) ?? ''
-  )
+  // Who paid, so the others at the table see whose share it was: known already for an account or a
+  // guest who gave a name at checkout, so asked only of a guest we have no name for
+  const knownName = (auth.isAuthenticated ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username) : guestContact?.name)?.trim() || ''
+  const [name, setName] = useState('')
 
   const total = num(view.total)
   const remaining = num(view.remaining)
@@ -195,7 +196,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
         parts: mode === 'equal' ? parts : null,
         of: mode === 'equal' ? of : null,
         amount: mode === 'custom' ? typed : null,
-        payerName: name.trim() || null,
+        payerName: knownName || name.trim() || null,
         payerPhone: null,
       },
     })
@@ -274,18 +275,20 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
               )}
             </AnimatePresence>
 
-            <label className='flex flex-col gap-1.5'>
-              <span className='px-1 text-[13px] font-semibold'>{t('payerNameLabel')}</span>
-              <input
-                autoComplete='given-name'
-                maxLength={60}
-                className='bg-muted placeholder:text-muted-foreground focus-visible:ring-ring/50 h-12 rounded-2xl px-4 text-base outline-none focus-visible:ring-[3px]'
-                placeholder={t('payerGuest')}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <span className='text-muted-foreground px-1 text-xs'>{t('payerNameHint')}</span>
-            </label>
+            {!knownName && (
+              <label className='flex flex-col gap-1.5'>
+                <span className='px-1 text-[13px] font-semibold'>{t('payerNameLabel')}</span>
+                <input
+                  autoComplete='given-name'
+                  maxLength={60}
+                  className='bg-muted placeholder:text-muted-foreground focus-visible:ring-ring/50 h-12 rounded-2xl px-4 text-base outline-none focus-visible:ring-[3px]'
+                  placeholder={t('payerGuest')}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <span className='text-muted-foreground px-1 text-xs'>{t('payerNameHint')}</span>
+              </label>
+            )}
           </>
         )}
       </div>

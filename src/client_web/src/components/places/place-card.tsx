@@ -61,7 +61,7 @@ export function PlaceCard({
       style={{ borderRadius: 28 }}
       className={cn(
         'relative isolate overflow-hidden',
-        free ? 'slab shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)] ring-2 ring-emerald-400/70' : 'surface text-foreground'
+        free ? 'slab shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)]' : 'surface text-foreground'
       )}
     >
       <motion.button
