@@ -127,6 +127,29 @@ public sealed class TenantScenarios
         Assert.Contains("header layout", detail);
     }
 
+    private record AssistantView(string? Name, string? Tone, string? Manner, string? Language, string? Notes);
+    private record WithAssistant(AssistantView Assistant);
+
+    [TestMethod]
+    public async Task The_owner_sets_how_their_assistant_speaks_and_everyone_reads_it_with_the_brand()
+    {
+        await ResetAsync();
+
+        await Owner.PutAsync<WithAssistant>($"{Tenant}/assistant", new { name = " Zein ", tone = "Detailed", manner = "formal", language = "ar-eg", notes = "Flag any discount over 20%." });
+        var read = await Suite.TenantApi.AsAnonymous().GetAsync<WithAssistant>(Tenant);
+        Assert.AreEqual(new AssistantView("Zein", "detailed", "formal", "ar-eg", "Flag any discount over 20%."), read.Assistant, "the assistant reads it with the public brand");
+
+        var cleared = await Owner.PutAsync<WithAssistant>($"{Tenant}/assistant", new { });
+        Assert.AreEqual(new AssistantView(null, null, null, null, null), cleared.Assistant, "nothing set is the platform's default");
+
+        var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Tenant}/assistant", new { tone = "chatty" });
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("brief, detailed", detail);
+
+        var (admin, _) = await Suite.TenantApi.As(Persona.Admin()).RefusedAsync(HttpMethod.Put, $"{Tenant}/assistant", new { name = "X" });
+        Assert.AreEqual(HttpStatusCode.Forbidden, admin, "the owner's assistant is the owner's");
+    }
+
     [TestMethod]
     public async Task The_plan_clamps_the_switches_and_an_owner_never_turns_on_what_is_not_in_it()
     {

@@ -4,6 +4,14 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AssistantDto = {
+    name: null | string;
+    tone: null | string;
+    manner: null | string;
+    language: null | string;
+    notes: null | string;
+};
+
 export type BranchResponse = {
     id: number | string;
     name: LocalizedText;
@@ -110,6 +118,7 @@ export type TenantResponse = {
     businessType?: null | string;
     guestOrdersAnywhere?: boolean;
     cover?: null | TenantWordmark;
+    assistant?: null | AssistantDto;
 };
 
 export type TenantThemeDarkDto = {
@@ -366,6 +375,39 @@ export type UpdateTenantResponses = {
 };
 
 export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
+
+export type SetTenantAssistantData = {
+    body: AssistantDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/assistant';
+};
+
+export type SetTenantAssistantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetTenantAssistantError = SetTenantAssistantErrors[keyof SetTenantAssistantErrors];
+
+export type SetTenantAssistantResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type SetTenantAssistantResponse = SetTenantAssistantResponses[keyof SetTenantAssistantResponses];
 
 export type SetTenantEntitlementsData = {
     body: TenantFeatures;

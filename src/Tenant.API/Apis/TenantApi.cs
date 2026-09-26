@@ -33,6 +33,11 @@ public static partial class TenantApi
             .WithSummary("Change the name, the brand color or the feature switches (within what the plan allows)")
             .RequireAuthorization("Owner");
 
+        api.MapPut("/assistant", SetAssistant)
+            .WithName("SetTenantAssistant")
+            .WithSummary("How the owner's AI assistant speaks: its name, tone, manner, language and the café's notes for it")
+            .RequireAuthorization("Owner");
+
         api.MapPut("/entitlements", SetEntitlements)
             .WithName("SetTenantEntitlements")
             .WithSummary("The modules the café's plan allows; a switch outside them goes off. The control plane only")
@@ -126,6 +131,35 @@ public static partial class TenantApi
         // The café's own settings travel on their own; Ordering keeps its copy
         if (guestsChanged) await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
 
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
+    }
+
+    public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> SetAssistant(TenantContext context, IConfiguration configuration, AssistantDto request)
+    {
+        static string? Pick(string? value, string[] allowed, string label, ref string? error)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            var v = value.Trim().ToLowerInvariant();
+            if (!allowed.Contains(v)) error ??= $"The {label} must be one of {string.Join(", ", allowed)}.";
+            return v;
+        }
+        string? error = null;
+        var settings = new AssistantSettings
+        {
+            Name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim(),
+            Tone = Pick(request.Tone, AssistantSettings.Tones, "tone", ref error),
+            Manner = Pick(request.Manner, AssistantSettings.Manners, "manner", ref error),
+            Language = Pick(request.Language, AssistantSettings.Languages, "language", ref error),
+            Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
+        };
+        if (settings.Name?.Length > AssistantSettings.MaxName) error ??= $"The name is at most {AssistantSettings.MaxName} characters.";
+        if (settings.Notes?.Length > AssistantSettings.MaxNotes) error ??= $"The notes are at most {AssistantSettings.MaxNotes} characters.";
+        if (error is not null) return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
+
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == Model.Tenant.SingletonId);
+        tenant.Assistant = settings;
+        tenant.UpdatedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync();
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
@@ -499,6 +533,15 @@ public record TenantLayoutDto(string? MenuItem, string? Categories, string? Head
 
 public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
 
+/// <param name="Tone">brief or detailed; null is brief.</param>
+/// <param name="Manner">friendly or formal; null is friendly.</param>
+/// <param name="Language">match (the owner's own), en, ar-eg or ar; null is match.</param>
+public record AssistantDto(string? Name, string? Tone, string? Manner, string? Language, string? Notes)
+{
+    public static AssistantDto From(AssistantSettings? s)
+        => new(s?.Name, s?.Tone, s?.Manner, s?.Language, s?.Notes);
+}
+
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
 public record TenantAuth(string Authority);
 
@@ -524,7 +567,8 @@ public record TenantResponse(
     long Version,
     string? BusinessType = null,
     bool GuestOrdersAnywhere = false,
-    TenantWordmark? Cover = null)
+    TenantWordmark? Cover = null,
+    AssistantDto? Assistant = null)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
@@ -556,7 +600,8 @@ public record TenantResponse(
             v,
             t.BusinessType,
             t.GuestOrdersAnywhere,
-            TenantWordmark.From(t, TenantImageSlots.Cover));
+            TenantWordmark.From(t, TenantImageSlots.Cover),
+            AssistantDto.From(t.Assistant));
     }
 }
 

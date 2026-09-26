@@ -74,22 +74,25 @@ builder.Services.AddHttpClient(NinjaApiClient.HttpClientName);
 builder.Services.AddHttpClient(TokenExchanger.HttpClientName);
 builder.Services.AddScoped<TokenExchanger>();
 builder.Services.AddScoped<NinjaApiClient>();
+builder.Services.AddSingleton<Ninja.Assistant.API.Context.Persona>();
 builder.Services.AddScoped<TenantContext>();
 builder.Services.AddSingleton<AuditLog>();
 
 builder.Services.AddMcpServer(o =>
     {
         o.ServerInfo = new() { Name = "ninja", Version = "1.0" };
-        o.ServerInstructions = """
-            This server answers questions about one cafe's Ninja back office: sales, profit, expenses, stock, staff, orders, and the drawer.
-            Call get_business_overview first: it gives the branches (ids and names), the currency, the time zone and today so far.
-            Periods are business days in the cafe's own time zone; a branch's day starts at its dayStartTime (often the afternoon), not at midnight.
-            Amounts are in the cafe's currency. Leave branch out to get every branch with a total and a line per branch.
-            The write tools (record_expense, set_item_availability, pause_online_ordering) return a preview when confirm is false. Show it to the person and only call again with confirm=true and the same requestId after they clearly agree.
-            """;
+        // The brief as the platform writes it; each connecting chat gets the café's own (Persona)
+        o.ServerInstructions = Ninja.Assistant.API.Context.Persona.Write(null, null);
     })
-    .WithHttpTransport(o => o.Stateless = true)
-    .WithToolsFromAssembly();
+    .WithHttpTransport(o =>
+    {
+        o.Stateless = true;
+        // The café's name and the owner's settings for their assistant, as each chat connects
+        o.ConfigureSessionOptions = async (http, options, ct) =>
+            options.ServerInstructions = await http.RequestServices.GetRequiredService<Ninja.Assistant.API.Context.Persona>().InstructionsAsync(ct);
+    })
+    .WithToolsFromAssembly()
+    .WithPromptsFromAssembly();
 
 var app = builder.Build();
 

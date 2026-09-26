@@ -25,6 +25,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { claudeCodeCommand, mcpUrl } from './connect'
+import { PersonalityCard } from './personality-card'
+import { RoutinesCard } from './routines'
 
 const TOPICS: TranslationKey[] = [
   'assistantTopicSales',
@@ -162,6 +164,12 @@ export function AssistantPage() {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* How it speaks: the café's own name, tone, manner, language and notes */}
+        <PersonalityCard />
+
+        {/* The server's prompts, one tap in Claude */}
+        <RoutinesCard />
 
         {/* Something to try first */}
         <Card>

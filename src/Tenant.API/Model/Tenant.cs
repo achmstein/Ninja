@@ -164,6 +164,9 @@ public class Tenant
         ApplyFeatures(Features);
     }
 
+    /// <summary>How the owner's AI assistant speaks: its name, manner and language, and the café's own notes for it.</summary>
+    public AssistantSettings Assistant { get; set; } = new();
+
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>Changes whenever anything a surface renders changes; the surfaces put it on every brand URL.</summary>
@@ -269,6 +272,37 @@ public class TenantLayout
     public string? Density { get; set; }
 
     public bool IsEmpty => (MenuItem ?? Categories ?? Header ?? Buttons ?? Surface ?? Density) is null;
+}
+
+/// <summary>
+/// The owner's AI assistant as the owner wants it: the assistant (the MCP
+/// server in the stack) reads these each time a chat app connects and
+/// writes its brief from them. Null is the platform's default for each.
+/// </summary>
+public class AssistantSettings
+{
+    public static readonly string[] Tones = ["brief", "detailed"];
+    public static readonly string[] Manners = ["friendly", "formal"];
+    /// <summary>"match" answers in whatever the owner writes in.</summary>
+    public static readonly string[] Languages = ["match", "en", "ar-eg", "ar"];
+
+    public const int MaxName = 40;
+    public const int MaxNotes = 1000;
+
+    /// <summary>What the assistant calls itself; null is simply "the assistant".</summary>
+    public string? Name { get; set; }
+
+    /// <summary>One of <see cref="Tones"/>; null is brief.</summary>
+    public string? Tone { get; set; }
+
+    /// <summary>One of <see cref="Manners"/>; null is friendly.</summary>
+    public string? Manner { get; set; }
+
+    /// <summary>One of <see cref="Languages"/>; null is match.</summary>
+    public string? Language { get; set; }
+
+    /// <summary>The café's own notes for it ("we call the terrace tables T1–T4", "flag any discount over 20%").</summary>
+    public string? Notes { get; set; }
 }
 
 /// <summary>The dark scheme's own seeds, for a brand whose lifted colours do not suit it.</summary>
