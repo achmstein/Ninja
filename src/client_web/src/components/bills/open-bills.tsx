@@ -1,4 +1,4 @@
-import { Children, useRef, useState, type ReactNode } from 'react'
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -30,14 +30,28 @@ export function hasLiveBill(live: LiveBills): boolean {
 /**
  * Two bills or more, side by side: a finger swipes between them, and with a
  * mouse (no sideways wheel) the arrows at the edges step one bill over. The
- * dots under them say which bill is in view.
+ * dots under them say which bill is in view. The row is as tall as the
+ * bill in view, not the tallest one (a long receipt printed out under the
+ * other bill), and eases to the next one's height as it comes in.
  */
 function Swipe({ children }: { children: ReactNode }) {
   const t = useT()
   const cards = Children.toArray(children).filter(Boolean)
   const track = useRef<HTMLDivElement>(null)
   const [index, setIndex] = useState(0)
-  if (cards.length <= 1) return <>{cards}</>
+  const [height, setHeight] = useState<number | null>(null)
+  const many = cards.length > 1
+
+  // The bill in view sets the row's height, following it as it grows (its stack fanning, its receipt printing)
+  useEffect(() => {
+    const card = track.current?.children[index] as HTMLElement | undefined
+    if (!many || !card) return
+    const watch = new ResizeObserver(() => setHeight(card.offsetHeight))
+    watch.observe(card)
+    return () => watch.disconnect()
+  }, [index, many])
+
+  if (!many) return <>{cards}</>
 
   const cardsIn = () => Array.from(track.current?.children ?? []) as HTMLElement[]
   const onScroll = () => {
@@ -60,8 +74,14 @@ function Swipe({ children }: { children: ReactNode }) {
 
   return (
     <div className='relative'>
-      {/* items-start: each bill keeps its own height, rather than stretching to the tallest */}
-      <div ref={track} onScroll={onScroll} className='no-scrollbar -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4'>
+      {/* items-start: each bill keeps its own height, rather than stretching to the tallest; the row
+          clips to the one in view, so a taller one beside it hangs out of sight, not as empty space */}
+      <div
+        ref={track}
+        onScroll={onScroll}
+        className='no-scrollbar -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overflow-y-hidden px-4 transition-[height] duration-300 ease-out motion-reduce:transition-none'
+        style={height != null ? { height } : undefined}
+      >
         {cards.map((card, i) => (
           <div key={i} className='w-[88%] shrink-0 snap-center'>
             {card}
