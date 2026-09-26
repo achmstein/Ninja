@@ -55,6 +55,7 @@ export function PlaceCard({
       ref={card}
       // The reservation opens out of this card and closes back into it (components/places/reservation)
       layoutId={placeCardId(place.id)}
+      layoutCrossfade={false}
       layout
       transition={springOpen}
       style={{ borderRadius: 28 }}

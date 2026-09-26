@@ -9,10 +9,11 @@ import { ReservationFace } from './reservation-face'
  * The customer's reservation, opened out of its place's card the way a dish
  * opens on the menu (components/ninja/tune.tsx): it shares the card's
  * layout id, so it grows from the card's own box to the space between the
- * bars on the menu's spring, crossfading with the card as it goes, and
- * closes back into it the same way. The card must stay on screen for that,
- * so the tab fades everything else out (Recede) rather than covering it. A
- * hold that is already there when the tab opens is simply open.
+ * bars on the menu's spring, solid the whole way (no crossfade: the card's
+ * own content would show through it), and closes back into it the same
+ * way. The card must stay on screen to be closed back into, so the tab
+ * fades everything else out (Recede) rather than covering it. A hold that
+ * is already there when the tab opens is simply open.
  */
 export function Reservation({ hold }: { hold: ReservationViewModel | undefined }) {
   return <AnimatePresence initial={false}>{hold && <Opened key={String(hold.id)} hold={hold} />}</AnimatePresence>
@@ -23,6 +24,8 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
   return (
     <motion.div
       layoutId={placeCardId(hold.placeId)}
+      // Solid from its first frame: a crossfade would show the room card's own content through it
+      layoutCrossfade={false}
       transition={springOpen}
       style={{ borderRadius: 32 }}
       role='dialog'
