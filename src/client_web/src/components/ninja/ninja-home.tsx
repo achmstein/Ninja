@@ -4,6 +4,7 @@ import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart } from '@/lib/cart'
+import { useLiveBills } from '@/lib/live-bills'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
@@ -22,6 +23,7 @@ import { HintBubble } from './hint-bubble'
 import { LiquidTabs } from './liquid-tabs'
 import { MenuGrid } from './menu-grid'
 import { Tray } from './tray'
+import { DockBill } from './dock-bill'
 import { Tune, type TuneResult } from './tune'
 import { useHint, useTimeout } from './use-hint'
 
@@ -44,6 +46,8 @@ export function NinjaHome({ menu }: HomeProps) {
   const reduced = useReducedMotion()
   const cloudKitchen = useIsCloudKitchen()
   const add = useCart((s) => s.add)
+  const trayEmpty = useCart((s) => s.lines.length === 0)
+  const live = useLiveBills()
 
   const columns = useMemo(() => buildDeck(menu.sections), [menu.sections])
   const usual = pickUsual(columns)
@@ -389,6 +393,8 @@ export function NinjaHome({ menu }: HomeProps) {
               onSignIn={() => setSignInOpen(true)}
               onKeepHolding={onKeepHolding}
             />
+            {/* The bill running now, in the tray's row while the tray is empty */}
+            <DockBill live={live} trayEmpty={trayEmpty} />
             <NinjaNav className='border-background/10 border-t' />
           </div>
         </div>
