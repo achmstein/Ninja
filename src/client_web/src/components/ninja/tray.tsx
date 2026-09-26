@@ -671,7 +671,7 @@ function HoldButton({
       }}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        'bg-primary text-primary-foreground relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
+        'bg-background/12 relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
         holding && 'scale-[0.96]'
       )}
     >

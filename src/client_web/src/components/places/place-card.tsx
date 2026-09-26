@@ -61,7 +61,7 @@ export function PlaceCard({
       style={{ borderRadius: 28 }}
       className={cn(
         'relative isolate overflow-hidden',
-        free ? 'bg-primary text-primary-foreground shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)]' : 'surface text-foreground'
+        free ? 'slab shadow-[0_12px_32px_-14px_rgb(0_0_0/0.45)] ring-2 ring-emerald-400/70' : 'surface text-foreground'
       )}
     >
       <motion.button
@@ -84,7 +84,7 @@ export function PlaceCard({
           <span
             className={cn(
               'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
-              free ? 'bg-primary-foreground/15' : cn('bg-muted', status.className)
+              free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
             )}
           >
             <span className={cn('size-1.5 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
@@ -95,7 +95,7 @@ export function PlaceCard({
               aria-hidden
               animate={{ rotate: open ? 45 : 0 }}
               transition={spring}
-              className='bg-primary-foreground text-primary grid size-10 shrink-0 place-items-center rounded-full'
+              className='bg-background text-foreground grid size-10 shrink-0 place-items-center rounded-full'
             >
               <Plus className='size-5' strokeWidth={2.5} />
             </motion.span>
@@ -144,7 +144,7 @@ function RateChips({ place, free }: { place: PlaceViewModel; free: boolean }) {
   const price = usePrice()
   const options = tariffOptions(place.tariff)
   if (options.length === 0) return null
-  const chip = cn('rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums', free ? 'bg-primary-foreground/12' : 'bg-muted')
+  const chip = cn('rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums', free ? 'bg-background/12' : 'bg-muted')
   return (
     <span className='mt-1 flex flex-wrap items-center gap-1.5'>
       {hasOptions(place.tariff) ? (
