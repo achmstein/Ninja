@@ -6,21 +6,27 @@ import { cn } from '@/lib/utils'
 import { pushTitleId } from '@/components/ninja/page/push'
 
 /**
- * Tiles in the Ninja style: rows in one filled group, flat like the request
- * tiles and the dock (no shadow), each an icon in a round tile, a label (and
- * a line under it), the row's current setting and a chevron. A press shades
- * the row; nothing jumps.
+ * Tiles in the Ninja style: rows straight on the page, no fill and no
+ * shadow, a hairline between them (from the label, not under the icon),
+ * each an icon in a soft round tile, a label (and a line under it), the
+ * row's current setting and a chevron. A press shades the row, rounded;
+ * nothing jumps.
  */
 export function TileGroup({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-muted divide-background/70 flex flex-col divide-y overflow-hidden rounded-[1.5rem]', className)}>
+    <div
+      className={cn(
+        'flex flex-col [&>*:not(:first-child)]:relative [&>*:not(:first-child)]:before:absolute [&>*:not(:first-child)]:before:start-14 [&>*:not(:first-child)]:before:end-2 [&>*:not(:first-child)]:before:top-0 [&>*:not(:first-child)]:before:border-t [&>*:not(:first-child)]:before:border-border/60',
+        className
+      )}
+    >
       {children}
     </div>
   )
 }
 
 const rowClasses =
-  'active:bg-foreground/[0.06] hover:bg-foreground/[0.03] flex min-h-16 w-full items-center gap-3 px-4 py-3 text-start transition-colors'
+  'active:bg-foreground/[0.06] hover:bg-foreground/[0.03] -mx-2 flex min-h-16 items-center gap-3 rounded-[1.25rem] px-2 py-3 text-start transition-colors'
 
 type TileContentProps = {
   icon: React.ComponentType<{ className?: string }>
@@ -41,7 +47,7 @@ function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing
       <span
         className={cn(
           'grid size-9 shrink-0 place-items-center rounded-full',
-          destructive ? 'bg-destructive/10 text-destructive' : 'bg-background text-foreground'
+          destructive ? 'bg-destructive/10 text-destructive' : 'bg-muted text-foreground'
         )}
       >
         <Icon className='size-[18px]' />
