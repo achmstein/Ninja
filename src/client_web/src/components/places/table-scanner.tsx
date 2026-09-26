@@ -54,10 +54,17 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
   const navigate = useNavigate()
   const video = useRef<HTMLVideoElement>(null)
   const [blocked, setBlocked] = useState(false)
+  // Each opening starts afresh: reset while rendering, not in the effect
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setBlocked(false)
+  }
+  // No camera API at all (an old browser, or not a secure page)
+  const unsupported = typeof navigator !== 'undefined' && !navigator.mediaDevices
 
   useEffect(() => {
-    if (!open) return
-    setBlocked(false)
+    if (!open || unsupported) return
     let stream: MediaStream | null = null
     let frame = 0
     let stopped = false
@@ -106,7 +113,7 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
     }
 
     navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then((s) => {
         if (stopped) {
           s.getTracks().forEach((track) => track.stop())
@@ -120,7 +127,6 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
         frame = requestAnimationFrame(() => void read())
       })
       .catch(() => setBlocked(true))
-    if (!navigator.mediaDevices) setBlocked(true)
 
     return () => {
       stopped = true
@@ -137,7 +143,7 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
           <DialogTitle>{t('scanTable')}</DialogTitle>
           <DialogDescription>{t('scanTableHint')}</DialogDescription>
         </DialogHeader>
-        {blocked ? (
+        {blocked || unsupported ? (
           <div className='bg-muted text-muted-foreground flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center text-sm'>
             <CameraOff className='h-8 w-8' />
             {t('cameraBlocked')}
