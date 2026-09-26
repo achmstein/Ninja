@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -59,12 +58,36 @@ export function ConfirmDialog({
           )}
         </DialogHeader>
 
-        <DialogFooter className='gap-2'>
+        {/* Two answers side by side; a quiet third one (cancel with no charge) goes under them, full width,
+            rather than squeezing three buttons into a row the dialog cannot hold */}
+        <div className='flex flex-col gap-2'>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-12 min-w-0 flex-1'
+              onClick={() => onOpenChange(false)}
+            >
+              {cancelLabel}
+            </Button>
+            <Button
+              variant={destructive ? 'destructive' : 'default'}
+              size='lg'
+              className='h-12 min-w-0 flex-1'
+              disabled={disabled}
+              onClick={() => {
+                onOpenChange(false)
+                onAction()
+              }}
+            >
+              {actionLabel}
+            </Button>
+          </div>
           {secondaryLabel && onSecondary && (
             <Button
               variant='ghost'
               size='lg'
-              className='text-destructive hover:text-destructive h-12 sm:me-auto'
+              className='text-destructive hover:text-destructive h-11 w-full'
               disabled={disabled}
               onClick={() => {
                 onOpenChange(false)
@@ -74,27 +97,7 @@ export function ConfirmDialog({
               {secondaryLabel}
             </Button>
           )}
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
-            {cancelLabel}
-          </Button>
-          <Button
-            variant={destructive ? 'destructive' : 'default'}
-            size='lg'
-            className='h-12'
-            disabled={disabled}
-            onClick={() => {
-              onOpenChange(false)
-              onAction()
-            }}
-          >
-            {actionLabel}
-          </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
