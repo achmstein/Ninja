@@ -250,7 +250,7 @@ export function NinjaHome({ menu }: HomeProps) {
     <MotionConfig reducedMotion='user'>
       <LayoutGroup>
         <div
-          className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col md:top-(--header-h)'
+          className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'
           onPointerDownCapture={noteInput}
           onTouchStartCapture={noteInput}
           onWheelCapture={noteInput}
@@ -307,7 +307,7 @@ export function NinjaHome({ menu }: HomeProps) {
 
             {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
             <NinjaTopBar
-              className='absolute inset-x-0 top-0 md:flex'
+              className='absolute inset-x-0 top-0'
               start={
                 mode === 'grid' ? (
                   <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>

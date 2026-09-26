@@ -179,7 +179,7 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
               <PlaceCardSkeleton />
             </RiseItem>
           ) : (
-            <div className='flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start'>
+            <div className='flex flex-col gap-4'>
               {places.map((place) => (
                 <RiseItem key={String(place.id)}>
                   <Recede gone={held && String(place.id) !== heldId}>

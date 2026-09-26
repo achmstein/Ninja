@@ -119,7 +119,7 @@ function CartPage() {
   return (
     // No dock on this page: -mb cancels the root <main>'s clearance for it,
     // and the page is at least a screen tall so the checkout sits at the bottom
-    <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] overflow-x-clip md:mb-0'>
+    <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] overflow-x-clip'>
       <NinjaPage
         title={t('ninjaYourOrder')}
         subtitle={t('itemCount', { count: cartCount(lines) })}

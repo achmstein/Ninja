@@ -124,7 +124,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
   return (
     <MotionConfig reducedMotion='user'>
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
-      <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] min-h-svh md:mb-0'>
+      <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] min-h-svh'>
         {/* What this page is, said plainly above everything else */}
         <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-xs font-semibold text-amber-950'>
           <FlaskConical className='size-3.5' />

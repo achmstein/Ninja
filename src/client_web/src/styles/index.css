@@ -21,6 +21,13 @@
   body {
     @apply bg-background text-foreground min-h-svh w-full antialiased;
   }
+  /* A wide screen shows the app as the phone's column, centred: the page
+     around it takes a tint, so the column reads as the app */
+  @media (width >= 48rem) {
+    body {
+      background-color: color-mix(in oklab, var(--muted) 70%, var(--background));
+    }
+  }
 
   /* Arabic UI reads in the Arabic family first */
   :root[dir='rtl'] body {

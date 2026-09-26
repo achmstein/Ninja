@@ -8,7 +8,6 @@ import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
-import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
 import { OrderPill } from '@/components/order-pill'
 
@@ -33,12 +32,13 @@ function RootLayout() {
   return (
     <DirectionProvider dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <ThemeProvider>
-        <div className='flex min-h-svh flex-col pt-[env(safe-area-inset-top)]'>
+        {/* One layout at every width: the phone's column, and on a wide screen that same column
+            centred on a tinted page (styles/index.css), its bars and dock kept to it */}
+        <div className='bg-background mx-auto flex min-h-svh w-full max-w-lg flex-col pt-[env(safe-area-inset-top)] md:shadow-[0_0_60px_-20px_rgb(0_0_0/0.25)]'>
           {/* Installed (standalone) PWA: opaque strip under the notch/status
               bar so scrolled content doesn't show through behind it */}
-          <div className='bg-background fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)]' />
-          <AppHeader />
-          <main className='mx-auto w-full max-w-lg flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:max-w-6xl md:pb-8'>
+          <div className='bg-background fixed inset-x-0 top-0 z-50 mx-auto h-[env(safe-area-inset-top)] max-w-lg' />
+          <main className='w-full flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))]'>
             <Outlet />
           </main>
           <BottomNav />
@@ -68,11 +68,15 @@ function AppToaster() {
     <Toaster
       position={language === 'ar' ? 'top-left' : 'top-right'}
       theme={resolvedTheme}
-      offset={{ top: 'calc(env(safe-area-inset-top) + 12px)', right: 16, left: 16 }}
+      // In the column's corner, which on a wide screen is not the window's
+      offset={{ top: 'calc(env(safe-area-inset-top) + 12px)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
       options={{ autopilot: true }}
     />
   )
 }
+
+/** 16 px in from the edge of the app's column (32rem wide, centred), however wide the window */
+const COLUMN_EDGE = 'max(16px, calc((100vw - 32rem) / 2 + 16px))'
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,

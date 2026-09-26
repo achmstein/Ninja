@@ -59,7 +59,7 @@ export function NinjaPage({
       />
       {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
       {/* pb-24: room for the dock's bill row, which sits above the tabs while a bill or an order is on */}
-      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-24 md:pt-8 md:pb-6', className)}>
+      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-24', className)}>
         <motion.header style={{ opacity, scale }} className='flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]'>
           <div className='min-w-0'>
             {/* A new title swaps in with a short blur, the page itself staying put */}

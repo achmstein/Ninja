@@ -166,7 +166,7 @@ function Outcome({
   return (
     <MotionConfig reducedMotion='user'>
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
-      <div className='mx-auto -mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] w-full max-w-lg flex-col justify-center px-4 py-8 md:mb-0'>
+      <div className='mx-auto -mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] w-full max-w-lg flex-col justify-center px-4 py-8'>
         <Rise className='flex flex-col gap-4'>
           {/* Whose payment it was: the café's own mark over it */}
           <RiseItem className='flex justify-center pb-2'>

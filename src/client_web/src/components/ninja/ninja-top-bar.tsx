@@ -49,7 +49,7 @@ export function NinjaTopBar({
   return (
     <div
       className={cn(
-        'bg-background/70 z-30 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 backdrop-blur-xl backdrop-saturate-150 md:hidden',
+        'bg-background/70 z-30 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 backdrop-blur-xl backdrop-saturate-150',
         className
       )}
       style={{ height: NINJA_BAR_H }}

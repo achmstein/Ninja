@@ -33,7 +33,7 @@ export function NinjaNav({ className }: { className?: string }) {
   const edges = useLiquidEdges(active, items, row, tabs.map((tab) => tab.key).join(), 'app-tabs')
 
   return (
-    <nav className={cn('md:hidden', className)}>
+    <nav className={className}>
       <div ref={row} className='relative flex h-14 items-stretch px-1.5'>
         <LiquidPill edges={edges} height={44} top={6} className='bg-[color-mix(in_oklab,var(--background)_16%,var(--foreground))]' />
         {tabs.map((tab, i) => {
@@ -88,7 +88,7 @@ export function NinjaNavDock() {
   return (
     // The menu's dock's own margins, so the bar does not shift when the page changes
     <div
-      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg md:hidden'
+      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg'
       style={{ paddingInline: DOCK_SIDE, bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
     >
       <div className='bg-foreground text-background pointer-events-auto relative rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
