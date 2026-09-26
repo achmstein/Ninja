@@ -268,28 +268,27 @@ export function BillCard({
                   {t(paper ? 'ninjaHideReceipt' : 'ninjaOpenBill')}
                 </button>
               )}
+              {/* The receipt, printed out inside the card under its button, as a transaction's is, rather than a page of its own */}
+              <AnimatePresence initial={false}>
+                {paper && !forming && (
+                  <motion.div
+                    key='paper'
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={springSoft}
+                    className='overflow-hidden'
+                  >
+                    <div className='pt-3'>
+                      <BillReceipt ticketId={Number(bill.id)} bill={bill} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
       </Surface>
-
-      {/* The receipt, printed out under the card as the till prints it, rather than a page of its own */}
-      <AnimatePresence initial={false}>
-        {paper && !forming && (
-          <motion.div
-            key='paper'
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={springSoft}
-            className='overflow-hidden'
-          >
-            <div className='pt-3'>
-              <BillReceipt ticketId={Number(bill.id)} bill={bill} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Paying from the phone, where the café takes it: tucked under the slab, as the order sheet tucks under the dock */}
       {open && !forming && (
