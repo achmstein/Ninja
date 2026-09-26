@@ -370,6 +370,7 @@ const webExtras = {
   ninjaRoomOpen: { en: 'Your room', ar: 'أوضتك' },
   ninjaRateNow: { en: 'Your rate now', ar: 'سعرك دلوقتي' },
   ninjaThisMonth: { en: 'this month', ar: 'الشهر ده' },
+  ninjaPlayedWith: { en: 'With', ar: 'مع' },
   ninjaRateOnceSwitched: { en: '{price} once the staff switch it', ar: '{price} من أول ما يحوّلوها' },
   ninjaSwitchingTo: { en: 'Switching to {option}', ar: 'بنحوّلها لـ {option}' },
   ninjaStaffSwitching: { en: 'The staff are switching it', ar: 'الموظفين بيحوّلوها' },

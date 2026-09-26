@@ -106,10 +106,30 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
         )
       )}
 
+      {/* Who played with you: the owner first, then in the order they joined */}
       {others.length > 0 && (
-        <div className='text-muted-foreground flex items-center gap-1.5 text-[13px]'>
-          <Users className='size-3.5 shrink-0' />
-          <span className='truncate'>{others.map((m) => m.customerName ?? '?').join(', ')}</span>
+        <div className='flex flex-wrap items-center gap-1.5'>
+          <span className='text-muted-foreground flex items-center gap-1 pe-1 text-[13px]'>
+            <Users className='size-3.5 shrink-0' />
+            {t('ninjaPlayedWith')}
+          </span>
+          {[...others]
+            .sort((a, b) => (a.role === b.role ? 0 : a.role === 'Owner' ? -1 : 1))
+            .map((member) => {
+              const name = member.customerName?.trim() || '?'
+              return (
+                <span
+                  key={member.customerId ?? name}
+                  title={name}
+                  className={cn('flex items-center gap-1.5 rounded-full py-0.5 ps-0.5 pe-2.5 text-xs font-semibold', active ? 'bg-background/12' : 'bg-background')}
+                >
+                  <span className={cn('grid size-5 place-items-center rounded-full text-[10px] font-bold', active ? 'bg-background text-foreground' : 'bg-foreground text-background')}>
+                    {name[0]?.toUpperCase()}
+                  </span>
+                  {name.split(' ')[0]}
+                </span>
+              )
+            })}
         </div>
       )}
     </Surface>

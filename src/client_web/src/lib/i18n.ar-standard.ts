@@ -194,6 +194,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaRoomOpen: 'غرفتك',
   ninjaRateNow: 'سعرك الآن',
   ninjaThisMonth: 'هذا الشهر',
+  ninjaPlayedWith: 'مع',
   ninjaRateOnceSwitched: '{price} بعد أن يحوّلها الموظفون',
   ninjaSwitchingTo: 'جارٍ التحويل إلى {option}',
   ninjaStaffSwitching: 'الموظفون يحوّلونها',
