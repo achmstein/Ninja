@@ -308,13 +308,14 @@ public class SavePaymentSettingsCommandHandler(
 /// <summary>What every payment command asks of a bill and an account.</summary>
 public static class PayRules
 {
-    /// <summary>Open, at a place (a counter sale is paid at the counter), and its total no longer moving.</summary>
+    /// <summary>
+    /// Open and its total no longer moving: a table's or a room's bill, or a
+    /// counter one (an order placed from the app to collect, paid ahead).
+    /// </summary>
     public static void EnsurePayable(Ticket ticket)
     {
         if (ticket.Status != TicketStatus.Open)
             throw new SalesDomainException("This bill is already closed.");
-        if (ticket.PlaceId is null)
-            throw new SalesDomainException("Only a table's or a room's bill is paid from a phone.");
         if (ticket.HasSession && ticket.SessionEndedAt is null)
             throw new SalesDomainException("The clock is still running; pay once it stops.");
         if (ticket.Lines.Count == 0)

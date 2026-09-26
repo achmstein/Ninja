@@ -20,7 +20,8 @@ import { PaySheet, type PayStart } from './pay-sheet'
  */
 export function BillPayBar({ bill }: { bill: BillView }) {
   const features = useFeatures()
-  const shown = features.onlinePayments && isOpen(bill) && bill.placeId != null
+  // A table's, a room's, or a counter bill (an order to collect, paid ahead): the server says whether it can be paid now
+  const shown = features.onlinePayments && isOpen(bill)
   const source = { ticketId: Number(bill.id) }
   const view = usePayView(source, { enabled: shown })
   const data = view.data
