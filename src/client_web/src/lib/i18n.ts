@@ -42,13 +42,13 @@ const webExtras = {
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
   // The in-app scanner: an installed app cannot be reached by the phone's camera
-  // A demo café's pretend checkout (pay at table without a payment account)
+  // A demo café's pretend checkout (online payments without a payment account)
   demoCheckoutTitle: {
     en: 'Demo payment',
     ar: 'دفع تجريبي',
   },
   demoCheckoutNote: {
-    en: 'This café is trying out paying at the table. No card is charged and no money moves.',
+    en: 'This café is trying out online payments. No card is charged and no money moves.',
     ar: 'الكافيه بيجرب الدفع من الترابيزة. مفيش كارت هيتسحب منه ولا فلوس هتتحول.',
   },
   demoPay: {
@@ -219,7 +219,7 @@ const webExtras = {
   },
   showPassword: { en: 'Show password', ar: 'اظهر الباسورد' },
   hidePassword: { en: 'Hide password', ar: 'اخفي الباسورد' },
-  // Pay at table: the guest pays all or part of the table's bill from here
+  // Online payments: the guest pays all or part of the table's bill from here
   payFully: { en: 'Pay fully', ar: 'ادفع الحساب كله' },
   splitBill: { en: 'Split bill', ar: 'قسّم الحساب' },
   payTheBill: { en: 'Pay the bill', ar: 'ادفع الحساب' },

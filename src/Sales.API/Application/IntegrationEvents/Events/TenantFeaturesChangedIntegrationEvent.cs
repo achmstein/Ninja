@@ -11,4 +11,4 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 /// older stack's event, it reads as off.
 /// </summary>
 public record TenantFeaturesChangedIntegrationEvent(
-    bool PayAtTable = false) : IntegrationEvent;
+    bool OnlinePayments = false) : IntegrationEvent;

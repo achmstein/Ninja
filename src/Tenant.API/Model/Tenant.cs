@@ -104,7 +104,7 @@ public class Tenant
     /// account. Off until the owner turns it on: it is no use before the
     /// café's payment keys are in.
     /// </summary>
-    public bool PayAtTableEnabled { get; set; }
+    public bool OnlinePaymentsEnabled { get; set; }
 
     /// <summary>
     /// What the café's plan allows, set by the control plane: an owner may
@@ -128,11 +128,11 @@ public class Tenant
 
     public bool KdsEntitled { get; set; } = true;
 
-    public bool PayAtTableEntitled { get; set; } = true;
+    public bool OnlinePaymentsEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, PayAtTableEnabled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled);
 
-    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, PayAtTableEntitled);
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
@@ -146,7 +146,7 @@ public class Tenant
         FinanceEnabled = f.Finance;
         PayrollEnabled = f.Payroll;
         KdsEnabled = f.Kds;
-        PayAtTableEnabled = f.PayAtTable;
+        OnlinePaymentsEnabled = f.OnlinePayments;
     }
 
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
@@ -160,7 +160,7 @@ public class Tenant
         FinanceEntitled = entitled.Finance;
         PayrollEntitled = entitled.Payroll;
         KdsEntitled = entitled.Kds;
-        PayAtTableEntitled = entitled.PayAtTable;
+        OnlinePaymentsEntitled = entitled.OnlinePayments;
         ApplyFeatures(Features);
     }
 
@@ -283,14 +283,14 @@ public class TenantThemeDark
 }
 
 /// <summary>The nine switches, as the surfaces read them and as the plan allows them.</summary>
-/// <param name="PayAtTable">Last and defaulted: a caller older than pay at table does not send it, and it stays off.</param>
-public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false)
+/// <param name="OnlinePayments">Last and defaulted: a caller older than online payments does not send it, and it stays off.</param>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
         Reservations && entitled.Reservations, TimeBilling && entitled.TimeBilling, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs,
         Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds,
-        PayAtTable && entitled.PayAtTable);
+        OnlinePayments && entitled.OnlinePayments);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

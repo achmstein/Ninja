@@ -34,6 +34,7 @@ import { Route as AuthenticatedInventoryIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedBrandIndexRouteImport } from './routes/_authenticated/brand/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
+import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
 import { Route as AuthenticatedAssistantIndexRouteImport } from './routes/_authenticated/assistant/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
@@ -196,6 +197,11 @@ const AuthenticatedBranchesIndexRoute =
     path: '/branches/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBillsIndexRoute = AuthenticatedBillsIndexRouteImport.update({
+  id: '/bills/',
+  path: '/bills/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAssistantIndexRoute =
   AuthenticatedAssistantIndexRouteImport.update({
     id: '/assistant/',
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/assistant': typeof AuthenticatedAssistantIndexRoute
+  '/bills': typeof AuthenticatedBillsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -435,6 +442,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/assistant': typeof AuthenticatedAssistantIndexRoute
+  '/bills': typeof AuthenticatedBillsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -489,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/assistant/': typeof AuthenticatedAssistantIndexRoute
+  '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/brand/': typeof AuthenticatedBrandIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
@@ -543,6 +552,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/apps'
     | '/assistant'
+    | '/bills'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -595,6 +605,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/apps'
     | '/assistant'
+    | '/bills'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -648,6 +659,7 @@ export interface FileRouteTypes {
     | '/_authenticated/accounts/'
     | '/_authenticated/apps/'
     | '/_authenticated/assistant/'
+    | '/_authenticated/bills/'
     | '/_authenticated/branches/'
     | '/_authenticated/brand/'
     | '/_authenticated/customers/'
@@ -856,6 +868,13 @@ declare module '@tanstack/react-router' {
       path: '/branches'
       fullPath: '/branches'
       preLoaderRoute: typeof AuthenticatedBranchesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bills/': {
+      id: '/_authenticated/bills/'
+      path: '/bills'
+      fullPath: '/bills'
+      preLoaderRoute: typeof AuthenticatedBillsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/assistant/': {
@@ -1067,6 +1086,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedAssistantIndexRoute: typeof AuthenticatedAssistantIndexRoute
+  AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedBrandIndexRoute: typeof AuthenticatedBrandIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
@@ -1112,6 +1132,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedAssistantIndexRoute: AuthenticatedAssistantIndexRoute,
+  AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedBrandIndexRoute: AuthenticatedBrandIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,

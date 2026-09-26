@@ -33,8 +33,8 @@ public class StartOnlinePaymentCommandHandler(
 {
     public async Task<StartedPayment> Handle(StartOnlinePaymentCommand command, CancellationToken ct)
     {
-        if (!await features.PayAtTableAsync())
-            throw new SalesDomainException("Paying at the table is off here.");
+        if (!await features.OnlinePaymentsAsync())
+            throw new SalesDomainException("Online payments are off here.");
         var settings = await payments.GetSettingsAsync();
         var provider = providers.For(settings)
             ?? throw new SalesDomainException("This café has not set up online payments yet.");

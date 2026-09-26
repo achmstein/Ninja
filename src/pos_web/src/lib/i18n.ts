@@ -292,7 +292,7 @@ const dictionary = {
   account: { en: "On account", ar: "على الحساب" },
   online: { en: "Online", ar: "أونلاين" },
 
-  // Pay at table: what guests paid from their phones
+  // Online payments: what guests paid from their phones
   paidOnlineTitle: { en: "Paid online", ar: "مدفوع أونلاين" },
   paidOnlineTotal: { en: "Paid online", ar: "مدفوع أونلاين" },
   onlineGuest: { en: "Guest", ar: "زائر" },

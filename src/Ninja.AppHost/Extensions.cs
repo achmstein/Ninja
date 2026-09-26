@@ -176,7 +176,7 @@ internal static class Extensions
             yarp.AddRoute("/api/shifts/{*any}", salesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // Paying at the table: the provider's callback carries no api-version
+            // Online payments: the provider's callback carries no api-version
             yarp.AddRoute("/api/sales/payments/paymob/callback", salesCluster);
             yarp.AddRoute("/api/sales/payments/{*any}", salesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);

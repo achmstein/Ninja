@@ -218,7 +218,7 @@ export function PaymentsList() {
           <ToggleGroupItem value='all' className='px-3'>
             {t('allTenders')}
           </ToggleGroupItem>
-          {tendersFor(features.payAtTable, tender?.name === 'Online').map(
+          {tendersFor(features.onlinePayments, tender?.name === 'Online').map(
             (item) => (
               <ToggleGroupItem
                 key={item.value}

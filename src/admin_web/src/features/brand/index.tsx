@@ -59,7 +59,7 @@ const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPla
   { key: 'payroll', label: 'featurePayroll' },
   { key: 'kds', label: 'featureKds' },
   // An add-on on every plan: not offered at all until it is bought
-  { key: 'payAtTable', label: 'featurePayAtTable', addon: true },
+  { key: 'onlinePayments', label: 'featureOnlinePayments', addon: true },
 ]
 
 /** The two slots every café fills and the cover photo, then the four variants behind a disclosure. */

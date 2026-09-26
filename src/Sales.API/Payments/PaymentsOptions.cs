@@ -1,7 +1,7 @@
 #nullable enable
 namespace Ninja.Sales.API.Payments;
 
-/// <summary>What the stack is stamped with for pay at table (Payments__* in its compose file).</summary>
+/// <summary>What the stack is stamped with for online payments (Payments__* in its compose file).</summary>
 public sealed class PaymentsOptions
 {
     /// <summary>The key the café's provider secrets are sealed with; the control plane keeps it, not this database.</summary>

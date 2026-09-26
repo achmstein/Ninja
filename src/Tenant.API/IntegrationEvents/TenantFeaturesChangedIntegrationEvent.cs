@@ -18,8 +18,8 @@ public record TenantFeaturesChangedIntegrationEvent(
     bool Finance,
     bool Payroll,
     bool Kds,
-    bool PayAtTable = false) : IntegrationEvent
+    bool OnlinePayments = false) : IntegrationEvent
 {
     public static TenantFeaturesChangedIntegrationEvent From(TenantFeatures f)
-        => new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.PayAtTable);
+        => new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments);
 }

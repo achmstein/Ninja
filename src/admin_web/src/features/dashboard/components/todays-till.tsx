@@ -39,7 +39,7 @@ export function TodaysTill({
     (report?.tenderTotals ?? []).map((row) => [row.tender, row])
   )
   const segments = tendersFor(
-    features.payAtTable,
+    features.onlinePayments,
     Number(tenderTotals.get('Online')?.amount ?? 0) > 0
   ).map(({ name, value, labelKey }) => {
     const row = tenderTotals.get(name)

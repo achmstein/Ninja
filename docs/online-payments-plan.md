@@ -1,7 +1,7 @@
-# Pay at table (online payment and bill splitting)
+# Online payments (online payment and bill splitting)
 
 Status: built 2026-09-26; waiting on a Paymob sandbox account for the end-to-end test.
-Decided: Paymob; each café's own merchant account; PayAtTable is an add-on on
+Decided: Paymob; each café's own merchant account; OnlinePayments is an add-on on
 every plan (included in none); fee and tips are the café's choice.
 
 As built (differences from the design below):
@@ -32,7 +32,7 @@ the bill closes itself when fully paid. Sold per café as a module.
 2. **Money flow: each café's own Paymob merchant account** (keys entered by
    the owner). Ninja never holds funds. (The alternative — Ninja as payment
    facilitator — is out of scope.)
-3. **Plan**: new module `PayAtTable`; included in which plans vs add-on.
+3. **Plan**: new module `OnlinePayments`; included in which plans vs add-on.
 4. Fee: café chooses whether the guest pays the online fee (percentage +
    fixed, shown as its own line) or the café absorbs it. Tips: optional.
 
@@ -51,10 +51,10 @@ the bill closes itself when fully paid. Sold per café as a module.
 ## Design
 
 ### Module and settings
-- `Module.PayAtTable` in Control.API; add to `PlanCatalog` (Included/Addon
-  per the decision), `TenantFeatures.PayAtTable` on Tenant.API, the features
+- `Module.OnlinePayments` in Control.API; add to `PlanCatalog` (Included/Addon
+  per the decision), `TenantFeatures.OnlinePayments` on Tenant.API, the features
   event, admin switch (only when entitled), client_web/client_app feature
-  flag (`features.payAtTable`).
+  flag (`features.onlinePayments`).
 - **Payment settings** (Tenant.API, café-wide, owner-only, admin "Payments"
   page): provider = paymob, API/secret key, public key, integration ids per
   method (card, Apple Pay, wallet), HMAC secret, fee mode (guest|café) with

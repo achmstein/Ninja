@@ -277,7 +277,7 @@ export function TicketScreen({
     if (ticketGone) navigate({ to: backTo })
   }, [ticketGone, navigate, backTo])
 
-  // What guests paid from their phones (pay at table), while the bill is
+  // What guests paid from their phones (online payments), while the bill is
   // open: the till takes only what is left
   const online = useOnlinePayments(
     ticketId,

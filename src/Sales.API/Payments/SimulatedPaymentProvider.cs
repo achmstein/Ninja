@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Sales.API.Payments;
 
 /// <summary>
-/// A pretend provider for demo cafés: the whole pay-at-table flow runs, but
+/// A pretend provider for demo cafés: the whole online-payments flow runs, but
 /// the "checkout" is the customer app's own page with Pay and Decline
 /// buttons, and no money moves. Offered only where the stack was stamped
 /// with Payments__Simulated (demos, and local runs), and only until the café

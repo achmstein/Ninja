@@ -28,10 +28,10 @@ public static class BusinessProfiles
         // Tables are booked, a kitchen cooks; nothing runs on a clock
         [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
         // Rooms and consoles by the hour, booked ahead, snacks from a small kitchen.
-        // Pay at table starts off everywhere: it needs the café's own payment
+        // Online payments starts off everywhere: it needs the café's own payment
         // account keys before a guest can use it, so the owner turns it on
-        [BusinessType.GameStation] = PlanCatalog.All.Except([Module.PayAtTable]).ToHashSet(),
-        [BusinessType.Other] = PlanCatalog.All.Except([Module.PayAtTable]).ToHashSet(),
+        [BusinessType.GameStation] = PlanCatalog.All.Except([Module.OnlinePayments]).ToHashSet(),
+        [BusinessType.Other] = PlanCatalog.All.Except([Module.OnlinePayments]).ToHashSet(),
         // A kitchen and a counter: nobody sits, so nothing is booked or timed.
         // Tabs are for regulars at a counter they come back to, not a hatch
         // they collect from once; the rest runs any kitchen

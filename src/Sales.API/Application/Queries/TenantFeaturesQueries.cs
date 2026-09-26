@@ -9,16 +9,16 @@ namespace Ninja.Sales.API.Application.Queries;
 /// </summary>
 public interface ITenantFeaturesQueries
 {
-    /// <summary>Whether guests may pay at the table. Fail-closed: with no projection row, they may not.</summary>
-    Task<bool> PayAtTableAsync();
+    /// <summary>Whether guests may pay online. Fail-closed: with no projection row, they may not.</summary>
+    Task<bool> OnlinePaymentsAsync();
 }
 
 public class TenantFeaturesQueries(SalesContext context) : ITenantFeaturesQueries
 {
-    public async Task<bool> PayAtTableAsync()
+    public async Task<bool> OnlinePaymentsAsync()
         => await context.TenantFeatures
             .AsNoTracking()
             .Where(t => t.Id == TenantFeatures.SingletonId)
-            .Select(t => t.PayAtTable)
+            .Select(t => t.OnlinePayments)
             .FirstOrDefaultAsync();
 }

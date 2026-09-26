@@ -18,7 +18,7 @@ public static class Extensions
 
         builder.AddDefaultAuthentication();
 
-        // Pay at table: the café's own provider account, its secrets sealed with the stack's payments key
+        // Online payments: the café's own provider account, its secrets sealed with the stack's payments key
         services.Configure<Ninja.Sales.API.Payments.PaymentsOptions>(builder.Configuration.GetSection("Payments"));
         services.AddSingleton<Ninja.Sales.API.Payments.SecretSealer>();
         services.AddHttpClient<Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));
@@ -82,7 +82,7 @@ public static class Extensions
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
             .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
-            // Whether guests may pay at the table: Sales keeps its own copy of the switch
+            // Whether guests may pay online: Sales keeps its own copy of the switch
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));

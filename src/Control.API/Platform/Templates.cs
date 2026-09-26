@@ -329,11 +329,11 @@ public static partial class Templates
                             sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;
                 case "sales":
-                    // Pay at table: the key the café's provider secrets are sealed with, and where the provider calls back
+                    // Online payments: the key the café's provider secrets are sealed with, and where the provider calls back
                     sb.AppendLine("      Payments__Key: \"${PAYMENTS_KEY}\"");
                     sb.AppendLine($"      Payments__CallbackBaseUrl: \"{hosts.ApiUrl}\"");
                     sb.AppendLine($"      Payments__ReturnBaseUrl: \"{hosts.CustomerUrl}\"");
-                    // A demo tries pay at table with pretend payments until it has a Paymob account; a customer never can
+                    // A demo tries online payments with pretend payments until it has a Paymob account; a customer never can
                     if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
                     break;
                 case "tenant":
@@ -495,7 +495,7 @@ public static partial class Templates
         yield return ("/api/stays/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
-        // Paying at the table; the provider's callback carries no api-version and is never blocked
+        // Online payments; the provider's callback carries no api-version and is never blocked
         yield return ("/api/sales/payments/paymob/callback", "sales", null, none);
         yield return ("/api/sales/payments/{*any}", "sales", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);

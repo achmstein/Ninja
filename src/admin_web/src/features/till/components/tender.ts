@@ -2,7 +2,7 @@ import { type TranslationKey } from '@/lib/i18n'
 
 // PaymentTender as Sales.Domain numbers it (Cash=0, Card=1, InstaPay=2,
 // Account=3, Online=4). Query params take the number; the read models spell
-// the name. Online is what guests paid from their phones (pay at table):
+// the name. Online is what guests paid from their phones (online payments):
 // never cash, never in the drawer.
 type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online'
 
@@ -22,9 +22,9 @@ export const TENDERS: {
  * The tenders worth offering: Online only where the café takes payments at
  * the table, or where some was taken anyway (switched off since).
  */
-export function tendersFor(payAtTable: boolean | undefined, hasOnline = false) {
+export function tendersFor(onlinePayments: boolean | undefined, hasOnline = false) {
   return TENDERS.filter(
-    (tender) => tender.name !== 'Online' || payAtTable || hasOnline
+    (tender) => tender.name !== 'Online' || onlinePayments || hasOnline
   )
 }
 

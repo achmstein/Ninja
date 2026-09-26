@@ -204,8 +204,8 @@ public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
-/// <param name="PayAtTable">Last and defaulted: a stack older than pay at table does not send it.</param>
-public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false);
+/// <param name="OnlinePayments">Last and defaulted: a stack older than online payments does not send it.</param>
+public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false);
 
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
 public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null);

@@ -17,7 +17,7 @@ public enum Module
     Payroll,
     Kds,
     /// <summary>Guests pay or split the bill online, through the café's own Paymob account. An add-on on every plan.</summary>
-    PayAtTable,
+    OnlinePayments,
 }
 
 /// <summary>
@@ -51,8 +51,8 @@ public static class PlanCatalog
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
         [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
-        // Pay at table goes through the café's own payment account: bought on its own, whatever the plan
-        [TenantPlan.Pro] = All.Except([Module.PayAtTable]).ToHashSet(),
+        // Online payments goes through the café's own payment account: bought on its own, whatever the plan
+        [TenantPlan.Pro] = All.Except([Module.OnlinePayments]).ToHashSet(),
     };
 
     /// <summary>
@@ -76,9 +76,9 @@ public static class PlanCatalog
         (Module.TimeBilling, "/api/places/{id}/walk-in"),
         (Module.TimeBilling, "/api/places/{id}/join"),
         (Module.TimeBilling, "/api/places/{id}/stays"),
-        (Module.PayAtTable, "/api/sales/payments/{*any}"),
-        (Module.PayAtTable, "/api/tickets/{id}/pay"),
-        (Module.PayAtTable, "/api/tickets/{id}/pay/{*any}"),
+        (Module.OnlinePayments, "/api/sales/payments/{*any}"),
+        (Module.OnlinePayments, "/api/tickets/{id}/pay"),
+        (Module.OnlinePayments, "/api/tickets/{id}/pay/{*any}"),
     ];
 
     /// <summary>
@@ -89,12 +89,12 @@ public static class PlanCatalog
     /// </summary>
     public static readonly IReadOnlyList<(Module Module, string Path)> AlwaysOpen =
     [
-        (Module.PayAtTable, "/api/sales/payments/paymob/callback"),
+        (Module.OnlinePayments, "/api/sales/payments/paymob/callback"),
     ];
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
 
-    /// <summary>What may be bought on top of the plan: anything it does not include (only pay at table on Pro).</summary>
+    /// <summary>What may be bought on top of the plan: anything it does not include (only online payments on Pro).</summary>
     public static IReadOnlySet<Module> AddonsAvailable(TenantPlan plan) => All.Except(Included(plan)).ToHashSet();
 
     /// <summary>Included plus add-ons; everything for a demo.</summary>

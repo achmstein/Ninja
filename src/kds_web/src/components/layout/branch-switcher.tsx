@@ -45,7 +45,8 @@ export function BranchSwitcher() {
       <BrandMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
         <span className='truncate font-semibold'>{cafe || label}</span>
-        {cafe && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
+        {/* One branch: the café is the place, and its branch says nothing more */}
+        {cafe && branches.length > 1 && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
       </div>
     </>
   )

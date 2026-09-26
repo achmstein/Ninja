@@ -126,7 +126,7 @@ var spacesApi = builder.AddProject<Projects.Spaces_API>("spaces-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
-// Pay at table: the key Sales seals the café's provider secrets with. A
+// Online payments: the key Sales seals the café's provider secrets with. A
 // stamped stack gets its own from the control plane (PAYMENTS_KEY); locally
 // a fixed one, so secrets saved yesterday still open today.
 var paymentsKey = builder.AddParameter("payments-key",
@@ -140,7 +140,7 @@ var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax")
     .WithEnvironment("Payments__Key", paymentsKey)
-    // Locally, pay at table works without a Paymob account: the checkout is pretend
+    // Locally, online payments works without a Paymob account: the checkout is pretend
     .WithEnvironment("Payments__Simulated", "true");
 
 var inventoryApi = builder.AddProject<Projects.Inventory_API>("inventory-api")

@@ -1,7 +1,7 @@
 import { type PayLineView, type PayOptionsView } from '@/api/sales'
 
 /**
- * Pay at table (docs/pay-at-table-plan.md), the arithmetic the guest's
+ * Online payments (docs/online-payments-plan.md), the arithmetic the guest's
  * phone shows before it asks the server: what a share comes to, the fee
  * when the café passes the provider's on, and the tip. Each one mirrors
  * Sales' OnlineShares, so the summary the guest confirms is the amount the

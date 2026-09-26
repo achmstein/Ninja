@@ -35,7 +35,7 @@ public sealed record PaymentSettingsRequest(
     bool AllowCustom);
 
 /// <summary>
-/// Pay at table (docs/pay-at-table-plan.md): a guest pays or splits their
+/// Online payments (docs/online-payments-plan.md): a guest pays or splits their
 /// bill from their phone through the café's own payment provider account.
 /// The gateway answers 402 for all of it when the café has not bought the
 /// module, except the provider's callback, which always lands.
@@ -381,6 +381,6 @@ public sealed class PayReader(
         var list = await payments.ListForTicketAsync(ticket.Id);
         var settings = await payments.GetSettingsAsync();
         var userId = http.User.GetUserId();
-        return PayViews.Build(ticket, bill, list, settings, await features.PayAtTableAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime, providers.IsSimulated(settings));
+        return PayViews.Build(ticket, bill, list, settings, await features.OnlinePaymentsAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime, providers.IsSimulated(settings));
     }
 }

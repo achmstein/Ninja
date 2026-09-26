@@ -27,7 +27,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
         {
             context.TenantFeatures.Add(new TenantFeatures
             {
-                PayAtTable = @event.PayAtTable,
+                OnlinePayments = @event.OnlinePayments,
                 UpdatedAt = @event.CreationDate,
             });
         }
@@ -41,12 +41,12 @@ public class TenantFeaturesChangedIntegrationEventHandler(
                 return;
             }
 
-            row.PayAtTable = @event.PayAtTable;
+            row.OnlinePayments = @event.OnlinePayments;
             row.UpdatedAt = @event.CreationDate;
         }
 
         await context.SaveChangesAsync();
 
-        logger.LogInformation("Tenant features projection: pay at table {PayAtTable}", @event.PayAtTable);
+        logger.LogInformation("Tenant features projection: online payments {OnlinePayments}", @event.OnlinePayments);
     }
 }

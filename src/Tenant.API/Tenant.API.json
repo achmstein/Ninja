@@ -815,7 +815,7 @@
           "kds": {
             "type": "boolean"
           },
-          "payAtTable": {
+          "onlinePayments": {
             "type": "boolean",
             "default": false
           }

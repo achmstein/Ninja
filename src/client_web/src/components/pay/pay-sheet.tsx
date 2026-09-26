@@ -68,7 +68,7 @@ function modesFor(view: PayView, start: PayStart): SplitKind[] {
 }
 
 /**
- * Paying at the table (docs/pay-at-table-plan.md): the bill as it stands —
+ * Online payments (docs/online-payments-plan.md): the bill as it stands —
  * what is paid, what others are paying right now — the ways the café lets
  * a table split it, the tip and the fee, and one button that sends the
  * guest to the provider's checkout. Re-read every few seconds while open,

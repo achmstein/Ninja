@@ -110,8 +110,8 @@ public sealed class PaymentScenarios
         using var scope = Suite.Sales.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SalesContext>();
         var row = await db.TenantFeatures.FindAsync(Infrastructure.Projections.TenantFeatures.SingletonId);
-        if (row is null) db.TenantFeatures.Add(new() { PayAtTable = true, UpdatedAt = DateTime.UtcNow });
-        else row.PayAtTable = true;
+        if (row is null) db.TenantFeatures.Add(new() { OnlinePayments = true, UpdatedAt = DateTime.UtcNow });
+        else row.OnlinePayments = true;
         await db.SaveChangesAsync();
     }
 
@@ -376,7 +376,7 @@ public sealed class PaymentScenarios
         using (var scope = Suite.Sales.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<SalesContext>();
-            (await db.TenantFeatures.FindAsync(Infrastructure.Projections.TenantFeatures.SingletonId))!.PayAtTable = false;
+            (await db.TenantFeatures.FindAsync(Infrastructure.Projections.TenantFeatures.SingletonId))!.OnlinePayments = false;
             await db.SaveChangesAsync();
         }
         try

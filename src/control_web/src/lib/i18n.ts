@@ -481,7 +481,7 @@ const dictionary = {
   featureFinance: "Finance",
   featurePayroll: "Payroll",
   featureKds: "Kitchen display",
-  featurePayAtTable: "Pay at table",
+  featureOnlinePayments: "Online payments",
   brandSaved: "Brand saved",
   brandSaveFailed: "The brand was not saved",
   brandNotRunning: "The brand lives on the stack; start it to edit",

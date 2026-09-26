@@ -17,7 +17,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   addingToBill: 'تم التأكيد، ويُضاف إلى فاتورتك',
   poweredBy: 'مدعوم من',
   demoCheckoutTitle: 'دفع تجريبي',
-  demoCheckoutNote: 'يجرّب هذا المقهى الدفع من الطاولة. لن تُخصم أي مبالغ من بطاقتك.',
+  demoCheckoutNote: 'يجرّب هذا المقهى الدفع أونلاين. لن تُخصم أي مبالغ من بطاقتك.',
   demoPay: 'ادفع (تجربة)',
   demoDecline: 'رفض',
   demoBanner: 'دفع تجريبي: لن تُخصم أي مبالغ من بطاقة حقيقية',

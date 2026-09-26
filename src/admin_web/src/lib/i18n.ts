@@ -14,8 +14,8 @@ type LocalizedTextLike = {
 const webExtras = {
   // The tenant's brand (Administration → Brand)
   brandNav: { en: "Brand", ar: "الهوية" },
-  // Pay at table (Administration → Payments): the café's own Paymob account
-  payAtTableNav: { en: "Payments", ar: "المدفوعات" },
+  // Online payments (Administration → Payments): the café's own Paymob account
+  onlinePaymentsNav: { en: "Payments", ar: "المدفوعات" },
   paySettingsDescription: { en: "Guests pay or split their bill from their phone, straight into your own Paymob account.", ar: "يدفع الضيوف فاتورتهم أو يقسمونها من موبايلاتهم، مباشرةً إلى حساب Paymob الخاص بك." },
   payReady: { en: "Ready", ar: "جاهز" },
   payNotReady: { en: "Not set up", ar: "غير مُعد" },
@@ -62,7 +62,7 @@ const webExtras = {
   payProblemTips: { en: "Up to 4 tips, each from 1 to 50%", ar: "حتى 4 اختيارات للبقشيش، كلٌّ منها من 1 إلى 50٪" },
   // A demo café without its own Paymob account: guests' payments are pretend until the keys are in
   payDemoBadge: { en: "Demo payments", ar: "مدفوعات تجريبية" },
-  payDemoNotice: { en: "Demo mode: guests can try paying at the table with pretend payments. Enter your Paymob account to take real payments.", ar: "وضع التجربة: يمكن للضيوف تجربة الدفع من الطاولة بمدفوعات وهمية. أدخل حساب Paymob الخاص بك لاستقبال مدفوعات حقيقية." },
+  payDemoNotice: { en: "Demo mode: guests can try paying online with pretend payments. Enter your Paymob account to take real payments.", ar: "وضع التجربة: يمكن للضيوف تجربة الدفع أونلاين بمدفوعات وهمية. أدخل حساب Paymob الخاص بك لاستقبال مدفوعات حقيقية." },
   // The owner's AI assistant (Administration → AI assistant): the café's MCP server in Claude or ChatGPT
   assistantNav: { en: "AI assistant", ar: "المساعد الذكي" },
   assistantDescription: { en: "Ask Claude or ChatGPT about your café in your own words: sales, profit, stock, staff. It reads your numbers live and changes something only when you confirm.", ar: "اسأل Claude أو ChatGPT عن مقهاك بكلامك: المبيعات والأرباح والمخزون والموظفين. يقرأ أرقامك مباشرةً، ولا يغيّر شيئًا إلا بعد تأكيدك." },
@@ -148,7 +148,7 @@ const webExtras = {
   featureFinance: { en: "Finance", ar: "المالية" },
   featurePayroll: { en: "Payroll", ar: "الرواتب" },
   featureKds: { en: "Kitchen display", ar: "شاشة المطبخ" },
-  featurePayAtTable: { en: "Pay at table", ar: "الدفع من الطاولة" },
+  featureOnlinePayments: { en: "Online payments", ar: "الدفع أونلاين" },
   brandWordmarkEn: { en: "Wide logo", ar: "الشعار العريض" },
   brandLogoDark: { en: "Logo, dark mode", ar: "الشعار للوضع الداكن" },
   brandWordmarkEnDark: { en: "Wide logo, dark mode", ar: "الشعار العريض للوضع الداكن" },
@@ -634,6 +634,7 @@ const webExtras = {
 
   // Till back office (read-only views over Sales.API)
   navTill: { en: "Till", ar: "الكاشير" },
+  navBills: { en: "Bills", ar: "الفواتير" },
   tillTickets: { en: "Tickets", ar: "الحسابات" },
   tillPayments: { en: "Payments", ar: "المدفوعات" },
   tillRefunds: { en: "Refunds", ar: "المرتجعات" },

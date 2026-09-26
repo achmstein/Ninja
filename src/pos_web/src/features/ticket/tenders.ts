@@ -25,7 +25,7 @@ export const ACCOUNT_TENDER: Tender = {
   labelKey: 'account',
 }
 
-// What guests paid from their phones (pay at table). Never offered on the
+// What guests paid from their phones (online payments). Never offered on the
 // till: the server adds every paid online payment to the settle itself, and
 // it is never cash, so it never counts towards the drawer.
 export const ONLINE_TENDER: Tender = {

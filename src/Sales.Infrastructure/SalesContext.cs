@@ -20,7 +20,7 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment> TabPayments { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePayment> OnlinePayments { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings> PaymentSettings { get; set; }
-    /// <summary>The café's switches Sales owns a part of (pay at table), from Tenant.API's events.</summary>
+    /// <summary>The café's switches Sales owns a part of (online payments), from Tenant.API's events.</summary>
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
 
     private readonly IMediator? _mediator;

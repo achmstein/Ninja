@@ -28,7 +28,7 @@ public static class Suite
 /// <summary>What the apps read off the wire; named here so a change in the API's shape fails a test.</summary>
 public record TenantView(LocalizedView Name, string? PrimaryColor, string? CustomerUrl, FeaturesView Features, FeaturesView Entitlements, long Version);
 public record LocalizedView(string En, string? Ar);
-public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false)
+public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false)
 {
     public static FeaturesView All => new(true, true, true, true, true, true, true, true, true);
 }
@@ -145,7 +145,7 @@ public sealed class TenantScenarios
         Assert.IsFalse(asked.Features.Finance);
         Assert.IsFalse(asked.Features.Payroll);
         Assert.IsTrue(asked.Features.Loyalty, "what the plan includes is the owner's to turn");
-        Assert.IsFalse(asked.Features.PayAtTable, "pay at table is an add-on the plan did not bring");
+        Assert.IsFalse(asked.Features.OnlinePayments, "online payments are an add-on the plan did not bring");
 
         // And an owner may always switch an entitled module off
         var off = await Owner.PutAsync<TenantView>(Tenant, Update(starter with { Loyalty = false }));

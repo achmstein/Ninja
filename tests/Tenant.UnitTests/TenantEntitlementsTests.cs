@@ -14,7 +14,7 @@ public sealed class TenantEntitlementsTests
     {
         var tenant = new API.Model.Tenant();
         Assert.AreEqual(AllOn, tenant.Entitlements, "the dev host and a stack stamped before plans keep every switch usable");
-        Assert.AreEqual(AllOn with { PayAtTable = false }, tenant.Features, "pay at table waits for the owner (and the cafe's payment keys)");
+        Assert.AreEqual(AllOn with { OnlinePayments = false }, tenant.Features, "online payments waits for the owner (and the cafe's payment keys)");
     }
 
     [TestMethod]
@@ -22,14 +22,14 @@ public sealed class TenantEntitlementsTests
     {
         var tenant = new API.Model.Tenant();
         tenant.ApplyFeatures(AllOn);
-        Assert.IsTrue(tenant.PayAtTableEnabled);
+        Assert.IsTrue(tenant.OnlinePaymentsEnabled);
 
-        // A control plane older than pay at table sends eight switches: the add-on is not bought
+        // A control plane older than online payments sends eight switches: the add-on is not bought
         tenant.ApplyEntitlements(new TenantFeatures(true, true, true, true, true, true, true, true));
-        Assert.IsFalse(tenant.PayAtTableEntitled);
-        Assert.IsFalse(tenant.PayAtTableEnabled, "the plan no longer allows it");
+        Assert.IsFalse(tenant.OnlinePaymentsEntitled);
+        Assert.IsFalse(tenant.OnlinePaymentsEnabled, "the plan no longer allows it");
         tenant.ApplyFeatures(AllOn);
-        Assert.IsFalse(tenant.PayAtTableEnabled, "an owner never turns on what is not bought");
+        Assert.IsFalse(tenant.OnlinePaymentsEnabled, "an owner never turns on what is not bought");
     }
 
     [TestMethod]

@@ -18,7 +18,7 @@ import { PaySheet, type PayStart } from './pay-sheet'
  */
 export function BillPayBar({ bill }: { bill: BillView }) {
   const features = useFeatures()
-  const shown = features.payAtTable && isOpen(bill) && bill.placeId != null
+  const shown = features.onlinePayments && isOpen(bill) && bill.placeId != null
   const source = { ticketId: Number(bill.id) }
   const view = usePayView(source, { enabled: shown })
   const data = view.data
@@ -88,9 +88,9 @@ export function TablePayButton({ placeId, branchId }: { placeId: number; branchI
   const features = useFeatures()
   const [open, setOpen] = useState(false)
   const source = { placeId, branchId }
-  const view = usePayView(source, { enabled: features.payAtTable, live: open })
+  const view = usePayView(source, { enabled: features.onlinePayments, live: open })
   const data = view.data
-  if (!features.payAtTable || !data || !offersPay(data.why) || data.why === 'closed' || data.why === 'empty')
+  if (!features.onlinePayments || !data || !offersPay(data.why) || data.why === 'closed' || data.why === 'empty')
     return null
 
   return (

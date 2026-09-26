@@ -29,9 +29,9 @@ public sealed class SubscriptionTests
     {
         CollectionAssert.AreEquivalent(new[] { Module.Kds }, PlanCatalog.Included(TenantPlan.Free).ToArray());
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
-        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.PayAtTable])));
-        CollectionAssert.AreEqual(new[] { Module.PayAtTable }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.PayAtTable }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments])));
+        CollectionAssert.AreEqual(new[] { Module.OnlinePayments }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
     }
 
     [TestMethod]
@@ -39,15 +39,15 @@ public sealed class SubscriptionTests
     {
         foreach (var plan in Enum.GetValues<TenantPlan>())
         {
-            Assert.DoesNotContain(Module.PayAtTable, PlanCatalog.Included(plan), $"{plan} does not include pay at table");
-            Assert.Contains(Module.PayAtTable, PlanCatalog.AddonsAvailable(plan), $"{plan} can buy pay at table");
-            Assert.DoesNotContain(Module.PayAtTable, PlanCatalog.Entitlements(plan, [], TenantKind.Customer), $"{plan} alone does not entitle it");
-            Assert.Contains(Module.PayAtTable, PlanCatalog.Entitlements(plan, [Module.PayAtTable], TenantKind.Customer), $"{plan} with the add-on does");
-            CollectionAssert.AreEqual(new[] { Module.PayAtTable }, PlanCatalog.NormalizeAddons(plan, [Module.PayAtTable]), "the add-on is kept on every plan");
+            Assert.DoesNotContain(Module.OnlinePayments, PlanCatalog.Included(plan), $"{plan} does not include online payments");
+            Assert.Contains(Module.OnlinePayments, PlanCatalog.AddonsAvailable(plan), $"{plan} can buy online payments");
+            Assert.DoesNotContain(Module.OnlinePayments, PlanCatalog.Entitlements(plan, [], TenantKind.Customer), $"{plan} alone does not entitle it");
+            Assert.Contains(Module.OnlinePayments, PlanCatalog.Entitlements(plan, [Module.OnlinePayments], TenantKind.Customer), $"{plan} with the add-on does");
+            CollectionAssert.AreEqual(new[] { Module.OnlinePayments }, PlanCatalog.NormalizeAddons(plan, [Module.OnlinePayments]), "the add-on is kept on every plan");
         }
-        Assert.Contains(Module.PayAtTable, PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo), "a demo has everything");
+        Assert.Contains(Module.OnlinePayments, PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo), "a demo has everything");
         foreach (var type in Enum.GetValues<BusinessType>())
-            Assert.DoesNotContain(Module.PayAtTable, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with pay at table off: it waits for the cafe's payment keys");
+            Assert.DoesNotContain(Module.OnlinePayments, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with online payments off: it waits for the cafe's payment keys");
     }
 
     [TestMethod]
@@ -59,7 +59,7 @@ public sealed class SubscriptionTests
         var payments = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/sales/payments/\{\*any\}""").Groups[1].Value;
         Assert.IsFalse(string.IsNullOrEmpty(payments));
         Assert.Contains($"{payments}__CLUSTERID: \"tenant\"", yaml);
-        Assert.Contains($"{payments}__TRANSFORMS__1__Set: \"payAtTable\"", yaml);
+        Assert.Contains($"{payments}__TRANSFORMS__1__Set: \"onlinePayments\"", yaml);
         foreach (var path in new[] { "/api/tickets/{id}/pay", "/api/tickets/{id}/pay/{*any}" })
         {
             var pay = Regex.Match(yaml, $@"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""{Regex.Escape(path)}""").Groups[1].Value;
@@ -78,7 +78,7 @@ public sealed class SubscriptionTests
         Assert.DoesNotContain($"{callback}__MATCH__QUERYPARAMETERS", yaml, "the provider sends no api-version");
 
         // Bought: the payment routes go to Sales and nothing is blocked
-        var bought = Customer(TenantPlan.Pro, Module.PayAtTable);
+        var bought = Customer(TenantPlan.Pro, Module.OnlinePayments);
         yaml = Templates.Compose(bought, TenantHosts.For(bought, Platform), Platform);
         payments = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/sales/payments/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{payments}__CLUSTERID: \"sales\"", yaml);
@@ -108,8 +108,8 @@ public sealed class SubscriptionTests
         Assert.IsTrue(features["reservations"]!.GetValue<bool>());
         Assert.IsTrue(features["timeBilling"]!.GetValue<bool>(), "camelCase, the way System.Text.Json spells Tenant.API's record");
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
-        Assert.IsFalse(features["payAtTable"]!.GetValue<bool>(), "an add-on on every plan");
-        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "payAtTable" }, features.Select(f => f.Key).ToArray());
+        Assert.IsFalse(features["onlinePayments"]!.GetValue<bool>(), "an add-on on every plan");
+        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments" }, features.Select(f => f.Key).ToArray());
     }
 
     [TestMethod]
@@ -207,7 +207,7 @@ public sealed class SubscriptionTests
     {
         var demo = Customer(TenantPlan.Free);
         demo.Kind = TenantKind.Demo;
-        foreach (var tenant in new[] { Customer(TenantPlan.Pro, Module.PayAtTable), demo })
+        foreach (var tenant in new[] { Customer(TenantPlan.Pro, Module.OnlinePayments), demo })
         {
             var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
             Assert.DoesNotContain("module-off", yaml);

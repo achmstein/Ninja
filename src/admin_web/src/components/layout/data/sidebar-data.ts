@@ -44,6 +44,7 @@ export const sidebarData: SidebarData = {
         // A waiter call or a bill request comes from any table's scan page, whatever the plan
         { title: 'requests', url: '/requests', icon: ConciergeBell, needsPlaces: true },
         { title: 'navTill', url: '/till', icon: ReceiptText },
+        { title: 'navBills', url: '/bills', icon: Receipt },
       ],
     },
     {
@@ -144,12 +145,12 @@ export const sidebarData: SidebarData = {
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
-        // Pay at table: the café's own payment account, fee, tips and splits
+        // Online payments: the café's own payment account, fee, tips and splits
         {
-          title: 'payAtTableNav',
+          title: 'onlinePaymentsNav',
           url: '/payments',
           icon: CreditCard,
-          entitled: 'payAtTable',
+          entitled: 'onlinePayments',
         },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },

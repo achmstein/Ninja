@@ -54,7 +54,7 @@ function problemDetail(e: unknown): string | undefined {
 }
 
 /**
- * Pay at table, the owner's side: the café's own Paymob account (keys,
+ * Online payments, the owner's side: the café's own Paymob account (keys,
  * integrations, the callback to paste into Paymob), who pays the fee, the
  * tips offered and how guests may split a bill.
  */
@@ -67,7 +67,7 @@ export function PaymentSettingsPage() {
     <Main>
       <div className='mx-auto w-full max-w-3xl space-y-6'>
         <PageHeader
-          title={t('payAtTableNav')}
+          title={t('onlinePaymentsNav')}
           description={t('paySettingsDescription')}
           badge={
             settings &&
