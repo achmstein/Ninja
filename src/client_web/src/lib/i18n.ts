@@ -373,6 +373,8 @@ const webExtras = {
   ninjaPlayedWith: { en: 'With', ar: 'مع' },
   ninjaBackToCards: { en: 'Back to the cards', ar: 'ارجع للكروت' },
   ninjaUseAllPoints: { en: 'Use all', ar: 'استخدمهم كلهم' },
+  ninjaScanCode: { en: 'Scan the code', ar: 'امسح الكود' },
+  ninjaScanCodeHint: { en: 'The code on your table or your room', ar: 'الكود اللي على ترابيزتك أو أوضتك' },
   ninjaPointsOf: { en: 'of {balance}', ar: 'من {balance}' },
   ninjaRateOnceSwitched: { en: '{price} once the staff switch it', ar: '{price} من أول ما يحوّلوها' },
   ninjaSwitchingTo: { en: 'Switching to {option}', ar: 'بنحوّلها لـ {option}' },

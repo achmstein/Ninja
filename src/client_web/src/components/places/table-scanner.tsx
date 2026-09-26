@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import jsQR from 'jsqr'
-import { CameraOff, QrCode } from 'lucide-react'
+import { CameraOff, QrCode, ScanLine } from 'lucide-react'
 import { useT } from '@/lib/i18n'
+import { useActiveStay } from '@/lib/stays'
+import { useActivePlace } from '@/stores/place-store'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -140,8 +142,8 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4'>
         <DialogHeader>
-          <DialogTitle>{t('scanTable')}</DialogTitle>
-          <DialogDescription>{t('scanTableHint')}</DialogDescription>
+          <DialogTitle>{t('ninjaScanCode')}</DialogTitle>
+          <DialogDescription>{t('ninjaScanCodeHint')}</DialogDescription>
         </DialogHeader>
         {blocked || unsupported ? (
           <div className='bg-muted text-muted-foreground flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center text-sm'>
@@ -173,6 +175,34 @@ export function ScanTableButton({ className, variant = 'default' }: { className?
         <QrCode className='h-4 w-4' />
         {t('scanTable')}
       </Button>
+      <TableScanner open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+/**
+ * The way in from anywhere while the customer is at no place: a round
+ * button in the top bar's corner that opens the scanner. A table's code
+ * puts them at the table, a room's opens its sheet on the Book tab (to
+ * start the clock or join it). Once they are somewhere the dock's row says
+ * so, and the button goes.
+ */
+export function ScanCodeButton() {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const place = useActivePlace()
+  const stay = useActiveStay()
+  if (place || stay) return null
+  return (
+    <>
+      <button
+        type='button'
+        aria-label={t('ninjaScanCode')}
+        onClick={() => setOpen(true)}
+        className='bg-muted/80 active:bg-muted grid size-10 place-items-center rounded-full transition-colors'
+      >
+        <ScanLine className='size-5' />
+      </button>
       <TableScanner open={open} onOpenChange={setOpen} />
     </>
   )

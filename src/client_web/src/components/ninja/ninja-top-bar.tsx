@@ -6,6 +6,7 @@ import { useIsland } from '@/lib/island'
 import { cn } from '@/lib/utils'
 import { BrandWordmark } from '@/components/brand-mark'
 import { BranchSwitcher } from '@/components/branch-switcher'
+import { ScanCodeButton } from '@/components/places/table-scanner'
 import { NINJA_BAR_H } from './chrome'
 
 /**
@@ -63,8 +64,10 @@ export function NinjaTopBar({
           style={{ pointerEvents: pill ? 'none' : undefined }}
           aria-hidden={pill || undefined}
         >
-          {/* Where the customer is (the table, the branch they are at) the dock's row says; here only the switch, while they are at none */}
+          {/* Where the customer is (the table, the branch they are at) the dock's row says; here, while they are at
+              none, the way to scan a table's or a room's code, and the switch of branch */}
           <BranchSwitcher quiet />
+          <ScanCodeButton />
         </motion.div>
       )}
     </div>
