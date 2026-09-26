@@ -118,7 +118,7 @@ export function ReservationFace({ reservation, enter }: { reservation: Reservati
 
       <Beat enter={enter} at={0.6} className='w-60'>
         {/* One button through the whole cancel: the question, a spinner, then the tick */}
-        <MorphButton phase={cancelPhase} height={44} onClick={() => setAsking(true)} className={cancelPhase === 'success' ? undefined : 'bg-muted text-foreground font-semibold shadow-none'}>
+        <MorphButton phase={cancelPhase} height={44} onClick={() => setAsking(true)} className={cancelPhase === 'success' ? undefined : 'bg-background/12 text-background font-semibold shadow-none'}>
           <X className='size-4' />
           {t('cancelReservation')}
         </MorphButton>

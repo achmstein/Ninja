@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useCanGoBack, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
-import { AnimatePresence, motion, MotionConfig, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { AnimatePresence, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
 import { blurSwap, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
@@ -24,6 +24,7 @@ export function NinjaPage({
   back,
   className,
   children,
+  fade,
 }: {
   title: string
   subtitle?: ReactNode
@@ -32,11 +33,14 @@ export function NinjaPage({
   back?: LinkProps['to']
   className?: string
   children: ReactNode
+  /** How far the large title stays shown (1) or goes (0) besides the scroll: a page's camera moving past it */
+  fade?: MotionValue<number>
 }) {
   const { scrollY } = useScroll()
   const [folded, setFolded] = useState(false)
   useMotionValueEvent(scrollY, 'change', (y) => setFolded(y > TITLE_FOLD))
-  const opacity = useTransform(scrollY, [0, TITLE_FOLD], [1, 0])
+  const unfaded = useMotionValue(1)
+  const opacity = useTransform([scrollY, fade ?? unfaded], ([y, f]: number[]) => Math.max(0, 1 - y / TITLE_FOLD) * f)
   const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
   const swap = blurSwap(useReducedMotion())
 

@@ -178,6 +178,8 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   return (
     <NinjaPage
       title={t('rooms')}
+      // The large title goes back with the places behind the reservation
+      fade={camera.opacity}
       subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
       <motion.div ref={list} style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
