@@ -5,12 +5,10 @@ import {
   buildDeck,
   canQuickAdd,
   columnAt,
-  controlKind,
   pickUsual,
   pinchIntent,
   positionOf,
   quickAddChoice,
-  sizeScale,
 } from './deck-model'
 
 const item = (id: number, x: Partial<CatalogItemDto> = {}): CatalogItemDto =>
@@ -71,39 +69,6 @@ describe('positionOf', () => {
     ])
     expect(positionOf(deck, 7)).toEqual({ column: 2, row: 1 })
     expect(positionOf(deck, 99)).toBeNull()
-  })
-})
-
-describe('controlKind', () => {
-  it('draws a size group as sizes, whatever its prices', () => {
-    expect(controlKind(group(1, 'Size', [option(1), option(2, 15)]))).toBe('size')
-    expect(controlKind(group(1, 'الحجم', [option(1), option(2)]))).toBe('size')
-  })
-
-  it('draws a free scale of three to six as a dial', () => {
-    expect(controlKind(group(1, 'Sugar Level', [option(1), option(2), option(3), option(4), option(5)]))).toBe('dial')
-  })
-
-  it('keeps chips for priced choices, several at once, or two options', () => {
-    expect(controlKind(group(1, 'Flavor', [option(1), option(2, 10), option(3, 20)]))).toBe('chips')
-    expect(controlKind(group(1, 'Extras', [option(1), option(2), option(3)], { allowMultiple: true }))).toBe('chips')
-    expect(controlKind(group(1, 'Tahwiga', [option(1), option(2)]))).toBe('chips')
-  })
-})
-
-describe('sizeScale', () => {
-  const size = group(1, 'Size', [option(1), option(2, 10), option(3, 20)])
-
-  it('grows a step per price step, and stays put with nothing picked', () => {
-    expect(sizeScale([size], { '1': [1] })).toBe(1)
-    expect(sizeScale([size], { '1': [2] })).toBeCloseTo(1.07)
-    expect(sizeScale([size], { '1': [3] })).toBeCloseTo(1.14)
-    expect(sizeScale([size], {})).toBe(1)
-  })
-
-  it('draws options that cost the same at the same size', () => {
-    const cups = group(2, 'Cup', [option(4), option(5)])
-    expect(sizeScale([cups], { '2': [5] })).toBe(1)
   })
 })
 

@@ -5,7 +5,6 @@ import {
   effectiveBasePrice,
   selectionsToCustomizations,
   withoutOutOfStock,
-  type Selections,
 } from '@/components/menu/item-form'
 import { posterTone, type MenuSectionData, type PosterTone, type SectionKind } from '@/components/menu/home/sections'
 
@@ -55,46 +54,9 @@ export function positionOf(columns: DeckColumn[], itemId: number | string | unde
   return fallback
 }
 
-/**
- * How a group of options is drawn when a card opens:
- * - size: one choice whose options cost more as they grow; picking one scales the photo
- * - dial: one choice along a scale (sugar, roast) that costs nothing either way
- * - chips: everything else (flavours, add-ons, several at once)
- */
-export type ControlKind = 'size' | 'dial' | 'chips'
-
-const SIZE_NAME = /size|cup|حجم|كوب|كوباية|كباية/i
-
-export function controlKind(customization: ItemCustomizationDto): ControlKind {
-  const options = customization.options ?? []
-  if (customization.allowMultiple || options.length < 2) return 'chips'
-  const adjustments = options.map((o) => Number(o.priceAdjustment ?? 0))
-  if (SIZE_NAME.test(`${customization.name?.en ?? ''} ${customization.name?.ar ?? ''}`)) return 'size'
-  if (options.length >= 3 && options.length <= 6 && adjustments.every((a) => a === 0)) return 'dial'
-  return 'chips'
-}
-
 /** The options in the order the café set them. */
 export function sortedOptions(customization: ItemCustomizationDto) {
   return [...(customization.options ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
-}
-
-/**
- * How much bigger the photo is drawn for the sizes picked: each step up in
- * price is a few percent more. Options that cost the same are the same size.
- */
-export function sizeScale(customizations: ItemCustomizationDto[] | undefined, selections: Selections): number {
-  let scale = 1
-  for (const customization of customizations ?? []) {
-    if (controlKind(customization) !== 'size') continue
-    const picked = selections[String(customization.id)]?.[0]
-    if (picked === undefined) continue
-    const prices = [...new Set((customization.options ?? []).map((o) => Number(o.priceAdjustment ?? 0)))].sort((a, b) => a - b)
-    const option = customization.options?.find((o) => Number(o.id) === picked)
-    const step = prices.indexOf(Number(option?.priceAdjustment ?? 0))
-    scale += Math.max(0, step) * 0.07
-  }
-  return Math.min(scale, 1.25)
 }
 
 /** Whether a long press may add the item straight away: it is on and nothing needs choosing. */

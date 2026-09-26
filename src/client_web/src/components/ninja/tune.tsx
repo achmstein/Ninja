@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { forwardRef, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
@@ -15,7 +15,7 @@ import {
   withoutOutOfStock,
   type Selections,
 } from '@/components/menu/item-form'
-import { controlKind, sizeScale, sortedOptions, TONE_CLASS, type DeckColumn } from './deck-model'
+import { sortedOptions, TONE_CLASS, type DeckColumn } from './deck-model'
 import { Odometer } from './odometer'
 
 export type TuneResult = {
@@ -29,8 +29,8 @@ export type TuneResult = {
  * A card opened in place: the card itself grows to fill the Ninja menu (it
  * shares its layout id with the card in the deck, so the photo never leaves
  * the screen) and its options come in under the photo, all on the one
- * scroll: the ones that must be answered first, the extras last, each with
- * the control that suits it. What is chosen gathers under the dish's name
+ * scroll: the ones that must be answered first, the extras last, every one
+ * the same pills. What is chosen gathers under the dish's name
  * as chips, each a way to its question. The choices are the classic item
  * sheet's: the customer's saved picks or the café's defaults, nothing sold
  * out, a required question must be answered; until they are, the button
@@ -69,7 +69,6 @@ export function Tune({
   const selections = withoutOutOfStock(item.customizations, overrides ?? preferenceSelections(item.customizations, preference))
   const chosen = selectionsToCustomizations(item, selections)
   const unitPrice = effectiveBasePrice(item) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
-  const scale = sizeScale(item.customizations, selections)
   const soldOut = item.isAvailable === false
 
   // The questions, all on the one scroll: in the café's order, the ones that must be answered first
@@ -111,7 +110,7 @@ export function Tune({
       className='bg-background absolute inset-0 z-30 flex flex-col overflow-hidden'
     >
       <div className='no-scrollbar flex-1 overflow-y-auto overscroll-contain'>
-        {/* The photo keeps its place on screen through the morph; a bigger size draws it a little bigger */}
+        {/* The photo keeps its place on screen through the morph */}
         <motion.div
           ref={photo}
           layoutId={leaving ? undefined : `photo-${item.id}`}
@@ -125,11 +124,10 @@ export function Tune({
               alt=''
               draggable={false}
               onError={() => setFailed(true)}
-              className={cn('size-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none', soldOut && 'grayscale')}
-              style={{ transform: `scale(${scale})` }}
+              className={cn('size-full object-cover', soldOut && 'grayscale')}
             />
           ) : (
-            <div className='flex size-full items-end p-6 transition-transform duration-500 motion-reduce:transition-none' style={{ transform: `scale(${scale})`, transformOrigin: 'bottom left' }}>
+            <div className='flex size-full items-end p-6'>
               <span className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words opacity-90'>{localized(item.name)}</span>
             </div>
           )}
@@ -320,25 +318,9 @@ const QuestionBlock = forwardRef<
   )
 })
 
-/** Longest name a dial stop holds whole; longer ones make the question big rows instead, where a name has room */
-const DIAL_NAME_MAX = 9
-
-function Control({ customization, selected, onPick }: ControlProps) {
-  const localized = useLocalized()
-  const kind = controlKind(customization)
-  const roomy = kind === 'dial' && sortedOptions(customization).some((o) => localized(o.name).length > DIAL_NAME_MAX)
-  switch (roomy ? 'chips' : kind) {
-    case 'size':
-      return <SizeControl customization={customization} selected={selected} onPick={onPick} />
-    case 'dial':
-      return <DialControl customization={customization} selected={selected} onPick={onPick} />
-    default:
-      return customization.allowMultiple ? (
-        <ExtrasControl customization={customization} selected={selected} onPick={onPick} />
-      ) : (
-        <PickControl customization={customization} selected={selected} onPick={onPick} />
-      )
-  }
+/** Every question looks the same, one choice or many: pills that fill when picked */
+function Control(props: ControlProps) {
+  return <OptionPills {...props} />
 }
 
 type ControlProps = { customization: ItemCustomizationDto; selected: number[]; onPick: (optionId: number) => void }
@@ -356,136 +338,12 @@ function useOptionText() {
   }
 }
 
-/**
- * Sizes: one cup over them that grows to the size picked, the drink inside
- * rising with it, and the sizes under it, the picked one lit by a highlight
- * that slides between them.
- */
-function SizeControl({ customization, selected, onPick }: ControlProps) {
+/** A question's options as pills that fill when picked (one, or as many as wanted), with what each adds; a long name wraps */
+function OptionPills({ customization, selected, onPick }: ControlProps) {
   const text = useOptionText()
-  const options = sortedOptions(customization)
-  const index = Math.max(0, options.findIndex((o) => selected.includes(Number(o.id))))
-  const share = options.length > 1 ? index / (options.length - 1) : 1
+  const many = !!customization.allowMultiple
   return (
-    <div className='flex flex-col items-center gap-4'>
-      {/* The cup: its size and its fill both by transform, so nothing lays out as it grows */}
-      <div className='grid h-24 place-items-end' aria-hidden>
-        <motion.div
-          className='border-foreground/70 relative h-20 w-16 origin-bottom overflow-hidden rounded-t-md rounded-b-[40%] border-[3px]'
-          initial={false}
-          animate={{ scale: 0.62 + share * 0.38 }}
-          transition={springOpen}
-        >
-          <motion.div
-            className='bg-primary absolute inset-x-0 bottom-0 h-full origin-bottom'
-            initial={false}
-            animate={{ scaleY: selected.length > 0 ? 0.45 + share * 0.4 : 0 }}
-            transition={springOpen}
-          />
-        </motion.div>
-      </div>
-      <div className='bg-muted flex w-full gap-1 rounded-[1.25rem] p-1' role='radiogroup'>
-        {options.map((option) => {
-          const id = Number(option.id)
-          const on = selected.includes(id)
-          const { name, extra } = text(option)
-          return (
-            <button
-              key={id}
-              type='button'
-              role='radio'
-              aria-checked={on}
-              disabled={!!option.isOutOfStock}
-              onClick={() => onPick(id)}
-              className='relative flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2.5 disabled:opacity-40'
-            >
-              {on && <motion.span layoutId={`size-${customization.id}`} transition={springOpen} aria-hidden className='bg-background absolute inset-0 rounded-2xl shadow-sm' />}
-              <span className='relative text-center text-sm leading-tight font-semibold break-words'>{name}</span>
-              {extra && <span className='text-muted-foreground relative text-xs tabular-nums'>{extra}</span>}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/**
- * A scale (sugar, roast) as a dial: a track with a stop per option and a
- * thumb that slides to the one picked. Drag along it or tap a stop.
- */
-function DialControl({ customization, selected, onPick }: ControlProps) {
-  const text = useOptionText()
-  const options = sortedOptions(customization)
-  const stops = useRef<Array<HTMLButtonElement | null>>([])
-  const dragging = useRef(false)
-
-  const pickAt = (e: ReactPointerEvent) => {
-    const index = stops.current.findIndex((el) => {
-      if (!el) return false
-      const r = el.getBoundingClientRect()
-      return e.clientX >= r.left && e.clientX <= r.right
-    })
-    const option = options[index]
-    if (option && !option.isOutOfStock && !selected.includes(Number(option.id))) onPick(Number(option.id))
-  }
-
-  return (
-    <div
-      role='radiogroup'
-      className='bg-muted relative flex touch-pan-y rounded-full p-1 select-none'
-      onPointerDown={(e) => {
-        dragging.current = true
-        e.currentTarget.setPointerCapture(e.pointerId)
-        pickAt(e)
-      }}
-      onPointerMove={(e) => {
-        if (dragging.current) pickAt(e)
-      }}
-      onPointerUp={() => {
-        dragging.current = false
-      }}
-      onPointerCancel={() => {
-        dragging.current = false
-      }}
-    >
-      {options.map((option, i) => {
-        const id = Number(option.id)
-        const on = selected.includes(id)
-        const { name } = text(option)
-        return (
-          <button
-            key={id}
-            ref={(el) => {
-              stops.current[i] = el
-            }}
-            type='button'
-            role='radio'
-            aria-checked={on}
-            disabled={!!option.isOutOfStock}
-            // A finger or a mouse picks on the way down (above); a click with no pointer is the keyboard
-            onClick={(e) => {
-              if (e.detail === 0 && !on) onPick(id)
-            }}
-            className={cn(
-              'relative min-w-0 flex-1 rounded-full px-1 py-3 text-center text-xs leading-tight font-semibold transition-colors duration-200 disabled:opacity-40',
-              on ? 'text-primary-foreground' : 'text-muted-foreground'
-            )}
-          >
-            {on && <motion.span layoutId={`dial-${customization.id}`} transition={springOpen} aria-hidden className='bg-primary absolute inset-0 rounded-full' />}
-            <span className='relative line-clamp-2 block break-words'>{name}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/** One of several (a milk, a sauce): big rows, the picked one lit by a highlight that slides to it and a dot that fills */
-function PickControl({ customization, selected, onPick }: ControlProps) {
-  const text = useOptionText()
-  return (
-    <div className='flex flex-col gap-1.5' role='radiogroup'>
+    <div className='flex flex-wrap gap-2' role={many ? 'group' : 'radiogroup'}>
       {sortedOptions(customization).map((option) => {
         const id = Number(option.id)
         const on = selected.includes(id)
@@ -494,47 +352,7 @@ function PickControl({ customization, selected, onPick }: ControlProps) {
           <button
             key={id}
             type='button'
-            role='radio'
-            aria-checked={on}
-            disabled={!!option.isOutOfStock}
-            onClick={() => onPick(id)}
-            className='bg-muted relative flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start transition-transform active:scale-[0.98] disabled:opacity-40 motion-reduce:transform-none'
-          >
-            {on && (
-              <motion.span
-                layoutId={`pick-${customization.id}`}
-                transition={springOpen}
-                aria-hidden
-                style={{ borderRadius: 20 }}
-                className='ring-primary bg-primary/10 absolute inset-0 ring-2'
-              />
-            )}
-            <span className='relative min-w-0 flex-1 py-2 text-[15px] leading-snug font-semibold break-words'>{name}</span>
-            {extra && <span className='text-muted-foreground relative shrink-0 text-sm tabular-nums'>{extra}</span>}
-            <span className={cn('relative grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors duration-200', on ? 'border-primary' : 'border-muted-foreground/40')}>
-              <motion.span className='bg-primary size-2.5 rounded-full' initial={false} animate={{ scale: on ? 1 : 0 }} transition={springOpen} />
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Extras, as many as wanted: chips that fill when picked, with what each adds */
-function ExtrasControl({ customization, selected, onPick }: ControlProps) {
-  const text = useOptionText()
-  return (
-    <div className='flex flex-wrap gap-2' role='group'>
-      {sortedOptions(customization).map((option) => {
-        const id = Number(option.id)
-        const on = selected.includes(id)
-        const { name, extra } = text(option)
-        return (
-          <button
-            key={id}
-            type='button'
-            role='checkbox'
+            role={many ? 'checkbox' : 'radio'}
             aria-checked={on}
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
