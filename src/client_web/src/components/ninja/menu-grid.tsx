@@ -79,16 +79,28 @@ export function MenuGrid({
     }
   }
   useLayoutEffect(spy)
+  // The jump reads these as they are when its scroll ends, not as they were when it began
+  const spyRef = useRef(spy)
+  const onSectionRef = useRef(onSection)
+  useLayoutEffect(() => {
+    spyRef.current = spy
+    onSectionRef.current = onSection
+  })
 
   useEffect(() => {
     const el = scroller.current
     const section = jump ? sections.current[jump.index] : null
     if (!el || !section) return
+    // The one asked for lights at once, and stays lit while the scroll runs past the others
     jumping.current = true
     shown.current = jump!.index
+    onSectionRef.current(jump!.index)
     el.scrollTo({ top: Math.max(0, section.offsetTop - DECK_TOP + 4), behavior: 'smooth' })
     const done = () => {
+      if (!jumping.current) return
       jumping.current = false
+      // Where it came to rest (a short last category cannot reach the top) is what the bar says then
+      spyRef.current()
     }
     // Let go once the scroll settles (scrollend where there is one, a timer where there is not)
     el.addEventListener('scrollend', done, { once: true })
