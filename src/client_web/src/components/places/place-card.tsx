@@ -8,6 +8,7 @@ import { canHold, hasOptions, PlaceIcon, placeStatusMeta, tariffOptions } from '
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
+import { OPEN_SPRING, placeCardId, placeNameId } from './reservation-shape'
 
 /**
  * One bookable place as a big card, the way the menu's deck shows a dish: a
@@ -50,10 +51,10 @@ export function PlaceCard({
   return (
     <motion.article
       ref={card}
-      // What a reservation shrinks back onto when it is cancelled (ReservationShape)
-      data-place={String(place.id)}
+      // The reservation opens out of this card and closes back into it (ReservationShape)
+      layoutId={placeCardId(place.id)}
       layout
-      transition={springSoft}
+      transition={OPEN_SPRING}
       style={{ borderRadius: 28 }}
       className={cn(
         'relative isolate overflow-hidden',
@@ -99,7 +100,10 @@ export function PlaceCard({
         </span>
 
         <span className='flex flex-col gap-1.5'>
-          <span className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>{localized(place.name)}</span>
+          {/* The name travels into the reservation, the way a dish's photo stays on screen as it opens */}
+          <motion.span layoutId={placeNameId(place.id)} transition={OPEN_SPRING} className='heading w-fit text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>
+            {localized(place.name)}
+          </motion.span>
           {place.description && (
             <span className={cn('line-clamp-2 max-w-[34ch] text-sm', free ? 'opacity-80' : 'text-muted-foreground')}>
               {localized(place.description)}

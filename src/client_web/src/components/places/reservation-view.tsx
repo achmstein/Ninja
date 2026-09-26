@@ -10,6 +10,7 @@ import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
+import { OPEN_SPRING, placeNameId } from './reservation-shape'
 import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import {
   AlertDialog,
@@ -90,13 +91,21 @@ export function ReservationFace({ reservation, enter }: { reservation: Reservati
         <Beat enter={enter} at={0.1}>
           {left != null ? <CountdownRing left={left} total={total ?? left} hurry={hurry} enter={enter} /> : <PlaceIcon kind={kind} className='size-16' />}
         </Beat>
-        <Beat enter={enter} at={0.3} className='flex flex-col items-center gap-1'>
-          <span className='flex items-center gap-2'>
-            {left != null && <PlaceIcon kind={kind} className='size-5 shrink-0 opacity-70' />}
-            <span className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{placeName}</span>
-          </span>
-          {forTime && <span className='text-muted-foreground text-sm font-medium'>{t('ninjaHoldFor', { time: forTime })}</span>}
-        </Beat>
+        <div className='flex flex-col items-center gap-1'>
+          {/* The name came with the card (same layout id and size): it does not fade in, it arrives */}
+          <motion.span
+            layoutId={placeNameId(reservation.placeId)}
+            transition={OPEN_SPRING}
+            className='heading w-fit text-[calc(2rem*var(--heading-scale))] leading-[1.05]'
+          >
+            {placeName}
+          </motion.span>
+          {forTime && (
+            <Beat enter={enter} at={0.3}>
+              <span className='text-muted-foreground text-sm font-medium'>{t('ninjaHoldFor', { time: forTime })}</span>
+            </Beat>
+          )}
+        </div>
       </div>
 
       <Beat enter={enter} at={0.45} className='flex flex-col items-center gap-2'>

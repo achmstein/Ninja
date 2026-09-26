@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion, useMotionValue } from 'motion/react'
+import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
@@ -8,6 +8,7 @@ import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
+import { useTickBeating } from '@/lib/tick-beat'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
@@ -15,7 +16,7 @@ import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
-import { ReservationShape, useCamera, type Box } from '@/components/places/reservation-shape'
+import { ReservationShape } from '@/components/places/reservation-shape'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -109,7 +110,10 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   // A hold closes whichever card was open, once the list has faded behind the
   // reservation, so nothing shifts behind the tick as it starts to grow; by
   // the time a cancel brings the list back the card is shut
-  const heldNow = hold != null
+  // The reservation opens only once the book button's tick has had its beat
+  const beating = useTickBeating()
+  const opened = beating ? undefined : hold
+  const heldNow = opened != null
   useEffect(() => {
     if (!heldNow) return
     const timer = window.setTimeout(() => setOpenId(null), 900)
@@ -143,46 +147,23 @@ function PlacesList({ atTable }: { atTable: boolean }) {
     setOpenId(Number(place.id))
   }
 
-  // One progress for the whole move between the places and the reservation:
-  // the shape grows over the list and the list falls out of focus behind it
-  const progress = useMotionValue(hold ? 1 : 0)
-  const camera = useCamera(progress)
-  // Held, the reservation fills the screen: the page goes back to its top and
-  // stays there, so its title never folds into the bar in the brand's place
-  const held = hold != null
+  // Held, the reservation fills the space between the bars: the page does not scroll under it
+  const held = opened != null
   useEffect(() => {
     if (!held) return
-    window.scrollTo({ top: 0, behavior: 'smooth' })
     const root = document.documentElement
     root.style.overflow = 'hidden'
     return () => {
       root.style.overflow = ''
     }
   }, [held])
-  const list = useRef<HTMLDivElement>(null)
-  // A card as it sits with the list at rest: the list is shrunk about its top
-  // centre while the reservation covers it, so that is undone from where it is on screen
-  const placeCard = useCallback(
-    (placeId: number | string | undefined): Box | null => {
-      const card = document.querySelector<HTMLElement>(`[data-place='${String(placeId)}']`)
-      const frame = list.current?.getBoundingClientRect()
-      if (!card || !frame) return null
-      const r = card.getBoundingClientRect()
-      const s = camera.scale.get() || 1
-      const cx = frame.x + frame.width / 2
-      return { x: cx + (r.x - cx) / s, y: frame.y + (r.y - frame.y) / s, width: r.width / s, height: r.height / s }
-    },
-    [camera.scale]
-  )
 
   return (
     <NinjaPage
       title={t('rooms')}
-      // The large title goes back with the places behind the reservation
-      fade={camera.opacity}
       subtitle={!hold && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
     >
-      <motion.div ref={list} style={camera} inert={hold ? true : undefined} aria-hidden={hold ? true : undefined}>
+      <div inert={opened ? true : undefined} aria-hidden={opened ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
           {!reservationsEnabled && (
             <RiseItem>
@@ -231,9 +212,9 @@ function PlacesList({ atTable }: { atTable: boolean }) {
             </RiseItem>
           )}
         </Rise>
-      </motion.div>
+      </div>
 
-      <ReservationShape hold={hold} progress={progress} placeCard={placeCard} />
+      <ReservationShape hold={opened} />
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </NinjaPage>

@@ -7,7 +7,7 @@ import { Clock } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { holdOrigin } from '@/lib/hold-origin'
+import { useTickBeat } from '@/lib/tick-beat'
 import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
@@ -17,8 +17,8 @@ import { Switch } from '@/components/ui/switch'
 
 /** How long the tick shows before whoever showed the form puts it away (the scan sheet), ms */
 const SUCCESS_HOLD_MS = 700
-/** The tick's own beat, ms: the button has become the circle and the tick has come in */
-const TICK_BEAT_MS = 420
+/** The tick's own beat, ms: the button becomes the green circle (about 300 ms) and the tick is there to be seen */
+const TICK_BEAT_MS = 1000
 /** The book button's height, and so the tick circle's size, px */
 const TICK = 48
 
@@ -49,7 +49,7 @@ export function HoldForm({
   // first option until the customer picks another
   const [optionCode, setOptionCode] = useState<string | null>(null)
   const [booked, setBooked] = useState(false)
-  const button = useRef<HTMLDivElement>(null)
+  const startTickBeat = useTickBeat((s) => s.start)
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
@@ -62,14 +62,13 @@ export function HoldForm({
     ...reservePlaceMutation(),
     // Nothing is re-read until the tick has had its beat: the hold arriving
     // is what turns the card into the reservation, so it waits its turn
-    // The hold is read again at once, while the tick has its beat; the
-    // reservation starts growing out of the tick the moment that beat is over
+    // The tick has its beat, then the hold is read again, and its arriving
+    // opens the card into the reservation (ReservationShape)
     onSuccess: () => {
-      const r = button.current?.querySelector('button')?.getBoundingClientRect()
-      // The button is on its way to a circle of its own height, round its centre
-      if (r) holdOrigin.set({ x: r.x + r.width / 2 - TICK / 2, y: r.y + r.height / 2 - TICK / 2, width: TICK, height: TICK }, TICK_BEAT_MS)
-      invalidate()
       setBooked(true)
+      // The reservation waits out the beat however soon the hold comes back
+      startTickBeat(TICK_BEAT_MS)
+      invalidate()
     },
     onError: (error) => {
       // The backend rejects double bookings with a clear reason — show it
@@ -172,7 +171,7 @@ export function HoldForm({
         )}
       </AnimatePresence>
 
-      <motion.div ref={button} {...step(2)} className='flex justify-center pt-1'>
+      <motion.div {...step(2)} className='flex justify-center pt-1'>
         <MorphButton
           phase={phase}
           height={TICK}
