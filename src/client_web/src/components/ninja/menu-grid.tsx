@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { motion } from 'motion/react'
-import { ChevronRight, Plus, UtensilsCrossed } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { ChevronRight, Minus, Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { springSoft } from '@/lib/motion'
+import { blurSwap, springOpen, springSoft } from '@/lib/motion'
+import { lineKey, useCart } from '@/lib/cart'
+import { Odometer } from './odometer'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { PressRing } from './deck'
@@ -317,7 +319,6 @@ function Row({
   onOpen: (item: CatalogItemDto) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
-  const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const [failed, setFailed] = useState(false)
@@ -377,17 +378,82 @@ function Row({
           </span>
         </span>
       </button>
-      {!soldOut && (
-        <button
-          type='button'
-          aria-label={quick ? t('addToCart') : localized(item.name)}
-          onClick={() => (quick ? onQuickAdd(item, photo.current) : onOpen(item))}
-          className='bg-primary text-primary-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-transform active:scale-90 motion-reduce:transform-none'
-        >
-          {/* A plus puts it in the tray at once; a chevron says there is something to choose first */}
-          {quick ? <Plus className='size-5' strokeWidth={2.5} /> : <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />}
-        </button>
-      )}
+      {!soldOut && <RowAction item={item} quick={quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
     </motion.div>
+  )
+}
+
+/**
+ * The end of a classic row. A dish that needs no choosing: a round plus,
+ * which once the dish is in the tray opens into less, how many and more,
+ * as the classic menu always had it (more flies another in; less takes the
+ * newest one back out). A dish with something to choose: a chevron to its
+ * options, carrying how many are in the tray.
+ */
+function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick: boolean; onAdd: () => void; onOpen: () => void }) {
+  const t = useT()
+  const localized = useLocalized()
+  const swap = blurSwap(useReducedMotion())
+  const lines = useCart((s) => s.lines).filter((l) => l.productId === Number(item.id))
+  const setQuantity = useCart((s) => s.setQuantity)
+  const count = lines.reduce((sum, l) => sum + l.quantity, 0)
+  const fill = 'bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)]'
+
+  if (!quick) {
+    return (
+      <button
+        type='button'
+        aria-label={localized(item.name)}
+        onClick={onOpen}
+        className={cn('relative grid size-11 shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', fill)}
+      >
+        <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />
+        <AnimatePresence initial={false}>
+          {count > 0 && (
+            <motion.span
+              key='count'
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={springOpen}
+              className='slab ring-background absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold tabular-nums ring-2'
+            >
+              {count}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </button>
+    )
+  }
+
+  const less = () => {
+    const newest = lines.at(-1)
+    if (newest) setQuantity(lineKey(newest), newest.quantity - 1)
+  }
+  return (
+    <AnimatePresence mode='popLayout' initial={false}>
+      {count === 0 ? (
+        <motion.button
+          key='add'
+          type='button'
+          aria-label={t('addToCart')}
+          onClick={onAdd}
+          {...swap}
+          className={cn('grid size-11 shrink-0 place-items-center rounded-full active:scale-90 motion-reduce:transform-none', fill)}
+        >
+          <Plus className='size-5' strokeWidth={2.5} />
+        </motion.button>
+      ) : (
+        <motion.div key='step' {...swap} className={cn('flex h-11 shrink-0 items-center gap-0.5 rounded-full px-1', fill)}>
+          <button type='button' aria-label={t('ninjaLess')} onClick={less} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
+            <Minus className='size-4' strokeWidth={2.5} />
+          </button>
+          <Odometer value={String(count)} className='min-w-5 text-center text-sm font-bold' />
+          <button type='button' aria-label={t('ninjaMore')} onClick={onAdd} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
+            <Plus className='size-4' strokeWidth={2.5} />
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
