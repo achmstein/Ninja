@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronRight, Minus, Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { blurSwap, springOpen, springSoft } from '@/lib/motion'
+import { blurSwap, springSoft } from '@/lib/motion'
 import { lineKey, useCart } from '@/lib/cart'
 import { Odometer } from './odometer'
 import { cn } from '@/lib/utils'
@@ -388,7 +388,7 @@ function Row({
  * which once the dish is in the tray opens into less, how many and more,
  * as the classic menu always had it (more flies another in; less takes the
  * newest one back out). A dish with something to choose: a chevron to its
- * options, carrying how many are in the tray.
+ * options.
  */
 function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick: boolean; onAdd: () => void; onOpen: () => void }) {
   const t = useT()
@@ -405,23 +405,9 @@ function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick
         type='button'
         aria-label={localized(item.name)}
         onClick={onOpen}
-        className={cn('relative grid size-11 shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', fill)}
+        className={cn('grid size-11 shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', fill)}
       >
         <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />
-        <AnimatePresence initial={false}>
-          {count > 0 && (
-            <motion.span
-              key='count'
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={springOpen}
-              className='slab ring-background absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold tabular-nums ring-2'
-            >
-              {count}
-            </motion.span>
-          )}
-        </AnimatePresence>
       </button>
     )
   }
