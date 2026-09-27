@@ -11,6 +11,7 @@ import { itemPictureUrl } from '@/components/menu/item-picture'
 import { PressRing } from './deck'
 import { canQuickAdd, DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 import { usePress } from './use-press'
+import { SHORT } from './chrome'
 
 /** A tile's corner; the card it came from is rounder, and the morph carries it across */
 const TILE_RADIUS = 18
@@ -536,17 +537,20 @@ function Row({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, root: scroller, margin: '0px 0px -8% 0px' }}
       transition={springSoft}
-      className={cn('flex items-center gap-4', soldOut && 'opacity-50')}
+      className={cn('flex items-center gap-3', soldOut && 'opacity-50')}
     >
-      <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-4 text-start select-none [-webkit-touch-callout:none]'>
+      <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'>
         <motion.div
           ref={photo}
           layoutId={morph ? `card-${item.id}` : undefined}
           // The row's photo stays put while a dish flies to the tray: the flight leaves from the options
           // sheet as often as from here, and a row is small enough that a copy lifting off reads fine
-          style={{ borderRadius: 24 }}
+          style={{ borderRadius: 20 }}
           className={cn(
-            'relative size-24 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
+            // Sized to leave the name and its line the room to read on a small phone, and a few dishes to a screen
+            'relative shrink-0 overflow-hidden',
+            SHORT ? 'size-18' : 'size-20',
+            ' transition-transform duration-200 ease-out motion-reduce:transition-none',
             !hasPhoto && TONE_CLASS.primary,
             soldOut && 'grayscale',
             pressing && 'scale-[0.94]'
@@ -559,13 +563,13 @@ function Row({
           ) : (
             // No photo (or one that would not load): the café's colour with a plate on it, as the classic menu always drew one
             <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 grid place-items-center'>
-              <UtensilsCrossed className='size-8 opacity-40' />
+              <UtensilsCrossed className='size-7 opacity-40' />
             </motion.div>
           )}
         </motion.div>
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
           {/* The deck's card, laid on its side: the name in the heading's voice, the price its pill */}
-          <span className='heading text-[calc(1.1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
+          <span className='heading text-[calc(1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
           {item.description && <span className='text-muted-foreground line-clamp-2 text-[13px] leading-snug'>{localized(item.description)}</span>}
           <span className='mt-1.5 flex items-center gap-2'>
             <span className='bg-muted rounded-full px-2.5 py-1 text-[13px] font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
@@ -573,7 +577,7 @@ function Row({
           </span>
         </span>
       </button>
-      {!soldOut && <RowAction item={item} quick={quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
+      {!soldOut && <RowAction small item={item} quick={quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
     </motion.div>
   )
 }
@@ -585,7 +589,20 @@ function Row({
  * newest one back out). A dish with something to choose: a chevron to its
  * options.
  */
-function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick: boolean; onAdd: () => void; onOpen: () => void }) {
+function RowAction({
+  item,
+  quick,
+  onAdd,
+  onOpen,
+  small = false,
+}: {
+  item: CatalogItemDto
+  quick: boolean
+  onAdd: () => void
+  onOpen: () => void
+  /** Drawn a size down (a classic row's), its reach kept a finger's: 44 px round it */
+  small?: boolean
+}) {
   const t = useT()
   const localized = useLocalized()
   const swap = blurSwap(useReducedMotion())
@@ -593,6 +610,7 @@ function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick
   const setQuantity = useCart((s) => s.setQuantity)
   const count = lines.reduce((sum, l) => sum + l.quantity, 0)
   const fill = 'bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)]'
+  const round = small ? "relative size-10 before:absolute before:-inset-0.5 before:content-['']" : 'size-11'
 
   if (!quick) {
     return (
@@ -600,7 +618,7 @@ function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick
         type='button'
         aria-label={localized(item.name)}
         onClick={onOpen}
-        className={cn('grid size-11 shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', fill)}
+        className={cn('grid shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', round, fill)}
       >
         <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />
       </button>
@@ -620,12 +638,12 @@ function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick
           aria-label={t('addToCart')}
           onClick={onAdd}
           {...swap}
-          className={cn('grid size-11 shrink-0 place-items-center rounded-full active:scale-90 motion-reduce:transform-none', fill)}
+          className={cn('grid shrink-0 place-items-center rounded-full active:scale-90 motion-reduce:transform-none', round, fill)}
         >
           <Plus className='size-5' strokeWidth={2.5} />
         </motion.button>
       ) : (
-        <motion.div key='step' {...swap} className={cn('flex h-11 shrink-0 items-center gap-0.5 rounded-full px-1', fill)}>
+        <motion.div key='step' {...swap} className={cn('flex shrink-0 items-center gap-0.5 rounded-full', small ? 'h-10 px-0.5' : 'h-11 px-1', fill)}>
           <button type='button' aria-label={t('ninjaLess')} onClick={less} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
             <Minus className='size-4' strokeWidth={2.5} />
           </button>

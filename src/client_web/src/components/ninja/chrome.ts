@@ -29,5 +29,5 @@ export const TAB_PILL_H = SHORT ? 38 : 44
 /** The dock's gap to the screen's edges, px */
 export const DOCK_INSET = 8
 
-/** The dock's side margin: the deck's own (px-4), so the dock's edges line up with the cards' */
-export const DOCK_SIDE = 16
+/** The dock's side margin: its gap to the bottom edge too, so it floats evenly off the screen's edges and a small phone's tray keeps the width */
+export const DOCK_SIDE = DOCK_INSET

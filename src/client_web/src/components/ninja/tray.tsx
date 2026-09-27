@@ -138,7 +138,6 @@ export function Tray({
   const measureSeats = () => {
     const sheet = sheetRef.current
     const dock = dockRef.current
-    if (openness.get() <= 0.001 && targetRef.current) thumbsWidth.current = targetRef.current.offsetWidth
     if (!sheet || !dock || reduced) return
     const clip = sheet.parentElement?.getBoundingClientRect()
     const dockThumbs = new Map<string, DOMRect>()
@@ -167,6 +166,21 @@ export function Tray({
   const dockThumbsShown = useTransform(openness, (v): number => (v <= 0.001 ? 1 : 0))
   // Open, the dock is just the total: the circles' place closes up, the count goes and the total grows into the room
   const thumbsWidth = useRef(0)
+  // Measured whenever the stack changes while the tray is shut, so an order opening (on a tap, or a
+  // pull already under way) closes up from the stack as it is now: measured only as the sheet
+  // mounted, a frame late, it was missing or out of date, and the total stood still, then jumped
+  useLayoutEffect(() => {
+    const el = targetRef.current
+    if (!el) return
+    const measure = () => {
+      if (openness.get() <= 0.001) thumbsWidth.current = el.offsetWidth
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+    // The stack is a new element on every bump (its key), so the observer follows it
+  }, [targetRef, openness, bump])
   const thumbsSize = useTransform(openness, (v): number | string => (v <= 0.001 || !thumbsWidth.current ? 'auto' : thumbsWidth.current * (1 - v)))
   // A little room past the stack at rest (its +N badge hangs over its end), closing up as the sheet opens
   const thumbsGap = useTransform(openness, (v) => 6 - 18 * v)
