@@ -11,7 +11,7 @@ import {
 import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
-import { RADII } from '@/lib/brand-theme'
+import { paletteFrom, RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -306,6 +306,28 @@ function BrandForm({ brand }: { brand: Brand }) {
               <div className='space-y-1.5'>
                 <span className='text-xs font-medium'>{t('brandPalettes')}</span>
                 <div className='flex flex-wrap gap-2'>
+                  {/* Grown from the brand colour set below: the secondary and the page made to match it */}
+                  {(() => {
+                    const grown = paletteFrom(color.trim())
+                    return (
+                      <button
+                        type='button'
+                        disabled={!grown}
+                        onClick={() => {
+                          if (!grown) return
+                          setTheme({ ...theme, accent: grown.accent, surface: grown.surface, darkPrimary: '', darkAccent: '', darkSurface: '' })
+                        }}
+                        className='hover:border-foreground/40 flex items-center gap-2 rounded-full border border-dashed py-1.5 ps-1.5 pe-3 text-xs font-medium transition-colors disabled:opacity-40'
+                      >
+                        <span className='flex -space-x-1.5 rtl:space-x-reverse'>
+                          {[color.trim() || '#cccccc', grown?.accent ?? '#dddddd', grown?.surface ?? '#eeeeee'].map((c, i) => (
+                            <span key={i} className='ring-background size-5 rounded-full ring-2' style={{ backgroundColor: c }} />
+                          ))}
+                        </span>
+                        {t('paletteMatchBrand')}
+                      </button>
+                    )
+                  })()}
                   {PALETTES.map((p) => {
                     const on = color.toLowerCase() === p.primary && theme.accent.toLowerCase() === p.accent && theme.surface.toLowerCase() === p.surface
                     return (
