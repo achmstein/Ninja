@@ -266,7 +266,16 @@ public static class PlacesApi
         // so a failed delete announces nothing and a crash after it loses nothing
         place.AddDomainEvent(new PlaceDeletedDomainEvent(place));
         places.Delete(place);
-        await places.UnitOfWork.SaveEntitiesAsync();
+        try
+        {
+            await places.UnitOfWork.SaveEntitiesAsync();
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            when (ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.ForeignKeyViolation })
+        {
+            // Its past stays and reservations keep it (the bills and the history name it): it goes off, not away
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "This place has past stays or reservations, so it cannot be deleted; switch it off instead" });
+        }
         return TypedResults.Ok();
     }
 

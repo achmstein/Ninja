@@ -128,7 +128,10 @@ refused = []
 for branch_id, places in their_places.items():
     for p in places:
         status, body = call('DELETE', f"/api/places/{p['id']}", branch=branch_id)
-        if status >= 300: refused.append(f"place {p['name']['en']}: {status} {body}")
+        if status >= 300:
+            # A place with history cannot go; switched off, it leaves the apps all the same
+            off, _ = call('PUT', f"/api/places/{p['id']}/active", {'isActive': False}, branch=branch_id)
+            refused.append(f"place {p['name']['en']}: {status} {body}" + (' (switched off instead)' if off < 300 else ''))
 for item in theirs['items']:
     status, body = call('DELETE', f"/api/catalog/items/{item['id']}")
     if status >= 300: refused.append(f"dish {item['name']['en']}: {status} {body}")
