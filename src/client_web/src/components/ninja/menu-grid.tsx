@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
+import { Plus } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
-import { useLocalized, usePrice } from '@/lib/i18n'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { PressRing } from './deck'
@@ -30,6 +31,7 @@ export function MenuGrid({
   landingId,
   jump,
   onSection,
+  rows = false,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -45,6 +47,8 @@ export function MenuGrid({
   jump: { index: number; n: number } | null
   /** The category in view changed, as the jump bar lights it */
   onSection: (index: number) => void
+  /** The classic menu (the café's choice): each dish a row under its category, not a tile, and no deck behind it */
+  rows?: boolean
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const categories = columns.filter((c) => c.kind === 'category')
@@ -170,6 +174,21 @@ export function MenuGrid({
           >
             {col.label}
           </motion.h2>
+          {rows ? (
+            <div className='divide-border/60 flex flex-col divide-y'>
+              {col.items.map((item) => (
+                <Row
+                  key={String(item.id)}
+                  item={item}
+                  tone={col.tone}
+                  opening={Number(item.id) === openingId}
+                  landing={Number(item.id) === landingId}
+                  onOpen={open}
+                  onQuickAdd={onQuickAdd}
+                />
+              ))}
+            </div>
+          ) : (
           <div className='grid grid-cols-3 gap-2.5'>
             {col.items.map((item) => (
               <Tile
@@ -184,6 +203,7 @@ export function MenuGrid({
               />
             ))}
           </div>
+          )}
         </section>
       ))}
     </motion.div>
@@ -273,5 +293,89 @@ function Tile({
       <span className='mt-1.5 truncate text-xs font-semibold'>{localized(item.name)}</span>
       <span className='text-muted-foreground text-xs tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
     </button>
+  )
+}
+
+/**
+ * A dish in the classic menu: its photo, its name and a line of what it is,
+ * its price, and a round + at the end. The row opens the dish's options
+ * grown out of its photo, as a tile does; the + puts a dish that needs no
+ * choosing straight in the tray (and opens one that does), and a held press
+ * on the row does the same as on a tile.
+ */
+function Row({
+  item,
+  tone,
+  opening,
+  landing,
+  onOpen,
+  onQuickAdd,
+}: {
+  item: CatalogItemDto
+  tone: DeckColumn['tone']
+  opening: boolean
+  landing: boolean
+  onOpen: (item: CatalogItemDto) => void
+  onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const [failed, setFailed] = useState(false)
+  const hasPhoto = !!item.pictureUri && !failed
+  const soldOut = item.isAvailable === false
+  const onOffer = item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
+  const photo = useRef<HTMLDivElement>(null)
+  const quick = canQuickAdd(item)
+  const morph = opening && !landing
+  const { pressing, handlers } = usePress({
+    onTap: () => onOpen(item),
+    onLongPress: () => onQuickAdd(item, photo.current),
+  })
+
+  return (
+    <div data-item={String(item.id)} className={cn('flex items-center gap-3 py-3', soldOut && 'opacity-50')}>
+      <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'>
+        <motion.div
+          ref={photo}
+          layoutId={morph ? `card-${item.id}` : undefined}
+          animate={{ opacity: landing ? 0 : 1 }}
+          transition={landing ? { duration: 0 } : { duration: 0.28 }}
+          style={{ borderRadius: 16 }}
+          className={cn(
+            'relative size-20 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
+            !hasPhoto && TONE_CLASS[tone],
+            soldOut && 'grayscale',
+            pressing && 'scale-[0.94]'
+          )}
+        >
+          {hasPhoto ? (
+            <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='bg-muted absolute inset-0'>
+              <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
+            </motion.div>
+          ) : (
+            <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0' />
+          )}
+        </motion.div>
+        <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          <span className='text-[15px] leading-snug font-semibold'>{localized(item.name)}</span>
+          {item.description && <span className='text-muted-foreground line-clamp-2 text-[13px] leading-snug'>{localized(item.description)}</span>}
+          <span className='mt-0.5 flex items-baseline gap-2 text-sm font-bold tabular-nums'>
+            {price(onOffer ? item.offerPrice : item.price)}
+            {onOffer && <span className='text-muted-foreground text-xs font-medium line-through'>{price(item.price)}</span>}
+          </span>
+        </span>
+      </button>
+      {!soldOut && (
+        <button
+          type='button'
+          aria-label={t('addToCart')}
+          onClick={() => (quick ? onQuickAdd(item, photo.current) : onOpen(item))}
+          className='bg-muted active:bg-foreground/10 grid size-10 shrink-0 place-items-center rounded-full transition-colors'
+        >
+          <Plus className='size-5' />
+        </button>
+      )}
+    </div>
   )
 }

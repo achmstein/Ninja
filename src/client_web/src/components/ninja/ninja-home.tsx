@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
-import { useIsCloudKitchen } from '@/lib/brand'
+import { useBrand, useIsCloudKitchen } from '@/lib/brand'
 import { useCart } from '@/lib/cart'
 import { useLiveBills } from '@/lib/live-bills'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -64,7 +64,10 @@ export function NinjaHome({ menu }: HomeProps) {
   const rows = useRef<Record<number, number>>({})
   const [activeRow, setActiveRow] = useState(0)
 
-  const [mode, setMode] = useState<'deck' | 'grid'>('deck')
+  // The café may list its menu the classic way (the brand's menu item part): the whole menu as rows, no deck
+  const classic = useBrand()?.theme?.layout?.menuItem === 'row'
+  const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
+  const mode = classic ? 'grid' : chosenMode
   const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
   const [tuning, setTuning] = useState<Tuning | null>(null)
   const [expanded, setExpanded] = useState(false)
@@ -282,10 +285,11 @@ export function NinjaHome({ menu }: HomeProps) {
                   sharedIds={gridFocus.shared}
                   onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
                   onQuickAdd={onQuickAdd}
-                  onZoomIn={() => zoomIn()}
+                  onZoomIn={() => (classic ? undefined : zoomIn())}
                   landingId={landing}
                   jump={jump}
                   onSection={setGridColumn}
+                  rows={classic}
                 />
               ) : (
                 <Deck
@@ -309,7 +313,7 @@ export function NinjaHome({ menu }: HomeProps) {
             <NinjaTopBar
               className='absolute inset-x-0 top-0'
               start={
-                mode === 'grid' ? (
+                mode === 'grid' && !classic ? (
                   <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
                     <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
                     <span className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>{t('ninjaWholeMenu')}</span>
@@ -338,11 +342,15 @@ export function NinjaHome({ menu }: HomeProps) {
                     labels={gridLabels}
                     active={gridColumn}
                     onSelect={(index) => setJump((j) => ({ index, n: (j?.n ?? 0) + 1 }))}
-                    // Back to the cards at the category in view, or where the deck was if that is the one
-                    onZoomOut={() => {
-                      const shown = gridCategories[gridColumn]
-                      zoomIn(shown && shown.id !== columns[column]?.id ? shown.items[0] : undefined)
-                    }}
+                    // Back to the cards at the category in view, or where the deck was if that is the one; a classic menu has none
+                    onZoomOut={
+                      classic
+                        ? undefined
+                        : () => {
+                            const shown = gridCategories[gridColumn]
+                            zoomIn(shown && shown.id !== columns[column]?.id ? shown.items[0] : undefined)
+                          }
+                    }
                   />
                 )}
               </nav>

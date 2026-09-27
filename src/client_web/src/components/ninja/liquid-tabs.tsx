@@ -26,8 +26,8 @@ export function LiquidTabs({
   labels: string[]
   active: number
   onSelect: (index: number) => void
-  /** The button at the end: to the whole menu, or (zoomed) back to the cards */
-  onZoomOut: () => void
+  /** The button at the end: to the whole menu, or (zoomed) back to the cards; none on a menu with no cards */
+  onZoomOut?: () => void
   zoomed?: boolean
 }) {
   const t = useT()
@@ -73,7 +73,7 @@ export function LiquidTabs({
               type='button'
               role='tab'
               aria-selected={i === active}
-              onClick={() => (i === active && !zoomed ? onZoomOut() : onSelect(i))}
+              onClick={() => (i === active && !zoomed && onZoomOut ? onZoomOut() : onSelect(i))}
               className={cn(
                 'relative z-10 h-9 shrink-0 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-200',
                 i === active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -84,15 +84,17 @@ export function LiquidTabs({
           ))}
         </div>
       </div>
-      <button
-        type='button'
-        onClick={onZoomOut}
-        aria-label={t(zoomed ? 'ninjaBackToCards' : 'ninjaWholeMenu')}
-        data-hint-anchor={zoomed ? undefined : 'zoom'}
-        className='bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-full'
-      >
-        {zoomed ? <GalleryVertical className='size-4' /> : <LayoutGrid className='size-4' />}
-      </button>
+      {onZoomOut && (
+        <button
+          type='button'
+          onClick={onZoomOut}
+          aria-label={t(zoomed ? 'ninjaBackToCards' : 'ninjaWholeMenu')}
+          data-hint-anchor={zoomed ? undefined : 'zoom'}
+          className='bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-full'
+        >
+          {zoomed ? <GalleryVertical className='size-4' /> : <LayoutGrid className='size-4' />}
+        </button>
+      )}
     </div>
   )
 }
