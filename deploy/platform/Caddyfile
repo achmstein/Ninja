@@ -5,8 +5,9 @@
 # thing a new tenant needs outside this compose project.
 #
 # Host scheme, with PLATFORM_DOMAIN=ninja.app:
-#   ninja.app                → the platform's site (control redirect for now); /apps is the
-#                              download page for the native till and kitchen apps
+#   ninja.app                → the platform's site (what Ninja is, privacy, terms, support);
+#                              /apps is the download page for the native till and kitchen apps;
+#                              /control sends you to the control plane
 #   auth.ninja.app           → Keycloak, every realm
 #   control.ninja.app        → the control app + its API
 #   {slug}.ninja.app         → the café's customer app, served from the shared build
@@ -74,8 +75,19 @@
 		@apk path *.apk
 		header @apk Content-Type application/vnd.android.package-archive
 	}
+	# The control plane lived at the bare domain before the site did
+	handle /control* {
+		redir https://control.{$PLATFORM_DOMAIN}
+	}
+	# The platform's own site: what Ninja is, its privacy policy and terms (the
+	# addresses Google's and Apple's sign-in screens link to), support
 	handle {
-		redir https://control.{$PLATFORM_DOMAIN}{uri}
+		root * /srv/site
+		try_files {path} {path}.html {path}/index.html
+		file_server
+		header Cache-Control "public, max-age=300"
+		@brand path /brand/*
+		header @brand Cache-Control "public, max-age=86400"
 	}
 }
 

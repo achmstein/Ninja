@@ -143,7 +143,7 @@ jobs:
             echo "::error::PLATFORM_ENCRYPTION_KEY must be the base64 of 32 bytes (openssl rand -base64 32)"; exit 1
           fi
 
-          mkdir -p platform-artifacts/realms platform-artifacts/themes platform-artifacts/apps
+          mkdir -p platform-artifacts/realms platform-artifacts/themes platform-artifacts/apps platform-artifacts/site
           cp deploy/platform/docker-compose.yml platform-artifacts/
           cp deploy/platform/Caddyfile platform-artifacts/
           cp deploy/platform/init-multiple-databases.sh platform-artifacts/
@@ -155,6 +155,8 @@ jobs:
           cp -r src/Ninja.AppHost/KeycloakConfiguration/themes/ninja platform-artifacts/themes/ninja
           # The native apps' download page; the APKs land beside it from mobile-deploy.yml
           cp deploy/platform/apps/index.html platform-artifacts/apps/
+          # The platform's own site at the bare domain (privacy, terms, support)
+          cp -r deploy/platform/site/. platform-artifacts/site/
 
           cat > platform-artifacts/.env <<EOF
           PLATFORM_DOMAIN=$PLATFORM_DOMAIN
