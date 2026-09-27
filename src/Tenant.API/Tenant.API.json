@@ -1252,6 +1252,12 @@
                 "$ref": "#/components/schemas/TenantLayoutDto"
               }
             ]
+          },
+          "slab": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

@@ -104,6 +104,8 @@ type ThemeForm = {
   darkPrimary: string
   darkAccent: string
   darkSurface: string
+  /** The dock's colour: '' a deep shade of the brand colour, 'neutral' black */
+  slab: string
   /** How the menu lists the dishes: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
   menuItem: string
 }
@@ -130,6 +132,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkPrimary: t.dark?.primary ?? '',
   darkAccent: t.dark?.accent ?? '',
   darkSurface: t.dark?.surface ?? '',
+  slab: t.slab === 'neutral' ? 'neutral' : '',
   menuItem: ['row', 'card', 'compact', 'hero'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
 })
 
@@ -148,6 +151,7 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
     // Ninja is the only style for now, worn whole
     style: 'ninja',
+    slab: f.slab || null,
     // The one part the café picks for now: the classic list instead of the cards
     layout: f.menuItem ? { menuItem: f.menuItem, categories: null, header: null, buttons: null, surface: null, density: null } : null,
   }
@@ -403,6 +407,21 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-dock' className='text-xs'>
+                    {t('dockColour')}
+                  </Label>
+                  <Select value={theme.slab || NONE} onValueChange={(v) => setTheme({ ...theme, slab: v === NONE ? '' : v })}>
+                    <SelectTrigger id='brand-dock' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t('dockBrand')}</SelectItem>
+                      <SelectItem value='neutral'>{t('dockBlack')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('dockColourHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-menu' className='text-xs'>

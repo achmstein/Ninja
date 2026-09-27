@@ -43,6 +43,8 @@ export type BrandThemeInput = {
     fontArabic?: string | null
     /** What the dark scheme must use instead of what is derived */
     dark?: BrandThemeDark | null
+    /** The dock's colour: "brand" (null) a deep shade of the brand colour, "neutral" near-black */
+    slab?: string | null
   } | null
 }
 
@@ -253,12 +255,15 @@ export function brandColors(input: BrandThemeInput | null | undefined): { light:
     dark.ring = d
     // The slab (the dock, the tray, the dark cards) is a deep shade of the brand's colour: near-black
     // with its hue on a light page, a raised surface of it on a dark one; a grey brand keeps it neutral
-    const slabLight: Oklch = { l: 0.23, c: Math.min(primary.c, 0.09), h: primary.h }
-    const slabDark: Oklch = { l: 0.28, c: Math.min(primary.c, 0.07), h: primary.h }
-    light.slab = slabLight
-    light.slabInk = textOn(slabLight)
-    dark.slab = slabDark
-    dark.slabInk = textOn(slabDark)
+    // A café that wants its dock black keeps the neutral one (styles/theme.css) whatever its colour
+    if (theme?.slab !== 'neutral') {
+      const slabLight: Oklch = { l: 0.23, c: Math.min(primary.c, 0.09), h: primary.h }
+      const slabDark: Oklch = { l: 0.28, c: Math.min(primary.c, 0.07), h: primary.h }
+      light.slab = slabLight
+      light.slabInk = textOn(slabLight)
+      dark.slab = slabDark
+      dark.slabInk = textOn(slabDark)
+    }
   }
 
   const accent = seed(theme?.accent)

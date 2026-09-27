@@ -1,4 +1,4 @@
-﻿using Ninja.ServiceDefaults;
+using Ninja.ServiceDefaults;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -366,6 +366,11 @@ public static partial class TenantApi
             return theme;
         }
 
+        // "brand" is the default, so it is stored as none
+        theme.Slab = OneOf(dto.Slab, TenantTheme.Slabs, "dock", out error);
+        if (error is not null) return theme;
+        if (theme.Slab == "brand") theme.Slab = null;
+
         theme.FontLatin = Font(dto.FontLatin, TenantTheme.LatinFonts, "Latin", out error);
         if (error is not null) return theme;
         theme.FontArabic = Font(dto.FontArabic, TenantTheme.ArabicFonts, "Arabic", out error);
@@ -501,6 +506,7 @@ public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, Tenant
 /// <param name="Mode">"light" or "dark" for someone who has not chosen; null follows the device.</param>
 /// <param name="Style">classic, minimal, bold, cozy or night: how the customer apps are dressed; null is classic.</param>
 /// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice for every part.</param>
+/// <param name="Slab">The dock's colour: "brand" (a deep shade of the brand colour, the default) or "neutral" (near-black).</param>
 public record TenantThemeDto(
     string? Accent,
     string? Surface,
@@ -511,7 +517,8 @@ public record TenantThemeDto(
     string? HeaderSize = null,
     string? Mode = null,
     string? Style = null,
-    TenantLayoutDto? Layout = null)
+    TenantLayoutDto? Layout = null,
+    string? Slab = null)
 {
     public static TenantThemeDto From(TenantTheme t)
         => new(
@@ -521,7 +528,8 @@ public record TenantThemeDto(
             TenantTheme.KnownFont(t.FontArabic, TenantTheme.ArabicFonts),
             t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface),
             t.HeaderSize, t.Mode, t.Style,
-            t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density) : null);
+            t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density) : null,
+            t.Slab);
 }
 
 /// <param name="MenuItem">row, card, compact or hero.</param>

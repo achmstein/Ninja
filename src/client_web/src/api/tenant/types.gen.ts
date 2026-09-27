@@ -137,6 +137,7 @@ export type TenantThemeDto = {
     mode?: null | string;
     style?: null | string;
     layout?: null | TenantLayoutDto;
+    slab?: null | string;
 };
 
 export type TenantWordmark = {

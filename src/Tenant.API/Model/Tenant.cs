@@ -224,6 +224,14 @@ public class TenantTheme
     /// <summary>One of <see cref="HeaderSizes"/>; null is "sm".</summary>
     public string? HeaderSize { get; set; }
 
+    public static readonly string[] Slabs = ["brand", "neutral"];
+
+    /// <summary>
+    /// The dock, the tray and the dark cards: "brand" (null) a deep shade of
+    /// the brand colour, "neutral" near-black whatever the brand colour is.
+    /// </summary>
+    public string? Slab { get; set; }
+
     /// <summary>One of <see cref="LatinFonts"/>.</summary>
     public string? FontLatin { get; set; }
 
