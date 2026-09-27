@@ -167,6 +167,8 @@ const dictionary = {
   nameAr: "Name (Arabic)",
   ownerEmail: "Owner email",
   brandColor: "Brand color",
+  socialSignIn: "Google & Apple sign-in",
+  socialSignInHint: "Customers sign in with Google or Apple through Ninja's own apps; nothing to set up for the café. Off leaves email and phone.",
   dockColour: "Dock",
   dockBrand: "Brand colour",
   dockBlack: "Black",

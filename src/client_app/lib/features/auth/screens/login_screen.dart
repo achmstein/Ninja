@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_mark.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -106,6 +107,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = AppLocalizations.of(context)!;
+    // Only the providers the café has on; a brand that does not say keeps both
+    final social = ref.watch(brandProvider).socialProviders;
+    final google = social == null || social.contains('google');
+    final apple = social == null || social.contains('apple');
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -177,6 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                if (google || apple) ...[
                 // Divider with "or"
                 Row(
                   children: [
@@ -208,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   children: [
                     // Google button
-                    Expanded(
+                    if (google) Expanded(
                       child: FButton(
                         variant: FButtonVariant.outline,
                         onPress: _isLoading || _loadingProvider != null
@@ -244,9 +250,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    if (google && apple) const SizedBox(width: 12),
                     // Apple button
-                    Expanded(
+                    if (apple) Expanded(
                       child: FButton(
                         variant: FButtonVariant.outline,
                         onPress: _isLoading || _loadingProvider != null
@@ -279,6 +285,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                ],
 
                 // Register link
                 Row(

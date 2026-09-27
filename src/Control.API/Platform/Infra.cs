@@ -68,6 +68,20 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureSocialProvidersAsync(string realm, CancellationToken ct);
     /// <summary>
+    /// The hub realm every café's browser sign-in with Google and Apple goes through: made when
+    /// missing, the platform's apps in it (a rotated secret lands too), a hub record never stopped
+    /// to review a profile, and a browser flow per provider that goes straight to it. Idempotent, and
+    /// a no-op while the platform holds no social app.
+    /// </summary>
+    Task EnsureHubAsync(CancellationToken ct);
+    /// <summary>
+    /// A café signing in through the hub: its client in the hub per provider, and the café realm's
+    /// "ninja-google" / "ninja-apple" pointing at it with the same secret. Idempotent.
+    /// </summary>
+    Task EnsureTenantBrokersAsync(string slug, CancellationToken ct);
+    /// <summary>The café's hub clients and its realm's providers for them gone (turned off, or the café destroyed); nothing there is fine.</summary>
+    Task RemoveTenantBrokersAsync(string slug, CancellationToken ct);
+    /// <summary>
     /// Keycloak's own account pages (password, authenticator, signed-in
     /// devices) working in a realm whose template declares its own client
     /// scopes: Keycloak creates its built-in account-console client with none
@@ -607,11 +621,138 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
     {
         var wanted = Templates.SocialProviders(options.Value);
         if (wanted.Count == 0) return;
+        // A rotated secret (Apple's expires) lands on the realm that already has the provider
+        await UpsertProvidersAsync(await AdminClientAsync(ct), realm, wanted, ct);
+    }
+
+    public async Task EnsureHubAsync(CancellationToken ct)
+    {
+        var kinds = Templates.SocialKinds(options.Value);
+        if (kinds.Count == 0) return;
 
         var client = await AdminClientAsync(ct);
+        var hub = TenantNaming.HubRealm;
+        var admin = $"{Base}/admin/realms/{hub}";
+        if (!await RealmExistsAsync(hub, ct))
+            await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{Base}/admin/realms", Templates.HubRealm(), ct), "the hub realm", ct);
+
+        // A hub record is a pass through: Apple gives a name only the first time, and nobody should be
+        // asked for one at the hub's door, so nothing in its profile is required
+        if (await client.GetFromJsonAsync<JsonObject>($"{admin}/users/profile", ct) is { } profile && profile["attributes"] is JsonArray attributes)
+        {
+            var changed = false;
+            foreach (var attribute in attributes.OfType<JsonObject>())
+            {
+                if (attribute["name"]?.GetValue<string>() is "email" or "firstName" or "lastName" && attribute["required"] is not null)
+                {
+                    attribute.Remove("required");
+                    changed = true;
+                }
+            }
+            if (changed)
+                await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/users/profile", profile, ct), "the hub's user profile", ct);
+        }
+
+        await UpsertProvidersAsync(client, hub, Templates.HubProviders(options.Value), ct);
+        foreach (var kind in kinds) await EnsureHubFlowAsync(client, kind, ct);
+    }
+
+    /// <summary>
+    /// The hub's browser flow for one provider: the identity-provider redirector alone, set to it, so a
+    /// café's client bound to it goes straight to Google or Apple. No cookie step: a person signed in
+    /// at the hub with Google who taps Apple for a café must reach Apple, not be handed back as Google.
+    /// </summary>
+    private async Task<string> EnsureHubFlowAsync(HttpClient client, string kind, CancellationToken ct)
+    {
+        var admin = $"{Base}/admin/realms/{TenantNaming.HubRealm}/authentication";
+        var alias = TenantNaming.HubFlow(kind);
+        string? FlowId(JsonArray? flows) => flows?.FirstOrDefault(f => f?["alias"]?.GetValue<string>() == alias)?["id"]?.GetValue<string>();
+
+        if (FlowId(await client.GetFromJsonAsync<JsonArray>($"{admin}/flows", ct)) is { } existing) return existing;
+
+        await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/flows", new JsonObject
+        {
+            ["alias"] = alias,
+            ["description"] = $"Straight to {kind}, for the cafés' clients",
+            ["providerId"] = "basic-flow",
+            ["topLevel"] = true,
+            ["builtIn"] = false,
+        }, ct), $"the hub flow {alias}", ct);
+        await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/flows/{alias}/executions/execution", new JsonObject { ["provider"] = "identity-provider-redirector" }, ct), $"the redirector in {alias}", ct);
+
+        var execution = (await client.GetFromJsonAsync<JsonArray>($"{admin}/flows/{alias}/executions", ct))!.OfType<JsonObject>().Single();
+        execution["requirement"] = "REQUIRED";
+        await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/flows/{alias}/executions", execution, ct), $"the redirector in {alias}", ct);
+        await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/executions/{execution["id"]!.GetValue<string>()}/config", new JsonObject
+        {
+            ["alias"] = alias,
+            ["config"] = new JsonObject { ["defaultProvider"] = kind },
+        }, ct), $"the redirector's provider in {alias}", ct);
+
+        return FlowId(await client.GetFromJsonAsync<JsonArray>($"{admin}/flows", ct)) ?? throw new InvalidOperationException($"The hub flow {alias} was made but cannot be found.");
+    }
+
+    public async Task EnsureTenantBrokersAsync(string slug, CancellationToken ct)
+    {
+        var kinds = Templates.SocialKinds(options.Value);
+        if (kinds.Count == 0) return;
+
+        var client = await AdminClientAsync(ct);
+        var hub = $"{Base}/admin/realms/{TenantNaming.HubRealm}";
+        var brokers = new JsonArray();
+        foreach (var kind in kinds)
+        {
+            var flowId = await EnsureHubFlowAsync(client, kind, ct);
+            var clientId = TenantNaming.HubClient(slug, kind);
+            var found = (await client.GetFromJsonAsync<JsonArray>($"{hub}/clients?clientId={Uri.EscapeDataString(clientId)}", ct))?.OfType<JsonObject>().FirstOrDefault();
+            string secret;
+            if (found is null)
+            {
+                secret = TenantNaming.NewSecret();
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{hub}/clients", Templates.HubClient(slug, kind, secret, flowId, options.Value), ct), $"the hub client {clientId}", ct);
+            }
+            else
+            {
+                // Kept as it was made, the redirect and the flow put right: the café realm has the same secret
+                var id = found["id"]!.GetValue<string>();
+                secret = (await client.GetFromJsonAsync<JsonObject>($"{hub}/clients/{id}/client-secret", ct))?["value"]?.GetValue<string>()
+                    ?? throw new InvalidOperationException($"The hub client {clientId} has no secret.");
+                var wanted = Templates.HubClient(slug, kind, secret, flowId, options.Value);
+                wanted["id"] = id;
+                await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{hub}/clients/{id}", wanted, ct), $"the hub client {clientId}", ct);
+            }
+            brokers.Add(Templates.TenantBroker(slug, kind, secret, options.Value));
+        }
+        await UpsertProvidersAsync(client, TenantNaming.Realm(slug), brokers, ct);
+    }
+
+    public async Task RemoveTenantBrokersAsync(string slug, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var hub = $"{Base}/admin/realms/{TenantNaming.HubRealm}";
+        // Both providers the platform has ever offered, whether or not it holds an app for them now
+        foreach (var kind in new[] { "google", "apple" })
+        {
+            var gone = await client.DeleteAsync($"{Base}/admin/realms/{TenantNaming.Realm(slug)}/identity-provider/instances/{TenantNaming.BrokerAlias(kind)}", ct);
+            if (gone.StatusCode != HttpStatusCode.NotFound) gone.EnsureSuccessStatusCode();
+
+            var clientId = TenantNaming.HubClient(slug, kind);
+            var response = await client.GetAsync($"{hub}/clients?clientId={Uri.EscapeDataString(clientId)}", ct);
+            if (response.StatusCode == HttpStatusCode.NotFound) continue; // no hub at all
+            response.EnsureSuccessStatusCode();
+            foreach (var found in (await response.Content.ReadFromJsonAsync<JsonArray>(ct) ?? []).OfType<JsonObject>())
+            {
+                var deleted = await client.DeleteAsync($"{hub}/clients/{found["id"]!.GetValue<string>()}", ct);
+                if (deleted.StatusCode != HttpStatusCode.NotFound) deleted.EnsureSuccessStatusCode();
+            }
+        }
+    }
+
+    /// <summary>Each provider in, as given: posted when new, put over the one there by its alias (a rotated secret lands).</summary>
+    private async Task UpsertProvidersAsync(HttpClient client, string realm, JsonArray wanted, CancellationToken ct)
+    {
         var admin = $"{Base}/admin/realms/{realm}";
         var existing = await client.GetFromJsonAsync<JsonArray>($"{admin}/identity-provider/instances", ct) ?? [];
-
         foreach (var provider in wanted.Select(p => (JsonObject)p!.DeepClone()))
         {
             var alias = provider["alias"]!.GetValue<string>();
@@ -622,7 +763,6 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             }
             else
             {
-                // A rotated secret (Apple's expires) lands on the realm that already has the provider
                 provider["internalId"] = found["internalId"]?.GetValue<string>();
                 await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/identity-provider/instances/{alias}", provider, ct), $"the {alias} identity provider in {realm}", ct);
             }
@@ -805,6 +945,13 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         return Task.CompletedTask;
     }
     public List<string> AccountConsolesEnsured { get; } = [];
+    public Task EnsureHubAsync(CancellationToken ct)
+    {
+        logger.LogInformation("(dry run) hub realm {Realm}: {Providers} providers", TenantNaming.HubRealm, Templates.HubProviders(new PlatformOptions()).Count);
+        return Task.CompletedTask;
+    }
+    public Task EnsureTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} signs in through the hub", slug); return Task.CompletedTask; }
+    public Task RemoveTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} off the hub", slug); return Task.CompletedTask; }
     public Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
     {
         AccountConsolesEnsured.Add(realm);

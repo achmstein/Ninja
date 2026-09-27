@@ -77,6 +77,7 @@ public sealed class Provisioner(
                     // Realms are never re-imported: what the template gained since this one was made is added by hand
                     await keycloak.EnsureAssistantClientsAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
                     await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                    await SocialBrokersAsync(tenant, ct);
                     await keycloak.EnsureAccountConsoleAsync(realm, ct);
                     return $"realm {realm} already there (assistant clients, social providers and account console ensured)";
                 }
@@ -84,6 +85,7 @@ public sealed class Provisioner(
                 // The shared Google and Apple apps are the platform's, not the template's: they carry
                 // secrets that rotate, so they go on through the admin API rather than into the realm file
                 await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                await SocialBrokersAsync(tenant, ct);
                 // Keycloak makes its built-in account console on import, without the template's scopes
                 await keycloak.EnsureAccountConsoleAsync(realm, ct);
                 return $"realm {realm}";
@@ -476,6 +478,8 @@ public sealed class Provisioner(
 
             await Step(tenant, runId, "realm-delete", async () =>
             {
+                // Its clients in the hub first: they would outlive the realm they hand back to
+                await keycloak.RemoveTenantBrokersAsync(tenant.Slug, ct);
                 await keycloak.DeleteRealmAsync(TenantNaming.Realm(tenant.Slug), ct);
                 return "gone";
             }, ct);
@@ -574,6 +578,16 @@ public sealed class Provisioner(
         try
         {
             await CarryStepAsync(tenant, runId, ct);
+            // The new stack may tell the apps of sign-ins the realm has not got yet (the hub's Google and
+            // Apple): the realm is brought up to what this release expects before the stack comes up on it
+            await Step(tenant, runId, "realm", async () =>
+            {
+                var realm = TenantNaming.Realm(tenant.Slug);
+                if (!await keycloak.RealmExistsAsync(realm, ct)) return "no realm";
+                await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                await SocialBrokersAsync(tenant, ct);
+                return "social providers ensured";
+            }, ct);
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);
@@ -783,6 +797,61 @@ public sealed class Provisioner(
     }
 
     /// <summary>Rewrite the edge's custom-domain sites after a domain changed on the record.</summary>
+    /// <summary>
+    /// The browser's Google and Apple sign-in for the café, through the hub realm (on), or none (off).
+    /// The native apps' hidden providers stay either way: the apps are told by the brand whether to offer them.
+    /// </summary>
+    private async Task SocialBrokersAsync(Tenant tenant, CancellationToken ct)
+    {
+        if (tenant.SocialSignIn)
+        {
+            await keycloak.EnsureHubAsync(ct);
+            await keycloak.EnsureTenantBrokersAsync(tenant.Slug, ct);
+        }
+        else
+        {
+            await keycloak.RemoveTenantBrokersAsync(tenant.Slug, ct);
+        }
+    }
+
+    /// <summary>
+    /// Google and Apple sign-in turned on or off: the café's realm and its hub clients follow, then the
+    /// stack is re-stamped so Tenant.API tells the apps (only Tenant.API is recreated). A stack that is
+    /// not running gets its files now and the rest on start.
+    /// </summary>
+    public async Task SocialAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        var runId = Guid.NewGuid();
+        try
+        {
+            await Step(tenant, runId, "social", async () =>
+            {
+                if (!await keycloak.RealmExistsAsync(TenantNaming.Realm(tenant.Slug), ct)) return "no realm yet; the next provision sets it";
+                await SocialBrokersAsync(tenant, ct);
+                return tenant.SocialSignIn ? "Google and Apple through the hub" : "off";
+            }, ct);
+            await Step(tenant, runId, "stack", async () =>
+            {
+                var dir = Dir(tenant);
+                if (!Directory.Exists(dir)) return "nothing stamped";
+                await WriteStackFilesAsync(tenant, ct);
+                if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
+                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
+                if (!result.Ok) throw new ShellException(result.Output);
+                return result.Output;
+            }, ct);
+            await audit.WriteAsync("tenant.social.done", tenant.Slug, new { on = tenant.SocialSignIn }, ct, Source);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Social sign-in for {Slug} failed", tenant.Slug);
+            tenant.LastError = ex.Message;
+            await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.social.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
+        }
+    }
+
     public async Task EdgeAsync(Guid tenantId, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);

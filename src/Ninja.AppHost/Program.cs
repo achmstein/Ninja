@@ -206,7 +206,9 @@ var tenantApi = builder.AddProject<Projects.Tenant_API>("tenant-api")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
     .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site")
     // Where the native apps sign in, as /api/tenant tells them; a stamp says its realm the same way
-    .WithEnvironment("Tenant__AuthUrl", keycloakRealmUrl);
+    .WithEnvironment("Tenant__AuthUrl", keycloakRealmUrl)
+    // The dev realm carries Google and Apple itself (no hub): the browser is sent to them by their own names
+    .WithEnvironment("Tenant__SocialSignIn", builder.Configuration["Tenant:SocialSignIn"] ?? "google=google,apple=apple");
 
 // The owner's MCP server. Chat apps (Claude, ChatGPT, Claude Code) reach it
 // at api.<tenant>/mcp through the BFF; it calls the other services by their

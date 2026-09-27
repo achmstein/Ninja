@@ -116,6 +116,9 @@ public class Tenant
     /// <summary>The dock's colour seeded into the stack: "neutral" black; null a deep shade of the brand colour. Its buttons keep the brand colour either way.</summary>
     public string? Slab { get; set; }
 
+    /// <summary>Whether its customers may sign in with Google and Apple (the platform's apps, through the hub realm). On unless turned off.</summary>
+    public bool SocialSignIn { get; set; } = true;
+
     /// <summary>A café's own customer host ("menu.cafe.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 

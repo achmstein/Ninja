@@ -128,7 +128,20 @@ public static partial class Templates
     /// Only the providers the platform actually holds an app for: a realm
     /// with no provider is better than one with a provider that cannot work.
     /// </summary>
-    public static JsonArray SocialProviders(PlatformOptions platform)
+    public static JsonArray SocialProviders(PlatformOptions platform) => RealProviders(platform, hidden: true);
+
+    /// <summary>
+    /// The same Google and Apple apps in the hub realm, where they are what the browser is sent to: shown,
+    /// and with the hub's one redirect URI each registered with Google and Apple once. A person's hub
+    /// record is only a pass through, so the hub never stops them to review a profile.
+    /// </summary>
+    public static JsonArray HubProviders(PlatformOptions platform) => RealProviders(platform, hidden: false);
+
+    /// <summary>The providers the platform holds an app for: "google", "apple", in the order the apps show them.</summary>
+    public static IReadOnlyList<string> SocialKinds(PlatformOptions platform)
+        => [.. new[] { ("google", platform.Social.Google), ("apple", platform.Social.Apple) }.Where(p => p.Item2.Configured).Select(p => p.Item1)];
+
+    private static JsonArray RealProviders(PlatformOptions platform, bool hidden)
     {
         var providers = new JsonArray();
         if (platform.Social.Google.Configured)
@@ -137,7 +150,7 @@ public static partial class Templates
             {
                 ["useJwksUrl"] = "true",
                 ["defaultScope"] = "openid profile email",
-            }));
+            }, hidden));
         }
         if (platform.Social.Apple.Configured)
         {
@@ -154,12 +167,12 @@ public static partial class Templates
                 ["disableTypeClaimCheck"] = "true",
                 ["clientAuthMethod"] = "client_secret_post",
                 ["defaultScope"] = "openid name email",
-            }));
+            }, hidden));
         }
         return providers;
     }
 
-    private static JsonObject Provider(string alias, string providerId, string displayName, SocialProviderOptions app, JsonObject config)
+    private static JsonObject Provider(string alias, string providerId, string displayName, SocialProviderOptions app, JsonObject config, bool hidden = true)
     {
         config["clientId"] = app.ClientId;
         config["clientSecret"] = app.ClientSecret;
@@ -177,11 +190,114 @@ public static partial class Templates
             ["authenticateByDefault"] = false,
             ["linkOnly"] = false,
             // Keycloak 26 keeps this on the representation; the old config.hideOnLoginPage is gone
-            ["hideOnLogin"] = true,
-            ["updateProfileFirstLoginMode"] = "on",
+            ["hideOnLogin"] = hidden,
+            ["updateProfileFirstLoginMode"] = hidden ? "on" : "off",
             ["firstBrokerLoginFlowAlias"] = "first broker login",
             ["config"] = config,
         };
+    }
+
+    /// <summary>
+    /// The hub realm itself: no registration, no passwords, nothing a person signs in to by hand. Two
+    /// people who share an address at Google and at Apple are two pass-through records rather than a
+    /// prompt to link accounts nobody asked to link.
+    /// </summary>
+    public static JsonObject HubRealm() => new()
+    {
+        ["realm"] = TenantNaming.HubRealm,
+        ["enabled"] = true,
+        ["displayName"] = "Ninja",
+        ["loginTheme"] = "ninja",
+        ["sslRequired"] = "external",
+        ["registrationAllowed"] = false,
+        ["resetPasswordAllowed"] = false,
+        ["rememberMe"] = false,
+        ["duplicateEmailsAllowed"] = true,
+        ["loginWithEmailAllowed"] = false,
+        ["editUsernameAllowed"] = false,
+    };
+
+    /// <summary>
+    /// A café's client in the hub for one provider: its only redirect is the café realm's broker
+    /// endpoint for it, and its browser flow is the hub's straight-to-that-provider one.
+    /// </summary>
+    public static JsonObject HubClient(string slug, string provider, string secret, string flowId, PlatformOptions platform) => new()
+    {
+        ["clientId"] = TenantNaming.HubClient(slug, provider),
+        ["name"] = $"{slug} / {provider}",
+        ["enabled"] = true,
+        ["protocol"] = "openid-connect",
+        ["publicClient"] = false,
+        ["secret"] = secret,
+        ["standardFlowEnabled"] = true,
+        ["implicitFlowEnabled"] = false,
+        ["directAccessGrantsEnabled"] = false,
+        ["serviceAccountsEnabled"] = false,
+        ["redirectUris"] = new JsonArray(BrokerEndpoint(slug, provider, platform)),
+        ["webOrigins"] = new JsonArray(),
+        ["attributes"] = new JsonObject { ["pkce.code.challenge.method"] = "S256" },
+        ["authenticationFlowBindingOverrides"] = new JsonObject { ["browser"] = flowId },
+    };
+
+    /// <summary>Where the hub hands a person back to the café's realm for one provider.</summary>
+    public static string BrokerEndpoint(string slug, string provider, PlatformOptions platform)
+        => $"{platform.KeycloakPublicUrl.TrimEnd('/')}/realms/{TenantNaming.Realm(slug)}/broker/{TenantNaming.BrokerAlias(provider)}/endpoint";
+
+    /// <summary>
+    /// The café realm's own "Google" or "Apple" for the browser: plain OIDC against its client in the
+    /// hub. Shown on the café's login page; the browser goes to the hub only (the one address the
+    /// providers know), Keycloak itself to the hub's tokens and keys on the network. The customer is
+    /// created in the café's realm from the hub's token, and asked there for what the café needs
+    /// (a phone number) that Google and Apple do not give.
+    /// </summary>
+    public static JsonObject TenantBroker(string slug, string provider, string secret, PlatformOptions platform)
+    {
+        var browser = $"{platform.KeycloakPublicUrl.TrimEnd('/')}/realms/{TenantNaming.HubRealm}/protocol/openid-connect";
+        var network = $"{platform.KeycloakInternalUrl.TrimEnd('/')}/realms/{TenantNaming.HubRealm}/protocol/openid-connect";
+        return new JsonObject
+        {
+            ["alias"] = TenantNaming.BrokerAlias(provider),
+            ["displayName"] = provider == "apple" ? "Apple" : "Google",
+            ["providerId"] = "oidc",
+            ["enabled"] = true,
+            ["trustEmail"] = true,
+            ["storeToken"] = false,
+            ["addReadTokenRoleOnCreate"] = false,
+            ["authenticateByDefault"] = false,
+            ["linkOnly"] = false,
+            ["hideOnLogin"] = false,
+            ["updateProfileFirstLoginMode"] = "on",
+            ["firstBrokerLoginFlowAlias"] = "first broker login",
+            ["config"] = new JsonObject
+            {
+                ["clientId"] = TenantNaming.HubClient(slug, provider),
+                ["clientSecret"] = secret,
+                ["clientAuthMethod"] = "client_secret_post",
+                ["authorizationUrl"] = $"{browser}/auth",
+                ["tokenUrl"] = $"{network}/token",
+                ["jwksUrl"] = $"{network}/certs",
+                ["useJwksUrl"] = "true",
+                ["validateSignature"] = "true",
+                // The hub's token carries the name and the address already
+                ["disableUserInfo"] = "true",
+                ["defaultScope"] = "openid profile email",
+                ["pkceEnabled"] = "true",
+                ["pkceMethod"] = "S256",
+                ["syncMode"] = "IMPORT",
+                ["guiOrder"] = provider == "apple" ? "2" : "1",
+            },
+        };
+    }
+
+    /// <summary>
+    /// What Tenant.API tells the apps about signing in with Google or Apple ("google=ninja-google,
+    /// apple=ninja-apple": each provider, and the hint the browser app sends for it); null when the
+    /// café has it off or the platform holds no app.
+    /// </summary>
+    public static string? SocialSignIn(Tenant tenant, PlatformOptions platform)
+    {
+        var kinds = SocialKinds(platform);
+        return tenant.SocialSignIn && kinds.Count > 0 ? string.Join(',', kinds.Select(k => $"{k}={TenantNaming.BrokerAlias(k)}")) : null;
     }
 
     /// <summary>What Keycloak's account-console client is given (see <see cref="IKeycloakAdmin.EnsureAccountConsoleAsync"/>): whichever of these the realm has.</summary>
@@ -342,6 +458,7 @@ public static partial class Templates
                     if (!string.IsNullOrEmpty(tenant.PrimaryColor)) sb.AppendLine($"      Tenant__PrimaryColor: \"{tenant.PrimaryColor}\"");
                     sb.AppendLine($"      Tenant__CustomerUrl: \"{hosts.CustomerUrl}\"");
                     sb.AppendLine($"      Tenant__AuthUrl: \"{platform.KeycloakPublicUrl}/realms/{TenantNaming.Realm(slug)}\"");
+                    if (SocialSignIn(tenant, platform) is { } social) sb.AppendLine($"      Tenant__SocialSignIn: \"{social}\"");
                     // The native till and kitchen apps: the host a tablet connects to, and where it downloads them
                     sb.AppendLine($"      Tenant__ApiUrl: \"{hosts.ApiUrl}\"");
                     sb.AppendLine($"      Tenant__AppsUrl: \"{platform.AppsUrl}\"");

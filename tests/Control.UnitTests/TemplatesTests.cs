@@ -81,6 +81,8 @@ public sealed class TemplatesTests
     private static PlatformOptions WithSocial(bool google = true, bool apple = true) => new()
     {
         Domain = "ninja.app",
+        KeycloakPublicUrl = "https://auth.ninja.app",
+        KeycloakInternalUrl = "http://keycloak:8080",
         Social = new SocialOptions
         {
             Google = google ? new SocialProviderOptions { ClientId = "g-id.apps.googleusercontent.com", ClientSecret = "g-secret" } : new(),
@@ -122,6 +124,70 @@ public sealed class TemplatesTests
         // Half a provider is no provider
         var halfGoogle = new PlatformOptions { Social = new SocialOptions { Google = new SocialProviderOptions { ClientId = "g-id" } } };
         Assert.AreEqual(0, Templates.SocialProviders(halfGoogle).Count);
+    }
+
+    // The browser half: the platform's apps in the hub realm, shown there, and each café's realm
+    // signing in through its own client in the hub (docs/social-auth-multi-tenant.md)
+    [TestMethod]
+    public void The_hub_shows_the_platform_apps_and_never_stops_a_person_to_review_a_profile()
+    {
+        foreach (var provider in Templates.HubProviders(WithSocial()).Select(p => p!.AsObject()))
+        {
+            Assert.IsFalse(provider["hideOnLogin"]!.GetValue<bool>(), "the hub is where the browser is sent");
+            Assert.AreEqual("off", provider["updateProfileFirstLoginMode"]!.GetValue<string>());
+        }
+        var hub = Templates.HubRealm();
+        Assert.AreEqual(TenantNaming.HubRealm, hub["realm"]!.GetValue<string>());
+        Assert.IsFalse(hub["registrationAllowed"]!.GetValue<bool>());
+        Assert.IsTrue(hub["duplicateEmailsAllowed"]!.GetValue<bool>(), "the same address at Google and Apple is two pass-throughs, not a link prompt");
+    }
+
+    [TestMethod]
+    public void A_cafes_hub_client_hands_back_only_to_its_own_realm_and_goes_straight_to_its_provider()
+    {
+        var client = Templates.HubClient("blue", "google", "s3cret", "flow-1", WithSocial());
+        Assert.AreEqual("blue-google", client["clientId"]!.GetValue<string>());
+        Assert.AreEqual("s3cret", client["secret"]!.GetValue<string>());
+        Assert.IsFalse(client["publicClient"]!.GetValue<bool>());
+        var redirects = client["redirectUris"]!.AsArray().Select(r => r!.GetValue<string>()).ToArray();
+        CollectionAssert.AreEqual(new[] { "https://auth.ninja.app/realms/blue/broker/ninja-google/endpoint" }, redirects);
+        Assert.AreEqual("flow-1", client["authenticationFlowBindingOverrides"]!["browser"]!.GetValue<string>());
+    }
+
+    [TestMethod]
+    public void A_cafes_broker_sends_the_browser_to_the_hub_and_keycloak_to_it_on_the_network()
+    {
+        var broker = Templates.TenantBroker("blue", "apple", "s3cret", WithSocial());
+        var config = broker["config"]!.AsObject();
+        Assert.AreEqual("ninja-apple", broker["alias"]!.GetValue<string>(), "apart from the hidden apple that vouches for the native apps");
+        Assert.AreEqual("Apple", broker["displayName"]!.GetValue<string>());
+        Assert.IsFalse(broker["hideOnLogin"]!.GetValue<bool>());
+        Assert.AreEqual("blue-apple", config["clientId"]!.GetValue<string>());
+        Assert.AreEqual("s3cret", config["clientSecret"]!.GetValue<string>());
+        Assert.AreEqual($"https://auth.ninja.app/realms/{TenantNaming.HubRealm}/protocol/openid-connect/auth", config["authorizationUrl"]!.GetValue<string>());
+        Assert.AreEqual($"http://keycloak:8080/realms/{TenantNaming.HubRealm}/protocol/openid-connect/token", config["tokenUrl"]!.GetValue<string>());
+        Assert.AreEqual($"http://keycloak:8080/realms/{TenantNaming.HubRealm}/protocol/openid-connect/certs", config["jwksUrl"]!.GetValue<string>());
+    }
+
+    [TestMethod]
+    public void The_stack_tells_the_apps_which_providers_a_cafe_has_and_nothing_when_off()
+    {
+        var tenant = Blue();
+        StringAssert.Contains(Templates.Compose(tenant, TenantHosts.For(tenant, WithSocial()), WithSocial()), "Tenant__SocialSignIn: \"google=ninja-google,apple=ninja-apple\"");
+        Assert.AreEqual("google=ninja-google", Templates.SocialSignIn(tenant, WithSocial(apple: false)));
+
+        tenant.SocialSignIn = false;
+        Assert.IsNull(Templates.SocialSignIn(tenant, WithSocial()));
+        Assert.IsFalse(Templates.Compose(tenant, TenantHosts.For(tenant, WithSocial()), WithSocial()).Contains("Tenant__SocialSignIn"));
+        // No app on the platform: nothing to offer, whatever the café chose
+        Assert.IsNull(Templates.SocialSignIn(Blue(), Platform));
+    }
+
+    [TestMethod]
+    public void No_cafe_can_take_the_hubs_name()
+    {
+        Assert.IsFalse(TenantNaming.IsValidSlug(TenantNaming.HubRealm));
+        Assert.IsFalse(TenantNaming.IsValidSlug("hub"));
     }
 
     [TestMethod]

@@ -4066,6 +4066,13 @@
               "string"
             ],
             "description": "The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand"
+          },
+          "socialSignIn": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on"
           }
         }
       },
@@ -5301,6 +5308,11 @@
               "string"
             ],
             "description": "The dock's colour: neutral (black); null a deep shade of the brand colour"
+          },
+          "socialSignIn": {
+            "type": "boolean",
+            "description": "Whether customers may sign in with Google and Apple",
+            "default": true
           }
         }
       },
@@ -6018,6 +6030,13 @@
               "string"
             ],
             "description": "The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it"
+          },
+          "socialSignIn": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether customers may sign in with Google and Apple; null leaves it"
           }
         }
       },

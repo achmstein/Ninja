@@ -1,12 +1,31 @@
 # Social sign-in across tenants
 
-**Status 2026-09-23:** the native half is built — a stamped tenant's realm now
-gets the platform's shared Google and Apple providers, hidden from the login
-page, so `client_app`'s token exchange works on any tenant. The browser half
-(`kc_idp_hint` in `client_web`) is not: it needs a redirect URI per realm,
-registered by hand, and the hub realm below is the way out of that. Until it
-exists, the social buttons in the browser app work on Chillax and nowhere
-else.
+**Status 2026-09-27:** both halves are built. The native half (2026-09-23):
+every stamped realm carries the platform's shared Google and Apple providers,
+hidden, so `client_app`'s token exchange works on any tenant. The browser
+half: the `ninja-hub` realm holds the same apps with one redirect URI each,
+and each café's realm signs in through it as `ninja-google` / `ninja-apple`.
+Google and Apple are a per-café switch in the control plane (on by default);
+the brand's `auth.social` tells both apps which buttons to show.
+
+## Setting it up (once, for the platform)
+
+1. The platform's `.env` (`PLATFORM_SOCIAL_*` secrets in `deploy-platform.yml`)
+   carries the shared apps: `Platform__Social__Google__ClientId/ClientSecret`,
+   `Platform__Social__Apple__ClientId` (the Services ID) and `…__ClientSecret`
+   (the JWT signed with the .p8 key).
+2. **Google Cloud console**, the OAuth client: one authorised redirect URI,
+   `https://auth.<platform-domain>/realms/ninja-hub/broker/google/endpoint`.
+3. **Apple developer**, the Services ID: domain `auth.<platform-domain>`, return
+   URL `https://auth.<platform-domain>/realms/ninja-hub/broker/apple/endpoint`.
+4. Nothing per café. Provisioning (and an upgrade, and turning the switch on)
+   makes the hub if it is missing, the café's two clients in it, and the café
+   realm's `ninja-google` / `ninja-apple`. Destroying a café removes its clients.
+
+A café already running gets the hub the next time it is provisioned or
+upgraded, or when its switch is turned off and on again (the `social` job).
+A rotated Apple secret reaches the hub the same way: on the next provision,
+upgrade or `social` job of any café.
 
 Before this, a stamped realm had no identity providers at all, and Chillax's
 provider credentials — still committed to this repository — were the only
@@ -141,14 +160,23 @@ which is correct — a customer of one café is not a customer of another.
 | Called from the realm step, on a fresh realm and on one that already exists | `src/Control.API/Platform/Provisioner.cs` |
 | `SOCIAL_*` through the deploy: the box's `.env`, the `control-api` service's env, and the four `PLATFORM_SOCIAL_*` secrets | `deploy/platform/docker-compose.yml`, `deploy/platform/.env.example`, `.github/workflows/deploy-platform.yml` |
 
-Still to do — the browser half:
+**Built 2026-09-27** — the browser half:
 
 | Change | Where |
 |---|---|
-| The hub realm: real providers, one redirect URI each | new template beside `platform-realm.json` |
-| A hub client per tenant and an OIDC provider pointing at it, in the same Ensure | `Infra.cs` |
-| Rotate against the hub realm, not `chillax` | `.github/workflows/rotate-apple-secret.yml:41` |
-| Bring already-imported realms up, as Keycloak imports a realm once | a script beside `deploy/keycloak-assistant.py` |
+| The hub realm (`ninja-hub`, a reserved slug): the apps shown, no registration, nothing required in its user profile, duplicate emails allowed; a straight-to-provider browser flow each (`hub-google`, `hub-apple`: the identity-provider redirector alone, no cookie step) | `Templates.HubRealm`/`HubProviders`, `KeycloakRestAdmin.EnsureHubAsync` |
+| A café's client in the hub per provider (`<slug>-google`, `<slug>-apple`), its one redirect the café realm's broker endpoint, bound to the provider's flow; the café realm's `ninja-google`/`ninja-apple` (plain OIDC, shown) with the same secret | `Templates.HubClient`/`TenantBroker`, `EnsureTenantBrokersAsync` |
+| Per-café switch `Tenant.SocialSignIn` (on by default); off removes the clients and providers; the `social` job applies a change; destroy removes the clients | `Model/Tenant.cs`, `Provisioner.SocialAsync`, the record's edit and the new-tenant form |
+| The realm brought up to date on an upgrade too, before the new stack tells the apps | `Provisioner.UpgradeAsync` |
+| `Tenant__SocialSignIn` ("google=ninja-google,apple=ninja-apple") into Tenant.API, out as `auth.social` | `Templates.Compose`, `TenantAuth.SocialOf` |
+| The web app's buttons only for the café's providers, each with its hint; the phone app's only for its providers | `sign-in-options.tsx`, `login_screen.dart` |
+| The login theme's Google and Apple marks on `ninja-google`/`ninja-apple` | `themes/ninja/login/resources/css/ninja.css` |
+
+Still to do:
+
+| Change | Where |
+|---|---|
+| Rotate against the platform's secret, not `chillax` | `.github/workflows/rotate-apple-secret.yml:41` |
 
 ## To confirm before building
 

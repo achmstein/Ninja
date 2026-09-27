@@ -69,6 +69,8 @@ public static partial class ControlApi
         tenant.ArabicStyle = arabicStyle;
         tenant.DefaultTheme = defaultTheme;
         tenant.Slab = slab;
+        var socialChanged = request.SocialSignIn is { } social && social != tenant.SocialSignIn;
+        if (socialChanged) tenant.SocialSignIn = request.SocialSignIn!.Value;
         // The kind of place is a label on a running café: its menu, switches and guest ordering stay as they are
         if (request.BusinessType is { } business) tenant.BusinessType = business;
         await context.SaveChangesAsync(ct);
@@ -81,6 +83,10 @@ public static partial class ControlApi
         // A café's own domain reaches the edge straight away
         if (domainChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "edge"), ct);
+
+        // Google and Apple on or off: its realm and hub clients follow, and the apps are told
+        if (socialChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
+            await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "social"), ct);
 
         // A running café's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
         if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, ct) is { } refused)
@@ -143,7 +149,8 @@ public record UpdateTenantRequest(
     [property: Description("standard or egyptian; null leaves it")] string? ArabicStyle = null,
     [property: Description("light, dark or device; null leaves it")] string? DefaultTheme = null,
     [property: Description("The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
-    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null);
+    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
+    [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null);
 
 /// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
 public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);

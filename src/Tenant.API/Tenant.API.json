@@ -860,6 +860,15 @@
         "properties": {
           "authority": {
             "type": "string"
+          },
+          "social": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TenantSocialProvider"
+            }
           }
         }
       },
@@ -1143,6 +1152,21 @@
                 "$ref": "#/components/schemas/AssistantDto"
               }
             ]
+          }
+        }
+      },
+      "TenantSocialProvider": {
+        "required": [
+          "provider",
+          "hint"
+        ],
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
           }
         }
       },

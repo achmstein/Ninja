@@ -170,6 +170,7 @@ public static partial class ControlApi
             ArabicStyle = arabicStyle,
             DefaultTheme = defaultTheme,
             Slab = slab,
+            SocialSignIn = request.SocialSignIn ?? true,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -461,7 +462,8 @@ public record CreateTenantRequest(
     BusinessType BusinessType = BusinessType.Other,
     string? ArabicStyle = null,
     string? DefaultTheme = null,
-    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null);
+    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null,
+    [property: Description("Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on")] bool? SocialSignIn = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -546,7 +548,8 @@ public record TenantDetail(
     [property: Description("The services the plan stamps (catalog, ordering, …): a module's own service only with its module")] IReadOnlyList<string> Services,
     BusinessType BusinessType = BusinessType.Other,
     [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null,
-    [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null)
+    [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null,
+    [property: Description("Whether customers may sign in with Google and Apple")] bool SocialSignIn = true)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -565,7 +568,8 @@ public record TenantDetail(
             PlanCatalog.Services(t),
             t.BusinessType,
             t.DefaultTheme,
-            t.Slab);
+            t.Slab,
+            t.SocialSignIn);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

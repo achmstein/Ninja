@@ -456,6 +456,11 @@ class TenantBrand {
   /// was not told
   final String? customerUrl;
 
+  /// The providers customers may sign in with ("google", "apple"); null when
+  /// the stack does not say (an older one, or a brand cached before it did),
+  /// which keeps both, as the app always offered them
+  final Set<String>? socialProviders;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -469,6 +474,7 @@ class TenantBrand {
     this.features = TenantFeatures.all,
     this.version = 0,
     this.customerUrl,
+    this.socialProviders,
   });
 
   /// What shows until anything is known: a neutral name, no color, no logo,
@@ -495,8 +501,14 @@ class TenantBrand {
           : TenantFeatures.all,
       version: (json['version'] as num?)?.toInt() ?? 0,
       customerUrl: json['customerUrl'] as String?,
+      socialProviders: _social(json['auth'] is Map ? (json['auth'] as Map)['social'] : null),
     );
   }
+
+  /// The API's auth.social ([{provider, hint}]) as the names the app offers
+  static Set<String>? _social(Object? value) => value is List
+      ? {for (final p in value) if (p is Map && p['provider'] is String) p['provider'] as String}
+      : null;
 
   /// The cached shape (what [toJson] wrote); a cache from an older build
   /// simply lacks the newer keys
@@ -515,6 +527,7 @@ class TenantBrand {
             : TenantFeatures.all,
         version: (json['version'] as num?)?.toInt() ?? 0,
         customerUrl: json['customerUrl'] as String?,
+        socialProviders: json['social'] is List ? {for (final p in json['social'] as List) if (p is String) p} : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -530,6 +543,7 @@ class TenantBrand {
         'features': features.toJson(),
         'version': version,
         'customerUrl': customerUrl,
+        'social': socialProviders?.toList(),
       };
 
   Color? get primaryColor => _color(primaryColorHex);

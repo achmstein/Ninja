@@ -1,4 +1,5 @@
 import { useAuth } from "react-oidc-context";
+import { useBrand } from "@/lib/brand";
 import { useTheme } from "@/context/theme-provider";
 import { useLanguage } from "@/lib/i18n";
 import { loginPageParams } from "@/lib/oidc";
@@ -51,11 +52,16 @@ function AppleIcon() {
 /**
  * Branded sign-in entry (option 3): Google and Apple skip the Keycloak form
  * entirely via kc_idp_hint — the user only sees the native provider prompt.
- * Email goes to the themed Keycloak page.
+ * Only the ones the café has on (the brand's auth.social), each sent to the
+ * provider its realm names for it (a stamped café's goes through the
+ * platform's hub). Email goes to the themed Keycloak page.
  */
 export function SignInOptions() {
   const auth = useAuth();
   const t = useT();
+  const social = useBrand()?.auth?.social ?? [];
+  const google = social.find((p) => p.provider === "google");
+  const apple = social.find((p) => p.provider === "apple");
   const { resolvedTheme } = useTheme();
   const language = useLanguage((state) => state.language);
 
@@ -76,28 +82,34 @@ export function SignInOptions() {
   // flex items-center parents this also renders in.
   return (
     <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
-      <Button
-        size="lg"
-        variant="outline"
-        className="w-full rounded-pill"
-        onClick={() => signIn("google")}
-      >
-        <GoogleIcon />
-        {t("continueWithGoogle")}
-      </Button>
-      <Button
-        size="lg"
-        className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill"
-        onClick={() => signIn("apple")}
-      >
-        <AppleIcon />
-        {t("continueWithApple")}
-      </Button>
-      <div className="text-muted-foreground flex items-center gap-3 px-2 text-xs">
-        <div className="bg-border h-px flex-1" />
-        {t("orContinueWith")}
-        <div className="bg-border h-px flex-1" />
-      </div>
+      {google && (
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full rounded-pill"
+          onClick={() => signIn(google.hint)}
+        >
+          <GoogleIcon />
+          {t("continueWithGoogle")}
+        </Button>
+      )}
+      {apple && (
+        <Button
+          size="lg"
+          className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill"
+          onClick={() => signIn(apple.hint)}
+        >
+          <AppleIcon />
+          {t("continueWithApple")}
+        </Button>
+      )}
+      {(google || apple) && (
+        <div className="text-muted-foreground flex items-center gap-3 px-2 text-xs">
+          <div className="bg-border h-px flex-1" />
+          {t("orContinueWith")}
+          <div className="bg-border h-px flex-1" />
+        </div>
+      )}
       <Button
         size="lg"
         variant="secondary"

@@ -248,7 +248,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         AssertShape(ComposeOnDisk(), "loyalty", "accounts");
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
     }
 
     /// <summary>Up to Pro: every service is stamped and no queue is touched; down to Free: five go, with their queues.</summary>
@@ -334,7 +334,7 @@ public sealed class ProvisionerTests
     {
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         Assert.AreEqual("v1", _tenant.PreviousImageTag);
@@ -388,7 +388,7 @@ public sealed class ProvisionerTests
 
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status, "the café is back on what worked");
         Assert.AreEqual("v1", _tenant.ImageTag);
         Assert.IsNull(_tenant.PreviousImageTag, "the tag that failed is nothing to go back to");
@@ -405,7 +405,7 @@ public sealed class ProvisionerTests
 
         await _provisioner.UpgradeAsync(_tenant.Id, "nope", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "stack:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v1", _tenant.ImageTag);
         Assert.AreEqual(

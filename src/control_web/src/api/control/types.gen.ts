@@ -187,6 +187,10 @@ export type CreateTenantRequest = {
      * The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand
      */
     slab?: null | string;
+    /**
+     * Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on
+     */
+    socialSignIn?: null | boolean;
 };
 
 export type ExtendRequest = {
@@ -450,6 +454,10 @@ export type TenantDetail = {
      * The dock's colour: neutral (black); null a deep shade of the brand colour
      */
     slab?: null | string;
+    /**
+     * Whether customers may sign in with Google and Apple
+     */
+    socialSignIn?: boolean;
 };
 
 export type TenantHostsDto = {
@@ -598,6 +606,10 @@ export type UpdateTenantRequest = {
      * The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it
      */
     slab?: null | string;
+    /**
+     * Whether customers may sign in with Google and Apple; null leaves it
+     */
+    socialSignIn?: null | boolean;
 };
 
 export type UpgradeRequest = {

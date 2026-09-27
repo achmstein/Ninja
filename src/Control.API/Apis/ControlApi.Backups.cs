@@ -93,6 +93,7 @@ public static partial class ControlApi
             Plan = source.Plan,
             PrimaryColor = source.PrimaryColor,
             Slab = source.Slab,
+            SocialSignIn = source.SocialSignIn,
             OwnerEmail = Clean(request.OwnerEmail)?.ToLowerInvariant() ?? source.OwnerEmail,
             ContactName = source.ContactName,
             Phone = source.Phone,

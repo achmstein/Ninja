@@ -8,6 +8,7 @@ import {
 } from '@/api/control/@tanstack/react-query.gen'
 import { ColorField } from '@/components/brand/color-field'
 import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
+import { SocialField } from '@/components/brand/social-field'
 import {
   fromLocalizedValue,
   LocalizedInput,
@@ -89,6 +90,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [name, setName] = useState(toLocalizedValue({ en: tenant.nameEn, ar: tenant.nameAr }))
   const [primaryColor, setPrimaryColor] = useState(tenant.primaryColor ?? '')
   const [dock, setDock] = useState<Dock>(dockOf(tenant.slab))
+  const [social, setSocial] = useState(tenant.socialSignIn ?? true)
   const [customerDomain, setCustomerDomain] = useState(tenant.customerDomain ?? '')
   const [contactName, setContactName] = useState(tenant.record.contactName ?? '')
   const [phone, setPhone] = useState(tenant.record.phone ?? '')
@@ -149,6 +151,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         nameAr: localized.ar,
         primaryColor: primaryColor ? primaryColor.toLowerCase() : null,
         slab: dock,
+        socialSignIn: social,
         customerDomain: customerDomain.trim() || null,
         contactName: contactName.trim() || null,
         phone: phone.trim() || null,
@@ -189,6 +192,9 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
           onChange={setPrimaryColor}
         />
         <DockField value={dock} onChange={setDock} color={primaryColor} />
+        <div className='sm:col-span-2'>
+          <SocialField id='record-social' checked={social} onChange={setSocial} />
+        </div>
         <div className='grid gap-2'>
           <Label htmlFor='record-domain'>{t('customerDomain')}</Label>
           <Input

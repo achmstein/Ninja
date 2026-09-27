@@ -552,7 +552,25 @@ public record AssistantDto(string? Tone, string? Manner, string? Language, strin
 }
 
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
-public record TenantAuth(string Authority);
+/// <param name="Social">The providers customers may sign in with (Google, Apple), each with the hint the browser app sends for it; empty when the café has them off.</param>
+public record TenantAuth(string Authority, IReadOnlyList<TenantSocialProvider>? Social = null)
+{
+    /// <summary>
+    /// The stack's Tenant:SocialSignIn ("google=ninja-google,apple=ninja-apple"), as the apps read it:
+    /// each provider and the Keycloak alias the browser is sent to for it. Anything malformed is left out.
+    /// </summary>
+    public static IReadOnlyList<TenantSocialProvider> SocialOf(string? setting)
+        => string.IsNullOrWhiteSpace(setting)
+            ? []
+            : [.. setting.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(pair => pair.Split('=', 2, StringSplitOptions.TrimEntries))
+                .Where(p => p.Length == 2 && p[0] is "google" or "apple" && p[1].Length > 0)
+                .Select(p => new TenantSocialProvider(p[0], p[1]))];
+}
+
+/// <param name="Provider">google or apple: which button, and which native sign-in the phone apps use.</param>
+/// <param name="Hint">The Keycloak alias the browser app sends as kc_idp_hint.</param>
+public record TenantSocialProvider(string Provider, string Hint);
 
 /// <param name="LogoUrl">The square mark, light scheme; null when none is uploaded (the icons are then a tile in the brand color).</param>
 /// <param name="LogoDarkUrl">The mark for dark backgrounds; null falls back to <paramref name="LogoUrl"/>.</param>
@@ -580,9 +598,9 @@ public record TenantResponse(
     AssistantDto? Assistant = null)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
-        => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
+        => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"], configuration["Tenant:SocialSignIn"]);
 
-    public static TenantResponse From(Model.Tenant t, string? authUrl, string? apiUrl = null, string? appsUrl = null)
+    public static TenantResponse From(Model.Tenant t, string? authUrl, string? apiUrl = null, string? appsUrl = null, string? socialSignIn = null)
     {
         var v = t.Version;
         static string? Url(string? url) => string.IsNullOrWhiteSpace(url) ? null : url.TrimEnd('/');
@@ -590,7 +608,7 @@ public record TenantResponse(
             t.Name,
             t.PrimaryColor,
             t.CustomerUrl,
-            Url(authUrl) is { } authority ? new TenantAuth(authority) : null,
+            Url(authUrl) is { } authority ? new TenantAuth(authority, TenantAuth.SocialOf(socialSignIn)) : null,
             Url(apiUrl),
             Url(appsUrl),
             t.Image(TenantImageSlots.Logo) is { } logo ? TenantWordmark.ImageUrl(TenantImageSlots.Logo, logo) : null,

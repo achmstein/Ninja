@@ -41,6 +41,8 @@ public static partial class TenantNaming
     private static readonly HashSet<string> Reserved = new(StringComparer.OrdinalIgnoreCase)
     {
         "www", "api", "auth", "admin", "pos", "kds", "app", "control", "ninja", "platform", "mail", "status",
+        // The social hub's realm lives beside the tenants' in the same Keycloak
+        HubRealm, "hub",
     };
 
     public static bool IsValidSlug(string? slug)
@@ -69,6 +71,25 @@ public static partial class TenantNaming
     public static string DrillSlug(string slug) => $"drill-{slug}"[..Math.Min(24, slug.Length + 6)].TrimEnd('-');
 
     public static string Realm(string slug) => slug;
+
+    /// <summary>
+    /// The realm the platform's Google and Apple apps are registered against, with one redirect URI each:
+    /// every café's browser sign-in goes through it (docs/social-auth-multi-tenant.md). Customers are
+    /// still the café's own, in its realm; the hub only vouches for who they are.
+    /// </summary>
+    public const string HubRealm = "ninja-hub";
+
+    /// <summary>The café's client in the hub for one provider ("blue-google"), each going straight to it.</summary>
+    public static string HubClient(string slug, string provider) => $"{slug}-{provider}";
+
+    /// <summary>The hub's browser flow that sends a client straight to one provider ("hub-google").</summary>
+    public static string HubFlow(string provider) => $"hub-{provider}";
+
+    /// <summary>
+    /// The café realm's provider that signs in through the hub ("ninja-google"): named apart from the
+    /// hidden "google" and "apple", which only vouch for the native apps' tokens.
+    /// </summary>
+    public static string BrokerAlias(string provider) => $"ninja-{provider}";
 
     public static string VHost(string slug) => slug;
 

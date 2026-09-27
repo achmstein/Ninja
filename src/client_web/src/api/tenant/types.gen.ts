@@ -57,6 +57,7 @@ export type ProblemDetails = {
 
 export type TenantAuth = {
     authority: string;
+    social?: null | Array<TenantSocialProvider>;
 };
 
 export type TenantFeatures = {
@@ -118,6 +119,11 @@ export type TenantResponse = {
     guestOrdersAnywhere?: boolean;
     cover?: null | TenantWordmark;
     assistant?: null | AssistantDto;
+};
+
+export type TenantSocialProvider = {
+    provider: string;
+    hint: string;
 };
 
 export type TenantThemeDarkDto = {
