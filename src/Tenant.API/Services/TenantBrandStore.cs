@@ -28,18 +28,20 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
         // Regular launcher icons: a bit of air so rounded masks keep the whole logo
         ["icon-192.png"] = new(192, 0.76f),
         ["icon-512.png"] = new(512, 0.76f),
-        // Maskable: Android may crop to a circle of 80% of the side; keep the logo inside it
-        ["maskable-512.png"] = new(512, 0.68f),
+        // Maskable: Android may crop to a circle of 80% of the side; the whole logo, corners too, sits inside a
+        // circle a little smaller, so a square logo is not cut at its corners and keeps some air all round
+        ["maskable-512.png"] = new(512, 0.72f, Round: true),
         // iOS home screen: iOS paints black behind anything transparent, so white goes first
         ["apple-touch-icon.png"] = new(180, 0.76f),
         // The browser tab: the mark alone, on whatever the tab bar is
         ["favicon.png"] = new(48, 0.84f, Opaque: false),
     };
 
-    public sealed record IconSpec(int Size, float Fill, bool Opaque = true);
+    /// <param name="Round">Fill is a circle's diameter the logo fits inside (its corners too), rather than a square's side.</param>
+    public sealed record IconSpec(int Size, float Fill, bool Opaque = true, bool Round = false);
 
     /// <summary>Bumped when the icons are drawn differently; a stack whose icons an older renderer cut cuts them again at boot.</summary>
-    public const int IconRenderer = 2;
+    public const int IconRenderer = 3;
     private const string IconRendererFile = "icons.renderer";
 
     private const int MaxLogoSide = 1024;
@@ -180,7 +182,10 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
         canvas.Clear(spec.Opaque ? SKColors.White : SKColors.Transparent);
 
         var box = spec.Size * spec.Fill;
-        var scale = Math.Min(box / logo.Width, box / logo.Height);
+        var scale = spec.Round
+            // The logo's diagonal is the circle's diameter
+            ? box / MathF.Sqrt(logo.Width * (float)logo.Width + logo.Height * (float)logo.Height)
+            : Math.Min(box / logo.Width, box / logo.Height);
         var w = logo.Width * scale;
         var h = logo.Height * scale;
         var dest = SKRect.Create((spec.Size - w) / 2f, (spec.Size - h) / 2f, w, h);

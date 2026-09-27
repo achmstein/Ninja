@@ -62,6 +62,22 @@ public sealed class TenantBrandStoreTests
     }
 
     [TestMethod]
+    public async Task A_square_logo_keeps_its_corners_inside_the_circle_Android_masks_to()
+    {
+        // A mark filling its whole canvas: a square logo with its own background
+        await _store.SaveAsync(TenantImageSlots.Logo, PngFile(300, 300, SKRect.Create(0, 0, 300, 300)), CancellationToken.None);
+
+        using var icon = SKBitmap.Decode(_store.PathOf("maskable-512.png"));
+        // Android's safe zone: a circle of 80% of the side. Just inside it along the diagonal is still white,
+        // so the logo's corners sit within the circle, air round them
+        var inset = (int)(512 / 2f - 0.4f * 512 / MathF.Sqrt(2)) + 4;
+        Assert.AreEqual(SKColors.White, icon.GetPixel(inset, inset));
+        Assert.AreEqual(SKColors.White, icon.GetPixel(511 - inset, 511 - inset));
+        var centre = icon.GetPixel(256, 256);
+        Assert.IsTrue(centre.Red > 200 && centre.Green < 60, $"centre was {centre}");
+    }
+
+    [TestMethod]
     public async Task Icons_cut_by_an_older_renderer_are_cut_again_at_boot_and_current_ones_left_alone()
     {
         await _store.SaveAsync(TenantImageSlots.Logo, PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
