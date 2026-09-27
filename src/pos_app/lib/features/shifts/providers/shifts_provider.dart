@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../models/shift.dart';
 import '../services/shifts_service.dart';
@@ -75,10 +76,13 @@ class BranchFlags {
   final bool takingOrders;
   final bool takingReservations;
 
-  const BranchFlags({required this.branchId, required this.known, required this.takingOrders, required this.takingReservations});
+  /// Whether the café takes reservations at all; without them its switch is not shown and never pauses it
+  final bool reservations;
+
+  const BranchFlags({required this.branchId, required this.known, required this.takingOrders, required this.takingReservations, this.reservations = true});
 
   /// Either switch is off — the store is not fully trading
-  bool get paused => known && !(takingOrders && takingReservations);
+  bool get paused => known && !(takingOrders && (takingReservations || !reservations));
 }
 
 final branchFlagsProvider = Provider<BranchFlags>((ref) {
@@ -89,5 +93,6 @@ final branchFlagsProvider = Provider<BranchFlags>((ref) {
     known: branch != null,
     takingOrders: branch?.isOrderingEnabled ?? true,
     takingReservations: branch?.isReservationsEnabled ?? true,
+    reservations: ref.watch(featuresProvider).reservations,
   );
 });

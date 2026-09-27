@@ -1,4 +1,5 @@
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
+import { useFeatures } from '@/lib/brand'
 import { Switch } from '@/components/ui/switch'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -44,11 +45,13 @@ function FlagRow({ label, on, disabled, onChange, className }: FlagRowProps) {
  * The branch's two customer-facing switches — taking orders, taking
  * reservations — for a mid-day pause. The shift flips both on its own
  * (open → on, close → off); the switches are for in between, so they sit
- * on the shift screen the header chip leads to.
+ * on the shift screen the header chip leads to. A café without reservations
+ * has only the one.
  */
 export function TradingSwitches({ className }: { className?: string }) {
   const t = useT()
   const flags = useBranchFlags()
+  const reservations = useFeatures().reservations
   const disabled = !flags.branch || flags.isPending
 
   return (
@@ -59,13 +62,15 @@ export function TradingSwitches({ className }: { className?: string }) {
         disabled={disabled}
         onChange={flags.setTakingOrders}
       />
-      <FlagRow
-        label={t('takingReservations')}
-        on={flags.takingReservations}
-        disabled={disabled}
-        onChange={flags.setTakingReservations}
-        className='border-t'
-      />
+      {reservations && (
+        <FlagRow
+          label={t('takingReservations')}
+          on={flags.takingReservations}
+          disabled={disabled}
+          onChange={flags.setTakingReservations}
+          className='border-t'
+        />
+      )}
     </div>
   )
 }

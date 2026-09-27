@@ -4,6 +4,7 @@ import {
   updateBranchSettingsMutation,
 } from '@/api/tenant/@tanstack/react-query.gen'
 import { handleServerError } from '@/lib/handle-server-error'
+import { useFeatures } from '@/lib/brand'
 import { useBranchStore } from '@/stores/branch-store'
 
 /**
@@ -30,6 +31,8 @@ export function useBranchFlags() {
   })
 
   const takingOrders = branch?.isOrderingEnabled ?? true
+  // A café without reservations takes none: its switch is not shown, so it never reads as paused
+  const reservations = useFeatures().reservations
   const takingReservations = branch?.isReservationsEnabled ?? true
 
   // Nothing to flip until a branch is active
@@ -44,7 +47,7 @@ export function useBranchFlags() {
     takingOrders,
     takingReservations,
     /** Either switch is off — the store is not fully trading. */
-    paused: !!branch && !(takingOrders && takingReservations),
+    paused: !!branch && !(takingOrders && (takingReservations || !reservations)),
     isPending: update.isPending,
     setTakingOrders: (on: boolean) => flip({ isOrderingEnabled: on }),
     setTakingReservations: (on: boolean) => flip({ isReservationsEnabled: on }),

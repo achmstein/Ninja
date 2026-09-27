@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -10,7 +11,8 @@ import '../providers/shifts_provider.dart';
 /// The branch's two customer-facing switches — taking orders, taking
 /// reservations — for a mid-day pause. The shift flips both on its own
 /// (open → on, close → off); the switches are for in between, so they sit
-/// on the shift screen the header chip leads to.
+/// on the shift screen the header chip leads to. A café without reservations
+/// has only the one.
 class TradingSwitches extends ConsumerStatefulWidget {
   const TradingSwitches({super.key});
 
@@ -37,6 +39,7 @@ class _TradingSwitchesState extends ConsumerState<TradingSwitches> {
     final l10n = AppLocalizations.of(context)!;
     final flags = ref.watch(branchFlagsProvider);
     final disabled = !flags.known || _pending;
+    final reservations = ref.watch(featuresProvider).reservations;
 
     return Container(
       decoration: BoxDecoration(
@@ -53,13 +56,15 @@ class _TradingSwitchesState extends ConsumerState<TradingSwitches> {
             disabled: disabled,
             onChange: (on) => _setFlag('isOrderingEnabled', on),
           ),
-          Container(height: 1, color: theme.colors.border),
-          _FlagRow(
-            label: l10n.takingReservations,
-            on: flags.takingReservations,
-            disabled: disabled,
-            onChange: (on) => _setFlag('isReservationsEnabled', on),
-          ),
+          if (reservations) ...[
+            Container(height: 1, color: theme.colors.border),
+            _FlagRow(
+              label: l10n.takingReservations,
+              on: flags.takingReservations,
+              disabled: disabled,
+              onChange: (on) => _setFlag('isReservationsEnabled', on),
+            ),
+          ],
         ],
       ),
     );
