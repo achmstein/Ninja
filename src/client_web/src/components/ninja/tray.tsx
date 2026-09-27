@@ -5,6 +5,7 @@ import { lineKey, useCart, type CartLine } from '@/lib/cart'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { toast } from '@/lib/toast'
+import { ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
@@ -510,6 +511,9 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
  * One line of the order: swipe it either way to take it off, or step it up
  * and down. Its photo is the landing place of its circle from the dock.
  */
+/** How long a removed line takes to fold shut, ms */
+const FOLD_MS = 240
+
 function SwipeLine({ line }: { line: CartLine }) {
   const t = useT()
   const seatShown = useContext(SeatShown)
@@ -531,7 +535,11 @@ function SwipeLine({ line }: { line: CartLine }) {
   const remove = (direction: number) => {
     setLeaving(true)
     const width = row.current?.offsetWidth ?? 320
-    animate(x, direction * width, { duration: 0.18, ease: 'easeIn' }).then(() => setFolding(true))
+    // On timers, not the animations' promises: a drag let go snaps back to its origin at the same
+    // moment and cuts the slide short, and a cut animation never says it finished
+    animate(x, direction * width, { duration: 0.18, ease: 'easeIn' })
+    window.setTimeout(() => setFolding(true), 180)
+    window.setTimeout(removed, 180 + FOLD_MS)
   }
 
   const removed = () => {
@@ -545,8 +553,7 @@ function SwipeLine({ line }: { line: CartLine }) {
       layout='position'
       transition={SPRING}
       initial={false}
-      animate={folding ? { height: 0, opacity: 0 } : undefined}
-      onAnimationComplete={() => folding && removed()}
+      animate={folding ? { height: 0, opacity: 0, transition: { duration: FOLD_MS / 1000, ease: ease.exit } } : undefined}
       className='relative overflow-hidden rounded-2xl'
     >
       <motion.div aria-hidden style={{ opacity: warn }} className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white'>
@@ -557,10 +564,11 @@ function SwipeLine({ line }: { line: CartLine }) {
         ref={row}
         style={{ x }}
         drag={leaving ? false : 'x'}
+        // Snapping back is for a swipe that did not go far enough; one that did is left to slide out
+        dragSnapToOrigin={!leaving}
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.9}
-        dragSnapToOrigin
         onDragEnd={(_, info) => {
           const width = row.current?.offsetWidth ?? 0
           if (swipeRemoves(info.offset.x, width, info.velocity.x)) remove(Math.sign(info.offset.x || info.velocity.x) || 1)
