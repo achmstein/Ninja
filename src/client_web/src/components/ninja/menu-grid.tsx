@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import { Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { PressRing } from './deck'
@@ -179,8 +180,8 @@ export function MenuGrid({
               {col.items.map((item) => (
                 <Row
                   key={String(item.id)}
+                  scroller={scroller}
                   item={item}
-                  tone={col.tone}
                   opening={Number(item.id) === openingId}
                   landing={Number(item.id) === landingId}
                   onOpen={open}
@@ -194,7 +195,6 @@ export function MenuGrid({
               <Tile
                 key={String(item.id)}
                 item={item}
-                tone={col.tone}
                 shared={sharedIds.has(Number(item.id))}
                 opening={Number(item.id) === openingId}
                 landing={Number(item.id) === landingId}
@@ -212,7 +212,6 @@ export function MenuGrid({
 
 function Tile({
   item,
-  tone,
   shared,
   opening,
   landing,
@@ -220,7 +219,6 @@ function Tile({
   onQuickAdd,
 }: {
   item: CatalogItemDto
-  tone: DeckColumn['tone']
   /** Its card was on screen in the deck: it morphs from it rather than appearing */
   shared: boolean
   /** Tapped: its card opens out of it and closes back into it */
@@ -261,7 +259,7 @@ function Tile({
         style={{ borderRadius: TILE_RADIUS }}
         className={cn(
           'relative aspect-[4/5] w-full overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
-          !hasPhoto && TONE_CLASS[tone],
+          !hasPhoto && TONE_CLASS.primary,
           soldOut && 'opacity-50 grayscale',
           pressing && 'scale-[0.95]'
         )}
@@ -304,15 +302,16 @@ function Tile({
  * on the row does the same as on a tile.
  */
 function Row({
+  scroller,
   item,
-  tone,
   opening,
   landing,
   onOpen,
   onQuickAdd,
 }: {
+  /** The list's scroller: a row rises in as it scrolls into it */
+  scroller: React.RefObject<HTMLDivElement | null>
   item: CatalogItemDto
-  tone: DeckColumn['tone']
   opening: boolean
   landing: boolean
   onOpen: (item: CatalogItemDto) => void
@@ -334,7 +333,15 @@ function Row({
   })
 
   return (
-    <div data-item={String(item.id)} className={cn('flex items-center gap-4', soldOut && 'opacity-50')}>
+    // Each row rises into place the first time it scrolls into view, as the deck's cards arrive
+    <motion.div
+      data-item={String(item.id)}
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, root: scroller, margin: '0px 0px -8% 0px' }}
+      transition={springSoft}
+      className={cn('flex items-center gap-4', soldOut && 'opacity-50')}
+    >
       <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-4 text-start select-none [-webkit-touch-callout:none]'>
         <motion.div
           ref={photo}
@@ -344,7 +351,7 @@ function Row({
           style={{ borderRadius: 24 }}
           className={cn(
             'relative size-24 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
-            !hasPhoto && TONE_CLASS[tone],
+            !hasPhoto && TONE_CLASS.primary,
             soldOut && 'grayscale',
             pressing && 'scale-[0.94]'
           )}
@@ -354,7 +361,7 @@ function Row({
               <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
             </motion.div>
           ) : (
-            // No photo (or one that would not load): the category's tone with a plate on it, as the classic menu always drew one
+            // No photo (or one that would not load): the café's colour with a plate on it, as the classic menu always drew one
             <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 grid place-items-center'>
               <UtensilsCrossed className='size-8 opacity-40' />
             </motion.div>
@@ -375,11 +382,11 @@ function Row({
           type='button'
           aria-label={t('addToCart')}
           onClick={() => (quick ? onQuickAdd(item, photo.current) : onOpen(item))}
-          className='slab grid size-11 shrink-0 place-items-center rounded-full shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-transform active:scale-90 motion-reduce:transform-none'
+          className='bg-primary text-primary-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-transform active:scale-90 motion-reduce:transform-none'
         >
           <Plus className='size-5' strokeWidth={2.5} />
         </button>
       )}
-    </div>
+    </motion.div>
   )
 }

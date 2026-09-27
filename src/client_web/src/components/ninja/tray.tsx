@@ -15,6 +15,7 @@ import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
 import { HOLD_MS } from './hold'
 import { Odometer } from './odometer'
+import { DishPhoto } from './dish-photo'
 import { HintBubble } from './hint-bubble'
 import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
 import { useHint, useTimeout } from './use-hint'
@@ -360,17 +361,12 @@ export function Tray({
 }
 
 function Thumbs({ summary, shown }: { summary: ReturnType<typeof traySummary>; shown: MotionValue<number> | number }) {
-  const language = useLanguage((s) => s.language)
   return (
     // space-x is logical in Tailwind v4: it overlaps the right way in Arabic without a reverse
     <motion.span className='relative flex items-center -space-x-3' style={{ opacity: shown }}>
       {summary.thumbs.map((thumb) => (
         <span key={thumb.key} data-thumb={thumb.key} className='bg-background/15 ring-foreground relative size-11 shrink-0 overflow-hidden rounded-full ring-2'>
-          {thumb.pictureUrl ? (
-            <img src={thumb.pictureUrl} alt='' className='size-full object-cover' draggable={false} />
-          ) : (
-            <span className='grid size-full place-items-center text-sm font-bold'>{(language === 'ar' && thumb.nameAr ? thumb.nameAr : thumb.name).charAt(0)}</span>
-          )}
+          <DishPhoto src={thumb.pictureUrl} />
         </span>
       ))}
       {summary.more > 0 && (
@@ -432,7 +428,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
       // A circle the whole way, as in the dock and on the row: only its size changes
       style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >
-      {seat.src ? <img src={seat.src} alt='' className='size-full object-cover' draggable={false} /> : seat.label}
+      <DishPhoto src={seat.src} />
     </motion.span>
   )
 }
@@ -567,7 +563,7 @@ function SwipeLine({ line }: { line: CartLine }) {
           className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-base font-bold'
           style={{ opacity: seatShown }}
         >
-          {line.pictureUrl ? <img src={line.pictureUrl} alt='' className='size-full object-cover' draggable={false} /> : name.charAt(0)}
+          <DishPhoto src={line.pictureUrl} />
         </motion.span>
         <span className='min-w-0 flex-1'>
           <span className='block truncate text-sm font-semibold'>{name}</span>

@@ -55,7 +55,6 @@ function ItemPage() {
           {item ? (
             <Tune
               item={item}
-              tone='primary'
               canOrder={canOrder}
               onClose={toMenu}
               onAdd={(result) => {

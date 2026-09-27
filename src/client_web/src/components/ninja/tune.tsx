@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Minus, Plus, X } from 'lucide-react'
+import { Minus, Plus, UtensilsCrossed, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -15,7 +15,7 @@ import {
   withoutOutOfStock,
   type Selections,
 } from '@/components/menu/item-form'
-import { sortedOptions, TONE_CLASS, type DeckColumn } from './deck-model'
+import { sortedOptions, TONE_CLASS } from './deck-model'
 import { Odometer } from './odometer'
 
 export type TuneResult = {
@@ -38,14 +38,12 @@ export type TuneResult = {
  */
 export function Tune({
   item,
-  tone,
   canOrder,
   onClose,
   onAdd,
   leaving = false,
 }: {
   item: CatalogItemDto
-  tone: DeckColumn['tone']
   canOrder: boolean
   onClose: () => void
   onAdd: (result: TuneResult, photo: HTMLElement | null) => void
@@ -116,7 +114,7 @@ export function Tune({
           layoutId={leaving ? undefined : `photo-${item.id}`}
           transition={springOpen}
           style={{ opacity: leaving ? 0 : undefined }}
-          className={cn('relative h-[34svh] max-h-80 overflow-hidden', !hasPhoto && TONE_CLASS[tone])}
+          className={cn('relative h-[34svh] max-h-80 overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
         >
           {hasPhoto ? (
             <img
@@ -127,8 +125,9 @@ export function Tune({
               className={cn('size-full object-cover', soldOut && 'grayscale')}
             />
           ) : (
-            <div className='flex size-full items-end p-6'>
-              <span className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words opacity-90'>{localized(item.name)}</span>
+            // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
+            <div className='grid size-full place-items-center'>
+              <UtensilsCrossed className='size-16 opacity-50' />
             </div>
           )}
         </motion.div>

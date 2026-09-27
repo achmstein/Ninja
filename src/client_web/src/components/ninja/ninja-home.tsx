@@ -18,7 +18,7 @@ import { DOCK_INSET, DOCK_SIDE } from './chrome'
 import { NinjaNav } from './ninja-nav'
 import { NinjaTopBar } from './ninja-top-bar'
 import { Deck, type DeckPosition } from './deck'
-import { buildDeck, canQuickAdd, DECK_TOP, pickUsual, positionOf, quickAddChoice, TONE_CLASS, type DeckColumn } from './deck-model'
+import { buildDeck, canQuickAdd, DECK_TOP, pickUsual, positionOf, quickAddChoice, TONE_CLASS } from './deck-model'
 import { FlightLayer, type Flight } from './flights'
 import { HintBubble } from './hint-bubble'
 import { LiquidTabs } from './liquid-tabs'
@@ -29,7 +29,7 @@ import { Tune, type TuneResult } from './tune'
 import { useHint, useTimeout } from './use-hint'
 
 /** The dish open in place; `leaving` once it was added and its photo has taken off */
-type Tuning = { item: CatalogItemDto; tone: DeckColumn['tone']; leaving?: boolean }
+type Tuning = { item: CatalogItemDto; leaving?: boolean }
 
 /**
  * Ninja: ordering as one surface that never leaves the page. Dishes
@@ -177,7 +177,7 @@ export function NinjaHome({ menu }: HomeProps) {
   const onZoom = useCallback((direction: 'out' | 'in') => (direction === 'out' ? zoomOut() : zoomIn()), [zoomOut, zoomIn])
 
   /** A photo lifts off where it is and flies into the tray; `land` runs as it gets there */
-  const fly = (item: CatalogItemDto, from: HTMLElement | null, tone: DeckColumn['tone'], land: () => void) => {
+  const fly = (item: CatalogItemDto, from: HTMLElement | null, land: () => void) => {
     setAnnounce(t('ninjaAdded', { name: localized(item.name) }))
     const to = target.current?.getBoundingClientRect()
     const box = from?.getBoundingClientRect()
@@ -195,7 +195,7 @@ export function NinjaHome({ menu }: HomeProps) {
         // The first thumbnail's slot
         to: { x: to.x, y: to.y, width: 44, height: 44 },
         src: item.pictureUri ? itemPictureUrl(item.id) : null,
-        toneClass: TONE_CLASS[tone],
+        toneClass: TONE_CLASS.primary,
         radius: cornerOf(from),
         land,
       },
@@ -214,10 +214,6 @@ export function NinjaHome({ menu }: HomeProps) {
       customizations: result.customizations,
     })
 
-  const toneOf = (item: CatalogItemDto): DeckColumn['tone'] => {
-    const position = positionOf(columns, item.id)
-    return position ? columns[position.column].tone : 'primary'
-  }
 
   const onQuickAdd = (item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!canOrder) {
@@ -230,13 +226,13 @@ export function NinjaHome({ menu }: HomeProps) {
     }
     // Something to choose first: open it instead
     if (!canQuickAdd(item)) {
-      setTuning({ item, tone: toneOf(item) })
+      setTuning({ item })
       return
     }
     navigator.vibrate?.(8)
     if (holdHint.pending) holdHint.done()
     const { customizations, unitPrice } = quickAddChoice(item)
-    fly(item, photo, toneOf(item), () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
+    fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
   }
 
   const onKeepHolding = () => {
@@ -283,7 +279,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   columns={columns}
                   focusId={gridFocus.id}
                   sharedIds={gridFocus.shared}
-                  onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
+                  onOpen={(item) => setTuning({ item })}
                   onQuickAdd={onQuickAdd}
                   onZoomIn={() => (classic ? undefined : zoomIn())}
                   landingId={landing}
@@ -301,7 +297,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   start={start}
                   usualId={usual ? Number(usual.id) : null}
                   holdHintId={holdHintId}
-                  onOpen={(item) => setTuning({ item, tone: toneOf(item) })}
+                  onOpen={(item) => setTuning({ item })}
                   onQuickAdd={onQuickAdd}
                   onZoom={onZoom}
                   landingId={landing}
@@ -380,7 +376,6 @@ export function NinjaHome({ menu }: HomeProps) {
                 <Tune
                   key={String(tuning.item.id)}
                   item={tuning.item}
-                  tone={tuning.tone}
                   canOrder={canOrder}
                   onClose={() => setTuning(null)}
                   leaving={tuning.leaving}
@@ -389,7 +384,7 @@ export function NinjaHome({ menu }: HomeProps) {
                     // rather than folding back into its card while a copy flies
                     const item = tuning.item
                     setLanding(Number(item.id))
-                    fly(item, photo, tuning.tone, () => {
+                    fly(item, photo, () => {
                       addLine(item, result)
                       setLanding(null)
                     })

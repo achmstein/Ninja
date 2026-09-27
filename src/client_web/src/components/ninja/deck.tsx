@@ -6,7 +6,6 @@ import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
-import type { PosterTone } from '@/components/menu/home/sections'
 import { canQuickAdd, CARD_RADIUS, columnAt, DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 import { LONG_PRESS_MS, usePress } from './use-press'
 
@@ -183,7 +182,6 @@ export function Deck({
             <DeckCard
               key={String(item.id)}
               item={item}
-              tone={col.tone}
               // Only the column on screen morphs; the rest simply appear, which keeps a zoom cheap on a slow phone
               shared={c === column && Number(item.id) !== landingId}
               landing={Number(item.id) === landingId}
@@ -250,7 +248,6 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
 
 function DeckCard({
   item,
-  tone,
   shared,
   usual,
   hint,
@@ -259,7 +256,6 @@ function DeckCard({
   onQuickAdd,
 }: {
   item: CatalogItemDto
-  tone: PosterTone
   shared: boolean
   /** Its photo is in the air: the card is out of sight until it lands, then fades back */
   landing: boolean
@@ -290,7 +286,7 @@ function DeckCard({
         className='relative isolate h-full w-full cursor-pointer overflow-hidden select-none [-webkit-touch-callout:none]'
         {...handlers}
       >
-        <CardFace item={item} tone={tone} usual={usual} photoRef={photo} layoutPhoto={shared} />
+        <CardFace item={item} usual={usual} photoRef={photo} layoutPhoto={shared} />
         {/* Holding a dish that needs no choosing: a ring fills round a plus, and at the full ring it is in the tray */}
         {quick && (
           <span
@@ -337,16 +333,14 @@ export function PressRing({ pressing, small = false }: { pressing: boolean; smal
   )
 }
 
-/** What a card shows: the photo under a scrim with the name, or, without a photo, the name set big on the category's colour. */
+/** What a card shows: the photo under a scrim with the name, or, without a photo, the name set big on the café's colour. */
 export function CardFace({
   item,
-  tone,
   usual,
   photoRef,
   layoutPhoto,
 }: {
   item: CatalogItemDto
-  tone: PosterTone
   usual?: boolean
   photoRef?: MutableRefObject<HTMLDivElement | null>
   layoutPhoto: boolean
@@ -385,7 +379,7 @@ export function CardFace({
       <motion.div
         ref={photoRef}
         layoutId={layoutPhoto ? `photo-${item.id}` : undefined}
-        className={cn('absolute inset-0 flex flex-col justify-end p-6', TONE_CLASS[tone], soldOut && 'grayscale')}
+        className={cn('absolute inset-0 flex flex-col justify-end p-6', TONE_CLASS.primary, soldOut && 'grayscale')}
       >
         {badges}
         <h2 className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words hyphens-auto'>{name}</h2>
