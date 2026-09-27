@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { NameFields } from '@/components/name-fields'
 import { usePhoneRule } from '@/lib/brand'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
@@ -14,6 +15,7 @@ import {
   changePassword,
   deleteAccount,
   getMyProfile,
+  namePartsOf,
   updateProfile,
 } from '@/lib/services/identity'
 import { useT } from '@/lib/i18n'
@@ -189,7 +191,7 @@ function SettingsPage() {
       <UpdateProfileDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        initialName={myProfileQuery.data?.name ?? name ?? ''}
+        initialName={namePartsOf(myProfileQuery.data, name)}
         initialPhone={myProfileQuery.data?.phoneNumber ?? ''}
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ['my-profile'] })
@@ -213,12 +215,13 @@ function UpdateProfileDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialName: string
+  initialName: [string, string]
   initialPhone: string
   onSaved: () => void
 }) {
   const t = useT()
-  const [name, setName] = useState(initialName)
+  const [first, setFirst] = useState(initialName[0])
+  const [last, setLast] = useState(initialName[1])
   const phonePattern = usePhoneRule((s) => s.pattern)
   // The café's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)
@@ -228,7 +231,7 @@ function UpdateProfileDialog({
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    if (!first.trim() || !last.trim()) {
       setError(t('fillAllFields'))
       return
     }
@@ -239,7 +242,7 @@ function UpdateProfileDialog({
     setError(null)
     setSaving(true)
     try {
-      await updateProfile(name.trim(), phone.trim())
+      await updateProfile(first.trim(), last.trim(), phone.trim())
       toast.success(t('profileUpdatedSuccessfully'))
       onOpenChange(false)
       onSaved()
@@ -256,7 +259,8 @@ function UpdateProfileDialog({
       onOpenChange={(o) => {
         onOpenChange(o)
         if (o) {
-          setName(initialName)
+          setFirst(initialName[0])
+          setLast(initialName[1])
           setPhone(initialPhone)
           setError(null)
         }
@@ -267,14 +271,7 @@ function UpdateProfileDialog({
           <DialogTitle>{t('updateProfile')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='profileName'>{t('name')}</Label>
-            <Input
-              id='profileName'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+          <NameFields idPrefix='profile' first={first} last={last} onFirst={setFirst} onLast={setLast} />
           <div className='space-y-2'>
             <Label htmlFor='profilePhone'>{t('phoneNumber')}</Label>
             <Input

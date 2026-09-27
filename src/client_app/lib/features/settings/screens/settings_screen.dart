@@ -185,7 +185,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (sheetContext) => _UpdateProfileSheet(
         ref: ref,
         l10n: l10n,
-        currentName: authState.name,
+        currentName: authState.nameParts,
         onSuccess: () {
           Navigator.pop(sheetContext);
           showFToast(
@@ -276,7 +276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 class _UpdateProfileSheet extends StatefulWidget {
   final WidgetRef ref;
   final AppLocalizations l10n;
-  final String? currentName;
+  final (String, String) currentName;
   final VoidCallback onSuccess;
 
   const _UpdateProfileSheet({
@@ -291,7 +291,8 @@ class _UpdateProfileSheet extends StatefulWidget {
 }
 
 class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
   String? _error;
@@ -299,9 +300,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.currentName != null) {
-      _nameController.text = widget.currentName!;
-    }
+    _firstNameController.text = widget.currentName.$1;
+    _lastNameController.text = widget.currentName.$2;
     _loadCurrentPhone();
   }
 
@@ -314,16 +314,18 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _handleUpdate() async {
-    final name = _nameController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
     final phone = _phoneController.text.trim();
 
-    if (name.isEmpty || phone.isEmpty) {
+    if (firstName.isEmpty || lastName.isEmpty || phone.isEmpty) {
       setState(() => _error = widget.l10n.fillAllFields);
       return;
     }
@@ -339,7 +341,7 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
     });
 
     try {
-      final success = await widget.ref.read(settingsProvider.notifier).updateProfile(name, phone);
+      final success = await widget.ref.read(settingsProvider.notifier).updateProfile(firstName, lastName, phone);
       if (mounted) {
         if (success) {
           widget.onSuccess();
@@ -428,11 +430,27 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                       const SizedBox(height: 16),
                     ],
 
-                    FTextField(
-                      control: FTextFieldControl.managed(controller: _nameController),
-                      label: AppText(widget.l10n.name),
-                      hint: widget.l10n.yourDisplayName,
-                      enabled: !_isLoading,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: FTextField(
+                            control: FTextFieldControl.managed(controller: _firstNameController),
+                            label: AppText(widget.l10n.firstName),
+                            enabled: !_isLoading,
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FTextField(
+                            control: FTextFieldControl.managed(controller: _lastNameController),
+                            label: AppText(widget.l10n.lastName),
+                            enabled: !_isLoading,
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 

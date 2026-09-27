@@ -25,6 +25,11 @@ class AuthState {
   final String? userId;
   final String? email;
   final String? name;
+
+  /// The name as Keycloak keeps it, once the profile has been read; null
+  /// until then (the token's [name] is the whole of it)
+  final String? firstName;
+  final String? lastName;
   final String? phoneNumber;
 
   const AuthState({
@@ -37,8 +42,19 @@ class AuthState {
     this.userId,
     this.email,
     this.name,
+    this.firstName,
+    this.lastName,
     this.phoneNumber,
   });
+
+  /// First and last name to fill a form with: as read from the profile, or
+  /// the token's whole name split at its first space until it has been
+  (String, String) get nameParts {
+    if (firstName != null || lastName != null) return (firstName ?? '', lastName ?? '');
+    final whole = hasName ? name!.trim() : '';
+    final space = whole.indexOf(' ');
+    return space < 0 ? (whole, '') : (whole.substring(0, space), whole.substring(space + 1).trim());
+  }
 
   /// Whether the user has a valid name (not null, not empty, not an email)
   bool get hasName => name != null && name!.isNotEmpty && !name!.contains('@');
@@ -59,6 +75,8 @@ class AuthState {
     String? userId,
     String? email,
     String? name,
+    String? firstName,
+    String? lastName,
     String? phoneNumber,
   }) {
     return AuthState(
@@ -71,6 +89,8 @@ class AuthState {
       userId: userId ?? this.userId,
       email: email ?? this.email,
       name: name ?? this.name,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
@@ -90,7 +110,9 @@ class AuthService extends Notifier<AuthState> {
   bool _googleSignInInitialized = false;
 
   /// Temporarily stores Apple-provided name (only available on first sign-in)
-  String? _pendingAppleName;
+  /// The name Apple gives on the first sign-in only, sent on once the account is made
+  String? _pendingAppleFirst;
+  String? _pendingAppleLast;
 
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
@@ -199,6 +221,8 @@ class AuthService extends Notifier<AuthState> {
         final effectiveName = (name != null && name.isNotEmpty) ? name : state.name;
         state = state.copyWith(
           name: effectiveName,
+          firstName: (data['firstName'] as String?)?.trim() ?? '',
+          lastName: (data['lastName'] as String?)?.trim() ?? '',
           phoneNumber: phone,
         );
         // Cache for offline access
@@ -212,8 +236,9 @@ class AuthService extends Notifier<AuthState> {
   }
 
   /// Update the cached profile in auth state (called after profile_gate saves).
-  void setProfile(String name, String phoneNumber) {
-    state = state.copyWith(name: name, phoneNumber: phoneNumber);
+  void setProfile(String firstName, String lastName, String phoneNumber) {
+    final name = '$firstName $lastName'.trim();
+    state = state.copyWith(name: name, firstName: firstName, lastName: lastName, phoneNumber: phoneNumber);
     _storage.write(key: _nameKey, value: name);
     _storage.write(key: _phoneKey, value: phoneNumber);
   }
@@ -326,16 +351,12 @@ class AuthService extends Notifier<AuthState> {
         tokenType = 'urn:ietf:params:oauth:token-type:id_token';
 
         // Apple provides name only on first sign-in — capture it now
-        final givenName = credential.givenName;
-        final familyName = credential.familyName;
-        if (givenName != null || familyName != null) {
-          final appleName = [givenName, familyName]
-              .where((p) => p != null && p.isNotEmpty)
-              .join(' ');
-          if (appleName.isNotEmpty) {
-            debugPrint('Apple provided name: $appleName');
-            _pendingAppleName = appleName;
-          }
+        final givenName = credential.givenName?.trim();
+        final familyName = credential.familyName?.trim();
+        if ((givenName?.isNotEmpty ?? false) || (familyName?.isNotEmpty ?? false)) {
+          debugPrint('Apple provided a name');
+          _pendingAppleFirst = givenName;
+          _pendingAppleLast = familyName;
         }
 
         debugPrint('Apple sign in successful, got identity token');
@@ -388,21 +409,22 @@ class AuthService extends Notifier<AuthState> {
         state = state.copyWith(isSocialLogin: true);
 
         // If Apple provided a name on first sign-in, send it to backend immediately
-        if (_pendingAppleName != null) {
+        if (_pendingAppleFirst != null || _pendingAppleLast != null) {
           try {
             await _dio.post(
               '${AppConfig.bffBaseUrl}/api/identity/update-profile',
-              data: {'name': _pendingAppleName},
+              data: {'firstName': _pendingAppleFirst, 'lastName': _pendingAppleLast},
               options: Options(
                 contentType: Headers.jsonContentType,
                 headers: {'Authorization': 'Bearer ${state.accessToken}'},
               ),
             );
-            debugPrint('Apple name sent to backend: $_pendingAppleName');
+            debugPrint('Apple name sent to backend');
           } catch (e) {
             debugPrint('Failed to send Apple name to backend: $e');
           }
-          _pendingAppleName = null;
+          _pendingAppleFirst = null;
+          _pendingAppleLast = null;
         }
 
         // Load full profile (name + phone) from backend
@@ -422,13 +444,14 @@ class AuthService extends Notifier<AuthState> {
   }
 
   /// Register a new user
-  Future<bool> register(String name, String email, String phone, String password) async {
+  Future<bool> register(String firstName, String lastName, String email, String phone, String password) async {
     try {
       // Call the BFF registration endpoint which handles Keycloak user creation
       final response = await _dio.post(
         '${AppConfig.bffBaseUrl}/api/identity/register',
         data: {
-          'name': name,
+          'firstName': firstName,
+          'lastName': lastName,
           'email': email,
           'phoneNumber': phone,
           'password': password,

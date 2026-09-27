@@ -116,13 +116,13 @@ class SettingsNotifier extends Notifier<SettingsState> {
     }
   }
 
-  Future<bool> updateProfile(String newName, String phoneNumber) async {
+  Future<bool> updateProfile(String firstName, String lastName, String phoneNumber) async {
     state = state.copyWith(isSaving: true, clearError: true);
 
     try {
-      await _service.updateProfile(newName, phoneNumber);
+      await _service.updateProfile(firstName, lastName, phoneNumber);
       // Update cached auth state so profile gate sees the new values immediately
-      ref.read(authServiceProvider.notifier).setProfile(newName, phoneNumber);
+      ref.read(authServiceProvider.notifier).setProfile(firstName, lastName, phoneNumber);
       // Also refresh token to pick up any JWT claim changes
       await ref.read(authServiceProvider.notifier).refreshToken();
       state = state.copyWith(isSaving: false);

@@ -17,7 +17,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,7 +29,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -38,14 +40,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context)!;
-    final name = _nameController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     // Validation
-    if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
       setState(() {
         _error = l10n.fillAllFields;
       });
@@ -81,7 +84,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       final authService = ref.read(authServiceProvider.notifier);
-      final success = await authService.register(name, email, phone, password);
+      final success = await authService.register(firstName, lastName, email, phone, password);
 
       if (mounted) {
         if (success) {
@@ -176,12 +179,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
 
-                // Name field
-                FTextField(
-                  control: FTextFieldControl.managed(controller: _nameController),
-                  label: AppText(l10n.name),
-                  hint: l10n.yourDisplayName,
-                  textInputAction: TextInputAction.next,
+                // First and last name, side by side
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: FTextField(
+                        control: FTextFieldControl.managed(controller: _firstNameController),
+                        label: AppText(l10n.firstName),
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FTextField(
+                        control: FTextFieldControl.managed(controller: _lastNameController),
+                        label: AppText(l10n.lastName),
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 

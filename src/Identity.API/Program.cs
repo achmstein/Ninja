@@ -94,10 +94,8 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
     var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
     var usersEndpoint = $"{adminUrl}/admin/realms/{realm}/users";
 
-    // Split name into first/last if space present
-    var nameParts = request.Name?.Split(' ', 2) ?? [];
-    var firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
-    var lastName = nameParts.Length > 1 ? nameParts[1] : null;
+    // First and last as the app asks for them (an older app's one name, split)
+    var (firstName, lastName) = PersonName.Of(request.FirstName, request.LastName, request.Name);
 
     var userPayload = new
     {
@@ -188,10 +186,8 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
     // Create user via Admin REST API
     var usersEndpoint = $"{adminUrl}/admin/realms/{realm}/users";
 
-    // Split name into first/last if space present
-    var nameParts = request.Name?.Split(' ', 2) ?? [];
-    var firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
-    var lastName = nameParts.Length > 1 ? nameParts[1] : null;
+    // Staff are added with one name, split at its first space
+    var (firstName, lastName) = PersonName.Of(null, null, request.Name);
 
     var userPayload = new
     {
@@ -600,13 +596,10 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
         return Results.NotFound(new { message = "User not found" });
     }
 
-    // Split name into first/last if space present (matching registration pattern)
-    var nameParts = request.NewName?.Split(' ', 2) ?? [];
-    var firstName = nameParts.Length > 0 ? nameParts[0] : request.NewName;
-    var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+    var (firstName, lastName) = PersonName.Of(request.FirstName, request.LastName, request.NewName);
 
     userJson["firstName"] = firstName;
-    userJson["lastName"] = lastName;
+    userJson["lastName"] = lastName ?? "";
 
     var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
@@ -634,7 +627,7 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
         return Results.Unauthorized();
     }
 
-    if (string.IsNullOrWhiteSpace(request.Name) && string.IsNullOrWhiteSpace(request.PhoneNumber))
+    if (!PersonName.Given(request.FirstName, request.LastName, request.Name) && string.IsNullOrWhiteSpace(request.PhoneNumber))
     {
         return Results.BadRequest(new { message = "At least name or phone number is required" });
     }
@@ -694,16 +687,14 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
         attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
     }
 
-    // Split name into first/last — only if provided, otherwise keep existing
+    // The name only if given, otherwise kept as it is
     var firstName = (string?)userJson["firstName"];
     var lastName = (string?)userJson["lastName"];
-    if (!string.IsNullOrWhiteSpace(request.Name))
+    if (PersonName.Given(request.FirstName, request.LastName, request.Name))
     {
-        var nameParts = request.Name.Split(' ', 2);
-        firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
-        lastName = nameParts.Length > 1 ? nameParts[1] : "";
+        (firstName, lastName) = PersonName.Of(request.FirstName, request.LastName, request.Name);
         userJson["firstName"] = firstName;
-        userJson["lastName"] = lastName;
+        userJson["lastName"] = lastName ?? "";
     }
 
     var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
@@ -725,7 +716,7 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
 // Admin: Update customer profile (name + phone) endpoint
 app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateProfileRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Name))
+    if (!PersonName.Given(request.FirstName, request.LastName, request.Name))
     {
         return Results.BadRequest(new { message = "Name is required" });
     }
@@ -790,19 +781,15 @@ app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateP
         attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
     }
 
-    // Split name into first/last
-    var nameParts = request.Name.Split(' ', 2);
-    var firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
-    var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+    var (firstName, lastName) = PersonName.Of(request.FirstName, request.LastName, request.Name);
     userJson["firstName"] = firstName;
-    userJson["lastName"] = lastName;
+    userJson["lastName"] = lastName ?? "";
 
     var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
-        var displayName = string.IsNullOrWhiteSpace(lastName) ? firstName : $"{firstName} {lastName}";
-        await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, displayName));
+        await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, PersonName.Display(firstName, lastName)));
         return Results.Ok(new { message = "Profile updated successfully" });
     }
 
@@ -1120,6 +1107,8 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
     return Results.Ok(new
     {
         name = fullName,
+        firstName = user.FirstName,
+        lastName = user.LastName,
         email = CounterCustomer.VisibleEmail(user.Email),
         phoneNumber = phoneNumber,
         branches = BranchesOf(user.Attributes),
@@ -1138,13 +1127,15 @@ app.MapCounterCustomers();
 
 app.Run();
 
-record RegisterRequest(string? Name, string Email, string Password, string? PhoneNumber);
+/// <param name="Name">An older app's one name; FirstName and LastName win when given.</param>
+record RegisterRequest(string? Name, string Email, string Password, string? PhoneNumber, string? FirstName = null, string? LastName = null);
 record RegisterAdminRequest(string? Name, string Email, string Password, bool IsOwner = false, string? Role = "Admin", List<int>? BranchIds = null);
 record SetBranchesRequest(List<int> BranchIds);
 record ChangePasswordRequest(string NewPassword);
 record UpdateEmailRequest(string NewEmail);
-record UpdateNameRequest(string NewName);
-record UpdateProfileRequest(string? Name, string? PhoneNumber);
+record UpdateNameRequest(string? NewName, string? FirstName = null, string? LastName = null);
+/// <param name="Name">An older app's one name; FirstName and LastName win when given.</param>
+record UpdateProfileRequest(string? Name, string? PhoneNumber, string? FirstName = null, string? LastName = null);
 
 /// <param name="AddedAtCounter">Added at the till by name and phone and not yet claimed by its customer: no email, no password, a "Send app link" away from being theirs.</param>
 record UserDto(

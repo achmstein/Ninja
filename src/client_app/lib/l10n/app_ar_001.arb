@@ -163,6 +163,8 @@
   "completeYourInfo": "أكمل بياناتك",
   "orderingUnavailable": "الطلبات غير متاحة حاليًا",
   "reservationsUnavailable": "الحجوزات غير متاحة حاليًا",
+  "firstName": "الاسم الأول",
+  "lastName": "اسم العائلة",
   "orderingPausedTitle": "لا نستقبل الطلبات حاليًا",
   "reservationsPausedTitle": "لا نستقبل الحجوزات حاليًا",
   "bookSignInTitle": "سجّل الدخول للحجز",

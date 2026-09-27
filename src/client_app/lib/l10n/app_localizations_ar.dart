@@ -33,6 +33,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get name => 'الاسم';
 
   @override
+  String get firstName => 'الاسم الأول';
+
+  @override
+  String get lastName => 'اسم العيلة';
+
+  @override
   String get enterEmail => 'دخل الايميل';
 
   @override
@@ -1216,6 +1222,12 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get confirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get firstName => 'الاسم الأول';
+
+  @override
+  String get lastName => 'اسم العائلة';
 
   @override
   String get enterEmail => 'أدخل البريد الإلكتروني';

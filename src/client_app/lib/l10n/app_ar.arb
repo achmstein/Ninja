@@ -8,6 +8,8 @@
   "password": "الباسورد",
   "confirmPassword": "تأكيد الباسورد",
   "name": "الاسم",
+  "firstName": "الاسم الأول",
+  "lastName": "اسم العيلة",
   "enterEmail": "دخل الايميل",
   "enterPassword": "دخل الباسورد",
   "createPassword": "اعمل باسورد",

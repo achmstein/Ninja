@@ -1,10 +1,12 @@
 import { usePhoneRule } from '@/lib/brand'
+import { NameFields } from '@/components/name-fields'
 import { useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import {
   getMyProfile,
+  namePartsOf,
   updateProfile,
 } from '@/lib/services/identity'
 import { useT } from '@/lib/i18n'
@@ -30,7 +32,7 @@ export function useProfileGate() {
   const phonePattern = usePhoneRule((s) => s.pattern)
 
   const [open, setOpen] = useState(false)
-  const [initialName, setInitialName] = useState('')
+  const [initialName, setInitialName] = useState<[string, string]>(['', ''])
   const [initialPhone, setInitialPhone] = useState('')
   const resolver = useRef<((ok: boolean) => void) | null>(null)
 
@@ -39,9 +41,10 @@ export function useProfileGate() {
     const profile = await getMyProfile().catch(() => null)
     const name = profile?.name?.trim() ?? ''
     const phone = profile?.phoneNumber?.trim() ?? ''
+    // A name already there (an older one-name account too) and a phone are enough to go on
     if (name && phonePattern.test(phone)) return true
 
-    setInitialName(name || auth.user?.profile?.name || '')
+    setInitialName(namePartsOf(profile, auth.user?.profile?.name))
     setInitialPhone(phone)
     setOpen(true)
     return new Promise((resolve) => {
@@ -78,12 +81,13 @@ function ProfileGateDialog({
   onSettle,
 }: {
   open: boolean
-  initialName: string
+  initialName: [string, string]
   initialPhone: string
   onSettle: (ok: boolean) => void
 }) {
   const t = useT()
-  const [name, setName] = useState(initialName)
+  const [first, setFirst] = useState(initialName[0])
+  const [last, setLast] = useState(initialName[1])
   const phonePattern = usePhoneRule((s) => s.pattern)
   // The café's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)
@@ -93,7 +97,7 @@ function ProfileGateDialog({
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    if (!first.trim() || !last.trim()) {
       setError(t('fillAllFields'))
       return
     }
@@ -104,7 +108,7 @@ function ProfileGateDialog({
     setError(null)
     setSaving(true)
     try {
-      await updateProfile(name.trim(), phone.trim())
+      await updateProfile(first.trim(), last.trim(), phone.trim())
       toast.success(t('profileUpdatedSuccessfully'))
       onSettle(true)
     } catch {
@@ -120,14 +124,7 @@ function ProfileGateDialog({
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='gateName'>{t('name')}</Label>
-            <Input
-              id='gateName'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+          <NameFields idPrefix='gate' first={first} last={last} onFirst={setFirst} onLast={setLast} />
           <div className='space-y-2'>
             <Label htmlFor='gatePhone'>{t('phoneNumber')}</Label>
             <Input

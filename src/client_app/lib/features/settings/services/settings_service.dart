@@ -7,7 +7,7 @@ abstract class SettingsRepository {
   Future<NotificationPreferences> getNotificationPreferences();
   Future<void> updateNotificationPreferences(NotificationPreferences preferences);
   Future<void> changePassword(String newPassword);
-  Future<void> updateProfile(String newName, String phoneNumber);
+  Future<void> updateProfile(String firstName, String lastName, String phoneNumber);
   Future<String?> getPhoneNumber();
   Future<void> deleteAccount();
 }
@@ -45,9 +45,10 @@ class ApiSettingsRepository implements SettingsRepository {
   }
 
   @override
-  Future<void> updateProfile(String newName, String phoneNumber) async {
+  Future<void> updateProfile(String firstName, String lastName, String phoneNumber) async {
     await _identityApiClient.post('update-profile', data: {
-      'name': newName,
+      'firstName': firstName,
+      'lastName': lastName,
       'phoneNumber': phoneNumber,
     });
   }

@@ -75,6 +75,12 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureHubAsync(CancellationToken ct);
     /// <summary>
+    /// A customer's first and last name as the realm template now asks for them, in a realm made
+    /// before: first name labelled as such, last name the customer's to see, edit and fill in, right
+    /// after it. Idempotent; a realm that has it already is left alone.
+    /// </summary>
+    Task EnsureNameFieldsAsync(string realm, CancellationToken ct);
+    /// <summary>
     /// A café signing in through the hub: its client in the hub per provider, and the café realm's
     /// "ninja-google" / "ninja-apple" pointing at it with the same secret. Idempotent.
     /// </summary>
@@ -625,6 +631,15 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         await UpsertProvidersAsync(await AdminClientAsync(ct), realm, wanted, ct);
     }
 
+    public async Task EnsureNameFieldsAsync(string realm, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var endpoint = $"{Base}/admin/realms/{realm}/users/profile";
+        if (await client.GetFromJsonAsync<JsonObject>(endpoint, ct) is not { } profile || profile["attributes"] is not JsonArray attributes) return;
+        if (Templates.WithNameFields(attributes))
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync(endpoint, profile, ct), $"the name fields in {realm}", ct);
+    }
+
     public async Task EnsureHubAsync(CancellationToken ct)
     {
         var kinds = Templates.SocialKinds(options.Value);
@@ -951,6 +966,7 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         return Task.CompletedTask;
     }
     public Task EnsureTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} signs in through the hub", slug); return Task.CompletedTask; }
+    public Task EnsureNameFieldsAsync(string realm, CancellationToken ct) { logger.LogInformation("(dry run) first and last name in {Realm}", realm); return Task.CompletedTask; }
     public Task RemoveTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} off the hub", slug); return Task.CompletedTask; }
     public Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
     {

@@ -32,7 +32,7 @@ Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
       child: _ProfilePromptSheet(
         hasName: authState.hasName,
         hasPhone: authState.hasPhone,
-        currentName: authState.hasName ? authState.name : null,
+        currentName: authState.hasName ? authState.nameParts : null,
         currentPhone: authState.hasPhone ? authState.phoneNumber : null,
       ),
     ),
@@ -44,7 +44,7 @@ Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
 class _ProfilePromptSheet extends ConsumerStatefulWidget {
   final bool hasName;
   final bool hasPhone;
-  final String? currentName;
+  final (String, String)? currentName;
   final String? currentPhone;
 
   const _ProfilePromptSheet({
@@ -60,7 +60,8 @@ class _ProfilePromptSheet extends ConsumerStatefulWidget {
 }
 
 class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
-  late final TextEditingController _nameController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
   late final TextEditingController _phoneController;
   bool _isSaving = false;
   String? _error;
@@ -68,23 +69,26 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.currentName ?? '');
+    _firstNameController = TextEditingController(text: widget.currentName?.$1 ?? '');
+    _lastNameController = TextEditingController(text: widget.currentName?.$2 ?? '');
     _phoneController = TextEditingController(text: widget.currentPhone ?? '');
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSave() async {
     final l10n = AppLocalizations.of(context)!;
-    final name = _nameController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
     final phone = _phoneController.text.trim();
 
-    if ((!widget.hasName && name.isEmpty) || (!widget.hasPhone && phone.isEmpty)) {
+    if ((!widget.hasName && (firstName.isEmpty || lastName.isEmpty)) || (!widget.hasPhone && phone.isEmpty)) {
       setState(() => _error = l10n.fillAllFields);
       return;
     }
@@ -99,18 +103,19 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
       _error = null;
     });
 
-    final submitName = name.isNotEmpty ? name : widget.currentName ?? '';
+    final submitFirst = firstName.isNotEmpty ? firstName : widget.currentName?.$1 ?? '';
+    final submitLast = lastName.isNotEmpty ? lastName : widget.currentName?.$2 ?? '';
     final submitPhone = phone.isNotEmpty ? phone : widget.currentPhone ?? '';
 
     final success = await ref
         .read(settingsProvider.notifier)
-        .updateProfile(submitName, submitPhone);
+        .updateProfile(submitFirst, submitLast, submitPhone);
 
     if (!mounted) return;
 
     if (success) {
       // Update auth state with new profile data so subsequent checks are instant
-      ref.read(authServiceProvider.notifier).setProfile(submitName, submitPhone);
+      ref.read(authServiceProvider.notifier).setProfile(submitFirst, submitLast, submitPhone);
       Navigator.pop(context, true);
     } else {
       setState(() {
@@ -178,15 +183,31 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
               const SizedBox(height: 12),
             ],
 
-            // Name field (only show if missing)
+            // First and last name (only when missing)
             if (!widget.hasName) ...[
-              FTextField(
-                control:
-                    FTextFieldControl.managed(controller: _nameController),
-                label: AppText(l10n.name),
-                hint: l10n.yourDisplayName,
-                enabled: !_isSaving,
-                textInputAction: TextInputAction.next,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: FTextField(
+                      control: FTextFieldControl.managed(controller: _firstNameController),
+                      label: AppText(l10n.firstName),
+                      enabled: !_isSaving,
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FTextField(
+                      control: FTextFieldControl.managed(controller: _lastNameController),
+                      label: AppText(l10n.lastName),
+                      enabled: !_isSaving,
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
             ],

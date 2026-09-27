@@ -8,6 +8,8 @@
   "password": "Password",
   "confirmPassword": "Confirm Password",
   "name": "Name",
+  "firstName": "First name",
+  "lastName": "Last name",
   "enterEmail": "Enter your email",
   "enterPassword": "Enter your password",
   "createPassword": "Create a password",

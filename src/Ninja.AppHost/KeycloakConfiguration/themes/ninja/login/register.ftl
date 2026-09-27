@@ -2,8 +2,8 @@
 <#import "user-profile-commons.ftl" as userProfileCommons>
 <#import "register-commons.ftl" as registerCommons>
 <#--
-  Registration mirrors the client app's form: Name, Email, Phone number,
-  Password, Confirm password, all required. The first three come from the
+  Registration mirrors the client app's form: First name, Last name, Email,
+  Phone number, Password, Confirm password. The first four come from the
   realm's user profile (order, labels and validation live there); the password
   pair follows them instead of sitting under the email as the base theme does.
   `novalidate` leaves validation to Keycloak so every error is rendered inline

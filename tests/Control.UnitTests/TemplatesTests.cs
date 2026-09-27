@@ -184,6 +184,32 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
+    public void A_new_realm_asks_for_a_first_and_a_last_name_and_an_old_one_is_brought_to_it()
+    {
+        var tenant = Blue();
+        var realm = JsonNode.Parse(Templates.TenantRealm(tenant, TenantHosts.For(tenant, Platform), Platform))!.AsObject();
+        var profile = realm["components"]!["org.keycloak.userprofile.UserProfileProvider"]![0]!["config"]!["kc.user.profile.config"]![0]!.GetValue<string>();
+        var attributes = JsonNode.Parse(profile)!["attributes"]!.AsArray();
+        var names = attributes.Select(a => a!["name"]!.GetValue<string>()).ToList();
+        Assert.AreEqual(names.IndexOf("firstName") + 1, names.IndexOf("lastName"), "asked for together");
+        var last = attributes.Single(a => a!["name"]!.GetValue<string>() == "lastName")!;
+        CollectionAssert.Contains(last["permissions"]!["edit"]!.AsArray().Select(r => r!.GetValue<string>()).ToList(), "user");
+        Assert.IsNotNull(last["required"]);
+        Assert.IsFalse(Templates.WithNameFields(attributes), "the template has it already");
+
+        // A realm made before: first name labelled "Name", last name the admin's alone, after the phone
+        var old = JsonNode.Parse("""
+            [{"name":"username"},{"name":"firstName","displayName":"${name}","required":{"roles":["user"]}},
+             {"name":"email"},{"name":"phoneNumber"},
+             {"name":"lastName","displayName":"${lastName}","permissions":{"view":["admin"],"edit":["admin"]}}]
+            """)!.AsArray();
+        Assert.IsTrue(Templates.WithNameFields(old));
+        CollectionAssert.AreEqual(new[] { "username", "firstName", "lastName", "email", "phoneNumber" }, old.Select(a => a!["name"]!.GetValue<string>()).ToArray());
+        Assert.AreEqual("${firstName}", old[1]!["displayName"]!.GetValue<string>());
+        Assert.IsFalse(Templates.WithNameFields(old), "twice is once");
+    }
+
+    [TestMethod]
     public void No_cafe_can_take_the_hubs_name()
     {
         Assert.IsFalse(TenantNaming.IsValidSlug(TenantNaming.HubRealm));

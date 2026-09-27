@@ -33,6 +33,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get name => 'Name';
 
   @override
+  String get firstName => 'First name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
   String get enterEmail => 'Enter your email';
 
   @override

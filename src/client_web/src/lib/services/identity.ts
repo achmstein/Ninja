@@ -7,8 +7,18 @@ const BASE = '/api/identity'
 
 export type MyProfile = {
   name?: string | null
+  firstName?: string | null
+  lastName?: string | null
   email?: string | null
   phoneNumber?: string | null
+}
+
+/** First and last name to fill a form with: the profile's own, or a whole name split at its first space */
+export function namePartsOf(profile: MyProfile | null | undefined, fallbackName?: string | null): [string, string] {
+  if (profile?.firstName || profile?.lastName) return [profile.firstName?.trim() ?? '', profile.lastName?.trim() ?? '']
+  const whole = (profile?.name || fallbackName || '').trim()
+  const space = whole.indexOf(' ')
+  return space < 0 ? [whole, ''] : [whole.slice(0, space), whole.slice(space + 1).trim()]
 }
 
 export async function getMyProfile(): Promise<MyProfile> {
@@ -17,10 +27,11 @@ export async function getMyProfile(): Promise<MyProfile> {
 }
 
 export async function updateProfile(
-  name: string,
+  firstName: string,
+  lastName: string,
   phoneNumber: string
 ): Promise<void> {
-  await apiClient.post(`${BASE}/update-profile`, { name, phoneNumber })
+  await apiClient.post(`${BASE}/update-profile`, { firstName, lastName, phoneNumber })
 }
 
 export async function changePassword(newPassword: string): Promise<void> {

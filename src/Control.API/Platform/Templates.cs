@@ -198,6 +198,32 @@ public static partial class Templates
     }
 
     /// <summary>
+    /// A realm's user-profile attributes brought to the first and last name the apps ask for: first
+    /// name labelled as such, last name the customer's to see, edit and fill in, right after it.
+    /// True when anything changed.
+    /// </summary>
+    public static bool WithNameFields(JsonArray attributes)
+    {
+        var first = attributes.OfType<JsonObject>().FirstOrDefault(a => a["name"]?.GetValue<string>() == "firstName");
+        var last = attributes.OfType<JsonObject>().FirstOrDefault(a => a["name"]?.GetValue<string>() == "lastName");
+        if (first is null || last is null) return false;
+
+        var before = attributes.ToJsonString();
+        first["displayName"] = "${firstName}";
+        last["displayName"] = "${lastName}";
+        last["permissions"] = new JsonObject { ["view"] = new JsonArray("admin", "user"), ["edit"] = new JsonArray("admin", "user") };
+        last["required"] = new JsonObject { ["roles"] = new JsonArray("user") };
+        // Right after the first name, so every form built from the profile asks for them together
+        var at = attributes.IndexOf(last);
+        if (at != attributes.IndexOf(first) + 1)
+        {
+            attributes.RemoveAt(at);
+            attributes.Insert(attributes.IndexOf(first) + 1, last);
+        }
+        return attributes.ToJsonString() != before;
+    }
+
+    /// <summary>
     /// The hub realm itself: no registration, no passwords, nothing a person signs in to by hand. Two
     /// people who share an address at Google and at Apple are two pass-through records rather than a
     /// prompt to link accounts nobody asked to link.

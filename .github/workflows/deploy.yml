@@ -461,7 +461,7 @@ jobs:
 
             echo ""
             echo "=== Shape the user profile like the app's registration form ==="
-            # One Name field (firstName; lastName is admin-only), email and an
+            # First and last name (together, the user's to fill in), email and an
             # Egyptian mobile number, required of users but not of admins
             # creating staff. Email is NOT required here: registration already
             # needs one (email is the username), and Apple sign-in creates
@@ -471,16 +471,16 @@ jobs:
             import sys,json
             p=json.load(sys.stdin)
             by={a["name"]:a for a in p["attributes"]}
-            first=by["firstName"]; first["displayName"]="${name}"; first["required"]={"roles":["user"]}
+            first=by["firstName"]; first["displayName"]="${firstName}"; first["required"]={"roles":["user"]}
             email=by["email"]; email.pop("required",None)
             email.setdefault("annotations",{})["inputType"]="html5-email"
-            last=by["lastName"]; last.pop("required",None); last["permissions"]={"view":["admin"],"edit":["admin"]}
+            last=by["lastName"]; last["displayName"]="${lastName}"; last["required"]={"roles":["user"]}; last["permissions"]={"view":["admin","user"],"edit":["admin","user"]}
             phone=by.setdefault("phoneNumber",{"name":"phoneNumber","multivalued":False})
             phone.update({"displayName":"${phoneNumber}","required":{"roles":["user"]},
               "validations":{"pattern":{"pattern":"^01[0-9]{9}$","error-message":"invalidPhone"}},
               "annotations":{"inputType":"html5-tel","inputTypePlaceholder":"01xxxxxxxxx"},
               "permissions":{"view":["admin","user"],"edit":["admin","user"]}})
-            order=["username","firstName","email","phoneNumber","lastName"]
+            order=["username","firstName","lastName","email","phoneNumber"]
             p["attributes"]=[by[n] for n in order]+[a for a in p["attributes"] if a["name"] not in order]
             json.dump(p,sys.stdout)' | \
               docker exec -i "$CONTAINER" $KC update users/profile -r $REALM -f - && echo "  User profile shaped"
