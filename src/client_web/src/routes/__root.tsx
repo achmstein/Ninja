@@ -10,6 +10,7 @@ import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
 import { BottomNav } from '@/components/bottom-nav'
 import { OrderPill } from '@/components/order-pill'
+import { InstallNudge } from '@/components/install-nudge'
 
 type RouterContext = {
   queryClient: QueryClient
@@ -44,6 +45,8 @@ function RootLayout() {
           <BottomNav />
           {/* The order just placed, live at the top of every page */}
           <OrderPill />
+          {/* The offer to install the app, said once or twice by the island */}
+          <InstallNudge />
           <AppToaster />
         </div>
       </ThemeProvider>

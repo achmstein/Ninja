@@ -4,6 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   Award,
+  Download,
   Info,
   LogOut,
   Phone,
@@ -40,6 +41,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { PoweredByNinja } from '@/components/powered-by-ninja'
+import { useInstallAction } from '@/components/use-install-action'
 import { Badge } from '@/components/ui/badge'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
@@ -70,6 +72,8 @@ function ProfilePage() {
   const features = useFeatures()
   const branch = useSelectedBranch()
   const [aboutOpen, setAboutOpen] = useState(false)
+  // Installing the app, for anyone who let the island's offer go by
+  const install = useInstallAction()
 
   const profile = auth.user?.profile
   const name = profile?.name || profile?.preferred_username
@@ -211,6 +215,7 @@ function ProfilePage() {
             {branch?.phone && (
               <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
             )}
+            {install.eligible && <TileButton icon={Download} label={t('installApp')} sublabel={t('installAppSubtitle')} onClick={install.run} />}
             <TileButton icon={Info} label={t('about')} onClick={() => setAboutOpen(true)} />
           </TileGroup>
         </RiseItem>
@@ -229,6 +234,7 @@ function ProfilePage() {
       </Rise>
 
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      {install.dialog}
     </NinjaPage>
   )
 }
