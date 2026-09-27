@@ -437,14 +437,14 @@ function PhotoTile({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) {
 function CompactRow({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const price = usePrice()
-  const photo = useRef<HTMLButtonElement>(null)
+  // What the dish flies to the tray from: the round button, a small circle, not the wide row
+  const photo = useRef<HTMLSpanElement>(null)
   const dish = useDish({ item, opening, onOpen, onQuickAdd, photo })
   return (
     <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3 py-3', dish.soldOut && 'opacity-50')}>
-      {/* The whole row is what grows into the options, and what the dish flies to the tray from */}
+      {/* The whole row is what grows into the options */}
       <motion.button
         type='button'
-        ref={photo}
         layoutId={dish.morph ? `card-${item.id}` : undefined}
         style={{ borderRadius: 16 }}
         {...dish.handlers}
@@ -459,7 +459,11 @@ function CompactRow({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) 
         </span>
         {item.description && <span className='text-muted-foreground line-clamp-1 text-[13px]'>{localized(item.description)}</span>}
       </motion.button>
-      {!dish.soldOut && <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
+      {!dish.soldOut && (
+        <span ref={photo} className='shrink-0 rounded-full'>
+          <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />
+        </span>
+      )}
     </motion.div>
   )
 }
