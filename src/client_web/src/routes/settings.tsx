@@ -220,6 +220,8 @@ function UpdateProfileDialog({
   const t = useT()
   const [name, setName] = useState(initialName)
   const phonePattern = usePhoneRule((s) => s.pattern)
+  // The café's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
+  const phonePlaceholder = usePhoneRule((s) => s.placeholder)
 
   const [phone, setPhone] = useState(initialPhone)
   const [error, setError] = useState<string | null>(null)
@@ -279,7 +281,7 @@ function UpdateProfileDialog({
               id='profilePhone'
               type='tel'
               dir='ltr'
-              placeholder='01XXXXXXXXX'
+              placeholder={phonePlaceholder || undefined}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />

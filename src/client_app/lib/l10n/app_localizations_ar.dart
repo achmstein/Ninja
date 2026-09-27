@@ -783,6 +783,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reservationsUnavailable => 'الحجوزات مش متاحة دلوقتي';
 
   @override
+  String get orderingPausedTitle => 'مش بناخد طلبات دلوقتي';
+
+  @override
+  String get reservationsPausedTitle => 'مش بناخد حجوزات دلوقتي';
+
+  @override
+  String get bookSignInTitle => 'سجّل دخول عشان تحجز';
+
+  @override
+  String get bookSignInBody =>
+      'حساب مجاني بيحجزلك مكان ويحفظ حجوزاتك كلها مع بعض.';
+
+  @override
+  String get bookSignInAction => 'سجّل دخول أو اعمل حساب';
+
+  @override
   String get todaysSessions => 'حجوزات النهارده';
 
   @override
@@ -1706,6 +1722,22 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get reservationsUnavailable => 'الحجوزات غير متاحة حاليًا';
+
+  @override
+  String get orderingPausedTitle => 'لا نستقبل الطلبات حاليًا';
+
+  @override
+  String get reservationsPausedTitle => 'لا نستقبل الحجوزات حاليًا';
+
+  @override
+  String get bookSignInTitle => 'سجّل الدخول للحجز';
+
+  @override
+  String get bookSignInBody =>
+      'يحجز لك الحساب المجاني مكانًا ويحفظ حجوزاتك في مكان واحد.';
+
+  @override
+  String get bookSignInAction => 'سجّل الدخول أو أنشئ حسابًا';
 
   @override
   String get todaysSessions => 'حجوزات اليوم';

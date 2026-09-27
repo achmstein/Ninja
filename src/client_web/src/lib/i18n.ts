@@ -211,12 +211,16 @@ const webExtras = {
   notNow: { en: 'Not now', ar: 'مش دلوقتي' },
   installBrand: { en: 'Install {name}', ar: 'نزّل {name}' },
   installIosStepShare: {
-    en: 'Tap the Share button in Safari',
-    ar: 'دوس على زرار المشاركة (Share) في سفاري',
+    en: 'Tap Share in Safari (on newer iPhones it is under ⋯ in the address bar)',
+    ar: 'دوس على زرار المشاركة (Share) في سفاري (في الأيفونات الجديدة هتلاقيه تحت ⋯ جنب العنوان)',
   },
   installIosStepAdd: {
-    en: 'Choose “Add to Home Screen”',
-    ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)',
+    en: 'Choose “Add to Home Screen” (scroll down if you do not see it)',
+    ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)، ولو مش ظاهر انزل لتحت',
+  },
+  installIosStepConfirm: {
+    en: 'Tap “Add” at the top: the app is on your home screen',
+    ar: 'دوس «Add» فوق، والتطبيق هيبقى على الشاشة الرئيسية',
   },
   // Claiming the account the café added at the counter: the web-only
   // claim* strings; the rest come from the ARB files, shared with the app

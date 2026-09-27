@@ -31,3 +31,10 @@ export const DOCK_INSET = 8
 
 /** The dock's side margin: its gap to the bottom edge too, so it floats evenly off the screen's edges and a small phone's tray keeps the width */
 export const DOCK_SIDE = DOCK_INSET
+
+/**
+ * Where a sheet or panel over the dock sits, sideways: the dock's own edges
+ * (the app's 32rem column, less the dock's margins), so what opens from it
+ * is exactly as wide as the tray at every width
+ */
+export const DOCK_EDGES = { left: DOCK_SIDE, right: DOCK_SIDE, maxWidth: `calc(32rem - ${DOCK_SIDE * 2}px)` } as const

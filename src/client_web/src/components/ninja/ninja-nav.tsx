@@ -162,7 +162,7 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
         </svg>
         <Icon className='size-[14px]' />
       </span>
-      {left != null ? <Odometer value={formatClock(left)} className={hurry ? 'text-red-400' : undefined} /> : <span className='truncate'>{label}</span>}
+      {left != null ? <Odometer clock value={formatClock(left)} className={hurry ? 'text-red-400' : undefined} /> : <span className='truncate'>{label}</span>}
     </span>
   )
 }

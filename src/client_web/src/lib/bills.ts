@@ -6,6 +6,7 @@ import { type StayViewModel } from '@/api/spaces'
 import { API_VERSION } from './api-client'
 import { useSelectedBranch } from './branch'
 import { businessDayStart } from './business-day'
+import { serverNow } from './clock'
 
 /** How far back the bills reach. One read, no paging: a regular's three
  *  months of bills is a short list. */
@@ -45,11 +46,11 @@ export function useMyBills() {
   return { ...query, dayStart }
 }
 
-/** A minute clock: the running time line only needs the minute. */
+/** A minute clock, by the server's: the running time line only needs the minute. */
 export function useNow(): number {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(serverNow)
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000)
+    const timer = setInterval(() => setNow(serverNow()), 60_000)
     return () => clearInterval(timer)
   }, [])
   return now

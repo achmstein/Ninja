@@ -12,6 +12,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/brand_style.dart';
 import '../../../core/brand/styles.dart';
 import '../../places/screens/qr_scan_screen.dart';
+import '../../../core/widgets/notice_card.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -169,25 +170,8 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
           onSearch: _toggleSearch,
         ),
 
-        // Ordering disabled banner
-        if (!isOrderingEnabled)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: colors.destructive.withValues(alpha: 0.1),
-            child: Row(
-              children: [
-                Icon(FIcons.circleAlert, size: 16, color: colors.destructive),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AppText(
-                    l10n.orderingUnavailable,
-                    style: TextStyle(fontSize: 13, color: colors.destructive),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        // Not taking orders for now: the same notice as the Book tab's
+        if (!isOrderingEnabled) PausedNotice(title: l10n.orderingPausedTitle),
 
         // Content
         Expanded(

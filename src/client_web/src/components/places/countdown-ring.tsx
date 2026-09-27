@@ -54,7 +54,7 @@ export function CountdownRing({
           style={{ pathLength }}
         />
       </svg>
-      <Odometer value={formatClock(left)} className={cn('text-[3.25rem] font-extrabold tracking-tight transition-colors duration-300', hurry && 'text-destructive')} />
+      <Odometer clock value={formatClock(left)} className={cn('text-[3.25rem] font-extrabold tracking-tight transition-colors duration-300', hurry && 'text-destructive')} />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/notice_card.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -140,25 +141,8 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
             ],
           ),
 
-          // Reservations disabled banner
-          if (!isReservationsEnabled)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: colors.destructive.withValues(alpha: 0.1),
-              child: Row(
-                children: [
-                  Icon(FIcons.circleAlert, size: 16, color: colors.destructive),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      l10n.reservationsUnavailable,
-                      style: TextStyle(fontSize: 13, color: colors.destructive),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // Not taking bookings for now: the same notice as the Menu's
+          if (!isReservationsEnabled) PausedNotice(title: l10n.reservationsPausedTitle),
 
           // Content
           Expanded(

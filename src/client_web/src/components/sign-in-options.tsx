@@ -116,17 +116,22 @@ export function SignInOptions() {
 export function SignInSheet({
   open,
   onOpenChange,
+  title,
+  description,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Why it asks, where it was opened for something (a booking); the plain sign-in otherwise */
+  title?: string;
+  description?: string;
 }) {
   const t = useT();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col items-center pb-8">
         <DialogHeader className="text-center">
-          <DialogTitle>{t("signIn")}</DialogTitle>
-          <DialogDescription>{t("signInPrompt")}</DialogDescription>
+          <DialogTitle>{title ?? t("signIn")}</DialogTitle>
+          <DialogDescription>{description ?? t("signInPrompt")}</DialogDescription>
         </DialogHeader>
         <SignInOptions />
       </DialogContent>

@@ -792,6 +792,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reservations are currently unavailable';
 
   @override
+  String get orderingPausedTitle => 'Not taking orders right now';
+
+  @override
+  String get reservationsPausedTitle => 'Not taking bookings right now';
+
+  @override
+  String get bookSignInTitle => 'Sign in to book';
+
+  @override
+  String get bookSignInBody =>
+      'A free account holds a place for you and keeps your bookings together.';
+
+  @override
+  String get bookSignInAction => 'Sign in or create an account';
+
+  @override
   String get todaysSessions => 'Today\'s Sessions';
 
   @override

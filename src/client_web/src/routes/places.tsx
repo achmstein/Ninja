@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Ban } from 'lucide-react'
+import { CirclePause, UserRound } from 'lucide-react'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
@@ -21,7 +21,7 @@ import { Reservation } from '@/components/places/reservation'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Panel } from '@/components/ninja/page/parts'
+import { Notice, noticeAction } from '@/components/ninja/page/notice'
 import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/sign-in-options'
@@ -115,8 +115,9 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
   const { data: places = [], isLoading } = useBookablePlaces()
 
   const reservationsEnabled = features.reservations && (branch?.isReservationsEnabled ?? true)
-  // One place at a time: a hold, or a clock running (the server refuses a second either way)
-  const canReserve = auth.isAuthenticated && !hold && !stay && reservationsEnabled
+  // One place at a time: a hold, or a clock running (the server refuses a second either way). A guest's
+  // free places answer a tap too: with the sign-in sheet, rather than a card that does nothing
+  const canReserve = !hold && !stay && reservationsEnabled
   const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
   const allBusy = places.length > 0 && freeCount === 0
 
@@ -154,12 +155,26 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
           {!reservationsEnabled && (
             <RiseItem>
               <Recede gone={held}>
-                <Panel className='text-destructive flex items-center gap-3 p-4'>
-                  <span className='bg-destructive/10 grid size-10 shrink-0 place-items-center rounded-full'>
-                    <Ban className='size-5' />
-                  </span>
-                  <span className='text-[15px] font-semibold'>{t('reservationsUnavailable')}</span>
-                </Panel>
+                <Notice tone='paused' icon={CirclePause} title={t('reservationsPausedTitle')} />
+              </Recede>
+            </RiseItem>
+          )}
+
+          {/* A guest can look but not book: say so up front, with the way to an account, rather than on a tap */}
+          {!auth.isAuthenticated && reservationsEnabled && (
+            <RiseItem>
+              <Recede gone={held}>
+                <Notice
+                  tone='invite'
+                  icon={UserRound}
+                  title={t('bookSignInTitle')}
+                  body={t('bookSignInBody')}
+                  action={
+                    <button type='button' onClick={() => setSignInOpen(true)} className={noticeAction}>
+                      {t('bookSignInAction')}
+                    </button>
+                  }
+                />
               </Recede>
             </RiseItem>
           )}
@@ -211,7 +226,7 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
 
       <Reservation hold={opened} />
       {profileGateDialog}
-      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} title={t('bookSignInTitle')} description={t('bookSignInBody')} />
     </NinjaPage>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useSecondTick } from '@/lib/clock'
 import { Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { motion } from 'motion/react'
@@ -10,17 +10,6 @@ import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Slab } from '@/components/ninja/page/parts'
-
-/** Ticks once a second while `on`, so a running stay's duration moves (mobile parity) */
-function useNow(on: boolean): number {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    if (!on) return
-    const id = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [on])
-  return now
-}
 
 /**
  * One stay in the history (app parity: place and status, when and how
@@ -36,7 +25,8 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
   const language = useLanguage((s) => s.language)
   const auth = useAuth()
   const active = Number(stay.status ?? 0) === STAY_RUNNING
-  const now = useNow(active)
+  // Ticks while the stay runs, by the server's clock, so its duration moves (mobile parity)
+  const now = useSecondTick(active)
 
   const timeOf = (raw: string | null | undefined) =>
     raw ? new Date(raw).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : ''

@@ -37,6 +37,7 @@ export function MenuGrid({
   onSection,
   list,
   onScroller,
+  notice,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -56,6 +57,8 @@ export function MenuGrid({
   list?: MenuList
   /** Its scrolling box, handed up while it is on screen, so the chrome around it can follow its scroll */
   onScroller?: (el: HTMLDivElement | null) => void
+  /** A word over the whole menu (ordering paused), the first thing in it and scrolling away with it */
+  notice?: React.ReactNode
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const onScrollerRef = useRef(onScroller)
@@ -168,6 +171,7 @@ export function MenuGrid({
       className='no-scrollbar h-full overflow-y-auto overscroll-y-contain px-4 pb-6 [touch-action:pan-y]'
       style={{ paddingTop: DECK_TOP }}
     >
+      {notice && <div className='mb-5'>{notice}</div>}
       {categories.map((col, index) => (
         <section
           key={col.id}

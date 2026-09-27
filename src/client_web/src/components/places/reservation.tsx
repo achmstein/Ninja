@@ -5,7 +5,7 @@ import { ease, springOpen } from '@/lib/motion'
 import { placeCardId } from '@/lib/places'
 import { useEntrance } from '@/components/motion/use-entrance'
 import { useLiveBills } from '@/lib/live-bills'
-import { DOCK_H } from '@/components/ninja/chrome'
+import { DOCK_EDGES, DOCK_H } from '@/components/ninja/chrome'
 import { useDockRowShown } from '@/components/ninja/use-dock-row'
 import { ReservationFace } from './reservation-face'
 
@@ -36,11 +36,11 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       // Closing, it hands over at once: it fades as the room's card, already under it with its
       // own face, runs back to its place, rather than shrinking empty over the card
       exit={{ opacity: 0, transition: { duration: 0.16, ease: ease.exit } }}
-      style={{ borderRadius: 32, '--dock-row': `${row}px` } as CSSProperties}
+      style={{ ...DOCK_EDGES, borderRadius: 32, '--dock-row': `${row}px` } as CSSProperties}
       role='dialog'
       aria-label={String(hold.placeName?.en ?? '')}
       // Between the top bar (64 px) and the dock, at the dock's side margins; the slab's tints for what is inside
-      className='slab fixed inset-x-4 top-[calc(env(safe-area-inset-top)+72px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto max-w-lg overflow-hidden shadow-(--slab-shadow) [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
+      className='slab fixed top-[calc(env(safe-area-inset-top)+72px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto overflow-hidden shadow-(--slab-shadow) [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
     >
       {/* Contained: what changes inside (the clock each second) never lays out or repaints the page around it */}
       <div className='no-scrollbar size-full overflow-y-auto [contain:content]'>

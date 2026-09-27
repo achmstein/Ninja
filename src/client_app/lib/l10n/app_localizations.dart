@@ -1545,6 +1545,36 @@ abstract class AppLocalizations {
   /// **'Reservations are currently unavailable'**
   String get reservationsUnavailable;
 
+  /// No description provided for @orderingPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not taking orders right now'**
+  String get orderingPausedTitle;
+
+  /// No description provided for @reservationsPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not taking bookings right now'**
+  String get reservationsPausedTitle;
+
+  /// No description provided for @bookSignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to book'**
+  String get bookSignInTitle;
+
+  /// No description provided for @bookSignInBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A free account holds a place for you and keeps your bookings together.'**
+  String get bookSignInBody;
+
+  /// No description provided for @bookSignInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or create an account'**
+  String get bookSignInAction;
+
   /// No description provided for @todaysSessions.
   ///
   /// In en, this message translates to:

@@ -355,6 +355,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   onSection={setGridColumn}
                   list={list}
                   onScroller={setGridScroller}
+                  notice={canOrder ? undefined : <OrderingPausedNote />}
                 />
               ) : (
                 <Deck
@@ -387,10 +388,18 @@ export function NinjaHome({ menu }: HomeProps) {
                 ) : undefined
               }
             />
-            {!canOrder && (
-              <div className='absolute inset-x-4 z-20' style={{ top: DECK_TOP }}>
-                <OrderingPausedNote className='shadow-sm backdrop-blur' />
-              </div>
+            {/* On the cards, over the first one as the top bar is, and gone with it past there (the whole menu has it at its top) */}
+            {!canOrder && mode === 'deck' && (
+              <motion.div
+                className='bg-background absolute inset-x-4 z-20 rounded-[1.5rem] shadow-(--slab-shadow)'
+                style={{ top: DECK_TOP }}
+                initial={false}
+                animate={{ opacity: compact ? 0 : 1, y: compact ? -NINJA_BAR_H : 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                inert={compact || undefined}
+              >
+                <OrderingPausedNote />
+              </motion.div>
             )}
 
             {/* The categories, in the thumb's reach: on the cards they turn the deck, on the whole menu they jump to their heading */}

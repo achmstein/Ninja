@@ -8,10 +8,11 @@ import { odometerRuns } from './odometer-runs'
  * of the number so the units stay the units when a digit is added in front.
  * Reduced motion: no transition, the digit simply swaps.
  */
-export function Odometer({ value, className }: { value: string; className?: string }) {
+export function Odometer({ value, className, clock = false }: { value: string; className?: string; clock?: boolean }) {
   const runs = odometerRuns(value)
   return (
-    <span className={cn('relative inline-block leading-[1.2em] whitespace-nowrap tabular-nums', className)}>
+    // A clock reads hours first in either language: its runs (6, :, 12) would otherwise be laid out right to left in Arabic
+    <span dir={clock ? 'ltr' : undefined} className={cn('relative inline-block leading-[1.2em] whitespace-nowrap tabular-nums', className)}>
       <span className='sr-only'>{value}</span>
       {runs.map((run, r) =>
         run.kind === 'text' ? (

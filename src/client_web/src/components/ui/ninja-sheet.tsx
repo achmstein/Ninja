@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'moti
 import { ease, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
+import { DOCK_EDGES } from '@/components/ninja/chrome'
 
 /**
  * The one way the customer app shows a sheet, a dialog or a question: the
@@ -84,10 +85,12 @@ export function SheetFrame({
           <Content asChild forceMount {...contentProps}>
             <motion.div
               className={cn(
-                'dark bg-background text-foreground fixed inset-x-4 z-50 mx-auto flex max-w-lg flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
+                'dark bg-background text-foreground fixed z-50 mx-auto flex flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
                 from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'
               )}
               style={{
+                // As wide as the dock it opens over
+                ...DOCK_EDGES,
                 ...(from === 'bottom' && { bottom: keyboardInset > 0 ? keyboardInset + 8 : 'max(8px, env(safe-area-inset-bottom))' }),
                 ...(keyboardInset > 0 && { maxHeight: `calc(100svh - ${keyboardInset + 16}px)` }),
                 originY: from === 'bottom' ? 1 : 0,

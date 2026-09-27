@@ -61,6 +61,16 @@ export function isStandalone(): boolean {
 // only confuse them
 const IN_APP_BROWSER = /FBAN|FBAV|Instagram|TikTok|musical_ly|Snapchat|Line\//i
 
+/** An iPad (which calls itself a Mac in Safari), where Safari's bar and its Share button sit at the top */
+export function isIPad(): boolean {
+  if (typeof navigator === 'undefined') return false
+  try {
+    return /iPad/.test(navigator.userAgent ?? '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  } catch {
+    return false
+  }
+}
+
 /**
  * iOS or iPadOS, where installing means "Share → Add to Home Screen" and
  * `beforeinstallprompt` never fires. iPadOS Safari calls itself a Mac, so

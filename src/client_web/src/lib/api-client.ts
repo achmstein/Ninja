@@ -2,6 +2,7 @@ import axios, { type InternalAxiosRequestConfig } from "axios";
 import { getActiveBranchId } from "@/stores/branch-store";
 import { getGuestId } from "@/stores/guest-store";
 import { getStoredUser } from "./oidc";
+import { noteServerDate } from "./clock";
 
 export const API_VERSION = "1.0";
 
@@ -37,4 +38,16 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+// Every answer says the server's time: timers count by it, not by a phone set wrong (lib/clock.ts)
+apiClient.interceptors.response.use(
+  (response) => {
+    noteServerDate(response.headers?.date);
+    return response;
+  },
+  (error) => {
+    noteServerDate(error?.response?.headers?.date);
+    return Promise.reject(error);
+  },
 );

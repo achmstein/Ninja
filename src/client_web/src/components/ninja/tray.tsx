@@ -502,7 +502,8 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
       <div className='flex items-baseline justify-between px-5 pb-2'>
         <h2 className='heading text-[calc(1.35rem*var(--heading-scale))]'>{t('ninjaYourOrder')}</h2>
       </div>
-      <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-12'>
+      {/* pb-3: the sheet's own padding already clears the dock it tucks under */}
+      <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3'>
         {lines.map((line) => (
           <SwipeLine key={lineKey(line)} line={line} />
         ))}
@@ -510,7 +511,8 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
         <div className='mt-3 px-2'>
           <TrayExtras extras={extras} />
         </div>
-        <div className='mt-3 flex flex-col gap-2 px-2 text-sm'>
+        {/* Where the order goes, or why it cannot yet; nothing to say leaves no gap */}
+        <div className='mt-3 flex flex-col gap-2 px-2 text-sm empty:hidden'>
           {order.tableUnconfirmed && order.activePlace ? (
             <div className='text-foreground rounded-2xl'>
               <StillHereCard place={order.activePlace} />
