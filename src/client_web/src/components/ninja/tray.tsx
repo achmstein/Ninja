@@ -522,6 +522,8 @@ function SwipeLine({ line }: { line: CartLine }) {
   const warn = useTransform(x, (v) => Math.min(1, Math.abs(v) / 48))
   const row = useRef<HTMLDivElement>(null)
   const [leaving, setLeaving] = useState(false)
+  // Slid out: the red it leaves behind folds shut, and only then is the dish taken off
+  const [folding, setFolding] = useState(false)
   const key = lineKey(line)
   const name = language === 'ar' && line.nameAr ? line.nameAr : line.nameEn
   const options = line.customizations.map((c) => (language === 'ar' && c.optionNameAr ? c.optionNameAr : c.optionNameEn)).join('، ')
@@ -529,15 +531,24 @@ function SwipeLine({ line }: { line: CartLine }) {
   const remove = (direction: number) => {
     setLeaving(true)
     const width = row.current?.offsetWidth ?? 320
-    animate(x, direction * width, { duration: 0.18, ease: 'easeIn' }).then(() => {
-      setQuantity(key, 0)
-      // Gone with a flick is easy to regret: the toast puts it back
-      toast.info(t('ninjaRemoved', { name }), { action: { label: t('ninjaUndo'), onClick: () => add(line) }, duration: 5000 })
-    })
+    animate(x, direction * width, { duration: 0.18, ease: 'easeIn' }).then(() => setFolding(true))
+  }
+
+  const removed = () => {
+    setQuantity(key, 0)
+    // Gone with a flick is easy to regret: the toast puts it back
+    toast.info(t('ninjaRemoved', { name }), { action: { label: t('ninjaUndo'), onClick: () => add(line) }, duration: 5000 })
   }
 
   return (
-    <motion.div layout='position' transition={SPRING} className='relative overflow-hidden rounded-2xl'>
+    <motion.div
+      layout='position'
+      transition={SPRING}
+      initial={false}
+      animate={folding ? { height: 0, opacity: 0 } : undefined}
+      onAnimationComplete={() => folding && removed()}
+      className='relative overflow-hidden rounded-2xl'
+    >
       <motion.div aria-hidden style={{ opacity: warn }} className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white'>
         <Trash2 className='size-5' />
         <Trash2 className='size-5' />
