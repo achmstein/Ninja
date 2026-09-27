@@ -524,6 +524,9 @@ function SwipeLine({ line }: { line: CartLine }) {
   const x = useMotionValue(0)
   // The red under a line only shows once it moves, so no edge of it leaks round the corners
   const warn = useTransform(x, (v) => Math.min(1, Math.abs(v) / 48))
+  // The bin shows on the side the line uncovers: the left as it moves right, the right as it moves left
+  const binLeft = useTransform(x, (v) => (v > 0 ? 1 : 0))
+  const binRight = useTransform(x, (v) => (v < 0 ? 1 : 0))
   const row = useRef<HTMLDivElement>(null)
   const [leaving, setLeaving] = useState(false)
   // Slid out: the red it leaves behind folds shut, and only then is the dish taken off
@@ -556,9 +559,13 @@ function SwipeLine({ line }: { line: CartLine }) {
       animate={folding ? { height: 0, opacity: 0, transition: { duration: FOLD_MS / 1000, ease: ease.exit } } : undefined}
       className='relative overflow-hidden rounded-2xl'
     >
-      <motion.div aria-hidden style={{ opacity: warn }} className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white'>
-        <Trash2 className='size-5' />
-        <Trash2 className='size-5' />
+      <motion.div aria-hidden style={{ opacity: warn }} className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white' dir='ltr'>
+        <motion.span style={{ opacity: binLeft }}>
+          <Trash2 className='size-5' />
+        </motion.span>
+        <motion.span style={{ opacity: binRight }}>
+          <Trash2 className='size-5' />
+        </motion.span>
       </motion.div>
       <motion.div
         ref={row}
