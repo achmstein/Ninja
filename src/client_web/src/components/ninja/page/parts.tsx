@@ -14,7 +14,7 @@ export function Slab({ className, children, ...props }: HTMLMotionProps<'div'>) 
   return (
     <motion.div
       className={cn(
-        'slab relative overflow-hidden rounded-[1.75rem] p-5 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]',
+        'slab relative overflow-hidden rounded-[1.75rem] p-5 shadow-(--slab-shadow)',
         '[--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))]',
         className
       )}

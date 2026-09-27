@@ -6,7 +6,17 @@ import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
-import { canQuickAdd, CARD_RADIUS, columnAt, DECK_TOP, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+import { canQuickAdd, CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+
+/** How much of the next card shows under the one in view, px */
+const PEEK = 44
+
+/**
+ * Room at the top of a column, px: --deck-top, set by the Ninja style (the
+ * top bar's room on the first card, a sliver past it; styles/index.css eases
+ * it between the two)
+ */
+const topOf = (column: HTMLElement) => parseFloat(getComputedStyle(column).scrollPaddingTop) || 0
 import { LONG_PRESS_MS, usePress } from './use-press'
 
 /** The gap between cards, px */
@@ -66,7 +76,7 @@ export function Deck({
     el.scrollLeft = (rtl ? -1 : 1) * start.column * el.clientWidth
     const col = columnEls.current[start.column]
     const card = col?.children[start.row] as HTMLElement | undefined
-    if (col && card) col.scrollTop = card.offsetTop - DECK_TOP
+    if (col && card) col.scrollTop = card.offsetTop - topOf(col)
     onRowChange(start.column, start.row)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -111,7 +121,7 @@ export function Deck({
       onColumnChange(c + 1)
       window.setTimeout(() => {
         const last = next.previousElementSibling as HTMLElement | null
-        if (last) el.scrollTop = last.offsetTop - DECK_TOP
+        if (last) el.scrollTop = last.offsetTop - topOf(el)
       }, 700)
     }, ADVANCE_AFTER)
   }
@@ -169,7 +179,7 @@ export function Deck({
           role='group'
           aria-label={col.label}
           className='no-scrollbar h-full w-full shrink-0 snap-start snap-always snap-y snap-mandatory overflow-y-auto overscroll-y-contain px-4'
-          style={{ paddingTop: DECK_TOP, scrollPaddingTop: DECK_TOP }}
+          style={{ paddingTop: 'var(--deck-top)', scrollPaddingTop: 'var(--deck-top)' }}
           onScroll={(e) => {
             const el = e.currentTarget
             const first = el.firstElementChild as HTMLElement | null
@@ -219,7 +229,7 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
       viewport={{ amount: 0.25 }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
       className={cn('mb-3 flex w-full shrink-0 snap-start flex-col justify-between p-6 text-start', TONE_CLASS[column.tone])}
-      style={{ height: `calc((100% - ${DECK_TOP + 44}px) * 0.5)`, borderRadius: CARD_RADIUS }}
+      style={{ height: `calc((100% - var(--deck-top) - ${PEEK}px) * 0.5)`, borderRadius: CARD_RADIUS }}
     >
       <span className='text-sm font-semibold opacity-70'>{t('ninjaUpNext')}</span>
       <span className='flex items-end justify-between gap-4'>
@@ -275,7 +285,7 @@ function DeckCard({
   return (
     <div
       className='mb-3 snap-start transition-transform duration-200 ease-out motion-reduce:transition-none'
-      style={{ height: `calc(100% - ${DECK_TOP + 44}px)`, transform: pressing ? 'scale(0.97)' : undefined }}
+      style={{ height: `calc(100% - var(--deck-top) - ${PEEK}px)`, transform: pressing ? 'scale(0.97)' : undefined }}
     >
       <motion.article
         layoutId={shared ? `card-${item.id}` : undefined}

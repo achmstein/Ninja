@@ -125,6 +125,12 @@ body[data-scroll-locked][data-scroll-locked] {
   padding-inline-end: var(--removed-body-scroll-bar-size, 0px) !important;
 }
 
+/* The slab's lift (the dock, the dark cards): one shadow for them all, kept
+   short and soft so a column of cards reads calm rather than stacked */
+:root {
+  --slab-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.28);
+}
+
 /* Shadows vanish on dark: surfaces take a hairline there instead */
 :root.dark {
   --surface-border: 1px;
@@ -196,4 +202,21 @@ html[data-preview] * {
 html[data-preview]::-webkit-scrollbar,
 html[data-preview] *::-webkit-scrollbar {
   display: none;
+}
+
+/* The room at the top of the Ninja deck's columns: the top bar's on the
+   first card, a sliver past it. A typed property, so the cards' padding and
+   height (both read from it) ease between the two together rather than jump */
+@property --deck-top {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 68px;
+}
+.deck-top {
+  transition: --deck-top 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-top {
+    transition: none;
+  }
 }

@@ -1,4 +1,4 @@
-import { useRef, type ComponentType } from 'react'
+import { useEffect, useRef, type ComponentType } from 'react'
 import { motion } from 'motion/react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n'
@@ -14,6 +14,7 @@ import { useDockRowShown } from './use-dock-row'
 import { LiquidPill } from './liquid-pill'
 import { Odometer } from './odometer'
 import { useLiquidEdges } from './use-liquid'
+import { useTuck, useTuckOnScroll } from './use-tuck'
 
 /**
  * The app's tabs as the Ninja style draws them: a row inside the dark dock, the
@@ -85,17 +86,41 @@ export function NinjaNav({ className }: { className?: string }) {
  */
 export function NinjaNavDock() {
   const live = useDockRowShown(useLiveBills())
+  const pathname = useRouterState({ select: (s) => (s.resolvedLocation ?? s.location).pathname })
+  // Every page scrolls the window; a new page starts with the dock whole
+  useTuckOnScroll(null)
+  useEffect(() => useTuck.setState({ tucked: false }), [pathname])
+  const tucked = useTuck((s) => s.tucked)
+  // With no row to keep, tucking the tabs is the whole dock going, down past the screen's edge
+  const gone = tucked && !live
   return (
     // The menu's dock's own margins, so the bar does not shift when the page changes
     <div
-      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg'
-      style={{ paddingInline: DOCK_SIDE, bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
+      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg transition-transform duration-300 ease-out motion-reduce:transition-none'
+      style={{
+        paddingInline: DOCK_SIDE,
+        bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))`,
+        transform: gone ? `translateY(calc(100% + max(${DOCK_INSET}px, env(safe-area-inset-bottom))))` : undefined,
+      }}
     >
-      <div className='slab pointer-events-auto relative rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'>
+      <div className='slab pointer-events-auto relative rounded-[1.75rem] shadow-(--slab-shadow)' inert={gone || undefined}>
         {/* The bill and the order on its way, above the tabs, on every tab */}
         <DockRow />
-        <NinjaNav className={live ? 'border-background/10 border-t' : undefined} />
+        <TuckedTabs tucked={tucked && live} className={live ? 'border-background/10 border-t' : undefined} />
       </div>
+    </div>
+  )
+}
+
+/** The tabs, folding shut under the dock's row while the customer scrolls down, and open again on the way back up */
+export function TuckedTabs({ tucked, className }: { tucked: boolean; className?: string }) {
+  return (
+    <div
+      className='overflow-hidden transition-[height] duration-300 ease-out motion-reduce:transition-none'
+      style={{ height: tucked ? 0 : TABS_H }}
+      inert={tucked || undefined}
+    >
+      <NinjaNav className={className} />
     </div>
   )
 }

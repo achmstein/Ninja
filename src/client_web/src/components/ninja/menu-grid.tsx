@@ -35,6 +35,7 @@ export function MenuGrid({
   jump,
   onSection,
   list,
+  onScroller,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -52,8 +53,16 @@ export function MenuGrid({
   onSection: (index: number) => void
   /** The café's own menu (no deck behind it): a row per dish, a photo grid, compact text rows, or magazine cards */
   list?: MenuList
+  /** Its scrolling box, handed up while it is on screen, so the chrome around it can follow its scroll */
+  onScroller?: (el: HTMLDivElement | null) => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
+  const onScrollerRef = useRef(onScroller)
+  useLayoutEffect(() => {
+    const hand = onScrollerRef.current
+    hand?.(scroller.current)
+    return () => hand?.(null)
+  }, [])
   const categories = columns.filter((c) => c.kind === 'category')
   // The tile being opened takes its layout id a frame before its card opens, so the card grows
   // out of it; every other tile outside the deck's column has none, which keeps the zoom's first

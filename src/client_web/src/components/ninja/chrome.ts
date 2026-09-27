@@ -16,6 +16,9 @@ export const NINJA_BAR_H = SHORT ? 54 : 64
 /** Room at the top of the deck and the grid for the top bar over them, px */
 export const DECK_TOP = NINJA_BAR_H + 4
 
+/** Room at the top of the deck past its first card, the top bar gone up, px */
+export const DECK_COMPACT_TOP = 8
+
 /** The tray's row of the bottom dock, px; the order sheet tucks under its top */
 export const DOCK_H = SHORT ? 58 : 68
 

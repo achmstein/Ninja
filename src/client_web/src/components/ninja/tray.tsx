@@ -17,6 +17,8 @@ import { StillHereCard } from '@/components/places/still-here'
 import { HOLD_MS } from './hold'
 import { Odometer } from './odometer'
 import { DishPhoto } from './dish-photo'
+import { GestureHint } from './gesture-hint'
+import { gestureMs } from './gesture-timing'
 import { HintBubble } from './hint-bubble'
 import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
 import { useHint, useTimeout } from './use-hint'
@@ -101,7 +103,7 @@ export function Tray({
   useEffect(() => {
     if (expanded && hintPending) hintDone()
   }, [expanded, hintPending, hintDone])
-  useTimeout(hint.showing, 3200, hint.done)
+  useTimeout(hint.showing, gestureMs('drag'), hint.done)
 
   // The sheet: mounted while open, opening, closing, peeking or under a finger; y is how far it sits below open
   const [sheetOn, setSheetOn] = useState(false)
@@ -249,7 +251,10 @@ export function Tray({
     <div className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none' style={{ height: bare ? 0 : DOCK_H }}>
       <AnimatePresence>
         {hint.showing && !expanded && (
-          <div className='absolute inset-x-0 bottom-full z-20 mb-4 flex justify-center'>
+          <GestureHint key='drag-tip' kind='drag' className='pointer-events-none absolute inset-0 z-30 grid place-items-center' />
+        )}
+        {hint.showing && !expanded && (
+          <div key='drag-words' className='absolute inset-x-0 bottom-full z-20 mb-4 flex justify-center'>
             <HintBubble>
               <ArrowUp className='size-3.5' />
               {t('ninjaHintTray')}

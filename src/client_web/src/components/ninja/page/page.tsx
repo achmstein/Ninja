@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useCanGoBack, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
-import { AnimatePresence, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
+import { AnimatePresence, motion, MotionConfig, useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
@@ -8,14 +8,15 @@ import { cn } from '@/lib/utils'
 import { NinjaTopBar } from '../ninja-top-bar'
 import { pushTitleId } from './push'
 
-/** How far the page scrolls before its large title has gone up into the bar, px */
+/** How far the page scrolls before its large title has faded away, px */
 const TITLE_FOLD = 44
 
 /**
- * A page in the Ninja style. It keeps the slim see-through bar at the top
- * and opens on a large title, which shrinks and fades as the page scrolls
- * until the bar takes the title over. A tab page keeps the brand and the
- * place chips in its bar; a pushed page (`back`) has a way back instead,
+ * A page in the Ninja style. Its slim bar is the top of the page and
+ * scrolls away with it, leaving a small screen whole to what is under it;
+ * then a large title, which shrinks and fades as the page scrolls. A tab
+ * page keeps the brand and the place chips in its bar; a pushed page
+ * (`back`) has a way back instead,
  * to where it came from, or to `back` when it was opened fresh. `push`: the
  * row it was opened from gave it its name, which travels into the title and
  * back (./push.ts).
@@ -42,8 +43,6 @@ export function NinjaPage({
   push?: string
 }) {
   const { scrollY } = useScroll()
-  const [folded, setFolded] = useState(false)
-  useMotionValueEvent(scrollY, 'change', (y) => setFolded(y > TITLE_FOLD))
   const unfaded = useMotionValue(1)
   const opacity = useTransform([scrollY, fade ?? unfaded], ([y, f]: number[]) => Math.max(0, 1 - y / TITLE_FOLD) * f)
   const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
@@ -51,12 +50,7 @@ export function NinjaPage({
 
   return (
     <MotionConfig reducedMotion='user'>
-      <NinjaTopBar
-        className='sticky top-[env(safe-area-inset-top)]'
-        title={folded ? title : null}
-        chips={!back}
-        start={back ? <BackButton to={back} title={folded ? title : null} /> : undefined}
-      />
+      <NinjaTopBar chips={!back} start={back ? <BackButton to={back} /> : undefined} />
       {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
       {/* pb-24: room for the dock's bill row, which sits above the tabs while a bill or an order is on */}
       <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-24', className)}>
@@ -82,32 +76,21 @@ export function NinjaPage({
   )
 }
 
-/** The way back from a pushed page: a round button, with the page's title beside it once the large one has gone. */
-function BackButton({ to, title }: { to: LinkProps['to']; title: string | null }) {
+/** The way back from a pushed page: a round button */
+function BackButton({ to }: { to: LinkProps['to'] }) {
   const t = useT()
   const navigate = useNavigate()
   const router = useRouter()
   const canGoBack = useCanGoBack()
   return (
-    <>
-      <button
-        type='button'
-        aria-label={t('back')}
-        onClick={() => (canGoBack ? router.history.back() : navigate({ to }))}
-        className='bg-muted/80 active:bg-muted -ms-1 grid size-10 shrink-0 place-items-center rounded-full transition-colors'
-      >
-        <ArrowLeft className='size-5 rtl:rotate-180' />
-      </button>
-      <motion.span
-        className='heading truncate ps-1 text-[calc(1.05rem*var(--heading-scale))]'
-        initial={false}
-        animate={{ opacity: title ? 1 : 0, x: title ? 0 : -6 }}
-        transition={springSoft}
-        aria-hidden={!title}
-      >
-        {title}
-      </motion.span>
-    </>
+    <button
+      type='button'
+      aria-label={t('back')}
+      onClick={() => (canGoBack ? router.history.back() : navigate({ to }))}
+      className='bg-muted/80 active:bg-muted -ms-1 grid size-10 shrink-0 place-items-center rounded-full transition-colors'
+    >
+      <ArrowLeft className='size-5 rtl:rotate-180' />
+    </button>
   )
 }
 

@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useBrand, useIsCloudKitchen } from '@/lib/brand'
@@ -8,24 +8,28 @@ import { useLiveBills } from '@/lib/live-bills'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { usePlaceOrder } from '@/lib/use-place-order'
 import { useCheckoutExtras } from '@/lib/use-checkout-extras'
 import { SignInSheet } from '@/components/sign-in-options'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { OrderingPausedNote } from '@/components/menu/home/shared'
 import type { HomeProps } from '@/components/menu/home/use-menu'
-import { DOCK_INSET, DOCK_SIDE } from './chrome'
-import { NinjaNav } from './ninja-nav'
+import { DECK_COMPACT_TOP, DOCK_INSET, DOCK_SIDE, NINJA_BAR_H, TABS_H } from './chrome'
+import { TuckedTabs } from './ninja-nav'
 import { NinjaTopBar } from './ninja-top-bar'
 import { Deck, type DeckPosition } from './deck'
 import { buildDeck, canQuickAdd, DECK_TOP, pickUsual, positionOf, quickAddChoice, TONE_CLASS } from './deck-model'
 import { FlightLayer, type Flight } from './flights'
+import { GestureHint } from './gesture-hint'
+import { GESTURE_DELAY_S, GESTURE_GAP_S, GESTURE_S, gestureMs } from './gesture-timing'
 import { HintBubble } from './hint-bubble'
 import { LiquidTabs } from './liquid-tabs'
 import { MenuGrid, type MenuList } from './menu-grid'
 import { Tray } from './tray'
 import { DockBill } from './dock-bill'
 import { useDockRowShown } from './use-dock-row'
+import { useTuck, useTuckOnScroll } from './use-tuck'
 import { Tune, type TuneResult } from './tune'
 import { useHint, useTimeout } from './use-hint'
 
@@ -38,9 +42,10 @@ type Tuning = { item: CatalogItemDto; leaving?: boolean }
  * them); a card opens in place into its options; what is added flies into
  * the tray; and a held press sends the order through the same path the cart
  * page uses, after which the order pill at the top takes over. Pinch, or tap
- * the category again, to see the whole menu. The bar at the top is see-
- * through over the cards; the tray and the app's tabs are one dock below.
- * The gestures are each shown once, on a first visit.
+ * the category again, to see the whole menu. The bar at the top goes up
+ * past the first card, the dock's tabs folding with it, so a small screen
+ * gives the cards its room; the tray and the app's tabs are one dock below.
+ * The gestures are each acted out once by a fingertip, on a first visit.
  */
 export function NinjaHome({ menu }: HomeProps) {
   const t = useT()
@@ -66,10 +71,17 @@ export function NinjaHome({ menu }: HomeProps) {
   const start: DeckPosition = touched ? moved : { column: 0, row: 0 }
   const rows = useRef<Record<number, number>>({})
   const [activeRow, setActiveRow] = useState(0)
+  const [pastFirst, setPastFirst] = useState(false)
+  // The tabs keep the rule they have on every page: a card on (scrolling down) puts them away, a
+  // card back (scrolling up) brings them back, as does the first card (the top)
+  const [tabsAsked, setTabsAsked] = useState(false)
 
-  // The café may list its menu the classic way (the brand's menu item part): the whole menu as rows, no deck
+  // The menu is a list (the brand's menu item part picks its look, rows when it picks none): a menu is
+  // scanned and compared, which a list lets the eye do. The cards to swipe are the café's own choice,
+  // for a short menu with a photo of every dish
   const chosen = useBrand()?.theme?.layout?.menuItem
-  const list: MenuList | undefined = chosen === 'row' || chosen === 'card' || chosen === 'compact' || chosen === 'hero' ? chosen : undefined
+  const list: MenuList | undefined =
+    chosen === 'deck' ? undefined : chosen === 'card' || chosen === 'compact' || chosen === 'hero' ? chosen : 'row'
   const classic = list != null
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
@@ -82,6 +94,33 @@ export function NinjaHome({ menu }: HomeProps) {
   useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
   const [flights, setFlights] = useState<Flight[]>([])
   const bare = trayEmpty && !dockRow && flights.length === 0
+
+  // The whole menu scrolls like a page: the top bar goes up with it, and scrolling down tucks the
+  // dock's tabs (the tray staying), scrolling back up brings them back
+  const [gridScroller, setGridScroller] = useState<HTMLDivElement | null>(null)
+  useTuckOnScroll(gridScroller, gridScroller != null && !expanded)
+  const scrolledDown = useTuck((s) => s.tucked)
+  // The deck goes compact past its first card: the top bar goes up, the tabs fold and the cards grow
+  // into both. By where the customer is rather than which way they last swiped, so going back a
+  // card to compare two dishes keeps the room; the first card brings the chrome back
+  const compact = mode === 'deck' && pastFirst && columns.length > 0
+  // Asked back on the compact deck, the tabs come up over the next card's peek rather than taking
+  // the cards' room: the categories and the dock rise over the deck's bottom, the cards unmoved
+  const tabsOver = compact && tabsAsked
+  const tucked = gridScroller ? scrolledDown : compact && !tabsAsked
+  const barY = useMotionValue(0)
+  useEffect(() => {
+    if (gridScroller) {
+      const follow = () => barY.set(-Math.min(gridScroller.scrollTop, NINJA_BAR_H))
+      follow()
+      gridScroller.addEventListener('scroll', follow, { passive: true })
+      return () => gridScroller.removeEventListener('scroll', follow)
+    }
+    const run = animate(barY, compact ? -NINJA_BAR_H : 0, reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' })
+    return () => run.stop()
+  }, [gridScroller, compact, barY, reduced])
+  // Nothing in the tray's row and the tabs tucked: the dock is gone, the categories left at the bottom
+  const docked = !(tucked && bare)
   // The dish added from its open card: that card sits out while its photo flies, and comes back as it lands
   const [landing, setLanding] = useState<number | null>(null)
   const [bump, setBump] = useState(0)
@@ -127,7 +166,7 @@ export function NinjaHome({ menu }: HomeProps) {
   // "Hold to add" waits for a card a long press would add straight away
   const cueFits = current !== holdHint || (!!activeItem && canQuickAdd(activeItem))
   useTimeout(idle && cueFits && current != null && !current.showing, 1400, () => current?.show())
-  useTimeout(!!current?.showing, 3800, () => current?.done())
+  useTimeout(!!current?.showing, gestureMs(current === swipeHint ? 'swipe' : current === zoomHint ? 'pinch' : 'hold'), () => current?.done())
   const holdHintId = holdHint.showing && activeItem && canQuickAdd(activeItem) ? Number(activeItem.id) : null
 
   const selectColumn = useCallback(
@@ -141,8 +180,15 @@ export function NinjaHome({ menu }: HomeProps) {
   )
 
   const onRowChange = (c: number, row: number) => {
+    const was = rows.current[c] ?? 0
     rows.current[c] = row
     if (c !== column) return
+    // Only a swipe through the cards moves the chrome: turning to another category (which opens on
+    // its first card) keeps it as it was. These flip only when the card changes, so scrolling
+    // between cards re-renders nothing
+    if (row === was) return
+    setPastFirst(row > 0)
+    setTabsAsked(row < was)
     // Only the first visit's "hold to add" cue needs the row as state; a
     // re-render here on every card scrolled past re-measured the whole deck
     // for its shared layouts and made the scroll stutter
@@ -174,6 +220,9 @@ export function NinjaHome({ menu }: HomeProps) {
         setActiveId(columns[position.column]?.id ?? null)
         setMoved(position)
         setActiveRow(position.row)
+        setPastFirst(position.row > 0)
+        // Back from the whole menu is a page opened afresh, which starts with its tabs
+        setTabsAsked(true)
       }
       setMode('deck')
     },
@@ -264,7 +313,8 @@ export function NinjaHome({ menu }: HomeProps) {
           <div className='relative flex min-h-0 flex-1 flex-col'>
             {/* The first-visit demonstrations move the whole deck: a nudge up, then a breath out to the whole menu */}
             <motion.div
-              className='min-h-0 flex-1'
+              className='deck-top min-h-0 flex-1'
+              style={{ '--deck-top': `${compact ? DECK_COMPACT_TOP : DECK_TOP}px` } as CSSProperties}
               animate={
                 swipeHint.showing
                   ? { y: [0, -56, 0, -28, 0], scale: 1 }
@@ -272,7 +322,19 @@ export function NinjaHome({ menu }: HomeProps) {
                     ? { scale: [1, 0.9, 0.9, 1], y: 0 }
                     : { scale: 1, y: 0 }
               }
-              transition={{ duration: swipeHint.showing ? 1.6 : 2.2, times: swipeHint.showing ? [0, 0.3, 0.55, 0.75, 1] : [0, 0.3, 0.7, 1], ease: 'easeInOut', delay: 0.2 }}
+              // Twice, in step with the fingertip acting the gesture out over it
+              transition={
+                swipeHint.showing || zoomHint.showing
+                  ? {
+                      duration: GESTURE_S[swipeHint.showing ? 'swipe' : 'pinch'],
+                      times: swipeHint.showing ? [0, 0.3, 0.55, 0.75, 1] : [0, 0.3, 0.7, 1],
+                      ease: 'easeInOut',
+                      delay: GESTURE_DELAY_S,
+                      repeat: 1,
+                      repeatDelay: GESTURE_GAP_S,
+                    }
+                  : { duration: 0.3 }
+              }
             >
               {loading ? (
                 <div className='h-full px-4 pb-14' style={{ paddingTop: DECK_TOP }}>
@@ -292,6 +354,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   jump={jump}
                   onSection={setGridColumn}
                   list={list}
+                  onScroller={setGridScroller}
                 />
               ) : (
                 <Deck
@@ -314,6 +377,7 @@ export function NinjaHome({ menu }: HomeProps) {
             {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
             <NinjaTopBar
               className='absolute inset-x-0 top-0'
+              style={{ y: barY }}
               start={
                 mode === 'grid' && !classic ? (
                   <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
@@ -334,7 +398,8 @@ export function NinjaHome({ menu }: HomeProps) {
               <nav
                 aria-label={t('menu')}
                 // A soft shadow along its top edge sets it apart from the cards or the tiles running up to it
-                className='bg-background relative z-10 shrink-0 pb-1 shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)]'
+                className='bg-background relative z-10 shrink-0 pb-1 shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)] transition-[margin] duration-300 ease-out motion-reduce:transition-none'
+                style={{ marginTop: tabsOver ? -TABS_H : 0 }}
               >
                 {mode === 'deck' ? (
                   <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
@@ -358,6 +423,11 @@ export function NinjaHome({ menu }: HomeProps) {
               </nav>
             )}
 
+            <AnimatePresence>
+              {swipeHint.showing && <GestureHint key='swipe-tip' kind='swipe' />}
+              {zoomHint.showing && <GestureHint key='pinch-tip' kind='pinch' />}
+              {holdHintId != null && <GestureHint key='hold-tip' kind='hold' />}
+            </AnimatePresence>
             <AnimatePresence>
               {swipeHint.showing && (
                 <div key='swipe' className='pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center'>
@@ -414,8 +484,11 @@ export function NinjaHome({ menu }: HomeProps) {
 
           {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
           <div
-            className='slab relative z-40 shrink-0 rounded-[1.75rem] shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]'
-            style={{ marginInline: DOCK_SIDE, marginBottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` }}
+            className={cn(
+              'slab relative z-40 shrink-0 rounded-[1.75rem] transition-[margin,box-shadow] duration-300 ease-out motion-reduce:transition-none',
+              docked && 'shadow-(--slab-shadow)'
+            )}
+            style={{ marginInline: DOCK_SIDE, marginBottom: docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)' }}
           >
             <Tray
               targetRef={target}
@@ -434,7 +507,8 @@ export function NinjaHome({ menu }: HomeProps) {
             />
             {/* The bill running now, in the tray's row while the tray is empty */}
             <DockBill live={live} trayEmpty={trayEmpty} />
-            <NinjaNav className={bare ? undefined : 'border-background/10 border-t'} />
+            {/* Scrolling down the whole menu folds the tabs, the tray staying: the order is what is at hand */}
+            <TuckedTabs tucked={tucked} className={bare ? undefined : 'border-background/10 border-t'} />
           </div>
         </div>
 
