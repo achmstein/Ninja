@@ -59,6 +59,7 @@ export function Tray({
   cloudKitchen,
   onSignIn,
   onKeepHolding,
+  bare = false,
 }: {
   /** Where a flying photo lands */
   targetRef: RefObject<HTMLDivElement | null>
@@ -76,6 +77,8 @@ export function Tray({
   onSignIn: () => void
   /** The hold was let go before the ring closed */
   onKeepHolding: () => void
+  /** Nothing in it and nothing on its way, and no bill or table in the dock: the row folds away, leaving the tabs */
+  bare?: boolean
 }) {
   const t = useT()
   const price = usePrice()
@@ -241,7 +244,9 @@ export function Tray({
   })()
 
   return (
-    <div className='relative z-10 shrink-0' style={{ height: DOCK_H }}>
+    // Bare, it takes no room: its row stays drawn where it will be (anchored to the bottom, over the
+    // menu, faded out) so a dish flying in lands on its place while the row grows under it
+    <div className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none' style={{ height: bare ? 0 : DOCK_H }}>
       <AnimatePresence>
         {hint.showing && !expanded && (
           <div className='absolute inset-x-0 bottom-full z-20 mb-4 flex justify-center'>
@@ -282,7 +287,14 @@ export function Tray({
 
       {/* The tray's row of the dock */}
       {/* px-6: the dishes and the total start where a card's name does */}
-      <div ref={dockRef} className='absolute inset-0 flex items-center gap-3 ps-6 pe-3'>
+      <div
+        ref={dockRef}
+        className={cn(
+          '@container absolute inset-x-0 bottom-0 flex items-center gap-3 ps-6 pe-3 transition-opacity duration-200',
+          bare && 'pointer-events-none opacity-0'
+        )}
+        style={{ height: DOCK_H }}
+      >
               <motion.button
                 type='button'
                 // The dock pulls the order up; a tap opens it too
@@ -334,7 +346,7 @@ export function Tray({
                         className='block origin-[0%_50%] rtl:origin-[100%_50%]'
                         style={reduced ? undefined : { scale: totalScale }}
                       >
-                        <Odometer value={price(extras.total)} className='text-base font-bold' />
+                        <Odometer value={price(extras.total)} className='text-base font-bold @max-[21rem]:text-sm' />
                       </motion.span>
                       {/* What the code and the points take off, under the total they took it from */}
                       <AnimatePresence initial={false}>
@@ -693,12 +705,12 @@ function HoldButton({
       }}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        'bg-background/12 relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
+        'bg-background/12 relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold @max-[21rem]:h-11 @max-[21rem]:gap-1.5 @max-[21rem]:pe-3.5 select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
         holding && 'scale-[0.96]'
       )}
     >
-      <span className='relative grid size-10 place-items-center'>
-        <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90 rtl:scale-y-[-1]' aria-hidden>
+      <span className='relative grid size-10 place-items-center @max-[21rem]:size-9'>
+        <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90' aria-hidden>
           <circle cx='22' cy='22' r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.25} strokeWidth='3' />
           <circle
             cx='22'
@@ -717,7 +729,8 @@ function HoldButton({
         </svg>
         {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className={cn('size-4 transition-opacity', filled ? 'opacity-100' : 'opacity-60')} strokeWidth={3} />}
       </span>
-      <span className='text-sm whitespace-nowrap'>{t('ninjaHoldToOrder')}</span>
+      {/* On a narrow row the words and the ring draw smaller, so the total beside them keeps its room */}
+      <span className='text-sm whitespace-nowrap @max-[21rem]:text-xs'>{t('ninjaHoldToOrder')}</span>
     </motion.button>
   )
 }

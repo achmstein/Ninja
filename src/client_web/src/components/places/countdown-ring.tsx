@@ -40,7 +40,7 @@ export function CountdownRing({
 
   return (
     <div className='relative grid place-items-center' style={{ width: SIZE, height: SIZE }}>
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className='absolute inset-0 -rotate-90 rtl:scale-y-[-1]' aria-hidden>
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className='absolute inset-0 -rotate-90' aria-hidden>
         <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill='none' stroke='currentColor' strokeOpacity={0.12} strokeWidth={STROKE} />
         <motion.circle
           cx={SIZE / 2}

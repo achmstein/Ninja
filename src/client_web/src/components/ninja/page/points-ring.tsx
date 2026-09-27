@@ -25,7 +25,7 @@ export function PointsRing({
   const r = (size - stroke) / 2
   return (
     <div className={cn('relative grid shrink-0 place-items-center', className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className='absolute inset-0 -rotate-90 rtl:scale-y-[-1]' aria-hidden>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className='absolute inset-0 -rotate-90' aria-hidden>
         <circle cx={size / 2} cy={size / 2} r={r} fill='none' stroke='currentColor' strokeOpacity={0.14} strokeWidth={stroke} />
         <motion.circle
           cx={size / 2}

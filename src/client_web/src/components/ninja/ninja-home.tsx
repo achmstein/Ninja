@@ -25,6 +25,7 @@ import { LiquidTabs } from './liquid-tabs'
 import { MenuGrid, type MenuList } from './menu-grid'
 import { Tray } from './tray'
 import { DockBill } from './dock-bill'
+import { useDockRowShown } from './use-dock-row'
 import { Tune, type TuneResult } from './tune'
 import { useHint, useTimeout } from './use-hint'
 
@@ -49,6 +50,8 @@ export function NinjaHome({ menu }: HomeProps) {
   const add = useCart((s) => s.add)
   const trayEmpty = useCart((s) => s.lines.length === 0)
   const live = useLiveBills()
+  // An empty tray with nothing to show in its place (no bill, order, table or room) takes no row until a dish is on its way
+  const dockRow = useDockRowShown(live)
 
   const columns = useMemo(() => buildDeck(menu.sections), [menu.sections])
   const usual = pickUsual(columns)
@@ -78,6 +81,7 @@ export function NinjaHome({ menu }: HomeProps) {
   const [scrim, setScrim] = useState(false)
   useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
   const [flights, setFlights] = useState<Flight[]>([])
+  const bare = trayEmpty && !dockRow && flights.length === 0
   // The dish added from its open card: that card sits out while its photo flies, and comes back as it lands
   const [landing, setLanding] = useState<number | null>(null)
   const [bump, setBump] = useState(0)
@@ -423,13 +427,14 @@ export function NinjaHome({ menu }: HomeProps) {
               // The hold sends the note, the code and the points set in the order with it
               order={{ ...order, submit: () => order.submit(extras.payload()) }}
               extras={extras}
+              bare={bare}
               cloudKitchen={cloudKitchen}
               onSignIn={() => setSignInOpen(true)}
               onKeepHolding={onKeepHolding}
             />
             {/* The bill running now, in the tray's row while the tray is empty */}
             <DockBill live={live} trayEmpty={trayEmpty} />
-            <NinjaNav className='border-background/10 border-t' />
+            <NinjaNav className={bare ? undefined : 'border-background/10 border-t'} />
           </div>
         </div>
 

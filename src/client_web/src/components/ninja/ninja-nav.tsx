@@ -7,7 +7,7 @@ import { formatClock, useSecondTick } from '@/lib/clock'
 import { ease, spring } from '@/lib/motion'
 import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { isTabActive, NAV_TABS } from '@/components/nav-tabs'
-import { DOCK_H, DOCK_INSET, DOCK_SIDE } from './chrome'
+import { DOCK_H, DOCK_INSET, DOCK_SIDE, TAB_PILL_H, TABS_H } from './chrome'
 import { DockBill } from './dock-bill'
 import { useLiveBills } from '@/lib/live-bills'
 import { useDockRowShown } from './use-dock-row'
@@ -34,8 +34,8 @@ export function NinjaNav({ className }: { className?: string }) {
 
   return (
     <nav className={className}>
-      <div ref={row} className='relative flex h-14 items-stretch px-1.5'>
-        <LiquidPill edges={edges} height={44} top={6} className='bg-[color-mix(in_oklab,var(--background)_16%,var(--foreground))]' />
+      <div ref={row} className='relative flex items-stretch px-1.5' style={{ height: TABS_H }}>
+        <LiquidPill edges={edges} height={TAB_PILL_H} top={(TABS_H - TAB_PILL_H) / 2} className='bg-[color-mix(in_oklab,var(--background)_16%,var(--foreground))]' />
         {tabs.map((tab, i) => {
           const isVisit = tab.key === 'rooms'
           const Icon = isVisit ? visitTab.icon : tab.icon
@@ -118,7 +118,7 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
   return (
     <span className='flex min-w-0 items-center gap-1.5' aria-label={label}>
       <span className='relative grid shrink-0 place-items-center' style={{ width: RING, height: RING }}>
-        <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90 rtl:scale-y-[-1]' aria-hidden>
+        <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90' aria-hidden>
           <circle cx={RING / 2} cy={RING / 2} r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.2} strokeWidth={2} />
           <motion.circle
             cx={RING / 2}
