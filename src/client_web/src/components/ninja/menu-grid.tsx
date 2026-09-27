@@ -175,7 +175,7 @@ export function MenuGrid({
             {col.label}
           </motion.h2>
           {rows ? (
-            <div className='divide-border/60 flex flex-col divide-y'>
+            <div className='flex flex-col gap-4'>
               {col.items.map((item) => (
                 <Row
                   key={String(item.id)}
@@ -334,16 +334,16 @@ function Row({
   })
 
   return (
-    <div data-item={String(item.id)} className={cn('flex items-center gap-3 py-3', soldOut && 'opacity-50')}>
-      <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'>
+    <div data-item={String(item.id)} className={cn('flex items-center gap-4', soldOut && 'opacity-50')}>
+      <button type='button' {...handlers} className='flex min-w-0 flex-1 items-center gap-4 text-start select-none [-webkit-touch-callout:none]'>
         <motion.div
           ref={photo}
           layoutId={morph ? `card-${item.id}` : undefined}
           animate={{ opacity: landing ? 0 : 1 }}
           transition={landing ? { duration: 0 } : { duration: 0.28 }}
-          style={{ borderRadius: 16 }}
+          style={{ borderRadius: 24 }}
           className={cn(
-            'relative size-20 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
+            'relative size-24 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
             !hasPhoto && TONE_CLASS[tone],
             soldOut && 'grayscale',
             pressing && 'scale-[0.94]'
@@ -358,11 +358,12 @@ function Row({
           )}
         </motion.div>
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
-          <span className='text-[15px] leading-snug font-semibold'>{localized(item.name)}</span>
+          {/* The deck's card, laid on its side: the name in the heading's voice, the price its pill */}
+          <span className='heading text-[calc(1.1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
           {item.description && <span className='text-muted-foreground line-clamp-2 text-[13px] leading-snug'>{localized(item.description)}</span>}
-          <span className='mt-0.5 flex items-baseline gap-2 text-sm font-bold tabular-nums'>
-            {price(onOffer ? item.offerPrice : item.price)}
-            {onOffer && <span className='text-muted-foreground text-xs font-medium line-through'>{price(item.price)}</span>}
+          <span className='mt-1.5 flex items-center gap-2'>
+            <span className='bg-muted rounded-full px-2.5 py-1 text-[13px] font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
+            {onOffer && <span className='text-muted-foreground text-xs font-medium tabular-nums line-through'>{price(item.price)}</span>}
           </span>
         </span>
       </button>
@@ -371,9 +372,9 @@ function Row({
           type='button'
           aria-label={t('addToCart')}
           onClick={() => (quick ? onQuickAdd(item, photo.current) : onOpen(item))}
-          className='bg-muted active:bg-foreground/10 grid size-10 shrink-0 place-items-center rounded-full transition-colors'
+          className='slab grid size-11 shrink-0 place-items-center rounded-full shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-transform active:scale-90 motion-reduce:transform-none'
         >
-          <Plus className='size-5' />
+          <Plus className='size-5' strokeWidth={2.5} />
         </button>
       )}
     </div>
