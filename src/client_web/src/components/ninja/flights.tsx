@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { cn } from '@/lib/utils'
+import { DishPhoto } from './dish-photo'
 import { flightPath, type Box } from './tray-model'
 
 export type Flight = {
@@ -42,7 +42,7 @@ export function FlightLayer({ flights, onLand }: { flights: Flight[]; onLand: (i
         return (
           <motion.div
             key={f.id}
-            className={cn('absolute', !f.src && f.toneClass)}
+            className='absolute'
             style={{ left: f.from.x, top: f.from.y, width: f.from.width, height: f.from.height, originX: 0.5, originY: 0.5 }}
             initial={{ x: 0, y: 0, scale: 1, clipPath: clipFrom }}
             animate={{
@@ -54,7 +54,8 @@ export function FlightLayer({ flights, onLand }: { flights: Flight[]; onLand: (i
             transition={{ duration: 0.62, times: [0, 0.45, 1], ease: [0.3, 0, 0.2, 1] }}
             onAnimationComplete={() => onLand(f.id)}
           >
-            {f.src && <img src={f.src} alt='' className='size-full object-cover' />}
+            {/* A photo that will not load flies as the plate, as the tray shows it, never as a broken image */}
+            <DishPhoto src={f.src} />
           </motion.div>
         )
       })}

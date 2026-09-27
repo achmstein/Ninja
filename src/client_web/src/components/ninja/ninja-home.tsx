@@ -22,7 +22,7 @@ import { buildDeck, canQuickAdd, DECK_TOP, pickUsual, positionOf, quickAddChoice
 import { FlightLayer, type Flight } from './flights'
 import { HintBubble } from './hint-bubble'
 import { LiquidTabs } from './liquid-tabs'
-import { MenuGrid } from './menu-grid'
+import { MenuGrid, type MenuList } from './menu-grid'
 import { Tray } from './tray'
 import { DockBill } from './dock-bill'
 import { Tune, type TuneResult } from './tune'
@@ -65,7 +65,9 @@ export function NinjaHome({ menu }: HomeProps) {
   const [activeRow, setActiveRow] = useState(0)
 
   // The café may list its menu the classic way (the brand's menu item part): the whole menu as rows, no deck
-  const classic = useBrand()?.theme?.layout?.menuItem === 'row'
+  const chosen = useBrand()?.theme?.layout?.menuItem
+  const list: MenuList | undefined = chosen === 'row' || chosen === 'card' || chosen === 'compact' || chosen === 'hero' ? chosen : undefined
+  const classic = list != null
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
   const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
@@ -285,7 +287,7 @@ export function NinjaHome({ menu }: HomeProps) {
                   landingId={landing}
                   jump={jump}
                   onSection={setGridColumn}
-                  rows={classic}
+                  list={list}
                 />
               ) : (
                 <Deck

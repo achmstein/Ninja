@@ -34,7 +34,7 @@ export function MenuGrid({
   landingId,
   jump,
   onSection,
-  rows = false,
+  list,
 }: {
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
@@ -50,8 +50,8 @@ export function MenuGrid({
   jump: { index: number; n: number } | null
   /** The category in view changed, as the jump bar lights it */
   onSection: (index: number) => void
-  /** The classic menu (the café's choice): each dish a row under its category, not a tile, and no deck behind it */
-  rows?: boolean
+  /** The café's own menu (no deck behind it): a row per dish, a photo grid, compact text rows, or magazine cards */
+  list?: MenuList
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const categories = columns.filter((c) => c.kind === 'category')
@@ -177,19 +177,22 @@ export function MenuGrid({
           >
             {col.label}
           </motion.h2>
-          {rows ? (
-            <div className='flex flex-col gap-4'>
-              {col.items.map((item) => (
-                <Row
-                  key={String(item.id)}
-                  scroller={scroller}
-                  item={item}
-                  opening={Number(item.id) === openingId}
-                  landing={Number(item.id) === landingId}
-                  onOpen={open}
-                  onQuickAdd={onQuickAdd}
-                />
-              ))}
+          {list ? (
+            <div className={LIST_CLASS[list]}>
+              {col.items.map((item) => {
+                const Dish = LIST_DISH[list]
+                return (
+                  <Dish
+                    key={String(item.id)}
+                    scroller={scroller}
+                    item={item}
+                    opening={Number(item.id) === openingId}
+                    landing={Number(item.id) === landingId}
+                    onOpen={open}
+                    onQuickAdd={onQuickAdd}
+                  />
+                )
+              })}
             </div>
           ) : (
           <div className='grid grid-cols-3 gap-2.5'>
@@ -303,6 +306,193 @@ function Tile({
  * choosing straight in the tray (and opens one that does), and a held press
  * on the row does the same as on a tile.
  */
+type DishProps = {
+  /** The list's scroller: a dish rises in as it scrolls into it */
+  scroller: React.RefObject<HTMLDivElement | null>
+  item: CatalogItemDto
+  opening: boolean
+  landing: boolean
+  onOpen: (item: CatalogItemDto) => void
+  onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
+}
+
+/** The menu styles a café may choose instead of the deck (the brand's menu item part) */
+export type MenuList = 'row' | 'card' | 'compact' | 'hero'
+
+/** Each rises into place the first time it scrolls into view, as the deck's cards arrive */
+const rise = (scroller: DishProps['scroller']) =>
+  ({
+    initial: { opacity: 0, y: 18 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, root: scroller, margin: '0px 0px -8% 0px' },
+    transition: springSoft,
+  }) as const
+
+/** What every dish of a list needs: its photo (or the plate), the press, the morph into its options */
+function useDish({
+  item,
+  opening,
+  onOpen,
+  onQuickAdd,
+  photo,
+}: Pick<DishProps, 'item' | 'opening' | 'onOpen' | 'onQuickAdd'> & { photo: React.RefObject<HTMLElement | null> }) {
+  const [failed, setFailed] = useState(false)
+  const { pressing, handlers } = usePress({
+    onTap: () => onOpen(item),
+    onLongPress: () => onQuickAdd(item, photo.current),
+  })
+  return {
+    pressing,
+    handlers,
+    hasPhoto: !!item.pictureUri && !failed,
+    fail: () => setFailed(true),
+    soldOut: item.isAvailable === false,
+    onOffer: !!item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0),
+    quick: canQuickAdd(item),
+    // Only the one being opened carries the layout ids its options grow out of
+    morph: opening,
+  }
+}
+
+/** The photo box of a list's dish: the photo, or the plate on the café's colour, morphing into the options when opened */
+function DishPhotoBox({
+  item,
+  dish,
+  photoRef,
+  radius,
+  className,
+  children,
+}: {
+  item: CatalogItemDto
+  dish: ReturnType<typeof useDish>
+  photoRef: React.RefObject<HTMLDivElement | null>
+  radius: number
+  className?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <motion.div
+      ref={photoRef}
+      layoutId={dish.morph ? `card-${item.id}` : undefined}
+      style={{ borderRadius: radius }}
+      className={cn(
+        'relative shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
+        !dish.hasPhoto && TONE_CLASS.primary,
+        dish.soldOut && 'grayscale',
+        dish.pressing && 'scale-[0.96]',
+        className
+      )}
+    >
+      {dish.hasPhoto ? (
+        <motion.div layoutId={dish.morph ? `photo-${item.id}` : undefined} className='bg-muted absolute inset-0'>
+          <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={dish.fail} className='size-full object-cover' />
+        </motion.div>
+      ) : (
+        <motion.div layoutId={dish.morph ? `photo-${item.id}` : undefined} className='absolute inset-0 grid place-items-center'>
+          <UtensilsCrossed className='size-1/3 max-w-12 opacity-40' />
+        </motion.div>
+      )}
+      {children}
+    </motion.div>
+  )
+}
+
+/** The price, and the struck-out one under an offer */
+function DishPrice({ item, onOffer, className }: { item: CatalogItemDto; onOffer: boolean; className?: string }) {
+  const price = usePrice()
+  return (
+    <span className={cn('flex items-center gap-2', className)}>
+      <span className='bg-muted rounded-full px-2.5 py-1 text-[13px] font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
+      {onOffer && <span className='text-muted-foreground text-xs font-medium tabular-nums line-through'>{price(item.price)}</span>}
+    </span>
+  )
+}
+
+/** Photo grid: two big photo tiles a row, the name and price under each, the button on the photo's corner */
+function PhotoTile({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) {
+  const localized = useLocalized()
+  const photo = useRef<HTMLDivElement>(null)
+  const dish = useDish({ item, opening, onOpen, onQuickAdd, photo })
+  return (
+    <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex min-w-0 flex-col gap-2', dish.soldOut && 'opacity-50')}>
+      <div className='relative'>
+        <button type='button' {...dish.handlers} className='block w-full select-none [-webkit-touch-callout:none]'>
+          <DishPhotoBox item={item} dish={dish} photoRef={photo} radius={24} className='aspect-[4/5] w-full' />
+        </button>
+        {!dish.soldOut && (
+          <span className='absolute end-2 bottom-2'>
+            <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />
+          </span>
+        )}
+      </div>
+      <button type='button' onClick={() => onOpen(item)} className='flex flex-col items-start gap-1.5 px-1 text-start'>
+        <span className='heading line-clamp-2 text-[calc(1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
+        <DishPrice item={item} onOffer={dish.onOffer} />
+      </button>
+    </motion.div>
+  )
+}
+
+/** Compact: the name, a line of what it is, the price, the button; no photo, many to a screen */
+function CompactRow({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) {
+  const localized = useLocalized()
+  const price = usePrice()
+  const photo = useRef<HTMLButtonElement>(null)
+  const dish = useDish({ item, opening, onOpen, onQuickAdd, photo })
+  return (
+    <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3 py-3', dish.soldOut && 'opacity-50')}>
+      {/* The whole row is what grows into the options, and what the dish flies to the tray from */}
+      <motion.button
+        type='button'
+        ref={photo}
+        layoutId={dish.morph ? `card-${item.id}` : undefined}
+        style={{ borderRadius: 16 }}
+        {...dish.handlers}
+        className={cn('flex min-w-0 flex-1 flex-col text-start transition-transform duration-200 select-none [-webkit-touch-callout:none]', dish.pressing && 'scale-[0.98]')}
+      >
+        <span className='flex items-baseline justify-between gap-3'>
+          <span className='text-[15px] leading-snug font-semibold'>{localized(item.name)}</span>
+          <span className='shrink-0 text-[15px] font-bold tabular-nums'>
+            {dish.onOffer && <span className='text-muted-foreground me-1.5 text-xs font-medium line-through'>{price(item.price)}</span>}
+            {price(dish.onOffer ? item.offerPrice : item.price)}
+          </span>
+        </span>
+        {item.description && <span className='text-muted-foreground line-clamp-1 text-[13px]'>{localized(item.description)}</span>}
+      </motion.button>
+      {!dish.soldOut && <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
+    </motion.div>
+  )
+}
+
+/** Magazine: one wide photo a dish, the name and price set on it under a shade, the button on its corner */
+function HeroCard({ scroller, item, opening, onOpen, onQuickAdd }: DishProps) {
+  const localized = useLocalized()
+  const price = usePrice()
+  const photo = useRef<HTMLDivElement>(null)
+  const dish = useDish({ item, opening, onOpen, onQuickAdd, photo })
+  return (
+    <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('relative', dish.soldOut && 'opacity-50')}>
+      <button type='button' {...dish.handlers} className='block w-full text-start select-none [-webkit-touch-callout:none]'>
+        <DishPhotoBox item={item} dish={dish} photoRef={photo} radius={28} className='aspect-[16/11] w-full'>
+          <span className='absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-5 pe-20 pt-16 text-white'>
+            <span className='heading text-[calc(1.5rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
+            {item.description && <span className='line-clamp-1 text-[13px] opacity-80'>{localized(item.description)}</span>}
+            <span className='mt-1 text-[15px] font-bold tabular-nums'>
+              {price(dish.onOffer ? item.offerPrice : item.price)}
+              {dish.onOffer && <span className='ms-2 text-xs font-medium line-through opacity-70'>{price(item.price)}</span>}
+            </span>
+          </span>
+        </DishPhotoBox>
+      </button>
+      {!dish.soldOut && (
+        <span className='absolute end-4 bottom-4'>
+          <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />
+        </span>
+      )}
+    </motion.div>
+  )
+}
+
 function Row({
   scroller,
   item,
@@ -310,15 +500,7 @@ function Row({
   landing,
   onOpen,
   onQuickAdd,
-}: {
-  /** The list's scroller: a row rises in as it scrolls into it */
-  scroller: React.RefObject<HTMLDivElement | null>
-  item: CatalogItemDto
-  opening: boolean
-  landing: boolean
-  onOpen: (item: CatalogItemDto) => void
-  onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
-}) {
+}: DishProps) {
   const localized = useLocalized()
   const price = usePrice()
   const [failed, setFailed] = useState(false)
@@ -442,4 +624,18 @@ function RowAction({ item, quick, onAdd, onOpen }: { item: CatalogItemDto; quick
       )}
     </AnimatePresence>
   )
+}
+
+const LIST_CLASS: Record<MenuList, string> = {
+  row: 'flex flex-col gap-4',
+  card: 'grid grid-cols-2 gap-x-3 gap-y-5',
+  compact: 'divide-border/60 flex flex-col divide-y',
+  hero: 'flex flex-col gap-4',
+}
+
+const LIST_DISH: Record<MenuList, (props: DishProps) => React.ReactNode> = {
+  row: Row,
+  card: PhotoTile,
+  compact: CompactRow,
+  hero: HeroCard,
 }

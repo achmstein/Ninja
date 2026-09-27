@@ -104,7 +104,7 @@ type ThemeForm = {
   darkPrimary: string
   darkAccent: string
   darkSurface: string
-  /** How the menu lists the dishes: '' the swiped cards, 'row' the classic list */
+  /** How the menu lists the dishes: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
   menuItem: string
 }
 
@@ -130,7 +130,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkPrimary: t.dark?.primary ?? '',
   darkAccent: t.dark?.accent ?? '',
   darkSurface: t.dark?.surface ?? '',
-  menuItem: t.layout?.menuItem === 'row' ? 'row' : '',
+  menuItem: ['row', 'card', 'compact', 'hero'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
@@ -415,6 +415,9 @@ function BrandForm({ brand }: { brand: Brand }) {
                     <SelectContent>
                       <SelectItem value={NONE}>{t('menuLayoutCards')}</SelectItem>
                       <SelectItem value='row'>{t('menuLayoutClassic')}</SelectItem>
+                      <SelectItem value='card'>{t('menuLayoutGrid')}</SelectItem>
+                      <SelectItem value='compact'>{t('menuLayoutCompact')}</SelectItem>
+                      <SelectItem value='hero'>{t('menuLayoutMagazine')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>
