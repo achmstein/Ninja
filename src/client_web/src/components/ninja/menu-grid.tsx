@@ -347,8 +347,8 @@ function Row({
         <motion.div
           ref={photo}
           layoutId={morph ? `card-${item.id}` : undefined}
-          animate={{ opacity: landing ? 0 : 1 }}
-          transition={landing ? { duration: 0 } : { duration: 0.28 }}
+          // The row's photo stays put while a dish flies to the tray: the flight leaves from the options
+          // sheet as often as from here, and a row is small enough that a copy lifting off reads fine
           style={{ borderRadius: 24 }}
           className={cn(
             'relative size-24 shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
