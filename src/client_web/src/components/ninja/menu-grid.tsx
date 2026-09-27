@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus } from 'lucide-react'
+import { Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -354,7 +354,10 @@ function Row({
               <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
             </motion.div>
           ) : (
-            <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0' />
+            // No photo (or one that would not load): the category's tone with a plate on it, as the classic menu always drew one
+            <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 grid place-items-center'>
+              <UtensilsCrossed className='size-8 opacity-40' />
+            </motion.div>
           )}
         </motion.div>
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
