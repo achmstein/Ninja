@@ -67,11 +67,23 @@ public static partial class TenantApi
             .WithName("GetTenantIcon")
             .WithSummary("One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png");
 
+        api.MapGet("/login.css", GetLoginCss)
+            .WithName("GetTenantLoginCss")
+            .WithSummary("The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet");
+
         api.MapGet("/manifest", GetManifest)
             .WithName("GetTenantManifest")
             .WithSummary("The web app manifest for one surface, in the tenant's name");
 
         return app;
+    }
+
+    public static async Task<ContentHttpResult> GetLoginCss(TenantContext context, HttpContext http)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Model.Tenant.SingletonId);
+        // A changed colour reaches the sign-in page within minutes; the page itself never names a version
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return TypedResults.Text(Services.LoginCss.For(tenant), "text/css");
     }
 
     public static async Task<Ok<TenantResponse>> GetTenant(TenantContext context, IConfiguration configuration)

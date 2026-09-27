@@ -31,6 +31,16 @@
             <link href="${url.resourcesPath}/${style}?v=${properties.themeVersion!'1'}" rel="stylesheet">
         </#list>
     </#if>
+    <#-- The café's colours, after the theme's own so they win: from the café's
+         API host, which the header's mark already comes from (the control plane
+         stamps the mark as <img src="{api}/api/tenant/icons/…">). A realm with
+         no such mark (the platform's, the hub) keeps the platform's palette. -->
+    <#if (realm.displayNameHtml)?has_content && realm.displayNameHtml?contains('/api/tenant/icons/')>
+        <#assign brandApi = realm.displayNameHtml?keep_after('src="')?keep_before('/api/tenant/icons/')>
+        <#if brandApi?starts_with('https://') || brandApi?starts_with('http://')>
+            <link href="${brandApi}/api/tenant/login.css" rel="stylesheet">
+        </#if>
+    </#if>
     <script>
         // Before first paint: the theme the app asked for, else the one
         // remembered earlier in this flow, else the system preference

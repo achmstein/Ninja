@@ -1,8 +1,10 @@
 /*
- * Ninja login theme, one for every realm: the same slate tokens, type and
- * components as the web apps (shadcn/ui, new-york, slate), so the Keycloak
- * page reads as one more screen of the app that sent the user here. The
- * café shows in the header only (its mark and name from the realm). The page frame is
+ * Ninja login theme, one for every realm, in the Ninja style of the customer
+ * app: a lifted card at the sheets' corners, filled fields, bold pill buttons,
+ * so the Keycloak page reads as one more screen of the app that sent the user
+ * here. The café shows in its header (its mark and name from the realm) and in
+ * its colour: the café's API serves a small sheet (/api/tenant/login.css) the
+ * frame loads after this one, setting --primary and the ring. The page frame is
  * template.ftl; the form markup is Keycloak's, mapped to these classes in
  * theme.properties. Light and dark are both first-class: the frame stamps
  * data-theme on <html> before first paint.
@@ -28,6 +30,13 @@
   --input-bg: transparent;
   --ring: oklch(0.704 0.04 256.788);
   --shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  /* The Ninja style's shapes (client_web/src/styles/theme.css) */
+  --radius-pill: 9999px;
+  --radius-card: 1.75rem;
+  --radius-field: 1rem;
+  --field-bg: var(--muted);
+  --card-border: transparent;
+  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
   color-scheme: light;
 }
 
@@ -47,6 +56,9 @@
   --input: oklch(1 0 0 / 15%);
   --input-bg: oklch(1 0 0 / 5%);
   --ring: oklch(0.551 0.027 264.364);
+  /* Shadows vanish on dark: the card takes a hairline instead */
+  --card-border: oklch(1 0 0 / 10%);
+  --surface-shadow: none;
   color-scheme: dark;
 }
 
@@ -68,6 +80,8 @@
     --input: oklch(1 0 0 / 15%);
     --input-bg: oklch(1 0 0 / 5%);
     --ring: oklch(0.551 0.027 264.364);
+    --card-border: oklch(1 0 0 / 10%);
+    --surface-shadow: none;
     color-scheme: dark;
   }
 }
@@ -124,9 +138,9 @@ body.nj-body {
 /* The mark is the realm's HTML display name (the tenant's icon, a square
    PNG on the café's color); without one, the café's initial on a tile */
 .nj-mark {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 22%;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 28%;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -149,8 +163,8 @@ body.nj-body {
 
 .nj-brand-name {
   font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--foreground);
 }
 
@@ -181,12 +195,12 @@ body.nj-body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.5rem;
+  padding: 1.75rem 1.5rem;
   background: var(--card);
   color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--surface-shadow);
 }
 
 .nj-card-header {
@@ -195,10 +209,10 @@ body.nj-body {
 
 .nj-title {
   margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
@@ -242,15 +256,17 @@ body.nj-body {
 .nj-input {
   display: block;
   width: 100%;
-  height: 2.5rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--input);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--input-bg);
+  height: 3rem;
+  padding: 0 1rem;
+  /* Filled, as the app's fields are; the border only for the ring and an error */
+  border: 1px solid transparent;
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
   color: var(--foreground);
   font: inherit;
-  font-size: 0.875rem;
-  box-shadow: var(--shadow);
+  /* 16px: a phone does not zoom into a field it can read */
+  font-size: 1rem;
+  box-shadow: none;
   outline: none;
   transition:
     border-color 0.15s ease,
@@ -307,7 +323,7 @@ textarea.nj-input {
   width: 2rem;
   height: 2rem;
   border: 0;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
@@ -418,13 +434,13 @@ textarea.nj-input {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 2.5rem;
-  padding: 0 1rem;
+  height: 3rem;
+  padding: 0 1.25rem;
   border: 1px solid transparent;
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: var(--radius-pill);
   font: inherit;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 700;
   line-height: 1.25rem;
   white-space: nowrap;
   text-decoration: none;
@@ -454,7 +470,10 @@ textarea.nj-input {
 .nj-button-primary {
   background: var(--primary);
   color: var(--primary-foreground);
-  box-shadow: var(--shadow);
+}
+
+.nj-button:active {
+  transform: scale(0.98);
 }
 
 .nj-button-primary:hover {
@@ -462,14 +481,13 @@ textarea.nj-input {
 }
 
 .nj-button-outline {
-  background: var(--input-bg);
-  border-color: var(--input);
+  background: var(--field-bg);
   color: var(--foreground);
-  box-shadow: var(--shadow);
+  font-weight: 600;
 }
 
 .nj-button-outline:hover {
-  background: var(--accent);
+  background: color-mix(in oklch, var(--field-bg) 85%, var(--foreground));
 }
 
 .nj-button-link {
@@ -541,7 +559,7 @@ textarea.nj-input {
   align-items: flex-start;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: var(--radius-field);
   background: var(--card);
   color: var(--foreground);
   font-size: 0.875rem;

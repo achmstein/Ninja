@@ -554,6 +554,20 @@
         }
       }
     },
+    "/api/tenant/login.css": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet",
+        "operationId": "GetTenantLoginCss",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/tenant/manifest": {
       "get": {
         "tags": [
