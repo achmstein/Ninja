@@ -219,7 +219,7 @@ const webExtras = {
   menuLayoutGrid: { en: "Photo grid", ar: "شبكة صور" },
   menuLayoutCompact: { en: "Compact, no photos", ar: "مختصرة، بدون صور" },
   menuLayoutMagazine: { en: "Magazine, big photos", ar: "مجلة، صور كبيرة" },
-  menuLayoutHint: { en: "Big photo cards swiped through, or every dish listed under its category: in rows, a photo grid, compact text, or big magazine photos.", ar: "بطاقات كبيرة بالصور تتصفحها، أو كل الأصناف تحت أقسامها: صفوف، أو شبكة صور، أو نص مختصر، أو صور كبيرة كالمجلة." },
+  menuLayoutHint: { en: "Every dish listed under its category: in rows, a photo grid, compact text, or big magazine photos. Cards to swipe show one dish at a time, for a short menu with a photo of every dish.", ar: "كل الأصناف تحت أقسامها: صفوف، أو شبكة صور، أو نص مختصر، أو صور كبيرة كالمجلة. البطاقات للتمرير تعرض صنفًا واحدًا في كل مرة، لقائمة قصيرة فيها صورة لكل صنف." },
   accentColor: { en: "Secondary", ar: "اللون الثانوي" },
   surfaceColor: { en: "Page", ar: "الصفحة" },
   brandColorHint: { en: "Buttons and highlights; the dock and dark cards take a deep shade of it. Text on it is picked for contrast, not set.", ar: "الأزرار والتمييز، ويأخذ الشريط السفلي والبطاقات الداكنة درجة عميقة منه. يُحدَّد لون النص عليه تلقائيًا ليبقى مقروءًا." },

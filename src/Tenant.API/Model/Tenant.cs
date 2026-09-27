@@ -272,7 +272,7 @@ public class TenantTheme
 /// </summary>
 public class TenantLayout
 {
-    public static readonly string[] MenuItems = ["row", "card", "compact", "hero"];
+    public static readonly string[] MenuItems = ["row", "card", "compact", "hero", "deck"];
     public static readonly string[] CategoryStyles = ["chips", "tabs", "rail"];
     public static readonly string[] Headers = ["left", "center", "banner"];
     public static readonly string[] ButtonStyles = ["pill", "rounded", "square"];

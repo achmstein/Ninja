@@ -532,7 +532,7 @@ public record TenantThemeDto(
             t.Slab);
 }
 
-/// <param name="MenuItem">row, card, compact or hero.</param>
+/// <param name="MenuItem">row, card, compact, hero, or deck (the web app's cards to swipe; none is a row).</param>
 /// <param name="Categories">chips, tabs or rail.</param>
 /// <param name="Header">left, center or banner (over the cover image).</param>
 /// <param name="Buttons">pill, rounded or square.</param>
