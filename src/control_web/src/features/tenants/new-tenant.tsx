@@ -12,6 +12,7 @@ import {
 } from '@/api/control/@tanstack/react-query.gen'
 import type { CreateTenantRequest } from '@/api/control'
 import { ColorField } from '@/components/brand/color-field'
+import { DockField, type Dock } from '@/components/brand/dock-field'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import {
   PhonePreview,
@@ -180,6 +181,7 @@ export function NewTenantPage() {
 
   // Brand
   const [color, setColor] = useState('')
+  const [dock, setDock] = useState<Dock>('brand')
   const [files, setFiles] = useState<SlotFiles>({})
   const objectUrls = useObjectUrls(files)
 
@@ -263,6 +265,7 @@ export function NewTenantPage() {
       defaultLanguage,
       slug: effectiveSlug,
       primaryColor: color ? color.toLowerCase() : null,
+      slab: dock === 'neutral' ? 'neutral' : null,
       customerDomain: kind === 'Customer' ? customerDomain.trim() || null : null,
       demoDays: kind === 'Demo' && demoDays.trim() !== '' ? Number(demoDays) : null,
       contactName: contactName.trim() || null,
@@ -544,6 +547,7 @@ export function NewTenantPage() {
                 swatchesFrom={files.logo ?? null}
                 eyedropper
               />
+              <DockField value={dock} onChange={setDock} color={color} />
               <ImageSlotGrid
                 srcOf={(slot) => objectUrls[slot] ?? null}
                 onUpload={(slot, file) => setFiles((prev) => ({ ...prev, [slot]: file }))}

@@ -98,6 +98,7 @@ export type BrandTheme = {
     mode?: null | string;
     style?: null | string;
     layout?: null | BrandLayout;
+    slab?: null | string;
 };
 
 export type BrandThemeDark = {
@@ -182,6 +183,10 @@ export type CreateTenantRequest = {
     businessType?: BusinessType;
     arabicStyle?: null | string;
     defaultTheme?: null | string;
+    /**
+     * The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand
+     */
+    slab?: null | string;
 };
 
 export type ExtendRequest = {
@@ -441,6 +446,10 @@ export type TenantDetail = {
      * light or dark for someone who has not chosen; null follows the device
      */
     defaultTheme?: null | string;
+    /**
+     * The dock's colour: neutral (black); null a deep shade of the brand colour
+     */
+    slab?: null | string;
 };
 
 export type TenantHostsDto = {
@@ -585,6 +594,10 @@ export type UpdateTenantRequest = {
      */
     defaultTheme?: null | string;
     businessType?: null | BusinessType;
+    /**
+     * The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it
+     */
+    slab?: null | string;
 };
 
 export type UpgradeRequest = {

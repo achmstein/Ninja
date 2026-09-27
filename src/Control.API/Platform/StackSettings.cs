@@ -28,6 +28,7 @@ public static class StackSettings
         brand["primaryColor"] = tenant.PrimaryColor;
         var theme = brand["theme"] as JsonObject ?? new JsonObject();
         theme["mode"] = tenant.DefaultTheme;
+        theme["slab"] = tenant.Slab;
         brand["theme"] = theme;
         brand["locale"] = new JsonObject
         {

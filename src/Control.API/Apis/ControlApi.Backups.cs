@@ -92,6 +92,7 @@ public static partial class ControlApi
             Seed = TenantSeed.None,
             Plan = source.Plan,
             PrimaryColor = source.PrimaryColor,
+            Slab = source.Slab,
             OwnerEmail = Clean(request.OwnerEmail)?.ToLowerInvariant() ?? source.OwnerEmail,
             ContactName = source.ContactName,
             Phone = source.Phone,

@@ -62,6 +62,7 @@ public static partial class ControlApi
             tenant.NameAr = brand.Name.Ar;
             tenant.PrimaryColor = brand.PrimaryColor;
             tenant.DefaultTheme = brand.Theme.Mode;
+            tenant.Slab = brand.Theme.Slab == "neutral" ? "neutral" : null;
             tenant.Country = brand.Locale.Country;
             tenant.Currency = brand.Locale.Currency;
             tenant.TimeZone = brand.Locale.TimeZone;
@@ -185,6 +186,7 @@ public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWord
 /// <param name="Mode">light or dark for someone who has not chosen; null follows the device. The record edits it; the Brand tab sends it back as it came.</param>
 /// <param name="Style">ninja, classic, minimal, bold, cozy or night; null is classic. A new café starts in <see cref="Platform.Provisioner.NewCafeStyle"/>.</param>
 /// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice.</param>
+/// <param name="Slab">The dock's colour: neutral (black); null a deep shade of the brand colour. The stack replaces the whole theme, so the Brand tab sends it back as it came.</param>
 public record BrandTheme(
     string? Accent,
     string? Surface,
@@ -195,7 +197,8 @@ public record BrandTheme(
     string? HeaderSize = null,
     string? Mode = null,
     string? Style = null,
-    BrandLayout? Layout = null);
+    BrandLayout? Layout = null,
+    string? Slab = null);
 
 /// <summary>One choice per part of the customer app; null is the style's. The stack validates the values.</summary>
 public record BrandLayout(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);

@@ -3547,6 +3547,12 @@
                 "$ref": "#/components/schemas/BrandLayout"
               }
             ]
+          },
+          "slab": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4053,6 +4059,13 @@
               "null",
               "string"
             ]
+          },
+          "slab": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand"
           }
         }
       },
@@ -5281,6 +5294,13 @@
               "string"
             ],
             "description": "light or dark for someone who has not chosen; null follows the device"
+          },
+          "slab": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The dock's colour: neutral (black); null a deep shade of the brand colour"
           }
         }
       },
@@ -5991,6 +6011,13 @@
                 "$ref": "#/components/schemas/BusinessType"
               }
             ]
+          },
+          "slab": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it"
           }
         }
       },

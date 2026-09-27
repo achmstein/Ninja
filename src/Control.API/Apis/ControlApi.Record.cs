@@ -42,6 +42,10 @@ public static partial class ControlApi
         var defaultTheme = theme is null ? tenant.DefaultTheme : theme is "" or "device" ? null : theme;
         if (defaultTheme is not (null or "light" or "dark"))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The default theme must be light, dark, or device." });
+        // Null leaves the dock as it is
+        var slab = tenant.Slab;
+        if (request.Slab is not null && !TrySlab(request.Slab, out slab))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = SlabError });
 
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
@@ -64,6 +68,7 @@ public static partial class ControlApi
         tenant.DefaultLanguage = locale.Language;
         tenant.ArabicStyle = arabicStyle;
         tenant.DefaultTheme = defaultTheme;
+        tenant.Slab = slab;
         // The kind of place is a label on a running café: its menu, switches and guest ordering stay as they are
         if (request.BusinessType is { } business) tenant.BusinessType = business;
         await context.SaveChangesAsync(ct);
@@ -137,7 +142,8 @@ public record UpdateTenantRequest(
     string? DefaultLanguage,
     [property: Description("standard or egyptian; null leaves it")] string? ArabicStyle = null,
     [property: Description("light, dark or device; null leaves it")] string? DefaultTheme = null,
-    [property: Description("The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null);
+    [property: Description("The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
+    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null);
 
 /// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
 public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);

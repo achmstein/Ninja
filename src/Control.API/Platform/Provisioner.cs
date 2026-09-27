@@ -114,7 +114,7 @@ public sealed class Provisioner(
                     ["features"] = kept?["features"]?.DeepClone()
                         ?? PlanCatalog.ToFeatures(BusinessProfiles.Starting(tenant.BusinessType, PlanCatalog.Entitlements(tenant))),
                     // A new café starts in Ninja, the platform's signature style
-                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme, ["style"] = NewCafeStyle },
+                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme, ["style"] = NewCafeStyle, ["slab"] = tenant.Slab },
                     ["locale"] = new JsonObject
                     {
                         ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,

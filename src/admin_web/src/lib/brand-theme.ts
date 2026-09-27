@@ -457,18 +457,3 @@ export function applyBrandTheme(input: BrandThemeInput | null | undefined) {
   if (!existing) document.head.appendChild(style)
 }
 
-/**
- * A palette grown from one colour, the brand's: the secondary a lighter
- * neighbour of its hue (a quarter turn warmer, so it sits beside it rather
- * than fighting it), the page a whisper of the hue on white. Null for a
- * value that is not a colour.
- */
-export function paletteFrom(primaryHex: string): { accent: string; surface: string } | null {
-  const primary = hexToOklch(primaryHex)
-  if (!primary) return null
-  // A grey brand gets a grey page and a quiet secondary rather than a hue it does not have
-  const grey = primary.c < 0.02
-  const accent: Oklch = grey ? { l: 0.8, c: 0.1, h: 85 } : { l: 0.8, c: Math.min(Math.max(primary.c, 0.08), 0.14), h: (primary.h + 35) % 360 }
-  const surface: Oklch = { l: 0.975, c: grey ? 0 : Math.min(primary.c * 0.12, 0.012), h: primary.h }
-  return { accent: oklchToHex(accent), surface: oklchToHex(surface) }
-}

@@ -142,6 +142,8 @@ public static partial class ControlApi
         var defaultTheme = string.IsNullOrWhiteSpace(request.DefaultTheme) ? null : request.DefaultTheme.Trim().ToLowerInvariant();
         if (defaultTheme is not (null or "light" or "dark"))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The default theme must be light, dark, or none to follow the device." });
+        if (!TrySlab(request.Slab, out var slab))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = SlabError });
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
@@ -167,6 +169,7 @@ public static partial class ControlApi
             BusinessType = request.BusinessType,
             ArabicStyle = arabicStyle,
             DefaultTheme = defaultTheme,
+            Slab = slab,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -387,6 +390,22 @@ public static partial class ControlApi
     [GeneratedRegex("^#[0-9a-f]{6}$")]
     private static partial Regex HexColor();
 
+    private const string SlabError = "The dock must be brand (a deep shade of the brand colour) or neutral (black).";
+
+    /// <summary>The dock's colour as the record keeps it: null for the brand's shade (none given, "", "brand"), "neutral" for black; false for anything else.</summary>
+    internal static bool TrySlab(string? value, out string? slab)
+    {
+        slab = null;
+        var v = value?.Trim().ToLowerInvariant();
+        if (v is null or "" or "brand") return true;
+        if (v is "neutral" or "black")
+        {
+            slab = "neutral";
+            return true;
+        }
+        return false;
+    }
+
     [GeneratedRegex("^[A-Za-z0-9._-]{1,64}$")]
     private static partial Regex ImageTag();
 }
@@ -441,7 +460,8 @@ public record CreateTenantRequest(
     Module[]? Addons = null,
     BusinessType BusinessType = BusinessType.Other,
     string? ArabicStyle = null,
-    string? DefaultTheme = null);
+    string? DefaultTheme = null,
+    [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -525,7 +545,8 @@ public record TenantDetail(
     IReadOnlyList<JobDto> Jobs,
     [property: Description("The services the plan stamps (catalog, ordering, …): a module's own service only with its module")] IReadOnlyList<string> Services,
     BusinessType BusinessType = BusinessType.Other,
-    [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null)
+    [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null,
+    [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -543,7 +564,8 @@ public record TenantDetail(
             jobs ?? [],
             PlanCatalog.Services(t),
             t.BusinessType,
-            t.DefaultTheme);
+            t.DefaultTheme,
+            t.Slab);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

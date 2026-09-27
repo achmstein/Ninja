@@ -10,6 +10,7 @@ import {
   uploadTenantBrandImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { ColorField } from '@/components/brand/color-field'
+import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { LivePreview } from '@/components/brand/live-preview'
@@ -186,6 +187,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [darkPrimary, setDarkPrimary] = useState(brand.theme.dark?.primary ?? '')
   const [darkAccent, setDarkAccent] = useState(brand.theme.dark?.accent ?? '')
   const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
+  const [dock, setDock] = useState<Dock>(dockOf(brand.theme.slab))
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
 
@@ -200,7 +202,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
+  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
     return {
       accent: orNull(f.accent),
@@ -212,13 +214,15 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
       dark: dark.primary || dark.accent || dark.surface ? dark : null,
       // Ninja is the only style for now, worn whole
       style: 'ninja',
-      layout: null,
+      slab: f.dock === 'neutral' ? 'neutral' : null,
+      // The stack replaces the whole theme: the café's own choices this tab does not edit go back as they came
+      layout: brand.theme.layout ?? null,
     }
   }
   const theme = useMemo(
-    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
+    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
+    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock]
   )
   const draft = useMemo<PreviewDraft>(
     () => ({
@@ -245,6 +249,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         darkPrimary: brand.theme.dark?.primary ?? '',
         darkAccent: brand.theme.dark?.accent ?? '',
         darkSurface: brand.theme.dark?.surface ?? '',
+        dock: dockOf(brand.theme.slab),
       }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,6 +296,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             eyedropper
             hint={t('brandColorHint')}
           />
+          <DockField value={dock} onChange={setDock} color={primary} />
           <div className='grid gap-4 sm:grid-cols-2'>
             <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper hint={t('secondaryColorHint')} />
             <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper hint={t('surfaceColorHint')} />

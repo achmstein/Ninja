@@ -8,7 +8,6 @@ import {
   contrastRatio,
   hexToOklch,
   oklchToHex,
-  paletteFrom,
   type BrandThemeInput,
 } from './brand-theme'
 
@@ -92,24 +91,5 @@ describe('brand tokens', () => {
     const issues = contrastIssues({ primaryColor: '#777777' })
     expect(issues.some((i) => i.pair === 'primary' && i.scheme === 'light')).toBe(true)
     expect(contrastIssues(cafe)).toEqual([])
-  })
-})
-
-describe('paletteFrom', () => {
-  it('grows a secondary and a page from the brand colour', () => {
-    const palette = paletteFrom('#4d6b3c')!
-    const accent = hexToOklch(palette.accent)!
-    const surface = hexToOklch(palette.surface)!
-    expect(accent.l).toBeGreaterThan(0.7)
-    expect(surface.l).toBeGreaterThan(0.95)
-  })
-
-  it('keeps a grey brand grey', () => {
-    const surface = hexToOklch(paletteFrom('#333333')!.surface)!
-    expect(surface.c).toBeLessThan(0.01)
-  })
-
-  it('is nothing for what is not a colour', () => {
-    expect(paletteFrom('olive')).toBeNull()
   })
 })

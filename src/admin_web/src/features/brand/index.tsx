@@ -11,7 +11,7 @@ import {
 import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
-import { paletteFrom, RADII } from '@/lib/brand-theme'
+import { RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -109,16 +109,6 @@ type ThemeForm = {
   /** How the menu lists the dishes: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
   menuItem: string
 }
-
-/** A start for the three colours: the brand's, the secondary, the page */
-const PALETTES: Array<{ key: TranslationKey; primary: string; accent: string; surface: string }> = [
-  { key: 'paletteEspresso', primary: '#6b4226', accent: '#d9a066', surface: '#faf6f1' },
-  { key: 'paletteOlive', primary: '#4d6b3c', accent: '#c9a227', surface: '#f6f7f1' },
-  { key: 'paletteOcean', primary: '#1f5f8b', accent: '#4fb3bf', surface: '#f3f8fb' },
-  { key: 'paletteBerry', primary: '#8e2c48', accent: '#e8a0b4', surface: '#fbf4f6' },
-  { key: 'paletteCharcoal', primary: '#2b2f36', accent: '#f2b705', surface: '#f7f7f8' },
-  { key: 'paletteTerracotta', primary: '#b4532a', accent: '#e9b872', surface: '#fbf5ef' },
-]
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   accent: t.accent ?? '',
@@ -307,61 +297,6 @@ function BrandForm({ brand }: { brand: Brand }) {
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
-              {/* Ready-made palettes: one tap sets the three colours, each still editable under them */}
-              <div className='space-y-1.5'>
-                <span className='text-xs font-medium'>{t('brandPalettes')}</span>
-                <div className='flex flex-wrap gap-2'>
-                  {/* Grown from the brand colour set below: the secondary and the page made to match it */}
-                  {(() => {
-                    const grown = paletteFrom(color.trim())
-                    return (
-                      <button
-                        type='button'
-                        disabled={!grown}
-                        onClick={() => {
-                          if (!grown) return
-                          setTheme({ ...theme, accent: grown.accent, surface: grown.surface, darkPrimary: '', darkAccent: '', darkSurface: '' })
-                        }}
-                        className='hover:border-foreground/40 flex items-center gap-2 rounded-full border border-dashed py-1.5 ps-1.5 pe-3 text-xs font-medium transition-colors disabled:opacity-40'
-                      >
-                        <span className='flex -space-x-1.5 rtl:space-x-reverse'>
-                          {[color.trim() || '#cccccc', grown?.accent ?? '#dddddd', grown?.surface ?? '#eeeeee'].map((c, i) => (
-                            <span key={i} className='ring-background size-5 rounded-full ring-2' style={{ backgroundColor: c }} />
-                          ))}
-                        </span>
-                        {t('paletteMatchBrand')}
-                      </button>
-                    )
-                  })()}
-                  {PALETTES.map((p) => {
-                    const on = color.toLowerCase() === p.primary && theme.accent.toLowerCase() === p.accent && theme.surface.toLowerCase() === p.surface
-                    return (
-                      <button
-                        key={p.key}
-                        type='button'
-                        aria-pressed={on}
-                        onClick={() => {
-                          setColor(p.primary)
-                          // The dark scheme is derived from them again, rather than kept from before
-                          setTheme({ ...theme, accent: p.accent, surface: p.surface, darkPrimary: '', darkAccent: '', darkSurface: '' })
-                        }}
-                        className={cn(
-                          'flex items-center gap-2 rounded-full border py-1.5 ps-1.5 pe-3 text-xs font-medium transition-colors',
-                          on ? 'border-foreground' : 'hover:border-foreground/40'
-                        )}
-                      >
-                        <span className='flex -space-x-1.5 rtl:space-x-reverse'>
-                          {[p.primary, p.accent, p.surface].map((c) => (
-                            <span key={c} className='ring-background size-5 rounded-full ring-2' style={{ backgroundColor: c }} />
-                          ))}
-                        </span>
-                        {t(p.key)}
-                      </button>
-                    )
-                  })}
-                </div>
-                <p className='text-muted-foreground text-xs'>{t('brandPalettesHint')}</p>
-              </div>
               <div className='grid items-start gap-3 sm:grid-cols-2'>
                 <ColorField
                   id='brand-color'
