@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, UtensilsCrossed } from 'lucide-react'
+import { ChevronRight, Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
@@ -380,11 +380,12 @@ function Row({
       {!soldOut && (
         <button
           type='button'
-          aria-label={t('addToCart')}
+          aria-label={quick ? t('addToCart') : localized(item.name)}
           onClick={() => (quick ? onQuickAdd(item, photo.current) : onOpen(item))}
           className='bg-primary text-primary-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-transform active:scale-90 motion-reduce:transform-none'
         >
-          <Plus className='size-5' strokeWidth={2.5} />
+          {/* A plus puts it in the tray at once; a chevron says there is something to choose first */}
+          {quick ? <Plus className='size-5' strokeWidth={2.5} /> : <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />}
         </button>
       )}
     </motion.div>

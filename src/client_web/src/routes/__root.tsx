@@ -3,7 +3,7 @@ import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { ThemeProvider, useTheme } from '@/context/theme-provider'
-import { useBrandEffects } from '@/lib/brand'
+import { useBrand, useBrandEffects } from '@/lib/brand'
 import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
@@ -53,24 +53,31 @@ function RootLayout() {
 
 /**
  * The island (lib/island.ts): one sileo pill in the top bar's end corner
- * (the right, or the left in Arabic), where the place chips are; they step
- * aside while it is up. Collapsed it is small; a tap opens it (sileo opens
- * on hover, which a tap is on a phone), and something new opens it on its
- * own for a moment (autopilot) before it collapses again. A toast is 40 px
- * tall, so 12 px down the 64 px bar centres it. Sileo takes its fill from
- * the theme given, the app's resolved one, so it is painted opposite the
- * page as the dock is.
+ * (the right, or the left in Arabic), where the scan and branch buttons
+ * are; they step aside while it is up. Collapsed it is small; a tap opens
+ * it (sileo opens on hover, which a tap is on a phone), and something new
+ * opens it on its own for a moment (autopilot) before it collapses again.
+ * A toast is 40 px tall, so 12 px down the 64 px bar centres it. It is the
+ * dock's slab on either scheme, in the café's colour, and its kinds wear
+ * the app's colours (styles/index.css).
  */
 function AppToaster() {
   const { resolvedTheme } = useTheme()
   const language = useLanguage((s) => s.language)
+  // Re-read when the scheme or the café's colours change, so the pill follows them
+  useBrand()
+  // The slab's colour as it resolves now (the café's deep shade, raised on a dark page): sileo takes a
+  // colour, not a variable, for the pill it draws
+  const slab = typeof document === 'undefined' ? undefined : getComputedStyle(document.documentElement).getPropertyValue('--slab').trim() || undefined
   return (
     <Toaster
+      key={`${resolvedTheme}-${slab}`}
       position={language === 'ar' ? 'top-left' : 'top-right'}
-      theme={resolvedTheme}
+      // Sileo's "light" is its dark pill with light text: the dock's, on either scheme
+      theme='light'
       // In the column's corner, which on a wide screen is not the window's
       offset={{ top: 'calc(env(safe-area-inset-top) + 12px)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
-      options={{ autopilot: true }}
+      options={{ autopilot: true, fill: slab }}
     />
   )
 }
