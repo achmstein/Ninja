@@ -365,6 +365,15 @@ jobs:
             docker compose up -d --remove-orphans
             # The Caddyfile is a single-file bind mount; scp replaced the inode
             docker compose up -d --force-recreate caddy
+            # Keycloak in production mode caches its themes: new login pages copied in are not served
+            # until it starts again (and a replaced folder is only seen by a recreated container).
+            # Only when the theme changed, since it drops every sign-in page open at that moment.
+            THEME_SUM=$(find themes/ninja -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+            if [ "$THEME_SUM" != "$(cat .theme-sum 2>/dev/null)" ]; then
+              docker compose up -d --force-recreate keycloak
+              echo "$THEME_SUM" > .theme-sum
+              echo "Keycloak recreated for the new login theme"
+            fi
 
             docker image prune -f >/dev/null
             docker compose ps
