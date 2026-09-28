@@ -7,7 +7,7 @@ import { useLanguage, useT } from '@/lib/i18n'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Empty, SectionLabel } from '@/components/ninja/page/parts'
 import { StayCard } from '@/components/places/stay-card'
-import { RequireAuth } from '@/components/require-auth'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { RequireFeature } from '@/components/require-feature'
 import { Skeleton } from '@/components/ui/skeleton'
 

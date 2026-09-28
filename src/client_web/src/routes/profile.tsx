@@ -12,6 +12,7 @@ import {
   Timer,
   Settings,
   User,
+  UserRound,
   Wallet,
 } from 'lucide-react'
 import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
@@ -40,17 +41,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { PoweredByNinja } from '@/components/powered-by-ninja'
-import { useInstallAction } from '@/components/use-install-action'
+import { PoweredByNinja } from '@/components/brand/powered-by-ninja'
+import { useInstallAction } from '@/components/install/use-install-action'
 import { Badge } from '@/components/ui/badge'
-import { SignInOptions } from '@/components/sign-in-options'
+import { SignInOptions } from '@/components/auth/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
-import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/tile-row'
+import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/ninja/page/tile-row'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Notice } from '@/components/ninja/page/notice'
 import { Slab } from '@/components/ninja/page/parts'
 import { PointsRing } from '@/components/ninja/page/points-ring'
 import { useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
-import { BrandMark, BrandWordmark } from '@/components/brand-mark'
+import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -163,9 +165,15 @@ function ProfilePage() {
         </RiseItem>
 
         {!signedIn && (
-          <RiseItem className='flex flex-col gap-3'>
-            <p className='text-muted-foreground px-1 text-[15px]'>{guestContact ? t('guestSignInPrompt') : t('signInPrompt')}</p>
-            <SignInOptions />
+          <RiseItem>
+            {/* The same card the Book page asks with: what an account gives, and the ways in */}
+            <Notice
+              tone='invite'
+              icon={UserRound}
+              title={t('youSignInTitle')}
+              body={guestContact ? t('guestSignInPrompt') : t('signInPrompt')}
+              action={<SignInOptions onCard />}
+            />
           </RiseItem>
         )}
 

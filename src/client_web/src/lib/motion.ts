@@ -71,7 +71,7 @@ export function blurSwap(reduced: boolean | null) {
 
 /**
  * A view opening out of the card it came from, sharing its layout id: a
- * dish into its options (components/ninja/tune.tsx), a place into its
+ * dish into its options (components/menu/tune.tsx), a place into its
  * reservation. Quick and firm, so the card seems to become the view.
  */
 export const springOpen: Transition = { type: 'spring', stiffness: 380, damping: 36 }

@@ -8,7 +8,7 @@ import { getMyAccountOptions, getMyTransactionsOptions } from '@/api/accounts/@t
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Panel, SectionLabel, Slab } from '@/components/ninja/page/parts'
 import { Odometer } from '@/components/ninja/odometer'
-import { RequireAuth } from '@/components/require-auth'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { RequireFeature } from '@/components/require-feature'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'

@@ -13,7 +13,7 @@ import { useScrollLock } from '@/lib/use-scroll-lock'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
-import { useProfileGate } from '@/components/profile-gate'
+import { useProfileGate } from '@/components/auth/profile-gate'
 import { StayBanner } from '@/components/places/stay-banner'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
@@ -24,7 +24,7 @@ import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Notice, noticeAction } from '@/components/ninja/page/notice'
 import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
-import { SignInSheet } from '@/components/sign-in-options'
+import { SignInSheet } from '@/components/auth/sign-in-options'
 
 export const Route = createFileRoute('/places')({
   component: PlacesPage,

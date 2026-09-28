@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'moti
 import { ease, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
-import { DOCK_EDGES } from '@/components/ninja/chrome'
+import { DOCK_EDGES } from '@/components/ninja/shell/chrome'
 
 /**
  * The one way the customer app shows a sheet, a dialog or a question: the

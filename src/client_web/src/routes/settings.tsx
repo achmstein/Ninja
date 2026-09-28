@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { NameFields } from '@/components/name-fields'
+import { NameFields } from '@/components/auth/name-fields'
 import { usePhoneRule } from '@/lib/brand'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
@@ -44,10 +44,10 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { SectionLabel } from '@/components/ninja/page/parts'
-import { InstallDialog } from '@/components/install-dialog'
-import { LanguageSwitch } from '@/components/language-switch'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { TileButton, TileGroup, TileRow } from '@/components/tile-row'
+import { InstallDialog } from '@/components/install/install-dialog'
+import { LanguageSwitch } from '@/components/settings/language-switch'
+import { ThemeSwitch } from '@/components/settings/theme-switch'
+import { TileButton, TileGroup, TileRow } from '@/components/ninja/page/tile-row'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,

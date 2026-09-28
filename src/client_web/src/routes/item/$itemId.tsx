@@ -9,7 +9,7 @@ import { useT } from '@/lib/i18n'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { NinjaPage } from '@/components/ninja/page/page'
 import { Empty } from '@/components/ninja/page/parts'
-import { Tune } from '@/components/ninja/tune'
+import { Tune } from '@/components/menu/tune'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 

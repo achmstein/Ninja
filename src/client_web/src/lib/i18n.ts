@@ -22,6 +22,8 @@ const webExtras = {
   },
   loading: { en: 'Loading...', ar: 'ثواني...' },
   pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
+  // The You page's card for a visitor, the same card the Book page asks with
+  youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {
     en: 'Sign in to see your orders and points',
     ar: 'سجل دخول عشان تشوف طلباتك ونقطك',

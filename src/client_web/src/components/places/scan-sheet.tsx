@@ -10,8 +10,8 @@ import {
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { PLACE_AVAILABLE, PlaceIcon, STAY_RUNNING } from '@/lib/places'
-import { useProfileGate } from '@/components/profile-gate'
-import { SignInOptions } from '@/components/sign-in-options'
+import { useProfileGate } from '@/components/auth/profile-gate'
+import { SignInOptions } from '@/components/auth/sign-in-options'
 import { MorphButton } from '@/components/motion/morph-button'
 import {
   Sheet,

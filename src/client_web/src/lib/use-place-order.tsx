@@ -13,8 +13,8 @@ import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature, type OrderExtras }
 import { toast } from '@/lib/toast'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
-import { useGuestGate } from '@/components/guest-gate'
-import { useProfileGate } from '@/components/profile-gate'
+import { useGuestGate } from '@/components/auth/guest-gate'
+import { useProfileGate } from '@/components/auth/profile-gate'
 
 /**
  * Placing the cart as an order, the one way every surface does it (the cart

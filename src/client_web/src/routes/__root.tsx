@@ -8,9 +8,9 @@ import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
-import { BottomNav } from '@/components/bottom-nav'
+import { BottomNav } from '@/components/ninja/shell/bottom-nav'
 import { OrderPill } from '@/components/order-pill'
-import { InstallNudge } from '@/components/install-nudge'
+import { InstallNudge } from '@/components/install/install-nudge'
 
 type RouterContext = {
   queryClient: QueryClient
@@ -60,7 +60,7 @@ function RootLayout() {
  * are; they step aside while it is up. Collapsed it is small; a tap opens
  * it (sileo opens on hover, which a tap is on a phone), and something new
  * opens it on its own for a moment (autopilot) before it collapses again.
- * A toast is 40 px tall, so 12 px down the 64 px bar centres it. It is the
+ * A toast is 40 px tall, set down the top bar to sit on its middle line. It is the
  * dock's slab on either scheme, in the café's colour, and its kinds wear
  * the app's colours (styles/index.css).
  */
@@ -78,8 +78,9 @@ function AppToaster() {
       position={language === 'ar' ? 'top-left' : 'top-right'}
       // Sileo's "light" is its dark pill with light text: the dock's, on either scheme
       theme='light'
-      // In the column's corner, which on a wide screen is not the window's
-      offset={{ top: 'calc(env(safe-area-inset-top) + 12px)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
+      // In the column's corner, which on a wide screen is not the window's; on the top bar's middle
+      // line (the island is 40 px tall), however tall the café's header makes the bar
+      offset={{ top: 'calc(env(safe-area-inset-top) + (var(--bar-h) - 40px) / 2)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
       options={{ autopilot: true, fill: slab }}
     />
   )

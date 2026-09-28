@@ -5,7 +5,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { useReceipt } from '@/lib/use-receipt'
 import { BillReceipt } from '@/components/bills/receipt-view'
 import { NinjaPage } from '@/components/ninja/page/page'
-import { RequireAuth } from '@/components/require-auth'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { useGuestStore } from '@/stores/guest-store'
 
 export const Route = createFileRoute('/receipts/$ticketId')({

@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { NinjaTopBar } from '../ninja-top-bar'
+import { NinjaTopBar } from '../shell/top-bar'
 import { pushTitleId } from './push'
 
 /** How far the page scrolls before its large title has faded away, px */
@@ -43,36 +43,63 @@ export function NinjaPage({
   push?: string
 }) {
   const { scrollY } = useScroll()
-  const unfaded = useMotionValue(1)
-  const opacity = useTransform([scrollY, fade ?? unfaded], ([y, f]: number[]) => Math.max(0, 1 - y / TITLE_FOLD) * f)
-  const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
-  const swap = blurSwap(useReducedMotion())
 
   return (
     <MotionConfig reducedMotion='user'>
       <NinjaTopBar chips={!back} start={back ? <BackButton to={back} /> : undefined} />
       {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
       {/* pb-24: room for the dock's bill row, which sits above the tabs while a bill or an order is on */}
-      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-2 pb-24', className)}>
-        <motion.header style={{ opacity, scale }} className='flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]'>
-          <div className='min-w-0'>
-            {/* A new title swaps in with a short blur, the page itself staying put */}
-            <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>
-              <motion.span layoutId={push ? pushTitleId(push) : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
-                <AnimatePresence mode='popLayout' initial={false}>
-                  <motion.span key={title} className='block' {...swap}>
-                    {title}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.span>
-            </h1>
-            {subtitle && <div className='text-muted-foreground mt-1 text-[15px]'>{subtitle}</div>}
-          </div>
-          {action && <div className='shrink-0'>{action}</div>}
-        </motion.header>
+      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-(--page-top) pb-24', className)}>
+        <PageTitle title={title} subtitle={subtitle} action={action} scrollY={scrollY} fade={fade} push={push} />
         {children}
       </div>
     </MotionConfig>
+  )
+}
+
+/**
+ * A page's large title (and the line under it), the first thing under the
+ * top bar on every tab, the menu's too. It shrinks and fades as `scrollY`
+ * (the scroller it sits in) runs past it.
+ */
+export function PageTitle({
+  title,
+  subtitle,
+  action,
+  scrollY,
+  fade,
+  push,
+  className,
+}: {
+  title: string
+  subtitle?: ReactNode
+  action?: ReactNode
+  scrollY: MotionValue<number>
+  fade?: MotionValue<number>
+  push?: string
+  className?: string
+}) {
+  const unfaded = useMotionValue(1)
+  const opacity = useTransform([scrollY, fade ?? unfaded], ([y, f]: number[]) => Math.max(0, 1 - y / TITLE_FOLD) * f)
+  const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
+  const swap = blurSwap(useReducedMotion())
+  return (
+    <motion.header style={{ opacity, scale }} className={cn('flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]', className)}>
+      <div className='min-w-0'>
+        {/* A new title swaps in with a short blur, the page itself staying put */}
+        <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>
+          <motion.span layoutId={push ? pushTitleId(push) : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
+            <AnimatePresence mode='popLayout' initial={false}>
+              <motion.span key={title} className='block' {...swap}>
+                {title}
+              </motion.span>
+            </AnimatePresence>
+          </motion.span>
+        </h1>
+        {subtitle && <div className='text-muted-foreground mt-1 text-[15px]'>{subtitle}</div>}
+      </div>
+      {action && <div className='shrink-0'>{action}</div>}
+    </motion.header>
   )
 }
 

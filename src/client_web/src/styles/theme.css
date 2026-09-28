@@ -14,6 +14,11 @@
   /* The header and the wordmark in it; the brand's header size seed raises both */
   --header-h: 3.5rem;
   --wordmark-h: 1.75rem;
+  /* The top bar the chrome draws: the café's header, never shorter than the island in it needs, so
+     whatever logo a café has (a tall one, a script whose tails run low) keeps room above and below */
+  --bar-h: max(4rem, var(--header-h));
+  /* The gap from the top bar to the first thing under it (a page's title, the menu's), on every page */
+  --page-top: 0.75rem;
   /* Cards and panels are lifted, with no border (index.css gives them a hairline on dark) */
   --surface-bg: var(--card);
   --surface-border: 0px;
@@ -46,6 +51,13 @@
      brand's theme gives it a deep shade of its own colour (lib/brand-theme.ts) */
   --slab: oklch(0.129 0.042 264.695);
   --slab-ink: oklch(1 0 0);
+}
+
+/* A short screen (components/ninja/shell/chrome.ts) draws the bar a size down */
+@media (max-height: 739px) {
+  :root {
+    --bar-h: max(3.375rem, calc(var(--header-h) - 0.5rem));
+  }
 }
 
 .dark {
