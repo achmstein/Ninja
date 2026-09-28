@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { GuestSignInChoices } from '@/components/sign-in-options'
 
 /**
  * Checkout gate for a customer with no account — the guest counterpart of
@@ -134,6 +135,8 @@ function GuestGateDialog({
           </Button>
           <Button onClick={handleSave}>{t('done')}</Button>
         </DialogFooter>
+        {/* Or not a guest at all: they choose, the details above being only one way to order */}
+        <GuestSignInChoices />
       </DialogContent>
     </Dialog>
   )

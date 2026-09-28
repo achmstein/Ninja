@@ -30,6 +30,10 @@ const webExtras = {
   // have no ARB counterpart to share.
   orderAsGuest: { en: 'Order as guest', ar: 'اطلب كزائر' },
   signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
+  // The guest sheet's other ways in, side by side under the details
+  google: { en: 'Google', ar: 'جوجل' },
+  apple: { en: 'Apple', ar: 'أبل' },
+  createNewAccount: { en: 'Create an account', ar: 'اعمل حساب جديد' },
   // The profile of someone who ordered as a guest: who they gave, and that it is not an account
   orderingAsGuest: { en: "You're ordering as a guest", ar: 'انت بتطلب كزائر' },
   guestSignInPrompt: {

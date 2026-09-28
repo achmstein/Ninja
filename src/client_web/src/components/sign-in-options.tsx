@@ -3,7 +3,7 @@ import { useBrand } from "@/lib/brand";
 import { useTheme } from "@/context/theme-provider";
 import { useLanguage } from "@/lib/i18n";
 import { loginPageParams } from "@/lib/oidc";
-import { Mail } from "lucide-react";
+import { Mail, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,6 +49,35 @@ function AppleIcon() {
   );
 }
 
+/** The café's Google and Apple, where it has them on (the brand's auth.social) */
+function useSocial() {
+  const social = useBrand()?.auth?.social ?? [];
+  return {
+    google: social.find((p) => p.provider === "google"),
+    apple: social.find((p) => p.provider === "apple"),
+  };
+}
+
+/**
+ * Off to sign in: the themed Keycloak page follows the app's language and
+ * colour scheme; Google and Apple skip it through kc_idp_hint, and a new
+ * account opens straight on its registration form (prompt=create).
+ */
+function useSignIn() {
+  const auth = useAuth();
+  const { resolvedTheme } = useTheme();
+  const language = useLanguage((state) => state.language);
+  return (idpHint?: string, create = false) => {
+    const { extraQueryParams } = loginPageParams(resolvedTheme, language);
+    auth.signinRedirect({
+      prompt: create ? "create" : undefined,
+      extraQueryParams: idpHint
+        ? { ...extraQueryParams, kc_idp_hint: idpHint }
+        : extraQueryParams,
+    });
+  };
+}
+
 /**
  * Branded sign-in entry (option 3): Google and Apple skip the Keycloak form
  * entirely via kc_idp_hint — the user only sees the native provider prompt.
@@ -57,24 +86,9 @@ function AppleIcon() {
  * platform's hub). Email goes to the themed Keycloak page.
  */
 export function SignInOptions() {
-  const auth = useAuth();
   const t = useT();
-  const social = useBrand()?.auth?.social ?? [];
-  const google = social.find((p) => p.provider === "google");
-  const apple = social.find((p) => p.provider === "apple");
-  const { resolvedTheme } = useTheme();
-  const language = useLanguage((state) => state.language);
-
-  // The themed Keycloak page follows the app's language and colour scheme;
-  // Google and Apple skip it through kc_idp_hint
-  const signIn = (idpHint?: string) => {
-    const { extraQueryParams } = loginPageParams(resolvedTheme, language);
-    auth.signinRedirect({
-      extraQueryParams: idpHint
-        ? { ...extraQueryParams, kc_idp_hint: idpHint }
-        : extraQueryParams,
-    });
-  };
+  const { google, apple } = useSocial();
+  const signIn = useSignIn();
 
   // mx-auto so the narrower max-width centres itself: in a plain block
   // container (the profile page) it would otherwise sit at the writing
@@ -118,6 +132,57 @@ export function SignInOptions() {
       >
         <Mail className="h-4 w-4" />
         {t("continueWithEmail")}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * The guest's other way in, under the name and phone they are giving: Google
+ * or Apple side by side, or a new account. Whichever they choose, the tray
+ * keeps its dishes through the round trip, so the order waits for them.
+ */
+export function GuestSignInChoices() {
+  const t = useT();
+  const { google, apple } = useSocial();
+  const signIn = useSignIn();
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="text-muted-foreground flex items-center gap-3 text-xs">
+        <div className="bg-border h-px flex-1" />
+        {t("guestSignInPrompt")}
+        <div className="bg-border h-px flex-1" />
+      </div>
+      {(google || apple) && (
+        <div className={google && apple ? "grid grid-cols-2 gap-2" : "grid"}>
+          {google && (
+            <Button
+              variant="outline"
+              className="rounded-pill"
+              onClick={() => signIn(google.hint)}
+            >
+              <GoogleIcon />
+              {t("google")}
+            </Button>
+          )}
+          {apple && (
+            <Button
+              className="bg-foreground text-background hover:bg-foreground/90 rounded-pill"
+              onClick={() => signIn(apple.hint)}
+            >
+              <AppleIcon />
+              {t("apple")}
+            </Button>
+          )}
+        </div>
+      )}
+      <Button
+        variant="secondary"
+        className="rounded-pill"
+        onClick={() => signIn(undefined, true)}
+      >
+        <UserPlus className="h-4 w-4" />
+        {t("createNewAccount")}
       </Button>
     </div>
   );
