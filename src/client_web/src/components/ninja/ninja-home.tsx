@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
+import { useDraftedMenuItem } from '@/lib/preview'
 import { useBrand, useIsCloudKitchen } from '@/lib/brand'
 import { useCart } from '@/lib/cart'
 import { useLiveBills } from '@/lib/live-bills'
@@ -79,10 +80,15 @@ export function NinjaHome({ menu }: HomeProps) {
   // The menu is a list (the brand's menu item part picks its look, rows when it picks none): a menu is
   // scanned and compared, which a list lets the eye do. The cards to swipe are the café's own choice,
   // for a short menu with a photo of every dish
-  const chosen = useBrand()?.theme?.layout?.menuItem
+  // Under the panel's preview, the style it is drafting, before it is saved
+  const drafted = useDraftedMenuItem()
+  const saved = useBrand()?.theme?.layout?.menuItem
+  const chosen = drafted === undefined ? saved : drafted
   const list: MenuList | undefined =
-    chosen === 'deck' ? undefined : chosen === 'card' || chosen === 'compact' || chosen === 'hero' ? chosen : 'row'
-  const classic = list != null
+    chosen === 'deck' || chosen === 'tiles' ? undefined : chosen === 'card' || chosen === 'compact' || chosen === 'hero' ? chosen : 'row'
+  // The card grid: the deck's cards small, three a row, as the cards zoomed out show them, and the whole
+  // menu from the start, with no cards to zoom back into
+  const classic = list != null || chosen === 'tiles'
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
   const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
@@ -121,6 +127,9 @@ export function NinjaHome({ menu }: HomeProps) {
   }, [gridScroller, compact, barY, reduced])
   // Nothing in the tray's row and the tabs tucked: the dock is gone, the categories left at the bottom
   const docked = !(tucked && bare)
+  // The tabs tucked with the tray's row kept: the row settles onto the screen's bottom edge, full
+  // width, rounded on top only, rather than floating over a strip of page
+  const stuck = tucked && !bare
   // The dish added from its open card: that card sits out while its photo flies, and comes back as it lands
   const [landing, setLanding] = useState<number | null>(null)
   const [bump, setBump] = useState(0)
@@ -494,10 +503,15 @@ export function NinjaHome({ menu }: HomeProps) {
           {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
           <div
             className={cn(
-              'slab relative z-40 shrink-0 rounded-[1.75rem] transition-[margin,box-shadow] duration-300 ease-out motion-reduce:transition-none',
+              'slab relative z-40 shrink-0 transition-[margin,padding,border-radius,box-shadow] duration-300 ease-out motion-reduce:transition-none',
+              stuck ? 'rounded-t-[1.75rem] rounded-b-none' : 'rounded-[1.75rem]',
               docked && 'shadow-(--slab-shadow)'
             )}
-            style={{ marginInline: DOCK_SIDE, marginBottom: docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)' }}
+            style={{
+              marginInline: stuck ? 0 : DOCK_SIDE,
+              marginBottom: stuck ? 0 : docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)',
+              paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined,
+            }}
           >
             <Tray
               targetRef={target}

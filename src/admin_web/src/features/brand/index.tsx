@@ -124,7 +124,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkSurface: t.dark?.surface ?? '',
   slab: t.slab === 'neutral' ? 'neutral' : '',
   // Rows are what a café gets when it chooses nothing, so a saved 'row' reads as that
-  menuItem: ['card', 'compact', 'hero', 'deck'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
+  menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
@@ -373,6 +373,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='compact'>{t('menuLayoutCompact')}</SelectItem>
                       <SelectItem value='hero'>{t('menuLayoutMagazine')}</SelectItem>
                       <SelectItem value='deck'>{t('menuLayoutCards')}</SelectItem>
+                      <SelectItem value='tiles'>{t('menuLayoutTiles')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>

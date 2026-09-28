@@ -54,6 +54,16 @@ import { toast } from '@/lib/toast'
 
 const DEFAULT = '__default__'
 
+/** The menu's styles the café may choose (the brand's menu item part); none is the classic list */
+const MENU_LAYOUTS: { key: string; label: TranslationKey }[] = [
+  { key: 'card', label: 'menuLayoutGrid' },
+  { key: 'compact', label: 'menuLayoutCompact' },
+  { key: 'hero', label: 'menuLayoutMagazine' },
+  { key: 'deck', label: 'menuLayoutCards' },
+  { key: 'tiles', label: 'menuLayoutTiles' },
+]
+const menuLayoutOf = (v: string | null | undefined) => (MENU_LAYOUTS.some((m) => m.key === v) ? v! : DEFAULT)
+
 const RADIUS_LABELS: Record<string, TranslationKey> = {
   none: 'radiusNone',
   sm: 'radiusSm',
@@ -188,6 +198,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [darkAccent, setDarkAccent] = useState(brand.theme.dark?.accent ?? '')
   const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
   const [dock, setDock] = useState<Dock>(dockOf(brand.theme.slab))
+  const [menuLayout, setMenuLayout] = useState(menuLayoutOf(brand.theme.layout?.menuItem))
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
 
@@ -202,8 +213,11 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock }) => {
+  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock; menuLayout: string }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
+    // The menu's style is this tab's; the layout's other parts go back as they came (the stack replaces the whole theme)
+    const kept = brand.theme.layout ?? { menuItem: null, categories: null, header: null, buttons: null, surface: null, density: null }
+    const layout = { ...kept, menuItem: f.menuLayout === DEFAULT ? null : f.menuLayout }
     return {
       accent: orNull(f.accent),
       surface: orNull(f.surface),
@@ -215,14 +229,13 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
       // Ninja is the only style for now, worn whole
       style: 'ninja',
       slab: f.dock === 'neutral' ? 'neutral' : null,
-      // The stack replaces the whole theme: the café's own choices this tab does not edit go back as they came
-      layout: brand.theme.layout ?? null,
+      layout: Object.values(layout).some(Boolean) ? layout : null,
     }
   }
   const theme = useMemo(
-    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock }),
+    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock]
+    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout]
   )
   const draft = useMemo<PreviewDraft>(
     () => ({
@@ -250,6 +263,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         darkAccent: brand.theme.dark?.accent ?? '',
         darkSurface: brand.theme.dark?.surface ?? '',
         dock: dockOf(brand.theme.slab),
+        menuLayout: menuLayoutOf(brand.theme.layout?.menuItem),
       }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -297,6 +311,21 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             hint={t('brandColorHint')}
           />
           <DockField value={dock} onChange={setDock} color={primary} />
+          <div className='grid gap-2'>
+            <Label htmlFor='brand-menu' className='text-xs'>{t('menuLayout')}</Label>
+            <Select value={menuLayout} onValueChange={setMenuLayout}>
+              <SelectTrigger id='brand-menu' className='w-full'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={DEFAULT}>{t('menuLayoutClassic')}</SelectItem>
+                {MENU_LAYOUTS.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{t(m.label)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>
+          </div>
           <div className='grid gap-4 sm:grid-cols-2'>
             <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper hint={t('secondaryColorHint')} />
             <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper hint={t('surfaceColorHint')} />

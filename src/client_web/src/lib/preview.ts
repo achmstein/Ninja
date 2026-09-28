@@ -4,6 +4,7 @@
  * while a preview is on, nothing chosen here is remembered, so the frame
  * never changes what a real visitor on this browser sees.
  */
+import { useSyncExternalStore } from 'react'
 import type { BrandThemeInput } from '@/lib/brand-theme'
 
 export type PreviewScheme = 'light' | 'dark'
@@ -130,9 +131,29 @@ const DRAFT_THEME = 'ninja:preview-theme'
 const READY = 'ninja:preview-ready'
 
 let drafted: BrandThemeInput | null = null
+const watchers = new Set<() => void>()
 
 /** The theme the framing panel is drafting, or null to show the saved brand */
 export const draftedTheme = () => drafted
+
+/**
+ * The menu style the panel is drafting: undefined while nothing is drafted
+ * (the saved brand's holds), null for the classic list. The panel sends the
+ * whole theme, the layout with it, though only the colours are painted.
+ */
+export function useDraftedMenuItem(): string | null | undefined {
+  return useSyncExternalStore(
+    (w) => {
+      watchers.add(w)
+      return () => watchers.delete(w)
+    },
+    () => {
+      if (!drafted) return undefined
+      const layout = (drafted.theme as { layout?: { menuItem?: string | null } | null } | null | undefined)?.layout
+      return layout?.menuItem ?? null
+    }
+  )
+}
 
 /** Listens for the panel's drafts and tells it the frame is ready for one; returns the stop. */
 export function onDraftedTheme(handler: (input: BrandThemeInput | null) => void): () => void {
@@ -143,6 +164,7 @@ export function onDraftedTheme(handler: (input: BrandThemeInput | null) => void)
     if (!data || data.type !== DRAFT_THEME) return
     drafted = data.theme ?? null
     handler(drafted)
+    watchers.forEach((w) => w())
   }
   window.addEventListener('message', listen)
   window.parent.postMessage({ type: READY }, '*')

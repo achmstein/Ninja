@@ -11,8 +11,8 @@ export const dockOf = (slab: string | null | undefined): Dock => (slab === 'neut
 
 /**
  * The customer app's dock, the café's to choose: a deep shade of its brand
- * colour, or black. Each choice shows a small dock in it, a brand-coloured
- * button on it, so the pick is seen rather than read.
+ * colour, or black. Each choice shows its colour as a swatch, as the colour
+ * fields beside it do.
  */
 export function DockField({ value, onChange, color }: { value: Dock; onChange: (value: Dock) => void; color: string }) {
   const t = useT()
@@ -35,9 +35,7 @@ export function DockField({ value, onChange, color }: { value: Dock; onChange: (
       >
         {choices.map((c) => (
           <ToggleGroupItem key={c.key} value={c.key} className='h-auto flex-1 gap-2 py-2'>
-            <span aria-hidden className='flex h-6 w-12 shrink-0 items-center justify-end rounded-full px-1' style={{ backgroundColor: c.fill }}>
-              <span className='size-4 rounded-full' style={{ backgroundColor: brand }} />
-            </span>
+            <span aria-hidden className='size-5 shrink-0 rounded-md border' style={{ backgroundColor: c.fill }} />
             {c.label}
           </ToggleGroupItem>
         ))}
