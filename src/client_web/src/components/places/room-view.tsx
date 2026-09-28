@@ -62,7 +62,7 @@ function LeaveStay({ stay, onLeft }: { stay: StayViewModel; onLeft: () => void }
       <AlertDialogTrigger asChild>
         <button
           type='button'
-          className='bg-destructive/10 text-destructive flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
+          className='bg-destructive/10 text-destructive flex h-12 w-full items-center justify-center gap-2 rounded-full text-body font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
           disabled={leave.isPending}
         >
           {leave.isPending ? <Loader2 className='size-4 animate-spin' /> : <LogOut className='size-4 rtl:rotate-180' />}

@@ -22,13 +22,13 @@ export function HoldSheet({ place, onOpenChange }: { place: PlaceViewModel | nul
       >
         <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
           <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-          <SheetTitle className='heading text-primary-foreground pe-8 text-[calc(1.75rem*var(--heading-scale))] leading-tight'>
+          <SheetTitle className='heading text-primary-foreground pe-8 text-title leading-tight'>
             {t('reserveRoomName', { roomName: localized(place.name) })}
           </SheetTitle>
           <SheetDescription className='text-primary-foreground/80'>
             <TariffLine place={place} />
           </SheetDescription>
-          {place.description && <p className='text-primary-foreground/80 text-sm'>{localized(place.description)}</p>}
+          {place.description && <p className='text-primary-foreground/80 text-note'>{localized(place.description)}</p>}
         </SheetHeader>
         <HoldForm place={place} onDone={() => onOpenChange(false)} className='p-3 pt-4' />
       </SheetContent>

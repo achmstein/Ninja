@@ -53,7 +53,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
     <div className='flex items-start gap-2.5 px-4 py-3'>
       <span className={cn('mt-1.5 size-2.5 shrink-0 animate-pulse rounded-full motion-reduce:animate-none', statusDotClass(order.status))} />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <div className='text-[15px] font-semibold'>
+        <div className='text-body font-semibold'>
           {order.date &&
             new Date(order.date).toLocaleTimeString(
               language === 'ar' ? 'ar-EG' : 'en-US',
@@ -61,7 +61,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
             )}
         </div>
         {placeName && (
-          <div className='text-muted-foreground flex items-center gap-1 text-[13px]'>
+          <div className='text-muted-foreground flex items-center gap-1 text-caption'>
             <PlaceIcon
               kind={placeKindOf(order.placeKind)}
               className='h-3.5 w-3.5 shrink-0'
@@ -72,7 +72,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
         {detailQuery.isLoading ? (
           <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
         ) : detailQuery.isError ? (
-          <p className='text-destructive text-[13px]'>
+          <p className='text-destructive text-caption'>
             {t('failedToLoadDetails')}
           </p>
         ) : (
@@ -80,17 +80,17 @@ function OrderTile({ order }: { order: OrderSummary }) {
         )}
       </div>
       <div className='shrink-0 text-end'>
-        <div className='text-[15px] font-bold tabular-nums'>
+        <div className='text-body font-bold tabular-nums'>
           {price(Number(order.total ?? 0) - discount)}
         </div>
         {promoDiscount > 0 && (
-          <div className='flex items-center justify-end gap-0.5 text-xs text-emerald-600 dark:text-emerald-400'>
+          <div className='flex items-center justify-end gap-0.5 text-caption text-emerald-600 dark:text-emerald-400'>
             <Tag className='h-3 w-3' />
             {price.discount(promoDiscount)}
           </div>
         )}
         {discount > 0 && (
-          <div className='flex items-center justify-end gap-0.5 text-xs text-emerald-600 dark:text-emerald-400'>
+          <div className='flex items-center justify-end gap-0.5 text-caption text-emerald-600 dark:text-emerald-400'>
             <Star className='h-3 w-3 fill-current' />
             {price.discount(discount)}
           </div>
@@ -108,7 +108,7 @@ function OrderItems({ order }: { order: Order }) {
     <div className='flex flex-col gap-1'>
       {(order.orderItems ?? []).map((item, index) => (
         <div key={index}>
-          <div className='flex items-baseline gap-1 text-sm'>
+          <div className='flex items-baseline gap-1 text-note'>
             <span className='text-muted-foreground'>
               {Number(item.units ?? 0)}x
             </span>
@@ -117,19 +117,19 @@ function OrderItems({ order }: { order: Order }) {
             </span>
           </div>
           {item.customizationsDescription && (
-            <p className='text-muted-foreground ms-6 text-xs'>
+            <p className='text-muted-foreground ms-6 text-caption'>
               {localized(item.customizationsDescription)}
             </p>
           )}
           {item.specialInstructions && (
-            <p className='text-muted-foreground ms-6 text-xs italic'>
+            <p className='text-muted-foreground ms-6 text-caption italic'>
               "{item.specialInstructions}"
             </p>
           )}
         </div>
       ))}
       {order.customerNote && (
-        <p className='text-muted-foreground text-[13px]'>
+        <p className='text-muted-foreground text-caption'>
           {t('noteWithText', { notes: order.customerNote })}
         </p>
       )}

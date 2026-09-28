@@ -94,10 +94,10 @@ export function BillsByMonth({ bills, ordersById }: { bills: BillView[]; ordersB
           <section key={month.key} className='flex flex-col gap-3'>
             <div className='flex items-end justify-between gap-3 px-1'>
               <div className='flex flex-col'>
-                <h2 className='heading text-[calc(1.35rem*var(--heading-scale))] leading-tight'>{month.label}</h2>
-                <span className='text-muted-foreground text-[13px]'>{t('ninjaMonthVisits', { count: String(month.bills.length) })}</span>
+                <h2 className='heading text-title leading-tight'>{month.label}</h2>
+                <span className='text-muted-foreground text-caption'>{t('ninjaMonthVisits', { count: String(month.bills.length) })}</span>
               </div>
-              <span className='text-lg font-extrabold tabular-nums'>{price(paid)}</span>
+              <span className='text-headline font-extrabold tabular-nums'>{price(paid)}</span>
             </div>
             <HistoryList bills={month.bills} ordersById={ordersById} />
           </section>

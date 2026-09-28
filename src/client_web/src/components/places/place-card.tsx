@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Plus } from 'lucide-react'
 import { type PlaceViewModel } from '@/api/spaces'
@@ -8,6 +8,12 @@ import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusMe
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
+
+/** Room kept at the bottom for the dock (its tabs and a bill's row) and the phone's home bar, px */
+const DOCK_ROOM = 150
+
+/** Room kept above a card being brought into view, px */
+const TOP_ROOM = 16
 
 /**
  * One bookable place as a big card, the way the menu's deck shows a dish: a
@@ -43,12 +49,17 @@ export function PlaceCard({
   const tappable = free && canReserve
   const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
 
-  // An opened card near the bottom brings its booking into view
-  useEffect(() => {
-    if (!open) return
-    const timer = window.setTimeout(() => card.current?.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }), 180)
-    return () => window.clearTimeout(timer)
-  }, [open, reduced])
+  // Once the booking has slid open, the page scrolls it into view above the dock: the customer
+  // should not have to find it under their thumb, or below the screen's edge
+  const reveal = () => {
+    const el = card.current
+    if (!el || !open) return
+    const box = el.getBoundingClientRect()
+    const below = box.bottom - (window.innerHeight - DOCK_ROOM)
+    // As far as needed to show the form's end, never so far that the card's own top leaves the screen
+    const by = Math.min(below, box.top - TOP_ROOM)
+    if (by > 0) window.scrollBy({ top: by, behavior: reduced ? 'auto' : 'smooth' })
+  }
 
   return (
     <motion.article
@@ -83,7 +94,7 @@ export function PlaceCard({
         <span className='flex w-full items-center justify-between gap-3'>
           <span
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
+              'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-bold',
               free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
             )}
           >
@@ -104,11 +115,11 @@ export function PlaceCard({
 
         <span className='flex flex-col gap-1.5'>
           {/* The name travels into the reservation, the way a dish's photo stays on screen as it opens */}
-          <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit text-[calc(2rem*var(--heading-scale))] leading-[1.05] break-words'>
+          <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading text-title w-fit break-words'>
             {localized(place.name)}
           </motion.span>
           {place.description && (
-            <span className={cn('line-clamp-2 max-w-[34ch] text-sm', free ? 'opacity-80' : 'text-muted-foreground')}>
+            <span className={cn('line-clamp-2 max-w-[34ch] text-note', free ? 'opacity-80' : 'text-muted-foreground')}>
               {localized(place.description)}
             </span>
           )}
@@ -125,6 +136,7 @@ export function PlaceCard({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0, transition: { duration: 0.18 } }}
             transition={springSoft}
+            onAnimationComplete={reveal}
             className='overflow-hidden'
           >
             <div className={cn('bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4', handedOver && 'invisible')}>
@@ -144,7 +156,7 @@ function RateChips({ place, free }: { place: PlaceViewModel; free: boolean }) {
   const price = usePrice()
   const options = tariffOptions(place.tariff)
   if (options.length === 0) return null
-  const chip = cn('rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums', free ? 'bg-background/12' : 'bg-muted')
+  const chip = cn('rounded-full px-2.5 py-1 text-caption font-semibold tabular-nums', free ? 'bg-background/12' : 'bg-muted')
   return (
     <span className='mt-1 flex flex-wrap items-center gap-1.5'>
       {hasOptions(place.tariff) ? (
@@ -154,7 +166,7 @@ function RateChips({ place, free }: { place: PlaceViewModel; free: boolean }) {
               {t('optionRateFormat', { option: localized(o.name), rate: price.whole(o.hourlyRate) })}
             </span>
           ))}
-          <span className={cn('text-xs font-medium', free ? 'opacity-70' : 'text-muted-foreground')}>{t('perHourShort')}</span>
+          <span className={cn('text-caption font-medium', free ? 'opacity-70' : 'text-muted-foreground')}>{t('perHourShort')}</span>
         </>
       ) : (
         <span className={chip}>{t('hourlyRateFormat', { rate: price.whole(options[0].hourlyRate) })}</span>

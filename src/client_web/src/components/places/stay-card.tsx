@@ -63,7 +63,7 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       />
 
       <div className='flex items-center gap-2'>
-        <span className='flex min-w-0 flex-1 items-center gap-1.5 text-[15px] font-semibold'>
+        <span className='flex min-w-0 flex-1 items-center gap-1.5 text-body font-semibold'>
           <PlaceIcon kind={Number(stay.placeKind)} className='size-4 shrink-0' />
           <span className='truncate'>{localized(stay.placeName)}</span>
         </span>
@@ -73,16 +73,16 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       <div className='flex items-end justify-between gap-3'>
         <div className='flex min-w-0 flex-col'>
           {/* A stay cancelled before its clock started has no length to show */}
-          {duration && <span className='text-[1.75rem] leading-tight font-extrabold'>{active ? <Odometer value={duration} /> : duration}</span>}
+          {duration && <span className='text-display leading-tight font-extrabold'>{active ? <Odometer value={duration} /> : duration}</span>}
           {start && (
-            <span className='text-muted-foreground flex items-center gap-1 text-[13px] tabular-nums'>
+            <span className='text-muted-foreground flex items-center gap-1 text-caption tabular-nums'>
               <Clock className='size-3.5' />
               {timeOf(start.toISOString())}
               {stay.endedAt && ` – ${timeOf(stay.endedAt)}`}
             </span>
           )}
         </div>
-        {stay.totalCost != null && <span className='shrink-0 text-lg font-bold tabular-nums'>{price(Number(stay.totalCost))}</span>}
+        {stay.totalCost != null && <span className='shrink-0 text-headline font-bold tabular-nums'>{price(Number(stay.totalCost))}</span>}
       </div>
 
       {showOptions && segments.length > 1 ? (
@@ -90,7 +90,7 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       ) : (
         showOptions &&
         segments.length === 1 && (
-          <span className={cn('w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold', color(segments[0].optionCode).chip)}>
+          <span className={cn('w-fit rounded-full px-2.5 py-0.5 text-caption font-semibold', color(segments[0].optionCode).chip)}>
             {localized(segments[0].optionName)}
           </span>
         )
@@ -99,7 +99,7 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       {/* Who played with you: the owner first, then in the order they joined */}
       {others.length > 0 && (
         <div className='flex flex-wrap items-center gap-1.5'>
-          <span className='text-muted-foreground flex items-center gap-1 pe-1 text-[13px]'>
+          <span className='text-muted-foreground flex items-center gap-1 pe-1 text-caption'>
             <Users className='size-3.5 shrink-0' />
             {t('ninjaPlayedWith')}
           </span>
@@ -111,9 +111,9 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
                 <span
                   key={member.customerId ?? name}
                   title={name}
-                  className={cn('flex items-center gap-1.5 rounded-full py-0.5 ps-0.5 pe-2.5 text-xs font-semibold', active ? 'bg-background/12' : 'bg-background')}
+                  className={cn('flex items-center gap-1.5 rounded-full py-0.5 ps-0.5 pe-2.5 text-caption font-semibold', active ? 'bg-background/12' : 'bg-background')}
                 >
-                  <span className={cn('grid size-5 place-items-center rounded-full text-[10px] font-bold', active ? 'bg-background text-foreground' : 'bg-foreground text-background')}>
+                  <span className={cn('grid size-5 place-items-center rounded-full text-micro font-bold', active ? 'bg-background text-foreground' : 'bg-foreground text-background')}>
                     {name[0]?.toUpperCase()}
                   </span>
                   {name.split(' ')[0]}
@@ -160,10 +160,10 @@ function RateBar({
       </motion.div>
       <ol className='flex flex-col gap-0.5'>
         {segments.map((segment, i) => (
-          <li key={i} className='flex items-baseline gap-2 text-[13px]'>
+          <li key={i} className='flex items-baseline gap-2 text-caption'>
             <span className={cn('size-2 shrink-0 self-center rounded-full', color(segment.optionCode).dot)} />
             <span className={cn('font-semibold', color(segment.optionCode).text)}>{localized(segment.optionName)}</span>
-            <span className='text-muted-foreground text-xs tabular-nums'>
+            <span className='text-muted-foreground text-caption tabular-nums'>
               {timeOf(segment.startTime)} · {durationOf(segment.startTime, segment.endTime)}
             </span>
           </li>
@@ -176,7 +176,7 @@ function RateBar({
 /** Paid (a tap opens the receipt), running, done or cancelled */
 function StatusChip({ stay }: { stay: StayViewModel }) {
   const t = useT()
-  const base = 'shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums'
+  const base = 'shrink-0 rounded-full px-2.5 py-1 text-caption font-bold tabular-nums'
   const status = Number(stay.status ?? 0)
   if (stay.paidAt != null) {
     // Sales' receipt, projected onto the stay by Spaces

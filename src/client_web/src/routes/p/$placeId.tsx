@@ -120,7 +120,7 @@ function Reading({ label }: { label: string }) {
           />
         )}
       </motion.div>
-      <span className='text-muted-foreground text-sm font-medium'>{label}</span>
+      <span className='text-muted-foreground text-note font-medium'>{label}</span>
     </div>
   )
 }

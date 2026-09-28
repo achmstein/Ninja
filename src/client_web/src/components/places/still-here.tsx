@@ -23,7 +23,7 @@ export function StillHereCard({ place }: { place: StoredPlace }) {
     <div className='bg-card flex flex-col gap-3 rounded-xl border p-4'>
       <div className='flex items-center gap-2'>
         <CircleHelp className='text-primary h-5 w-5 shrink-0' />
-        <span className='text-sm font-bold'>
+        <span className='text-note font-bold'>
           {t('stillAtTable', { name: localized(place.name) })}
         </span>
       </div>

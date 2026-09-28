@@ -4,7 +4,7 @@ import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { SHORT } from '@/components/ninja/shell/chrome'
 import { DishPhotoBox, DishPrice, RowAction } from './dish-parts'
-import { rise, useDish, type DishProps } from './use-dish'
+import { DISH_NAME, DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
 
 /**
  * The classic menu's dish: the deck's card laid on its side. Its photo, its
@@ -24,8 +24,8 @@ export function Row({ scroller, item, opening, landing, onOpen, onQuickAdd }: Di
         {/* Sized to leave the name and its line the room to read on a small phone, and a few dishes to a screen */}
         <DishPhotoBox item={item} dish={dish} photoRef={photo} radius={20} className={SHORT ? 'size-18' : 'size-20'} />
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
-          <span className='heading text-[calc(1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
-          {item.description && <span className='text-muted-foreground line-clamp-2 text-[13px] leading-snug'>{localized(item.description)}</span>}
+          <span className={DISH_NAME}>{localized(item.name)}</span>
+          {item.description && <span className={cn('text-muted-foreground line-clamp-2', DISH_NOTE)}>{localized(item.description)}</span>}
           <DishPrice item={item} onOffer={dish.onOffer} className='mt-1.5' />
         </span>
       </button>

@@ -70,7 +70,7 @@ export function SeatsTable({
   return (
     <div className='flex flex-col gap-3'>
       <div className='flex items-center justify-between gap-2'>
-        <span className='px-1 text-[13px] font-semibold'>{t('seatsAtTable')}</span>
+        <span className='px-1 text-caption font-semibold'>{t('seatsAtTable')}</span>
         <div className='bg-muted flex items-center rounded-full p-1'>
           <motion.button
             type='button'
@@ -84,7 +84,7 @@ export function SeatsTable({
             <Minus className='size-4' />
           </motion.button>
           <span className='w-8 text-center' aria-live='polite'>
-            <Odometer value={String(seats)} className='text-[15px] font-bold' />
+            <Odometer value={String(seats)} className='text-body font-bold' />
           </span>
           <motion.button
             type='button'
@@ -112,11 +112,11 @@ export function SeatsTable({
             left: (BOX - TABLE) / 2,
           }}
         >
-          <span className='text-foreground/60 text-[11px] font-medium'>
+          <span className='text-foreground/60 text-micro font-medium'>
             {t('perPerson')}
           </span>
-          <Odometer value={plan.perPerson.toFixed(2)} className='text-[20px] font-extrabold' />
-          <span className='text-foreground/60 text-xs font-semibold'>
+          <Odometer value={plan.perPerson.toFixed(2)} className='text-headline font-extrabold' />
+          <span className='text-foreground/60 text-caption font-semibold'>
             {currencyLabel(currency, language)}
           </span>
         </div>
@@ -156,7 +156,7 @@ export function SeatsTable({
                 disabled={kind !== 'free'}
                 onClick={() => onToggle(i)}
                 className={cn(
-                  'flex items-center justify-center rounded-full border-2 text-xs font-bold',
+                  'flex items-center justify-center rounded-full border-2 text-caption font-bold',
                   'focus-visible:ring-ring/50 transition-colors duration-200 outline-none focus-visible:ring-4',
                   kind === 'paid' && 'border-emerald-500 bg-emerald-500 text-white',
                   kind === 'held' && 'border-dashed border-amber-400 text-amber-500',
@@ -187,16 +187,16 @@ export function SeatsTable({
       </div>
 
       <div className='flex flex-col items-center gap-0.5 text-center'>
-        <p className='text-[15px] font-semibold tabular-nums'>
+        <p className='text-body font-semibold tabular-nums'>
           {t('youPayForSeats', { parts: mine.length, of: seats })}
           <span className='text-muted-foreground'> · </span>
-          <Odometer value={price(share)} className='text-[15px] font-bold' />
+          <Odometer value={price(share)} className='text-body font-bold' />
         </p>
-        <p className='text-muted-foreground text-[13px] tabular-nums'>
+        <p className='text-muted-foreground text-caption tabular-nums'>
           {t('leftAfterYou', { amount: price(left) })}
         </p>
         {(plan.paid > 0 || plan.held > 0 || plan.free > 1) && (
-          <p className='text-muted-foreground mt-1 text-xs'>{t('seatsHint')}</p>
+          <p className='text-muted-foreground mt-1 text-caption'>{t('seatsHint')}</p>
         )}
       </div>
     </div>
@@ -255,7 +255,7 @@ export function AmountPicker({
         onClick={() => set(value)}
         className={cn(
           'min-h-10 rounded-full border px-3 font-semibold tabular-nums transition-[background-color,border-color,color,scale] duration-200 active:scale-[0.96] motion-reduce:transform-none',
-          big ? 'text-lg leading-none' : 'text-[13px]',
+          big ? 'text-headline leading-none' : 'text-caption',
           active ? 'border-foreground bg-foreground text-background' : 'hover:bg-accent'
         )}
       >
@@ -266,12 +266,12 @@ export function AmountPicker({
 
   return (
     <div className='flex flex-col gap-4'>
-      <span className='px-1 text-[13px] font-semibold'>{t('chooseAmount')}</span>
+      <span className='px-1 text-caption font-semibold'>{t('chooseAmount')}</span>
 
       {/* The figure is drawn big; the input over it takes the typing
           (phones keep inputs at 16px so they never zoom) */}
       <label className='bg-muted group focus-within:ring-ring/50 relative flex cursor-text flex-col items-center gap-1 rounded-[1.5rem] px-4 pt-3 pb-4 transition-shadow focus-within:ring-[3px]'>
-        <span className='text-muted-foreground text-xs'>{t('tapToType')}</span>
+        <span className='text-muted-foreground text-caption'>{t('tapToType')}</span>
         <input
           inputMode='decimal'
           autoComplete='off'
@@ -287,14 +287,14 @@ export function AmountPicker({
         >
           <span
             className={cn(
-              'truncate text-4xl font-bold tabular-nums',
+              'truncate text-display-lg font-bold tabular-nums',
               !text && 'text-muted-foreground/50'
             )}
           >
             {text || '0'}
           </span>
           <span className='bg-primary hidden h-7 w-0.5 animate-pulse self-center rounded-full group-focus-within:block motion-reduce:animate-none' />
-          <span className='text-muted-foreground text-base font-semibold'>
+          <span className='text-muted-foreground text-name font-semibold'>
             {currencyLabel(currency, language)}
           </span>
         </span>
@@ -310,7 +310,7 @@ export function AmountPicker({
           aria-label={t('amountToPay')}
           className='py-2 [&_[data-slot=slider-thumb]]:size-6 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-track]]:h-2'
         />
-        <div className='text-muted-foreground flex justify-between text-xs tabular-nums'>
+        <div className='text-muted-foreground flex justify-between text-caption tabular-nums'>
           <span>{price(0)}</span>
           <span>{price(remaining)}</span>
         </div>
@@ -336,7 +336,7 @@ export function AmountPicker({
 
       <p
         className={cn(
-          'text-center text-[13px] tabular-nums',
+          'text-center text-caption tabular-nums',
           clamped ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'
         )}
         aria-live='polite'

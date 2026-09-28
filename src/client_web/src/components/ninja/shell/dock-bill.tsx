@@ -128,7 +128,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               {asking && <span className='ring-foreground absolute end-0 top-0 size-2.5 rounded-full bg-amber-400 ring-2' />}
             </span>
             <span className='flex min-w-0 flex-1 flex-col'>
-              <span className='flex min-w-0 items-center gap-1 text-xs'>
+              <span className='flex min-w-0 items-center gap-1 text-caption'>
                 <AnimatePresence mode='popLayout' initial={false}>
                   {line && (
                     <motion.span key={line} {...swap} className='truncate opacity-70'>
@@ -144,16 +144,16 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 )}
               </span>
               {total > 0 ? (
-                <Odometer value={price(total)} className='text-base font-bold' />
+                <Odometer value={price(total)} className='text-name font-bold' />
               ) : clock ? (
-                <span dir='ltr' className='self-start text-base font-bold rtl:self-end'>
+                <span dir='ltr' className='self-start text-name font-bold rtl:self-end'>
                   <Odometer value={clock} />
                 </span>
               ) : (
-                <span className='truncate text-base font-bold'>{place}</span>
+                <span className='truncate text-name font-bold'>{place}</span>
               )}
             </span>
-            <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-sm font-semibold'>
+            <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold'>
               {label}
               <ChevronUp className='size-4' />
             </span>

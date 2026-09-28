@@ -193,12 +193,8 @@ export function MenuGrid({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.25, delay: 0.1 }}
-            className={
-              // Under a page title a category is the page's section; on the zoomed-out deck, a small label over its tiles
-              title
-                ? 'heading mb-3 text-[calc(1.3rem*var(--heading-scale))] leading-tight'
-                : 'heading mb-2.5 text-[calc(1.05rem*var(--heading-scale))]'
-            }
+            // A category is the page's section, in every menu style
+            className='heading text-headline mb-3'
           >
             {col.label}
           </motion.h2>

@@ -50,7 +50,7 @@ export function NinjaNav({ className }: { className?: string }) {
               }}
               aria-current={on ? 'page' : undefined}
               className={cn(
-                'relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 text-xs font-semibold transition-colors duration-200',
+                'relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 text-caption font-semibold transition-colors duration-200',
                 on ? 'text-background' : 'text-background/55'
               )}
             >

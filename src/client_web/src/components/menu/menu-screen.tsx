@@ -394,7 +394,7 @@ export function MenuScreen({ menu }: HomeProps) {
                 mode === 'grid' && !classic ? (
                   <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
                     <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
-                    <span className='heading truncate text-[calc(1.15rem*var(--heading-scale))]'>{t('ninjaWholeMenu')}</span>
+                    <span className='heading truncate text-headline'>{t('ninjaWholeMenu')}</span>
                   </button>
                 ) : undefined
               }

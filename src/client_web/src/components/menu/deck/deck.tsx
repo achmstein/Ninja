@@ -231,7 +231,7 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
       className={cn('mb-3 flex w-full shrink-0 snap-start flex-col justify-between p-6 text-start', TONE_CLASS[column.tone])}
       style={{ height: `calc((100% - var(--deck-top) - ${PEEK}px) * 0.5)`, borderRadius: CARD_RADIUS }}
     >
-      <span className='text-sm font-semibold opacity-70'>{t('ninjaUpNext')}</span>
+      <span className='text-note font-semibold opacity-70'>{t('ninjaUpNext')}</span>
       <span className='flex items-end justify-between gap-4'>
         <span className='heading min-w-0 text-[calc(2.25rem*var(--heading-scale))] leading-[1] break-words'>{column.label}</span>
         <span className='grid size-12 shrink-0 place-items-center rounded-full bg-black/15'>
@@ -306,7 +306,7 @@ function DeckCard({
               pressing || hint ? 'opacity-100' : 'opacity-0'
             )}
           >
-            {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
+            {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-caption font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
             <PressRing pressing={pressing} />
           </span>
         )}
@@ -368,19 +368,19 @@ export function CardFace({
   const badges = (
     <div className='absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2'>
       {usual && (
-        <span className='flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-black'>
+        <span className='flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-caption font-semibold text-black'>
           <Repeat2 className='size-3.5' />
           {t('yourUsuals')}
         </span>
       )}
-      {soldOut && <span className='rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white'>{t('unavailable')}</span>}
+      {soldOut && <span className='rounded-full bg-black/70 px-3 py-1 text-caption font-semibold text-white'>{t('unavailable')}</span>}
     </div>
   )
 
   const priceLine = (
     <div className='flex items-baseline gap-2 tabular-nums'>
       <span className='text-lg font-bold'>{price(onOffer ? item.offerPrice : item.price)}</span>
-      {onOffer && <span className='text-sm line-through opacity-60'>{price(item.price)}</span>}
+      {onOffer && <span className='text-note line-through opacity-60'>{price(item.price)}</span>}
     </div>
   )
 
@@ -393,7 +393,7 @@ export function CardFace({
       >
         {badges}
         <h2 className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words hyphens-auto'>{name}</h2>
-        {description && <p className='mt-3 line-clamp-3 max-w-[28ch] text-sm opacity-80'>{description}</p>}
+        {description && <p className='mt-3 line-clamp-3 max-w-[28ch] text-note opacity-80'>{description}</p>}
         <div className='mt-4'>{priceLine}</div>
       </motion.div>
     )
@@ -420,7 +420,7 @@ export function CardFace({
       {badges}
       <div className='absolute inset-x-0 bottom-0 p-6 text-white'>
         <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
-        {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-sm text-white/80'>{description}</p>}
+        {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-note text-white/80'>{description}</p>}
         <div className='mt-3'>{priceLine}</div>
       </div>
     </>

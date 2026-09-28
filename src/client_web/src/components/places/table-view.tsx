@@ -56,8 +56,8 @@ export function TableView({
         <div className='bg-muted flex size-14 items-center justify-center rounded-full'>
           <PlaceIcon kind={place.kind} className='h-7 w-7' />
         </div>
-        <span className='heading text-[calc(1.75rem*var(--heading-scale))]'>{localized(place.name)}</span>
-        <span className='text-sm opacity-80'>
+        <span className='heading text-title'>{localized(place.name)}</span>
+        <span className='text-note opacity-80'>
           {t('sinceTime', { time: since })}
         </span>
       </div>
@@ -100,7 +100,7 @@ export function TableView({
         {/* Moved, or scanned the wrong sticker */}
         <button
           type='button'
-          className='text-muted-foreground self-center text-sm underline'
+          className='text-muted-foreground self-center text-note underline'
           onClick={() => {
             clearPlace()
             onClose()

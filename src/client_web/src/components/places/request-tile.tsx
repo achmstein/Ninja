@@ -76,10 +76,10 @@ export function RequestTile({
         </AnimatePresence>
       </span>
       <span className='flex min-w-0 flex-col'>
-        <span className='text-sm leading-snug font-semibold'>{label}</span>
+        <span className='text-note leading-snug font-semibold'>{label}</span>
         <AnimatePresence mode='popLayout' initial={false}>
           {note && (
-            <motion.span key={note} {...swap} className='text-muted-foreground truncate text-xs'>
+            <motion.span key={note} {...swap} className='text-muted-foreground truncate text-caption'>
               {note}
             </motion.span>
           )}

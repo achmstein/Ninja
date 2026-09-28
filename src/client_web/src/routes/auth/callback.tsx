@@ -22,7 +22,7 @@ function AuthCallback() {
     return (
       <div className='flex h-svh flex-col items-center justify-center gap-3 px-6 text-center'>
         <p className='font-semibold'>Sign-in failed</p>
-        <p className='text-muted-foreground text-sm'>{auth.error.message}</p>
+        <p className='text-muted-foreground text-note'>{auth.error.message}</p>
         <Button
           className='rounded-pill px-8'
           onClick={() => navigate({ to: '/', replace: true })}

@@ -75,7 +75,7 @@ export function LiquidTabs({
               aria-selected={i === active}
               onClick={() => (i === active && !zoomed && onZoomOut ? onZoomOut() : onSelect(i))}
               className={cn(
-                'relative z-10 h-9 shrink-0 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-200',
+                'relative z-10 h-9 shrink-0 rounded-full px-4 text-note font-semibold whitespace-nowrap transition-colors duration-200',
                 i === active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >

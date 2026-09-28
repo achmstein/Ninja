@@ -90,7 +90,7 @@ export function SignInOptions({ onCard = false }: { onCard?: boolean }) {
         </Button>
       )}
       {(google || apple) && (
-        <div className='text-muted-foreground flex items-center gap-3 px-2 text-xs'>
+        <div className='text-muted-foreground flex items-center gap-3 px-2 text-caption'>
           <div className='bg-border h-px flex-1' />
           {t('orContinueWith')}
           <div className='bg-border h-px flex-1' />
@@ -115,7 +115,7 @@ export function GuestSignInChoices() {
   const signIn = useSignIn()
   return (
     <div className='flex flex-col gap-2.5'>
-      <div className='text-muted-foreground flex items-center gap-3 text-xs'>
+      <div className='text-muted-foreground flex items-center gap-3 text-caption'>
         <div className='bg-border h-px flex-1' />
         {t('guestSignInPrompt')}
         <div className='bg-border h-px flex-1' />

@@ -69,7 +69,7 @@ export function NotifyBanner() {
       >
         <Bell className='size-5' />
       </motion.span>
-      <div className='min-w-0 flex-1 text-[15px] font-semibold'>{t('allRoomsBusy')}</div>
+      <div className='min-w-0 flex-1 text-body font-semibold'>{t('allRoomsBusy')}</div>
       {busy || subscriptionQuery.isLoading ? (
         <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
       ) : (

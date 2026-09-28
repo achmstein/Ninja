@@ -16,7 +16,7 @@ export function HintBubble({ children, className }: { children: ReactNode; class
       exit={{ opacity: 0, y: 4, transition: { duration: 0.18 } }}
       transition={{ type: 'spring', stiffness: 420, damping: 30 }}
       className={cn(
-        'slab pointer-events-none flex w-max max-w-[calc(100vw-3rem)] items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold shadow-lg',
+        'slab pointer-events-none flex w-max max-w-[calc(100vw-3rem)] items-center gap-1.5 rounded-full px-3.5 py-2 text-caption font-semibold shadow-lg',
         className
       )}
     >

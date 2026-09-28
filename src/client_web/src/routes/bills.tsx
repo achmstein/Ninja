@@ -143,7 +143,7 @@ function OnYourTab() {
           to='/account'
           icon={Wallet}
           label={t('onYourTab')}
-          value={<span className='text-destructive text-[15px] font-bold tabular-nums'>{price(balance)}</span>}
+          value={<span className='text-destructive text-body font-bold tabular-nums'>{price(balance)}</span>}
         />
       </TileGroup>
     </RiseItem>

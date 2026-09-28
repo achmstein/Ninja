@@ -43,7 +43,7 @@ export function BillStars({
     const value = Number(mine[0].ratingValue ?? 0)
     return (
       <div className='flex items-center gap-1 pt-1'>
-        <span className='text-muted-foreground text-[13px]'>
+        <span className='text-muted-foreground text-caption'>
           {t('yourRating')}
         </span>
         <StarsDisplay value={value} />
@@ -81,7 +81,7 @@ function StarRow({ orderIds }: { orderIds: number[] }) {
 
   if (done) {
     return (
-      <span className='text-muted-foreground pt-1 text-[13px]'>
+      <span className='text-muted-foreground pt-1 text-caption'>
         {t('ratedThanks')}
       </span>
     )
@@ -89,7 +89,7 @@ function StarRow({ orderIds }: { orderIds: number[] }) {
 
   return (
     <div className='flex flex-wrap items-center gap-2 pt-1'>
-      <span className='text-[13px] font-semibold'>{t('howWasIt')}</span>
+      <span className='text-caption font-semibold'>{t('howWasIt')}</span>
       <div
         className='text-amber-400 flex items-center'
         onMouseLeave={() => setHover(0)}
@@ -188,7 +188,7 @@ function RatingSheet({
       >
 
         <SheetHeader>
-          <SheetTitle className='pe-8 text-xl font-bold'>
+          <SheetTitle className='pe-8 text-headline font-bold'>
             {t('rateYourOrder')}
           </SheetTitle>
         </SheetHeader>
@@ -208,11 +208,11 @@ function RatingSheet({
             </button>
           ))}
         </div>
-        <p className='text-muted-foreground mt-2 text-center text-[15px]'>
+        <p className='text-muted-foreground mt-2 text-center text-body'>
           {t(RATING_LABELS[rating])}
         </p>
 
-        <p className='mt-6 text-sm font-semibold'>{t('yourReviewOptional')}</p>
+        <p className='mt-6 text-note font-semibold'>{t('yourReviewOptional')}</p>
         <Textarea
           rows={3}
           maxLength={500}
@@ -223,7 +223,7 @@ function RatingSheet({
         />
 
         {rateAll.isError && (
-          <div className='bg-destructive/10 text-destructive mt-4 flex items-center gap-2 rounded-lg p-3 text-[13px]'>
+          <div className='bg-destructive/10 text-destructive mt-4 flex items-center gap-2 rounded-lg p-3 text-caption'>
             <CircleAlert className='h-4 w-4 shrink-0' />
             {t('failedToPlaceOrder')}
           </div>

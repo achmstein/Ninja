@@ -131,14 +131,14 @@ function LoyaltyPage() {
           <Slab className='isolate flex flex-col items-center gap-4 py-7 text-center'>
             <PointsRing points={Number(account?.pointsBalance ?? 0)} progress={progress} label={t('pts')} size={148} />
             <div className='flex flex-col items-center gap-1.5'>
-              <div className='inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300'>
+              <div className='inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-note font-bold text-amber-300'>
                 <Award className='size-4' />
                 {TIER_KEYS[tier] ? t(TIER_KEYS[tier]) : account?.currentTier}
               </div>
               {/* The key carries its own "{points}" placeholder and label */}
-              <span className='text-sm opacity-60'>{t('lifetimePoints', { points: lifetime })}</span>
+              <span className='text-note opacity-60'>{t('lifetimePoints', { points: lifetime })}</span>
               {nextTier && (
-                <span className='text-sm opacity-80'>
+                <span className='text-note opacity-80'>
                   {t('pointsToNextTier', { points: Number(nextTier.pointsRequired) - lifetime, tier: nextTier.name })}
                 </span>
               )}
@@ -150,7 +150,7 @@ function LoyaltyPage() {
           <SectionLabel>{t('recentActivity')}</SectionLabel>
           {transactions.length === 0 ? (
             <Panel>
-              <p className='text-muted-foreground py-8 text-center text-sm'>{t('noTransactionsYet')}</p>
+              <p className='text-muted-foreground py-8 text-center text-note'>{t('noTransactionsYet')}</p>
             </Panel>
           ) : (
             <Panel className='divide-border/60 flex flex-col divide-y overflow-hidden'>
@@ -161,15 +161,15 @@ function LoyaltyPage() {
                 return (
                   <div key={String(tx.id)} className='flex items-center gap-3 px-4 py-3'>
                     <div className='min-w-0 flex-1'>
-                      <div className='text-[15px] font-semibold'>{typeKey ? t(typeKey) : tx.type}</div>
-                      <div className='text-muted-foreground line-clamp-2 text-[13px]'>
+                      <div className='text-body font-semibold'>{typeKey ? t(typeKey) : tx.type}</div>
+                      <div className='text-muted-foreground line-clamp-2 text-caption'>
                         {[tx.createdAt && relativeDate(tx.createdAt), tx.description].filter(Boolean).join(' · ')}
                       </div>
                     </div>
                     {/* Earned in green, spent in red, like the app */}
                     <span
                       className={cn(
-                        'shrink-0 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums',
+                        'shrink-0 rounded-full px-2.5 py-1 text-note font-bold tabular-nums',
                         earned ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'
                       )}
                     >

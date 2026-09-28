@@ -196,11 +196,11 @@ export function ItemCustomizeForm({
           return (
             <div key={String(customization.id)} className='flex flex-col gap-2'>
               <div className='flex items-baseline gap-2'>
-                <span className='text-sm font-semibold'>
+                <span className='text-note font-semibold'>
                   {localized(customization.name)}
                 </span>
                 {customization.isRequired && (
-                  <span className='text-destructive text-xs'>
+                  <span className='text-destructive text-caption'>
                     {t('required')}
                   </span>
                 )}
@@ -238,12 +238,12 @@ export function ItemCustomizeForm({
                       >
                         {localized(option.name)}
                         {outOfStock ? (
-                          <span className='text-muted-foreground text-xs'>
+                          <span className='text-muted-foreground text-caption'>
                             {t('outOfStock')}
                           </span>
                         ) : (
                           adjustment > 0 && (
-                            <span className='text-xs opacity-70'>
+                            <span className='text-caption opacity-70'>
                               +{adjustment}
                             </span>
                           )
@@ -257,7 +257,7 @@ export function ItemCustomizeForm({
         })}
 
       <div className='flex items-center justify-between'>
-        <span className='text-sm font-medium'>{t('quantity')}</span>
+        <span className='text-note font-medium'>{t('quantity')}</span>
         <div className='flex items-center gap-3'>
           <Button
             variant='outline'
@@ -310,7 +310,7 @@ export function ItemCustomizeForm({
           <span className='font-bold'>{t('addToCart')}</span>
           <span className='flex items-center gap-1.5 font-bold'>
             {item.isOnOffer && originalUnitPrice > unitPrice && (
-              <span className='text-xs font-normal opacity-70 line-through'>
+              <span className='text-caption font-normal opacity-70 line-through'>
                 {price(originalUnitPrice * quantity)}
               </span>
             )}

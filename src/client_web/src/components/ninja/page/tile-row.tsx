@@ -57,13 +57,13 @@ function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing
         <motion.span
           layoutId={push ? pushTitleId(push) : undefined}
           transition={springOpen}
-          className={cn('inline-block max-w-full truncate align-top text-[15px] font-semibold', destructive && 'text-destructive')}
+          className={cn('inline-block max-w-full truncate align-top text-body font-semibold', destructive && 'text-destructive')}
         >
           {label}
         </motion.span>
-        {sublabel && <span className='text-muted-foreground block text-[13px]'>{sublabel}</span>}
+        {sublabel && <span className='text-muted-foreground block text-caption'>{sublabel}</span>}
       </span>
-      {value && <span className='text-muted-foreground shrink-0 text-[13px]'>{value}</span>}
+      {value && <span className='text-muted-foreground shrink-0 text-caption'>{value}</span>}
       {trailing === undefined ? (
         <ChevronRight className={cn('size-4 shrink-0 rtl:rotate-180', destructive ? 'text-destructive' : 'text-muted-foreground')} />
       ) : (

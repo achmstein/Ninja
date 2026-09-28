@@ -43,13 +43,13 @@ export function PaidSoFar({ view, hero = false, className }: { view: PayView; he
     <div className={cn('flex flex-col', hero ? 'gap-3' : 'gap-2', className)}>
       <div className='flex items-end justify-between gap-2 tabular-nums'>
         <div className='flex min-w-0 flex-col'>
-          <span className='text-muted-foreground text-xs font-semibold'>{t('remainingToPay')}</span>
+          <span className='text-muted-foreground text-caption font-semibold'>{t('remainingToPay')}</span>
           {/* 30px and 15px type: wheels a whole 36 and 18 px tall, so no edge of the next digit shows */}
-          <Odometer value={price(view.remaining)} className={cn('font-extrabold', hero ? 'text-[30px]' : 'text-[15px]')} />
+          <Odometer value={price(view.remaining)} className={cn('font-extrabold', hero ? 'text-display' : 'text-body')} />
         </div>
         <div className='flex flex-col items-end'>
-          <span className='text-muted-foreground text-xs font-semibold'>{t('paidSoFar')}</span>
-          <Odometer value={price(paid)} className='text-[15px] font-semibold text-emerald-500' />
+          <span className='text-muted-foreground text-caption font-semibold'>{t('paidSoFar')}</span>
+          <Odometer value={price(paid)} className='text-body font-semibold text-emerald-500' />
         </div>
       </div>
       <div className={cn('bg-muted relative overflow-hidden rounded-full', hero ? 'h-3' : 'h-2')}>
@@ -106,7 +106,7 @@ export function SharesList({ shares, simulated = false }: { shares: PayShareView
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={springSoft}
-              className='flex items-center gap-2.5 text-sm'
+              className='flex items-center gap-2.5 text-note'
             >
               <span
                 className={cn(
@@ -139,14 +139,14 @@ export function SharesList({ shares, simulated = false }: { shares: PayShareView
                       to='/pay/$key'
                       params={{ key: String(share.key).replace(/-/g, '') }}
                       search={{ simulate: true }}
-                      className='bg-muted flex h-7 items-center rounded-full px-2.5 text-xs font-semibold'
+                      className='bg-muted flex h-7 items-center rounded-full px-2.5 text-caption font-semibold'
                     >
                       {t('continuePayment')}
                     </Link>
                   )}
                   <button
                     type='button'
-                    className='text-destructive flex h-7 items-center rounded-full px-2.5 text-xs font-semibold disabled:opacity-50'
+                    className='text-destructive flex h-7 items-center rounded-full px-2.5 text-caption font-semibold disabled:opacity-50'
                     disabled={cancel.isPending}
                     onClick={() => cancel.mutate({ path: { key: String(share.key) }, query: { 'api-version': API_VERSION } })}
                   >
@@ -171,7 +171,7 @@ export function PayWhy({ why, className }: { why: string | null; className?: str
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-2xl px-4 py-3 text-[13px] font-medium',
+        'flex items-center gap-2.5 rounded-2xl px-4 py-3 text-caption font-medium',
         done ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400' : 'bg-muted text-muted-foreground',
         className
       )}

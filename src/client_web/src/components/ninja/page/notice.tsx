@@ -43,8 +43,8 @@ export function Notice({
           <Icon className='size-5' />
         </span>
         <span className='flex min-w-0 flex-col'>
-          <span className='text-[15px] leading-snug font-semibold'>{title}</span>
-          {body && <span className='text-[13px] leading-snug opacity-75'>{body}</span>}
+          <span className='text-body leading-snug font-semibold'>{title}</span>
+          {body && <span className='text-caption leading-snug opacity-75'>{body}</span>}
         </span>
       </div>
       {action}
@@ -54,4 +54,4 @@ export function Notice({
 
 /** The notice's way on: a full-width pill in the café's colour */
 export const noticeAction =
-  'bg-primary text-primary-foreground flex h-11 w-full items-center justify-center gap-2 rounded-full text-[15px] font-bold transition-transform active:scale-[0.98] motion-reduce:transform-none'
+  'bg-primary text-primary-foreground flex h-11 w-full items-center justify-center gap-2 rounded-full text-body font-bold transition-transform active:scale-[0.98] motion-reduce:transform-none'

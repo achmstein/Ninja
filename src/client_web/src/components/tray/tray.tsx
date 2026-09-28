@@ -250,7 +250,7 @@ export function Tray({
     if (order.block === 'table' && !cloudKitchen) return <ScanTableButton className='h-12 rounded-full px-5' />
     if (order.block) {
       return (
-        <button type='button' onClick={onSignIn} className='bg-primary text-primary-foreground flex h-12 items-center gap-2 rounded-full px-5 text-sm font-bold'>
+        <button type='button' onClick={onSignIn} className='bg-primary text-primary-foreground flex h-12 items-center gap-2 rounded-full px-5 text-note font-bold'>
           <LogIn className='size-4' />
           {t('signIn')}
         </button>
@@ -352,11 +352,11 @@ export function Tray({
                 </motion.div>
                 <span className='min-w-0 flex-1'>
                   {empty ? (
-                    <span className='line-clamp-2 text-xs leading-snug opacity-70'>{t('ninjaEmptyTray')}</span>
+                    <span className='line-clamp-2 text-caption leading-snug opacity-70'>{t('ninjaEmptyTray')}</span>
                   ) : (
                     <>
                       <motion.span
-                        className='block overflow-hidden text-xs opacity-70'
+                        className='block overflow-hidden text-caption opacity-70'
                         style={reduced ? undefined : { opacity: countOpacity, height: countHeight }}
                       >
                         {t('itemCount', { count: summary.count })}
@@ -365,7 +365,7 @@ export function Tray({
                         className='block origin-[0%_50%] rtl:origin-[100%_50%]'
                         style={reduced ? undefined : { scale: totalScale }}
                       >
-                        <Odometer value={price(extras.total)} className='text-base font-bold @max-[21rem]:text-sm' />
+                        <Odometer value={price(extras.total)} className='text-name font-bold @max-[21rem]:text-note' />
                       </motion.span>
                       {/* What the code and the points take off, under the total they took it from */}
                       <AnimatePresence initial={false}>
@@ -376,7 +376,7 @@ export function Tray({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
                             transition={SPRING}
-                            className='block text-[11px] font-semibold text-emerald-400 tabular-nums'
+                            className='block text-micro font-semibold text-emerald-400 tabular-nums'
                           >
                             −{price(extras.promoDiscount + extras.pointsDiscount)}
                           </motion.span>
@@ -402,7 +402,7 @@ function Thumbs({ summary, shown }: { summary: ReturnType<typeof traySummary>; s
         </span>
       ))}
       {summary.more > 0 && (
-        <span className='bg-primary text-primary-foreground ring-foreground absolute -end-1.5 -bottom-1 z-10 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold ring-2'>
+        <span className='bg-primary text-primary-foreground ring-foreground absolute -end-1.5 -bottom-1 z-10 grid h-5 min-w-5 place-items-center rounded-full px-1 text-micro font-bold ring-2'>
           +{summary.more}
         </span>
       )}
@@ -456,7 +456,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   const opacity = useTransform(progress, (p) => (seat.fromDock ? 1 : Math.min(1, p * 3)))
   return (
     <motion.span
-      className='slab ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-sm font-bold shadow-lg ring-2'
+      className='slab ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-note font-bold shadow-lg ring-2'
       // A circle the whole way, as in the dock and on the row: only its size changes
       style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >
@@ -500,7 +500,7 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
   return (
     <div className='flex min-h-0 flex-1 flex-col'>
       <div className='flex items-baseline justify-between px-5 pb-2'>
-        <h2 className='heading text-[calc(1.35rem*var(--heading-scale))]'>{t('ninjaYourOrder')}</h2>
+        <h2 className='heading text-title'>{t('ninjaYourOrder')}</h2>
       </div>
       {/* pb-3: the sheet's own padding already clears the dock it tucks under */}
       <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3'>
@@ -512,7 +512,7 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
           <TrayExtras extras={extras} />
         </div>
         {/* Where the order goes, or why it cannot yet; nothing to say leaves no gap */}
-        <div className='mt-3 flex flex-col gap-2 px-2 text-sm empty:hidden'>
+        <div className='mt-3 flex flex-col gap-2 px-2 text-note empty:hidden'>
           {order.tableUnconfirmed && order.activePlace ? (
             <div className='text-foreground rounded-2xl'>
               <StillHereCard place={order.activePlace} />
@@ -619,16 +619,16 @@ function SwipeLine({ line }: { line: CartLine }) {
           data-seat={key}
           data-src={line.pictureUrl ?? ''}
           data-label={name.charAt(0)}
-          className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-base font-bold'
+          className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-name font-bold'
           style={{ opacity: seatShown }}
         >
           <DishPhoto src={line.pictureUrl} />
         </motion.span>
         <span className='min-w-0 flex-1'>
-          <span className='block truncate text-sm font-semibold'>{name}</span>
-          {options && <span className='block truncate text-xs opacity-60'>{options}</span>}
-          {line.specialInstructions && <span className='block truncate text-xs italic opacity-60'>"{line.specialInstructions}"</span>}
-          <span className='block text-sm font-bold tabular-nums'>{price(line.price * line.quantity)}</span>
+          <span className='block truncate text-note font-semibold'>{name}</span>
+          {options && <span className='block truncate text-caption opacity-60'>{options}</span>}
+          {line.specialInstructions && <span className='block truncate text-caption italic opacity-60'>"{line.specialInstructions}"</span>}
+          <span className='block text-note font-bold tabular-nums'>{price(line.price * line.quantity)}</span>
         </span>
         <span className='flex items-center gap-1'>
           <button
@@ -639,7 +639,7 @@ function SwipeLine({ line }: { line: CartLine }) {
           >
             {line.quantity === 1 ? <Trash2 className='size-3.5' /> : <Minus className='size-3.5' />}
           </button>
-          <span className='w-6 text-center text-sm font-bold tabular-nums'>{line.quantity}</span>
+          <span className='w-6 text-center text-note font-bold tabular-nums'>{line.quantity}</span>
           <button
             type='button'
             aria-label={t('ninjaMore')}
@@ -751,7 +751,7 @@ function HoldButton({
         {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className={cn('size-4 transition-opacity', filled ? 'opacity-100' : 'opacity-60')} strokeWidth={3} />}
       </span>
       {/* On a narrow row the words and the ring draw smaller, so the total beside them keeps its room */}
-      <span className='text-sm whitespace-nowrap @max-[21rem]:text-xs'>{t('ninjaHoldToOrder')}</span>
+      <span className='text-note whitespace-nowrap @max-[21rem]:text-caption'>{t('ninjaHoldToOrder')}</span>
     </motion.button>
   )
 }

@@ -77,7 +77,7 @@ export function BranchSwitcher() {
       <button
         type='button'
         onClick={() => setOpen(true)}
-        className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-sm font-semibold transition-colors'
+        className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-note font-semibold transition-colors'
       >
         <MapPin className='size-4 shrink-0' />
         <span className='truncate'>{localized(activeBranch?.name)}</span>
@@ -119,8 +119,8 @@ export function BranchSwitcher() {
                     <MapPin className='size-5' />
                   </span>
                   <span className='relative flex min-w-0 flex-1 flex-col'>
-                    <span className='text-[15px] font-semibold'>{localized(branch.name)}</span>
-                    {localized(branch.address) && <span className='text-muted-foreground text-[13px]'>{localized(branch.address)}</span>}
+                    <span className='text-body font-semibold'>{localized(branch.name)}</span>
+                    {localized(branch.address) && <span className='text-muted-foreground text-caption'>{localized(branch.address)}</span>}
                   </span>
                   {on && <Check className='relative size-5 shrink-0' />}
                 </button>

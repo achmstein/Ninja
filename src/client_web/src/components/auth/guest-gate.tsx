@@ -127,7 +127,7 @@ function GuestGateDialog({
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
-          {error && <p className='text-destructive text-sm'>{error}</p>}
+          {error && <p className='text-destructive text-note'>{error}</p>}
         </div>
         <DialogFooter>
           <Button variant='outline' onClick={() => onSettle(null)}>

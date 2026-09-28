@@ -66,8 +66,8 @@ function RateSwitch({ stay, requests }: { stay: StayViewModel; requests: ReturnT
       {/* Where the clock stands: said, not a control */}
       {current && (
         <div className='flex items-center justify-between gap-3 px-4 pt-3 pb-2'>
-          <span className='text-muted-foreground text-xs font-medium'>{t('ninjaRateNow')}</span>
-          <span className='text-sm font-semibold'>
+          <span className='text-muted-foreground text-caption font-medium'>{t('ninjaRateNow')}</span>
+          <span className='text-note font-semibold'>
             {localized(current.name)} · {perHour(current.hourlyRate)}
           </span>
         </div>
@@ -114,9 +114,9 @@ function RateSwitch({ stay, requests }: { stay: StayViewModel; requests: ReturnT
                 </AnimatePresence>
               </span>
               <span className='flex min-w-0 flex-1 flex-col'>
-                <span className='text-sm font-semibold'>{t(phase === 'idle' ? 'switchToOption' : 'ninjaSwitchingTo', { option: name })}</span>
+                <span className='text-note font-semibold'>{t(phase === 'idle' ? 'switchToOption' : 'ninjaSwitchingTo', { option: name })}</span>
                 <AnimatePresence mode='popLayout' initial={false}>
-                  <motion.span key={note} {...swap} className='text-muted-foreground truncate text-xs'>
+                  <motion.span key={note} {...swap} className='text-muted-foreground truncate text-caption'>
                     {note}
                   </motion.span>
                 </AnimatePresence>

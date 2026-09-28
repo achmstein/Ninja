@@ -59,3 +59,12 @@ export function useDish({
     morph: opening && !landing,
   }
 }
+
+/**
+ * A dish's name in a list: the heading's family at 16 px, bold rather than the heading's extra
+ * bold, so a column of names reads as dishes under the category, not as a stack of titles
+ */
+export const DISH_NAME = 'heading text-name [--heading-weight:700]'
+
+/** What a dish is, under its name: 14 px, which Arabic's dots and small letters need to read */
+export const DISH_NOTE = 'text-note'

@@ -43,7 +43,7 @@ export function PointsRing({
       </svg>
       <div className='flex flex-col items-center leading-none'>
         <Odometer value={String(points)} className='text-2xl font-extrabold' />
-        <span className='mt-1 text-[11px] font-semibold opacity-60'>{label}</span>
+        <span className='mt-1 text-micro font-semibold opacity-60'>{label}</span>
       </div>
     </div>
   )

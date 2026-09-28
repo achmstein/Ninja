@@ -94,7 +94,7 @@ export function PaySheet({
         className='gap-0 p-0'
       >
         <SheetHeader className='shrink-0 px-5 pt-3 pb-0 text-start'>
-          <SheetTitle className='heading pe-8 text-[calc(1.5rem*var(--heading-scale))] leading-tight'>
+          <SheetTitle className='heading pe-8 text-title leading-tight'>
             {t(start === 'full' ? 'payFully' : start === 'split' ? 'splitBill' : 'payTheBill')}
           </SheetTitle>
           <SheetDescription>{data ? localized(data.locationName) : ' '}</SheetDescription>
@@ -109,7 +109,7 @@ export function PaySheet({
         ) : !data ? (
           <div className='flex flex-col items-center gap-3 p-8 text-center'>
             <CircleAlert className='text-muted-foreground size-10' />
-            <p className='text-muted-foreground text-sm'>{t('failedToLoadBills')}</p>
+            <p className='text-muted-foreground text-note'>{t('failedToLoadBills')}</p>
             <Button variant='outline' className='rounded-full' onClick={() => view.refetch()}>
               {t('retry')}
             </Button>
@@ -277,7 +277,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
 
             {!knownName && (
               <label className='flex flex-col gap-1.5'>
-                <span className='px-1 text-[13px] font-semibold'>{t('payerNameLabel')}</span>
+                <span className='px-1 text-caption font-semibold'>{t('payerNameLabel')}</span>
                 <input
                   autoComplete='given-name'
                   maxLength={60}
@@ -286,7 +286,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                <span className='text-muted-foreground px-1 text-xs'>{t('payerNameHint')}</span>
+                <span className='text-muted-foreground px-1 text-caption'>{t('payerNameHint')}</span>
               </label>
             )}
           </>
@@ -295,7 +295,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
 
       {view.canPay && (
         <div className='bg-background shrink-0 border-t px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]'>
-          <div className='flex flex-col gap-1 text-sm tabular-nums'>
+          <div className='flex flex-col gap-1 text-note tabular-nums'>
             {guestPaysFee && summary.fee > 0 && (
               <>
                 <Row label={t('yourShare')} value={price(summary.share)} />
@@ -304,7 +304,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
             )}
             <div className='flex items-baseline justify-between gap-2'>
               <span className='font-bold'>{t('youPay')}</span>
-              <Odometer value={price(summary.total)} className='text-[20px] font-extrabold' />
+              <Odometer value={price(summary.total)} className='text-headline font-extrabold' />
             </div>
           </div>
 
@@ -318,7 +318,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
                 transition={springSoft}
                 className='overflow-hidden'
               >
-                <div className='bg-destructive/10 text-destructive mt-3 flex items-center gap-2 rounded-2xl p-3 text-[13px]'>
+                <div className='bg-destructive/10 text-destructive mt-3 flex items-center gap-2 rounded-2xl p-3 text-caption'>
                   <CircleAlert className='size-4 shrink-0' />
                   {problem}
                 </div>
@@ -333,7 +333,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
               disabled={summary.share <= 0}
               onClick={confirm}
               height={52}
-              className='text-[15px] font-bold'
+              className='text-body font-bold'
             >
               <Lock className='size-4' />
               {t('payAmount', { amount: price(summary.total) })}
@@ -382,7 +382,7 @@ function ItemsPicker({
 
   return (
     <div className='flex flex-col gap-2'>
-      <span className='px-1 text-[13px] font-semibold'>{t('pickItemsToPay')}</span>
+      <span className='px-1 text-caption font-semibold'>{t('pickItemsToPay')}</span>
       {lines.map((line) => {
         const id = String(line.id)
         const qty = num(line.qty)
@@ -415,17 +415,17 @@ function ItemsPicker({
               </AnimatePresence>
             </span>
             <span className='flex min-w-0 flex-1 flex-col'>
-              <span className='text-sm font-medium'>
+              <span className='text-note font-medium'>
                 {qty !== 1 && <span className='text-muted-foreground'>{qty}× </span>}
                 {localized(line.description)}
               </span>
               {line.claimed ? (
-                <span className='text-muted-foreground text-xs'>{claimedLabel}</span>
+                <span className='text-muted-foreground text-caption'>{claimedLabel}</span>
               ) : (
-                localized(line.details) && <span className='text-muted-foreground truncate text-xs'>{localized(line.details)}</span>
+                localized(line.details) && <span className='text-muted-foreground truncate text-caption'>{localized(line.details)}</span>
               )}
             </span>
-            <span className={cn('shrink-0 text-sm font-semibold tabular-nums', line.claimed && 'line-through')}>{price(line.share)}</span>
+            <span className={cn('shrink-0 text-note font-semibold tabular-nums', line.claimed && 'line-through')}>{price(line.share)}</span>
           </button>
         )
       })}
@@ -440,7 +440,7 @@ function Methods({ view }: { view: PayView }) {
   // A demo café: the next page is ours, and nothing is charged
   const Icon = view.options.simulated ? FlaskConical : Lock
   return (
-    <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-xs'>
+    <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-caption'>
       <Icon className='size-3' />
       {t(view.options.simulated ? 'demoPaymentsBadge' : 'paySecureNote')}
     </div>

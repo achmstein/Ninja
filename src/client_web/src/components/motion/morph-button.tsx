@@ -60,7 +60,7 @@ export function MorphButton({
       // growing out of it) carries corners across only when both ends state them
       style={{ height, borderRadius: height / 2 }}
       className={cn(
-        'relative mx-auto inline-flex shrink-0 items-center justify-center overflow-hidden text-sm font-medium whitespace-nowrap outline-none',
+        'relative mx-auto inline-flex shrink-0 items-center justify-center overflow-hidden text-note font-medium whitespace-nowrap outline-none',
         'transition-[background-color,color,opacity] duration-250',
         'focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50',
         phase === 'success'

@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { DishPhotoBox, DishPrice, RowAction } from './dish-parts'
-import { rise, useDish, type DishProps } from './use-dish'
+import { DISH_NAME, rise, useDish, type DishProps } from './use-dish'
 
 /** Photo grid: two big photo tiles a row, the name and price under each, the button on the photo's corner */
 export function PhotoTile({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
@@ -23,7 +23,7 @@ export function PhotoTile({ scroller, item, opening, landing, onOpen, onQuickAdd
         )}
       </div>
       <button type='button' onClick={() => onOpen(item)} className='flex flex-col items-start gap-1.5 px-1 text-start'>
-        <span className='heading line-clamp-2 text-[calc(1rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</span>
+        <span className={cn('line-clamp-2', DISH_NAME)}>{localized(item.name)}</span>
         <DishPrice item={item} onOffer={dish.onOffer} />
       </button>
     </motion.div>

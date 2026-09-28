@@ -45,7 +45,7 @@ export function StayClock({
       <PlaceIcon kind={Number(stay.placeKind)} className='pointer-events-none absolute -end-8 -top-6 -z-10 size-48 rotate-12 opacity-[0.07]' />
 
       <div className='flex items-center justify-between gap-3'>
-        <span className='flex items-center gap-2 text-[13px] font-semibold'>
+        <span className='flex items-center gap-2 text-caption font-semibold'>
           <span className='relative grid size-2.5 place-items-center'>
             <span className='absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none' />
             <span className='size-2 rounded-full bg-emerald-400' />
@@ -53,7 +53,7 @@ export function StayClock({
           {t('bookClockRunning')}
         </span>
         {hasOptions(stay.tariff) && stay.currentOptionName && (
-          <span className='bg-muted rounded-full px-3 py-1 text-xs font-bold'>{localized(stay.currentOptionName)}</span>
+          <span className='bg-muted rounded-full px-3 py-1 text-caption font-bold'>{localized(stay.currentOptionName)}</span>
         )}
       </div>
 
@@ -73,7 +73,7 @@ export function StayClock({
             return (
               <span
                 key={member.customerId ?? name}
-                className={cn('rounded-full px-3 py-1 text-xs font-semibold', isSelf ? 'bg-background text-foreground' : 'bg-muted')}
+                className={cn('rounded-full px-3 py-1 text-caption font-semibold', isSelf ? 'bg-background text-foreground' : 'bg-muted')}
                 title={name}
               >
                 {isSelf ? t('you') : name.split(' ')[0]}

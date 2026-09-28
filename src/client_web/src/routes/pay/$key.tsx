@@ -98,7 +98,7 @@ function PayReturnPage() {
         amount={formatMoney(payment.charged, payment.currency, language)}
         payment={payment}
       >
-        {payment.billClosed && <p className='text-muted-foreground px-2 text-center text-sm'>{t('billClosedNote')}</p>}
+        {payment.billClosed && <p className='text-muted-foreground px-2 text-center text-note'>{t('billClosedNote')}</p>}
         <BackToBills />
       </Outcome>
     )
@@ -115,7 +115,7 @@ function PayReturnPage() {
           to='/bills'
           search={{ pay: Number(payment.ticketId) }}
           replace
-          className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-[15px] font-bold'
+          className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
         >
           {t('tryAgain')}
         </Link>
@@ -185,13 +185,13 @@ function Outcome({
               </AnimatePresence>
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.div key={title} {...swap} className='flex flex-col items-center gap-1.5'>
-                  <h1 className='heading text-[calc(1.5rem*var(--heading-scale))] leading-tight' aria-live='polite'>
+                  <h1 className='heading text-title leading-tight' aria-live='polite'>
                     {title}
                   </h1>
-                  {note && <p className='text-muted-foreground text-sm'>{note}</p>}
+                  {note && <p className='text-muted-foreground text-note'>{note}</p>}
                 </motion.div>
               </AnimatePresence>
-              {amount && <Odometer value={amount} className='text-[30px] font-extrabold' />}
+              {amount && <Odometer value={amount} className='text-display font-extrabold' />}
               {/* What the card paid over the share, said once rather than printed as a slip */}
               {payment && Number(payment.fee) > 0 && <FeeNote payment={payment} />}
             </Slab>
@@ -212,7 +212,7 @@ function CafeMark() {
   ) : (
     <span className='flex flex-col items-center gap-2'>
       <BrandMark className='size-14 rounded-2xl text-2xl' />
-      <span className='text-sm font-bold'>{name}</span>
+      <span className='text-note font-bold'>{name}</span>
     </span>
   )
 }
@@ -222,7 +222,7 @@ function FeeNote({ payment }: { payment: PaymentStatusView }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
   return (
-    <p className='text-muted-foreground -mt-2 text-xs tabular-nums'>
+    <p className='text-muted-foreground -mt-2 text-caption tabular-nums'>
       {t('onlinePaymentFee')} · {formatMoney(payment.fee, payment.currency, language)}
     </p>
   )
@@ -231,7 +231,7 @@ function FeeNote({ payment }: { payment: PaymentStatusView }) {
 function BackToBills() {
   const t = useT()
   return (
-    <Link to='/bills' className='bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-[15px] font-bold'>
+    <Link to='/bills' className='bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'>
       {t('backToBills')}
     </Link>
   )

@@ -59,8 +59,8 @@ export function DishPrice({ item, onOffer, className }: { item: CatalogItemDto; 
   const price = usePrice()
   return (
     <span className={cn('flex items-center gap-2', className)}>
-      <span className='bg-muted rounded-full px-2.5 py-1 text-[13px] font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
-      {onOffer && <span className='text-muted-foreground text-xs font-medium tabular-nums line-through'>{price(item.price)}</span>}
+      <span className='bg-muted rounded-full px-2.5 py-1 text-caption font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
+      {onOffer && <span className='text-muted-foreground text-caption font-medium tabular-nums line-through'>{price(item.price)}</span>}
     </span>
   )
 }
@@ -130,7 +130,7 @@ export function RowAction({
           <button type='button' aria-label={t('ninjaLess')} onClick={less} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
             <Minus className='size-4' strokeWidth={2.5} />
           </button>
-          <Odometer value={String(count)} className='min-w-5 text-center text-sm font-bold' />
+          <Odometer value={String(count)} className='min-w-5 text-center text-note font-bold' />
           <button type='button' aria-label={t('ninjaMore')} onClick={onAdd} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
             <Plus className='size-4' strokeWidth={2.5} />
           </button>

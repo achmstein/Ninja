@@ -146,7 +146,7 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
           <DialogDescription>{t('ninjaScanCodeHint')}</DialogDescription>
         </DialogHeader>
         {blocked || unsupported ? (
-          <div className='bg-muted text-muted-foreground flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center text-sm'>
+          <div className='bg-muted text-muted-foreground flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center text-note'>
             <CameraOff className='h-8 w-8' />
             {t('cameraBlocked')}
           </div>

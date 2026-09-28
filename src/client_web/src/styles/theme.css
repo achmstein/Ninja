@@ -88,6 +88,35 @@
   /* Inlined as var() references, so the brand's --font-latin / --font-arabic reach every utility and the page */
   --font-sans: var(--font-latin), var(--font-arabic), system-ui, sans-serif;
 
+  /* The type scale, one for every page and every menu style. Each step is a job, not a size:
+     - title: a page's name, a sheet's, a place's own (28 px at the Ninja heading scale)
+     - headline: a section, a menu category, a card's title (20 px)
+     - name: a dish, a row's bold value (16 px)
+     - body: labels and what is read (15 px); note: what a thing is, under its name (14 px)
+     - caption: small details, prices in pills, meta (13 px); micro: badges only (11 px)
+     - display: the one big number a card is about (30 px, and 40 px for a balance)
+     Headings grow with the style's heading scale; receipts keep their printed paper's sizes,
+     and the swipe deck's poster cards and a clock's ring their own. A text field stays 16 px
+     (text-base), which keeps a phone from zooming in on it */
+  --text-title: calc(1.6rem * var(--heading-scale));
+  --text-title--line-height: 1.15;
+  --text-headline: calc(1.15rem * var(--heading-scale));
+  --text-headline--line-height: 1.2;
+  --text-name: 1rem;
+  --text-name--line-height: 1.25;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.4;
+  --text-note: 0.875rem;
+  --text-note--line-height: 1.4;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.35;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.3;
+  --text-display: 1.875rem;
+  --text-display--line-height: 1.1;
+  --text-display-lg: 2.5rem;
+  --text-display-lg--line-height: 1.05;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

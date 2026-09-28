@@ -59,7 +59,7 @@ function AccountPage() {
               <Skeleton className='h-48 rounded-[1.5rem]' />
             ) : transactions.length === 0 ? (
               <Panel>
-                <p className='text-muted-foreground py-8 text-center text-sm'>{t('noTransactionsYet')}</p>
+                <p className='text-muted-foreground py-8 text-center text-note'>{t('noTransactionsYet')}</p>
               </Panel>
             ) : (
               <Panel className='divide-border/60 flex flex-col divide-y overflow-hidden'>
@@ -103,11 +103,11 @@ function BalanceSlab({ balance }: { balance: number }) {
           )}
         />
       )}
-      <span className={cn('relative flex items-center gap-2 text-sm font-semibold', tone || 'text-muted-foreground')}>
+      <span className={cn('relative flex items-center gap-2 text-note font-semibold', tone || 'text-muted-foreground')}>
         <Icon className='size-4' />
         {owes ? t('amountDue') : hasCredit ? t('creditBalance') : t('yourBalance')}
       </span>
-      <Odometer value={price(Math.abs(balance))} className={cn('relative text-[40px] font-extrabold', tone)} />
+      <Odometer value={price(Math.abs(balance))} className={cn('relative text-display-lg font-extrabold', tone)} />
     </Slab>
   )
 }
@@ -153,13 +153,13 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
         {isCharge ? <ArrowUpRight className='size-[18px] rtl:-scale-x-100' /> : <ArrowDownLeft className='size-[18px] rtl:-scale-x-100' />}
       </span>
       <span className='flex min-w-0 flex-1 flex-col'>
-        <span className='text-[15px] font-semibold'>{isCharge ? t('charge') : t('payment')}</span>
-        <span className='text-muted-foreground line-clamp-2 text-[13px]'>
+        <span className='text-body font-semibold'>{isCharge ? t('charge') : t('payment')}</span>
+        <span className='text-muted-foreground line-clamp-2 text-caption'>
           {[tx.createdAt && relativeDate(tx.createdAt), detail].filter(Boolean).join(' · ')}
         </span>
       </span>
       <span
-        className={cn('shrink-0 text-[15px] font-bold tabular-nums', isCharge ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}
+        className={cn('shrink-0 text-body font-bold tabular-nums', isCharge ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}
       >
         {isCharge ? '+' : '−'}
         {amountFormat.format(Math.abs(Number(tx.amount ?? 0)))}

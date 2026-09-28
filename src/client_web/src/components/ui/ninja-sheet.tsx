@@ -129,6 +129,6 @@ export function SheetFrame({
 
 /** The action row under a question: full-width pills, the action on top */
 export const sheetFooterClass = 'flex flex-col-reverse gap-2 pt-1'
-export const sheetTitleClass = 'heading text-[calc(1.35rem*var(--heading-scale))] leading-tight'
-export const pillAction = 'bg-primary text-primary-foreground flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-bold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
-export const pillCancel = 'bg-muted text-foreground flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition-transform active:scale-[0.98] motion-reduce:transform-none'
+export const sheetTitleClass = 'heading text-title leading-tight'
+export const pillAction = 'bg-primary text-primary-foreground flex h-12 w-full items-center justify-center gap-2 rounded-full text-body font-bold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
+export const pillCancel = 'bg-muted text-foreground flex h-12 w-full items-center justify-center gap-2 rounded-full text-body font-semibold transition-transform active:scale-[0.98] motion-reduce:transform-none'

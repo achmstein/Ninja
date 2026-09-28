@@ -36,7 +36,7 @@ export function Panel({ className, children, ...props }: HTMLMotionProps<'div'>)
 
 /** A small label over a group of panels or tiles */
 export function SectionLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <h2 className={cn('text-muted-foreground px-1 text-[13px] font-semibold', className)}>{children}</h2>
+  return <h2 className={cn('text-muted-foreground px-1 text-caption font-semibold', className)}>{children}</h2>
 }
 
 /**
@@ -77,7 +77,7 @@ export function Segment<T extends string>({
           onClick={() => onChange(option.value)}
           className={cn(
             'relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full font-semibold transition-colors duration-200',
-            compact ? 'px-2.5 text-[13px]' : 'px-3 text-sm',
+            compact ? 'px-2.5 text-caption' : 'px-3 text-note',
             i === active ? 'text-foreground' : 'text-muted-foreground'
           )}
         >
@@ -116,8 +116,8 @@ export function Empty({
         <Icon className='size-9' />
       </motion.div>
       <div className='flex flex-col gap-1'>
-        <p className='heading text-lg'>{title}</p>
-        {note && <p className='text-muted-foreground text-[15px]'>{note}</p>}
+        <p className='heading text-headline'>{title}</p>
+        {note && <p className='text-muted-foreground text-body'>{note}</p>}
       </div>
       {children}
     </div>

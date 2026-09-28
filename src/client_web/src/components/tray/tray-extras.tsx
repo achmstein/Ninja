@@ -81,7 +81,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
       {/* Why a code does not apply, said under the row whether its field is open or not */}
       <AnimatePresence initial={false}>
         {promo.code && promo.reason && (
-          <motion.p key='reason' {...swap} className='px-1 text-xs text-red-300'>
+          <motion.p key='reason' {...swap} className='px-1 text-caption text-red-300'>
             {t(promoReasonKey(promo.reason))}
           </motion.p>
         )}
@@ -114,7 +114,7 @@ function Pill({
       aria-expanded={on}
       onClick={onClick}
       className={cn(
-        'flex h-9 max-w-full items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200',
+        'flex h-9 max-w-full items-center gap-1.5 rounded-full px-3 text-caption font-semibold whitespace-nowrap transition-colors duration-200',
         set ? 'bg-emerald-500/20 text-emerald-300' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
       )}
     >
@@ -132,7 +132,7 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
   if (promo.code) {
     return (
       <div className='bg-background/10 flex items-center gap-2 rounded-2xl px-4 py-2'>
-        <span className='min-w-0 flex-1 truncate font-mono text-sm font-bold tracking-wide'>{promo.code}</span>
+        <span className='min-w-0 flex-1 truncate font-mono text-note font-bold tracking-wide'>{promo.code}</span>
         {promo.checking ? (
           <Loader2 className='size-4 animate-spin opacity-60' />
         ) : (
@@ -164,7 +164,7 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
         autoComplete='off'
         className='placeholder:text-background/50 h-9 min-w-0 flex-1 bg-transparent text-base uppercase outline-none placeholder:normal-case md:text-sm'
       />
-      <button type='submit' disabled={!input.trim()} className='bg-background text-foreground h-9 shrink-0 rounded-full px-4 text-[13px] font-bold disabled:opacity-40'>
+      <button type='submit' disabled={!input.trim()} className='bg-background text-foreground h-9 shrink-0 rounded-full px-4 text-caption font-bold disabled:opacity-40'>
         {t('apply')}
       </button>
     </form>
@@ -197,10 +197,10 @@ function PointsField({ extras }: { extras: CheckoutExtras }) {
         <Minus className='size-4' />
       </button>
       <span className='flex min-w-0 flex-1 flex-col items-center leading-tight'>
-        <span className='text-sm font-bold'>
+        <span className='text-note font-bold'>
           <Odometer value={String(points.count)} /> {t('pts')}
         </span>
-        <span className='text-[11px] tabular-nums opacity-60'>
+        <span className='text-micro tabular-nums opacity-60'>
           {t('ninjaPointsOf', { balance: String(points.balance) })}
         </span>
       </span>
@@ -217,7 +217,7 @@ function PointsField({ extras }: { extras: CheckoutExtras }) {
         type='button'
         disabled={all}
         onClick={() => set(points.max)}
-        className='bg-background text-foreground h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold disabled:opacity-40'
+        className='bg-background text-foreground h-9 shrink-0 rounded-full px-3.5 text-caption font-bold disabled:opacity-40'
       >
         {t('ninjaUseAllPoints')}
       </button>

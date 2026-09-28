@@ -144,8 +144,8 @@ function ClaimPage() {
                   <span className='grid size-16 place-items-center rounded-full bg-emerald-500 text-white'>
                     <DrawnCheck reduced={!!reduced} className='size-8' />
                   </span>
-                  <p className='heading text-xl'>{t('claimDone')}</p>
-                  <p className='text-muted-foreground text-sm'>{t('claimDoneHint', { email: claim.data.email })}</p>
+                  <p className='heading text-headline'>{t('claimDone')}</p>
+                  <p className='text-muted-foreground text-note'>{t('claimDoneHint', { email: claim.data.email })}</p>
                 </motion.div>
               ) : (
                 <motion.div key='whose' {...swap} className='flex flex-col items-center gap-3'>
@@ -154,15 +154,15 @@ function ClaimPage() {
                     <Skeleton className='bg-background/10 h-6 w-40' />
                   ) : (
                     <div className='flex flex-col items-center'>
-                      <p className='heading text-xl'>{preview.data?.name}</p>
+                      <p className='heading text-headline'>{preview.data?.name}</p>
                       {preview.data?.phoneNumber && (
-                        <p className='text-muted-foreground text-sm' dir='ltr'>
+                        <p className='text-muted-foreground text-note' dir='ltr'>
                           {preview.data.phoneNumber}
                         </p>
                       )}
                     </div>
                   )}
-                  <p className='text-muted-foreground text-sm'>{t('claimIntro')}</p>
+                  <p className='text-muted-foreground text-note'>{t('claimIntro')}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -171,7 +171,7 @@ function ClaimPage() {
 
         <RiseItem>
           {claim.isSuccess ? (
-            <Button size='lg' className='h-[52px] w-full rounded-full text-[15px] font-bold' onClick={() => signIn(claim.data.email)}>
+            <Button size='lg' className='h-[52px] w-full rounded-full text-body font-bold' onClick={() => signIn(claim.data.email)}>
               {t('signIn')}
             </Button>
           ) : preview.isPending ? (
@@ -192,7 +192,7 @@ function ClaimPage() {
                     aria-invalid={fieldProblem === 'badEmail' || fieldProblem === 'emailTaken'}
                   />
                   {(fieldProblem === 'badEmail' || fieldProblem === 'emailTaken') && (
-                    <p className='text-destructive text-sm'>{t(problemText[fieldProblem])}</p>
+                    <p className='text-destructive text-note'>{t(problemText[fieldProblem])}</p>
                   )}
                 </div>
                 <div className='space-y-2'>
@@ -218,15 +218,15 @@ function ClaimPage() {
                       {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
                     </button>
                   </div>
-                  {fieldProblem === 'weakPassword' && <p className='text-destructive text-sm'>{t('passwordMustBe8Chars')}</p>}
+                  {fieldProblem === 'weakPassword' && <p className='text-destructive text-note'>{t('passwordMustBe8Chars')}</p>}
                 </div>
 
                 {(fieldProblem === 'tooMany' || fieldProblem === 'failed') && (
-                  <p className='text-destructive text-center text-sm'>{t(problemText[fieldProblem])}</p>
+                  <p className='text-destructive text-center text-note'>{t(problemText[fieldProblem])}</p>
                 )}
-                {auth.isAuthenticated && <p className='text-muted-foreground text-center text-sm'>{t('claimSignedInNote')}</p>}
+                {auth.isAuthenticated && <p className='text-muted-foreground text-center text-note'>{t('claimSignedInNote')}</p>}
 
-                <Button type='submit' size='lg' className='h-[52px] rounded-full text-[15px] font-bold' disabled={claim.isPending}>
+                <Button type='submit' size='lg' className='h-[52px] rounded-full text-body font-bold' disabled={claim.isPending}>
                   {claim.isPending && <Loader2 className='size-4 animate-spin' />}
                   {t('claimSubmit')}
                 </Button>

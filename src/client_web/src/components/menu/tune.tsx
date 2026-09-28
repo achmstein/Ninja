@@ -141,8 +141,8 @@ export function Tune({
         >
           <div className='flex flex-col gap-2.5'>
             <div>
-              <h2 className='heading text-[calc(1.75rem*var(--heading-scale))] leading-tight'>{localized(item.name)}</h2>
-              {item.description && <p className='text-muted-foreground mt-1.5 text-sm leading-relaxed'>{localized(item.description)}</p>}
+              <h2 className='heading text-title leading-tight'>{localized(item.name)}</h2>
+              {item.description && <p className='text-muted-foreground mt-1.5 text-note leading-relaxed'>{localized(item.description)}</p>}
             </div>
             {steps.length > 0 && !loadingPreference && <Recap steps={steps} selections={selections} onJump={show} />}
           </div>
@@ -170,10 +170,10 @@ export function Tune({
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 placeholder={t('anySpecialRequestsOptional')}
-                className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-sm outline-none focus-visible:ring-[3px]'
+                className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-note outline-none focus-visible:ring-[3px]'
               />
             ) : (
-              <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-sm font-medium underline-offset-4 hover:underline'>
+              <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-note font-medium underline-offset-4 hover:underline'>
                 {t('ninjaAddNote')}
               </button>
             )}
@@ -199,7 +199,7 @@ export function Tune({
           >
             <Minus className='size-4' />
           </button>
-          <span className='w-7 text-center text-lg font-bold tabular-nums'>{quantity}</span>
+          <span className='w-7 text-center text-headline font-bold tabular-nums'>{quantity}</span>
           <button type='button' aria-label={t('ninjaMore')} onClick={() => setQuantity((q) => q + 1)} className='bg-muted grid size-10 place-items-center rounded-full'>
             <Plus className='size-4' />
           </button>
@@ -265,7 +265,7 @@ function Recap({ steps, selections, onJump }: { steps: ItemCustomizationDto[]; s
             exit={{ opacity: 0, scale: 0.6 }}
             transition={springOpen}
             onClick={() => onJump(chip.index)}
-            className='bg-muted h-7 rounded-full px-3 text-xs font-semibold'
+            className='bg-muted h-7 rounded-full px-3 text-caption font-semibold'
           >
             {chip.name}
           </motion.button>
@@ -307,8 +307,8 @@ const QuestionBlock = forwardRef<
         />
       )}
       <legend className='mb-3 flex w-full items-baseline justify-between gap-3'>
-        <span className='heading text-[calc(1.15rem*var(--heading-scale))]'>{localized(customization.name)}</span>
-        <span className={cn('shrink-0 text-xs font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}>
+        <span className='heading text-headline'>{localized(customization.name)}</span>
+        <span className={cn('shrink-0 text-caption font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}>
           {customization.isRequired ? t('required') : t('ninjaOptional')}
         </span>
       </legend>
@@ -356,12 +356,12 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
             className={cn(
-              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] px-4 py-1.5 text-start text-sm leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
+              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] px-4 py-1.5 text-start text-note leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
               on ? 'bg-primary text-primary-foreground' : 'bg-muted'
             )}
           >
             <span className='min-w-0 break-words'>{name}</span>
-            {extra && <span className='shrink-0 text-xs tabular-nums opacity-75'>{extra}</span>}
+            {extra && <span className='shrink-0 text-caption tabular-nums opacity-75'>{extra}</span>}
           </button>
         )
       })}

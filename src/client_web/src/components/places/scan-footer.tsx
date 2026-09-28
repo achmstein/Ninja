@@ -20,8 +20,8 @@ export function ScanFooter() {
           <ScanLine className='size-5' />
         </span>
         <div className='min-w-0'>
-          <div className='text-[15px] font-semibold'>{t('atTableQuestion')}</div>
-          <div className='text-muted-foreground text-[13px]'>{t('atTableScanHint')}</div>
+          <div className='text-body font-semibold'>{t('atTableQuestion')}</div>
+          <div className='text-muted-foreground text-caption'>{t('atTableScanHint')}</div>
         </div>
       </button>
       <TableScanner open={open} onOpenChange={setOpen} />

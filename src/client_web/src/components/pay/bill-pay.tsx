@@ -55,7 +55,7 @@ function PayBar({
           <button
             type='button'
             onClick={() => openAs('full')}
-            className='bg-foreground text-background flex h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition-transform active:scale-[0.97] motion-reduce:transform-none'
+            className='bg-foreground text-background flex h-11 items-center justify-center gap-2 rounded-full text-note font-bold transition-transform active:scale-[0.97] motion-reduce:transform-none'
           >
             <CreditCard className='size-4' />
             {t('payFully')}
@@ -64,7 +64,7 @@ function PayBar({
             type='button'
             disabled={!canSplit}
             onClick={() => openAs('split')}
-            className='bg-background flex h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition-transform active:scale-[0.97] disabled:opacity-50 motion-reduce:transform-none'
+            className='bg-background flex h-11 items-center justify-center gap-2 rounded-full text-note font-bold transition-transform active:scale-[0.97] disabled:opacity-50 motion-reduce:transform-none'
           >
             <Split className='size-4' />
             {t('splitBill')}
@@ -111,7 +111,7 @@ export function TablePayButton({ placeId, branchId }: { placeId: number; branchI
           <CreditCard className='size-4' />
           {t('payTheBill')}
         </span>
-        <Odometer value={price(data.remaining)} className='text-muted-foreground text-[15px]' />
+        <Odometer value={price(data.remaining)} className='text-muted-foreground text-body' />
       </button>
       <PaySheet source={source} start='any' open={open} onOpenChange={setOpen} />
     </>

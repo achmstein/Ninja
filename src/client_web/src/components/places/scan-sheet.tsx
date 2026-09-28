@@ -127,14 +127,14 @@ export function ScanSheet({
           {/* The place on its card, as the tab shows it */}
           <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
             <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-            <SheetTitle className='heading text-primary-foreground pe-8 text-[calc(1.75rem*var(--heading-scale))] leading-tight'>
+            <SheetTitle className='heading text-primary-foreground pe-8 text-title leading-tight'>
               {localized(place.name)}
             </SheetTitle>
             <SheetDescription className='text-primary-foreground/80'>
               <TariffLine place={place} />
             </SheetDescription>
             {running && memberCount != null && (
-              <span className='bg-primary-foreground/15 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold'>
+              <span className='bg-primary-foreground/15 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold'>
                 <Users className='size-3.5' />
                 {t('memberCountFormat', { count: Number(memberCount) })}
               </span>
@@ -144,7 +144,7 @@ export function ScanSheet({
           <div className='flex flex-col items-center gap-3 p-3 pt-5 text-center'>
             {!auth.isAuthenticated ? (
               <>
-                <p className='text-muted-foreground text-sm'>{t('signInPrompt')}</p>
+                <p className='text-muted-foreground text-note'>{t('signInPrompt')}</p>
                 <SignInOptions />
               </>
             ) : running ? (
@@ -160,7 +160,7 @@ export function ScanSheet({
                 {t('join')}
               </MorphButton>
             ) : (
-              <p className='text-muted-foreground text-sm'>{t('roomNotAvailable')}</p>
+              <p className='text-muted-foreground text-note'>{t('roomNotAvailable')}</p>
             )}
           </div>
         </SheetContent>

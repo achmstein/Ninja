@@ -126,7 +126,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
       <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] min-h-svh'>
         {/* What this page is, said plainly above everything else */}
-        <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-xs font-semibold text-amber-950'>
+        <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-caption font-semibold text-amber-950'>
           <FlaskConical className='size-3.5' />
           {t('demoBanner')}
         </div>
@@ -137,7 +137,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
           transition={springSoft}
           className='mx-auto flex w-full max-w-md flex-col gap-4 p-4 pb-10'
         >
-          <div className='text-muted-foreground flex items-center justify-center gap-1.5 pt-2 text-xs'>
+          <div className='text-muted-foreground flex items-center justify-center gap-1.5 pt-2 text-caption'>
             <Lock className='size-3.5' />
             {t('demoSecureCheckout')}
           </div>
@@ -145,10 +145,10 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
           {/* The merchant and what is being paid */}
           <Slab className='flex flex-col gap-4'>
             <div className='min-w-0'>
-              <div className='text-muted-foreground text-xs font-semibold'>{t('demoPayTo')}</div>
-              <div className='heading truncate text-xl'>{merchant}</div>
+              <div className='text-muted-foreground text-caption font-semibold'>{t('demoPayTo')}</div>
+              <div className='heading truncate text-headline'>{merchant}</div>
             </div>
-            <div className='flex flex-col gap-1.5 text-sm tabular-nums'>
+            <div className='flex flex-col gap-1.5 text-note tabular-nums'>
               {fee > 0 && (
                 <>
                   <div className='text-muted-foreground flex justify-between gap-2'>
@@ -163,7 +163,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
               )}
               <div className='flex items-baseline justify-between gap-2'>
                 <span className='font-semibold'>{t('demoTotal')}</span>
-                <Odometer value={money(payment.charged)} className='text-[30px] font-extrabold' />
+                <Odometer value={money(payment.charged)} className='text-display font-extrabold' />
               </div>
             </div>
           </Slab>
@@ -236,7 +236,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
                       className='h-11 rounded-xl'
                     />
                   </div>
-                  <div className='bg-muted text-muted-foreground flex flex-col gap-1 rounded-2xl p-3 text-xs'>
+                  <div className='bg-muted text-muted-foreground flex flex-col gap-1 rounded-2xl p-3 text-caption'>
                     <span>
                       {t('demoTestApproved')} <span className='font-mono'>4242 4242 4242 4242</span>
                     </span>
@@ -267,12 +267,12 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
                     onChange={(e) => setPhone(digits(e.target.value).slice(0, 11))}
                     className='h-11 rounded-xl font-mono'
                   />
-                  <span className='text-muted-foreground text-xs'>{t('demoWalletHint')}</span>
+                  <span className='text-muted-foreground text-caption'>{t('demoWalletHint')}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {error && <p className='text-destructive text-sm'>{error}</p>}
+            {error && <p className='text-destructive text-note'>{error}</p>}
 
             {/* The button is the bank's moment too: a spinner while "the bank" decides */}
             <MorphButton
@@ -280,19 +280,19 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
               disabled={cancel.isPending}
               onClick={pay}
               height={52}
-              className='text-[15px] font-bold'
+              className='text-body font-bold'
             >
               <Lock className='size-4' />
               {t('payAmount', { amount: money(payment.charged) })}
             </MorphButton>
             {busy && (
-              <p className='text-muted-foreground -mt-2 text-center text-xs' aria-live='polite'>
+              <p className='text-muted-foreground -mt-2 text-center text-caption' aria-live='polite'>
                 {t('demoProcessing')}
               </p>
             )}
             <button
               type='button'
-              className='text-muted-foreground h-10 w-full rounded-full text-sm font-semibold disabled:opacity-50'
+              className='text-muted-foreground h-10 w-full rounded-full text-note font-semibold disabled:opacity-50'
               disabled={busy || cancel.isPending}
               onClick={() => cancel.mutate({ path: { key: payment.key }, query: { 'api-version': API_VERSION } })}
             >
@@ -300,7 +300,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
             </button>
           </Panel>
 
-          <p className='text-muted-foreground text-center text-xs'>{t('demoFooter')}</p>
+          <p className='text-muted-foreground text-center text-caption'>{t('demoFooter')}</p>
         </motion.div>
       </div>
     </MotionConfig>

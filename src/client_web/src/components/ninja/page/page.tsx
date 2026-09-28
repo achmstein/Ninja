@@ -87,7 +87,7 @@ export function PageTitle({
     <motion.header style={{ opacity, scale }} className={cn('flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]', className)}>
       <div className='min-w-0'>
         {/* A new title swaps in with a short blur, the page itself staying put */}
-        <h1 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.1]'>
+        <h1 className='heading text-title'>
           <motion.span layoutId={push ? pushTitleId(push) : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
             <AnimatePresence mode='popLayout' initial={false}>
               <motion.span key={title} className='block' {...swap}>
@@ -96,7 +96,7 @@ export function PageTitle({
             </AnimatePresence>
           </motion.span>
         </h1>
-        {subtitle && <div className='text-muted-foreground mt-1 text-[15px]'>{subtitle}</div>}
+        {subtitle && <div className='text-muted-foreground mt-1 text-body'>{subtitle}</div>}
       </div>
       {action && <div className='shrink-0'>{action}</div>}
     </motion.header>

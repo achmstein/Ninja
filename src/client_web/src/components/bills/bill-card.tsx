@@ -124,14 +124,14 @@ export function BillCard({
     : ''
   const Surface = open ? Slab : Panel
   const row = 'flex items-baseline justify-between gap-2 tabular-nums'
-  const small = cn(row, 'text-muted-foreground text-[13px]')
+  const small = cn(row, 'text-muted-foreground text-caption')
 
   return (
     <div className='flex flex-col'>
       <Surface className={cn('relative z-10 flex flex-col gap-4', !open && 'p-5')}>
         {/* Where and when, and what the till did with it */}
         <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground flex min-w-0 flex-1 items-center gap-1.5 text-[13px] font-semibold'>
+          <span className='text-muted-foreground flex min-w-0 flex-1 items-center gap-1.5 text-caption font-semibold'>
             {bill.placeId != null && <PlaceIcon kind={placeKindOf(bill.placeKind)} className='size-4 shrink-0' />}
             <span className='truncate'>{localized(bill.locationName) || t('atTheCounter')}</span>
             {opened && <span className='shrink-0'>· {opened}</span>}
@@ -141,8 +141,8 @@ export function BillCard({
 
         <div className='flex items-end justify-between gap-3'>
           <div className={cn('flex min-w-0 flex-col', voided && 'line-through opacity-50')}>
-            <span className='text-muted-foreground text-[13px]'>{parts.shared ? t('yourRounds') : t('total')}</span>
-            <span className='text-[2rem] leading-tight font-extrabold'>
+            <span className='text-muted-foreground text-caption'>{parts.shared ? t('yourRounds') : t('total')}</span>
+            <span className='text-display leading-tight font-extrabold'>
               {running && <span className='me-1 opacity-60'>≈</span>}
               <Odometer value={price(headline)} />
             </span>
@@ -152,7 +152,7 @@ export function BillCard({
               type='button'
               aria-expanded={fanned}
               onClick={() => setFanned((f) => !f)}
-              className='bg-muted flex shrink-0 items-center gap-1 rounded-full py-1.5 ps-3 pe-2 text-[13px] font-semibold'
+              className='bg-muted flex shrink-0 items-center gap-1 rounded-full py-1.5 ps-3 pe-2 text-caption font-semibold'
             >
               {rounds.length > 0 && t('ninjaRoundCount', { count: String(rounds.length) })}
               <motion.span animate={{ rotate: fanned ? 180 : 0 }} transition={spring} className='grid place-items-center'>
@@ -252,7 +252,7 @@ export function BillCard({
                 </div>
               )}
               {refunded > 0 && (
-                <div className={cn(row, 'text-destructive text-[13px]')}>
+                <div className={cn(row, 'text-destructive text-caption')}>
                   <span>{t('refunded')}</span>
                   <span>−{price(refunded)}</span>
                 </div>
@@ -262,7 +262,7 @@ export function BillCard({
                   type='button'
                   aria-expanded={paper}
                   onClick={() => setPaper((on) => !on)}
-                  className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-sm font-semibold'
+                  className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-note font-semibold'
                 >
                   <ReceiptText className='size-4' />
                   {t(paper ? 'ninjaHideReceipt' : 'ninjaOpenBill')}
@@ -369,9 +369,9 @@ function RoundCard({ round, dark }: { round: Round; dark: boolean }) {
   return (
     <RoundShell dark={dark} pending={round.pending != null}>
       <span className='flex items-center justify-between gap-2 empty:hidden'>
-        {round.at && <span className='text-muted-foreground text-xs font-semibold'>{round.at}</span>}
+        {round.at && <span className='text-muted-foreground text-caption font-semibold'>{round.at}</span>}
         {round.pending && (
-          <span className='ms-auto flex items-center gap-1.5 text-xs font-bold text-amber-500'>
+          <span className='ms-auto flex items-center gap-1.5 text-caption font-bold text-amber-500'>
             <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
             {t(round.pending === 'waiting' ? 'waitingToBeConfirmed' : 'addingToBill')}
           </span>
@@ -396,7 +396,7 @@ function LineRow({ line }: { line: BillLineView }) {
   const details = localized(line.details)
   return (
     <div>
-      <div className='flex items-baseline gap-1.5 text-sm'>
+      <div className='flex items-baseline gap-1.5 text-note'>
         {isTime ? (
           <Timer className='text-muted-foreground size-3.5 shrink-0 self-center' />
         ) : (
@@ -406,12 +406,12 @@ function LineRow({ line }: { line: BillLineView }) {
         <span className='shrink-0 tabular-nums'>{price(Number(line.total ?? 0))}</span>
       </div>
       {isTime ? (
-        <p className='text-muted-foreground ms-5 text-xs tabular-nums'>
+        <p className='text-muted-foreground ms-5 text-caption tabular-nums'>
           {t('hoursShort', { count: String(qty) })} × {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
         </p>
       ) : (
-        details && <p className='text-muted-foreground ms-5 text-xs'>{details}</p>
+        details && <p className='text-muted-foreground ms-5 text-caption'>{details}</p>
       )}
     </div>
   )
@@ -420,7 +420,7 @@ function LineRow({ line }: { line: BillLineView }) {
 /** What the till did with the bill: paid (and on which receipt), on the customer's tab, voided, or still open. */
 function StatusChip({ bill }: { bill: BillView }) {
   const t = useT()
-  const base = 'shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums'
+  const base = 'shrink-0 rounded-full px-2.5 py-1 text-caption font-bold tabular-nums'
   if (bill.status === 'Voided') return <span className={cn(base, 'bg-muted text-muted-foreground')}>{t('voided')}</span>
   if (!isSettled(bill)) {
     return (

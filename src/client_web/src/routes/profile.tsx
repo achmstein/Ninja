@@ -127,28 +127,28 @@ function ProfilePage() {
               {signedIn ? (displayName || '?')[0]?.toUpperCase() : guestContact ? guestContact.name[0]?.toUpperCase() : <User className='size-7 opacity-70' />}
             </div>
             <div className='min-w-0 flex-1'>
-              <div className='heading truncate text-xl'>
+              <div className='heading truncate text-headline'>
                 {signedIn ? displayName : guestContact ? guestContact.name : t('guestUser')}
               </div>
               {signedIn && myProfileQuery.data?.phoneNumber && (
-                <div className='truncate text-sm opacity-60'>
+                <div className='truncate text-note opacity-60'>
                   {/* The digits run left to right; the line sits where the page reads from */}
                   <span dir='ltr'>{myProfileQuery.data.phoneNumber}</span>
                 </div>
               )}
               {!signedIn && guestContact && (
-                <div className='truncate text-sm opacity-60'>
+                <div className='truncate text-note opacity-60'>
                   <span dir='ltr'>{guestContact.phone}</span>
                 </div>
               )}
               {loyalty && (
-                <div className='mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-bold text-amber-300'>
+                <div className='mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-caption font-bold text-amber-300'>
                   <Award className='size-3.5' />
                   {TIER_KEYS[tier] ? t(TIER_KEYS[tier]) : loyalty.currentTier}
                 </div>
               )}
               {!signedIn && guestContact && (
-                <div className='bg-background/12 mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold'>{t('orderingAsGuest')}</div>
+                <div className='bg-background/12 mt-2 inline-flex rounded-full px-2.5 py-1 text-caption font-semibold'>{t('orderingAsGuest')}</div>
               )}
             </div>
             {loyalty && (
@@ -158,7 +158,7 @@ function ProfilePage() {
             )}
           </Slab>
           {loyalty && nextTier && (
-            <p className='text-muted-foreground px-2 pt-2 text-[13px]'>
+            <p className='text-muted-foreground px-2 pt-2 text-caption'>
               {t('pointsToNextTier', { points: Number(nextTier.pointsRequired) - lifetime, tier: nextTier.name })}
             </p>
           )}
@@ -237,7 +237,7 @@ function ProfilePage() {
         )}
 
         <RiseItem>
-          <p className='text-muted-foreground text-center text-xs'>{t('version', { version: __APP_VERSION__ })}</p>
+          <p className='text-muted-foreground text-center text-caption'>{t('version', { version: __APP_VERSION__ })}</p>
         </RiseItem>
       </Rise>
 
@@ -300,7 +300,7 @@ function AboutDialog({
           ) : (
             <>
               <BrandMark className='size-20 rounded-2xl text-3xl' />
-              <div className='text-lg font-bold'>{brandName}</div>
+              <div className='text-headline font-bold'>{brandName}</div>
             </>
           )}
           <Badge variant='secondary'>

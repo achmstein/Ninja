@@ -91,12 +91,12 @@ export function ZoomTile({
           </motion.div>
         ) : (
           <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 flex items-end p-2.5'>
-            <span className='heading line-clamp-3 text-base leading-[1.05] break-words'>{localized(item.name)}</span>
+            <span className='heading line-clamp-3 text-name leading-[1.05] break-words'>{localized(item.name)}</span>
           </motion.div>
         )}
       </motion.div>
-      <span className='mt-1.5 truncate text-xs font-semibold'>{localized(item.name)}</span>
-      <span className='text-muted-foreground text-xs tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
+      <span className='mt-1.5 truncate text-caption font-semibold'>{localized(item.name)}</span>
+      <span className='text-muted-foreground text-caption tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
     </button>
   )
 }
