@@ -93,17 +93,27 @@ export function NinjaNavDock() {
   const tucked = useTuck((s) => s.tucked)
   // With no row to keep, tucking the tabs is the whole dock going, down past the screen's edge
   const gone = tucked && !live
+  // With the bill's row kept, the row settles onto the screen's bottom edge, full width, rounded
+  // on top only: no strip of page showing under it
+  const stuck = tucked && live
   return (
     // The menu's dock's own margins, so the bar does not shift when the page changes
     <div
-      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg transition-transform duration-300 ease-out motion-reduce:transition-none'
+      className='pointer-events-none fixed inset-x-0 z-40 mx-auto max-w-lg transition-[transform,padding,bottom] duration-300 ease-out motion-reduce:transition-none'
       style={{
-        paddingInline: DOCK_SIDE,
-        bottom: `max(${DOCK_INSET}px, env(safe-area-inset-bottom))`,
+        paddingInline: stuck ? 0 : DOCK_SIDE,
+        bottom: stuck ? 0 : `max(${DOCK_INSET}px, env(safe-area-inset-bottom))`,
         transform: gone ? `translateY(calc(100% + max(${DOCK_INSET}px, env(safe-area-inset-bottom))))` : undefined,
       }}
     >
-      <div className='slab pointer-events-auto relative rounded-[1.75rem] shadow-(--slab-shadow)' inert={gone || undefined}>
+      <div
+        className={cn(
+          'slab pointer-events-auto relative shadow-(--slab-shadow) transition-[border-radius,padding] duration-300 ease-out motion-reduce:transition-none',
+          stuck ? 'rounded-t-[1.75rem] rounded-b-none' : 'rounded-[1.75rem]'
+        )}
+        style={{ paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined }}
+        inert={gone || undefined}
+      >
         {/* The bill and the order on its way, above the tabs, on every tab */}
         <DockRow />
         <TuckedTabs tucked={tucked && live} className={live ? 'border-background/10 border-t' : undefined} />
