@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { motion, useScroll } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { PageTitle } from '@/components/ninja/page/page'
+import { TABS_H } from '@/components/ninja/shell/chrome'
 import { pinchIntent, type DeckColumn } from '../deck/deck-model'
 import { LIST_STYLES, type MenuList } from './dishes'
 import { ZoomTile } from './zoom-tile'
@@ -92,6 +93,10 @@ export function MenuGrid({
     sections.current.forEach((section, i) => {
       if (section && section.offsetTop <= line) index = i
     })
+    // At the end the last one is in view, however short it is. The end is measured with the tabs'
+    // room to spare: reaching it brings the dock's tabs back, which shortens the list by their
+    // height and would otherwise hand the bar back to the category before
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - TABS_H - 2) index = categories.length - 1
     if (index !== shown.current) {
       shown.current = index
       onSection(index)
@@ -179,16 +184,10 @@ export function MenuGrid({
           ref={(el) => {
             sections.current[index] = el
           }}
-          className='mb-7 last:mb-0'
-          style={{
-            // The last category can always come up to the top, however few its dishes: a tap on it
-            // in the bar shows it alone rather than stopping with the one before it still in view,
-            // and the end of the menu no longer lights that one when the dock grows back
-            ...(index === categories.length - 1 ? { minHeight: '100%' } : null),
-            // Off-screen categories are not drawn until scrolled to; the one the deck was on always is,
-            // so the grid can land on the dish it came from
-            ...(col.id === focusColumn ? null : { contentVisibility: 'auto', containIntrinsicSize: 'auto 480px' }),
-          }}
+          className='mb-7'
+          // Off-screen categories are not drawn until scrolled to; the one the deck was on always is,
+          // so the grid can land on the dish it came from
+          style={col.id === focusColumn ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 480px' }}
         >
           <motion.h2
             initial={{ opacity: 0 }}
