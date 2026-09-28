@@ -108,6 +108,17 @@ auth.{$PLATFORM_DOMAIN} {
 	handle /api/control/impersonate/* {
 		reverse_proxy control-api:8080
 	}
+	# Apple answers the hub's browser sign-in with a form post (it will not use
+	# the query once name and email are asked for), and Keycloak's broker only
+	# takes a GET: the control plane turns the post into a GET to this same path
+	@applepost {
+		method POST
+		path /realms/ninja-hub/broker/apple/endpoint
+	}
+	handle @applepost {
+		rewrite * /api/control/social/apple
+		reverse_proxy control-api:8080
+	}
 	# The admin console and the admin REST API: only from ADMIN_ALLOW_CIDR
 	# (space-separated networks; nothing is allowed until it is set). The
 	# control plane talks to Keycloak inside the docker network, not here.

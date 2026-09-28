@@ -154,10 +154,12 @@ public static partial class Templates
         }
         if (platform.Social.Apple.Configured)
         {
-            // Apple is not a first-class Keycloak provider: it is plain OIDC with its endpoints spelled out
+            // Apple is not a first-class Keycloak provider: it is plain OIDC with its endpoints spelled out.
+            // Asking for name and email, Apple answers only as a form post; the auth host turns that post
+            // into the GET Keycloak listens for (ControlApi.AppleFormPost)
             providers.Add(Provider("apple", "oidc", "Apple", platform.Social.Apple, new JsonObject
             {
-                ["authorizationUrl"] = "https://appleid.apple.com/auth/authorize",
+                ["authorizationUrl"] = AppleAuthorizationUrl,
                 ["tokenUrl"] = "https://appleid.apple.com/auth/token",
                 ["jwksUrl"] = "https://appleid.apple.com/auth/keys",
                 ["issuer"] = "https://appleid.apple.com",
@@ -171,6 +173,9 @@ public static partial class Templates
         }
         return providers;
     }
+
+    /// <summary>Apple's authorize endpoint, answering by form post (the only way it will with name and email asked for)</summary>
+    public const string AppleAuthorizationUrl = "https://appleid.apple.com/auth/authorize?response_mode=form_post";
 
     private static JsonObject Provider(string alias, string providerId, string displayName, SocialProviderOptions app, JsonObject config, bool hidden = true)
     {

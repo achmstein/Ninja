@@ -112,6 +112,15 @@ public sealed class TemplatesTests
         Assert.AreEqual("oidc", byAlias["apple"]["providerId"]!.GetValue<string>());
         Assert.AreEqual("https://appleid.apple.com", byAlias["apple"]["config"]!["issuer"]!.GetValue<string>());
         Assert.AreEqual("a-jwt", byAlias["apple"]["config"]!["clientSecret"]!.GetValue<string>());
+        // Asked for name and email, Apple answers only by form post (the auth host turns it into a GET)
+        StringAssert.EndsWith(byAlias["apple"]["config"]!["authorizationUrl"]!.GetValue<string>(), "?response_mode=form_post");
+    }
+
+    [TestMethod]
+    public void Apples_form_post_goes_on_to_the_hubs_broker_as_a_get_with_only_what_it_reads()
+    {
+        Assert.AreEqual("/realms/ninja-hub/broker/apple/endpoint?state=s%2B1&code=c.2", Ninja.Control.API.Apis.ControlApi.AppleBrokerUrl("s+1", "c.2", null));
+        Assert.AreEqual("/realms/ninja-hub/broker/apple/endpoint?state=s&error=user_cancelled_authorize", Ninja.Control.API.Apis.ControlApi.AppleBrokerUrl("s", "", "user_cancelled_authorize"));
     }
 
     [TestMethod]

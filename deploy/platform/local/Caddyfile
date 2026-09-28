@@ -67,6 +67,15 @@ https:// {
 		handle /api/control/impersonate/* {
 			reverse_proxy control-api:8080
 		}
+		# Apple's form post to the hub, turned into the GET Keycloak's broker takes
+		@applepost {
+			method POST
+			path /realms/ninja-hub/broker/apple/endpoint
+		}
+		handle @applepost {
+			rewrite * /api/control/social/apple
+			reverse_proxy control-api:8080
+		}
 		handle {
 			reverse_proxy keycloak:8080
 		}
