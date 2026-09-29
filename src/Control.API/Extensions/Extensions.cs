@@ -44,7 +44,10 @@ public static class Extensions
         builder.Services.AddHttpClient("keycloak").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false }).RemoveAllResilienceHandlers();
         builder.Services.AddSingleton<ImpersonationTickets>();
         builder.Services.AddHttpClient("stack", client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllResilienceHandlers();
+        // Talabat's middleware: the café's stack retries a status change itself, so no retries here on top
+        builder.Services.AddHttpClient(TalabatMiddleware.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15)).RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
+        builder.Services.AddSingleton<TalabatMiddleware>();
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();

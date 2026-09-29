@@ -24,6 +24,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<KitchenPrintJob> KitchenPrintJobs { get; set; }
     public DbSet<PrintConnector> PrintConnectors { get; set; }
     public DbSet<ConnectorPairing> ConnectorPairings { get; set; }
+    public DbSet<PlatformUpdate> PlatformUpdates { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -58,6 +59,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new KitchenPrintJobEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PrintConnectorEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ConnectorPairingEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PlatformUpdateEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

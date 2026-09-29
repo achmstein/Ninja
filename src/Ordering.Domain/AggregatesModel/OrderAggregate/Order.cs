@@ -138,6 +138,12 @@ public class Order
     /// </summary>
     public bool IsGuestOrder => GuestId != null;
 
+    /// <summary>
+    /// What the delivery platform said about an order it dispatched here;
+    /// null on every order placed in the café's own apps or at its till.
+    /// </summary>
+    public PlatformOrder? Platform { get; private set; }
+
     // Draft orders have this set to true
 #pragma warning disable CS0414
     private bool _isDraft;
@@ -206,7 +212,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
@@ -243,6 +249,17 @@ public class Order
         if (Source == OrderSource.Pos)
         {
             GuestName = string.IsNullOrWhiteSpace(guestName) ? null : guestName.Trim();
+        }
+
+        // A delivery platform's order has no account and no table here: the
+        // platform took the customer's details and runs the delivery. What it
+        // sent is kept whole; the name and phone ride the kitchen card and the
+        // bill like a walk-in's, for the rider and the counter.
+        if (Source == OrderSource.Talabat)
+        {
+            Platform = platform ?? throw new OrderingDomainException("A Talabat order needs Talabat's details.");
+            GuestName = string.IsNullOrWhiteSpace(guestName) ? null : guestName.Trim();
+            GuestPhone = string.IsNullOrWhiteSpace(guestPhone) ? null : guestPhone.Trim();
         }
 
         if (Source == OrderSource.Guest)
@@ -403,6 +420,7 @@ public class Order
 
         OrderStatus = OrderStatus.Cancelled;
         Description = $"Order cancelled - some items are not available: {string.Join(", ", unavailableProductIds)}";
+        Platform?.Reject(PlatformRejectReasons.ItemUnavailable);
         AddDomainEvent(new OrderCancelledDomainEvent(this));
     }
 
@@ -529,9 +547,12 @@ public class Order
     }
 
     /// <summary>
-    /// Cancel the order (can cancel submitted or awaiting validation orders)
+    /// Cancel the order (can cancel submitted or awaiting validation orders).
+    /// A delivery platform's order is turned down on the platform too, for
+    /// <paramref name="platformReason"/> — the kitchen being too busy when
+    /// staff give none.
     /// </summary>
-    public void SetCancelledStatus()
+    public void SetCancelledStatus(string? platformReason = null)
     {
         if (OrderStatus != OrderStatus.Submitted && OrderStatus != OrderStatus.AwaitingValidation)
         {
@@ -540,7 +561,52 @@ public class Order
 
         OrderStatus = OrderStatus.Cancelled;
         Description = "The order was cancelled.";
+        Platform?.Reject(string.IsNullOrWhiteSpace(platformReason) ? PlatformRejectReasons.TooBusy : platformReason);
         AddDomainEvent(new OrderCancelledDomainEvent(this));
+    }
+
+    /// <summary>
+    /// The platform cancelled its order: the customer changed their mind, or
+    /// nobody here answered it in time. Not yet in the kitchen, it is simply
+    /// cancelled — and nothing is reported back, the platform knows. Already
+    /// accepted, it stays where it is (in the kitchen, on its bill) with the
+    /// cancellation recorded, for the till to deal with. A repeat is a no-op.
+    /// </summary>
+    public void CancelByPlatform(DateTime at)
+    {
+        if (Platform is null)
+        {
+            throw new OrderingDomainException("Only a delivery platform's order can be cancelled by the platform.");
+        }
+
+        if (Platform.CancelledAt is not null)
+        {
+            return;
+        }
+
+        Platform.MarkCancelled(at);
+
+        if (OrderStatus is OrderStatus.Submitted or OrderStatus.AwaitingValidation)
+        {
+            OrderStatus = OrderStatus.Cancelled;
+            Description = $"{Platform.Name} cancelled the order.";
+            AddDomainEvent(new OrderCancelledDomainEvent(this));
+        }
+        else if (OrderStatus == OrderStatus.Confirmed)
+        {
+            Description = $"{Platform.Name} cancelled the order after it was accepted.";
+        }
+    }
+
+    /// <summary>The platform's rider collected it. A repeat is a no-op.</summary>
+    public void MarkPickedUpByPlatform(DateTime at)
+    {
+        if (Platform is null)
+        {
+            throw new OrderingDomainException("Only a delivery platform's order is picked up by the platform.");
+        }
+
+        Platform.MarkPickedUp(at);
     }
 
     private void AddOrderStartedDomainEvent(string userId, string userName)

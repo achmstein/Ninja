@@ -133,6 +133,11 @@ services:
       Platform__Social__Google__ClientSecret: ${SOCIAL_GOOGLE_CLIENT_SECRET:-}
       Platform__Social__Apple__ClientId: ${SOCIAL_APPLE_CLIENT_ID:-}
       Platform__Social__Apple__ClientSecret: ${SOCIAL_APPLE_CLIENT_SECRET:-}
+      # Ninja's Talabat (Delivery Hero POS) integration, one account for every café; empty leaves it off
+      Platform__Talabat__MiddlewareUrl: ${TALABAT_MIDDLEWARE_URL:-}
+      Platform__Talabat__Username: ${TALABAT_USERNAME:-}
+      Platform__Talabat__Password: ${TALABAT_PASSWORD:-}
+      Platform__Talabat__Secret: ${TALABAT_SECRET:-}
       # What the capacity guard counts against (the same number as the postgres command above) and the pool each service is stamped with
       Platform__PostgresMaxConnections: ${POSTGRES_MAX_CONNECTIONS:-400}
       Platform__ServicePoolSize: ${SERVICE_POOL_SIZE:-20}

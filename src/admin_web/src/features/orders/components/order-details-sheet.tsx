@@ -20,6 +20,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 import { formatEgp, getOrderStatus, isSubmitted } from '../status'
+import { PlatformBadge, PlatformHandover } from './platform-badge'
 
 type OrderDetailsSheetProps = {
   orderId: number | null
@@ -79,6 +80,14 @@ export function OrderDetailsSheet({
             </div>
           ) : order ? (
             <>
+              {order.platform && (
+                <div className='flex flex-col gap-2 text-sm'>
+                  <PlatformBadge platform={order.platform} />
+                  <div className='text-muted-foreground'>
+                    <PlatformHandover platform={order.platform} />
+                  </div>
+                </div>
+              )}
               {(localized(order.placeName) || order.customerNote) && (
                 <div className='flex flex-col gap-2'>
                   {localized(order.placeName) && (

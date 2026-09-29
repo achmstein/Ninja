@@ -66,6 +66,14 @@ internal static class Extensions
 
         // Background service for pending order reminders
         services.AddHostedService<Ninja.Ordering.API.BackgroundServices.PendingOrderReminderService>();
+
+        // Talabat: the platform relays its orders here with its own token, and
+        // passes what the café does with them back through the relay
+        services.AddAuthorizationBuilder()
+            .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"));
+        services.Configure<Ninja.Ordering.API.Talabat.TalabatOptions>(builder.Configuration.GetSection(Ninja.Ordering.API.Talabat.TalabatOptions.Section));
+        services.AddHttpClient(Ninja.Ordering.API.Talabat.PlatformUpdateSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHostedService<Ninja.Ordering.API.Talabat.PlatformUpdateSender>();
     }
 
     private static void AddEventBusSubscriptions(this IEventBusBuilder eventBus)

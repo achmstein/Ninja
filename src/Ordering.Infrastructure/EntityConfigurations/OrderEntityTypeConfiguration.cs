@@ -55,6 +55,25 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         orderConfiguration.OwnsOne(o => o.PlaceName, b => b.ToJson());
         orderConfiguration.Ignore(o => o.Destination);
 
+        // A delivery platform's order: its details beside the order's own
+        // columns, the token indexed because every status update names it
+        orderConfiguration.OwnsOne(o => o.Platform, p =>
+        {
+            p.Property(x => x.Name).HasMaxLength(20).IsRequired();
+            p.Property(x => x.Token).HasMaxLength(100).IsRequired();
+            p.Property(x => x.Code).HasMaxLength(100).IsRequired();
+            p.Property(x => x.ShortCode).HasMaxLength(20);
+            p.Property(x => x.Expedition).HasConversion<string>().HasMaxLength(20);
+            p.Property(x => x.DeliveryAddress).HasMaxLength(500);
+            p.Property(x => x.CollectFromCustomer).HasPrecision(18, 2);
+            p.Property(x => x.AcceptedUrl).HasMaxLength(500);
+            p.Property(x => x.RejectedUrl).HasMaxLength(500);
+            p.Property(x => x.PreparedUrl).HasMaxLength(500);
+            p.Property(x => x.PickedUpUrl).HasMaxLength(500);
+            p.Property(x => x.RejectReason).HasMaxLength(40);
+            p.HasIndex(x => x.Token).IsUnique();
+        });
+
         orderConfiguration.HasOne(o => o.Buyer)
             .WithMany()
             .HasForeignKey(o => o.BuyerId);

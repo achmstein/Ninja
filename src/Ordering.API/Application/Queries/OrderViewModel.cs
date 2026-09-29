@@ -21,6 +21,48 @@ public record OrderRatingDto
 }
 
 /// <summary>
+/// What a delivery platform said about its order, as staff read it: the code
+/// the rider asks for, how it leaves, when the rider comes, and — only when
+/// the café's own rider takes it — where to. The platform's addresses stay
+/// out.
+/// </summary>
+public record PlatformOrderView
+{
+    /// <summary>"Talabat".</summary>
+    public string Name { get; init; } = string.Empty;
+    public string Code { get; init; } = string.Empty;
+    public string? ShortCode { get; init; }
+    /// <summary>"PlatformDelivery", "VendorDelivery" or "Pickup".</summary>
+    public string Expedition { get; init; } = string.Empty;
+    public DateTime? RiderPickupAt { get; init; }
+    public DateTime? DueAt { get; init; }
+    public string? DeliveryAddress { get; init; }
+    public bool PaidOnline { get; init; }
+    public decimal? CollectFromCustomer { get; init; }
+    /// <summary>Why it was turned down here, in the platform's words.</summary>
+    public string? RejectReason { get; init; }
+    /// <summary>The platform cancelled it.</summary>
+    public DateTime? CancelledAt { get; init; }
+    public DateTime? PickedUpAt { get; init; }
+
+    public static PlatformOrderView? From(PlatformOrder? p) => p is null ? null : new()
+    {
+        Name = p.Name,
+        Code = p.Code,
+        ShortCode = p.ShortCode,
+        Expedition = p.Expedition.ToString(),
+        RiderPickupAt = p.RiderPickupAt,
+        DueAt = p.DueAt,
+        DeliveryAddress = p.DeliveryAddress,
+        PaidOnline = p.PaidOnline,
+        CollectFromCustomer = p.CollectFromCustomer,
+        RejectReason = p.RejectReason,
+        CancelledAt = p.CancelledAt,
+        PickedUpAt = p.PickedUpAt,
+    };
+}
+
+/// <summary>
 /// Simplified order view model for cafe orders.
 /// No address or payment information needed.
 /// </summary>
@@ -37,8 +79,10 @@ public record Order
     public LocalizedText? PlaceName { get; init; }
     /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
-    /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
+    /// <summary>Who placed the order: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
+    /// <summary>A delivery platform's details; null on every other order.</summary>
+    public PlatformOrderView? Platform { get; init; }
     public string? CustomerNote { get; init; }
     /// <summary>Name a guest left at checkout; null on orders placed by a signed-in customer.</summary>
     public string? GuestName { get; init; }
@@ -79,8 +123,10 @@ public record KitchenOrder
     public DateTime? ConfirmedAt { get; init; }
     /// <summary>When the kitchen finished it; null while it is still on the board.</summary>
     public DateTime? ReadyAt { get; init; }
-    /// <summary>Who placed it: Customer, Guest, or Pos.</summary>
+    /// <summary>Who placed it: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
+    /// <summary>A delivery platform's details — the code the rider asks for; null on every other order.</summary>
+    public PlatformOrderView? Platform { get; init; }
     public int? PlaceId { get; init; }
     public string? PlaceKind { get; init; }
     public LocalizedText? PlaceName { get; init; }
@@ -166,8 +212,10 @@ public record OrderSummary
     public LocalizedText? PlaceName { get; init; }
     /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
-    /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
+    /// <summary>Who placed the order: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
+    /// <summary>A delivery platform's details; null on every other order.</summary>
+    public PlatformOrderView? Platform { get; init; }
     /// <summary>Buyer's name, or the name a guest left at checkout.</summary>
     public string? UserName { get; init; }
     /// <summary>

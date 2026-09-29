@@ -50,6 +50,7 @@ export const orderSourceKeys: Record<string, TranslationKey> = {
   Customer: 'sourceCustomer',
   Guest: 'sourceGuest',
   Pos: 'sourcePos',
+  Talabat: 'sourceTalabat',
 }
 
 // Where an order was placed from, for grouping the live board

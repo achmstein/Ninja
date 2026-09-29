@@ -20,4 +20,7 @@ public interface IOrderRepository : IRepository<Order>
     Task<List<int>> GetUnclaimedGuestOrderIdsAsync(string guestId);
 
     void AddRating(OrderRating rating);
+
+    /// <summary>The order a delivery platform dispatched under this token, loaded whole; null when none was.</summary>
+    Task<Order> FindByPlatformTokenAsync(string token);
 }

@@ -58,4 +58,14 @@ public class OrderRepository
     {
         _context.OrderRatings.Add(rating);
     }
+
+    public async Task<Order> FindByPlatformTokenAsync(string token)
+    {
+        var id = await _context.Orders
+            .Where(o => o.Platform != null && o.Platform.Token == token)
+            .Select(o => (int?)o.Id)
+            .FirstOrDefaultAsync();
+
+        return id is int orderId ? await GetAsync(orderId) : null;
+    }
 }
