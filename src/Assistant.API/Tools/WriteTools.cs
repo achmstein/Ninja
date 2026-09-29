@@ -60,7 +60,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         if (!categories.IsOk) return ToolResults.Fail(categories.Error!);
         var match = FindCategory(categories.Value!, category);
         if (match is null)
-            return ToolResults.Fail($"No expense category matches '{category}'. The categories are: {string.Join(", ", categories.Value!.Where(c => c.IsActive).Select(c => c.Name?.Display))}.");
+            return ToolResults.Fail($"No expense category matches '{category}'. The categories are: {string.Join(", ", categories.Value!.Where(c => c.IsActive).Select(c => c.Name?.Both))}.");
 
         DateOnly day;
         if (string.IsNullOrWhiteSpace(date))
@@ -68,7 +68,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         else if (!DateOnly.TryParseExact(date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out day))
             return ToolResults.Fail("date must be yyyy-MM-dd.");
 
-        var preview = $"Record {snap.Currency} {ToolResults.Money(amount)} under {match.Name?.Display} for {target.DisplayName} on {Day(day)}, paid from the {(paidFromCode == 0 ? "drawer" : "bank")}"
+        var preview = $"Record {snap.Currency} {ToolResults.Money(amount)} under {match.Name?.Both} for {target.BothNames} on {Day(day)}, paid from the {(paidFromCode == 0 ? "drawer" : "bank")}"
             + (string.IsNullOrWhiteSpace(vendor) ? "" : $", vendor {vendor.Trim()}")
             + (string.IsNullOrWhiteSpace(note) ? "" : $", note \"{note.Trim()}\"") + ".";
         requestId ??= Guid.NewGuid().ToString("N");
@@ -111,8 +111,8 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         var menuItem = found.Item!;
 
         var preview = available
-            ? $"Put \"{menuItem.Name?.Display}\" back on sale at {target.DisplayName}."
-            : $"Mark \"{menuItem.Name?.Display}\" sold out at {target.DisplayName} (currently {(menuItem.IsAvailable && !menuItem.IsOutOfStock ? "on sale" : "not on sale")}).";
+            ? $"Put \"{menuItem.Name?.Both}\" back on sale at {target.BothNames}."
+            : $"Mark \"{menuItem.Name?.Both}\" sold out at {target.BothNames} (currently {(menuItem.IsAvailable && !menuItem.IsOutOfStock ? "on sale" : "not on sale")}).";
         requestId ??= Guid.NewGuid().ToString("N");
         if (!confirm)
             return ToolResults.Ok(new { preview, requestId, itemId = menuItem.Id, nextStep = NextStep });
@@ -127,7 +127,9 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         {
             done = true,
             item = result.Value!.Name?.Display,
+            itemAr = result.Value.Name?.Arabic,
             branch = target.DisplayName,
+            branchAr = target.NameAr,
             isAvailable = result.Value.IsAvailable,
             isOutOfStock = result.Value.IsOutOfStock,
         });
@@ -150,8 +152,8 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         var target = one.Value!;
 
         var preview = paused
-            ? $"Pause online ordering at {target.DisplayName}: customers will not be able to order from the app or a table until it is resumed. It is {(target.IsOrderingEnabled ? "on" : "already paused")} now."
-            : $"Resume online ordering at {target.DisplayName}. It is {(target.IsOrderingEnabled ? "already on" : "paused")} now.";
+            ? $"Pause online ordering at {target.BothNames}: customers will not be able to order from the app or a table until it is resumed. It is {(target.IsOrderingEnabled ? "on" : "already paused")} now."
+            : $"Resume online ordering at {target.BothNames}. It is {(target.IsOrderingEnabled ? "already on" : "paused")} now.";
         requestId ??= Guid.NewGuid().ToString("N");
         if (!confirm)
             return ToolResults.Ok(new { preview, requestId, nextStep = NextStep });
@@ -166,6 +168,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         {
             done = true,
             branch = result.Value!.DisplayName,
+            branchAr = result.Value.NameAr,
             onlineOrdering = result.Value.IsOrderingEnabled ? "on" : "paused",
         });
     }
@@ -205,7 +208,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         {
             1 => (loose[0], null),
             0 => (null, $"No menu item matches '{text}'."),
-            _ => (null, $"Several menu items match '{text}': {string.Join(", ", loose.Take(8).Select(i => $"{i.Name?.Display} (id {i.Id})"))}. Say which."),
+            _ => (null, $"Several menu items match '{text}': {string.Join(", ", loose.Take(8).Select(i => $"{i.Name?.Both} (id {i.Id})"))}. Say which."),
         };
     }
 

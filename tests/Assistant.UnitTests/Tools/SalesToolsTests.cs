@@ -88,6 +88,9 @@ public sealed class SalesToolsTests
 
         var one = Bench.JsonOf(await tools.GetSalesSummary("last_7_days", null, null, "maadi", CancellationToken.None));
         Assert.AreEqual(1, one.GetProperty("branches").GetArrayLength());
+        var maadi = one.GetProperty("branches")[0];
+        Assert.AreEqual("Maadi", maadi.GetProperty("name").GetString());
+        Assert.AreEqual("المعادي", maadi.GetProperty("nameAr").GetString(), "the Arabic name rides beside the English one");
         Assert.AreEqual(5, one.GetProperty("total").GetProperty("ticketsSettled").GetInt32());
 
         var badPeriod = await tools.GetSalesSummary("fortnight", null, null, null, CancellationToken.None);

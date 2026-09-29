@@ -1,25 +1,15 @@
-import { usePhoneRule } from '@/lib/brand'
-import { NameFields } from './name-fields'
 import { useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import {
-  getMyProfile,
-  namePartsOf,
-  updateProfile,
-} from '@/lib/services/identity'
+import { Loader2, Phone } from 'lucide-react'
+import { usePhoneRule } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { getMyProfile, hasWholeName, namePartsOf, updateProfile } from '@/lib/services/identity'
+import { toast } from '@/lib/toast'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { pillAction, pillCancel, sheetFooterClass } from '@/components/ui/ninja-sheet'
+import { NameFields } from './name-fields'
 
 /**
  * Checkout/reservation gate (mobile parity): the customer must have a name
@@ -39,10 +29,10 @@ export function useProfileGate() {
   const ensureProfileComplete = async (): Promise<boolean> => {
     if (!auth.isAuthenticated) return false
     const profile = await getMyProfile().catch(() => null)
-    const name = profile?.name?.trim() ?? ''
     const phone = profile?.phoneNumber?.trim() ?? ''
-    // A name already there (an older one-name account too) and a phone are enough to go on
-    if (name && phonePattern.test(phone)) return true
+    // First and last name both, and a phone: an Apple account, which may come with no name or half
+    // of one, is asked for what it lacks (the fields start from whatever is there)
+    if (hasWholeName(profile) && phonePattern.test(phone)) return true
 
     setInitialName(namePartsOf(profile, auth.user?.profile?.name))
     setInitialPhone(phone)
@@ -117,36 +107,59 @@ function ProfileGateDialog({
     }
   }
 
+  // Only what is missing is asked for: a customer whose name is on file sees the phone alone, first
+  // thing under the title, rather than under two name fields they did not need to touch
+  const [needName] = useState(() => !initialName[0].trim() || !initialName[1].trim())
+  const phoneField = (
+    <div className='flex flex-col gap-2'>
+      <Label htmlFor='gatePhone'>{t('phoneNumber')}</Label>
+      <div className='relative'>
+        <Phone className='text-muted-foreground pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2' />
+        <Input
+          id='gatePhone'
+          type='tel'
+          inputMode='tel'
+          autoComplete='tel'
+          dir='ltr'
+          // The first thing to fill when it is the only one: the keyboard comes up on it
+          autoFocus={!needName}
+          placeholder={phonePlaceholder || undefined}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          aria-invalid={error === t('invalidPhone') || undefined}
+          className='ps-11 rtl:text-right'
+        />
+      </div>
+    </div>
+  )
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onSettle(false)}>
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent onOpenAutoFocus={(e) => needName && e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
+          <DialogDescription>{t('completeYourInfoWhy')}</DialogDescription>
         </DialogHeader>
-        <div className='flex flex-col gap-4'>
-          <NameFields idPrefix='gate' first={first} last={last} onFirst={setFirst} onLast={setLast} />
-          <div className='space-y-2'>
-            <Label htmlFor='gatePhone'>{t('phoneNumber')}</Label>
-            <Input
-              id='gatePhone'
-              type='tel'
-              dir='ltr'
-              placeholder={phonePlaceholder || undefined}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
+        <form
+          className='flex flex-col gap-4'
+          onSubmit={(e) => {
+            e.preventDefault()
+            void handleSave()
+          }}
+        >
+          {needName && <NameFields idPrefix='gate' first={first} last={last} onFirst={setFirst} onLast={setLast} />}
+          {phoneField}
           {error && <p className='text-destructive text-note'>{error}</p>}
-        </div>
-        <DialogFooter>
-          <Button variant='outline' onClick={() => onSettle(false)}>
-            {t('cancel')}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
-            {t('done')}
-          </Button>
-        </DialogFooter>
+          <div className={sheetFooterClass}>
+            <button type='button' onClick={() => onSettle(false)} className={pillCancel}>
+              {t('cancel')}
+            </button>
+            <button type='submit' disabled={saving} className={pillAction}>
+              {saving && <Loader2 className='size-4 animate-spin' />}
+              {t('done')}
+            </button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

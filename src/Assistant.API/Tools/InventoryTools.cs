@@ -36,6 +36,7 @@ public sealed class InventoryTools(TenantContext tenant, NinjaApiClient api, Tim
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 items = x.Value.Count,
                 low = x.Value.Count(l => l.IsLow),
                 value = x.Value.Sum(l => l.Value),
@@ -45,7 +46,7 @@ public sealed class InventoryTools(TenantContext tenant, NinjaApiClient api, Tim
                     .Select(l => new
                     {
                         item = l.Name?.Display,
-                        itemAr = l.Name?.Ar,
+                        itemAr = l.Name?.Arabic,
                         l.Unit,
                         l.OnHand,
                         l.ReorderLevel,
@@ -92,11 +93,11 @@ public sealed class InventoryTools(TenantContext tenant, NinjaApiClient api, Tim
                 wastedValue = usage.Ok.Sum(x => x.Value.Value.WastedValue),
                 countVarianceValue = usage.Ok.Sum(x => x.Value.Value.CountVarianceValue),
                 stockValue = usage.Ok.Sum(x => x.Value.Value.StockValue),
-                mostUsed = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Select(r => new { branch = x.Branch.DisplayName, item = r.Name?.Display, r.Unit, r.Sold, r.SoldValue, r.Purchased, r.PurchasedValue }))
+                mostUsed = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Select(r => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, item = r.Name?.Display, itemAr = r.Name?.Arabic, r.Unit, r.Sold, r.SoldValue, r.Purchased, r.PurchasedValue }))
                     .OrderByDescending(r => r.SoldValue).Take(top),
-                mostWasted = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.Wasted != 0).Select(r => new { branch = x.Branch.DisplayName, item = r.Name?.Display, r.Unit, r.Wasted, r.WastedValue }))
+                mostWasted = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.Wasted != 0).Select(r => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, item = r.Name?.Display, itemAr = r.Name?.Arabic, r.Unit, r.Wasted, r.WastedValue }))
                     .OrderByDescending(r => Math.Abs(r.WastedValue)).Take(top),
-                countDifferences = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.CountVariance != 0).Select(r => new { branch = x.Branch.DisplayName, item = r.Name?.Display, r.Unit, r.CountVariance, r.CountVarianceValue }))
+                countDifferences = usage.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.CountVariance != 0).Select(r => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, item = r.Name?.Display, itemAr = r.Name?.Arabic, r.Unit, r.CountVariance, r.CountVarianceValue }))
                     .OrderByDescending(r => Math.Abs(r.CountVarianceValue)).Take(top),
             },
             variance = new
@@ -106,7 +107,7 @@ public sealed class InventoryTools(TenantContext tenant, NinjaApiClient api, Tim
                 theoreticalValue = variance.Ok.Sum(x => x.Value.Value.TheoreticalValue),
                 wastedValue = variance.Ok.Sum(x => x.Value.Value.WastedValue),
                 closingValue = variance.Ok.Sum(x => x.Value.Value.ClosingValue),
-                biggestVariance = variance.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.VariancePercent is not null).Select(r => new { branch = x.Branch.DisplayName, item = r.Name?.Display, r.Unit, r.Opening, r.Received, r.Theoretical, r.Closing, r.VariancePercent }))
+                biggestVariance = variance.Ok.SelectMany(x => (x.Value.Value.Rows ?? []).Where(r => r.VariancePercent is not null).Select(r => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, item = r.Name?.Display, itemAr = r.Name?.Arabic, r.Unit, r.Opening, r.Received, r.Theoretical, r.Closing, r.VariancePercent }))
                     .OrderByDescending(r => Math.Abs(r.VariancePercent ?? 0)).Take(top),
             },
             errors = ErrorsOrNull(usage.Errors.Concat(variance.Errors).ToList()),

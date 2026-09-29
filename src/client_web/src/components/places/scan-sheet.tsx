@@ -127,7 +127,7 @@ export function ScanSheet({
           {/* The place on its card, as the tab shows it */}
           <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
             <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-            <SheetTitle className='heading text-primary-foreground pe-8 text-title leading-tight'>
+            <SheetTitle className='heading text-primary-foreground text-headline pe-8'>
               {localized(place.name)}
             </SheetTitle>
             <SheetDescription className='text-primary-foreground/80'>

@@ -56,6 +56,7 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 period = x.Value.Period.Label,
                 ticketsSettled = x.Value.Value.TicketsSettled,
                 net = x.Value.Value.Net,
@@ -104,7 +105,7 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
                 .Select(g => new { cashier = g.Key, count = g.Sum(c => c.Count), net = g.Sum(c => c.Net), discounts = g.Sum(c => c.Discounts), voids = g.Sum(c => c.Voids), refunds = g.Sum(c => c.Refunds) })
                 .OrderByDescending(c => c.net).Take(top).ToList(),
             _ => reports.SelectMany(r => r.ByItem ?? []).GroupBy(i => i.Description?.Display ?? "")
-                .Select(g => new { item = g.Key, itemAr = g.Select(i => i.Description?.Ar).FirstOrDefault(a => a is not null), qty = g.Sum(i => i.Qty), amount = g.Sum(i => i.Amount), tickets = g.Sum(i => i.Tickets), catalogItemId = g.Select(i => i.CatalogItemId).FirstOrDefault(id => id is not null) })
+                .Select(g => new { item = g.Key, itemAr = g.Select(i => i.Description?.Arabic).FirstOrDefault(a => a is not null), qty = g.Sum(i => i.Qty), amount = g.Sum(i => i.Amount), tickets = g.Sum(i => i.Tickets), catalogItemId = g.Select(i => i.CatalogItemId).FirstOrDefault(id => id is not null) })
                 .OrderByDescending(i => i.amount).Take(top).ToList(),
         };
 
@@ -113,7 +114,7 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
             period = fan.Ok[0].Value.Period.Label,
             currency = snap!.Currency,
             dimension = dim,
-            branches = fan.Ok.Select(x => new { id = x.Branch.Id, name = x.Branch.DisplayName }),
+            branches = fan.Ok.Select(x => new { id = x.Branch.Id, name = x.Branch.DisplayName, nameAr = x.Branch.NameAr }),
             rows,
             errors = ErrorsOrNull(fan.Errors),
         });
@@ -147,12 +148,13 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
                 .Select(g => new { date = g.Key, orders = g.Sum(d => d.Orders), revenue = g.Sum(d => d.Revenue) })
                 .OrderBy(d => d.date),
             topItems = stats.SelectMany(s => s.TopItems ?? []).GroupBy(i => i.ProductName?.Display ?? "")
-                .Select(g => new { item = g.Key, units = g.Sum(i => i.Units), revenue = g.Sum(i => i.Revenue) })
+                .Select(g => new { item = g.Key, itemAr = g.Select(i => i.ProductName?.Arabic).FirstOrDefault(a => a is not null), units = g.Sum(i => i.Units), revenue = g.Sum(i => i.Revenue) })
                 .OrderByDescending(i => i.revenue).Take(top),
             branches = fan.Ok.Select(x => new
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 orders = (x.Value.Value.Days ?? []).Sum(d => d.Orders),
                 revenue = (x.Value.Value.Days ?? []).Sum(d => d.Revenue),
             }),
@@ -187,6 +189,7 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
             refunds = fan.Ok.SelectMany(x => (x.Value.Value.Items ?? []).Select(r => new
             {
                 branch = x.Branch.DisplayName,
+                branchAr = x.Branch.NameAr,
                 r.ReceiptNumber,
                 r.Amount,
                 r.Tender,
@@ -232,11 +235,12 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
             period = closed.Ok.Count > 0 ? closed.Ok[0].Value.Period.Label : null,
             currency = snap!.Currency,
             openNow = current.Ok.Select(x => x.Value is null
-                ? new { branch = x.Branch.DisplayName, open = false, openedBy = (string?)null, openedAt = (string?)null, ticketsSettled = 0, salesTotal = 0m }
-                : new { branch = x.Branch.DisplayName, open = true, openedBy = x.Value.OpenedBy, openedAt = (string?)Local(x.Value.OpenedAt), ticketsSettled = x.Value.TicketsSettled, salesTotal = x.Value.SalesTotal }),
+                ? new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, open = false, openedBy = (string?)null, openedAt = (string?)null, ticketsSettled = 0, salesTotal = 0m }
+                : new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, open = true, openedBy = x.Value.OpenedBy, openedAt = (string?)Local(x.Value.OpenedAt), ticketsSettled = x.Value.TicketsSettled, salesTotal = x.Value.SalesTotal }),
             closedShifts = closed.Ok.SelectMany(x => (x.Value.Value).Select(s => new
             {
                 branch = x.Branch.DisplayName,
+                branchAr = x.Branch.NameAr,
                 s.Id,
                 s.OpenedBy,
                 openedAt = Local(s.OpenedAt),

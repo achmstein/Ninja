@@ -56,8 +56,15 @@ class AuthState {
     return space < 0 ? (whole, '') : (whole.substring(0, space), whole.substring(space + 1).trim());
   }
 
-  /// Whether the user has a valid name (not null, not empty, not an email)
-  bool get hasName => name != null && name!.isNotEmpty && !name!.contains('@');
+  /// Whether the user has a whole name: once the profile has been read, a first
+  /// and a last name both (an Apple account comes with none, or half of one);
+  /// until then the token's whole name, never an address
+  bool get hasName {
+    if (firstName != null || lastName != null) {
+      return (firstName?.trim().isNotEmpty ?? false) && (lastName?.trim().isNotEmpty ?? false);
+    }
+    return name != null && name!.isNotEmpty && !name!.contains('@');
+  }
 
   /// Whether the user has a phone number
   bool get hasPhone => phoneNumber != null && phoneNumber!.isNotEmpty;
@@ -109,10 +116,11 @@ class AuthService extends Notifier<AuthState> {
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _googleSignInInitialized = false;
 
-  /// Temporarily stores Apple-provided name (only available on first sign-in)
-  /// The name Apple gives on the first sign-in only, sent on once the account is made
-  String? _pendingAppleFirst;
-  String? _pendingAppleLast;
+  /// The name Apple gives on the first sign-in only, sent on once the account is made.
+  /// Kept in storage until the backend has it: Apple never gives it again, so a failed
+  /// send is retried when the profile is next read rather than lost
+  static const _pendingAppleFirstKey = 'pending_apple_first';
+  static const _pendingAppleLastKey = 'pending_apple_last';
 
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
@@ -205,6 +213,33 @@ class AuthService extends Notifier<AuthState> {
     }
   }
 
+  /// The name Apple gave on a first sign-in, to the backend; kept for another try if it
+  /// does not get there. Only ever fills a name: one already on the account is left as it is.
+  Future<void> _sendPendingAppleName({String? currentFirst, String? currentLast}) async {
+    final first = (await _storage.read(key: _pendingAppleFirstKey))?.trim() ?? '';
+    final last = (await _storage.read(key: _pendingAppleLastKey))?.trim() ?? '';
+    if (first.isEmpty && last.isEmpty) return;
+    final data = {
+      'firstName': (currentFirst?.isNotEmpty ?? false) ? currentFirst : first,
+      'lastName': (currentLast?.isNotEmpty ?? false) ? currentLast : last,
+    };
+    try {
+      await _dio.post(
+        '${AppConfig.bffBaseUrl}/api/identity/update-profile',
+        data: data,
+        options: Options(
+          contentType: Headers.jsonContentType,
+          headers: {'Authorization': 'Bearer ${state.accessToken}'},
+        ),
+      );
+      await _storage.delete(key: _pendingAppleFirstKey);
+      await _storage.delete(key: _pendingAppleLastKey);
+      debugPrint('Apple name sent to backend');
+    } catch (e) {
+      debugPrint('Failed to send Apple name to backend, kept for the next try: $e');
+    }
+  }
+
   /// Load the user's full profile (name + phone) from the backend.
   /// Called once after authentication — result is cached in state.
   void _loadProfile() {
@@ -213,9 +248,19 @@ class AuthService extends Notifier<AuthState> {
       options: Options(
         headers: {'Authorization': 'Bearer ${state.accessToken}'},
       ),
-    ).then((response) {
+    ).then((response) async {
       if (response.statusCode == 200) {
         final data = response.data;
+        // A name Apple gave that never reached the backend: sent now, then read again
+        final storedFirst = (data['firstName'] as String?)?.trim() ?? '';
+        final storedLast = (data['lastName'] as String?)?.trim() ?? '';
+        if (state.isSocialLogin && (storedFirst.isEmpty || storedLast.isEmpty) && await _storage.containsKey(key: _pendingAppleFirstKey)) {
+          await _sendPendingAppleName(currentFirst: storedFirst, currentLast: storedLast);
+          if (!await _storage.containsKey(key: _pendingAppleFirstKey)) {
+            _loadProfile();
+            return;
+          }
+        }
         final name = (data['name'] as String?)?.trim();
         final phone = data['phoneNumber'] as String?;
         final effectiveName = (name != null && name.isNotEmpty) ? name : state.name;
@@ -355,8 +400,8 @@ class AuthService extends Notifier<AuthState> {
         final familyName = credential.familyName?.trim();
         if ((givenName?.isNotEmpty ?? false) || (familyName?.isNotEmpty ?? false)) {
           debugPrint('Apple provided a name');
-          _pendingAppleFirst = givenName;
-          _pendingAppleLast = familyName;
+          await _storage.write(key: _pendingAppleFirstKey, value: givenName ?? '');
+          await _storage.write(key: _pendingAppleLastKey, value: familyName ?? '');
         }
 
         debugPrint('Apple sign in successful, got identity token');
@@ -408,26 +453,8 @@ class AuthService extends Notifier<AuthState> {
         await _storage.write(key: _isSocialLoginKey, value: 'true');
         state = state.copyWith(isSocialLogin: true);
 
-        // If Apple provided a name on first sign-in, send it to backend immediately
-        if (_pendingAppleFirst != null || _pendingAppleLast != null) {
-          try {
-            await _dio.post(
-              '${AppConfig.bffBaseUrl}/api/identity/update-profile',
-              data: {'firstName': _pendingAppleFirst, 'lastName': _pendingAppleLast},
-              options: Options(
-                contentType: Headers.jsonContentType,
-                headers: {'Authorization': 'Bearer ${state.accessToken}'},
-              ),
-            );
-            debugPrint('Apple name sent to backend');
-          } catch (e) {
-            debugPrint('Failed to send Apple name to backend: $e');
-          }
-          _pendingAppleFirst = null;
-          _pendingAppleLast = null;
-        }
-
-        // Load full profile (name + phone) from backend
+        // Load full profile (name + phone) from backend; a name Apple gave on this, its
+        // first sign-in, is sent on from there where the account has none
         _loadProfile();
 
         return true;
@@ -634,6 +661,8 @@ class AuthService extends Notifier<AuthState> {
     await _storage.delete(key: _isSocialLoginKey);
     await _storage.delete(key: _nameKey);
     await _storage.delete(key: _phoneKey);
+    await _storage.delete(key: _pendingAppleFirstKey);
+    await _storage.delete(key: _pendingAppleLastKey);
 
     state = const AuthState(isInitializing: false);
   }

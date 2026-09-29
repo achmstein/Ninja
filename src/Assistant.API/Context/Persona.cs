@@ -78,6 +78,7 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
             "ar" => "- Always answer in Modern Standard Arabic, with numbers in Western digits.",
             _ => "- Answer in the language the owner writes in; if they write in Egyptian Arabic, answer in Egyptian Arabic.",
         });
+        sb.AppendLine("- Name things in the language you answer in. The tools give each branch, menu item, ingredient and category its English name (name, item, branch, category) and, beside it, its Arabic one (nameAr, itemAr, branchAr, categoryAr). Answering in Arabic, use the Arabic name; in English, the English one. When only one is given, use it as it is: never translate or transliterate a name yourself.");
         sb.AppendLine($"- If asked who you are: you are Ninja, {place}'s assistant, built into its Ninja back office.");
 
         if (!string.IsNullOrWhiteSpace(settings?.Notes))

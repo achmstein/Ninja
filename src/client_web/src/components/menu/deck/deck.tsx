@@ -19,10 +19,25 @@ const PEEK = 44
 const topOf = (column: HTMLElement) => parseFloat(getComputedStyle(column).scrollPaddingTop) || 0
 import { LONG_PRESS_MS, usePress } from '@/components/ninja/gestures/use-press'
 
-/** The gap between cards, px */
-const GAP = 12
 /** How long the deck must rest on the next category's card before it moves on, ms */
 const ADVANCE_AFTER = 160
+
+/** How long a column's scroll must be still before it counts as resting on a card, ms (a snap's last frames included) */
+const SETTLE_MS = 110
+
+/**
+ * The card a column rests on: the last one whose top has reached the room at
+ * the column's top. Measured by the cards themselves, since the category's
+ * poster at the head of a column is shorter than a dish's card
+ */
+function rowAt(column: HTMLElement, count: number): number {
+  const line = column.scrollTop + topOf(column) + 8
+  let row = 0
+  Array.from(column.children).forEach((card, i) => {
+    if (i < count && (card as HTMLElement).offsetTop <= line) row = i
+  })
+  return row
+}
 
 export type DeckPosition = { column: number; row: number }
 
@@ -107,6 +122,10 @@ export function Deck({
   useEffect(() => () => {
     if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
   }, [])
+  const settleTimer = useRef<number | null>(null)
+  useEffect(() => () => {
+    if (settleTimer.current !== null) window.clearTimeout(settleTimer.current)
+  }, [])
   const watchForNext = (c: number, el: HTMLElement) => {
     if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
     advanceTimer.current = null
@@ -182,9 +201,14 @@ export function Deck({
           style={{ paddingTop: 'var(--deck-top)', scrollPaddingTop: 'var(--deck-top)' }}
           onScroll={(e) => {
             const el = e.currentTarget
-            const first = el.firstElementChild as HTMLElement | null
-            const step = (first?.offsetHeight ?? 0) + GAP
-            if (step > GAP) onRowChange(c, Math.min(col.items.length - 1, Math.round(el.scrollTop / step)))
+            // The row is told once the swipe has come to rest on a card, not half way there: what it
+            // sets off (the bar going up, the cards growing into its room) resizes the cards, and doing
+            // that while the browser is still snapping to one made the move stutter and jump
+            if (settleTimer.current !== null) window.clearTimeout(settleTimer.current)
+            settleTimer.current = window.setTimeout(() => {
+              settleTimer.current = null
+              onRowChange(c, rowAt(el, col.items.length))
+            }, SETTLE_MS)
             if (c === column) watchForNext(c, el)
           }}
         >

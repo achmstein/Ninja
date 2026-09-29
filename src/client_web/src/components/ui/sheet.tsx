@@ -59,7 +59,7 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
 }
 
 function SheetDescription({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Description>) {
-  return <SheetPrimitive.Description data-slot='sheet-description' className={cn('text-muted-foreground text-[15px]', className)} {...props} />
+  return <SheetPrimitive.Description data-slot='sheet-description' className={cn('text-muted-foreground text-note', className)} {...props} />
 }
 
 export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription }

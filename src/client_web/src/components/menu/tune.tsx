@@ -5,6 +5,7 @@ import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap, ease, springOpen } from '@/lib/motion'
+import { revealField } from '@/lib/reveal'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from './item-picture'
 import {
@@ -30,8 +31,7 @@ export type TuneResult = {
  * shares its layout id with the card in the deck, so the photo never leaves
  * the screen) and its options come in under the photo, all on the one
  * scroll: the ones that must be answered first, the extras last, every one
- * the same pills. What is chosen gathers under the dish's name
- * as chips, each a way to its question. The choices are the classic item
+ * the same pills, which show what is picked themselves. The choices are the classic item
  * sheet's: the customer's saved picks or the café's defaults, nothing sold
  * out, a required question must be answered; until they are, the button
  * names the one left and goes to it.
@@ -76,7 +76,7 @@ export function Tune({
   const missing = steps.findIndex((c) => c.isRequired && picked(c).length === 0)
   const ready = missing < 0
 
-  // A chip or the button sends the eye to a question: it scrolls into view and glows a moment
+  // The button sends the eye to a question still to answer: it scrolls into view and glows a moment
   const sections = useRef<Array<HTMLElement | null>>([])
   const [flash, setFlash] = useState<{ index: number; n: number } | null>(null)
   const show = (index: number) => {
@@ -96,6 +96,27 @@ export function Tune({
     setOverrides({ ...selections, [key]: next })
   }
 
+  // The photo keeps its place on screen through the morph, whichever way it is laid out
+  const compact = steps.length > 0
+  const photoBox = (className: string) => (
+    <motion.div
+      ref={photo}
+      layoutId={leaving ? undefined : `photo-${item.id}`}
+      transition={springOpen}
+      style={{ opacity: leaving ? 0 : undefined }}
+      className={cn('relative overflow-hidden', !hasPhoto && TONE_CLASS.primary, className)}
+    >
+      {hasPhoto ? (
+        <img src={itemPictureUrl(item.id)} alt='' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', soldOut && 'grayscale')} />
+      ) : (
+        // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just beside it)
+        <div className='grid size-full place-items-center'>
+          <UtensilsCrossed className={compact ? 'size-8 opacity-50' : 'size-16 opacity-50'} />
+        </div>
+      )}
+    </motion.div>
+  )
+
   return (
     <motion.div
       layoutId={`card-${item.id}`}
@@ -108,44 +129,31 @@ export function Tune({
       className='bg-background absolute inset-0 z-30 flex flex-col overflow-hidden'
     >
       <div className='no-scrollbar flex-1 overflow-y-auto overscroll-contain'>
-        {/* The photo keeps its place on screen through the morph */}
-        <motion.div
-          ref={photo}
-          layoutId={leaving ? undefined : `photo-${item.id}`}
-          transition={springOpen}
-          style={{ opacity: leaving ? 0 : undefined }}
-          className={cn('relative h-[34svh] max-h-80 overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
-        >
-          {hasPhoto ? (
-            <img
-              src={itemPictureUrl(item.id)}
-              alt=''
-              draggable={false}
-              onError={() => setFailed(true)}
-              className={cn('size-full object-cover', soldOut && 'grayscale')}
-            />
-          ) : (
-            // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
-            <div className='grid size-full place-items-center'>
-              <UtensilsCrossed className='size-16 opacity-50' />
-            </div>
-          )}
-        </motion.div>
+        {!compact && <div className='h-[30svh] max-h-72'>{photoBox('size-full')}</div>}
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
           transition={{ ...springOpen, delay: 0.06 }}
-          className='flex flex-col gap-5 px-5 pt-5 pb-6'
+          className={cn('flex flex-col gap-5 px-5 pb-6', compact ? 'pt-5' : 'pt-4')}
         >
-          <div className='flex flex-col gap-2.5'>
-            <div>
-              <h2 className='heading text-title leading-tight'>{localized(item.name)}</h2>
-              {item.description && <p className='text-muted-foreground mt-1.5 text-note leading-relaxed'>{localized(item.description)}</p>}
+          {compact ? (
+            // With questions to answer the photo steps aside, a square beside the name, so the options start
+            // on the first screen rather than under a photo to scroll past
+            <div className='flex items-center gap-4 pe-12'>
+              {photoBox('size-24 shrink-0 rounded-[1.25rem]')}
+              <div className='min-w-0'>
+                <h2 className='heading text-headline'>{localized(item.name)}</h2>
+                {item.description && <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>}
+              </div>
             </div>
-            {steps.length > 0 && !loadingPreference && <Recap steps={steps} selections={selections} onJump={show} />}
-          </div>
+          ) : (
+            <div>
+              <h2 className='heading text-title'>{localized(item.name)}</h2>
+              {item.description && <p className='text-muted-foreground text-note mt-1'>{localized(item.description)}</p>}
+            </div>
+          )}
 
           {loadingPreference
             ? steps.length > 0 && <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
@@ -167,10 +175,11 @@ export function Tune({
             {noteOpen ? (
               <input
                 autoFocus
+                onFocus={(e) => revealField(e.currentTarget)}
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 placeholder={t('anySpecialRequestsOptional')}
-                className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-note outline-none focus-visible:ring-[3px]'
+                className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-base outline-none focus-visible:ring-[3px]'
               />
             ) : (
               <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-note font-medium underline-offset-4 hover:underline'>
@@ -216,7 +225,10 @@ export function Tune({
         type='button'
         onClick={onClose}
         aria-label={t('close')}
-        className='absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'
+        className={cn(
+          'absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full',
+          compact ? 'bg-muted text-foreground' : 'bg-black/45 text-white backdrop-blur-sm'
+        )}
       >
         <X className='size-5' />
       </button>
@@ -244,41 +256,10 @@ function AddButton({ disabled, label, total, onClick }: { disabled: boolean; lab
   )
 }
 
-/** What is chosen so far, as chips under the name: each springs in as it is picked, and a tap goes back to its question */
-function Recap({ steps, selections, onJump }: { steps: ItemCustomizationDto[]; selections: Selections; onJump: (index: number) => void }) {
-  const localized = useLocalized()
-  const chips = steps.flatMap((c, index) =>
-    sortedOptions(c)
-      .filter((o) => (selections[String(c.id)] ?? []).includes(Number(o.id)))
-      .map((o) => ({ key: `${c.id}-${o.id}`, name: localized(o.name), index }))
-  )
-  return (
-    <div className='flex min-h-7 flex-wrap gap-1.5'>
-      <AnimatePresence mode='popLayout' initial={false}>
-        {chips.map((chip) => (
-          <motion.button
-            key={chip.key}
-            type='button'
-            layout='position'
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            transition={springOpen}
-            onClick={() => onJump(chip.index)}
-            className='bg-muted h-7 rounded-full px-3 text-caption font-semibold'
-          >
-            {chip.name}
-          </motion.button>
-        ))}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 /**
  * One question, on the scroll with the others: its name (and whether it
  * must be answered) over its control, rising in a little after the one
- * above it. Sent to by a chip or the button, it glows a moment.
+ * above it. Sent to by the button, it glows a moment.
  */
 const QuestionBlock = forwardRef<
   HTMLFieldSetElement,
@@ -293,7 +274,7 @@ const QuestionBlock = forwardRef<
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...springOpen, delay: 0.1 + index * 0.05 }}
-      className='relative flex scroll-mt-24 flex-col gap-3'
+      className='relative flex scroll-mt-24 flex-col'
     >
       {/* The glow: a ring that lights and fades, keyed so each send lights it again */}
       {flash > 0 && (
@@ -306,8 +287,8 @@ const QuestionBlock = forwardRef<
           transition={{ duration: 1.2, delay: 0.35, ease: ease.exit }}
         />
       )}
-      <legend className='mb-3 flex w-full items-baseline justify-between gap-3'>
-        <span className='heading text-headline'>{localized(customization.name)}</span>
+      <legend className='mb-2.5 flex w-full items-baseline justify-between gap-3'>
+        <span className='heading text-name'>{localized(customization.name)}</span>
         <span className={cn('shrink-0 text-caption font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}>
           {customization.isRequired ? t('required') : t('ninjaOptional')}
         </span>
@@ -356,7 +337,7 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
             disabled={!!option.isOutOfStock}
             onClick={() => onPick(id)}
             className={cn(
-              'flex min-h-11 max-w-full items-center gap-1.5 rounded-[1.375rem] px-4 py-1.5 text-start text-note leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
+              'text-note flex min-h-10 max-w-full items-center gap-1.5 rounded-[1.25rem] px-3.5 py-1.5 text-start leading-snug font-semibold transition-[background-color,color] duration-200 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none',
               on ? 'bg-primary text-primary-foreground' : 'bg-muted'
             )}
           >
@@ -368,3 +349,4 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
     </div>
   )
 }
+

@@ -52,13 +52,14 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
                 margin = netSales == 0 ? null : (decimal?)Math.Round(profit / netSales, 3),
                 expensesByCategory = views.SelectMany(v => v.ExpensesByCategory ?? [])
                     .GroupBy(c => c.CategoryName?.Display ?? c.CategoryId.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                    .Select(g => new { category = g.Key, total = g.Sum(c => c.Total) })
+                    .Select(g => new { category = g.Key, categoryAr = g.Select(c => c.CategoryName?.Arabic).FirstOrDefault(a => a is not null), total = g.Sum(c => c.Total) })
                     .OrderByDescending(c => c.total),
             },
             branches = fan.Ok.Select(x => new
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 x.Value.NetSales,
                 x.Value.Goods,
                 x.Value.Waste,
@@ -106,6 +107,7 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 months = x.Value.Select(m => new { month = $"{m.Year:0000}-{m.Month:00}", m.NetSales, m.Profit }),
             }),
             errors = ErrorsOrNull(fan.Errors),
@@ -138,13 +140,15 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
             total = views.Sum(v => v.Total),
             byCategory = views.SelectMany(v => v.ByCategory ?? [])
                 .GroupBy(c => c.CategoryName?.Display ?? c.CategoryId.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                .Select(g => new { category = g.Key, total = g.Sum(c => c.Total) })
+                .Select(g => new { category = g.Key, categoryAr = g.Select(c => c.CategoryName?.Arabic).FirstOrDefault(a => a is not null), total = g.Sum(c => c.Total) })
                 .OrderByDescending(c => c.total),
             largest = fan.Ok.SelectMany(x => (x.Value.Value.Expenses ?? []).Select(e => new
             {
                 branch = x.Branch.DisplayName,
+                branchAr = x.Branch.NameAr,
                 date = Day(e.Date),
                 category = e.CategoryName?.Display,
+                categoryAr = e.CategoryName?.Arabic,
                 e.Amount,
                 paidFrom = e.PaidFrom switch { 0 => "drawer", 1 => "bank", 2 => "partner", _ => e.PaidFrom.ToString(System.Globalization.CultureInfo.InvariantCulture) },
                 e.PartnerName,
@@ -156,6 +160,7 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 total = x.Value.Value.Total,
                 count = x.Value.Value.Expenses?.Count ?? 0,
             }),
@@ -183,9 +188,9 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
         {
             currency = snap!.Currency,
             owedToSuppliers = suppliers.Ok.SelectMany(x => x.Value).Sum(s => s.Balance),
-            suppliers = suppliers.Ok.SelectMany(x => x.Value.Select(s => new { branch = x.Branch.DisplayName, s.Name, s.Balance, s.IsActive }))
+            suppliers = suppliers.Ok.SelectMany(x => x.Value.Select(s => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, s.Name, s.Balance, s.IsActive }))
                 .OrderByDescending(s => s.Balance),
-            partners = partners.Ok.SelectMany(x => x.Value.Select(p => new { branch = x.Branch.DisplayName, p.Name, p.Balance, p.IsActive }))
+            partners = partners.Ok.SelectMany(x => x.Value.Select(p => new { branch = x.Branch.DisplayName, branchAr = x.Branch.NameAr, p.Name, p.Balance, p.IsActive }))
                 .OrderByDescending(p => Math.Abs(p.Balance)),
             errors = ErrorsOrNull(suppliers.Errors.Concat(partners.Errors).ToList()),
         });

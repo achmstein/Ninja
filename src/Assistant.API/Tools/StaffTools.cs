@@ -34,6 +34,7 @@ public sealed class StaffTools(TenantContext tenant, NinjaApiClient api, TimePro
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
                 employees = x.Value.OrderBy(e => e.Name).Select(e => new
                 {
                     e.Id,
@@ -72,13 +73,14 @@ public sealed class StaffTools(TenantContext tenant, NinjaApiClient api, TimePro
         {
             period = fan.Ok[0].Value.Period.Label,
             days = fan.Ok[0].Value.Period.Days,
-            employees = fan.Ok.SelectMany(x => x.Value.Value.Select(a => (branch: x.Branch.DisplayName, a)))
+            employees = fan.Ok.SelectMany(x => x.Value.Value.Select(a => (branch: x.Branch.DisplayName, branchAr: x.Branch.NameAr, a)))
                 .GroupBy(t => t.a.EmployeeId)
                 .Select(g => new
                 {
                     employeeId = g.Key,
                     name = names.GetValueOrDefault(g.Key, $"Employee {g.Key}"),
                     branch = g.First().branch,
+                    branchAr = g.First().branchAr,
                     present = g.Count(t => t.a.Status == 0),
                     halfDays = g.Count(t => t.a.Status == 1),
                     absent = g.Count(t => t.a.Status == 2),

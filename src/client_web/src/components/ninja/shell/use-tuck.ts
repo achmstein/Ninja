@@ -19,6 +19,9 @@ const TUCK_SLACK = 12
 /** How long the dock takes to fold or grow, ms (its transition), during which its own effect on the scroll is ignored */
 export const SETTLE_MS = 300
 
+/** How long the page must be still at its end before the dock comes back, ms: a beat, so a flick past the end does not flash it */
+const REST_MS = 220
+
 /** The tuck a scroll to `y` (of `max`) makes, given where the last turn began and the tuck till now */
 export function tuckAt(y: number, max: number, from: number, tucked: boolean): { tucked: boolean; from: number } {
   // At the top, or at the end (nothing more to read), the dock is whole
@@ -49,7 +52,22 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
     // The dock folding or growing can resize the scroller (the menu's sits over it) and clamp its
     // scroll; while it moves, the scroll it causes is not the customer's
     let quietUntil = 0
+    // Once the page has come to rest at its end (or its top), the dock comes back whole: scroll events
+    // stop there, so one swallowed while the dock was still folding (or never sent, a short page
+    // reaching its end in one flick) must not leave the tabs away with nothing more to read
+    let rest: number | null = null
+    const atRest = () => {
+      rest = null
+      const { y, max } = read()
+      if ((y <= TUCK_AFTER || y >= max - 2) && useTuck.getState().tucked) {
+        from = y
+        quietUntil = performance.now() + SETTLE_MS
+        useTuck.setState({ tucked: false })
+      }
+    }
     const onScroll = () => {
+      if (rest !== null) window.clearTimeout(rest)
+      rest = window.setTimeout(atRest, REST_MS)
       const { y, max } = read()
       if (performance.now() < quietUntil) {
         from = y
@@ -65,6 +83,7 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
     source.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       source.removeEventListener('scroll', onScroll)
+      if (rest !== null) window.clearTimeout(rest)
       useTuck.setState({ tucked: false })
     }
   }, [target, enabled])

@@ -20,6 +20,13 @@ public static class PersonName
     public static bool Given(string? firstName, string? lastName, string? name)
         => Of(firstName, lastName, name) is { } n && (n.First is not null || n.Last is not null);
 
+    /// <summary>
+    /// Whether the name is whole, first and last: what the apps' "complete your info" prompt asks for.
+    /// Apple gives a name only on a person's very first sign-in (and never through the browser's
+    /// Keycloak broker), so an Apple account can arrive with neither, or with one alone.
+    /// </summary>
+    public static bool Complete(string? first, string? last) => !string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last);
+
     /// <summary>The name as one line, for what shows it whole (a bill, a receipt, the café's lists)</summary>
     public static string Display(string? first, string? last) => $"{first} {last}".Trim();
 

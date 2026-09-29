@@ -32,7 +32,8 @@ Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
       child: _ProfilePromptSheet(
         hasName: authState.hasName,
         hasPhone: authState.hasPhone,
-        currentName: authState.hasName ? authState.nameParts : null,
+        // Whatever part of the name there is (an Apple account may hold a first name alone)
+        currentName: authState.nameParts,
         currentPhone: authState.hasPhone ? authState.phoneNumber : null,
       ),
     ),

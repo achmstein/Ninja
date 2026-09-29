@@ -5,7 +5,7 @@ import { lineKey, useCart, type CartLine } from '@/lib/cart'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { toast } from '@/lib/toast'
-import { ease } from '@/lib/motion'
+import { blurSwap, ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
@@ -14,7 +14,6 @@ import { TrayExtras } from './tray-extras'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
-import { HOLD_MS } from '../ninja/gestures/hold'
 import { Odometer } from '../ninja/odometer'
 import { DishPhoto } from '../menu/dish-photo'
 import { GestureHint } from '../ninja/gestures/gesture-hint'
@@ -22,7 +21,6 @@ import { gestureMs } from '../ninja/gestures/gesture-timing'
 import { HintBubble } from '../ninja/gestures/hint-bubble'
 import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
 import { useHint, useTimeout } from '../ninja/gestures/use-hint'
-import { useHold } from '../ninja/gestures/use-hold'
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 
@@ -60,7 +58,6 @@ export function Tray({
   extras,
   cloudKitchen,
   onSignIn,
-  onKeepHolding,
   bare = false,
 }: {
   /** Where a flying photo lands */
@@ -77,8 +74,6 @@ export function Tray({
   extras: CheckoutExtras
   cloudKitchen: boolean
   onSignIn: () => void
-  /** The hold was let go before the ring closed */
-  onKeepHolding: () => void
   /** Nothing in it and nothing on its way, and no bill or table in the dock: the row folds away, leaving the tabs */
   bare?: boolean
 }) {
@@ -256,7 +251,15 @@ export function Tray({
         </button>
       )
     }
-    return <HoldButton onCommit={order.submit} busy={order.isPending} disabled={order.tableUnconfirmed} onEarly={onKeepHolding} />
+    return (
+      <OrderButton
+        open={expanded}
+        onOpen={() => onExpandedChange(true)}
+        onPlace={() => void order.submit()}
+        busy={order.isPending}
+        disabled={order.tableUnconfirmed}
+      />
+    )
   })()
 
   return (
@@ -500,7 +503,7 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
   return (
     <div className='flex min-h-0 flex-1 flex-col'>
       <div className='flex items-baseline justify-between px-5 pb-2'>
-        <h2 className='heading text-title'>{t('ninjaYourOrder')}</h2>
+        <h2 className='heading text-headline'>{t('ninjaYourOrder')}</h2>
       </div>
       {/* pb-3: the sheet's own padding already clears the dock it tucks under */}
       <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3'>
@@ -654,104 +657,56 @@ function SwipeLine({ line }: { line: CartLine }) {
   )
 }
 
-const RING_R = 19
-const RING_C = 2 * Math.PI * RING_R
-
 /**
- * Hold to order: press and keep pressing while the ring fills; letting go
- * before it closes cancels, so a brushed thumb never sends an order. Space
- * or Enter held down does the same from a keyboard.
+ * The dock's way to the order, where the thumb is. Shut, it opens the order
+ * to look over (what is in it, a note, a code, where it goes); open, the
+ * same button places it, a tap as in any app, so nothing is sent unseen.
  */
-function HoldButton({
-  onCommit,
+function OrderButton({
+  open,
+  onOpen,
+  onPlace,
   busy,
   disabled,
-  onEarly,
 }: {
-  onCommit: () => Promise<boolean>
+  open: boolean
+  onOpen: () => void
+  onPlace: () => void
   busy: boolean
+  /** The order cannot go yet (the table is still to be confirmed in the sheet) */
   disabled?: boolean
-  /** A tap let go before the ring closed */
-  onEarly: () => void
 }) {
   const t = useT()
-  const reduced = useReducedMotion()
-  const { phase, press, release, reset } = useHold(onCommit, disabled || busy)
-  // A tap that let go too soon: a small shake (and the page says keep holding), rather than nothing
-  const [early, setEarly] = useState(0)
-
-  // A failed request lets the customer hold again
-  const wasBusy = useRef(false)
-  useEffect(() => {
-    if (wasBusy.current && !busy) reset()
-    wasBusy.current = busy
-  }, [busy, reset])
-
-  const holding = phase === 'holding'
-  const filled = holding || phase === 'committed'
-  const letGo = () => {
-    if (phase === 'holding') {
-      setEarly((n) => n + 1)
-      onEarly()
-    }
-    release()
-  }
-
+  const swap = blurSwap(useReducedMotion())
+  const state = busy ? 'busy' : open ? 'place' : 'order'
   return (
     <motion.button
       type='button'
-      disabled={disabled}
-      aria-label={t('ninjaHoldToOrder')}
+      layout
+      transition={SPRING}
+      disabled={open && (disabled || busy)}
       aria-busy={busy}
+      onClick={open ? onPlace : onOpen}
       style={{ borderRadius: 24 }}
-      animate={early > 0 && !reduced ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
-      transition={{ duration: 0.36 }}
-      key={early}
-      onPointerDown={(e) => {
-        if (e.button !== 0) return
-        e.currentTarget.setPointerCapture(e.pointerId)
-        press()
-      }}
-      onPointerUp={letGo}
-      onPointerCancel={release}
-      onLostPointerCapture={release}
-      onKeyDown={(e) => {
-        if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
-          e.preventDefault()
-          press()
-        }
-      }}
-      onKeyUp={(e) => {
-        if (e.key === ' ' || e.key === 'Enter') letGo()
-      }}
-      onContextMenu={(e) => e.preventDefault()}
-      className={cn(
-        'bg-background/12 relative flex h-12 shrink-0 touch-none items-center gap-2 ps-1 pe-5 font-bold @max-[21rem]:h-11 @max-[21rem]:gap-1.5 @max-[21rem]:pe-3.5 select-none transition-[scale] duration-200 disabled:opacity-50 motion-reduce:transition-none [-webkit-touch-callout:none]',
-        holding && 'scale-[0.96]'
-      )}
+      className='bg-primary text-primary-foreground text-body flex h-12 shrink-0 items-center gap-2 overflow-hidden px-5 font-bold whitespace-nowrap shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[opacity,scale] active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none @max-[21rem]:h-11 @max-[21rem]:px-4'
     >
-      <span className='relative grid size-10 place-items-center @max-[21rem]:size-9'>
-        <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90' aria-hidden>
-          <circle cx='22' cy='22' r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.25} strokeWidth='3' />
-          <circle
-            cx='22'
-            cy='22'
-            r={RING_R}
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='3'
-            strokeLinecap='round'
-            strokeDasharray={RING_C}
-            style={{
-              strokeDashoffset: filled ? 0 : RING_C,
-              transition: holding ? `stroke-dashoffset ${HOLD_MS}ms linear` : 'stroke-dashoffset 220ms ease-out',
-            }}
-          />
-        </svg>
-        {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className={cn('size-4 transition-opacity', filled ? 'opacity-100' : 'opacity-60')} strokeWidth={3} />}
-      </span>
-      {/* On a narrow row the words and the ring draw smaller, so the total beside them keeps its room */}
-      <span className='text-note whitespace-nowrap @max-[21rem]:text-caption'>{t('ninjaHoldToOrder')}</span>
+      <AnimatePresence mode='popLayout' initial={false}>
+        <motion.span key={state} className='flex items-center gap-2' {...swap}>
+          {state === 'busy' ? (
+            <>
+              <Loader2 className='size-4 animate-spin' />
+              {t('ninjaSending')}
+            </>
+          ) : state === 'place' ? (
+            <>
+              <Check className='size-4' strokeWidth={3} />
+              {t('placeOrder')}
+            </>
+          ) : (
+            t('ninjaOrder')
+          )}
+        </motion.span>
+      </AnimatePresence>
     </motion.button>
   )
 }

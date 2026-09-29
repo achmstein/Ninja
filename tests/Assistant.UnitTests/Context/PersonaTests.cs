@@ -18,6 +18,7 @@ public sealed class PersonaTests
         StringAssert.Contains(brief, "- Brief:");
         StringAssert.Contains(brief, "Friendly");
         StringAssert.Contains(brief, "in the language the owner writes in");
+        StringAssert.Contains(brief, "Answering in Arabic, use the Arabic name", "names follow the language of the answer");
         Assert.DoesNotContain("owner's own notes", brief);
     }
 

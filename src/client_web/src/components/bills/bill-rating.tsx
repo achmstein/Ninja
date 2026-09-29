@@ -188,7 +188,7 @@ function RatingSheet({
       >
 
         <SheetHeader>
-          <SheetTitle className='pe-8 text-headline font-bold'>
+          <SheetTitle className='heading text-headline pe-8'>
             {t('rateYourOrder')}
           </SheetTitle>
         </SheetHeader>

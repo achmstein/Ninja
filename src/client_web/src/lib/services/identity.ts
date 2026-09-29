@@ -21,6 +21,15 @@ export function namePartsOf(profile: MyProfile | null | undefined, fallbackName?
   return space < 0 ? [whole, ''] : [whole.slice(0, space), whole.slice(space + 1).trim()]
 }
 
+/**
+ * Whether the profile holds both a first and a last name. An Apple account can
+ * come without either (Apple gives the name on the first sign-in only, and the
+ * browser's sign-in never passes it on), so it is asked for what it lacks.
+ */
+export function hasWholeName(profile: MyProfile | null | undefined): boolean {
+  return !!profile?.firstName?.trim() && !!profile?.lastName?.trim()
+}
+
 export async function getMyProfile(): Promise<MyProfile> {
   const response = await apiClient.get<MyProfile>(`${BASE}/my-profile`)
   return response.data

@@ -29,8 +29,11 @@ public static partial class ControlApi
     }
 
     /// <summary>
-    /// The broker's address with only what it reads; Apple's user (the name, on a first sign-in) the
-    /// hub has no use for, its record being a pass through
+    /// The broker's address with only what it reads. Apple's user field (the name, on a person's very
+    /// first sign-in to the platform's Apple app, never again) cannot go on: Keycloak's OIDC broker
+    /// reads a name only from the id_token, where Apple never puts it. A browser Apple account so
+    /// arrives with no name, and the café's review-profile page and the apps' "complete your info"
+    /// prompt ask for it
     /// </summary>
     internal static string AppleBrokerUrl(string? state, string? code, string? error)
     {

@@ -34,4 +34,13 @@ public sealed class PersonNameTests
         Assert.AreEqual("Mona El Sayed", PersonName.Display("Mona", "El Sayed"));
         Assert.AreEqual("Mona", PersonName.Display("Mona", null));
     }
+
+    [TestMethod]
+    public void A_name_is_complete_only_with_both_parts()
+    {
+        Assert.IsTrue(PersonName.Complete("Mona", "El Sayed"));
+        Assert.IsFalse(PersonName.Complete("Mona", null));
+        Assert.IsFalse(PersonName.Complete(" ", "El Sayed"));
+        Assert.IsFalse(PersonName.Complete(null, null));
+    }
 }

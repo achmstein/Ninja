@@ -1102,7 +1102,8 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
 
     var fullName = $"{user.FirstName} {user.LastName}".Trim();
     var phoneNumber = user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault();
-    var isProfileComplete = !string.IsNullOrWhiteSpace(user.FirstName) && !string.IsNullOrWhiteSpace(phoneNumber);
+    // First and last name both, and a phone: an Apple account (a name only on the very first sign-in, none through the browser) is asked for what it lacks
+    var isProfileComplete = PersonName.Complete(user.FirstName, user.LastName) && !string.IsNullOrWhiteSpace(phoneNumber);
 
     return Results.Ok(new
     {

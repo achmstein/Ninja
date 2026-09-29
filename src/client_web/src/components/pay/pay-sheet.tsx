@@ -94,7 +94,7 @@ export function PaySheet({
         className='gap-0 p-0'
       >
         <SheetHeader className='shrink-0 px-5 pt-3 pb-0 text-start'>
-          <SheetTitle className='heading pe-8 text-title leading-tight'>
+          <SheetTitle className='heading text-headline pe-8'>
             {t(start === 'full' ? 'payFully' : start === 'split' ? 'splitBill' : 'payTheBill')}
           </SheetTitle>
           <SheetDescription>{data ? localized(data.locationName) : ' '}</SheetDescription>

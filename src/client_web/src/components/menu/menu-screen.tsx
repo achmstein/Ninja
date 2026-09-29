@@ -15,7 +15,7 @@ import { SignInSheet } from '@/components/auth/sign-in-options'
 import { GestureHint } from '@/components/ninja/gestures/gesture-hint'
 import { GESTURE_DELAY_S, GESTURE_GAP_S, GESTURE_S, gestureMs } from '@/components/ninja/gestures/gesture-timing'
 import { HintBubble } from '@/components/ninja/gestures/hint-bubble'
-import { useHint, useTimeout } from '@/components/ninja/gestures/use-hint'
+import { useHint, useNoCueOnScreen, useTimeout } from '@/components/ninja/gestures/use-hint'
 import { DECK_COMPACT_TOP, DECK_TOP, DOCK_INSET, DOCK_SIDE, TABS_H } from '@/components/ninja/shell/chrome'
 import { DockBill } from '@/components/ninja/shell/dock-bill'
 import { TuckedTabs } from '@/components/ninja/shell/nav'
@@ -136,7 +136,6 @@ export function MenuScreen({ menu }: HomeProps) {
   const [announce, setAnnounce] = useState('')
   const target = useRef<HTMLDivElement>(null)
   const flightId = useRef(0)
-  const keepHoldingToast = useRef<string | null>(null)
   // When the guest last touched the page: a scroll only counts as their swipe
   // if they were touching it (a resize or the browser's bars re-snapping the
   // deck scrolls it too, and must not end the swipe cue)
@@ -170,10 +169,17 @@ export function MenuScreen({ menu }: HomeProps) {
   const holdHint = useHint('holdAdd')
   const idle = !loading && columns.length > 0 && mode === 'deck' && !tuning && !expanded
   const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
+  // One cue on screen at a time (the tray's pull may be up); and one showing as a dish or the order
+  // opens is over, so no fingertip or words are left over what opened
+  const noCue = useNoCueOnScreen()
+  const endCue = current?.showing && !idle ? current.done : null
+  useEffect(() => {
+    endCue?.()
+  }, [endCue])
   const activeItem = columns[column]?.items[activeRow]
   // "Hold to add" waits for a card a long press would add straight away
   const cueFits = current !== holdHint || (!!activeItem && canQuickAdd(activeItem))
-  useTimeout(idle && cueFits && current != null && !current.showing, 1400, () => current?.show())
+  useTimeout(idle && noCue && cueFits && current != null && !current.showing, 1400, () => current?.show())
   useTimeout(!!current?.showing, gestureMs(current === swipeHint ? 'swipe' : current === zoomHint ? 'pinch' : 'hold'), () => current?.done())
   const holdHintId = holdHint.showing && activeItem && canQuickAdd(activeItem) ? Number(activeItem.id) : null
 
@@ -298,10 +304,6 @@ export function MenuScreen({ menu }: HomeProps) {
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
   }
 
-  const onKeepHolding = () => {
-    if (keepHoldingToast.current) toast.dismiss(keepHoldingToast.current)
-    keepHoldingToast.current = toast.info(t('ninjaKeepHolding'), { duration: 1800 })
-  }
 
   const labels = columns.map((c) => c.label)
   // The whole menu shows the categories alone (each usual is a tile in its own category)
@@ -450,7 +452,7 @@ export function MenuScreen({ menu }: HomeProps) {
             </AnimatePresence>
             <AnimatePresence>
               {swipeHint.showing && (
-                <div key='swipe' className='pointer-events-none absolute inset-x-0 bottom-14 z-20 flex justify-center'>
+                <div key='swipe' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
                   <HintBubble>
                     <MoveVertical className='size-3.5' />
                     {t('ninjaHintSwipe')}
@@ -458,7 +460,7 @@ export function MenuScreen({ menu }: HomeProps) {
                 </div>
               )}
               {zoomHint.showing && (
-                <div key='zoom' className='pointer-events-none absolute end-3 bottom-14 z-20'>
+                <div key='zoom' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
                   <HintBubble>
                     <LayoutGrid className='size-3.5' />
                     {t('ninjaHintZoom')}
@@ -528,7 +530,6 @@ export function MenuScreen({ menu }: HomeProps) {
               bare={bare}
               cloudKitchen={cloudKitchen}
               onSignIn={() => setSignInOpen(true)}
-              onKeepHolding={onKeepHolding}
             />
             {/* The bill running now, in the tray's row while the tray is empty */}
             <DockBill live={live} trayEmpty={trayEmpty} />

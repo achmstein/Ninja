@@ -39,8 +39,9 @@ public sealed class BranchSelectorTests
     {
         var r = BranchSelector.Select(Branches, "Heliopolis");
         Assert.IsFalse(r.IsOk);
-        StringAssert.Contains(r.Error, "Nasr City (id 1)");
-        StringAssert.Contains(r.Error, "Old Zamalek (id 3, inactive)");
+        // Both names, so the model can name them back in the owner's language
+        StringAssert.Contains(r.Error, "Nasr City / مدينة نصر (id 1)");
+        StringAssert.Contains(r.Error, "Old Zamalek / الزمالك (id 3, inactive)");
     }
 
     [TestMethod]
@@ -61,5 +62,23 @@ public sealed class BranchSelectorTests
         Assert.AreEqual(new TimeOnly(17, 0), Branches[0].DayStart);
         Assert.AreEqual(TimeOnly.MinValue, new BranchResponse(9, null, true, 0, null, null, true, true).DayStart);
         Assert.AreEqual("Branch 9", new BranchResponse(9, null, true, 0, null, null, true, true).DisplayName);
+    }
+
+    [TestMethod]
+    public void A_branch_carries_its_Arabic_name_beside_the_English_one()
+    {
+        Assert.AreEqual("مدينة نصر", Branches[0].NameAr);
+        Assert.AreEqual("Maadi / المعادي", Branches[1].BothNames);
+
+        // Only Arabic: it is the name, and not repeated as the Arabic one
+        var arabicOnly = new BranchResponse(4, new LocalizedText("", "الدقي"), true, 4, null, null, true, true);
+        Assert.AreEqual("الدقي", arabicOnly.DisplayName);
+        Assert.IsNull(arabicOnly.NameAr);
+        Assert.AreEqual("الدقي", arabicOnly.BothNames);
+
+        // Only English
+        var englishOnly = new BranchResponse(5, new LocalizedText("Dokki", null), true, 5, null, null, true, true);
+        Assert.IsNull(englishOnly.NameAr);
+        Assert.AreEqual("Dokki", englishOnly.BothNames);
     }
 }

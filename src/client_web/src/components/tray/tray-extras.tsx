@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Award, Loader2, Minus, NotebookPen, Plus, Tag, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
+import { reveal, revealField } from '@/lib/reveal'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { cn } from '@/lib/utils'
 import { Odometer } from '../ninja/odometer'
@@ -18,7 +19,11 @@ type Open = 'note' | 'promo' | 'points' | null
  */
 export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
   const t = useT()
-  const swap = blurSwap(useReducedMotion())
+  const reduced = useReducedMotion()
+  const swap = blurSwap(reduced)
+  // The field opened slides in under the pills and the order's list scrolls to it: at the end of a long
+  // order it would open out of sight, and the tap would seem to have done nothing
+  const panel = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState<Open>(null)
   const toggle = (which: Exclude<Open, null>) => setOpen((o) => (o === which ? null : which))
   const { promo, points } = extras
@@ -52,22 +57,25 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
         {open && (
           <motion.div
             key='panel'
+            ref={panel}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={springSoft}
-            className='overflow-hidden'
+            onAnimationComplete={() => reveal(panel.current, reduced)}
+            className='scroll-mb-4 overflow-hidden'
           >
             <AnimatePresence mode='wait' initial={false}>
-            <motion.div key={open} {...swap} transition={{ duration: 0.14 }} className='pt-1'>
+            <motion.div key={open} {...swap} transition={{ duration: 0.14 }} onAnimationComplete={() => reveal(panel.current, reduced)} className='pt-1'>
               {open === 'note' && (
                 <textarea
                   autoFocus
+                  onFocus={(e) => revealField(e.currentTarget)}
                   rows={2}
                   value={extras.note}
                   onChange={(e) => extras.setNote(e.target.value)}
                   placeholder={t('orderNoteOptional')}
-                  className='bg-background/10 placeholder:text-background/50 focus:bg-background/15 block w-full resize-none rounded-2xl px-4 py-3 text-base transition-colors outline-none md:text-sm'
+                  className='bg-background/10 placeholder:text-background/50 focus:bg-background/15 block w-full resize-none rounded-2xl px-4 py-3 text-base transition-colors outline-none'
                 />
               )}
               {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
@@ -156,13 +164,14 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
     >
       <input
         autoFocus
+        onFocus={(e) => revealField(e.currentTarget)}
         placeholder={t('promoCode')}
         aria-label={t('promoCode')}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         autoCapitalize='characters'
         autoComplete='off'
-        className='placeholder:text-background/50 h-9 min-w-0 flex-1 bg-transparent text-base uppercase outline-none placeholder:normal-case md:text-sm'
+        className='placeholder:text-background/50 h-9 min-w-0 flex-1 bg-transparent text-base uppercase outline-none placeholder:normal-case'
       />
       <button type='submit' disabled={!input.trim()} className='bg-background text-foreground h-9 shrink-0 rounded-full px-4 text-caption font-bold disabled:opacity-40'>
         {t('apply')}

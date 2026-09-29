@@ -9,7 +9,17 @@ namespace Ninja.Assistant.API.Downstream;
 public sealed record LocalizedText(string? En, string? Ar)
 {
     /// <summary>The English name, or the Arabic one when that is all there is.</summary>
-    public string Display => !string.IsNullOrWhiteSpace(En) ? En : En ?? Ar ?? "";
+    public string Display => !string.IsNullOrWhiteSpace(En) ? En : Ar ?? En ?? "";
+
+    /// <summary>
+    /// The Arabic name, sent beside <see cref="Display"/> so the model can name
+    /// things in the owner's language; null when there is none or it is the
+    /// name already given.
+    /// </summary>
+    public string? Arabic => !string.IsNullOrWhiteSpace(Ar) && Ar != Display ? Ar : null;
+
+    /// <summary>For a sentence the model shows as it is (a preview, an error): "Latte / لاتيه".</summary>
+    public string Both => Arabic is { } ar ? $"{Display} / {ar}" : Display;
 }
 
 // --- Branch ------------------------------------------------------------------
@@ -25,6 +35,12 @@ public sealed record BranchResponse(
     bool IsReservationsEnabled)
 {
     public string DisplayName => Name?.Display is { Length: > 0 } n ? n : $"Branch {Id}";
+
+    /// <summary>The branch's Arabic name when it has one of its own (see <see cref="LocalizedText.Arabic"/>).</summary>
+    public string? NameAr => Name?.Arabic;
+
+    /// <summary>Both names, for a sentence: "Maadi / المعادي".</summary>
+    public string BothNames => NameAr is { } ar ? $"{DisplayName} / {ar}" : DisplayName;
 
     /// <summary>When the branch's business day starts ("17:00" for a night cafe); midnight when unset.</summary>
     public TimeOnly DayStart

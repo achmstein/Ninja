@@ -92,7 +92,7 @@ public sealed class WriteToolsTests
         StringAssert.Contains(Bench.TextOf(noBranch), "Say which branch");
 
         var noCategory = await tools.RecordExpense(10, "Marketing", null, "1", "drawer", null, null, null, false, CancellationToken.None);
-        StringAssert.Contains(Bench.TextOf(noCategory), "Rent, Electricity");
+        StringAssert.Contains(Bench.TextOf(noCategory), "Rent / إيجار, Electricity / كهرباء", "both names, so the model can offer them in the owner's language");
         Assert.IsFalse(Bench.TextOf(noCategory).Contains("Old Electricity", StringComparison.Ordinal), "inactive categories are not offered");
 
         var badDate = await tools.RecordExpense(10, "Rent", "20/09/2026", "1", "drawer", null, null, null, false, CancellationToken.None);

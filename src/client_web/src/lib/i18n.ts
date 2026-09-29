@@ -22,6 +22,8 @@ const webExtras = {
   },
   loading: { en: 'Loading...', ar: 'ثواني...' },
   pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
+  // The profile prompt before an order or a booking: why it asks
+  completeYourInfoWhy: { en: 'So the café can reach you about your order or booking.', ar: 'عشان المكان يقدر يكلمك بخصوص طلبك أو حجزك.' },
   // The You page's card for a visitor, the same card the Book page asks with
   youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {
@@ -334,8 +336,10 @@ const webExtras = {
   ninjaLess: { en: 'One less', ar: 'واحد أقل' },
   ninjaMore: { en: 'One more', ar: 'واحد كمان' },
   ninjaRemove: { en: 'Remove', ar: 'شيله' },
-  ninjaHoldToOrder: { en: 'Hold to order', ar: 'دوس واطلب' },
-  ninjaEmptyTray: { en: 'Tap a dish to open it. Hold one to add it.', ar: 'دوس على صنف تفتحه، ودوس مطوّل تضيفه.' },
+  // The dock's way to the order: a tap opens it to look over, and Place order sends it
+  ninjaOrder: { en: 'Order', ar: 'اطلب' },
+  ninjaSending: { en: 'Sending', ar: 'بيتبعت' },
+  ninjaEmptyTray: { en: 'Your order is empty. Tap a dish to add it.', ar: 'طلبك فاضي. دوس على صنف تضيفه.' },
   ninjaYourOrder: { en: 'Your order', ar: 'طلبك' },
   ninjaMoreAtCheckout: { en: 'Note, promo or points', ar: 'ملاحظة أو كود أو نقط' },
   ninjaAdded: { en: '{name} added', ar: 'اتضاف {name}' },
@@ -343,7 +347,6 @@ const webExtras = {
   ninjaHintTray: { en: 'Drag up to see your order', ar: 'اسحب لفوق تشوف طلبك' },
   ninjaHintSwipe: { en: 'Swipe up for more, sideways for other categories', ar: 'اسحب لفوق للمزيد، وللجنب لباقي الأقسام' },
   ninjaHintZoom: { en: 'Pinch or tap the grid to see everything', ar: 'اقرص أو دوس على المربعات تشوف كل حاجة' },
-  ninjaKeepHolding: { en: 'Keep holding until the ring closes', ar: 'فضل دايس لحد ما الدايرة تقفل' },
   ninjaRemoved: { en: '{name} removed', ar: 'اتشال {name}' },
   ninjaUndo: { en: 'Undo', ar: 'رجّعه' },
   ninjaUpNext: { en: 'Up next', ar: 'اللي بعده' },

@@ -76,5 +76,5 @@ public static class BranchSelector
             : $"No branch matches '{text}'. The branches are {Names(all)}.";
 
     private static string Names(IEnumerable<BranchResponse> branches)
-        => string.Join(", ", branches.Select(b => $"{b.DisplayName} (id {b.Id}{(b.IsActive ? "" : ", inactive")})"));
+        => string.Join(", ", branches.Select(b => $"{b.BothNames} (id {b.Id}{(b.IsActive ? "" : ", inactive")})"));
 }
