@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasWholeName, namePartsOf } from './identity'
+import { guestDetailsParams, hasWholeName, namePartsOf } from './identity'
 
 describe('namePartsOf', () => {
   it('takes the profile’s own first and last name', () => {
@@ -23,5 +23,19 @@ describe('hasWholeName', () => {
     expect(hasWholeName({ name: '', firstName: null, lastName: null })).toBe(false)
     expect(hasWholeName({ firstName: ' ', lastName: 'El Sayed' })).toBe(false)
     expect(hasWholeName(null)).toBe(false)
+  })
+})
+
+describe('guestDetailsParams', () => {
+  it('splits the name at its first space and keeps the phone', () => {
+    expect(guestDetailsParams({ name: ' Ahmed Ali Hassan ', phone: ' 01012345678 ' })).toEqual({
+      nj_first: 'Ahmed',
+      nj_last: 'Ali Hassan',
+      nj_phone: '01012345678',
+    })
+  })
+
+  it('leaves out what is empty', () => {
+    expect(guestDetailsParams({ name: 'Ahmed', phone: '' })).toEqual({ nj_first: 'Ahmed' })
   })
 })

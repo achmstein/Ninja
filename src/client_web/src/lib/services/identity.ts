@@ -22,6 +22,20 @@ export function namePartsOf(profile: MyProfile | null | undefined, fallbackName?
 }
 
 /**
+ * What a guest gave at checkout, as the sign-in pages take it (the login
+ * theme's guest-details.js): the name split into first and last at its first
+ * space, as the profile does. Empty parts are left out.
+ */
+export function guestDetailsParams(contact: { name: string; phone: string }): Record<string, string> {
+  const [first, last] = namePartsOf(null, contact.name)
+  const params: Record<string, string> = {}
+  if (first) params.nj_first = first
+  if (last) params.nj_last = last
+  if (contact.phone.trim()) params.nj_phone = contact.phone.trim()
+  return params
+}
+
+/**
  * Whether the profile holds both a first and a last name. An Apple account can
  * come without either (Apple gives the name on the first sign-in only, and the
  * browser's sign-in never passes it on), so it is asked for what it lacks.

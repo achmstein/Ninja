@@ -3,7 +3,9 @@ import { Mail, UserPlus } from 'lucide-react'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { loginPageParams } from '@/lib/oidc'
+import { guestDetailsParams } from '@/lib/services/identity'
 import { cn } from '@/lib/utils'
+import { useGuestStore } from '@/stores/guest-store'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -53,9 +55,18 @@ function useSignIn() {
   const language = useLanguage((state) => state.language)
   return (idpHint?: string, create = false) => {
     const { extraQueryParams } = loginPageParams(resolvedTheme, language)
+    // A guest who ordered here brings what they gave at checkout: the sign-in pages start with their
+    // name and phone filled in (the login theme's guest-details.js). Google or Apple then go by the
+    // sign-in page (nj_idp) rather than straight past it, so it can keep them for the step after
+    const guest = useGuestStore.getState().contact
+    const details = guest ? guestDetailsParams(guest) : null
     auth.signinRedirect({
       prompt: create ? 'create' : undefined,
-      extraQueryParams: idpHint ? { ...extraQueryParams, kc_idp_hint: idpHint } : extraQueryParams,
+      extraQueryParams: {
+        ...extraQueryParams,
+        ...details,
+        ...(idpHint ? (details ? { nj_idp: idpHint } : { kc_idp_hint: idpHint }) : null),
+      },
     })
   }
 }

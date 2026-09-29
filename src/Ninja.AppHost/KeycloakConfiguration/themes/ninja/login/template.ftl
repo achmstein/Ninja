@@ -74,6 +74,7 @@
         </#list>
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
+    <script type="module" src="${url.resourcesPath}/js/guest-details.js?v=${properties.themeVersion!'1'}"></script>
     <script type="module">
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
         startSessionPolling("${url.ssoLoginInOtherTabsUrl?no_esc}");
