@@ -105,5 +105,11 @@
   "kitchenPrinterStuck": "Kitchen tickets are not printing: {stations}",
   "@kitchenPrinterStuck": {"placeholders": {"stations": {"type": "String"}}},
   "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right.",
-  "starting": "Starting…"
+  "starting": "Starting…",
+  "sourceTalabat": "Talabat",
+  "platformRiderAt": "Rider at {time}",
+  "@platformRiderAt": { "placeholders": { "time": { "type": "String" } } },
+  "platformCollect": "Customer collects",
+  "platformOwnRider": "Our rider",
+  "platformCancelled": "Cancelled on Talabat"
 }

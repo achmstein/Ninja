@@ -9,8 +9,12 @@ import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
+import 'platform_badge.dart';
 
 enum OrderDetailAction { confirm, cancel, rejectGuest }
+
+/// The pick, and, for a delivery platform's order being turned down, why
+typedef OrderDetailPick = ({OrderDetailAction action, String? platformReason});
 
 /// What the customer actually ordered, for the cashier who wants to look
 /// before accepting: every item with its options and instructions, the
@@ -20,8 +24,8 @@ enum OrderDetailAction { confirm, cancel, rejectGuest }
 /// [summary] is the queue's row for the order: the identity facts (account or
 /// guest, the phone, how many orders the device has had here) the order
 /// itself does not carry.
-Future<OrderDetailAction?> showOrderDetailDialog(BuildContext context, int orderId, {Order? summary}) {
-  return showFDialog<OrderDetailAction>(
+Future<OrderDetailPick?> showOrderDetailDialog(BuildContext context, int orderId, {Order? summary}) {
+  return showFDialog<OrderDetailPick>(
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
@@ -44,6 +48,9 @@ class _OrderDetailDialog extends ConsumerStatefulWidget {
 
 class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
   bool _cancelling = false;
+
+  // A delivery platform's order is turned down for a reason its customer hears
+  String _reason = platformRejectReasons.first;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +82,13 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
     // A guest's order to a place: the one the "nobody there" answer fits
     final guestAtPlace = (order?.guestName ?? '').isNotEmpty && order?.placeId != null;
 
-    void pick(OrderDetailAction action) => Navigator.of(context, rootNavigator: true).pop(action);
+    // From the order once loaded, the queue's row until then
+    final platform = order?.platform ?? summary?.platform;
+
+    void pick(OrderDetailAction action) => Navigator.of(context, rootNavigator: true).pop((
+          action: action,
+          platformReason: action == OrderDetailAction.cancel && platform != null ? _reason : null,
+        ));
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
@@ -90,7 +103,12 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
               const SizedBox(height: 4),
               Text(subtitle, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
             ],
-            if (identity != null) ...[
+            if (platform != null) ...[
+              const SizedBox(height: 8),
+              PlatformBadge(platform: platform, logoHeight: 18),
+              const SizedBox(height: 4),
+              PlatformHandover(platform: platform),
+            ] else if (identity != null) ...[
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -197,6 +215,29 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
             const SizedBox(height: 16),
             if (_cancelling) ...[
               Text(l10n.cancelOrderConfirm, style: theme.typography.base.copyWith(color: theme.colors.destructive)),
+              // The platform tells its customer why; one tap picks it
+              if (platform != null) ...[
+                const SizedBox(height: 12),
+                Text(l10n.platformRejectReason, style: muted),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final reason in platformRejectReasons)
+                      SizedBox(
+                        height: 40,
+                        child: FButton(
+                          // The picked one filled, the rest outlined
+                          variant: _reason == reason ? null : FButtonVariant.outline,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: () => setState(() => _reason = reason),
+                          child: Text(platformRejectReasonLabel(l10n, reason), style: theme.typography.sm.forButton),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

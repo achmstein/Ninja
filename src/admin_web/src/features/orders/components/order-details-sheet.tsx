@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -19,14 +20,24 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
-import { formatEgp, getOrderStatus, isSubmitted } from '../status'
-import { PlatformBadge, PlatformHandover } from './platform-badge'
+import {
+  defaultPlatformRejectReason,
+  formatEgp,
+  getOrderStatus,
+  isSubmitted,
+} from '../status'
+import {
+  PlatformBadge,
+  PlatformHandover,
+  PlatformRejectReasonPicker,
+} from './platform-badge'
 
 type OrderDetailsSheetProps = {
   orderId: number | null
   onOpenChange: (open: boolean) => void
   onConfirm: (orderNumber: number) => void
-  onCancel: (orderNumber: number) => void
+  /** A delivery platform's order carries the reason it is turned down for */
+  onCancel: (orderNumber: number, platformReason?: string) => void
   isActing: boolean
 }
 
@@ -47,6 +58,13 @@ export function OrderDetailsSheet({
     }),
     enabled: orderId != null,
   })
+
+  // A delivery platform's order is turned down for a reason its customer hears
+  // (kept with the order it was picked for, so the next order starts afresh)
+  const [picked, setPicked] = useState<{ orderId: number | null; reason: string } | null>(null)
+  const cancelReason =
+    picked?.orderId === orderId ? picked.reason : defaultPlatformRejectReason
+  const setCancelReason = (reason: string) => setPicked({ orderId, reason })
 
   const status = getOrderStatus(order?.status)
   const StatusIcon = status?.icon
@@ -190,13 +208,23 @@ export function OrderDetailsSheet({
           )}
         </SheetBody>
 
+        {order?.platform && isSubmitted(order.status) && (
+          <div className='px-4'>
+            <PlatformRejectReasonPicker
+              value={cancelReason}
+              onChange={setCancelReason}
+            />
+          </div>
+        )}
         {order && isSubmitted(order.status) && orderId != null && (
           <SheetFooter className='flex-row gap-2'>
             <Button
               variant='outline'
               className='flex-1'
               disabled={isActing}
-              onClick={() => onCancel(orderId)}
+              onClick={() =>
+                onCancel(orderId, order.platform ? cancelReason : undefined)
+              }
             >
               <X className='me-1 h-4 w-4' />
               {t('cancelOrderButton')}

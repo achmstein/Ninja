@@ -40,7 +40,8 @@ export function TodaysTill({
   )
   const segments = tendersFor(
     features.onlinePayments,
-    Number(tenderTotals.get('Online')?.amount ?? 0) > 0
+    Number(tenderTotals.get('Online')?.amount ?? 0) > 0,
+    Number(tenderTotals.get('Talabat')?.amount ?? 0) > 0
   ).map(({ name, value, labelKey }) => {
     const row = tenderTotals.get(name)
     const amount = Number(row?.amount ?? 0)

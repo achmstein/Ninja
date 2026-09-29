@@ -8,6 +8,11 @@ public static class Extensions
         TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
         builder.AddDefaultAuthentication();
 
+        // The platform's own token (ninja-control), for what it relays from Talabat
+        builder.Services.AddAuthorizationBuilder()
+            .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"))
+            .AddPolicy("OwnerOrControl", policy => policy.RequireAssertion(c => c.User.IsInRole("Owner") || c.User.HasClaim("azp", "ninja-control")));
+
         // The assistant: on when the AppHost handed out a chat model, scripted
         // under test, off otherwise. Before the build-time guard because the
         // rate limiter middleware needs its services even when only the
@@ -44,9 +49,16 @@ public static class Extensions
                .AddSubscription<OrderConfirmedWithPreferencesIntegrationEvent, OrderConfirmedWithPreferencesIntegrationEventHandler>()
                .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
                .AddSubscription<CatalogItemStockChangedIntegrationEvent, CatalogItemStockChangedIntegrationEventHandler>()
-               .AddSubscription<CatalogOptionStockChangedIntegrationEvent, CatalogOptionStockChangedIntegrationEventHandler>();
+               .AddSubscription<CatalogOptionStockChangedIntegrationEvent, CatalogOptionStockChangedIntegrationEventHandler>()
+               // A branch paused or opened here closes or opens it on Talabat
+               .AddSubscription<Ninja.Catalog.API.Talabat.BranchSettingsChangedIntegrationEvent, Ninja.Catalog.API.Talabat.BranchSettingsChangedIntegrationEventHandler>();
 
         builder.Services.AddOptions<CatalogOptions>()
             .BindConfiguration(nameof(CatalogOptions));
+
+        // Talabat: the menu and what is sold out go out through the platform's relay
+        builder.Services.AddOptions<Ninja.Catalog.API.Talabat.TalabatOptions>().BindConfiguration(Ninja.Catalog.API.Talabat.TalabatOptions.Section);
+        builder.Services.AddHttpClient(Ninja.Catalog.API.Talabat.TalabatSyncService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(60));
+        builder.Services.AddHostedService<Ninja.Catalog.API.Talabat.TalabatSyncService>();
     }
 }

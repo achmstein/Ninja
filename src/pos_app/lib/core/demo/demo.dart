@@ -537,7 +537,7 @@ class _DemoOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<bool> cancelOrder(int orderId, {String? requestId}) async {
+  Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason}) async {
     _pending.removeWhere((o) => o.id == orderId);
     return true;
   }

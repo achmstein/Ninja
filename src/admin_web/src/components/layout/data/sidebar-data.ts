@@ -9,6 +9,7 @@ import {
   ConciergeBell,
   Contact,
   CreditCard,
+  Bike,
   Armchair,
   Handshake,
   History,
@@ -152,6 +153,8 @@ export const sidebarData: SidebarData = {
           icon: CreditCard,
           entitled: 'onlinePayments',
         },
+        // Talabat: which branches sell there, and the menu it shows
+        { title: 'talabatNav', url: '/talabat', icon: Bike },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
         // The owner's assistant: this café's MCP server in their own Claude or ChatGPT, in every plan

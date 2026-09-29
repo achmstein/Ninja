@@ -72,6 +72,13 @@ public static class TalabatNaming
         return Convert.ToHexStringLower(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(slug)));
     }
 
+    /// <summary>
+    /// Talabat's market for a country when the operator gave none: Egypt is
+    /// the old Otlob entity (HF_EG); the Gulf markets are TB_{country}.
+    /// </summary>
+    public static string DefaultGlobalEntity(string country)
+        => string.Equals(country, "EG", StringComparison.OrdinalIgnoreCase) ? "HF_EG" : $"TB_{country.ToUpperInvariant()}";
+
     public static bool RelayKeyMatches(string slug, string platformKey, string? presented)
         => presented is not null && CryptographicOperations.FixedTimeEquals(
             Encoding.ASCII.GetBytes(RelayKey(slug, platformKey)), Encoding.ASCII.GetBytes(presented));
@@ -145,22 +152,28 @@ public sealed class TalabatMiddleware(IHttpClientFactory http, IOptions<Platform
             && target.Scheme == Uri.UriSchemeHttps
             && string.Equals(target.Host, middleware.Host, StringComparison.OrdinalIgnoreCase);
 
-    public async Task<TalabatCallResult> PostAsync(string url, object? body, CancellationToken ct)
+    public Task<TalabatCallResult> PostAsync(string url, object? body, CancellationToken ct) => CallAsync(HttpMethod.Post, url, body, ct);
+
+    /// <summary>A call on the middleware's own API, by its path (/v2/chains/…).</summary>
+    public Task<TalabatCallResult> CallPathAsync(HttpMethod method, string path, object? body, CancellationToken ct)
+        => CallAsync(method, $"{Talabat.MiddlewareUrl!.TrimEnd('/')}{path}", body, ct);
+
+    private async Task<TalabatCallResult> CallAsync(HttpMethod method, string url, object? body, CancellationToken ct)
     {
-        var result = await SendAsync(url, body, ct);
+        var result = await SendAsync(method, url, body, ct);
         if (result.Status == StatusCodes.Status401Unauthorized)
         {
             // A token the middleware stopped taking early: once more with a fresh one
             _token = null;
-            result = await SendAsync(url, body, ct);
+            result = await SendAsync(method, url, body, ct);
         }
         return result;
     }
 
-    private async Task<TalabatCallResult> SendAsync(string url, object? body, CancellationToken ct)
+    private async Task<TalabatCallResult> SendAsync(HttpMethod method, string url, object? body, CancellationToken ct)
     {
         var client = http.CreateClient(HttpClientName);
-        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+        using var request = new HttpRequestMessage(method, url)
         {
             Content = body is null ? null : JsonContent.Create(body, options: Json),
         };
@@ -211,4 +224,39 @@ public sealed class TalabatMiddleware(IHttpClientFactory http, IOptions<Platform
     {
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
     };
+}
+
+/// <param name="BranchId">The café's branch; its remote id is derived from the café's own slug.</param>
+/// <param name="Catalog">Talabat's catalog object ({ items: { … } }), as the café's catalog built it.</param>
+public sealed record TalabatCatalogRelay(int BranchId, JsonObject Catalog);
+
+/// <param name="Type">ITEM for menu items, TOPPING for options.</param>
+/// <param name="Items">The remote codes Ninja gave them (item-12, option-7).</param>
+public sealed record TalabatItemsRelay(int BranchId, string Type, IReadOnlyList<string> Items, bool IsAvailable);
+
+public sealed record TalabatStoreRelay(int BranchId, bool Open);
+
+/// <summary>One platform's store for a branch, as the middleware's availability answer lists it.</summary>
+public sealed record TalabatStore(string State, bool Changeable, string PlatformKey, string PlatformRestaurantId, IReadOnlyList<string> ClosingReasons)
+{
+    /// <summary>"CLOSED" when Talabat takes it for this store, whatever it takes otherwise.</summary>
+    public string CloseReason() => ClosingReasons.Contains("CLOSED") ? "CLOSED" : ClosingReasons.FirstOrDefault() ?? "OTHER";
+}
+
+public static class TalabatStores
+{
+    /// <summary>The Talabat store in the middleware's answer (it lists every platform the branch is on); the only one when there is one.</summary>
+    public static TalabatStore? Pick(string body)
+    {
+        if (JsonNode.Parse(body) is not JsonArray stores || stores.Count == 0) return null;
+        var store = stores.OfType<JsonObject>().FirstOrDefault(s => string.Equals(s["platformType"]?.GetValue<string>(), "TALABAT", StringComparison.OrdinalIgnoreCase))
+            ?? (stores.Count == 1 ? stores[0] as JsonObject : null);
+        if (store is null) return null;
+        return new(
+            store["availabilityState"]?.GetValue<string>() ?? "UNKNOWN",
+            store["changeable"]?.GetValue<bool>() ?? false,
+            store["platformKey"]?.GetValue<string>() ?? "",
+            store["platformRestaurantId"]?.ToString() ?? "",
+            store["closingReasons"] is JsonArray reasons ? reasons.Select(r => r?.GetValue<string>() ?? "").Where(r => r.Length > 0).ToList() : []);
+    }
 }

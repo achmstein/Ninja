@@ -764,6 +764,7 @@
   "tooManyLinks": "روابط كثيرة خلال وقت قصير، حاول بعد دقيقة",
   "starting": "جاري التشغيل…",
   "onlineTender": "أونلاين",
+  "talabatTender": "طلبات",
   "onlinePayments": "مدفوع أونلاين",
   "paidOnline": "مدفوع أونلاين",
   "onlinePaying": "جارٍ الدفع…",
@@ -777,5 +778,18 @@
   "releaseOnline": "إلغاء الحجز",
   "onlineReleasedToast": "تم إلغاء الحجز: الحصة متاحة للدفع من جديد",
   "guestPayingOnline": "ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.",
-  "settleRemainingOnly": "دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا."
+  "settleRemainingOnly": "دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا.",
+  "sourceTalabat": "طلبات",
+  "platformRiderAt": "المندوب {time}",
+  "platformCollect": "يستلمها العميل",
+  "platformOwnRider": "مندوبنا",
+  "platformCollectCash": "تحصيل {amount}",
+  "platformCancelled": "أُلغي على طلبات",
+  "platformRejectReason": "السبب؟ طلبات تُبلغ العميل",
+  "rejectTooBusy": "مشغولون جدًا",
+  "rejectItemUnavailable": "صنف غير متوفر",
+  "rejectClosed": "مغلق",
+  "rejectNoCourier": "لا يوجد مندوب",
+  "rejectOutsideArea": "خارج منطقة التوصيل",
+  "rejectPrank": "طلب وهمي"
 }

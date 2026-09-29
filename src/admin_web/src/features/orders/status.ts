@@ -53,6 +53,22 @@ export const orderSourceKeys: Record<string, TranslationKey> = {
   Talabat: 'sourceTalabat',
 }
 
+/**
+ * Why staff turn a delivery platform's order down, as the platform spells
+ * it; the platform tells its customer. Too busy is the answer when nothing
+ * else fits.
+ */
+export const platformRejectReasons: { value: string; key: TranslationKey }[] = [
+  { value: 'TOO_BUSY', key: 'rejectTooBusy' },
+  { value: 'ITEM_UNAVAILABLE', key: 'rejectItemUnavailable' },
+  { value: 'CLOSED', key: 'rejectClosed' },
+  { value: 'NO_COURIER', key: 'rejectNoCourier' },
+  { value: 'OUTSIDE_DELIVERY_AREA', key: 'rejectOutsideArea' },
+  { value: 'FRAUD_PRANK', key: 'rejectPrank' },
+]
+
+export const defaultPlatformRejectReason = platformRejectReasons[0].value
+
 // Where an order was placed from, for grouping the live board
 export type OrderPlace = 'rooms' | 'tables' | 'counter'
 

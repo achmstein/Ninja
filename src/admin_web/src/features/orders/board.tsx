@@ -15,7 +15,13 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { OrdersTabs } from './components/orders-tabs'
 import { PendingOrderCard } from './components/pending-order-card'
-import { orderPlace, orderUrgency, type OrderPlace } from './status'
+import { PlatformRejectReasonPicker } from './components/platform-badge'
+import {
+  defaultPlatformRejectReason,
+  orderPlace,
+  orderUrgency,
+  type OrderPlace,
+} from './status'
 import { useOrderActions } from './use-order-actions'
 
 const route = getRouteApi('/_authenticated/orders/')
@@ -42,6 +48,8 @@ export function OrdersBoard() {
   // Cancelling is irreversible for the customer: always a confirm step
   const [cancelTarget, setCancelTarget] = useState<number | null>(null)
   const [rejectTarget, setRejectTarget] = useState<number | null>(null)
+  // A delivery platform's order is turned down for a reason its customer hears
+  const [cancelReason, setCancelReason] = useState(defaultPlatformRejectReason)
 
   // Tick every 30s so ages and urgency tiers advance without a refetch
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -62,6 +70,12 @@ export function OrdersBoard() {
   const delayedCount = pending.filter(
     (order) => orderUrgency(order.date, nowMs) === 'delayed'
   ).length
+
+  const cancelIsPlatform =
+    cancelTarget != null &&
+    pending.some(
+      (order) => Number(order.orderNumber) === cancelTarget && order.platform
+    )
 
   const place = search.place
   const counts: Record<OrderPlace, number> = { rooms: 0, tables: 0, counter: 0 }
@@ -157,7 +171,10 @@ export function OrdersBoard() {
                 summary={order}
                 nowMs={nowMs}
                 onConfirm={() => confirm(Number(order.orderNumber))}
-                onCancel={() => setCancelTarget(Number(order.orderNumber))}
+                onCancel={() => {
+                  setCancelReason(defaultPlatformRejectReason)
+                  setCancelTarget(Number(order.orderNumber))
+                }}
                 onRejectGuest={() => setRejectTarget(Number(order.orderNumber))}
                 onViewCustomer={
                   order.userId ? () => openCustomer(order.userId!) : undefined
@@ -182,10 +199,18 @@ export function OrdersBoard() {
         confirmText={t('cancelOrderButton')}
         destructive
         handleConfirm={() => {
-          if (cancelTarget != null) cancel(cancelTarget)
+          if (cancelTarget != null)
+            cancel(cancelTarget, cancelIsPlatform ? cancelReason : undefined)
           setCancelTarget(null)
         }}
-      />
+      >
+        {cancelIsPlatform && (
+          <PlatformRejectReasonPicker
+            value={cancelReason}
+            onChange={setCancelReason}
+          />
+        )}
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={rejectTarget != null}

@@ -2883,6 +2883,201 @@
           { }
         ]
       }
+    },
+    "/api/catalog/talabat": {
+      "get": {
+        "tags": [
+          "Talabat"
+        ],
+        "summary": "Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused",
+        "operationId": "GetTalabat",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalabatStatusView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Talabat"
+        ],
+        "summary": "Which branches sell on Talabat, and whether pausing one here closes it there; a branch newly on Talabat gets its menu sent",
+        "operationId": "SaveTalabat",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TalabatSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalabatStatusView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/catalog/talabat/push": {
+      "post": {
+        "tags": [
+          "Talabat"
+        ],
+        "summary": "Send the menu to Talabat now: every branch on Talabat, or the one in X-Branch-Id (the platform's, when Talabat asks)",
+        "operationId": "PushTalabatMenu",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/catalog/talabat/preview/{branchId}": {
+      "get": {
+        "tags": [
+          "Talabat"
+        ],
+        "summary": "Exactly what Talabat would be sent for a branch",
+        "operationId": "PreviewTalabatMenu",
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
     }
   },
   "components": {
@@ -3540,6 +3735,9 @@
             }
           }
         }
+      },
+      "JsonObject": {
+        "type": "object"
       },
       "LocalizedText": {
         "type": "object",
@@ -4241,6 +4439,142 @@
           }
         }
       },
+      "TalabatFailureView": {
+        "required": [
+          "kind",
+          "branchId",
+          "code",
+          "error",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TalabatSettingsRequest": {
+        "required": [
+          "branchIds"
+        ],
+        "type": "object",
+        "properties": {
+          "branchIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "syncOpenClose": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "TalabatStatusView": {
+        "required": [
+          "connected",
+          "branchIds",
+          "syncOpenClose",
+          "menuChangedAt",
+          "menuSentAt",
+          "lastMenuResult",
+          "lastMenuResultAt",
+          "pending",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "branchIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "syncOpenClose": {
+            "type": "boolean"
+          },
+          "menuChangedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "menuSentAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastMenuResult": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastMenuResultAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pending": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TalabatFailureView"
+            }
+          }
+        }
+      },
       "UpdateCatalogItemRequest": {
         "type": "object",
         "properties": {
@@ -4386,6 +4720,9 @@
     },
     {
       "name": "Branch Overrides"
+    },
+    {
+      "name": "Talabat"
     }
   ]
 }

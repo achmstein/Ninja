@@ -458,6 +458,7 @@ export type TenantDetail = {
      * Whether customers may sign in with Google and Apple
      */
     socialSignIn?: boolean;
+    talabat?: null | TenantTalabatDto;
 };
 
 export type TenantHostsDto = {
@@ -536,6 +537,19 @@ export type TenantSummary = {
     paidThrough: null | string;
     update: null | TenantUpdate;
     isDrill: boolean;
+};
+
+export type TenantTalabatDto = {
+    chainCode: null | string;
+    globalEntityId: string;
+    remoteIdPattern: string;
+    pluginUrl: string;
+    platformConfigured: boolean;
+};
+
+export type TenantTalabatRequest = {
+    chainCode: null | string;
+    globalEntityId: null | string;
 };
 
 export type TenantUpdate = {
@@ -2803,6 +2817,45 @@ export type SignOutOperatorResponses = {
 };
 
 export type SignOutOperatorResponse = SignOutOperatorResponses[keyof SignOutOperatorResponses];
+
+export type UpdateTenantTalabatData = {
+    body: TenantTalabatRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/talabat';
+};
+
+export type UpdateTenantTalabatErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateTenantTalabatError = UpdateTenantTalabatErrors[keyof UpdateTenantTalabatErrors];
+
+export type UpdateTenantTalabatResponses = {
+    /**
+     * OK
+     */
+    200: TenantTalabatDto;
+};
+
+export type UpdateTenantTalabatResponse = UpdateTenantTalabatResponses[keyof UpdateTenantTalabatResponses];
 
 export type TlsAskData = {
     body?: never;

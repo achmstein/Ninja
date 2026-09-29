@@ -451,6 +451,8 @@ public static partial class Templates
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
                     AppendChatModel(sb, tenant, platform);
+                    // Talabat: the menu and what is sold out go out through the relay, like the orders' answers
+                    if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, platform);
                     // Uploaded pictures are written under the content root; without a volume an upgrade loses them
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.PicsVolume(slug)}:/app/Pics\"");
@@ -485,9 +487,7 @@ public static partial class Templates
                     break;
                 case "ordering" when platform.Talabat.Configured:
                     // Talabat: what the café does with its orders goes back through the platform's relay, which holds Ninja's account
-                    sb.AppendLine($"      Talabat__RelayUrl: \"{platform.Talabat.RelayUrl}\"");
-                    sb.AppendLine($"      Talabat__Tenant: \"{slug}\"");
-                    sb.AppendLine("      Talabat__RelayKey: \"${TALABAT_RELAY_KEY}\"");
+                    AppendTalabatRelay(sb, slug, platform);
                     break;
                 case "tenant":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
@@ -623,6 +623,13 @@ public static partial class Templates
         sb.AppendLine("      options:");
         sb.AppendLine($"        max-size: \"{platform.LogMaxSize}\"");
         sb.AppendLine($"        max-file: \"{platform.LogMaxFile}\"");
+    }
+
+    private static void AppendTalabatRelay(StringBuilder sb, string slug, PlatformOptions platform)
+    {
+        sb.AppendLine($"      Talabat__RelayUrl: \"{platform.Talabat.RelayUrl}\"");
+        sb.AppendLine($"      Talabat__Tenant: \"{slug}\"");
+        sb.AppendLine("      Talabat__RelayKey: \"${TALABAT_RELAY_KEY}\"");
     }
 
     private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform)

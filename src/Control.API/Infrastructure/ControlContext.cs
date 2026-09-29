@@ -97,6 +97,8 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
                     .HasConversion(v => string.Join(',', v), v => v.Length == 0 ? Array.Empty<Module>() : v.Split(',').Select(s => Enum.Parse<Module>(s)).ToArray(), addons);
             entity.Property(e => e.Subscription).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.TalabatChainCode).HasMaxLength(64);
+            entity.Property(e => e.TalabatGlobalEntityId).HasMaxLength(16);
             entity.HasMany(e => e.Steps).WithOne().HasForeignKey(s => s.TenantId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.Payments).WithOne().HasForeignKey(p => p.TenantId).OnDelete(DeleteBehavior.Cascade);
         });

@@ -732,6 +732,10 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Platform")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("ProvisionalReceiptNumber")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");

@@ -10,6 +10,7 @@ import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tena
 import { UpdateStanding } from '../dialogs'
 import { EditRecordSheet } from '../edit-record-sheet'
 import { Steps } from '../steps'
+import { TalabatSection } from '../talabat-section'
 import { JobLabel } from '@/features/platform/queue-table'
 
 const HOSTS: { key: keyof TenantDetail['hosts']; label: TranslationKey }[] = [
@@ -178,6 +179,8 @@ export function OverviewTab({
           )}
         </dl>
       </section>
+
+      {alive && <TalabatSection tenant={tenant} />}
 
       <section className='flex flex-col gap-2'>
         <h2 className='text-sm font-medium'>{t('steps')}</h2>

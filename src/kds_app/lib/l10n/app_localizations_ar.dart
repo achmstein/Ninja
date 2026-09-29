@@ -285,4 +285,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get starting => 'جاري التشغيل…';
+
+  @override
+  String get sourceTalabat => 'طلبات';
+
+  @override
+  String platformRiderAt(String time) {
+    return 'المندوب $time';
+  }
+
+  @override
+  String get platformCollect => 'يستلمها العميل';
+
+  @override
+  String get platformOwnRider => 'مندوبنا';
+
+  @override
+  String get platformCancelled => 'أُلغي على طلبات';
 }

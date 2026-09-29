@@ -170,6 +170,7 @@ public static class NotificationMessages
         "Card" => ar ? "بطاقة" : "Card",
         "InstaPay" => ar ? "انستاباي" : "InstaPay",
         "Account" => ar ? "على الحساب" : "On account",
+        "Talabat" => ar ? "طلبات" : "Talabat",
         _ => tender,
     };
 }

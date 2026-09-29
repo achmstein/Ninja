@@ -35,6 +35,9 @@ public static class TalabatApi
 
         // The cafés' side, each with its own key
         api.MapPost("/relay/status", RelayStatus).WithName("TalabatRelayStatus");
+        api.MapPost("/relay/catalog", RelayCatalog).WithName("TalabatRelayCatalog");
+        api.MapPost("/relay/items", RelayItems).WithName("TalabatRelayItems");
+        api.MapPost("/relay/store", RelayStore).WithName("TalabatRelayStore");
 
         return app;
     }
@@ -135,19 +138,67 @@ public static class TalabatApi
         return Results.Ok();
     }
 
-    /// <summary>Talabat asks for a branch's menu. The menu is sent from the café's catalog; until then, taken and not acted on.</summary>
-    public static IResult MenuImport(HttpContext http, string remoteId, IOptions<PlatformOptions> options, ILoggerFactory loggers)
+    /// <summary>Talabat asks for a branch's menu: the café's catalog sends it, through the relay, as it would after an edit.</summary>
+    public static async Task<IResult> MenuImport(
+        HttpContext http, string remoteId, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
     {
+        var logger = loggers.CreateLogger("Ninja.Control.API.Talabat");
         if (Refuse(http, options.Value) is { } refused) return refused;
-        loggers.CreateLogger("Ninja.Control.API.Talabat").LogInformation("Talabat asked for {RemoteId}'s menu", remoteId);
-        return Results.StatusCode(StatusCodes.Status202Accepted);
+        var (tenant, branchId) = await FindAsync(context, remoteId, ct);
+        if (tenant is null) return Results.NotFound();
+
+        logger.LogInformation("Talabat asked for {RemoteId}'s menu", remoteId);
+        try
+        {
+            using var response = await stacks.SendAsync(tenant, HttpMethod.Post, "/api/catalog/talabat/push?api-version=1.0", null, StackAuth.Control, ct, branchId);
+            return response.IsSuccessStatusCode ? Results.StatusCode(StatusCodes.Status202Accepted) : Results.StatusCode(StatusCodes.Status502BadGateway);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Talabat's menu request for {RemoteId} could not reach {Slug}'s stack", remoteId, tenant.Slug);
+            return Results.StatusCode(StatusCodes.Status502BadGateway);
+        }
     }
 
-    /// <summary>How a menu Ninja sent was taken.</summary>
-    public static async Task<IResult> CatalogCallback(HttpContext http, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
+    /// <summary>How a menu Ninja sent was taken: passed on to the café whose branch it was, for its Talabat page.</summary>
+    public static async Task<IResult> CatalogCallback(
+        HttpContext http, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
     {
+        var logger = loggers.CreateLogger("Ninja.Control.API.Talabat");
         if (Refuse(http, options.Value) is { } refused) return refused;
-        loggers.CreateLogger("Ninja.Control.API.Talabat").LogInformation("Talabat catalog import: {Body}", await ReadBodyAsync(http, ct));
+        var body = await ReadBodyAsync(http, ct);
+        logger.LogInformation("Talabat catalog import: {Body}", body);
+
+        JsonObject? result;
+        try
+        {
+            result = JsonNode.Parse(body) as JsonObject;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return Results.Ok();
+        }
+
+        // Each vendor in the import is one of ours; its café hears the overall status
+        var vendors = (result?["details"] as JsonArray)?.OfType<JsonObject>()
+            .Select(d => d["posVendorId"]?.GetValue<string>())
+            .OfType<string>()
+            .Distinct() ?? [];
+        foreach (var vendor in vendors)
+        {
+            var (tenant, branchId) = await FindAsync(context, vendor, ct);
+            if (tenant is null || tenant.Status != TenantStatus.Running) continue;
+            try
+            {
+                var forward = new JsonObject { ["status"] = result?["status"]?.GetValue<string>() ?? "unknown", ["message"] = result?["message"]?.GetValue<string>() };
+                using var response = await stacks.SendAsync(tenant, HttpMethod.Post, "/api/catalog/talabat/import-result?api-version=1.0",
+                    new StringContent(forward.ToJsonString(), Encoding.UTF8, "application/json"), StackAuth.Control, ct, branchId);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "Talabat's import result for {Vendor} could not reach {Slug}", vendor, tenant.Slug);
+            }
+        }
         return Results.Ok();
     }
 
@@ -161,14 +212,9 @@ public static class TalabatApi
         HttpContext http, TalabatRelayRequest request, TalabatMiddleware middleware, IOptions<PlatformOptions> options, ControlContext context, ILoggerFactory loggers, CancellationToken ct)
     {
         var logger = loggers.CreateLogger("Ninja.Control.API.Talabat");
-        var platform = options.Value;
-        if (!platform.Talabat.Configured || string.IsNullOrWhiteSpace(platform.EncryptionKey))
-            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-
-        var slug = http.Request.Headers["X-Ninja-Tenant"].ToString();
-        if (!TalabatNaming.RelayKeyMatches(slug, platform.EncryptionKey, http.Request.Headers["X-Ninja-Relay-Key"].ToString())
-            || !await context.Tenants.AnyAsync(t => t.Slug == slug && t.Status != TenantStatus.Destroyed, ct))
-            return Results.Unauthorized();
+        var (caller, refused) = await CallerAsync(http, context, options.Value, ct);
+        if (caller is null) return refused!;
+        var slug = caller.Slug;
 
         if (!middleware.IsMiddlewareUrl(request.Url))
         {
@@ -190,6 +236,103 @@ public static class TalabatApi
         logger.LogInformation("{Slug} told Talabat order {Token} was {Kind}: {Status}", slug, request.Token, request.Kind, result.Status);
         return Results.Text(result.Body, "application/json", statusCode: result.Status);
     }
+
+    /// <summary>
+    /// A branch's whole menu, as the café's catalog built it, submitted to the
+    /// café's own chain for that branch alone (a branch's prices and what it
+    /// has may differ). Talabat imports it in the background and reports back
+    /// on the catalog callback.
+    /// </summary>
+    public static async Task<IResult> RelayCatalog(
+        HttpContext http, TalabatCatalogRelay request, TalabatMiddleware middleware, IOptions<PlatformOptions> options, ControlContext context, ILoggerFactory loggers, CancellationToken ct)
+    {
+        var (caller, refused) = await CallerAsync(http, context, options.Value, ct);
+        if (caller is null) return refused!;
+        if (caller.TalabatChainCode is not { } chain) return NotOnTalabat();
+
+        var remoteId = TalabatNaming.RemoteId(caller.Slug, request.BranchId);
+        var result = await middleware.CallPathAsync(HttpMethod.Put, $"/v2/chains/{Uri.EscapeDataString(chain)}/catalog", new
+        {
+            vendors = new[] { remoteId },
+            catalog = request.Catalog,
+            callbackUrl = $"{options.Value.ControlUrl.TrimEnd('/')}/api/talabat/catalog-callback",
+        }, ct);
+        loggers.CreateLogger("Ninja.Control.API.Talabat").LogInformation("{RemoteId}'s menu sent to Talabat: {Status} {Body}", remoteId, result.Status, result.Body);
+        return Results.Text(result.Body, "application/json", statusCode: result.Status);
+    }
+
+    /// <summary>Items or options sold out, or back, at one branch.</summary>
+    public static async Task<IResult> RelayItems(
+        HttpContext http, TalabatItemsRelay request, TalabatMiddleware middleware, IOptions<PlatformOptions> options, ControlContext context, ILoggerFactory loggers, CancellationToken ct)
+    {
+        var (caller, refused) = await CallerAsync(http, context, options.Value, ct);
+        if (caller is null) return refused!;
+        if (caller.TalabatChainCode is not { } chain) return NotOnTalabat();
+        if (request.Items.Count == 0 || request.Type is not ("ITEM" or "TOPPING")) return Results.BadRequest("Items, as ITEM or TOPPING.");
+
+        var remoteId = TalabatNaming.RemoteId(caller.Slug, request.BranchId);
+        var result = await middleware.CallPathAsync(HttpMethod.Put, $"/v2/chains/{Uri.EscapeDataString(chain)}/vendors/{Uri.EscapeDataString(remoteId)}/catalog/items/availability", new
+        {
+            globalEntityId = caller.TalabatGlobalEntityId ?? TalabatNaming.DefaultGlobalEntity(caller.Country),
+            items = request.Items,
+            type = request.Type,
+            isAvailable = request.IsAvailable,
+        }, ct);
+        loggers.CreateLogger("Ninja.Control.API.Talabat").LogInformation("{RemoteId}: {Count} {Type} available={Available} → {Status}", remoteId, request.Items.Count, request.Type, request.IsAvailable, result.Status);
+        return Results.Text(result.Body, "application/json", statusCode: result.Status);
+    }
+
+    /// <summary>
+    /// A branch opens or closes on Talabat, as its own switch says. Talabat
+    /// wants its own id for the store and whether the change is allowed, so
+    /// it is asked first; a store Talabat has closed itself stays closed.
+    /// </summary>
+    public static async Task<IResult> RelayStore(
+        HttpContext http, TalabatStoreRelay request, TalabatMiddleware middleware, IOptions<PlatformOptions> options, ControlContext context, ILoggerFactory loggers, CancellationToken ct)
+    {
+        var logger = loggers.CreateLogger("Ninja.Control.API.Talabat");
+        var (caller, refused) = await CallerAsync(http, context, options.Value, ct);
+        if (caller is null) return refused!;
+        if (caller.TalabatChainCode is not { } chain) return NotOnTalabat();
+
+        var remoteId = TalabatNaming.RemoteId(caller.Slug, request.BranchId);
+        var path = $"/v2/chains/{Uri.EscapeDataString(chain)}/remoteVendors/{Uri.EscapeDataString(remoteId)}/availability";
+        var current = await middleware.CallPathAsync(HttpMethod.Get, path, null, ct);
+        // 204: Talabat is still finding out; the café's stack asks again shortly
+        if (current.Status == StatusCodes.Status204NoContent) return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        if (current.Status is < 200 or >= 300) return Results.Text(current.Body, "application/json", statusCode: current.Status);
+
+        var store = TalabatStores.Pick(current.Body);
+        if (store is null) return Results.NotFound();
+        var wanted = request.Open ? "OPEN" : "CLOSED";
+        if (store.State == wanted) return Results.Ok();
+        if (!store.Changeable)
+        {
+            logger.LogInformation("{RemoteId} is {State} on Talabat and Talabat does not let it change", remoteId, store.State);
+            return Results.Conflict("Talabat does not let this store change now.");
+        }
+
+        var result = await middleware.CallPathAsync(HttpMethod.Put, path, request.Open
+            ? new { availabilityState = "OPEN", platformKey = store.PlatformKey, platformRestaurantId = store.PlatformRestaurantId }
+            : new { availabilityState = "CLOSED", platformKey = store.PlatformKey, platformRestaurantId = store.PlatformRestaurantId, closedReason = store.CloseReason() }, ct);
+        logger.LogInformation("{RemoteId} {State} on Talabat → {Status}", remoteId, wanted, result.Status);
+        return Results.Text(result.Body, "application/json", statusCode: result.Status);
+    }
+
+    /// <summary>The café's stack, by its slug and the key derived for it.</summary>
+    private static async Task<(Tenant? Tenant, IResult? Refused)> CallerAsync(HttpContext http, ControlContext context, PlatformOptions platform, CancellationToken ct)
+    {
+        if (!platform.Talabat.Configured || string.IsNullOrWhiteSpace(platform.EncryptionKey))
+            return (null, Results.StatusCode(StatusCodes.Status503ServiceUnavailable));
+
+        var slug = http.Request.Headers["X-Ninja-Tenant"].ToString();
+        if (!TalabatNaming.RelayKeyMatches(slug, platform.EncryptionKey, http.Request.Headers["X-Ninja-Relay-Key"].ToString()))
+            return (null, Results.Unauthorized());
+        var tenant = await context.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Slug == slug && t.Status != TenantStatus.Destroyed, ct);
+        return tenant is null ? (null, Results.Unauthorized()) : (tenant, null);
+    }
+
+    private static IResult NotOnTalabat() => Results.Conflict("The café has no chain at Talabat yet; the platform sets it from Talabat's onboarding.");
 
     /// <summary>Anything without the middleware's signature, or while the integration is off, is turned away.</summary>
     private static IResult? Refuse(HttpContext http, PlatformOptions platform)

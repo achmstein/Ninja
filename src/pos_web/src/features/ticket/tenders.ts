@@ -1,8 +1,8 @@
 import type { TranslationKey } from '@/lib/i18n'
 
 // PaymentTender enum values (Sales.Domain: Cash=0, Card=1, InstaPay=2,
-// Account=3, Online=4).
-export type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online'
+// Account=3, Online=4, Talabat=5).
+export type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online' | 'Talabat'
 
 type Tender = {
   value: number
@@ -40,4 +40,7 @@ export const tenderLabelKey: Record<string, TranslationKey> = {
   InstaPay: 'instapay',
   Account: 'account',
   Online: 'online',
+  // A Talabat order Talabat pays for: settled by the server when it lands,
+  // never offered on the till
+  Talabat: 'talabatTender',
 }

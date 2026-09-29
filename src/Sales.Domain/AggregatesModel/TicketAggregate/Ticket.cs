@@ -178,6 +178,10 @@ public class Ticket : Entity, IAggregateRoot
 
     private Bill ComputeBill(PricingRules rules)
     {
+        // The platform's price already holds the VAT, and there is no service
+        if (Platform is not null)
+            rules = new PricingRules(rules.VatRate, pricesIncludeVat: true, serviceChargeRate: 0m);
+
         var subtotal = GetSubtotal();
 
         // The bill discount comes off the menu money first: a percent follows
@@ -268,6 +272,22 @@ public class Ticket : Entity, IAggregateRoot
         {
             Label = CleanLabel(label),
         };
+
+    /// <summary>
+    /// A delivery platform's order, on a bill of its own named by the
+    /// platform's code. Its price is what the platform charged its customer,
+    /// VAT and all: VAT is shown out of it, never added on top, and nobody
+    /// here served it.
+    /// </summary>
+    public static Ticket OpenForPlatform(int branchId, string platform, string? code)
+        => new(TicketType.Counter, branchId)
+        {
+            Label = CleanLabel($"{platform} {code}"),
+            Platform = platform,
+        };
+
+    /// <summary>The delivery platform whose order this bill is ("Talabat"); null for every bill of the café's own.</summary>
+    public string? Platform { get; private set; }
 
     private static string? CleanLabel(string? label)
         => string.IsNullOrWhiteSpace(label) ? null : label.Trim();

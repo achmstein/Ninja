@@ -8,7 +8,8 @@ import '../models/order.dart';
 abstract class OrderRepository {
   Future<List<Order>> getPendingOrders();
   Future<bool> confirmOrder(int orderId, {String? requestId});
-  Future<bool> cancelOrder(int orderId, {String? requestId});
+  /// A delivery platform's order is turned down there too, for [platformReason]
+  Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason});
 
   /// "Nobody at the table": cancels a guest's order and turns their device
   /// away at this branch for the day
@@ -54,8 +55,12 @@ class ApiOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<bool> cancelOrder(int orderId, {String? requestId}) async {
-    await _api.put('cancel', data: {'orderNumber': orderId}, requestId: requestId);
+  Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason}) async {
+    await _api.put(
+      'cancel',
+      data: {'orderNumber': orderId, 'platformReason': ?platformReason},
+      requestId: requestId,
+    );
     return true;
   }
 

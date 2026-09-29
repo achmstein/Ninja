@@ -48,6 +48,42 @@ class KitchenOrderPart {
       );
 }
 
+/// What a delivery platform (Talabat) said about its order, as the kitchen
+/// needs it: the code to match the bag to the rider, how it leaves, and when
+/// the platform's rider comes. Nothing about money.
+class KitchenPlatform {
+  /// "Talabat"
+  final String name;
+  final String code;
+
+  /// "PlatformDelivery", "VendorDelivery" or "Pickup"
+  final String expedition;
+  final DateTime? riderPickupAt;
+
+  /// The platform cancelled it after the kitchen had it
+  final DateTime? cancelledAt;
+
+  const KitchenPlatform({
+    required this.name,
+    required this.code,
+    this.expedition = 'PlatformDelivery',
+    this.riderPickupAt,
+    this.cancelledAt,
+  });
+
+  static KitchenPlatform? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    return KitchenPlatform(
+      name: _text(json['name']) ?? '',
+      // The short code the rider asks for, when the platform sends one
+      code: _text(json['shortCode']) ?? _text(json['code']) ?? '',
+      expedition: _text(json['expedition']) ?? 'PlatformDelivery',
+      riderPickupAt: readUtc(json['riderPickupAt']),
+      cancelledAt: readUtc(json['cancelledAt']),
+    );
+  }
+}
+
 /// An order in the kitchen: `GET /api/orders/kitchen` returns the confirmed
 /// orders of the last day, oldest first. `readyAt` is the kitchen state —
 /// null while it is on the board, set once it is done. On a station's
@@ -70,6 +106,9 @@ class KitchenOrder {
   /// The stations the order is split between; empty on orders from before stations
   final List<KitchenOrderPart> parts;
 
+  /// A delivery platform's details; null on every other order
+  final KitchenPlatform? platform;
+
   const KitchenOrder({
     required this.orderNumber,
     required this.date,
@@ -82,6 +121,7 @@ class KitchenOrder {
     this.customerNote,
     this.items = const [],
     this.parts = const [],
+    this.platform,
   });
 
   /// The clock runs from confirmation — the moment the order reached the kitchen
@@ -102,6 +142,7 @@ class KitchenOrder {
         customerNote: customerNote,
         items: items,
         parts: parts,
+        platform: platform,
       );
 
   factory KitchenOrder.fromJson(Map<String, dynamic> json) => KitchenOrder(
@@ -120,6 +161,7 @@ class KitchenOrder {
         parts: [
           for (final part in (json['parts'] as List<dynamic>? ?? const [])) KitchenOrderPart.fromJson(part as Map<String, dynamic>),
         ],
+        platform: KitchenPlatform.parse(json['platform']),
       );
 }
 

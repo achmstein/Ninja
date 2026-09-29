@@ -14,6 +14,7 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { OrderDetailDialog } from './order-detail-dialog'
+import { PlatformBadge, PlatformHandover } from './platform-badge'
 import { orderUrgency, relativeTime, urgencyTextClass } from './status'
 import { useOrderActions } from './use-order-actions'
 import { useNowMs, usePendingOrders } from './use-pending-orders'
@@ -84,10 +85,23 @@ function PendingOrderCard({
           <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
           <span className='truncate text-base font-semibold'>{title}</span>
         </div>
-        <div className='text-muted-foreground mt-0.5 truncate text-sm'>
-          #{toNumber(order.orderNumber)}
-          {subtitle && ` · ${subtitle}`}
-        </div>
+        {order.platform ? (
+          <>
+            <div className='text-muted-foreground mt-0.5 flex items-center gap-2 text-sm'>
+              <span>#{toNumber(order.orderNumber)}</span>
+              <PlatformBadge platform={order.platform} />
+            </div>
+            <PlatformHandover
+              platform={order.platform}
+              className='text-muted-foreground mt-0.5 text-sm'
+            />
+          </>
+        ) : (
+          <div className='text-muted-foreground mt-0.5 truncate text-sm'>
+            #{toNumber(order.orderNumber)}
+            {subtitle && ` · ${subtitle}`}
+          </div>
+        )}
         {/* Its own line, so it never truncates away: a first-timer at a
             table is the thing to notice */}
         {history && (
@@ -177,9 +191,9 @@ export function PendingOrders({
           setOpenOrder(null)
           confirm(id)
         }}
-        onCancel={(id) => {
+        onCancel={(id, platformReason) => {
           setOpenOrder(null)
-          cancel(id)
+          cancel(id, platformReason)
         }}
         onRejectGuest={(id) => {
           setOpenOrder(null)

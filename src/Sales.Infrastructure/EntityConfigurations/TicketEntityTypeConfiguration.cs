@@ -36,6 +36,7 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Ignore(t => t.HasSession);
 
         builder.Property(t => t.Label).HasMaxLength(200);
+        builder.Property(t => t.Platform).HasMaxLength(20);
         // The customers who sat in the room, as a text array
         builder.Property(t => t.MemberIds);
         builder.Property(t => t.GuestPhone).HasMaxLength(30);

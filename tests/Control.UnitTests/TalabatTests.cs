@@ -84,6 +84,41 @@ public sealed class TalabatTests
         Assert.IsFalse(middleware.IsMiddlewareUrl("not a url"));
     }
 
+    [TestMethod]
+    public void The_talabat_store_is_picked_from_every_platform_the_branch_is_on()
+    {
+        const string body = """
+        [
+          { "availabilityState": "OPEN", "changeable": true, "platformKey": "FO_DE", "platformRestaurantId": "kg6y", "platformType": "FOODORA", "closingReasons": ["OTHER"] },
+          { "availabilityState": "CLOSED", "changeable": true, "platformKey": "TB", "platformRestaurantId": "123456789", "platformType": "TALABAT", "closingReasons": ["TOO_BUSY_KITCHEN", "CLOSED"] }
+        ]
+        """;
+
+        var store = TalabatStores.Pick(body)!;
+
+        Assert.AreEqual("TB", store.PlatformKey);
+        Assert.AreEqual("123456789", store.PlatformRestaurantId);
+        Assert.AreEqual("CLOSED", store.State);
+        Assert.AreEqual("CLOSED", store.CloseReason());
+        Assert.IsNull(TalabatStores.Pick("[]"));
+    }
+
+    [TestMethod]
+    public void A_store_that_does_not_take_closed_is_closed_for_its_first_reason()
+    {
+        var store = new TalabatStore("OPEN", true, "TB", "1", ["TOO_BUSY_KITCHEN"]);
+
+        Assert.AreEqual("TOO_BUSY_KITCHEN", store.CloseReason());
+        Assert.AreEqual("OTHER", new TalabatStore("OPEN", true, "TB", "1", []).CloseReason());
+    }
+
+    [TestMethod]
+    public void Egypt_is_talabats_old_otlob_market_and_the_gulf_is_tb()
+    {
+        Assert.AreEqual("HF_EG", TalabatNaming.DefaultGlobalEntity("EG"));
+        Assert.AreEqual("TB_AE", TalabatNaming.DefaultGlobalEntity("ae"));
+    }
+
     private static string Sign(string payload, string secret)
     {
         static string B64(byte[] b) => Convert.ToBase64String(b).TrimEnd('=').Replace('+', '-').Replace('/', '_');

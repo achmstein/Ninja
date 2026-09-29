@@ -286,4 +286,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get starting => 'Starting…';
+
+  @override
+  String get sourceTalabat => 'Talabat';
+
+  @override
+  String platformRiderAt(String time) {
+    return 'Rider at $time';
+  }
+
+  @override
+  String get platformCollect => 'Customer collects';
+
+  @override
+  String get platformOwnRider => 'Our rider';
+
+  @override
+  String get platformCancelled => 'Cancelled on Talabat';
 }

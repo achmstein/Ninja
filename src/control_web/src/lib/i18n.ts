@@ -204,6 +204,18 @@ const dictionary = {
   provisioned: "Provisioned",
   steps: "Steps",
   noSteps: "No run yet",
+  // Talabat, from its onboarding
+  talabat: "Talabat",
+  talabatHint: "From Talabat's onboarding: the café's chain there. Give Talabat the plugin URL and each branch's remote id.",
+  talabatNoAccount: "The platform has no Talabat account yet (TALABAT_* in the platform .env): nothing is sent or taken until it has.",
+  talabatChainCode: "Chain code",
+  talabatChainCodePlaceholder: "Not on Talabat",
+  talabatGlobalEntity: "Global entity",
+  talabatPluginUrl: "Plugin URL",
+  talabatRemoteId: "Remote id",
+  talabatRemoteIdHint: "One per branch, ending in the branch's number in the café's admin",
+  talabatSaved: "Talabat saved",
+  talabatSaveFailed: "Couldn't save Talabat",
   output: "Output",
   notFound: "Tenant not found",
 

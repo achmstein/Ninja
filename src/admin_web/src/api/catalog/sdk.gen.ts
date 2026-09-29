@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, CreatePromoData, CreatePromoErrors, CreatePromoResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, DeletePromoData, DeletePromoErrors, DeletePromoResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, ListPromosData, ListPromosErrors, ListPromosResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, QuotePromoData, QuotePromoErrors, QuotePromoResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SetPromoActiveData, SetPromoActiveErrors, SetPromoActiveResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UpdatePromoData, UpdatePromoErrors, UpdatePromoResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
+import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, CreatePromoData, CreatePromoErrors, CreatePromoResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, DeletePromoData, DeletePromoErrors, DeletePromoResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetTalabatData, GetTalabatErrors, GetTalabatResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, ListPromosData, ListPromosErrors, ListPromosResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, PreviewTalabatMenuData, PreviewTalabatMenuErrors, PreviewTalabatMenuResponses, PushTalabatMenuData, PushTalabatMenuErrors, PushTalabatMenuResponses, QuotePromoData, QuotePromoErrors, QuotePromoResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveTalabatData, SaveTalabatErrors, SaveTalabatResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SetPromoActiveData, SetPromoActiveErrors, SetPromoActiveResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UpdatePromoData, UpdatePromoErrors, UpdatePromoResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -582,5 +582,41 @@ export const setBranchItemOverride = <ThrowOnError extends boolean = false>(opti
 export const getBranchOverrides = <ThrowOnError extends boolean = false>(options: Options<GetBranchOverridesData, ThrowOnError>): RequestResult<GetBranchOverridesResponses, GetBranchOverridesErrors, ThrowOnError> => (options.client ?? client).get<GetBranchOverridesResponses, GetBranchOverridesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/catalog/branches/{branchId}/overrides',
+    ...options
+});
+
+/**
+ * Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused
+ */
+export const getTalabat = <ThrowOnError extends boolean = false>(options?: Options<GetTalabatData, ThrowOnError>): RequestResult<GetTalabatResponses, GetTalabatErrors, ThrowOnError> => (options?.client ?? client).get<GetTalabatResponses, GetTalabatErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/talabat',
+    ...options
+});
+
+/**
+ * Which branches sell on Talabat, and whether pausing one here closes it there; a branch newly on Talabat gets its menu sent
+ */
+export const saveTalabat = <ThrowOnError extends boolean = false>(options: Options<SaveTalabatData, ThrowOnError>): RequestResult<SaveTalabatResponses, SaveTalabatErrors, ThrowOnError> => (options.client ?? client).put<SaveTalabatResponses, SaveTalabatErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/talabat',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Send the menu to Talabat now: every branch on Talabat, or the one in X-Branch-Id (the platform's, when Talabat asks)
+ */
+export const pushTalabatMenu = <ThrowOnError extends boolean = false>(options?: Options<PushTalabatMenuData, ThrowOnError>): RequestResult<PushTalabatMenuResponses, PushTalabatMenuErrors, ThrowOnError> => (options?.client ?? client).post<PushTalabatMenuResponses, PushTalabatMenuErrors, ThrowOnError>({ url: '/api/catalog/talabat/push', ...options });
+
+/**
+ * Exactly what Talabat would be sent for a branch
+ */
+export const previewTalabatMenu = <ThrowOnError extends boolean = false>(options: Options<PreviewTalabatMenuData, ThrowOnError>): RequestResult<PreviewTalabatMenuResponses, PreviewTalabatMenuErrors, ThrowOnError> => (options.client ?? client).get<PreviewTalabatMenuResponses, PreviewTalabatMenuErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/talabat/preview/{branchId}',
     ...options
 });

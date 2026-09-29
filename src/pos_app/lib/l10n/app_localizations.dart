@@ -2906,6 +2906,12 @@ abstract class AppLocalizations {
   /// **'Online'**
   String get onlineTender;
 
+  /// No description provided for @talabatTender.
+  ///
+  /// In en, this message translates to:
+  /// **'Talabat'**
+  String get talabatTender;
+
   /// No description provided for @onlinePayments.
   ///
   /// In en, this message translates to:
@@ -2989,6 +2995,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guests paid part online; take the rest here.'**
   String get settleRemainingOnly;
+
+  /// No description provided for @sourceTalabat.
+  ///
+  /// In en, this message translates to:
+  /// **'Talabat'**
+  String get sourceTalabat;
+
+  /// No description provided for @platformRiderAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider at {time}'**
+  String platformRiderAt(String time);
+
+  /// No description provided for @platformCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer collects'**
+  String get platformCollect;
+
+  /// No description provided for @platformOwnRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Our rider'**
+  String get platformOwnRider;
+
+  /// No description provided for @platformCollectCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect {amount}'**
+  String platformCollectCash(String amount);
+
+  /// No description provided for @platformCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled on Talabat'**
+  String get platformCancelled;
+
+  /// No description provided for @platformRejectReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Why? Talabat tells the customer'**
+  String get platformRejectReason;
+
+  /// No description provided for @rejectTooBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Too busy'**
+  String get rejectTooBusy;
+
+  /// No description provided for @rejectItemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Item sold out'**
+  String get rejectItemUnavailable;
+
+  /// No description provided for @rejectClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get rejectClosed;
+
+  /// No description provided for @rejectNoCourier.
+  ///
+  /// In en, this message translates to:
+  /// **'No rider available'**
+  String get rejectNoCourier;
+
+  /// No description provided for @rejectOutsideArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside delivery area'**
+  String get rejectOutsideArea;
+
+  /// No description provided for @rejectPrank.
+  ///
+  /// In en, this message translates to:
+  /// **'Prank order'**
+  String get rejectPrank;
 }
 
 class _AppLocalizationsDelegate

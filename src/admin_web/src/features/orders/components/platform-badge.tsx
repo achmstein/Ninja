@@ -2,11 +2,42 @@ import { Bike, Store, TriangleAlert } from 'lucide-react'
 import { type PlatformOrderView } from '@/api/ordering'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { formatEgp } from '../status'
+import { Button } from '@/components/ui/button'
+import { formatEgp, platformRejectReasons } from '../status'
 
 /** The delivery platforms whose own mark we show; anything else falls back to its name. */
 const platformLogos: Record<string, string> = {
   Talabat: `${import.meta.env.BASE_URL}platforms/talabat.svg`,
+}
+
+/** One tap picks why a platform's order is turned down. */
+export function PlatformRejectReasonPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  return (
+    <div className='flex flex-col gap-2'>
+      <span className='text-muted-foreground text-sm'>{t('platformRejectReason')}</span>
+      <div className='flex flex-wrap gap-2'>
+        {platformRejectReasons.map((r) => (
+          <Button
+            key={r.value}
+            type='button'
+            size='sm'
+            variant={value === r.value ? 'default' : 'outline'}
+            aria-pressed={value === r.value}
+            onClick={() => onChange(r.value)}
+          >
+            {t(r.key)}
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /**

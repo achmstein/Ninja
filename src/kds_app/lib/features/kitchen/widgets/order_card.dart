@@ -9,6 +9,9 @@ import '../status.dart';
 import 'dish_line.dart';
 import 'elapsed_ring.dart';
 
+/// The delivery platforms whose own mark we show; anything else falls back to its name
+const _platformLogos = {'Talabat': 'assets/images/talabat.png'};
+
 /// One order as a kitchen ticket, as kds_web's order-card and the way every
 /// kitchen display lays one out:
 ///
@@ -89,6 +92,19 @@ class OrderCard extends StatelessWidget {
             ? ''
             : l10n.walkIn;
 
+    // A delivery platform's order: its logo and the code the rider asks for,
+    // big enough to match the bag to the rider across the pass, and how it leaves
+    final platform = order.platform;
+    final riderAt = platform?.riderPickupAt == null
+        ? null
+        : MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(platform!.riderPickupAt!.toLocal()));
+    final handover = switch (platform?.expedition) {
+      null => null,
+      'Pickup' => l10n.platformCollect,
+      'VendorDelivery' => l10n.platformOwnRider,
+      _ => riderAt == null ? null : l10n.platformRiderAt(riderAt),
+    };
+
     // One station is the whole order; the split is only worth showing past that
     final parts = showParts && order.parts.length > 1 ? order.parts : const <KitchenOrderPart>[];
 
@@ -151,7 +167,9 @@ class OrderCard extends StatelessWidget {
                             ? const SizedBox.shrink()
                             : Align(
                                 alignment: AlignmentDirectional.centerStart,
-                                child: _chip(theme, icon: placeIcon, label: channel),
+                                child: platform != null
+                                    ? _platformChip(theme, platform)
+                                    : _chip(theme, icon: placeIcon, label: channel),
                               ),
                       ),
                     ),
@@ -175,6 +193,29 @@ class OrderCard extends StatelessWidget {
                     style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, height: 1.25),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (handover != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike, size: 16, color: theme.colors.foreground),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text(handover, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500))),
+                    ],
+                  ),
+                ],
+                if (platform?.cancelledAt != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(FIcons.triangleAlert, size: 16, color: theme.colors.destructive),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(l10n.platformCancelled,
+                            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+                      ),
+                    ],
                   ),
                 ],
                 if (parts.isNotEmpty) ...[
@@ -274,6 +315,45 @@ class OrderCard extends StatelessWidget {
             const SizedBox(width: 4),
             Flexible(
               child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.foreground), overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A delivery platform's chip: its own logo, then the code large, as the
+  /// rider will say it
+  Widget _platformChip(FThemeData theme, KitchenPlatform platform) {
+    final logo = _platformLogos[platform.name];
+    return FBadge.raw(
+      variant: FBadgeVariant.outline,
+      style: FBadgeStyleDelta.delta(decoration: BoxDecorationDelta.delta(color: theme.colors.background)),
+      builder: (context, style) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (logo != null)
+              Image.asset(logo, height: 16, semanticLabel: platform.name)
+            else
+              Text(platform.name, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Text(
+                  platform.code,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colors.foreground,
+                    fontFamily: 'monospace',
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    height: 1.2,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

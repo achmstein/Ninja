@@ -1581,6 +1581,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlineTender => 'Online';
 
   @override
+  String get talabatTender => 'Talabat';
+
+  @override
   String get onlinePayments => 'Paid online';
 
   @override
@@ -1628,4 +1631,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settleRemainingOnly =>
       'Guests paid part online; take the rest here.';
+
+  @override
+  String get sourceTalabat => 'Talabat';
+
+  @override
+  String platformRiderAt(String time) {
+    return 'Rider at $time';
+  }
+
+  @override
+  String get platformCollect => 'Customer collects';
+
+  @override
+  String get platformOwnRider => 'Our rider';
+
+  @override
+  String platformCollectCash(String amount) {
+    return 'Collect $amount';
+  }
+
+  @override
+  String get platformCancelled => 'Cancelled on Talabat';
+
+  @override
+  String get platformRejectReason => 'Why? Talabat tells the customer';
+
+  @override
+  String get rejectTooBusy => 'Too busy';
+
+  @override
+  String get rejectItemUnavailable => 'Item sold out';
+
+  @override
+  String get rejectClosed => 'Closed';
+
+  @override
+  String get rejectNoCourier => 'No rider available';
+
+  @override
+  String get rejectOutsideArea => 'Outside delivery area';
+
+  @override
+  String get rejectPrank => 'Prank order';
 }
