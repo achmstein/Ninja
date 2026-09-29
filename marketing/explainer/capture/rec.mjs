@@ -72,8 +72,10 @@ export async function pointer(ctx, kind) {
   }, kind);
 }
 
-/** Captures full-density screenshots in a loop until stop() */
-export async function capture(page, scale = 2) {
+/** Captures full-density screenshots in a loop until stop().
+ *  `viewport: true` is for pages that scroll: a clip is measured on the document, so it follows the
+ *  page's scroll position frame by frame (without a clip the shot would come at 1x). */
+export async function capture(page, scale = 2, { viewport = false } = {}) {
   const cdp = await page.context().newCDPSession(page);
   const vp = page.viewportSize(), clip = { x: 0, y: 0, width: vp.width, height: vp.height, scale };
   const frames = []; let on = true;
@@ -81,6 +83,7 @@ export async function capture(page, scale = 2) {
     while (on) {
       try {
         const t = now();
+        if (viewport) { const { cssVisualViewport: v } = await cdp.send('Page.getLayoutMetrics'); clip.x = v.pageX; clip.y = v.pageY; }
         const r = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 90, optimizeForSpeed: true, clip });
         frames.push({ t: (t + now()) / 2, data: Buffer.from(r.data, 'base64') });
       } catch { await new Promise(r => setTimeout(r, 30)); }

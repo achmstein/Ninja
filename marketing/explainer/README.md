@@ -57,6 +57,34 @@ Captions live in `index.html` (English in the markup, Arabic in the `AR` table).
 - **Story, 60 s, easy for guests and for the café:** your brand (logo and colours set on the admin Brand page, the phone preview changes live) → order from the table (Tiles) → book a room (its reservation effect) → ask for a new controller from the room → pay the bill (pay fully / split) → loyalty points → the till confirms → the kitchen → AI menu scan → AI recipes (Menu → Track items → Propose recipes) → stock from a supplier's receipt photo (Stock → Receive → Scan receipt, `assets/supplier-receipt.jpg`) → menu cost. No English/Arabic scene.
 - `capture/cafe.mjs` records the recipes and receipt scenes (`node capture/cafe.mjs recipes,receive`).
 
+## v2: the 60-second cut (index-v2.html)
+
+Arabic first, Chillax's own brand, told as one evening in Egyptian Arabic: the café's look (logo, menu style, dock colours) → a guest orders at Table 3 without an account → the till confirms → the kitchen marks it ready → friends book a room → a controller asked for from the room → the bill split equally → loyalty points. No admin on screen; the AI scenes (menu scan, recipes, receipt, and menu cost which needs them) are left out while the local Gemini key is the free tier.
+
+### On any machine
+
+Needs: the dev stack running (`dotnet run --project src/Ninja.AppHost/Ninja.AppHost.csproj`, Docker), Node with Playwright's Chromium (`npx playwright install chromium`), Python with `pip install imageio-ffmpeg`, and internet for the fonts and GSAP the page loads. From `marketing/explainer`:
+
+```
+node capture/signin.mjs ar       # once per machine: the till, kitchen, admin and customer (tester@chillax.site) sessions
+node capture/v2.mjs all ar       # prep, every scene, then the render → ninja-explainer-v2-ar.mp4 (about 25 minutes)
+```
+
+`prep` puts the local stack in the state the cut needs, nothing recorded: the tester renamed Sherif Elhout in Keycloak (the admin password comes from `KEYCLOAK_ADMIN_PASSWORD` or the AppHost secret `Parameters:keycloak-password`); both wide logos (`src/client_app/assets/images/logo.png`, `assets/chillax-logo-ar.png`), the card grid, the black dock and online payments saved; any room the tester holds or plays in closed at the till, and requests left by earlier takes marked done; the tester's phone on file and a Table 3 bill of theirs to split. It can be run again at any time.
+
+One scene again: `node capture/v2.mjs order ar` (scenes: `prep`, `brandphone`, `order`, `book`, `controller`, `pay`, `loyalty`); `book` and `controller` belong together (the hold lasts 10 minutes), so re-run them as a pair after `prep`. Then `node render.mjs --page index-v2.html --lang ar` (`--stills 9.6,22` for check frames). `pay` stops at the split and pays nothing, so it repeats cleanly.
+
+### What the scripts work around
+
+- **The brand scene** frames the real customer app in a harness page on its own origin and posts theme drafts to it (the app paints drafts only for a page that frames it, as in the admin's live preview); the logo cannot be drafted, so `brandphone-a` is the same screen before it and the page crossfades the two.
+- **Cached brands:** the saved sessions carry an old copy of the brand; each app starts without it, so it paints what is saved now.
+- **Room clocks** are recorded with the page's `Date` left real (they run fast but smoothly; a slowed `Date` made them jump).
+- **The guest's order** is placed without an account so it stays on Table 3 (a signed-in customer with a room in play orders to the room).
+- **The music** (`music-v2.mp3`) is `music.mp3` with its 2-second break cut out and the end extended, gapless for the whole minute; v2 renders use it by default.
+- **The Arabic logo** is set in IBM Plex Sans Arabic Bold by `capture/mklogo-ar.mjs`.
+
+A UI change is picked up by recording again; a renamed button, a new step or a moved route needs that scene's selectors in `capture/v2.mjs` updated, and a scene whose length changes a lot its timing in `index-v2.html`.
+
 ## Known local issues
 
 - **Identity behind the gateway answers 502** when Windows has reserved its HTTPS port (7260 inside `netsh int ipv4 show excludedportrange protocol=tcp`). Booking, joining a room (the controller request) and the profile's phone number all need it. Fix: `net stop winnat; net start winnat` in an admin terminal, then restart `identity-api` from the Aspire dashboard.

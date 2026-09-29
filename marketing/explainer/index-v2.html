@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Explainer v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Original+Surfer&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<!--
+  Ninja in 60 seconds (v2), 1920x1080, from real recordings of the apps (clips/, recorded by
+  capture/v2.mjs against the local stack, Chillax's own brand). One GSAP timeline drives the page
+  and every clip, so window.__seek(t) renders an exact frame; `node render.mjs --page index-v2.html`
+  turns it into an MP4. Story: your brand → order at the table → the till → the kitchen → book a
+  room → a controller from the room → pay or split → loyalty points. Arabic first (?lang=en for English).
+  The camera leans into each app where the feature happens, quietly (power2 in/out, no bounce).
+-->
+<style>
+:root {
+  --page: #f4f5f7;
+  --ink: #0b1020;
+  --muted: #5b6477;
+  --hair: rgb(11 16 32 / 0.08);
+  --lift: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 40px 80px -32px rgb(11 16 32 / 0.28);
+  --font: 'Inter', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; margin: -540px 0 0 -960px; background: var(--page); overflow: hidden; }
+.scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+
+.mark { display: block; }
+.wordmark { font-family: 'Original Surfer', 'Inter', sans-serif; font-weight: 400; line-height: 1; direction: ltr; }
+#corner { position: absolute; left: 96px; top: 64px; display: flex; align-items: center; gap: 14px; opacity: 0; z-index: 5; }
+#corner .mark { width: 56px; height: 56px; }
+#corner .wordmark { font-size: 42px; }
+
+/* captions: a numbered step, a heavy headline, a quiet line under it */
+.cap { position: absolute; left: 110px; top: 0; bottom: 0; width: 660px; display: flex; flex-direction: column; justify-content: center; }
+.step { font-size: 24px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+.step b { display: inline-grid; place-items: center; min-width: 44px; height: 44px; padding: 0 12px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 19px; font-weight: 800; font-family: 'Inter', sans-serif; }
+.h { font-size: 62px; line-height: 1.06; font-weight: 800; letter-spacing: -0.035em; }
+.sub { margin-top: 26px; font-size: 28px; line-height: 1.5; color: var(--muted); font-weight: 500; max-width: 560px; }
+
+/* devices: plain frames, the apps are the colour; .cam is what the camera moves */
+.cam { width: 100%; height: 100%; transform-origin: 50% 50%; will-change: transform; }
+.cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phone { position: absolute; top: 102px; width: 414px; height: 876px; padding: 11px; border-radius: 62px; background: #0b0d12; box-shadow: var(--lift), inset 0 0 0 2px #262a33; }
+.phone .scr { position: relative; width: 100%; height: 100%; border-radius: 51px; overflow: hidden; background: #fff; }
+.tablet { position: absolute; left: 700px; top: 184px; width: 1120px; height: 711px; padding: 14px; border-radius: 34px; background: #0b0d12; box-shadow: var(--lift), inset 0 0 0 2px #262a33; }
+.tablet .scr { width: 100%; height: 100%; border-radius: 22px; overflow: hidden; background: #fff; }
+.window { position: absolute; left: 700px; top: 190px; width: 1120px; height: 700px; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: var(--lift), 0 0 0 1px var(--hair); }
+
+.center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.center .mark { width: 120px; height: 120px; }
+.center .wordmark { font-size: 120px; margin-top: 22px; }
+.center .line { margin-top: 34px; font-size: 60px; font-weight: 800; letter-spacing: -0.035em; }
+.center .small { margin-top: 18px; font-size: 28px; color: var(--muted); font-weight: 500; }
+.pill { margin-top: 44px; height: 76px; padding: 0 40px; border-radius: 999px; background: var(--ink); color: #fff; display: inline-grid; place-items: center; font-size: 28px; font-weight: 700; font-family: 'Inter', sans-serif; direction: ltr; }
+
+/* Arabic: Cairo, right to left, captions on the right and the devices on the left */
+body.ar { --font: 'IBM Plex Sans Arabic', 'Inter', sans-serif; }
+body.ar .h { font-weight: 700; letter-spacing: 0; line-height: 1.32; font-size: 66px; }
+body.ar .center .line { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+body.ar .step { font-weight: 600; }
+body.ar .sub { line-height: 1.6; }
+body.ar .step b { font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 22px; font-weight: 700; }
+body.ar .cap { left: auto; right: 110px; }
+/* beside the wide screens (admin, till, kitchen) the caption keeps clear of them */
+.scene:has(.tablet, .window) .cap { width: 560px; }
+body.ar #corner { left: auto; right: 96px; }
+body.ar .tablet, body.ar .window { left: 100px; }
+
+/* motion: drifting colour fields and grain behind everything, depth for the devices */
+#bg { position: absolute; inset: 0; overflow: hidden; }
+.blob { position: absolute; width: 1100px; height: 1100px; border-radius: 50%; }
+.blob.a { left: -200px; top: -380px; background: radial-gradient(circle, rgb(99 102 241 / .16) 0%, transparent 62%); }
+.blob.b { right: -260px; top: 180px; background: radial-gradient(circle, rgb(245 158 11 / .13) 0%, transparent 62%); }
+.blob.c { left: 520px; bottom: -620px; background: radial-gradient(circle, rgb(20 184 166 / .12) 0%, transparent 62%); }
+#grain { position: absolute; inset: 0; pointer-events: none; z-index: 8; opacity: .06; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.scene { perspective: 1800px; }
+.phone, .tablet, .window { transform-style: preserve-3d; will-change: transform, filter; }
+/* kinetic type: each word rises out of its own mask; [marked] words get a marker sweep */
+.wm { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.04em 0.02em 0.16em; margin: -0.04em -0.02em -0.16em; }
+.w { display: inline-block; will-change: transform, filter; }
+.hl .w { background-image: linear-gradient(rgb(250 204 21 / .55), rgb(250 204 21 / .55)); background-repeat: no-repeat; background-position: 0 88%; background-size: 0% 0.34em; }
+body.ar .hl .w { background-position: 100% 88%; }
+.ch { display: inline-block; }
+/* callout chips: frosted pills that pop in when the feature happens */
+.chip { position: absolute; z-index: 6; display: flex; align-items: center; gap: 14px; padding: 12px 24px 12px 12px; border-radius: 999px;
+  background: rgb(255 255 255 / .74); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgb(255 255 255 / .9);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .05), 0 24px 60px -24px rgb(11 16 32 / .45); font-size: 27px; font-weight: 700; white-space: nowrap; opacity: 0; }
+body.ar .chip { padding: 12px 12px 12px 24px; }
+.chip i { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: #fff; }
+.chip svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#controls { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgb(11 16 32 / .88); z-index: 10; font: 600 14px Inter, sans-serif; color: #fff; }
+#controls button { border: 0; background: #fff; color: #0b1020; font: 700 14px Inter, sans-serif; height: 34px; padding: 0 16px; border-radius: 999px; cursor: pointer; }
+#controls input { width: min(50vw, 520px); accent-color: #fff; }
+#controls .t { font-variant-numeric: tabular-nums; min-width: 88px; text-align: right; }
+body.render #controls { display: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
+  <div id="grain"></div>
+  <div id="corner"><svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg><span class="wordmark">ninja</span></div>
+
+  <section class="scene" id="s0">
+    <div class="center">
+      <svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg>
+      <div class="wordmark">ninja</div>
+      <div class="line" data-i18n="intro">Let us tell you about a night at your café.</div>
+    </div>
+  </section>
+
+  <section class="scene" id="s1">
+    <div class="cap"><div class="h" data-i18n="s1h">Before you open, [you set the place up your way].</div>
+      <div class="sub" data-i18n="s1sub">Your logo, your colours, your menu's look, exactly as guests will see it on their phones.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam1"><video id="b1a" data-clip="brandphone-a" muted playsinline preload="auto"></video><video id="b1b" data-clip="brandphone-b" muted playsinline preload="auto" style="position:absolute;inset:0;opacity:0"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s2">
+    <div class="cap"><div class="h" data-i18n="s2h">8 pm: a guest sits down and [orders from their phone].</div>
+      <div class="sub" data-i18n="s2sub">Scans the code, picks from the photos, sends. No app to download.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam2"><video data-clip="phone-order" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s3">
+    <div class="cap"><div class="h" data-i18n="s3h">That same second, [the till knows].</div>
+      <div class="sub" data-i18n="s3sub">One tap, and the order is confirmed.</div></div>
+    <div class="tablet"><div class="scr"><div class="cam" id="cam3"><video data-clip="pos-confirm" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s4">
+    <div class="cap"><div class="h" data-i18n="s4h">And the kitchen [gets on it] straight away.</div>
+      <div class="sub" data-i18n="s4sub">Every ticket in front of them on its clock until it's out.</div></div>
+    <div class="tablet"><div class="scr" style="background:#02061a"><div class="cam" id="cam4"><video data-clip="kds" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s5">
+    <div class="cap"><div class="h" data-i18n="s5h">Friends call, [so they book a room] from their seat.</div>
+      <div class="sub" data-i18n="s5sub">The room waits for them, the clock running until they arrive.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam5"><video data-clip="phone-book" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s6">
+    <div class="cap"><div class="h" data-i18n="s6h">Mid-match, [they need another controller].</div>
+      <div class="sub" data-i18n="s6sub">One tap on the phone, and the controller is on its way.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam6"><video data-clip="phone-controller" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s7">
+    <div class="cap"><div class="h" data-i18n="s7h">At the end of the night, [everyone pays their share].</div>
+      <div class="sub" data-i18n="s7sub">The bill split evenly and paid online, no waiting for the check.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam7"><video data-clip="phone-pay" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s8">
+    <div class="cap"><div class="h" data-i18n="s8h">And it won't be the last time, [thanks to the points].</div>
+      <div class="sub" data-i18n="s8sub">Every order earns points to spend on the next visit.</div></div>
+    <div class="phone pl"><div class="scr"><div class="cam" id="cam8"><video data-clip="phone-loyalty" muted playsinline preload="auto"></video></div></div></div>
+  </section>
+
+  <section class="scene" id="s9">
+    <div class="center">
+      <svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg>
+      <div class="wordmark">ninja</div>
+      <div class="line" data-i18n="end">Every night at your café, [in one place].</div>
+      <div class="small" data-i18n="endsub">Menu, orders, rooms, till, kitchen, payments and loyalty.</div>
+      <div class="pill">ninjapp.net</div>
+    </div>
+  </section>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="nmark">
+      <rect width="64" height="64" rx="14" fill="#18181b"/>
+      <path fill="#fafafa" d="M49.03 14.8Q49.03 14.8 49.03 15.77Q49.03 16.74 48.99 18.44Q48.96 20.13 48.88 22.42Q48.81 24.72 48.68 27.38Q48.55 30.05 48.35 32.93Q48.16 35.82 47.85 38.69Q47.55 41.56 47.16 44.29Q46.78 47.02 46.24 49.35L41.61 49.54Q40.4 47.72 38.9 45.42Q37.39 43.12 35.76 40.58Q34.12 38.05 32.44 35.42Q30.75 32.79 29.2 30.32Q25.54 24.52 21.66 18.36Q21.54 24.96 21.49 30.92Q21.47 33.47 21.47 36.11Q21.47 38.75 21.48 41.2Q21.49 43.65 21.55 45.76Q21.61 47.87 21.71 49.35L16.55 50Q16.16 47.96 15.89 45.37Q15.62 42.78 15.44 39.92Q15.26 37.05 15.16 34.08Q15.07 31.12 15.02 28.3Q14.92 21.73 15.02 14.75L24.69 14L42.02 44.08Q42.29 40.93 42.34 37.31Q42.39 33.68 42.25 29.83Q42.12 25.98 41.81 22.02Q41.49 18.07 41.03 14.24Z"/>
+    </g>
+  </defs>
+</svg>
+
+<div id="controls">
+  <button id="play">Play</button>
+  <input id="scrub" type="range" min="0" max="60" step="0.01" value="0">
+  <span class="t" id="clock">0.0 / 60.0</span>
+</div>
+
+<script>
+const DURATION = 60;
+const qs = new URLSearchParams(location.search);
+const render = qs.has('render');
+const LANG = qs.get('lang') === 'en' ? 'en' : 'ar';
+if (render) document.body.classList.add('render');
+
+function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); document.getElementById('stage').style.transform = `scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* ---- words (English in the markup, Arabic here) ---- */
+const AR = {
+  intro: 'تعالى نحكيلك ليلة في الكافيه بتاعك.',
+  s1h: 'قبل ما تفتح، [بتظبّط المكان على ذوقك].', s1sub: 'لوجوك، ألوانك، وشكل المنيو… وعملائك يشوفوه كده على موبايلهم.',
+  s2h: 'الساعة ٨، عميل قعد و[طلب من موبايله].', s2sub: 'مسح الكود، اختار من الصور وبعت. من غير ما ينزّل أي أبلكيشن.',
+  s3h: 'وفي لحظتها، [الكاشير عرف].', s3sub: 'ضغطة واحدة، والطلب اتأكد.',
+  s4h: 'والمطبخ [ابتدى يحضّر] على طول.', s4sub: 'كل طلب قدامهم بعدّاده، لحد ما يطلع.',
+  s5h: 'صحابه كلموه، [فحجز أوضة] من مكانه.', s5sub: 'الأوضة مستنياهم، والعدّاد شغّال لحد ما يوصلوا.',
+  s6h: 'وفي نص الماتش، [عايزين دراع كمان].', s6sub: 'ضغطة من الموبايل، والدراع في الطريق.',
+  s7h: 'وآخر الليلة، [كل واحد دفع نصيبه].', s7sub: 'الحساب اتقسم بالتساوي واتدفع أونلاين، من غير ما حد يستنى الشيك.',
+  s8h: 'ومش هتبقى آخر مرة، [عشان النقط].', s8sub: 'كل طلب بيجمّعله نقط، يستبدلها في الزيارة الجاية.',
+  end: 'كل ليلة في الكافيه، [في مكان واحد].', endsub: 'المنيو، الطلبات، الأوض، الكاشير، المطبخ، الدفع، والولاء.',
+};
+const toArabicDigits = s => s.replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+if (LANG === 'ar') {
+  document.body.classList.add('ar'); document.getElementById('stage').dir = 'rtl';
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = AR[el.dataset.i18n]; if (v) el.textContent = v; });
+  document.querySelectorAll('.step b').forEach(b => b.textContent = toArabicDigits(b.textContent));
+} else document.documentElement.lang = 'en';
+// the phones sit opposite the captions
+document.querySelectorAll('.phone.pl').forEach(p => p.style.left = (LANG === 'ar' ? 1920 - 1150 - 414 : 1150) + 'px');
+
+/* ---- clips: pieces of a recording, [from, to] seconds at `rate`, starting at `at` on the timeline ---- */
+const videos = [...document.querySelectorAll('video[data-clip]')];
+videos.forEach(v => { v.src = `clips/${v.dataset.clip}-${LANG}.webm`; });
+const V = sel => document.querySelector(sel);
+const plan = [];
+function clip(video, ...pieces) { plan.push({ video, pieces }); }
+const pieceLen = s => (s.to - s.from) / (s.rate || 1);
+function localTime(p, t) {
+  for (const s of p.pieces) if (t >= s.at && t < s.at + pieceLen(s)) return s.from + (t - s.at) * (s.rate || 1);
+  if (t < p.pieces[0].at) return p.pieces[0].from;
+  return p.pieces[p.pieces.length - 1].to - 0.04;
+}
+/** Pieces laid end to end from `at`: [[from, to, rate], ...] */
+function run(video, at, parts) {
+  const pieces = []; let t = at;
+  for (const [from, to, rate = 1] of parts) { pieces.push({ at: t, from, to, rate }); t += (to - from) / rate; }
+  clip(video, ...pieces); return t;
+}
+
+/* ---- timeline ---- */
+gsap.defaults({ ease: 'expo.out', duration: 0.7 });
+const tl = gsap.timeline({ paused: true });
+const RTL = LANG === 'ar';
+// Right to left the screens mirror too: what sits on the left in English sits on the right in Arabic
+const X = x => RTL ? x : 100 - x;
+
+/* Kinetic type: words (Arabic letters must stay joined, so never letters) in masks; [..] marks the marker's phrase */
+function kinetic(el) {
+  const raw = el.textContent.trim(); el.textContent = ''; let on = false;
+  raw.split(/\s+/).forEach((tok, i) => {
+    const hl = on || tok.includes('[');
+    if (tok.includes('[')) on = true;
+    if (tok.includes(']')) on = false;
+    const wm = document.createElement('span'); wm.className = 'wm' + (hl ? ' hl' : '');
+    const w = document.createElement('span'); w.className = 'w'; w.textContent = tok.replace(/[\[\]]/g, '');
+    wm.appendChild(w); if (i) el.appendChild(document.createTextNode(' ')); el.appendChild(wm);
+  });
+}
+document.querySelectorAll('.h, .center .line').forEach(kinetic);
+document.querySelectorAll('.wordmark').forEach(el => { el.innerHTML = [...el.textContent].map(c => `<span class="wm"><span class="ch">${c}</span></span>`).join(''); });
+
+function show(id, at) { tl.set(id, { visibility: 'visible' }, at).fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' }, at); }
+const blurIn = (sel, at, y = 18, blur = 6, d = 0.8) =>
+  tl.fromTo(sel, { opacity: 0, y, filter: `blur(${blur}px)` }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: d }, at);
+/** Words rise out of their masks one after another, then the marker sweeps under the phrase */
+function wordsIn(sel, at, stagger = 0.07) {
+  tl.fromTo(`${sel} .w`, { yPercent: 115, opacity: 0, filter: 'blur(8px)' }, { yPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, ease: 'expo.out', stagger }, at);
+  const n = document.querySelectorAll(`${sel} .w`).length;
+  if (document.querySelector(`${sel} .hl`))
+    tl.fromTo(`${sel} .hl .w`, { backgroundSize: '0% 0.34em' }, { backgroundSize: '100% 0.34em', duration: 0.45, ease: 'power2.out', stagger: 0.14 }, at + n * stagger + 0.35);
+}
+function capIn(scope, at) {
+  wordsIn(`${scope} .h`, at + 0.1);
+  blurIn(`${scope} .sub`, at + 0.75, 16, 4);
+}
+function capOut(scope, at) {
+  tl.to(`${scope} .h .w`, { yPercent: -115, opacity: 0, filter: 'blur(6px)', duration: 0.38, ease: 'power2.in', stagger: 0.025 }, at)
+    .to(`${scope} .sub`, { opacity: 0, y: -14, filter: 'blur(4px)', duration: 0.32, ease: 'power2.in' }, at);
+}
+/** Devices swing in from a 3D tilt facing the caption, drift while on screen, and leave by zooming through */
+function deviceIn(sel, at, end) {
+  const ry = RTL ? 14 : -14;
+  tl.fromTo(sel, { opacity: 0, rotateY: ry, rotateX: 6, y: 70, z: -120, scale: 0.94, filter: 'blur(6px)' },
+    { opacity: 1, rotateY: 0, rotateX: 0, y: 0, z: 0, scale: 1, filter: 'blur(0px)', duration: 1.4, ease: 'expo.out' }, at);
+  tl.to(sel, { y: -8, rotateY: ry * 0.08, rotateX: -1, duration: Math.max(1, end - at - 1.5), ease: 'sine.inOut' }, at + 1.4);
+  tl.to(sel, { scale: 1.05, opacity: 0, filter: 'blur(8px)', duration: 0.4, ease: 'power2.in' }, end - 0.1);
+}
+const ICON = {
+  spark: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M10 2h4"/>',
+  pad: '<rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4"/><path d="M15 12h.01M18 10h.01"/>',
+  split: '<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.17-2.87L3 3"/><path d="m15 9 6-6"/>',
+  star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+};
+/** A frosted chip that pops in with a spring beside the device when the feature happens; `side` is px from the device's edge of the stage */
+function chip(n, at, icon, ar, en, { side, top }) {
+  const el = document.createElement('div'); el.className = 'chip';
+  el.innerHTML = `<i><svg viewBox="0 0 24 24">${ICON[icon]}</svg></i><span>${RTL ? ar : en}</span>`;
+  el.style[RTL ? 'left' : 'right'] = side + 'px'; el.style.top = top + 'px';
+  document.getElementById('s' + n).appendChild(el);
+  tl.fromTo(el, { opacity: 0, scale: 0.55, y: 26, filter: 'blur(8px)' }, { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)', duration: 0.85, ease: 'back.out(1.9)' }, at)
+    .to(el, { y: -10, duration: 2.2, ease: 'sine.inOut' }, at + 0.85);
+}
+/** A scene: kinetic caption, a device in 3D, its exit, the scene hidden once all has left */
+function scene(n, at, end, device) {
+  show(`#s${n}`, at); capIn(`#s${n}`, at + 0.05); deviceIn(`#s${n} ${device}`, at, end);
+  capOut(`#s${n}`, end - 0.3);
+  tl.to(`#s${n} .chip`, { opacity: 0, scale: 0.9, filter: 'blur(6px)', duration: 0.3, ease: 'power2.in' }, end - 0.2);
+  tl.set(`#s${n}`, { visibility: 'hidden' }, end + 0.36);
+}
+// the colour fields drift through the whole minute
+tl.to('.blob.a', { x: 520, y: 260, duration: DURATION, ease: 'sine.inOut' }, 0)
+  .to('.blob.b', { x: -600, y: -220, duration: DURATION, ease: 'sine.inOut' }, 0)
+  .to('.blob.c', { x: 380, y: -300, duration: DURATION, ease: 'sine.inOut' }, 0);
+/** The mark pops, the wordmark's letters rise, the line's words follow */
+function brandIn(id, at) {
+  tl.fromTo(`${id} .mark`, { opacity: 0, scale: 0.3, rotate: -14, filter: 'blur(10px)' }, { opacity: 1, scale: 1, rotate: 0, filter: 'blur(0px)', duration: 1.0, ease: 'back.out(1.7)' }, at);
+  tl.fromTo(`${id} .ch`, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.8, ease: 'expo.out', stagger: 0.06 }, at + 0.2);
+  wordsIn(`${id} .line`, at + 0.55, 0.08);
+}
+
+// 0 · intro 0 – 3
+show('#s0', 0); brandIn('#s0', 0.1);
+tl.to('#s0 .center', { scale: 1.06, filter: 'blur(10px)', opacity: 0, duration: 0.45, ease: 'power2.in' }, 2.6);
+tl.set('#s0', { visibility: 'hidden' }, 3.05);
+tl.fromTo('#corner', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.6 }, 3.0);
+
+// 1 · brand 3.0 – 10.6: the phone alone: the logo arrives, the card grid, the dock through the café's colours
+scene(1, 3.0, 10.6, '.phone');
+run(V('#b1a'), 3.2, [[0.2, 1.7]]);
+run(V('#b1b'), 4.5, [[0.3, 9.3, 1.5]]);   // each step a new look: card grid + teal, magazine + amber, photo grid + rose, Chillax black
+tl.fromTo('#b1b', { opacity: 0 }, { opacity: 1, duration: 0.45, ease: 'power1.inOut' }, 4.5);
+chip(1, 4.8, 'spark', 'لوجوك', 'Your logo', { side: 700, top: 230 });
+chip(1, 5.5, 'check', 'شكل المنيو', "Your menu's look", { side: 700, top: 390 });
+chip(1, 6.5, 'star', 'ألوانك', 'Your colours', { side: 700, top: 550 });
+
+// 2 · order 10.95 – 20.6
+scene(2, 10.95, 20.6, '.phone');
+// picks, the order, the guest's name typed (quick), sent
+run(V('#s2 video'), 11.15, [[0.6, 8.2, 1.6], [8.2, 11.8, 1.8], [11.8, 14.4, 3.0], [14.4, 17.3, 2.0]]);
+chip(2, 18.9, 'check', 'الطلب اتبعت', 'Order sent', { side: 700, top: 660 });
+
+// 3 · till 20.95 – 24.9
+scene(3, 20.95, 24.9, '.tablet');
+run(V('#s3 video'), 21.15, [[0, 3.78]]);
+chip(3, 21.7, 'bell', 'طلب جديد', 'New order', { side: 1120, top: 140 });
+
+// 4 · kitchen 25.25 – 31.4
+scene(4, 25.25, 31.4, '.tablet');
+run(V('#s4 video'), 25.45, [[0.2, 1.5], [1.5, 7.4, 1.05]]);
+chip(4, 27.9, 'timer', 'عدّاد لكل طلب', 'A clock on every ticket', { side: 1120, top: 140 });
+
+// 5 · book 31.75 – 39.0
+scene(5, 31.75, 39.0, '.phone');
+run(V('#s5 video'), 31.95, [[0.3, 5.9, 1.2], [5.9, 8.9]]);
+chip(5, 36.8, 'timer', 'محجوزة ليك ١٠ دقايق', 'Held for 10 minutes', { side: 700, top: 300 });
+
+// 6 · controller 39.35 – 44.6
+scene(6, 39.35, 44.6, '.phone');
+run(V('#s6 video'), 39.55, [[0.3, 6.0, 1.2]]);
+chip(6, 41.6, 'pad', 'الدراع جايلك', 'Controller on its way', { side: 700, top: 520 });
+
+// 7 · pay 44.95 – 52.9
+scene(7, 44.95, 52.9, '.phone');
+// ends on the split sheet as the share is tapped: the (test) checkout that follows is not shown
+run(V('#s7 video'), 45.15, [[0.3, 2.5], [2.5, 5.3, 0.8]]);   // Table 3's bill: split, then equally (the new people picker)
+chip(7, 47.8, 'split', 'بالتساوي على الكل', 'Split evenly', { side: 700, top: 420 });
+
+// 8 · loyalty 53.25 – 56.9
+scene(8, 53.25, 56.9, '.phone');
+run(V('#s8 video'), 53.45, [[0.4, 4.3, 1.1]]);
+chip(8, 54.6, 'star', '+٣٢٠ نقطة', '+320 points', { side: 700, top: 260 });
+tl.to('#corner', { opacity: 0, duration: 0.3 }, 56.9);
+
+// 9 · end 57.2 – 60
+show('#s9', 57.2); brandIn('#s9', 57.25);
+blurIn('#s9 .small', 58.1, 14, 4);
+tl.fromTo('#s9 .pill', { opacity: 0, scale: 0.6, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.9)' }, 58.35);
+tl.set({}, {}, DURATION);
+
+/* ---- driving the clips ---- */
+function syncClips(t, exact) {
+  const waits = [];
+  for (const p of plan) {
+    const v = p.video, lt = localTime(p, t);
+    if (exact) {
+      if (!v.paused) v.pause();
+      if (Math.abs(v.currentTime - lt) > 0.001) waits.push(new Promise(r => { v.addEventListener('seeked', r, { once: true }); v.currentTime = lt; }));
+      continue;
+    }
+    const piece = p.pieces.find(s => t >= s.at && t < s.at + pieceLen(s));
+    if (piece) {
+      v.playbackRate = piece.rate || 1;
+      if (Math.abs(v.currentTime - lt) > 0.25) v.currentTime = lt;
+      if (v.paused) v.play().catch(() => {});
+    } else {
+      if (!v.paused) v.pause();
+      if (Math.abs(v.currentTime - lt) > 0.05) v.currentTime = lt;
+    }
+  }
+  return Promise.all(waits);
+}
+
+window.__duration = DURATION;
+window.__seek = async t => {
+  tl.time(Math.min(t, DURATION), false);
+  await syncClips(t, true);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+
+const scrub = document.getElementById('scrub'), clock = document.getElementById('clock'), btn = document.getElementById('play');
+tl.eventCallback('onUpdate', () => { scrub.value = tl.time(); clock.textContent = `${tl.time().toFixed(1)} / ${DURATION.toFixed(1)}`; if (!render) syncClips(tl.time(), false); });
+tl.eventCallback('onComplete', () => { btn.textContent = 'Play'; videos.forEach(v => v.pause()); });
+btn.onclick = () => { if (tl.isActive()) { tl.pause(); videos.forEach(v => v.pause()); btn.textContent = 'Play'; } else { if (tl.progress() === 1) tl.restart(); else tl.play(); btn.textContent = 'Pause'; } };
+scrub.oninput = () => { tl.pause(); btn.textContent = 'Play'; tl.time(+scrub.value); syncClips(+scrub.value, true); };
+
+Promise.all([document.fonts.ready, ...videos.map(v => new Promise(r => v.readyState >= 2 ? r() : v.addEventListener('loadeddata', r, { once: true })))])
+  .then(() => { window.__ready = true; tl.time(0); syncClips(0, true); });
+</script>
+</body>
+</html>
