@@ -10,6 +10,11 @@
   the system preference. Language follows `ui_locales`.
 -->
 <#macro registrationLayout bodyClass="" displayInfo=false displayMessage=true displayRequiredFields=false>
+<#-- The customer's apps (the web app, the phone app) get their pages drawn as the app is: a full
+     screen under a top bar, the app's title, fields and fonts, the action at the thumb. The staff's
+     keep the card. By the client that sent the customer here, so one theme serves both -->
+<#assign appLook = (client?? && ['client-web', 'mobile-app', 'webapp']?seq_contains(client.clientId))>
+<#assign appBack = (appLook && (client.baseUrl!'')?starts_with('http'))?then(client.baseUrl, '')>
 <!DOCTYPE html>
 <html class="${properties.kcHtmlClass!}" lang="${lang}"<#if realm.internationalizationEnabled> dir="${(locale.rtl)?then('rtl','ltr')}"</#if>>
 <head>
@@ -23,7 +28,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Cpath d='M49.03 14.8Q49.03 14.8 49.03 15.77Q49.03 16.74 48.99 18.44Q48.96 20.13 48.88 22.42Q48.81 24.72 48.68 27.38Q48.55 30.05 48.35 32.93Q48.16 35.82 47.85 38.69Q47.55 41.56 47.16 44.29Q46.78 47.02 46.24 49.35L41.61 49.54Q40.4 47.72 38.9 45.42Q37.39 43.12 35.76 40.58Q34.12 38.05 32.44 35.42Q30.75 32.79 29.2 30.32Q25.54 24.52 21.66 18.36Q21.54 24.96 21.49 30.92Q21.47 33.47 21.47 36.11Q21.47 38.75 21.48 41.2Q21.49 43.65 21.55 45.76Q21.61 47.87 21.71 49.35L16.55 50Q16.16 47.96 15.89 45.37Q15.62 42.78 15.44 39.92Q15.26 37.05 15.16 34.08Q15.07 31.12 15.02 28.3Q14.92 21.73 15.02 14.75L24.69 14L42.02 44.08Q42.29 40.93 42.34 37.31Q42.39 33.68 42.25 29.83Q42.12 25.98 41.81 22.02Q41.49 18.07 41.03 14.24Z' fill='%23fafafa'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700<#if realm.name == 'ninja'>&family=Original+Surfer</#if>&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700<#if appLook>&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700</#if><#if realm.name == 'ninja'>&family=Original+Surfer</#if>&display=swap" rel="stylesheet">
     <#if properties.styles?has_content>
         <#list properties.styles?split(' ') as style>
             <#-- Versioned: Keycloak's resource path never changes when the
@@ -74,6 +79,7 @@
         </#list>
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
+    <script type="module" src="${url.resourcesPath}/js/app-back.js?v=${properties.themeVersion!'1'}"></script>
     <script type="module" src="${url.resourcesPath}/js/guest-details.js?v=${properties.themeVersion!'1'}"></script>
     <script type="module">
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
@@ -102,13 +108,18 @@
     </#if>
 </head>
 
-<body class="${properties.kcBodyClass!} ${bodyClass}" data-page-id="login-${pageId}">
+<body class="${properties.kcBodyClass!} ${bodyClass}<#if appLook> nj-app</#if>" data-page-id="login-${pageId}">
 <main class="nj-page">
     <#-- The platform's own realm gets the platform's brand: its N tile and
          its lowercase wordmark in the display face. Every café realm keeps
          its own mark and name, in the UI face. -->
     <#assign platformRealm = (realm.name == 'ninja')>
     <header class="nj-brand<#if platformRealm> nj-brand-platform</#if>">
+        <#-- In the app's look, the way back to the café's app sits at the bar's start, as on a pushed page -->
+        <#if appLook>
+            <#-- To the app's own address; where the client has none, the address the sign-in came from (js/app-back.js), and none at all hides it -->
+            <a class="nj-back" data-app-back href="${appBack}"<#if !appBack?has_content> hidden</#if> aria-label="${msg('doBack')}"><i class="nj-icon nj-arrow-back" aria-hidden="true"></i></a>
+        </#if>
         <#-- Keycloak hands back the display name when no HTML one is set, so a
              realm the control plane did not stamp gets a tile with its initial.
              The HTML is the platform's own (an <img> at the tenant's icon), so

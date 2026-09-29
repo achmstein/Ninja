@@ -38,4 +38,22 @@ public sealed class LoginCssTests
         Assert.AreEqual("#ffffff", LoginCss.OnColour("#0055ff"));
         Assert.AreEqual("#0a0a0a", LoginCss.OnColour("#ffd400"));
     }
+
+    [TestMethod]
+    public void The_cafes_fonts_are_loaded_first_and_named_for_the_pages()
+    {
+        var css = LoginCss.For(new API.Model.Tenant { PrimaryColor = "#0055ff", Theme = new TenantTheme { FontLatin = "Satoshi", FontArabic = "Readex Pro" } });
+        Assert.IsTrue(css.StartsWith("@import url('https://api.fontshare.com/v2/css?f[]=satoshi", StringComparison.Ordinal));
+        StringAssert.Contains(css, "@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:");
+        StringAssert.Contains(css, "--font-latin: 'Satoshi';");
+        StringAssert.Contains(css, "--font-arabic: 'Readex Pro';");
+    }
+
+    [TestMethod]
+    public void A_font_off_the_cafes_lists_never_reaches_the_sheet()
+    {
+        var css = LoginCss.For(new API.Model.Tenant { Theme = new TenantTheme { FontLatin = "x'); } body { display:none" } });
+        Assert.IsFalse(css.Contains("@import"));
+        Assert.IsFalse(css.Contains("--font-latin"));
+    }
 }
