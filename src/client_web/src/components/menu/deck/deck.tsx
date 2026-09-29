@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
@@ -19,10 +19,10 @@ const PEEK = 44
 const topOf = (column: HTMLElement) => parseFloat(getComputedStyle(column).scrollPaddingTop) || 0
 import { LONG_PRESS_MS, usePress } from '@/components/ninja/gestures/use-press'
 
-/** How long the deck must rest on the next category's card before it moves on, ms */
-const ADVANCE_AFTER = 160
+/** How long the deck must rest on the next category's card before it moves on, ms (counted once the column has come to rest) */
+const ADVANCE_AFTER = 60
 
-/** How long a column's scroll must be still before it counts as resting on a card, ms (a snap's last frames included) */
+/** How long a scroll must be still before it counts as resting on a card, ms (a snap's last frames included) */
 const SETTLE_MS = 110
 
 /**
@@ -59,6 +59,7 @@ export function Deck({
   onQuickAdd,
   onZoom,
   landingId,
+  openId,
 }: {
   columns: DeckColumn[]
   column: number
@@ -75,6 +76,8 @@ export function Deck({
   onZoom: (direction: 'out' | 'in') => void
   /** The dish whose photo is flying to the tray from its open card: its card waits for it to land */
   landingId: number | null
+  /** The dish open in place: its card measures itself as it opens and as it closes, so the morph starts where it is */
+  openId: number | null
 }) {
   const reduced = useReducedMotion()
   const pager = useRef<HTMLDivElement>(null)
@@ -82,6 +85,16 @@ export function Deck({
   // While the pager is being moved by a tab, its own scroll events are not the customer's
   const steering = useRef(false)
   const shown = useRef(start.column)
+
+  // The cards keep the same two handlers from render to render, so the menu re-rendering (a tray
+  // line, a timer, the chrome) passes them by: a card that renders re-measures every shared
+  // layout on the page, which on a phone is a dropped frame per card
+  const handlers = useRef({ onOpen, onQuickAdd })
+  useLayoutEffect(() => {
+    handlers.current = { onOpen, onQuickAdd }
+  })
+  const open = useCallback((item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onOpen(item, photo), [])
+  const quickAdd = useCallback((item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onQuickAdd(item, photo), [])
 
   // Open where asked, before paint, so a tile growing back lands on its card
   useLayoutEffect(() => {
@@ -118,17 +131,21 @@ export function Deck({
   // Resting on a column's last card, the "up next" one, moves on to the next
   // category the way a sideways swipe does; the column left behind goes back
   // to its last dish, so coming back lands on a dish rather than the way on
+  // One timer of each kind for the whole deck, all cleared on the way out: nothing is read or told
+  // while a swipe is still moving, only once it has come to rest
   const advanceTimer = useRef<number | null>(null)
-  useEffect(() => () => {
-    if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
-  }, [])
+  const rewindTimer = useRef<number | null>(null)
   const settleTimer = useRef<number | null>(null)
-  useEffect(() => () => {
-    if (settleTimer.current !== null) window.clearTimeout(settleTimer.current)
-  }, [])
+  const pagerTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      for (const timer of [advanceTimer, rewindTimer, settleTimer, pagerTimer]) {
+        if (timer.current !== null) window.clearTimeout(timer.current)
+      }
+    },
+    []
+  )
   const watchForNext = (c: number, el: HTMLElement) => {
-    if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
-    advanceTimer.current = null
     // The card is shorter than a dish, so the column cannot bring it to the
     // top: reaching the end of the column is resting on it
     const next = el.querySelector<HTMLElement>('[data-up-next]')
@@ -138,7 +155,8 @@ export function Deck({
       const nextColumn = columnEls.current[c + 1]
       if (nextColumn) nextColumn.scrollTop = 0
       onColumnChange(c + 1)
-      window.setTimeout(() => {
+      rewindTimer.current = window.setTimeout(() => {
+        rewindTimer.current = null
         const last = next.previousElementSibling as HTMLElement | null
         if (last) el.scrollTop = last.offsetTop - topOf(el)
       }, 700)
@@ -181,11 +199,18 @@ export function Deck({
       onScroll={(e) => {
         if (steering.current) return
         const el = e.currentTarget
-        const next = columnAt(el.scrollLeft, el.clientWidth, columns.length)
-        if (next !== shown.current) {
-          shown.current = next
-          onColumnChange(next)
-        }
+        // The category is told once the sideways swipe has come to rest, as the row is: telling it half
+        // way re-rendered the menu and moved the shared cards from one column to the other while the
+        // browser was still snapping, a dropped frame for every card
+        if (pagerTimer.current !== null) window.clearTimeout(pagerTimer.current)
+        pagerTimer.current = window.setTimeout(() => {
+          pagerTimer.current = null
+          const next = columnAt(el.scrollLeft, el.clientWidth, columns.length)
+          if (next !== shown.current) {
+            shown.current = next
+            onColumnChange(next)
+          }
+        }, SETTLE_MS)
       }}
     >
       {columns.map((col, c) => (
@@ -204,12 +229,15 @@ export function Deck({
             // The row is told once the swipe has come to rest on a card, not half way there: what it
             // sets off (the bar going up, the cards growing into its room) resizes the cards, and doing
             // that while the browser is still snapping to one made the move stutter and jump
+            // Scrolling reads nothing and sets nothing; the timers only restart
             if (settleTimer.current !== null) window.clearTimeout(settleTimer.current)
+            if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current)
+            advanceTimer.current = null
             settleTimer.current = window.setTimeout(() => {
               settleTimer.current = null
               onRowChange(c, rowAt(el, col.items.length))
+              if (c === shown.current) watchForNext(c, el)
             }, SETTLE_MS)
-            if (c === column) watchForNext(c, el)
           }}
         >
           {col.items.map((item) => (
@@ -219,10 +247,11 @@ export function Deck({
               // Only the column on screen morphs; the rest simply appear, which keeps a zoom cheap on a slow phone
               shared={c === column && Number(item.id) !== landingId}
               landing={Number(item.id) === landingId}
+              open={Number(item.id) === openId}
               usual={col.kind === 'usuals' && Number(item.id) === usualId}
               hint={Number(item.id) === holdHintId}
-              onOpen={onOpen}
-              onQuickAdd={onQuickAdd}
+              onOpen={open}
+              onQuickAdd={quickAdd}
             />
           ))}
           {columns[c + 1] && <UpNext column={columns[c + 1]} onGo={() => onColumnChange(c + 1)} />}
@@ -280,12 +309,20 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
   )
 }
 
-function DeckCard({
+/**
+ * One dish's card. Memoised: it renders only when something about it
+ * changes, since every render of a card with a shared layout re-measures the
+ * page's shared layouts. `open` is such a change on purpose — the card
+ * measures itself as its dish opens and closes, so the morph starts from
+ * where it is on screen now.
+ */
+const DeckCard = memo(function DeckCard({
   item,
   shared,
   usual,
   hint,
   landing,
+  open,
   onOpen,
   onQuickAdd,
 }: {
@@ -293,6 +330,8 @@ function DeckCard({
   shared: boolean
   /** Its photo is in the air: the card is out of sight until it lands, then fades back */
   landing: boolean
+  /** Its dish is open in place */
+  open: boolean
   usual: boolean
   hint: boolean
   onOpen: (item: CatalogItemDto, photo: HTMLElement | null) => void
@@ -308,7 +347,11 @@ function DeckCard({
 
   return (
     <div
-      className='mb-3 snap-start transition-transform duration-200 ease-out motion-reduce:transition-none'
+      data-open={open || undefined}
+      // A card off screen (the other categories, the ones further down) keeps its box but is not laid
+      // out or painted inside: the bar going up resizes every card in the deck, and only the ones in
+      // view should cost anything while it does
+      className='mb-3 snap-start transition-transform duration-200 ease-out [content-visibility:auto] motion-reduce:transition-none'
       style={{ height: `calc(100% - var(--deck-top) - ${PEEK}px)`, transform: pressing ? 'scale(0.97)' : undefined }}
     >
       <motion.article
@@ -331,21 +374,25 @@ function DeckCard({
             )}
           >
             {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-caption font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
-            <PressRing pressing={pressing} />
+            <PressRing pressing={pressing} blur={pressing || hint} />
           </span>
         )}
       </motion.article>
     </div>
   )
-}
+})
 
 const RING_R = 18
 const RING_C = 2 * Math.PI * RING_R
 
-/** A ring that fills round a plus while a press is held, full when the long press lands */
-export function PressRing({ pressing, small = false }: { pressing: boolean; small?: boolean }) {
+/**
+ * A ring that fills round a plus while a press is held, full when the long press lands. `blur`
+ * off leaves the frosted backdrop out while the ring is hidden: a backdrop blur on every card of
+ * the deck, even at no opacity, is a layer the phone keeps re-reading as the cards scroll under it
+ */
+export function PressRing({ pressing, small = false, blur = true }: { pressing: boolean; small?: boolean; blur?: boolean }) {
   return (
-    <span className={cn('relative grid place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm', small ? 'size-9' : 'size-11')}>
+    <span className={cn('relative grid place-items-center rounded-full bg-black/45 text-white', blur && 'backdrop-blur-sm', small ? 'size-9' : 'size-11')}>
       <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90'>
         <circle
           cx='22'
@@ -443,7 +490,7 @@ export function CardFace({
       <div aria-hidden className='absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/15 to-transparent' />
       {badges}
       <div className='absolute inset-x-0 bottom-0 p-6 text-white'>
-        <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
+        <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
         {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-note text-white/80'>{description}</p>}
         <div className='mt-3'>{priceLine}</div>
       </div>

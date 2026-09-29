@@ -74,7 +74,7 @@ export function ZoomTile({
         {/* Held, a dish that needs no choosing fills a ring and drops into the tray */}
         {quick && (
           <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-200', pressing ? 'opacity-100' : 'opacity-0')}>
-            <PressRing pressing={pressing} small />
+            <PressRing pressing={pressing} blur={pressing} small />
           </span>
         )}
         {hasPhoto ? (

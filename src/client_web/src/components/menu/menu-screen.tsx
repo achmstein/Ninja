@@ -383,6 +383,7 @@ export function MenuScreen({ menu }: HomeProps) {
                   onQuickAdd={onQuickAdd}
                   onZoom={onZoom}
                   landingId={landing}
+                  openId={tuning ? Number(tuning.item.id) : null}
                 />
               )}
             </motion.div>
