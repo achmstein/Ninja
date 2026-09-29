@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
@@ -55,12 +56,16 @@ export function usePlaceOrder({
   })
 
   const savePreferences = useMutation(saveUserPreferencesMutation())
-  const requestIdRef = useRef<{ signature: string; id: string } | null>(null)
+  // One request id per payload, kept in the browser until the order goes through: an answer that never
+  // came back (a hang, a closed tab, a phone that lost its signal) is sent again as the same request,
+  // which the server answers as placed rather than making a second order or turning it away
+  const requestIdRef = useRef<PendingRequest | null>(readPending())
 
   const mutation = useMutation({
     ...createOrderMutation(),
     onSuccess: () => {
       requestIdRef.current = null
+      writePending(null)
       // Preferences hang off an account, so there is nothing to save for a guest
       const customized = auth.isAuthenticated ? lines.filter((line) => line.customizations.length > 0) : []
       if (customized.length > 0) {
@@ -78,8 +83,13 @@ export function usePlaceOrder({
       if (onPlaced) onPlaced(clear)
       else clear()
     },
-    onError: () => {
+    onError: (error) => {
       onFailed?.()
+      // The last order is still waiting for the till (a guest has one at a time): say that, not a failure
+      if (isAxiosError(error) && error.response?.status === 409) {
+        toast.info(t('orderStillWaiting'))
+        return
+      }
       toast.error(t('failedToPlaceOrder'))
     },
   })
@@ -100,6 +110,7 @@ export function usePlaceOrder({
     const signature = orderSignature(lines, extras, guestId, destination)
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
+      writePending(requestIdRef.current)
     }
     mutation.mutate({
       body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination }),
@@ -125,5 +136,29 @@ export function usePlaceOrder({
         {guestGateDialog}
       </>
     ),
+  }
+}
+
+type PendingRequest = { signature: string; id: string }
+
+/** Where the order being sent keeps its request id, until it goes through */
+const PENDING_KEY = 'ninja-pending-order'
+
+function readPending(): PendingRequest | null {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : null
+    return parsed && typeof parsed === 'object' && 'signature' in parsed && 'id' in parsed ? (parsed as PendingRequest) : null
+  } catch {
+    return null
+  }
+}
+
+function writePending(pending: PendingRequest | null) {
+  try {
+    if (pending) localStorage.setItem(PENDING_KEY, JSON.stringify(pending))
+    else localStorage.removeItem(PENDING_KEY)
+  } catch {
+    // No storage: the id lives as long as the page, as before
   }
 }

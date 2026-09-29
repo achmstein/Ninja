@@ -562,6 +562,20 @@ export type GetTenantIconErrors = {
     404: unknown;
 };
 
+export type GetTenantLoginCssData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/login.css';
+};
+
+export type GetTenantLoginCssResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type GetTenantManifestData = {
     body?: never;
     path?: never;

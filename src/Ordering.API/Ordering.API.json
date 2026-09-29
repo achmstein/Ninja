@@ -59,6 +59,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },

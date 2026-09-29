@@ -6,7 +6,8 @@
     ITenantSettingsQueries tenantSettings,
     IPlaceQueries places,
     TenantCountry country,
-    ILogger<OrderServices> logger)
+    ILogger<OrderServices> logger,
+    IRequestManager requests)
 {
     public IMediator Mediator { get; set; } = mediator;
     public ILogger<OrderServices> Logger { get; } = logger;
@@ -18,4 +19,7 @@
 
     /// <summary>Where the café is, so a guest's phone is read the way its country writes one.</summary>
     public TenantCountry Country { get; } = country;
+
+    /// <summary>The requests already carried out, so the same one sent again is answered as done.</summary>
+    public IRequestManager Requests { get; } = requests;
 }

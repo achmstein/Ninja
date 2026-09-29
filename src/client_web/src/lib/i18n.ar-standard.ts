@@ -7,6 +7,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   itemCount: { '=1': 'صنف واحد', '=2': 'صنفان', other: '{count} أصناف' },
   loading: 'جارٍ التحميل...',
   pointsBalance: 'رصيد النقاط',
+  orderStillWaiting: 'طلبك السابق ما زال بانتظار تأكيد الكاشير، وسيُؤكَّد قريبًا.',
   youSignInTitle: 'سجّل الدخول أو أنشئ حسابًا',
   signInPrompt: 'سجّل الدخول لترى طلباتك ونقاطك',
   orderAsGuest: 'اطلب كزائر',

@@ -151,7 +151,7 @@ public static partial class OrdersApi
         return api;
     }
 
-    public static async Task<Results<Ok, BadRequest<string>>> CreateOrderAsync(
+    public static async Task<Results<Ok, BadRequest<string>, Conflict<string>>> CreateOrderAsync(
         [FromHeader(Name = "x-requestid")] Guid requestId,
         CreateOrderRequest request,
         HttpContext httpContext,
@@ -161,6 +161,16 @@ public static partial class OrdersApi
         {
             services.Logger.LogWarning("Invalid request - RequestId is missing");
             return TypedResults.BadRequest("RequestId is missing.");
+        }
+
+        // The same request again (the app sending once more after an answer that never reached it): the
+        // order was made the first time, so it is answered as made, before any rule below can turn it
+        // away. Without this, a guest whose first answer was lost met "your last order is still
+        // waiting" on every retry, their own order being that last one, and was told it had failed
+        if (await services.Requests.ExistAsync(requestId))
+        {
+            services.Logger.LogInformation("CreateOrder - RequestId {RequestId} was already placed; answered as placed", requestId);
+            return TypedResults.Ok();
         }
 
         // The identity comes from the token, never from the body: a signed-in
@@ -218,7 +228,7 @@ public static partial class OrdersApi
                 // One order at a time from away too, until the till answers it
                 if (await services.Queries.HasUnconfirmedGuestOrderAwayAsync(guestId))
                 {
-                    return TypedResults.BadRequest("Your last order is still waiting for the counter. It will be confirmed shortly.");
+                    return TypedResults.Conflict("Your last order is still waiting for the counter. It will be confirmed shortly.");
                 }
             }
 
@@ -242,7 +252,7 @@ public static partial class OrdersApi
             if (request.PlaceId is int guestPlaceId
                 && await services.Queries.HasUnconfirmedGuestOrderAtPlaceAsync(guestId, guestPlaceId))
             {
-                return TypedResults.BadRequest("Your last order is still waiting for the counter. It will be confirmed shortly.");
+                return TypedResults.Conflict("Your last order is still waiting for the counter. It will be confirmed shortly.");
             }
         }
 

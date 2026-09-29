@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -264,6 +264,24 @@ export const getTenantIconOptions = (options: Options<GetTenantIconData>) => que
         return data;
     },
     queryKey: getTenantIconQueryKey(options)
+});
+
+export const getTenantLoginCssQueryKey = (options?: Options<GetTenantLoginCssData>) => createQueryKey('getTenantLoginCss', options);
+
+/**
+ * The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet
+ */
+export const getTenantLoginCssOptions = (options?: Options<GetTenantLoginCssData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantLoginCssQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantLoginCss({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantLoginCssQueryKey(options)
 });
 
 export const getTenantManifestQueryKey = (options?: Options<GetTenantManifestData>) => createQueryKey('getTenantManifest', options);

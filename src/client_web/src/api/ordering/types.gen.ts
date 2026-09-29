@@ -424,6 +424,10 @@ export type CreateOrderErrors = {
      * Forbidden
      */
     403: unknown;
+    /**
+     * Conflict
+     */
+    409: string;
 };
 
 export type CreateOrderError = CreateOrderErrors[keyof CreateOrderErrors];

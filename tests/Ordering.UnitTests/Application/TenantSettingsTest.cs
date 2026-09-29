@@ -108,7 +108,7 @@ public class TenantSettingsTest
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result, "no row reads as off, as it always has");
     }
 
-    private static Task<Results<Ok, BadRequest<string>>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
+    private static Task<Results<Ok, BadRequest<string>, Conflict<string>>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
     {
         var mediator = Substitute.For<IMediator>();
         mediator.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default).Returns(Task.FromResult(42));
@@ -129,7 +129,8 @@ public class TenantSettingsTest
             new TenantCountry(new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?> { ["Tenant:Country"] = "EG" })
                 .Build()),
-            NullLogger<OrderServices>.Instance);
+            NullLogger<OrderServices>.Instance,
+            Substitute.For<IRequestManager>());
 
         var request = new CreateOrderRequest(
             UserId: string.Empty,

@@ -36,6 +36,7 @@ public class OrdersApiAuthorizationTest
         builder.Services.AddSingleton(Substitute.For<IBranchSettingsQueries>());
         builder.Services.AddSingleton(Substitute.For<ITenantSettingsQueries>());
         builder.Services.AddSingleton(Substitute.For<IPlaceQueries>());
+        builder.Services.AddSingleton(Substitute.For<IRequestManager>());
         builder.Services.AddSingleton<TenantCountry>();
 
         var app = builder.Build();

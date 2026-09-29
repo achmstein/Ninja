@@ -22,6 +22,8 @@ const webExtras = {
   },
   loading: { en: 'Loading...', ar: 'ثواني...' },
   pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
+  // Ordering again while the last order is still with the till (a guest has one at a time)
+  orderStillWaiting: { en: 'Your last order is still waiting for the counter. It will be confirmed shortly.', ar: 'طلبك اللي فات لسه مستني الكاشير يأكده، ثواني ويتأكد.' },
   // The You page's card for a visitor, the same card the Book page asks with
   youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {
