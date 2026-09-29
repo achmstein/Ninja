@@ -7,7 +7,6 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   itemCount: { '=1': 'صنف واحد', '=2': 'صنفان', other: '{count} أصناف' },
   loading: 'جارٍ التحميل...',
   pointsBalance: 'رصيد النقاط',
-  completeYourInfoWhy: 'ليتمكن المكان من التواصل معك بشأن طلبك أو حجزك.',
   youSignInTitle: 'سجّل الدخول أو أنشئ حسابًا',
   signInPrompt: 'سجّل الدخول لترى طلباتك ونقاطك',
   orderAsGuest: 'اطلب كزائر',

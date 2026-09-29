@@ -22,8 +22,6 @@ const webExtras = {
   },
   loading: { en: 'Loading...', ar: 'ثواني...' },
   pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
-  // The profile prompt before an order or a booking: why it asks
-  completeYourInfoWhy: { en: 'So the café can reach you about your order or booking.', ar: 'عشان المكان يقدر يكلمك بخصوص طلبك أو حجزك.' },
   // The You page's card for a visitor, the same card the Book page asks with
   youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {

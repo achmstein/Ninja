@@ -5,7 +5,7 @@ import { usePhoneRule } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { getMyProfile, hasWholeName, namePartsOf, updateProfile } from '@/lib/services/identity'
 import { toast } from '@/lib/toast'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { pillAction, pillCancel, sheetFooterClass } from '@/components/ui/ninja-sheet'
@@ -138,7 +138,6 @@ function ProfileGateDialog({
       <DialogContent onOpenAutoFocus={(e) => needName && e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
-          <DialogDescription>{t('completeYourInfoWhy')}</DialogDescription>
         </DialogHeader>
         <form
           className='flex flex-col gap-4'
