@@ -800,8 +800,8 @@ textarea.nj-input {
 }
 
 /* ---- The customer's pages, drawn as the app (template.ftl's appLook) ----
-   A full screen in the app's column, not a card on a page: a top bar with the
-   way back and the café's mark, the page's large title at its start, the
+   A full screen in the app's column, not a card on a page: the café's own
+   logo at its head, the page's large title at its start, the
    app's fonts (the café's own when it chose them, /api/tenant/login.css), its
    type scale (title 28, body 15, labels 14), and the action kept in reach of
    the thumb as a long form scrolls. The staff's pages keep the card above. */
@@ -826,58 +826,26 @@ body.nj-app {
   padding-top: env(safe-area-inset-top);
 }
 
-/* The top bar: back, then the café's mark and name, as the app's own bar */
+/* The café's own drawing, alone and centred at the head of the page: its
+   wordmark (sized by height, its own shape) or its logo, as the café's sign-in
+   sheet picks it for the language and scheme (--nj-logo); else the café's
+   icon, rounded as the app's icon is. No bar, no name beside it. */
 .nj-app .nj-brand {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.625rem;
-  height: 4rem;
-  padding-inline: 1rem;
+  padding: 2.5rem 1rem 0.5rem;
+}
+
+.nj-logo {
+  display: block;
+  height: var(--nj-logo-h, 4.5rem);
+  max-width: 75%;
+  aspect-ratio: var(--nj-logo-ratio, 1);
+  border-radius: var(--nj-logo-radius, 28%);
+  background: var(--nj-logo, var(--nj-icon)) center / contain no-repeat;
 }
 
 .nj-app .nj-mark {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.75rem;
-}
-
-.nj-app .nj-mark-tile {
-  font-size: 1.125rem;
-}
-
-.nj-app .nj-brand-name {
-  font-size: 1.0625rem;
-  font-weight: 800;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nj-back {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  margin-inline-start: -0.25rem;
-  border-radius: var(--radius-pill);
-  background: var(--muted);
-  color: var(--foreground);
-  transition: transform 0.15s ease;
-}
-
-.nj-back:active {
-  transform: scale(0.95);
-}
-
-.nj-arrow-back {
-  width: 1.25rem;
-  height: 1.25rem;
-  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E");
-}
-
-[dir='rtl'] .nj-arrow-back {
-  transform: scaleX(-1);
+  width: 4.5rem;
+  height: 4.5rem;
 }
 
 /* The page itself: no card, the app's gutters, the title at the start */
@@ -928,8 +896,4 @@ body.nj-app {
 
 .nj-app .nj-footer {
   padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
-}
-
-.nj-back[hidden] {
-  display: none;
 }

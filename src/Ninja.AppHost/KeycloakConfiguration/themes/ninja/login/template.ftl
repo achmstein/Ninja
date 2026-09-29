@@ -14,7 +14,6 @@
      screen under a top bar, the app's title, fields and fonts, the action at the thumb. The staff's
      keep the card. By the client that sent the customer here, so one theme serves both -->
 <#assign appLook = (client?? && ['client-web', 'mobile-app', 'webapp']?seq_contains(client.clientId))>
-<#assign appBack = (appLook && (client.baseUrl!'')?starts_with('http'))?then(client.baseUrl, '')>
 <!DOCTYPE html>
 <html class="${properties.kcHtmlClass!}" lang="${lang}"<#if realm.internationalizationEnabled> dir="${(locale.rtl)?then('rtl','ltr')}"</#if>>
 <head>
@@ -79,7 +78,6 @@
         </#list>
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
-    <script type="module" src="${url.resourcesPath}/js/app-back.js?v=${properties.themeVersion!'1'}"></script>
     <script type="module" src="${url.resourcesPath}/js/guest-details.js?v=${properties.themeVersion!'1'}"></script>
     <script type="module">
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
@@ -115,11 +113,12 @@
          its own mark and name, in the UI face. -->
     <#assign platformRealm = (realm.name == 'ninja')>
     <header class="nj-brand<#if platformRealm> nj-brand-platform</#if>">
-        <#-- In the app's look, the way back to the café's app sits at the bar's start, as on a pushed page -->
-        <#if appLook>
-            <#-- To the app's own address; where the client has none, the address the sign-in came from (js/app-back.js), and none at all hides it -->
-            <a class="nj-back" data-app-back href="${appBack}"<#if !appBack?has_content> hidden</#if> aria-label="${msg('doBack')}"><i class="nj-icon nj-arrow-back" aria-hidden="true"></i></a>
-        </#if>
+        <#-- In the app's look, the café's own drawing alone at the head of the page, as its app's
+             header shows it: the wordmark or the logo, from the café's sign-in sheet (--nj-logo,
+             /api/tenant/login.css), else its icon. No name beside it: the drawing is the name -->
+        <#if appLook && brandApi?? && (brandApi?starts_with('https://') || brandApi?starts_with('http://'))>
+            <span class="nj-logo" role="img" aria-label="${(realm.displayName!'')?trim}" style="--nj-icon: url('${brandApi}/api/tenant/icons/icon-192.png')"></span>
+        <#else>
         <#-- Keycloak hands back the display name when no HTML one is set, so a
              realm the control plane did not stamp gets a tile with its initial.
              The HTML is the platform's own (an <img> at the tenant's icon), so
@@ -129,7 +128,8 @@
         <#elseif realm.displayName?trim?has_content>
             <div class="nj-mark nj-mark-tile" aria-hidden="true">${realm.displayName?trim[0..0]?upper_case}</div>
         </#if>
-        <span class="nj-brand-name"><#if platformRealm>${(realm.displayName!'')?trim?lower_case}<#else>${(realm.displayName!'')?trim}</#if></span>
+        <#if !appLook><span class="nj-brand-name"><#if platformRealm>${(realm.displayName!'')?trim?lower_case}<#else>${(realm.displayName!'')?trim}</#if></span></#if>
+        </#if>
     </header>
 
     <section class="nj-card">

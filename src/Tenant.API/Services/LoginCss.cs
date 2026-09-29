@@ -13,7 +13,67 @@ namespace Ninja.Tenant.API.Services;
 /// </summary>
 public static partial class LoginCss
 {
-    public static string For(Model.Tenant tenant) => Fonts(tenant) + Colours(tenant);
+    public static string For(Model.Tenant tenant) => Fonts(tenant) + Colours(tenant) + Logo(tenant);
+
+    /// <summary>
+    /// The café's own drawing at the head of the customer's pages, picked as the app's header picks
+    /// it: the wide wordmark for the page's language and scheme (dark to light, Arabic to English),
+    /// else the logo (the dark one on a dark page). As --nj-logo with its shape and size, per
+    /// language and scheme; a combination with nothing uploaded unsets it, and the page shows the
+    /// café's icon instead. Nothing at all when the café uploaded no image.
+    /// </summary>
+    public static string Logo(Model.Tenant tenant)
+    {
+        var variants = new[]
+        {
+            (Selector: ":root", Pick: PickLogo(tenant, arabic: false, dark: false)),
+            (Selector: ":root[data-theme='dark']", Pick: PickLogo(tenant, arabic: false, dark: true)),
+            (Selector: ":root[lang='ar']", Pick: PickLogo(tenant, arabic: true, dark: false)),
+            (Selector: ":root[lang='ar'][data-theme='dark']", Pick: PickLogo(tenant, arabic: true, dark: true)),
+        };
+        if (variants.All(v => v.Pick is null)) return "";
+
+        var css = new System.Text.StringBuilder("/* The café's logo on its customer's pages, as its app's header shows it */\n");
+        // Each later selector is at least as specific as the ones before it, so the last that matches wins
+        foreach (var (selector, pick) in variants)
+        {
+            css.Append($"{selector} {{\n");
+            if (pick is { } picked)
+            {
+                var (slot, image) = picked;
+                var wide = !Model.TenantImageSlots.IsMark(slot);
+                var ratio = image.Width > 0 && image.Height > 0 ? $"{image.Width} / {image.Height}" : "1";
+                // Only a slot name and numbers reach the address
+                css.Append($"  --nj-logo: url('/api/tenant/images/{slot}?v={image.Version.ToString(CultureInfo.InvariantCulture)}');\n");
+                css.Append($"  --nj-logo-ratio: {ratio};\n");
+                css.Append($"  --nj-logo-h: {(wide ? "3rem" : "4.5rem")};\n");
+                css.Append("  --nj-logo-radius: 0;\n");
+            }
+            else
+            {
+                css.Append("  --nj-logo: initial;\n  --nj-logo-ratio: 1;\n  --nj-logo-h: 4.5rem;\n  --nj-logo-radius: 28%;\n");
+            }
+            css.Append("}\n");
+        }
+        return css.ToString();
+    }
+
+    private static (string Slot, Model.TenantImage Image)? PickLogo(Model.Tenant tenant, bool arabic, bool dark)
+    {
+        string[] order = (arabic, dark) switch
+        {
+            (true, true) => [Model.TenantImageSlots.WordmarkArDark, Model.TenantImageSlots.WordmarkAr, Model.TenantImageSlots.WordmarkEnDark, Model.TenantImageSlots.WordmarkEn, Model.TenantImageSlots.LogoDark, Model.TenantImageSlots.Logo],
+            (true, false) => [Model.TenantImageSlots.WordmarkAr, Model.TenantImageSlots.WordmarkEn, Model.TenantImageSlots.Logo],
+            (false, true) => [Model.TenantImageSlots.WordmarkEnDark, Model.TenantImageSlots.WordmarkEn, Model.TenantImageSlots.LogoDark, Model.TenantImageSlots.Logo],
+            (false, false) => [Model.TenantImageSlots.WordmarkEn, Model.TenantImageSlots.Logo],
+        };
+        foreach (var slot in order)
+        {
+            if (tenant.Image(slot) is { } image)
+                return (slot, image);
+        }
+        return null;
+    }
 
     /// <summary>
     /// The café's chosen families (only names from its lists reach this sheet), loaded from where

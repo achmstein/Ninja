@@ -50,6 +50,40 @@ public sealed class LoginCssTests
     }
 
     [TestMethod]
+    public void The_wordmark_heads_the_page_before_the_logo_by_language_and_scheme()
+    {
+        var tenant = new API.Model.Tenant
+        {
+            Images = new()
+            {
+                [TenantImageSlots.Logo] = new TenantImage { Version = 1, Width = 512, Height = 512 },
+                [TenantImageSlots.LogoDark] = new TenantImage { Version = 2, Width = 512, Height = 512 },
+                [TenantImageSlots.WordmarkAr] = new TenantImage { Version = 3, Width = 600, Height = 200 },
+            },
+        };
+        var css = LoginCss.Logo(tenant);
+        string Rule(string selector)
+        {
+            var start = css.IndexOf(selector + " {", StringComparison.Ordinal);
+            return css[start..css.IndexOf('}', start)];
+        }
+
+        StringAssert.Contains(Rule(":root"), "--nj-logo: url('/api/tenant/images/logo?v=1');");
+        StringAssert.Contains(Rule(":root[data-theme='dark']"), "--nj-logo: url('/api/tenant/images/logo-dark?v=2');");
+        StringAssert.Contains(Rule(":root[lang='ar']"), "--nj-logo: url('/api/tenant/images/wordmark-ar?v=3');");
+        StringAssert.Contains(Rule(":root[lang='ar']"), "--nj-logo-ratio: 600 / 200;");
+        // No dark Arabic wordmark: the light one, before any logo
+        StringAssert.Contains(Rule(":root[lang='ar'][data-theme='dark']"), "wordmark-ar?v=3");
+    }
+
+    [TestMethod]
+    public void No_uploaded_image_leaves_the_page_its_icon()
+    {
+        Assert.AreEqual("", LoginCss.Logo(new API.Model.Tenant()));
+        Assert.IsFalse(LoginCss.For(new API.Model.Tenant { PrimaryColor = "#0055ff" }).Contains("--nj-logo"));
+    }
+
+    [TestMethod]
     public void A_font_off_the_cafes_lists_never_reaches_the_sheet()
     {
         var css = LoginCss.For(new API.Model.Tenant { Theme = new TenantTheme { FontLatin = "x'); } body { display:none" } });
