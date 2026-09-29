@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@500;600;700;800&family=Original+Surfer&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<!--
+  Ninja in 45 seconds, 1920x1080, made of real recordings of the apps (clips/, recorded by
+  capture/*.mjs against the local stack). One GSAP timeline drives the page and every clip,
+  so window.__seek(t) renders an exact frame; render.mjs turns it into an MP4.
+  The look is Ninja's own: a flat light page, near-black ink, Inter, the wordmark in
+  Original Surfer, the apps' motion (ease-out, blur swap, nothing that bounces).
+  ?lang=ar gives the Arabic cut (captions right to left, the Arabic recordings).
+-->
+<style>
+:root {
+  --page: #f4f5f7;
+  --ink: #0b1020;
+  --muted: #5b6477;
+  --hair: rgb(11 16 32 / 0.08);
+  --lift: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 40px 80px -32px rgb(11 16 32 / 0.28);
+  --font: 'Inter', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; margin: -540px 0 0 -960px; background: var(--page); overflow: hidden; }
+.scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+
+/* the platform's mark and name */
+.mark { display: block; }
+.wordmark { font-family: 'Original Surfer', 'Inter', sans-serif; font-weight: 400; line-height: 1; }
+#corner { position: absolute; left: 96px; top: 72px; display: flex; align-items: center; gap: 12px; opacity: 0; z-index: 5; }
+#corner .mark { width: 40px; height: 40px; }
+#corner .wordmark { font-size: 30px; }
+
+/* captions */
+.cap { position: absolute; left: 110px; top: 0; bottom: 0; width: 560px; display: flex; flex-direction: column; justify-content: center; }
+.step { font-size: 22px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.step b { display: inline-grid; place-items: center; min-width: 40px; height: 40px; padding: 0 10px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 17px; font-weight: 700; }
+.h { font-size: 64px; line-height: 1.06; font-weight: 800; letter-spacing: -0.035em; }
+.sub { margin-top: 24px; font-size: 26px; line-height: 1.45; color: var(--muted); font-weight: 500; max-width: 520px; }
+
+/* devices: plain, the apps are the colour */
+.phone { position: absolute; width: 414px; height: 876px; padding: 11px; border-radius: 62px; background: #0b0d12; box-shadow: var(--lift), inset 0 0 0 2px #262a33; }
+.phone .scr { position: relative; width: 100%; height: 100%; border-radius: 51px; overflow: hidden; background: #f6f7f1; }
+.phone video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tablet { position: absolute; left: 700px; top: 184px; width: 1120px; height: 711px; padding: 14px; border-radius: 34px; background: #0b0d12; box-shadow: var(--lift), inset 0 0 0 2px #262a33; }
+.tablet .scr { width: 100%; height: 100%; border-radius: 22px; overflow: hidden; background: #fff; }
+.tablet video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.window { position: absolute; left: 700px; top: 176px; width: 1120px; height: 700px; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: var(--lift), 0 0 0 1px var(--hair); }
+.window video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* intro and end */
+.center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.center .mark { width: 120px; height: 120px; }
+.center .wordmark { font-size: 120px; margin-top: 22px; }
+.center .line { margin-top: 34px; font-size: 56px; font-weight: 800; letter-spacing: -0.035em; }
+.center .small { margin-top: 18px; font-size: 26px; color: var(--muted); font-weight: 500; }
+.pill { margin-top: 44px; height: 76px; padding: 0 40px; border-radius: 999px; background: var(--ink); color: #fff; display: inline-grid; place-items: center; font-size: 28px; font-weight: 700; font-family: 'Inter', sans-serif; }
+
+/* two languages */
+#s6 .cap { left: 0; right: 0; width: auto; top: 96px; bottom: auto; align-items: center; text-align: center; }
+#s6 .h { font-size: 60px; }
+
+/* Arabic */
+body.ar { --font: 'Cairo', 'Inter', sans-serif; }
+body.ar .h, body.ar .center .line { letter-spacing: 0; line-height: 1.3; }
+body.ar .cap { left: auto; right: 110px; }
+body.ar #s6 .cap { right: 0; left: 0; }
+body.ar #corner { left: auto; right: 96px; }
+body.ar .tablet, body.ar .window { left: 100px; }
+body.ar .wordmark, body.ar .ltr { direction: ltr; }
+
+/* player */
+#controls { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgb(11 16 32 / .88); z-index: 10; font: 600 14px Inter, sans-serif; color: #fff; }
+#controls button { border: 0; background: #fff; color: #0b1020; font: 700 14px Inter, sans-serif; height: 34px; padding: 0 16px; border-radius: 999px; cursor: pointer; }
+#controls input { width: min(50vw, 520px); accent-color: #fff; }
+#controls .t { font-variant-numeric: tabular-nums; min-width: 88px; text-align: right; }
+body.render #controls { display: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="corner"><svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg><span class="wordmark">ninja</span></div>
+
+  <section class="scene" id="s0">
+    <div class="center">
+      <svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg>
+      <div class="wordmark">ninja</div>
+      <div class="line" data-i18n="intro">Everything your café runs on.</div>
+    </div>
+  </section>
+
+  <section class="scene" id="s1">
+    <div class="cap">
+      <div class="step"><b>1</b><span data-i18n="s1step">At the table</span></div>
+      <div class="h" data-i18n="s1h">Guests order from their phone.</div>
+      <div class="sub" data-i18n="s1sub">Scan the table's code, pick, send. Nothing to download.</div>
+    </div>
+    <div class="phone" style="left:1150px;top:102px"><div class="scr"><video data-clip="phone-order" muted playsinline preload="auto"></video></div></div>
+  </section>
+
+  <section class="scene" id="s2">
+    <div class="cap">
+      <div class="step"><b>2</b><span data-i18n="s2step">At the counter</span></div>
+      <div class="h" data-i18n="s2h">The till hears it first.</div>
+      <div class="sub" data-i18n="s2sub">A heads-up, then one tap to confirm.</div>
+    </div>
+    <div class="tablet"><div class="scr"><video data-clip="pos-confirm" muted playsinline preload="auto"></video></div></div>
+  </section>
+
+  <section class="scene" id="s3">
+    <div class="cap">
+      <div class="step"><b>3</b><span data-i18n="s3step">In the kitchen</span></div>
+      <div class="h" data-i18n="s3h">The kitchen sees it, live.</div>
+      <div class="sub" data-i18n="s3sub">Every ticket on a clock until it's ready.</div>
+    </div>
+    <div class="tablet"><div class="scr" style="background:#02061a"><video data-clip="kds" muted playsinline preload="auto"></video></div></div>
+  </section>
+
+  <section class="scene" id="s4">
+    <div class="cap">
+      <div class="step"><b>4</b><span data-i18n="s4step">Rooms and tables</span></div>
+      <div class="h" data-i18n="s4h">Book a room from the phone.</div>
+      <div class="sub" data-i18n="s4sub">Held for the guest, timed, and billed by the hour.</div>
+    </div>
+    <div class="phone" style="left:1150px;top:102px"><div class="scr"><video data-clip="phone-book" muted playsinline preload="auto"></video></div></div>
+  </section>
+
+  <section class="scene" id="s5">
+    <div class="cap">
+      <div class="step"><b>5</b><span data-i18n="s5step">The back office</span></div>
+      <div class="h" data-i18n="s5h">Snap your menu. It's typed for you.</div>
+      <div class="sub" data-i18n="s5sub">The assistant reads the photo. You check it and add.</div>
+    </div>
+    <div class="window"><video id="scanvid" data-clip="admin-scan" muted playsinline preload="auto"></video></div>
+  </section>
+
+  <section class="scene" id="s6">
+    <div class="cap"><div class="h" data-i18n="s6h">In your café's name. In English and Arabic.</div></div>
+    <div class="phone" id="p6a" style="left:500px;top:250px;transform-origin:50% 0"><div class="scr"><video data-clip="phone-menu-en" muted playsinline preload="auto"></video></div></div>
+    <div class="phone" id="p6b" style="left:1006px;top:250px;transform-origin:50% 0"><div class="scr"><video data-clip="phone-menu-ar" muted playsinline preload="auto"></video></div></div>
+  </section>
+
+  <section class="scene" id="s7">
+    <div class="center">
+      <svg class="mark" viewBox="0 0 64 64"><use href="#nmark"/></svg>
+      <div class="wordmark">ninja</div>
+      <div class="line" data-i18n="end">Everything your café runs on.</div>
+      <div class="small" data-i18n="endsub">Ordering, bookings, till, kitchen and back office, in one place.</div>
+      <div class="pill ltr">ninjapp.net</div>
+    </div>
+  </section>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="nmark">
+      <rect width="64" height="64" rx="14" fill="#18181b"/>
+      <path fill="#fafafa" d="M49.03 14.8Q49.03 14.8 49.03 15.77Q49.03 16.74 48.99 18.44Q48.96 20.13 48.88 22.42Q48.81 24.72 48.68 27.38Q48.55 30.05 48.35 32.93Q48.16 35.82 47.85 38.69Q47.55 41.56 47.16 44.29Q46.78 47.02 46.24 49.35L41.61 49.54Q40.4 47.72 38.9 45.42Q37.39 43.12 35.76 40.58Q34.12 38.05 32.44 35.42Q30.75 32.79 29.2 30.32Q25.54 24.52 21.66 18.36Q21.54 24.96 21.49 30.92Q21.47 33.47 21.47 36.11Q21.47 38.75 21.48 41.2Q21.49 43.65 21.55 45.76Q21.61 47.87 21.71 49.35L16.55 50Q16.16 47.96 15.89 45.37Q15.62 42.78 15.44 39.92Q15.26 37.05 15.16 34.08Q15.07 31.12 15.02 28.3Q14.92 21.73 15.02 14.75L24.69 14L42.02 44.08Q42.29 40.93 42.34 37.31Q42.39 33.68 42.25 29.83Q42.12 25.98 41.81 22.02Q41.49 18.07 41.03 14.24Z"/>
+    </g>
+  </defs>
+</svg>
+
+<div id="controls">
+  <button id="play">Play</button>
+  <input id="scrub" type="range" min="0" max="45" step="0.01" value="0">
+  <span class="t" id="clock">0.0 / 45.0</span>
+</div>
+
+<script>
+const DURATION = 45;
+const qs = new URLSearchParams(location.search);
+const render = qs.has('render');
+const LANG = qs.get('lang') === 'ar' ? 'ar' : 'en';
+const OTHER = LANG === 'ar' ? 'en' : 'ar';
+if (render) document.body.classList.add('render');
+
+function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); document.getElementById('stage').style.transform = `scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* ---- words ---- */
+const AR = {
+  intro: 'كل اللي الكافيه بتاعك محتاجه.',
+  s1step: 'على الترابيزة', s1h: 'الزبون يطلب من موبايله.', s1sub: 'يمسح كود الترابيزة، يختار، ويبعت. من غير ما ينزّل أي حاجة.',
+  s2step: 'عند الكاشير', s2h: 'الكاشير يعرف الأول.', s2sub: 'تنبيه، وضغطة واحدة للتأكيد.',
+  s3step: 'في المطبخ', s3h: 'المطبخ يشوف الطلب لايف.', s3sub: 'كل طلب عليه عدّاد لحد ما يجهز.',
+  s4step: 'الغرف والترابيزات', s4h: 'احجز أوضة من الموبايل.', s4sub: 'تتحجز للزبون، وتتحسب بالساعة.',
+  s5step: 'الإدارة', s5h: 'صوّر المنيو، وهو يتكتب لوحده.', s5sub: 'المساعد يقرا الصورة، وانت تراجع وتضيف.',
+  s6h: 'باسم الكافيه بتاعك. بالعربي والإنجليزي.',
+  end: 'كل اللي الكافيه بتاعك محتاجه.', endsub: 'الطلبات، الحجوزات، الكاشير، المطبخ، والإدارة، في مكان واحد.',
+};
+if (LANG === 'ar') {
+  document.documentElement.lang = 'ar'; document.body.classList.add('ar'); document.getElementById('stage').dir = 'rtl';
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = AR[el.dataset.i18n]; if (v) el.textContent = v; });
+  // the phones swap sides with the reading direction
+  document.querySelectorAll('#s1 .phone, #s4 .phone').forEach(p => p.style.left = (1920 - 1150 - 414) + 'px');
+}
+
+/* ---- clips ----
+   Each <video> plays pieces of a recording: [from, to] seconds of the clip, starting at
+   `at` on the timeline, at `rate`. After its last piece a clip holds its last frame. */
+const clipSrc = name => name.startsWith('phone-menu-') ? `clips/${name}.webm` : `clips/${name}-${LANG}.webm`;
+const videos = [...document.querySelectorAll('video[data-clip]')];
+videos.forEach(v => { v.src = clipSrc(v.dataset.clip); });
+const V = sel => document.querySelector(sel);
+const plan = [];
+function clip(video, ...pieces) { plan.push({ video, pieces }); }
+const pieceLen = s => (s.to - s.from) / (s.rate || 1);
+function localTime(p, t) {
+  for (const s of p.pieces) if (t >= s.at && t < s.at + pieceLen(s)) return s.from + (t - s.at) * (s.rate || 1);
+  if (t < p.pieces[0].at) return p.pieces[0].from;
+  return p.pieces[p.pieces.length - 1].to - 0.04;
+}
+
+/* ---- timeline ---- */
+gsap.defaults({ ease: 'expo.out', duration: 0.7 });
+const tl = gsap.timeline({ paused: true });
+function show(id, at) { tl.set(id, { visibility: 'visible' }, at).fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power1.out', immediateRender: false }, at); }
+function hide(id, at) { tl.to(id, { opacity: 0, scale: 0.985, filter: 'blur(4px)', duration: 0.35, ease: 'power2.in' }, at).set(id, { visibility: 'hidden' }, at + 0.35); }
+const blurIn = (sel, at, y = 18, blur = 6, d = 0.8) =>
+  tl.fromTo(sel, { opacity: 0, y, filter: `blur(${blur}px)` }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: d, immediateRender: false }, at);
+/** A caption arrives the way the apps swap content: from a small blur */
+function capIn(scope, at) { blurIn(`${scope} .step`, at, 14, 4, 0.6); blurIn(`${scope} .h`, at + 0.08, 22, 6); blurIn(`${scope} .sub`, at + 0.22, 16, 4); }
+function deviceIn(sel, at) { tl.fromTo(sel, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.9, immediateRender: false }, at); }
+
+// 0 · intro 0 – 3.1
+show('#s0', 0);
+tl.fromTo('#s0 .mark', { opacity: 0, scale: 0.9, filter: 'blur(6px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.9 }, 0.15);
+blurIn('#s0 .wordmark', 0.35); blurIn('#s0 .line', 0.7);
+hide('#s0', 2.75);
+tl.to('#corner', { opacity: 1, duration: 0.5 }, 3.0);
+
+// 1 · the guest's phone 3.0 – 14.5
+show('#s1', 3.0); capIn('#s1', 3.05); deviceIn('#s1 .phone', 3.0);
+clip(V('#s1 video'), { at: 3.2, from: 0.5, to: 9.1 }, { at: 3.2 + 8.6, from: 9.1, to: 13.2, rate: 1.6 });
+hide('#s1', 14.5);
+
+// 2 · the till 14.85 – 19.3
+show('#s2', 14.85); capIn('#s2', 14.9); deviceIn('#s2 .tablet', 14.85);
+clip(V('#s2 video'), { at: 15.1, from: 0, to: 3.94 });
+hide('#s2', 19.3);
+
+// 3 · the kitchen 19.65 – 25.6
+show('#s3', 19.65); capIn('#s3', 19.7); deviceIn('#s3 .tablet', 19.65);
+clip(V('#s3 video'), { at: 19.8, from: 0, to: 6.4 });
+hide('#s3', 25.6);
+
+// 4 · booking 25.95 – 30.6
+show('#s4', 25.95); capIn('#s4', 26.0); deviceIn('#s4 .phone', 25.95);
+clip(V('#s4 video'), { at: 26.1, from: 0.2, to: 5.1 });
+hide('#s4', 30.6);
+
+// 5 · the back office 30.95 – 37.2
+show('#s5', 30.95); capIn('#s5', 31.0); deviceIn('#s5 .window', 30.95);
+clip(V('#s5 video'), { at: 31.1, from: 0, to: 6.3 });
+// once the proposal is up, lean in so its lines can be read
+tl.fromTo('#scanvid', { scale: 1, transformOrigin: '100% 45%' }, { scale: 1.32, transformOrigin: '100% 45%', duration: 3.2, ease: 'power2.inOut', immediateRender: false }, 31.1 + 2.7);
+hide('#s5', 37.2);
+
+// 6 · two languages 37.55 – 41.4
+show('#s6', 37.55);
+blurIn('#s6 .h', 37.6);
+tl.fromTo('#p6a', { opacity: 0, y: 60, scale: 0.86 }, { opacity: 1, y: 0, scale: 0.86, duration: 0.9, immediateRender: false }, 37.6)
+  .fromTo('#p6b', { opacity: 0, y: 60, scale: 0.86 }, { opacity: 1, y: 0, scale: 0.86, duration: 0.9, immediateRender: false }, 37.72);
+clip(V('#p6a video'), { at: 37.6, from: 0.2, to: 4.1 });
+clip(V('#p6b video'), { at: 37.6, from: 0.2, to: 4.1 });
+hide('#s6', 41.4);
+tl.to('#corner', { opacity: 0, duration: 0.3 }, 41.4);
+
+// 7 · end 41.75 – 45
+show('#s7', 41.75);
+tl.fromTo('#s7 .mark', { opacity: 0, scale: 0.9, filter: 'blur(6px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.9, immediateRender: false }, 41.8);
+blurIn('#s7 .wordmark', 41.95); blurIn('#s7 .line', 42.15); blurIn('#s7 .small', 42.35, 14, 4); blurIn('#s7 .pill', 42.55, 14, 4);
+tl.set({}, {}, DURATION);
+
+/* ---- driving the clips ---- */
+function syncClips(t, exact) {
+  const waits = [];
+  for (const p of plan) {
+    const v = p.video, lt = localTime(p, t);
+    if (exact) {
+      if (!v.paused) v.pause();
+      if (Math.abs(v.currentTime - lt) > 0.001) waits.push(new Promise(r => { v.addEventListener('seeked', r, { once: true }); v.currentTime = lt; }));
+      continue;
+    }
+    const piece = p.pieces.find(s => t >= s.at && t < s.at + pieceLen(s));
+    if (piece) {
+      v.playbackRate = piece.rate || 1;
+      if (Math.abs(v.currentTime - lt) > 0.25) v.currentTime = lt;
+      if (v.paused) v.play().catch(() => {});
+    } else {
+      if (!v.paused) v.pause();
+      if (Math.abs(v.currentTime - lt) > 0.05) v.currentTime = lt;
+    }
+  }
+  return Promise.all(waits);
+}
+
+window.__duration = DURATION;
+window.__seek = async t => {
+  tl.time(Math.min(t, DURATION), false);
+  await syncClips(t, true);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+
+const scrub = document.getElementById('scrub'), clock = document.getElementById('clock'), btn = document.getElementById('play');
+tl.eventCallback('onUpdate', () => { scrub.value = tl.time(); clock.textContent = `${tl.time().toFixed(1)} / ${DURATION.toFixed(1)}`; if (!render) syncClips(tl.time(), false); });
+tl.eventCallback('onComplete', () => { btn.textContent = 'Play'; videos.forEach(v => v.pause()); });
+btn.onclick = () => { if (tl.isActive()) { tl.pause(); videos.forEach(v => v.pause()); btn.textContent = 'Play'; } else { if (tl.progress() === 1) tl.restart(); else tl.play(); btn.textContent = 'Pause'; } };
+scrub.oninput = () => { tl.pause(); btn.textContent = 'Play'; tl.time(+scrub.value); syncClips(+scrub.value, true); };
+
+Promise.all([document.fonts.ready, ...videos.map(v => new Promise(r => v.readyState >= 2 ? r() : v.addEventListener('loadeddata', r, { once: true })))])
+  .then(() => { window.__ready = true; tl.time(0); syncClips(0, true); });
+</script>
+</body>
+</html>

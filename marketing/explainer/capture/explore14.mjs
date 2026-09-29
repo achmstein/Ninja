@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const here = new URL('./', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'); const out = here + 'shots/';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, storageState: here + 'admin-state.json' });
+const a = await ctx.newPage();
+await a.goto('http://localhost:5173/brand'); await a.waitForTimeout(6000);
+console.log('url', a.url());
+console.log('file inputs', await a.locator('input[type=file]').count());
+console.log('buttons', (await a.locator('button').allInnerTexts()).map(s => s.trim()).filter(Boolean).join(' | '));
+await a.mouse.wheel(0, 900); await a.waitForTimeout(1000); await a.screenshot({ path: out + 'brand-2.png' });
+await a.mouse.wheel(0, 900); await a.waitForTimeout(1000); await a.screenshot({ path: out + 'brand-3.png' });
+await browser.close();

@@ -1,0 +1,23 @@
+import { chromium } from 'playwright';
+const here = new URL('./', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'); const out = here + 'shots/';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await ctx.addInitScript(() => { localStorage.setItem('ninja-language', JSON.stringify({ state: { language: 'en' }, version: 0 })); localStorage.setItem('ninja-style-hints', JSON.stringify(['swipe','zoom','holdAdd','tray'])); });
+const p = await ctx.newPage();
+await p.goto('http://localhost:5174/'); await p.getByText('Cappuccino', { exact: true }).first().waitFor();
+await p.getByRole('link', { name: 'Book' }).or(p.getByRole('button', { name: 'Book' })).first().click(); await p.waitForTimeout(2000);
+await p.getByText('Sign in or create an account').click();
+await p.waitForTimeout(2500); await p.screenshot({ path: out + 'b-0.png' });
+const email = p.getByText(/Continue with email/); if (await email.count()) { await email.click(); }
+await p.waitForSelector('#username', { timeout: 30000 });
+await p.fill('#username', 'tester'); await p.fill('#password', 'Tester123$');
+await Promise.all([p.waitForNavigation().catch(() => {}), p.click('#kc-login')]); await p.waitForTimeout(8000);
+await ctx.storageState({ path: here + 'tester-state.json' });
+await p.screenshot({ path: out + 'b-1.png' });
+await p.getByRole('link', { name: 'Book' }).or(p.getByRole('button', { name: 'Book' })).first().click(); await p.waitForTimeout(2500);
+await p.screenshot({ path: out + 'b-2.png' });
+const plus = p.locator('text="Room 1" >> visible=true').first(); const b = await plus.boundingBox();
+await p.mouse.click(336, b.y - 50); await p.waitForTimeout(2500);
+await p.screenshot({ path: out + 'b-3.png' });
+console.log((await p.locator('button').allInnerTexts()).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | ').slice(0, 800));
+await browser.close();

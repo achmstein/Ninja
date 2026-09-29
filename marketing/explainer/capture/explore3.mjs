@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const out = new URL('./shots/', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await ctx.addInitScript(() => localStorage.setItem('ninja-language', JSON.stringify({ state: { language: 'en' }, version: 0 })));
+const p = await ctx.newPage();
+const shot = async n => { await p.waitForTimeout(1500); await p.screenshot({ path: out + 'z-' + n + '.png' }); };
+await p.goto('http://localhost:5174/p/13'); await p.waitForTimeout(5000); await shot('1-table');
+await p.getByText('Continue with email').click(); await p.waitForSelector('#username', { timeout: 30000 });
+await p.fill('#username', 'tester'); await p.fill('#password', 'Tester123$');
+await Promise.all([p.waitForNavigation().catch(() => {}), p.click('#kc-login')]);
+await p.waitForTimeout(8000); await shot('2-after-login');
+console.log(p.url());
+await ctx.storageState({ path: new URL('./tester-state.json', import.meta.url).pathname.replace(/^\/(\w:)/, '$1') });
+await browser.close();

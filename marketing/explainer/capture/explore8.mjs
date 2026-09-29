@@ -1,0 +1,21 @@
+import { chromium } from 'playwright';
+const here = new URL('./', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'); const out = here + 'shots/';
+const browser = await chromium.launch();
+const pctx = await browser.newContext({ viewport: { width: 1366, height: 800 }, deviceScaleFactor: 2, storageState: here + 'pos-state.json' });
+const t = await pctx.newPage(); await t.goto('http://localhost:5175/'); await t.waitForTimeout(5000);
+const kctx = await browser.newContext({ viewport: { width: 1366, height: 800 }, deviceScaleFactor: 2, storageState: here + 'kds-state.json' });
+const k = await kctx.newPage(); await k.goto('http://localhost:5176/'); await k.waitForTimeout(5000);
+await t.getByRole('button', { name: /Confirm/ }).first().click();
+await t.waitForTimeout(2500); await t.screenshot({ path: out + 'r-pos-after.png' });
+await k.waitForTimeout(2000); await k.screenshot({ path: out + 'r-kds.png' });
+console.log('KDS:', (await k.locator('button').allInnerTexts()).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | '));
+// admin
+const actx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+const a = await actx.newPage(); await a.goto('http://localhost:5173/'); await a.waitForSelector('#username');
+await a.fill('#username', 'admin@chillax.site'); await a.fill('#password', 'Admin123$');
+await Promise.all([a.waitForNavigation().catch(() => {}), a.click('#kc-login')]); await a.waitForTimeout(8000);
+await actx.storageState({ path: here + 'admin-state.json' });
+await a.screenshot({ path: out + 'r-admin-dash.png' });
+const links = await a.locator('a').evaluateAll(els => els.map(e => e.textContent.trim() + ' ' + e.getAttribute('href')).filter(s => s.includes('/')));
+console.log('ADMIN:', links.join(' | '));
+await browser.close();

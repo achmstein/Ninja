@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+const out = new URL('./shots/', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+const b = await chromium.launch(); const c = await b.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1600, height: 1000 } });
+const p = await c.newPage();
+await p.goto('https://localhost:19888/login?t=30ab1f646522c24108903f932eb171f0'); await p.waitForTimeout(4000);
+await p.locator('input[type=search]').first().fill('identity'); await p.waitForTimeout(1500);
+await p.screenshot({ path: out + 'aspire-id.png' });
+console.log(await p.locator('fluent-data-grid, table, [role=grid]').first().innerText().catch(() => ''));
+await p.locator('fluent-button[title="More"], [aria-label*="More"], button:has-text("...")').last().click().catch(async () => { await p.mouse.click(1481, 280); });
+await p.waitForTimeout(800);
+await p.screenshot({ path: out + 'aspire-menu.png' });
+const r = p.getByText('Restart', { exact: true });
+if (await r.count()) { await r.first().click(); console.log('restarted'); } else console.log('no restart item');
+await p.waitForTimeout(25000);
+await p.screenshot({ path: out + 'aspire-id2.png' });
+console.log(await p.locator('[role=grid]').first().innerText().catch(() => ''));
+await b.close();

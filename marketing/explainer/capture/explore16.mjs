@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const here = new URL('./', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'); const out = here + 'shots/';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, storageState: here + 'customer-state.json' });
+await ctx.addInitScript(() => { localStorage.setItem('ninja-language', JSON.stringify({ state: { language: 'en' }, version: 0 })); localStorage.setItem('ninja-style-hints', JSON.stringify(['swipe','zoom','holdAdd','tray'])); });
+const p = await ctx.newPage();
+p.on('response', async r => { if (r.request().method() !== 'GET' && r.url().includes('/api/')) console.log(r.request().method(), r.status(), r.url(), r.request().postData()?.slice(0, 200), (await r.text().catch(() => '')).slice(0, 600)); });
+await p.goto('http://localhost:5174/'); await p.getByText('Cappuccino', { exact: true }).first().waitFor();
+await p.getByRole('link', { name: 'Book', exact: true }).or(p.getByRole('button', { name: 'Book', exact: true })).first().click(); await p.waitForTimeout(3000);
+const b = await p.locator('text="Room 1" >> visible=true').first().boundingBox();
+await p.mouse.click(336, b.y - 50); await p.waitForTimeout(2500);
+await p.locator('input').first().fill('01122334455'); await p.getByRole('button', { name: 'Done', exact: true }).click(); await p.waitForTimeout(4000);
+await browser.close();

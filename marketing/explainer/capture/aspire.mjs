@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const out = new URL('./shots/', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+const b = await chromium.launch(); const c = await b.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1600, height: 1000 } });
+const p = await c.newPage();
+await p.goto('https://localhost:19888/login?t=30ab1f646522c24108903f932eb171f0'); await p.waitForTimeout(5000);
+await p.screenshot({ path: out + 'aspire.png' });
+await p.goto('https://localhost:19888/consolelogs/resource/identity-api'); await p.waitForTimeout(5000);
+await p.screenshot({ path: out + 'aspire-identity.png' });
+console.log((await p.locator('body').innerText()).slice(-3000));
+await b.close();

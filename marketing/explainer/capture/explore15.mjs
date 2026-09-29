@@ -1,0 +1,26 @@
+import { chromium } from 'playwright';
+const here = new URL('./', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'); const out = here + 'shots/';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await ctx.addInitScript(() => { localStorage.setItem('ninja-language', JSON.stringify({ state: { language: 'en' }, version: 0 })); localStorage.setItem('ninja-style-hints', JSON.stringify(['swipe','zoom','holdAdd','tray'])); });
+const p = await ctx.newPage();
+const texts = async () => (await p.locator('button, a').allInnerTexts()).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | ').slice(0, 900);
+await p.goto('http://localhost:5174/'); await p.getByText('Cappuccino', { exact: true }).first().waitFor();
+await p.getByRole('link', { name: 'You', exact: true }).or(p.getByRole('button', { name: 'You', exact: true })).first().click(); await p.waitForTimeout(2500);
+await p.screenshot({ path: out + 'c-you-guest.png' });
+// sign in as the admin (who is also a customer)
+const signin = p.getByText(/Sign in or create an account|Continue with email/).first(); await signin.click(); await p.waitForTimeout(2000);
+if (await p.getByText(/Continue with email/).count()) await p.getByText(/Continue with email/).first().click();
+await p.waitForSelector('#username', { timeout: 30000 });
+await p.fill('#username', 'admin@chillax.site'); await p.fill('#password', 'Admin123$');
+await Promise.all([p.waitForNavigation().catch(() => {}), p.click('#kc-login')]); await p.waitForTimeout(8000);
+await ctx.storageState({ path: here + 'customer-state.json' });
+await p.screenshot({ path: out + 'c-after-login.png' });
+await p.getByRole('link', { name: 'You', exact: true }).or(p.getByRole('button', { name: 'You', exact: true })).first().click(); await p.waitForTimeout(3000);
+await p.screenshot({ path: out + 'c-you.png' }); console.log('YOU:', await texts());
+await p.getByRole('link', { name: 'Book', exact: true }).or(p.getByRole('button', { name: 'Book', exact: true })).first().click(); await p.waitForTimeout(3000);
+await p.screenshot({ path: out + 'c-book.png' });
+const b = await p.locator('text="Room 1" >> visible=true').first().boundingBox();
+await p.mouse.click(336, b.y - 50); await p.waitForTimeout(3000);
+await p.screenshot({ path: out + 'c-book-room1.png' }); console.log('BOOK:', await texts());
+await browser.close();

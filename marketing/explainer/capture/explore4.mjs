@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const out = new URL('./shots/', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await ctx.addInitScript(() => localStorage.setItem('ninja-language', JSON.stringify({ state: { language: 'en' }, version: 0 })));
+const p = await ctx.newPage();
+const shot = async n => { await p.waitForTimeout(1500); await p.screenshot({ path: out + 'w-' + n + '.png' }); };
+await p.goto('http://localhost:5174/p/13'); await p.waitForSelector('text=Cappuccino'); await p.waitForTimeout(2500);
+await p.mouse.click(355, 474); await p.waitForTimeout(700); await p.mouse.click(355, 543); await shot('1-added');
+const texts = (await p.locator('button, [role=button]').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim()).filter(t => t && t.length < 40);
+console.log([...new Set(texts)].join(' | '));
+await browser.close();

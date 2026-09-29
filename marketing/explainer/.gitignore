@@ -1,0 +1,9 @@
+# Sign-in states hold live session tokens
+capture/*-state.json
+# Generated: screenshots, recordings, check frames, renders
+capture/shots/
+clips/
+stills/
+*.mp4
+# The first, drawn version (rejected)
+v1-mockup.*
