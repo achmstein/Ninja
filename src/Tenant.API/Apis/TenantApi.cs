@@ -78,12 +78,12 @@ public static partial class TenantApi
         return app;
     }
 
-    public static async Task<ContentHttpResult> GetLoginCss(TenantContext context, HttpContext http)
+    public static async Task<ContentHttpResult> GetLoginCss(TenantContext context, HttpContext http, IConfiguration configuration)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Model.Tenant.SingletonId);
         // A changed colour reaches the sign-in page within minutes; the page itself never names a version
         http.Response.Headers.CacheControl = "public, max-age=300";
-        return TypedResults.Text(Services.LoginCss.For(tenant), "text/css");
+        return TypedResults.Text(Services.LoginCss.For(tenant, configuration["Tenant:ApiUrl"]), "text/css");
     }
 
     public static async Task<Ok<TenantResponse>> GetTenant(TenantContext context, IConfiguration configuration)

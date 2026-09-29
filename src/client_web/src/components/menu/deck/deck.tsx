@@ -3,7 +3,6 @@ import { motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { ease } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { canQuickAdd, CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
@@ -24,6 +23,9 @@ const ADVANCE_AFTER = 60
 
 /** How long a scroll must be still before it counts as resting on a card, ms (a snap's last frames included) */
 const SETTLE_MS = 110
+
+/** How long a card that was open stays uncontained after it closes, ms: its fold back into its slot, a spring that settles in about this */
+const UNBOUND_MS = 900
 
 /**
  * The card a column rests on: the last one whose top has reached the room at
@@ -248,7 +250,6 @@ export const Deck = memo(function Deck({
               item={item}
               // Only the column on screen morphs; the rest simply appear, which keeps a zoom cheap on a slow phone
               shared={c === column && Number(item.id) !== landingId}
-              landing={Number(item.id) === landingId}
               open={Number(item.id) === openId}
               usual={col.kind === 'usuals' && Number(item.id) === usualId}
               hint={Number(item.id) === holdHintId}
@@ -323,15 +324,12 @@ const DeckCard = memo(function DeckCard({
   shared,
   usual,
   hint,
-  landing,
   open,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
   shared: boolean
-  /** Its photo is in the air: the card is out of sight until it lands, then fades back */
-  landing: boolean
   /** Its dish is open in place */
   open: boolean
   usual: boolean
@@ -342,6 +340,14 @@ const DeckCard = memo(function DeckCard({
   const t = useT()
   const photo = useRef<HTMLDivElement>(null)
   const quick = canQuickAdd(item)
+  // Open, and for the fold back into the deck after, the card is not contained: it grows past its slot to fill the screen
+  const [unbound, setUnbound] = useState(open)
+  if (open && !unbound) setUnbound(true)
+  useEffect(() => {
+    if (open || !unbound) return
+    const timer = window.setTimeout(() => setUnbound(false), UNBOUND_MS)
+    return () => window.clearTimeout(timer)
+  }, [open, unbound])
   const { pressing, handlers } = usePress({
     onTap: () => onOpen(item, photo.current),
     onLongPress: () => onQuickAdd(item, photo.current),
@@ -352,15 +358,16 @@ const DeckCard = memo(function DeckCard({
       data-open={open || undefined}
       // A card off screen (the other categories, the ones further down) keeps its box but is not laid
       // out or painted inside: the bar going up resizes every card in the deck, and only the ones in
-      // view should cost anything while it does
-      className='mb-3 snap-start transition-transform duration-200 ease-out [content-visibility:auto] motion-reduce:transition-none'
+      // view should cost anything while it does. That skipping also clips the card to its slot, so the
+      // card opening or folding back into place leaves it off, or the morph is cut to the slot's size
+      className={cn(
+        'mb-3 snap-start transition-transform duration-200 ease-out motion-reduce:transition-none',
+        !unbound && '[content-visibility:auto]'
+      )}
       style={{ height: `calc(100% - var(--deck-top) - ${PEEK}px)`, transform: pressing ? 'scale(0.97)' : undefined }}
     >
       <motion.article
         layoutId={shared ? `card-${item.id}` : undefined}
-        initial={false}
-        animate={{ opacity: landing ? 0 : 1 }}
-        transition={landing ? { duration: 0 } : { duration: 0.25, ease: ease.enter }}
         style={{ borderRadius: CARD_RADIUS }}
         className='relative isolate h-full w-full cursor-pointer overflow-hidden select-none [-webkit-touch-callout:none]'
         {...handlers}
@@ -426,6 +433,11 @@ export function CardFace({
   item: CatalogItemDto
   usual?: boolean
   photoRef?: MutableRefObject<HTMLDivElement | null>
+  /**
+   * The card morphs into its open dish: its words then keep their shape while the card grows and shrinks
+   * around them. The photo is the card's own, filling it the whole way, not shared with the open dish's
+   * short banner: grown out of that strip it was stretched tall, with the card empty under it until it caught up
+   */
   layoutPhoto: boolean
 }) {
   const t = useT()
@@ -461,7 +473,6 @@ export function CardFace({
     return (
       <motion.div
         ref={photoRef}
-        layoutId={layoutPhoto ? `photo-${item.id}` : undefined}
         className={cn('absolute inset-0 flex flex-col justify-end p-6', TONE_CLASS.primary, soldOut && 'grayscale')}
       >
         {badges}
@@ -476,7 +487,6 @@ export function CardFace({
     <>
       <motion.div
         ref={photoRef}
-        layoutId={layoutPhoto ? `photo-${item.id}` : undefined}
         className={cn('bg-muted absolute inset-0 -z-10 overflow-hidden', soldOut && 'grayscale')}
       >
         <img
@@ -491,11 +501,11 @@ export function CardFace({
       </motion.div>
       <div aria-hidden className='absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/15 to-transparent' />
       {badges}
-      <div className='absolute inset-x-0 bottom-0 p-6 text-white'>
+      <motion.div layout={layoutPhoto ? 'position' : false} className='absolute inset-x-0 bottom-0 p-6 text-white'>
         <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
         {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-note text-white/80'>{description}</p>}
         <div className='mt-3'>{priceLine}</div>
-      </div>
+      </motion.div>
     </>
   )
 }

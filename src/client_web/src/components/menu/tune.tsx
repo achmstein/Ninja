@@ -19,6 +19,8 @@ import {
 import { sortedOptions, TONE_CLASS } from './deck/deck-model'
 import { Odometer } from '../ninja/odometer'
 
+const CLEAR_OUT = { opacity: 0, transition: { duration: 0.16, ease: ease.exit } }
+
 export type TuneResult = {
   customizations: CartCustomization[]
   quantity: number
@@ -107,7 +109,14 @@ export function Tune({
       className={cn('relative aspect-[16/7] max-h-[180px] w-full overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
     >
       {hasPhoto ? (
-        <img src={itemPictureUrl(item.id)} alt='' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', soldOut && 'grayscale')} />
+        <motion.img
+          src={itemPictureUrl(item.id)}
+          alt=''
+          draggable={false}
+          onError={() => setFailed(true)}
+          exit={CLEAR_OUT}
+          className={cn('size-full object-cover', soldOut && 'grayscale')}
+        />
       ) : (
         // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
         <div className='grid size-full place-items-center'>
@@ -118,17 +127,22 @@ export function Tune({
   )
 
   return (
+    // Added, it lets go of its card as well: sharing a layout id with no card left to fold into, it
+    // vanished on the spot instead of fading, leaving its photo's copy alone over an empty screen
     <motion.div
-      layoutId={`card-${item.id}`}
+      layoutId={leaving ? undefined : `card-${item.id}`}
       style={{ borderRadius: 0 }}
       transition={springOpen}
       exit={leaving ? { opacity: 0, scale: 0.97, transition: { duration: 0.18, ease: ease.exit } } : undefined}
       role='dialog'
       aria-modal='true'
       aria-label={localized(item.name)}
-      className='bg-background absolute inset-0 z-30 flex flex-col overflow-hidden'
+      className='absolute inset-0 z-30 flex flex-col overflow-hidden'
     >
-      <div className='no-scrollbar flex-1 overflow-y-auto overscroll-contain'>
+      {/* Its page, and its banner's photo, clear at once as it closes, so the dish it folds back into shows
+          through: on the page alone, the sheet stayed a white slab for half the fold, the card only then showing */}
+      <motion.div aria-hidden exit={CLEAR_OUT} className='bg-background absolute inset-0' />
+      <div className='no-scrollbar relative flex-1 overflow-y-auto overscroll-contain'>
         {photoBox}
 
         <motion.div
@@ -184,7 +198,7 @@ export function Tune({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
         transition={{ ...springOpen, delay: 0.08 }}
-        className='bg-background flex items-center gap-3 border-t px-4 py-3'
+        className='bg-background relative flex items-center gap-3 border-t px-4 py-3'
       >
         <div className='flex items-center gap-1'>
           <button
@@ -209,14 +223,15 @@ export function Tune({
         />
       </motion.div>
 
-      <button
+      <motion.button
         type='button'
         onClick={onClose}
+        exit={CLEAR_OUT}
         aria-label={t('close')}
         className='absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'
       >
         <X className='size-5' />
-      </button>
+      </motion.button>
     </motion.div>
   )
 }

@@ -24,6 +24,11 @@ import { useHint, useTimeout } from '../ninja/gestures/use-hint'
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 
+/** How far the order sheet reaches down into the dock, px: it rises from inside it */
+const TUCK = 28
+/** The grab handle's distance from the top edge it sits on, px */
+const HANDLE_TOP = 6
+
 export type TrayOrder = {
   submit: () => Promise<boolean>
   isPending: boolean
@@ -183,6 +188,9 @@ export function Tray({
   const countHeight = useTransform(openness, (v): number | string => (v <= 0.001 ? 'auto' : 16 * (1 - v)))
   const totalScale = useTransform(openness, (v) => 1 + 0.3 * v)
   const seatShown = useTransform(openness, (v): number => (reduced || v >= 0.999 ? 1 : 0))
+  // The one grab handle rides the order's top edge: it stays on the dock until the rising sheet reaches
+  // it, then goes up with the sheet (under a finger too) and comes back down with it as it closes
+  const handleY = useTransform(y, (v) => Math.min(0, TUCK - height.current + v))
 
   const settle = (to: 'open' | 'shut') => {
     const target = to === 'open' ? 0 : height.current
@@ -284,7 +292,7 @@ export function Tray({
       {sheetOn && !empty && (
         <div
           className='pointer-events-none absolute inset-x-0 overflow-hidden rounded-t-[1.75rem]'
-          style={{ bottom: DOCK_H - 28, height: 'min(68svh, 34rem)' }}
+          style={{ bottom: DOCK_H - TUCK, height: 'min(68svh, 34rem)' }}
         >
           <motion.div
             ref={sheetRef}
@@ -329,8 +337,12 @@ export function Tray({
                 disabled={empty}
                 className='flex min-w-0 flex-1 touch-none items-center gap-3 text-start'
               >
-                {/* The dock's grab handle, always there: the open sheet shows none of its own, so there is only ever the one */}
-                <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
+                {/* The dock's grab handle, always there: the open sheet shows none of its own, so there is only ever the one, and it goes up and down with the sheet */}
+                <motion.span
+                  aria-hidden
+                  className='bg-background/30 absolute left-1/2 h-1 w-9 -translate-x-1/2 rounded-full'
+                  style={{ top: HANDLE_TOP, y: handleY }}
+                />
                 <motion.div
                   ref={targetRef}
                   key={bump}
@@ -463,7 +475,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   )
 }
 
-/** The open sheet's top edge: pulled down or tapped, it closes; no bar of its own, the dock's handle is the one shown */
+/** The open sheet's top edge: pulled down or tapped, it closes; no bar of its own, the dock's handle has come up onto it */
 function SheetHandle({
   onClose,
   onPanStart,

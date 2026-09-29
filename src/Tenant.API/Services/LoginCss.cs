@@ -13,7 +13,8 @@ namespace Ninja.Tenant.API.Services;
 /// </summary>
 public static partial class LoginCss
 {
-    public static string For(Model.Tenant tenant) => Fonts(tenant) + Colours(tenant) + Logo(tenant);
+    /// <param name="apiUrl">The API's public address, the host the sign-in page loads this sheet from (Tenant:ApiUrl)</param>
+    public static string For(Model.Tenant tenant, string? apiUrl) => Fonts(tenant) + Colours(tenant) + Logo(tenant, apiUrl);
 
     /// <summary>
     /// The café's own drawing at the head of the customer's pages, picked as the app's header picks
@@ -21,9 +22,14 @@ public static partial class LoginCss
     /// else the logo (the dark one on a dark page). As --nj-logo with its shape and size, per
     /// language and scheme; a combination with nothing uploaded unsets it, and the page shows the
     /// café's icon instead. Nothing at all when the café uploaded no image.
+    /// The address is absolute, on the API's host: a url() in a custom property is resolved against
+    /// the sheet that uses it (the theme's own, on Keycloak's host), so a path alone asked Keycloak for
+    /// the image and the page showed nothing. With no known host there is no logo, and the page keeps
+    /// the café's icon, which the theme addresses on the API's host itself.
     /// </summary>
-    public static string Logo(Model.Tenant tenant)
+    public static string Logo(Model.Tenant tenant, string? apiUrl)
     {
+        if (Origin(apiUrl) is not { } origin) return "";
         var variants = new[]
         {
             (Selector: ":root", Pick: PickLogo(tenant, arabic: false, dark: false)),
@@ -43,8 +49,8 @@ public static partial class LoginCss
                 var (slot, image) = picked;
                 var wide = !Model.TenantImageSlots.IsMark(slot);
                 var ratio = image.Width > 0 && image.Height > 0 ? $"{image.Width} / {image.Height}" : "1";
-                // Only a slot name and numbers reach the address
-                css.Append($"  --nj-logo: url('/api/tenant/images/{slot}?v={image.Version.ToString(CultureInfo.InvariantCulture)}');\n");
+                // Only the API's origin, a slot name and numbers reach the address
+                css.Append($"  --nj-logo: url('{origin}/api/tenant/images/{slot}?v={image.Version.ToString(CultureInfo.InvariantCulture)}');\n");
                 css.Append($"  --nj-logo-ratio: {ratio};\n");
                 css.Append($"  --nj-logo-h: {(wide ? "3rem" : "4.5rem")};\n");
                 css.Append("  --nj-logo-radius: 0;\n");
@@ -57,6 +63,12 @@ public static partial class LoginCss
         }
         return css.ToString();
     }
+
+    /// <summary>The scheme, host and port of an http(s) address, nothing else of it; null for anything else</summary>
+    private static string? Origin(string? url)
+        => Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+            ? uri.GetLeftPart(UriPartial.Authority)
+            : null;
 
     private static (string Slot, Model.TenantImage Image)? PickLogo(Model.Tenant tenant, bool arabic, bool dark)
     {

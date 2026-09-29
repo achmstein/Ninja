@@ -76,6 +76,9 @@ export const MenuGrid = memo(function MenuGrid({
   // out of it; every other tile outside the deck's column has none, which keeps the zoom's first
   // frame cheap (each id is a box to measure)
   const [openingId, setOpeningId] = useState<number | null>(null)
+  // Added from its options, the dish is done opening: its photo flew off to the tray, so it does not take
+  // its layout ids back as the photo lands (a remount mid-list, which blinked its photo out for a frame)
+  if (landingId != null && landingId === openingId) setOpeningId(null)
   // The dishes keep the same two handlers from render to render, so a render of the list (a dish
   // opening, a category asked for) passes every dish by but the one it is about
   const open = useHandler((item: CatalogItemDto) => {
