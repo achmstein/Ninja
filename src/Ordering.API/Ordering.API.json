@@ -2745,6 +2745,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "platformReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3094,6 +3100,16 @@
           },
           "source": {
             "type": "string"
+          },
+          "platform": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformOrderView"
+              }
+            ]
           },
           "placeId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -3578,6 +3594,16 @@
           },
           "source": {
             "type": "string"
+          },
+          "platform": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformOrderView"
+              }
+            ]
           },
           "customerNote": {
             "type": [
@@ -4068,6 +4094,16 @@
           "source": {
             "type": "string"
           },
+          "platform": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlatformOrderView"
+              }
+            ]
+          },
           "userName": {
             "type": [
               "null",
@@ -4240,6 +4276,78 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PlatformOrderView": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "shortCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expedition": {
+            "type": "string"
+          },
+          "riderPickupAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "deliveryAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paidOnline": {
+            "type": "boolean"
+          },
+          "collectFromCustomer": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "rejectReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cancelledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pickedUpAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

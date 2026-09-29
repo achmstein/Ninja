@@ -74,6 +74,9 @@ public sealed class PlatformOptions
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
 
+    /// <summary>Ninja's Talabat integration: one account for every café, used through the relay; empty leaves it off.</summary>
+    public TalabatOptions Talabat { get; set; } = new();
+
     /// <summary>How long a demo lives before it is stopped, and how long a stopped demo waits before it is destroyed.</summary>
     public int DemoDays { get; set; } = 14;
 

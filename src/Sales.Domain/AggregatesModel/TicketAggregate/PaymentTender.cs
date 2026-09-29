@@ -11,4 +11,11 @@ public enum PaymentTender
 
     /// <summary>Paid by the guest from their phone through the café's payment provider (OnlinePayment); never cash in the drawer.</summary>
     Online = 4,
+
+    /// <summary>
+    /// A delivery platform's order the platform pays the café for (Talabat):
+    /// settled by Sales itself when the order lands; never cash in the drawer,
+    /// never offered at the till.
+    /// </summary>
+    Talabat = 5,
 }

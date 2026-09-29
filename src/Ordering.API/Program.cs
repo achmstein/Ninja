@@ -25,6 +25,11 @@ orders.MapOrdersApiV1()
       .MapKitchenOrderRoutes()
       .RequireAuthorization();
 
+// Talabat's orders, relayed by the platform; each endpoint takes only the platform's token
+var talabat = app.NewVersionedApi("Talabat");
+
+Ninja.Ordering.API.Talabat.TalabatApi.MapTalabatApiV1(talabat);
+
 var kitchen = app.NewVersionedApi("Kitchen");
 
 kitchen.MapKitchenApiV1()

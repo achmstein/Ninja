@@ -46,6 +46,7 @@ public static partial class ControlApi
         MapSubscriptionApi(api);
         MapJobsApi(api);
         MapOperatorsApi(api);
+        MapTalabatSettingsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
@@ -550,7 +551,8 @@ public record TenantDetail(
     BusinessType BusinessType = BusinessType.Other,
     [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null,
     [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null,
-    [property: Description("Whether customers may sign in with Google and Apple")] bool SocialSignIn = true)
+    [property: Description("Whether customers may sign in with Google and Apple")] bool SocialSignIn = true,
+    [property: Description("The café on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -570,7 +572,8 @@ public record TenantDetail(
             t.BusinessType,
             t.DefaultTheme,
             t.Slab,
-            t.SocialSignIn);
+            t.SocialSignIn,
+            TenantTalabatDto.From(t, p));
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

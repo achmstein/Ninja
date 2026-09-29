@@ -21,13 +21,16 @@ enum TicketType {
 /// PaymentTender as Sales.Domain numbers it: Cash=0, Card=1, InstaPay=2,
 /// Account=3, Online=4. Online is what guests paid from their phones (pay
 /// at table): the server adds it at settle, the till never offers it, and
-/// it is never cash in the drawer.
+/// it is never cash in the drawer. Talabat=5 is a Talabat order Talabat
+/// pays the café for: the server settles it when the order lands, and the
+/// till never offers it either.
 enum PaymentTender {
   cash(0, 'Cash'),
   card(1, 'Card'),
   instaPay(2, 'InstaPay'),
   account(3, 'Account'),
-  online(4, 'Online');
+  online(4, 'Online'),
+  talabat(5, 'Talabat');
 
   final int value;
   final String name_;

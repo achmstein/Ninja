@@ -80,6 +80,20 @@ const dictionary = {
   guestTurnedAway: { en: "Turned away for today", ar: "مرفوض حتى الغد" },
   cancelOrderConfirm: { en: "Cancel order?", ar: "إلغاء الطلب؟" },
   keepOrder: { en: "Keep it", ar: "أبقِه" },
+  // A delivery platform's order
+  sourceTalabat: { en: "Talabat", ar: "طلبات" },
+  platformRiderAt: { en: "Rider at {time}", ar: "المندوب {time}" },
+  platformCollect: { en: "Customer collects", ar: "يستلمها العميل" },
+  platformOwnRider: { en: "Our rider", ar: "مندوبنا" },
+  platformCollectCash: { en: "Collect {amount}", ar: "تحصيل {amount}" },
+  platformCancelled: { en: "Cancelled on Talabat", ar: "أُلغي على طلبات" },
+  platformRejectReason: { en: "Why? Talabat tells the customer", ar: "السبب؟ طلبات تُبلغ العميل" },
+  rejectTooBusy: { en: "Too busy", ar: "مشغولون جدًا" },
+  rejectItemUnavailable: { en: "Item sold out", ar: "صنف غير متوفر" },
+  rejectClosed: { en: "Closed", ar: "مغلق" },
+  rejectNoCourier: { en: "No rider available", ar: "لا يوجد مندوب" },
+  rejectOutsideArea: { en: "Outside delivery area", ar: "خارج منطقة التوصيل" },
+  rejectPrank: { en: "Prank order", ar: "طلب وهمي" },
   orderConfirmed: { en: "Order confirmed", ar: "تم تأكيد الطلب" },
   orderCancelled: { en: "Order cancelled", ar: "تم إلغاء الطلب" },
   failedToConfirmOrder: { en: "Could not confirm the order", ar: "تعذّر تأكيد الطلب" },
@@ -291,6 +305,7 @@ const dictionary = {
   instapay: { en: "InstaPay", ar: "إنستاباي" },
   account: { en: "On account", ar: "على الحساب" },
   online: { en: "Online", ar: "أونلاين" },
+  talabatTender: { en: "Talabat", ar: "طلبات" },
 
   // Online payments: what guests paid from their phones
   paidOnlineTitle: { en: "Paid online", ar: "مدفوع أونلاين" },

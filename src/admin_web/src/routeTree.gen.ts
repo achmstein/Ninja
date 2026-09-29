@@ -20,6 +20,7 @@ import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as AuthenticatedTillIndexRouteImport } from './routes/_authenticated/till/index'
+import { Route as AuthenticatedTalabatIndexRouteImport } from './routes/_authenticated/talabat/index'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
@@ -116,6 +117,12 @@ const AuthenticatedTillIndexRoute = AuthenticatedTillIndexRouteImport.update({
   path: '/till/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTalabatIndexRoute =
+  AuthenticatedTalabatIndexRouteImport.update({
+    id: '/talabat/',
+    path: '/talabat/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -404,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
+  '/talabat': typeof AuthenticatedTalabatIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -457,6 +465,7 @@ export interface FileRoutesByTo {
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
+  '/talabat': typeof AuthenticatedTalabatIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -512,6 +521,7 @@ export interface FileRoutesById {
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
+  '/_authenticated/talabat/': typeof AuthenticatedTalabatIndexRoute
   '/_authenticated/till/': typeof AuthenticatedTillIndexRoute
   '/_authenticated/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/_authenticated/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -567,6 +577,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/staff'
+    | '/talabat'
     | '/till'
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/staff'
+    | '/talabat'
     | '/till'
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
@@ -674,6 +686,7 @@ export interface FileRouteTypes {
     | '/_authenticated/requests/'
     | '/_authenticated/settings/'
     | '/_authenticated/staff/'
+    | '/_authenticated/talabat/'
     | '/_authenticated/till/'
     | '/_authenticated/inventory/history/counts'
     | '/_authenticated/inventory/history/purchases'
@@ -770,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/till'
       fullPath: '/till'
       preLoaderRoute: typeof AuthenticatedTillIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/talabat/': {
+      id: '/_authenticated/talabat/'
+      path: '/talabat'
+      fullPath: '/talabat'
+      preLoaderRoute: typeof AuthenticatedTalabatIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/staff/': {
@@ -1101,6 +1121,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
+  AuthenticatedTalabatIndexRoute: typeof AuthenticatedTalabatIndexRoute
   AuthenticatedTillIndexRoute: typeof AuthenticatedTillIndexRoute
   AuthenticatedInventoryHistoryCountsRoute: typeof AuthenticatedInventoryHistoryCountsRoute
   AuthenticatedInventoryHistoryPurchasesRoute: typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -1147,6 +1168,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
+  AuthenticatedTalabatIndexRoute: AuthenticatedTalabatIndexRoute,
   AuthenticatedTillIndexRoute: AuthenticatedTillIndexRoute,
   AuthenticatedInventoryHistoryCountsRoute:
     AuthenticatedInventoryHistoryCountsRoute,

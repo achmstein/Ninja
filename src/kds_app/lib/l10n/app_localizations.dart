@@ -607,6 +607,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting…'**
   String get starting;
+
+  /// No description provided for @sourceTalabat.
+  ///
+  /// In en, this message translates to:
+  /// **'Talabat'**
+  String get sourceTalabat;
+
+  /// No description provided for @platformRiderAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider at {time}'**
+  String platformRiderAt(String time);
+
+  /// No description provided for @platformCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer collects'**
+  String get platformCollect;
+
+  /// No description provided for @platformOwnRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Our rider'**
+  String get platformOwnRider;
+
+  /// No description provided for @platformCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled on Talabat'**
+  String get platformCancelled;
 }
 
 class _AppLocalizationsDelegate

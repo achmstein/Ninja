@@ -101,5 +101,10 @@
   "kitchenTicketTestBody": "طابعة هذه المحطة تعمل",
   "kitchenPrinterStuck": "تذاكر المطبخ لا تُطبع: {stations}",
   "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.",
-  "starting": "جاري التشغيل…"
+  "starting": "جاري التشغيل…",
+  "sourceTalabat": "طلبات",
+  "platformRiderAt": "المندوب {time}",
+  "platformCollect": "يستلمها العميل",
+  "platformOwnRider": "مندوبنا",
+  "platformCancelled": "أُلغي على طلبات"
 }

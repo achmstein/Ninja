@@ -51,6 +51,9 @@ namespace Ordering.Infrastructure.Migrations
             modelBuilder.HasSequence("orderstationpartseq")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("platformupdateseq")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("printconnectorseq")
                 .IncrementsBy(10);
 
@@ -633,6 +636,72 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("places", "ordering");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.PlatformUpdate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "platformupdateseq");
+
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("AcceptanceTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("SentAt", "AbandonedAt", "NextAttemptAt");
+
+                    b.ToTable("platformupdates", "ordering");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.TenantSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -699,9 +768,94 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasForeignKey("OrderId");
                         });
 
+                    b.OwnsOne("Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.PlatformOrder", "Platform", b1 =>
+                        {
+                            b1.Property<int>("OrderId")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("AcceptedUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<DateTime?>("CancelledAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Code")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<decimal?>("CollectFromCustomer")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("DeliveryAddress")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<DateTime?>("DueAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Expedition")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<bool>("PaidOnline")
+                                .HasColumnType("boolean");
+
+                            b1.Property<DateTime?>("PickedUpAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("PickedUpUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<string>("PreparedUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<string>("RejectReason")
+                                .HasMaxLength(40)
+                                .HasColumnType("character varying(40)");
+
+                            b1.Property<string>("RejectedUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<DateTime?>("RiderPickupAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("ShortCode")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("Token")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.HasKey("OrderId");
+
+                            b1.HasIndex("Token")
+                                .IsUnique();
+
+                            b1.ToTable("orders", "ordering");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
                     b.Navigation("Buyer");
 
                     b.Navigation("PlaceName");
+
+                    b.Navigation("Platform");
                 });
 
             modelBuilder.Entity("Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.OrderItem", b =>

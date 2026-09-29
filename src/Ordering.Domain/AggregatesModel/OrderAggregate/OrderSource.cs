@@ -16,4 +16,11 @@ public enum OrderSource
 
     /// <summary>Staff keying a sale in at the counter POS.</summary>
     Pos = 2,
+
+    /// <summary>
+    /// A Talabat customer, dispatched to the café through Delivery Hero's
+    /// middleware. Paid and addressed on Talabat's side; the order carries
+    /// Talabat's details in <see cref="Order.Platform"/>.
+    /// </summary>
+    Talabat = 3,
 }

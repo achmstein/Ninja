@@ -1593,6 +1593,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onlineTender => 'أونلاين';
 
   @override
+  String get talabatTender => 'طلبات';
+
+  @override
   String get onlinePayments => 'مدفوع أونلاين';
 
   @override
@@ -1639,4 +1642,47 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settleRemainingOnly =>
       'دفع الضيوف جزءًا أونلاين؛ حصّل الباقي هنا.';
+
+  @override
+  String get sourceTalabat => 'طلبات';
+
+  @override
+  String platformRiderAt(String time) {
+    return 'المندوب $time';
+  }
+
+  @override
+  String get platformCollect => 'يستلمها العميل';
+
+  @override
+  String get platformOwnRider => 'مندوبنا';
+
+  @override
+  String platformCollectCash(String amount) {
+    return 'تحصيل $amount';
+  }
+
+  @override
+  String get platformCancelled => 'أُلغي على طلبات';
+
+  @override
+  String get platformRejectReason => 'السبب؟ طلبات تُبلغ العميل';
+
+  @override
+  String get rejectTooBusy => 'مشغولون جدًا';
+
+  @override
+  String get rejectItemUnavailable => 'صنف غير متوفر';
+
+  @override
+  String get rejectClosed => 'مغلق';
+
+  @override
+  String get rejectNoCourier => 'لا يوجد مندوب';
+
+  @override
+  String get rejectOutsideArea => 'خارج منطقة التوصيل';
+
+  @override
+  String get rejectPrank => 'طلب وهمي';
 }

@@ -12,6 +12,7 @@ import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 import '../status.dart';
 import 'order_detail_dialog.dart';
+import 'platform_badge.dart';
 import '../../../core/utils/bidi.dart';
 
 /// The queue of customer app orders waiting for a cashier's tap, wherever
@@ -48,10 +49,10 @@ class _PendingOrdersState extends ConsumerState<PendingOrders> {
     showPosToast(context, ok ? PosToastType.success : PosToastType.error, ok ? l10n.orderConfirmed : l10n.failedToConfirmOrder);
   }
 
-  Future<void> _cancel(int orderId) async {
+  Future<void> _cancel(int orderId, {String? platformReason}) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _acting = orderId);
-    final ok = await ref.read(pendingOrdersProvider.notifier).cancel(orderId);
+    final ok = await ref.read(pendingOrdersProvider.notifier).cancel(orderId, platformReason: platformReason);
     if (!mounted) return;
     setState(() => _acting = null);
     showPosToast(context, ok ? PosToastType.success : PosToastType.error, ok ? l10n.orderCancelled : l10n.failedToCancelOrder);
@@ -67,13 +68,13 @@ class _PendingOrdersState extends ConsumerState<PendingOrders> {
   }
 
   Future<void> _open(Order order) async {
-    final action = await showOrderDetailDialog(context, order.id, summary: order);
-    if (!mounted || action == null) return;
-    switch (action) {
+    final picked = await showOrderDetailDialog(context, order.id, summary: order);
+    if (!mounted || picked == null) return;
+    switch (picked.action) {
       case OrderDetailAction.confirm:
         await _confirm(order.id);
       case OrderDetailAction.cancel:
-        await _cancel(order.id);
+        await _cancel(order.id, platformReason: picked.platformReason);
       case OrderDetailAction.rejectGuest:
         await _rejectGuest(order.id);
     }
@@ -199,12 +200,23 @@ class _PendingOrderCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    subtitle == null || subtitle.isEmpty ? '#${order.id}' : '${bidiIsolate('#${order.id}')} · $subtitle',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
-                  ),
+                  if (order.platform case final platform?) ...[
+                    // A delivery platform's order: its logo and the code the rider asks for, and how it leaves
+                    Row(
+                      children: [
+                        Text('#${order.id}', style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        const SizedBox(width: 8),
+                        Flexible(child: PlatformBadge(platform: platform)),
+                      ],
+                    ),
+                    PlatformHandover(platform: platform),
+                  ] else
+                    Text(
+                      subtitle == null || subtitle.isEmpty ? '#${order.id}' : '${bidiIsolate('#${order.id}')} · $subtitle',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                    ),
                   if (history != null)
                     Row(
                       children: [

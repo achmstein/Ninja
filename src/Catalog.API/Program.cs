@@ -26,6 +26,8 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapCatalogApi();
+// Talabat: which branches sell there, sending the menu, what it is sent
+Ninja.Catalog.API.Talabat.TalabatApi.MapTalabatApi(app);
 
 app.UseDefaultOpenApi();
 app.Run();

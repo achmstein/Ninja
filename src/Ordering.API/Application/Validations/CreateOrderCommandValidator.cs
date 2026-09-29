@@ -16,8 +16,9 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
         // neither: staff keyed it in, the cashier's identity rides the request,
         // and a walk-in may have no customer at all — attaching one is
         // optional, for loyalty and tabs. Requiring an identity here rejected
-        // every anonymous POS order.
-        When(command => !command.IsGuestOrder && command.Source != OrderSource.Pos, () =>
+        // every anonymous POS order. A delivery platform's order has nobody
+        // here either: the platform holds the customer.
+        When(command => !command.IsGuestOrder && command.Source is not (OrderSource.Pos or OrderSource.Talabat), () =>
         {
             RuleFor(command => command.UserId).NotEmpty();
             RuleFor(command => command.UserName).NotEmpty();
@@ -48,6 +49,10 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
         RuleFor(command => command.PointsToRedeem).GreaterThanOrEqualTo(0);
 
         RuleFor(command => command.OrderItems).Must(ContainOrderItems).WithMessage("No order items found");
+
+        RuleFor(command => command.Platform).NotNull()
+            .When(command => command.Source == OrderSource.Talabat)
+            .WithMessage("A Talabat order needs Talabat's details.");
 
         if (logger.IsEnabled(LogLevel.Trace))
         {

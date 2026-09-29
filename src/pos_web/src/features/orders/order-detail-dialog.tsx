@@ -18,6 +18,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useMoney, toNumber } from '@/lib/money'
+import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
 
 type OrderDetailDialogProps = {
   /** The order to show; null keeps the dialog closed. */
@@ -26,7 +27,8 @@ type OrderDetailDialogProps = {
   summary?: OrderSummary
   onOpenChange: (open: boolean) => void
   onConfirm: (orderNumber: number) => void
-  onCancel: (orderNumber: number) => void
+  /** A delivery platform's order carries the reason it is turned down for */
+  onCancel: (orderNumber: number, platformReason?: string) => void
   /** "Nobody at the table": cancel, and turn the guest's device away for the day */
   onRejectGuest?: (orderNumber: number) => void
 }
@@ -50,9 +52,13 @@ export function OrderDetailDialog({
   const money = useMoney()
   const open = orderNumber != null
   const [cancelling, setCancelling] = useState(false)
+  const [reason, setReason] = useState(platformRejectReasons[0].value)
 
   useEffect(() => {
-    if (!open) setCancelling(false)
+    if (!open) {
+      setCancelling(false)
+      setReason(platformRejectReasons[0].value)
+    }
   }, [open])
 
   const { data: order, isLoading, isError, refetch } = useQuery({
@@ -72,6 +78,8 @@ export function OrderDetailDialog({
   const failed = !order && isError
   const canAct = !!order || failed
 
+  // A delivery platform's order: from the order once loaded, the queue's row until then
+  const platform = order?.platform ?? summary?.platform ?? null
   const loyaltyDiscount = toNumber(order?.loyaltyDiscount)
   const place = localized(order?.placeName)
   const who = order?.guestName || null
@@ -107,7 +115,12 @@ export function OrderDetailDialog({
               {[place, who].filter(Boolean).join(' · ')}
             </DialogDescription>
           )}
-          {summary && (
+          {platform ? (
+            <div className='flex flex-col gap-1 text-sm'>
+              <PlatformBadge platform={platform} />
+              <PlatformHandover platform={platform} className='text-muted-foreground' />
+            </div>
+          ) : summary && (
             <p
               className={cn(
                 'flex items-center gap-1.5 text-sm',
@@ -195,6 +208,28 @@ export function OrderDetailDialog({
             <p className='text-destructive text-base'>
               {t('cancelOrderConfirm')}
             </p>
+            {/* The platform tells its customer why; one tap picks it */}
+            {platform && (
+              <div className='flex flex-col gap-2'>
+                <span className='text-muted-foreground text-sm'>
+                  {t('platformRejectReason')}
+                </span>
+                <div className='flex flex-wrap gap-2'>
+                  {platformRejectReasons.map((r) => (
+                    <Button
+                      key={r.value}
+                      type='button'
+                      variant={reason === r.value ? 'default' : 'outline'}
+                      className='h-10'
+                      aria-pressed={reason === r.value}
+                      onClick={() => setReason(r.value)}
+                    >
+                      {t(r.key)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* The two answers side by side, and the stronger one — the
                 guest turned away for the day — on its own row, so three
                 wide buttons never overflow the dialog */}
@@ -212,7 +247,10 @@ export function OrderDetailDialog({
                   variant='destructive'
                   size='lg'
                   className='h-12'
-                  onClick={() => orderNumber != null && onCancel(orderNumber)}
+                  onClick={() =>
+                    orderNumber != null &&
+                    onCancel(orderNumber, platform ? reason : undefined)
+                  }
                 >
                   <X className='size-5' />
                   {t('cancelOrder')}

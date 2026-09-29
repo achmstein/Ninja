@@ -39,7 +39,13 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     LocalizedText? PlaceName = null,
     /// <summary>The promo code the customer redeemed in the app, and what it took off; null and zero when none.</summary>
     string? PromoCode = null,
-    decimal PromoDiscount = 0) : IntegrationEvent;
+    decimal PromoDiscount = 0,
+    /// <summary>The delivery platform the order came through ("Talabat"); null for the café's own orders.</summary>
+    string? Platform = null,
+    /// <summary>The platform's code for the order, the one its rider asks for.</summary>
+    string? PlatformCode = null,
+    /// <summary>The platform pays the café for it: its bill settles at once, to the platform.</summary>
+    bool PlatformSettles = false) : IntegrationEvent;
 
 public record OrderConfirmedItem(
     int ProductId,

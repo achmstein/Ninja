@@ -63,9 +63,10 @@ export function useOrderActions() {
       query: { 'api-version': API_VERSION },
     })
 
-  const cancel = (orderNumber: number) =>
+  // A delivery platform's order is turned down there too, for the reason given
+  const cancel = (orderNumber: number, platformReason?: string) =>
     cancelOrder.mutate({
-      body: { orderNumber },
+      body: { orderNumber, platformReason },
       headers: { 'x-requestid': uuidv4() },
       query: { 'api-version': API_VERSION },
     })

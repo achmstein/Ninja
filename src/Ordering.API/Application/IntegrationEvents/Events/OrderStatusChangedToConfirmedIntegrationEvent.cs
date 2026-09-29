@@ -75,6 +75,19 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public DateTime PlacedAt { get; init; }
 
+    /// <summary>The delivery platform the order came through ("Talabat"); null for the café's own orders.</summary>
+    public string? Platform { get; init; }
+
+    /// <summary>The platform's code for the order, the one its rider asks for; names its bill.</summary>
+    public string? PlatformCode { get; init; }
+
+    /// <summary>
+    /// The platform pays the café for this order: the customer paid online,
+    /// or the platform's own rider collects. Sales settles the bill at once;
+    /// only cash the café collects itself is left for the till.
+    /// </summary>
+    public bool PlatformSettles { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

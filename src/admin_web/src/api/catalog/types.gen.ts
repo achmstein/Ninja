@@ -130,6 +130,10 @@ export type ItemCustomizationDto = {
     options?: Array<CustomizationOptionDto>;
 };
 
+export type JsonObject = {
+    [key: string]: unknown;
+};
+
 export type LocalizedText = {
     en?: string;
     ar?: null | string;
@@ -285,6 +289,31 @@ export type SuggestCustomizationsRequest = {
 export type SuggestCustomizationsResponse = {
     groups: Array<ProposedCustomization>;
     warnings: Array<string>;
+};
+
+export type TalabatFailureView = {
+    kind: string;
+    branchId: number | string;
+    code: null | string;
+    error: null | string;
+    at: string;
+};
+
+export type TalabatSettingsRequest = {
+    branchIds: Array<number | string>;
+    syncOpenClose?: boolean;
+};
+
+export type TalabatStatusView = {
+    connected: boolean;
+    branchIds: Array<number | string>;
+    syncOpenClose: boolean;
+    menuChangedAt: null | string;
+    menuSentAt: null | string;
+    lastMenuResult: null | string;
+    lastMenuResultAt: null | string;
+    pending: number | string;
+    failed: Array<TalabatFailureView>;
 };
 
 export type UpdateCatalogItemRequest = {
@@ -2148,3 +2177,143 @@ export type GetBranchOverridesResponses = {
 };
 
 export type GetBranchOverridesResponse = GetBranchOverridesResponses[keyof GetBranchOverridesResponses];
+
+export type GetTalabatData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat';
+};
+
+export type GetTalabatErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetTalabatResponses = {
+    /**
+     * OK
+     */
+    200: TalabatStatusView;
+};
+
+export type GetTalabatResponse = GetTalabatResponses[keyof GetTalabatResponses];
+
+export type SaveTalabatData = {
+    body: TalabatSettingsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat';
+};
+
+export type SaveTalabatErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveTalabatError = SaveTalabatErrors[keyof SaveTalabatErrors];
+
+export type SaveTalabatResponses = {
+    /**
+     * OK
+     */
+    200: TalabatStatusView;
+};
+
+export type SaveTalabatResponse = SaveTalabatResponses[keyof SaveTalabatResponses];
+
+export type PushTalabatMenuData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat/push';
+};
+
+export type PushTalabatMenuErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: string;
+};
+
+export type PushTalabatMenuError = PushTalabatMenuErrors[keyof PushTalabatMenuErrors];
+
+export type PushTalabatMenuResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type PreviewTalabatMenuData = {
+    body?: never;
+    path: {
+        branchId: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat/preview/{branchId}';
+};
+
+export type PreviewTalabatMenuErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type PreviewTalabatMenuResponses = {
+    /**
+     * OK
+     */
+    200: JsonObject;
+};
+
+export type PreviewTalabatMenuResponse = PreviewTalabatMenuResponses[keyof PreviewTalabatMenuResponses];

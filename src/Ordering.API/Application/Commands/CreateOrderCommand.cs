@@ -120,6 +120,10 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public bool GuestOrdersAnywhere { get; private set; }
 
+    /// <summary>What a delivery platform said about the order it dispatched; null for every other source.</summary>
+    [DataMember]
+    public PlatformOrder? Platform { get; private set; }
+
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
     /// sale keyed in by staff.
@@ -156,9 +160,11 @@ public class CreateOrderCommand : IRequest<int>
         string? placeKind = null,
         LocalizedText? placeName = null,
         string? promoCode = null,
-        bool guestOrdersAnywhere = false)
+        bool guestOrdersAnywhere = false,
+        PlatformOrder? platform = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        Platform = platform;
         GuestOrdersAnywhere = guestOrdersAnywhere;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim();
         PlaceId = placeId;

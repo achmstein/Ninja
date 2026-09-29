@@ -28,6 +28,21 @@ public class CatalogContext : DbContext
     public required DbSet<BranchOptionStockOut> BranchOptionStockOuts { get; set; }
     public required DbSet<PromoCode> PromoCodes { get; set; }
     public required DbSet<PromoRedemption> PromoRedemptions { get; set; }
+    public required DbSet<Talabat.TalabatSettings> TalabatSettings { get; set; }
+    public required DbSet<Talabat.TalabatTask> TalabatTasks { get; set; }
+
+    /// <summary>What Talabat should hear about this save is queued inside it (Talabat.TalabatChanges).</summary>
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        await Talabat.TalabatChanges.CaptureAsync(this, cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        Talabat.TalabatChanges.CaptureAsync(this, CancellationToken.None).GetAwaiter().GetResult();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -42,6 +57,8 @@ public class CatalogContext : DbContext
         builder.ApplyConfiguration(new BranchItemOverrideEntityTypeConfiguration());
         builder.ApplyConfiguration(new BranchOptionStockOutEntityTypeConfiguration());
         builder.ApplyConfiguration(new PromoCodeEntityTypeConfiguration());
+        builder.ApplyConfiguration(new Talabat.TalabatSettingsEntityTypeConfiguration());
+        builder.ApplyConfiguration(new Talabat.TalabatTaskEntityTypeConfiguration());
         builder.ApplyConfiguration(new PromoRedemptionEntityTypeConfiguration());
 
         // Add the outbox table to this context

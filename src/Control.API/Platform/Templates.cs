@@ -451,6 +451,8 @@ public static partial class Templates
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
                     AppendChatModel(sb, tenant, platform);
+                    // Talabat: the menu and what is sold out go out through the relay, like the orders' answers
+                    if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, platform);
                     // Uploaded pictures are written under the content root; without a volume an upgrade loses them
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.PicsVolume(slug)}:/app/Pics\"");
@@ -482,6 +484,10 @@ public static partial class Templates
                     sb.AppendLine($"      Payments__ReturnBaseUrl: \"{hosts.CustomerUrl}\"");
                     // A demo tries online payments with pretend payments until it has a Paymob account; a customer never can
                     if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
+                    break;
+                case "ordering" when platform.Talabat.Configured:
+                    // Talabat: what the café does with its orders goes back through the platform's relay, which holds Ninja's account
+                    AppendTalabatRelay(sb, slug, platform);
                     break;
                 case "tenant":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
@@ -564,6 +570,8 @@ public static partial class Templates
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
             $"ASSISTANT_SECRET={tenant.AssistantSecret}",
             $"PAYMENTS_KEY={tenant.PaymentsKey}",
+            // The café's key to the Talabat relay, derived from the platform's key; only when the platform has a Talabat account
+            $"TALABAT_RELAY_KEY={(platform.Talabat.Configured && !string.IsNullOrWhiteSpace(platform.EncryptionKey) ? TalabatNaming.RelayKey(tenant.Slug, platform.EncryptionKey) : "")}",
             // The shared key reaches only the stacks whose plan includes the assistant: one café's compromise is not every café's
             $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
             "",
@@ -615,6 +623,13 @@ public static partial class Templates
         sb.AppendLine("      options:");
         sb.AppendLine($"        max-size: \"{platform.LogMaxSize}\"");
         sb.AppendLine($"        max-file: \"{platform.LogMaxFile}\"");
+    }
+
+    private static void AppendTalabatRelay(StringBuilder sb, string slug, PlatformOptions platform)
+    {
+        sb.AppendLine($"      Talabat__RelayUrl: \"{platform.Talabat.RelayUrl}\"");
+        sb.AppendLine($"      Talabat__Tenant: \"{slug}\"");
+        sb.AppendLine("      Talabat__RelayKey: \"${TALABAT_RELAY_KEY}\"");
     }
 
     private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform)

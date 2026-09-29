@@ -153,6 +153,16 @@ public class Tenant
 
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// The café's chain at Talabat, as Talabat's onboarding gives it; null while
+    /// it is not on Talabat. The relay only ever sends the café's menu and
+    /// availability to this chain, whatever the stack asks.
+    /// </summary>
+    public string? TalabatChainCode { get; set; }
+
+    /// <summary>Talabat's market for the café (its "global entity", e.g. TB_EG); null reads it from the country.</summary>
+    public string? TalabatGlobalEntityId { get; set; }
+
     /// <summary>A scratch tenant the restore drill stamps and destroys: nobody is mailed about it and the demo sweep leaves it alone.</summary>
     public bool IsDrill { get; set; }
 

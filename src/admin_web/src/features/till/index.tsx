@@ -274,7 +274,8 @@ export function TillReport() {
                 <SegmentedBar
                   segments={tendersFor(
                     features.onlinePayments,
-                    toNumber(tenderTotals.get('Online')?.amount) > 0
+                    toNumber(tenderTotals.get('Online')?.amount) > 0,
+                    toNumber(tenderTotals.get('Talabat')?.amount) > 0
                   ).map(({ name, value, labelKey }) => {
                     const payments = toNumber(tenderTotals.get(name)?.count)
                     const slips = toNumber(tabTenderTotals.get(name)?.count)

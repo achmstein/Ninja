@@ -19,6 +19,7 @@ import {
   isCancelled,
   orderSourceKeys,
 } from './status'
+import { PlatformBadge } from './components/platform-badge'
 
 const columnHelper = createAppColumnHelper<OrderSummary>()
 
@@ -128,6 +129,8 @@ export function getOrdersColumns({
       header: t('source'),
       enableSorting: false,
       cell: (info) => {
+        const platform = info.row.original.platform
+        if (platform) return <PlatformBadge platform={platform} />
         const key = info.getValue() ? orderSourceKeys[info.getValue()!] : null
         return key ? (
           <Badge variant='outline'>{t(key)}</Badge>

@@ -1,10 +1,11 @@
 import { type TranslationKey } from '@/lib/i18n'
 
 // PaymentTender as Sales.Domain numbers it (Cash=0, Card=1, InstaPay=2,
-// Account=3, Online=4). Query params take the number; the read models spell
-// the name. Online is what guests paid from their phones (online payments):
-// never cash, never in the drawer.
-type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online'
+// Account=3, Online=4, Talabat=5). Query params take the number; the read
+// models spell the name. Online is what guests paid from their phones (online
+// payments); Talabat is a Talabat order Talabat pays the café for, settled
+// when it lands. Neither is cash, neither is in the drawer.
+type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online' | 'Talabat'
 
 export const TENDERS: {
   name: TenderName
@@ -16,15 +17,19 @@ export const TENDERS: {
   { name: 'InstaPay', value: 2, labelKey: 'tenderInstaPay' },
   { name: 'Account', value: 3, labelKey: 'tenderOnAccount' },
   { name: 'Online', value: 4, labelKey: 'tenderOnline' },
+  { name: 'Talabat', value: 5, labelKey: 'tenderTalabat' },
 ]
 
 /**
  * The tenders worth offering: Online only where the café takes payments at
- * the table, or where some was taken anyway (switched off since).
+ * the table, or where some was taken anyway (switched off since); Talabat
+ * only where some was taken.
  */
-export function tendersFor(onlinePayments: boolean | undefined, hasOnline = false) {
+export function tendersFor(onlinePayments: boolean | undefined, hasOnline = false, hasTalabat = false) {
   return TENDERS.filter(
-    (tender) => tender.name !== 'Online' || onlinePayments || hasOnline
+    (tender) =>
+      (tender.name !== 'Online' || onlinePayments || hasOnline) &&
+      (tender.name !== 'Talabat' || hasTalabat)
   )
 }
 

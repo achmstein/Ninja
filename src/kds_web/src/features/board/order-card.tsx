@@ -1,11 +1,13 @@
 import {
   Armchair,
+  Bike,
   Check,
   DoorOpen,
   MessageSquareText,
   Printer,
   ShoppingBag,
   Store,
+  TriangleAlert,
   Undo2,
 } from 'lucide-react'
 import type { KitchenOrder } from '@/api/ordering/types.gen'
@@ -24,6 +26,11 @@ import {
   toneClockClass,
   type CardTone,
 } from './status'
+
+/** The delivery platforms whose own mark we show; anything else falls back to its name. */
+const platformLogos: Record<string, string> = {
+  Talabat: `${import.meta.env.BASE_URL}platforms/talabat.svg`,
+}
 
 /**
  * One order as a kitchen ticket, laid out the way every kitchen display
@@ -94,6 +101,26 @@ export function OrderCard({
   // pickup without a name is a guest.
   const who = order.customerName || (isPos || place ? '' : t('walkIn'))
 
+  // A delivery platform's order: its logo and the code its rider asks for,
+  // big enough to match the bag to the rider across the pass, and how it leaves
+  const platform = order.platform ?? null
+  const platformLogo = platform ? platformLogos[platform.name ?? ''] : undefined
+  const riderAt = platform?.riderPickupAt
+    ? new Date(platform.riderPickupAt).toLocaleTimeString(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null
+  const handover = !platform
+    ? null
+    : platform.expedition === 'Pickup'
+      ? t('platformCollect')
+      : platform.expedition === 'VendorDelivery'
+        ? t('platformOwnRider')
+        : riderAt
+          ? t('platformRiderAt', { time: riderAt })
+          : null
+
   // One station is the whole order; the split is only worth showing past that
   const parts = showParts && (order.parts ?? []).length > 1 ? order.parts! : []
 
@@ -108,13 +135,26 @@ export function OrderCard({
           <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums'>
             #{Number(order.orderNumber)}
           </span>
-          <Badge
-            variant='outline'
-            className='bg-card min-w-0 gap-1 px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5'
-          >
-            <PlaceIcon className='text-muted-foreground' />
-            <span className='truncate'>{channel}</span>
-          </Badge>
+          {platform ? (
+            <span className='bg-card flex min-w-0 items-center gap-2 rounded-md border px-2 py-0.5'>
+              {platformLogo ? (
+                <img src={platformLogo} alt={platform.name} className='h-4 w-auto shrink-0' />
+              ) : (
+                <span className='text-sm font-semibold'>{platform.name}</span>
+              )}
+              <span className='truncate font-mono text-lg leading-tight font-bold tabular-nums' dir='ltr'>
+                {platform.shortCode ?? platform.code}
+              </span>
+            </span>
+          ) : (
+            <Badge
+              variant='outline'
+              className='bg-card min-w-0 gap-1 px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5'
+            >
+              <PlaceIcon className='text-muted-foreground' />
+              <span className='truncate'>{channel}</span>
+            </Badge>
+          )}
           <span
             className={cn(
               'ms-auto shrink-0 text-xl leading-none font-bold tabular-nums',
@@ -127,6 +167,22 @@ export function OrderCard({
         {who && (
           <div className='line-clamp-2 text-lg leading-tight font-semibold break-words'>
             {who}
+          </div>
+        )}
+        {handover && (
+          <div className='flex items-center gap-1.5 text-sm font-medium'>
+            {platform?.expedition === 'Pickup' ? (
+              <ShoppingBag className='size-4 shrink-0' />
+            ) : (
+              <Bike className='size-4 shrink-0' />
+            )}
+            {handover}
+          </div>
+        )}
+        {platform?.cancelledAt && (
+          <div className='text-destructive flex items-center gap-1.5 text-sm font-semibold'>
+            <TriangleAlert className='size-4 shrink-0' />
+            {t('platformCancelled')}
           </div>
         )}
         {parts.length > 0 && (

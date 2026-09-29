@@ -29,6 +29,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             PlaceName = order.PlaceName,
             SessionId = order.SessionId,
             Source = order.Source.ToString(),
+            Platform = PlatformOrderView.From(order.Platform),
             CustomerNote = order.CustomerNote,
             // Only an admin or the customer themselves can read an order, so
             // the guest's contact details are safe to carry here — and staff
@@ -172,6 +173,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                     ? o.ReadyAt
                     : o.StationParts.Where(p => p.StationId == stationId).Select(p => p.ReadyAt).FirstOrDefault(),
                 Source = o.Source.ToString(),
+                Platform = PlatformOrderView.From(o.Platform),
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
@@ -232,6 +234,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
+                Platform = PlatformOrderView.From(o.Platform),
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.
@@ -323,6 +326,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
+                Platform = PlatformOrderView.From(o.Platform),
                 UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 IsMine = (userId != null && o.Buyer != null && o.Buyer.IdentityGuid == userId)
                     || (guestId != null && o.GuestId == guestId),
@@ -444,6 +448,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
+                Platform = PlatformOrderView.From(o.Platform),
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.

@@ -1,5 +1,6 @@
 #nullable enable
 using Ninja.EventBus.Abstractions;
+using Ninja.Sales.API.Application.Commands;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
@@ -17,6 +18,7 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     ITicketRepository ticketRepository,
     SalesTransaction transaction,
+    IMediator mediator,
     ILogger<OrderStatusChangedToConfirmedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStatusChangedToConfirmedIntegrationEvent>
 {
@@ -85,10 +87,51 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         logger.LogInformation(
             "Order {OrderId} appended to {Type} ticket {TicketId}",
             @event.OrderId, ticket.Type, ticket.Id);
+
+        if (@event.Platform is not null && @event.PlatformSettles)
+        {
+            await SettleToPlatformAsync(@event, ticket);
+        }
+    }
+
+    /// <summary>The name a settle to a platform is recorded under, beside a cashier's.</summary>
+    public const string PlatformSettledBy = "talabat";
+
+    /// <summary>
+    /// The platform pays the café for this order, so nobody at the till
+    /// collects anything: its bill settles now, to the platform, in this same
+    /// transaction. If the ticket cannot settle (it should always be able to),
+    /// it stays open for the till rather than losing the order.
+    /// </summary>
+    private async Task SettleToPlatformAsync(OrderStatusChangedToConfirmedIntegrationEvent @event, Ticket ticket)
+    {
+        var bill = ticket.GetBill(await ticketRepository.GetPricingRulesAsync(ticket.BranchId));
+        try
+        {
+            var settled = await mediator.Send(new SettleTicketCommand(
+                ticket.Id,
+                [new PaymentDto(PaymentTender.Talabat, bill.Total)],
+                PlatformSettledBy));
+
+            logger.LogInformation(
+                "{Platform} order {OrderId} settled to the platform - ticket {TicketId}, receipt {Receipt}, {Total}",
+                @event.Platform, @event.OrderId, ticket.Id, settled.ReceiptNumber, bill.Total);
+        }
+        catch (SalesDomainException ex)
+        {
+            logger.LogWarning(ex, "{Platform} order {OrderId} could not settle itself; ticket {TicketId} stays open for the till", @event.Platform, @event.OrderId, ticket.Id);
+        }
     }
 
     private async Task<Ticket> ResolveTicketAsync(OrderStatusChangedToConfirmedIntegrationEvent @event)
     {
+        // A delivery platform's order is its own sale: never a table's bill,
+        // never another customer's counter tab, named by the platform's code
+        if (@event.Platform is { } platform)
+        {
+            return ticketRepository.Add(Ticket.OpenForPlatform(@event.BranchId, platform, @event.PlatformCode));
+        }
+
         // The cashier rang this up against a bill that is already on the
         // floor, so there is nothing to infer. Only an open ticket in the same
         // branch counts: a settled or voided one (or a stale id) falls through

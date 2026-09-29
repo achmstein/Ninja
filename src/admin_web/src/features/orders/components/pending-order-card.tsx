@@ -23,6 +23,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { QueueCard } from '@/components/queue-card'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
+import { PlatformBadge, PlatformHandover } from './platform-badge'
 import {
   formatEgp,
   orderSourceKeys,
@@ -82,7 +83,9 @@ export function PendingOrderCard({
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
           <span className='text-lg font-semibold'>#{summary.orderNumber}</span>
-          {sourceKey && (
+          {summary.platform ? (
+            <PlatformBadge platform={summary.platform} />
+          ) : sourceKey && (
             <Badge variant='outline' className='h-5 px-1.5 text-[11px]'>
               {t(sourceKey)}
             </Badge>
@@ -121,6 +124,7 @@ export function PendingOrderCard({
             {summary.guestPhone}
           </a>
         )}
+        {summary.platform && <PlatformHandover platform={summary.platform} />}
         {!hidePlace && localized(summary.placeName) && (
           <span className='flex items-center gap-1'>
             <PlaceKindIcon kind={summary.placeKind} className='h-3 w-3' />

@@ -90,6 +90,78 @@ class OrderItem {
   }
 }
 
+/// How a delivery platform's order leaves the café
+enum PlatformExpedition {
+  /// The platform's rider collects it at the counter
+  platformDelivery,
+
+  /// The café's own rider takes it to the address
+  vendorDelivery,
+
+  /// The customer collects it
+  pickup;
+
+  static PlatformExpedition parse(String? value) => switch (value) {
+        'VendorDelivery' => PlatformExpedition.vendorDelivery,
+        'Pickup' => PlatformExpedition.pickup,
+        _ => PlatformExpedition.platformDelivery,
+      };
+}
+
+/// What a delivery platform (Talabat) said about its order, as the counter
+/// reads it: the code the rider asks for, how it leaves, and (only when the
+/// café's own rider takes it) where to
+class PlatformOrder {
+  /// "Talabat"
+  final String name;
+  final String code;
+  final String? shortCode;
+  final PlatformExpedition expedition;
+  final DateTime? riderPickupAt;
+  final DateTime? dueAt;
+  final String? deliveryAddress;
+  final bool paidOnline;
+  final double? collectFromCustomer;
+
+  /// The platform cancelled it
+  final DateTime? cancelledAt;
+
+  const PlatformOrder({
+    required this.name,
+    required this.code,
+    this.shortCode,
+    required this.expedition,
+    this.riderPickupAt,
+    this.dueAt,
+    this.deliveryAddress,
+    this.paidOnline = false,
+    this.collectFromCustomer,
+    this.cancelledAt,
+  });
+
+  /// The code the rider asks for at the counter
+  String get displayCode => shortCode ?? code;
+
+  static DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toLocal() : null;
+
+  static PlatformOrder? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    final collect = json['collectFromCustomer'];
+    return PlatformOrder(
+      name: (json['name'] as String?) ?? '',
+      code: (json['code'] as String?) ?? '',
+      shortCode: json['shortCode'] as String?,
+      expedition: PlatformExpedition.parse(json['expedition'] as String?),
+      riderPickupAt: _time(json['riderPickupAt']),
+      dueAt: _time(json['dueAt']),
+      deliveryAddress: json['deliveryAddress'] as String?,
+      paidOnline: json['paidOnline'] == true,
+      collectFromCustomer: collect is num ? collect.toDouble() : double.tryParse('${collect ?? ''}'),
+      cancelledAt: _time(json['cancelledAt']),
+    );
+  }
+}
+
 /// Order model
 class Order {
   final int id;
@@ -122,6 +194,9 @@ class Order {
   /// first-timer; null is an account holder.
   final int? guestOrdersBefore;
 
+  /// A delivery platform's details; null on every other order
+  final PlatformOrder? platform;
+
   Order({
     required this.id,
     this.userId,
@@ -144,6 +219,7 @@ class Order {
     this.guestPhone,
     this.source,
     this.guestOrdersBefore,
+    this.platform,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -183,6 +259,7 @@ class Order {
       guestPhone: (json['guestPhone'] ?? json['GuestPhone']) as String?,
       source: (json['source'] ?? json['Source']) as String?,
       guestOrdersBefore: (json['guestOrdersBefore'] ?? json['GuestOrdersBefore']) as int?,
+      platform: PlatformOrder.parse(json['platform'] ?? json['Platform']),
     );
   }
 }
