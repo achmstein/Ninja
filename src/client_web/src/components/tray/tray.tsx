@@ -329,13 +329,8 @@ export function Tray({
                 disabled={empty}
                 className='flex min-w-0 flex-1 touch-none items-center gap-3 text-start'
               >
-                {/* The dock's grab handle; the open sheet has its own */}
-                <motion.span
-                  aria-hidden
-                  className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full'
-                  animate={{ opacity: expanded || empty ? 0 : 1 }}
-                  transition={{ duration: 0.15 }}
-                />
+                {/* The dock's grab handle, always there: the open sheet shows none of its own, so there is only ever the one */}
+                <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
                 <motion.div
                   ref={targetRef}
                   key={bump}
@@ -468,6 +463,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   )
 }
 
+/** The open sheet's top edge: pulled down or tapped, it closes; no bar of its own, the dock's handle is the one shown */
 function SheetHandle({
   onClose,
   onPanStart,
@@ -488,10 +484,8 @@ function SheetHandle({
       onPanStart={onPanStart}
       onPan={(_, info) => onPan(info)}
       onPanEnd={(_, info) => onPanEnd(info)}
-      className='flex h-8 shrink-0 touch-none items-center justify-center'
-    >
-      <span className='bg-background/30 h-1 w-10 rounded-full' />
-    </motion.button>
+      className='h-8 w-full shrink-0 touch-none'
+    />
   )
 }
 

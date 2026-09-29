@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
-import { Check, Loader2, Minus, Plus } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { Check, Loader2, UserRound, UserRoundCheck, UserRoundMinus, UserRoundPlus } from 'lucide-react'
 import { currencyLabel, useCurrency } from '@/lib/currency'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
 import {
@@ -20,20 +20,17 @@ import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
 import { Slider } from '@/components/ui/slider'
 
-/** The table's drawing: a square this wide, the table in the middle and
- *  the seats around it. Fits a 360px phone with the sheet's padding. */
-const BOX = 248
-const TABLE = 136
-const SEAT = 44
-const ORBIT = (BOX - SEAT) / 2
+type SeatKind = 'mine' | 'free' | 'held' | 'paid'
 
 /**
- * Divide equally, drawn as the table: seats around it, the per-person
- * price in the middle, the seats paid or being paid filled in (a guess
- * from the money, and said to be one), and the guest taps the seats
- * they are paying for. The seats picked are the parts, the seats the
- * whole: the same `parts` of `of` the server takes. Seats glide round
- * the table on a spring as it grows, and the per-person sum rolls.
+ * Divide equally, told plainly: the guest's share big in the middle, the
+ * bill as a bar cut into one piece per person, a stepper for how many are
+ * at the table, and the people themselves as a row the guest taps to say
+ * whose share they are covering (their own, "you", always first). Those
+ * who look paid, or are paying now, sit at the end (a guess from the
+ * money, and said to be one). The people picked are the parts, everyone
+ * the whole: the same `parts` of `of` the server takes. People pop in and
+ * out as the table grows, the bar re-cuts itself and the sums roll.
  */
 export function SeatsTable({
   total,
@@ -61,143 +58,157 @@ export function SeatsTable({
   const reduced = useReducedMotion()
   const language = useLanguage((s) => s.language)
   const currency = useCurrency((s) => s.code)
-  const rtl = language === 'ar'
   const plan = seatPlan(total, paid, held, seats)
   const mine = pickedSeats(selected, plan.free)
   const share = equalShare(total, remaining, mine.length, seats)
   const left = money(Math.max(0, remaining - share))
+  const kinds: SeatKind[] = Array.from({ length: seats }, (_, i) =>
+    i < plan.free ? (mine.includes(i) ? 'mine' : 'free') : i < plan.free + plan.held ? 'held' : 'paid'
+  )
+  const pop = reduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : { initial: { opacity: 0, scale: 0.4 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.4 } }
+
+  const stepper = (dir: -1 | 1) => (
+    <motion.button
+      type='button'
+      whileTap={reduced ? undefined : { scale: 0.88 }}
+      transition={spring}
+      aria-label={t(dir < 0 ? 'removeSeat' : 'addSeat')}
+      disabled={dir < 0 ? seats <= minSeats : seats >= MAX_SEATS}
+      onClick={() => onSeats(seats + dir)}
+      className='bg-background text-foreground focus-visible:ring-ring/50 grid size-12 shrink-0 place-items-center rounded-full shadow-sm outline-none focus-visible:ring-4 disabled:opacity-35 disabled:shadow-none'
+    >
+      {dir < 0 ? <UserRoundMinus className='size-5' /> : <UserRoundPlus className='size-5' />}
+    </motion.button>
+  )
 
   return (
-    <div className='flex flex-col gap-3'>
-      <div className='flex items-center justify-between gap-2'>
-        <span className='px-1 text-caption font-semibold'>{t('seatsAtTable')}</span>
-        <div className='bg-muted flex items-center rounded-full p-1'>
-          <motion.button
-            type='button'
-            whileTap={reduced ? undefined : { scale: 0.85 }}
-            transition={spring}
-            className='grid size-9 place-items-center rounded-full disabled:opacity-40'
-            aria-label={t('removeSeat')}
-            disabled={seats <= minSeats}
-            onClick={() => onSeats(seats - 1)}
-          >
-            <Minus className='size-4' />
-          </motion.button>
-          <span className='w-8 text-center' aria-live='polite'>
-            <Odometer value={String(seats)} className='text-body font-bold' />
+    <div className='flex flex-col gap-4'>
+      <div className='bg-muted flex flex-col items-center gap-4 rounded-[1.75rem] px-4 pt-5 pb-4'>
+        {/* What this guest pays, the one big number */}
+        <div className='flex flex-col items-center gap-1 text-center'>
+          <span className='text-muted-foreground text-caption font-semibold'>
+            {mine.length > 1 ? t('youPayForSeats', { parts: mine.length, of: seats }) : t('yourShare')}
           </span>
-          <motion.button
-            type='button'
-            whileTap={reduced ? undefined : { scale: 0.85 }}
-            transition={spring}
-            className='grid size-9 place-items-center rounded-full disabled:opacity-40'
-            aria-label={t('addSeat')}
-            disabled={seats >= MAX_SEATS}
-            onClick={() => onSeats(seats + 1)}
-          >
-            <Plus className='size-4' />
-          </motion.button>
-        </div>
-      </div>
-
-      <div className='relative mx-auto' style={{ width: BOX, height: BOX }}>
-        {/* The table */}
-        {/* The table: light, with its own ink, since the dark slab it may sit on would lend it light text */}
-        <div
-          className='bg-background text-foreground absolute flex flex-col items-center justify-center rounded-full shadow-[0_8px_24px_-10px_rgb(0_0_0/0.35)]'
-          style={{
-            width: TABLE,
-            height: TABLE,
-            top: (BOX - TABLE) / 2,
-            left: (BOX - TABLE) / 2,
-          }}
-        >
-          <span className='text-foreground/60 text-micro font-medium'>
-            {t('perPerson')}
+          <span className='flex items-baseline justify-center gap-1.5' aria-live='polite'>
+            <Odometer value={share.toFixed(2)} className='text-display-lg font-bold' />
+            <span className='text-muted-foreground text-name font-semibold'>{currencyLabel(currency, language)}</span>
           </span>
-          <Odometer value={plan.perPerson.toFixed(2)} className='text-headline font-extrabold' />
-          <span className='text-foreground/60 text-caption font-semibold'>
-            {currencyLabel(currency, language)}
+          <span className='text-muted-foreground text-caption tabular-nums'>
+            {t('splitMath', { total: total.toFixed(2), n: seats, each: plan.perPerson.toFixed(2) })}
           </span>
         </div>
 
-        {Array.from({ length: seats }, (_, i) => {
-          // From the guest's side of the table (the bottom), round the
-          // way the page reads: clockwise in English, the other way in Arabic
-          const angle = Math.PI / 2 + ((rtl ? -1 : 1) * 2 * Math.PI * i) / seats
-          const x = ORBIT + ORBIT * Math.cos(angle)
-          const y = ORBIT + ORBIT * Math.sin(angle)
-          const kind: 'free' | 'held' | 'paid' =
-            i < plan.free ? 'free' : i < plan.free + plan.held ? 'held' : 'paid'
-          const picked = kind === 'free' && mine.includes(i)
-          const first = picked && i === mine[0]
-          const label =
-            kind === 'paid'
-              ? t('seatPaid')
-              : kind === 'held'
-                ? t('lineBeingPaid')
-                : t(picked ? 'seatYours' : 'seatFree', { n: i + 1 })
-
-          return (
-            // Placed with a transform so seats glide round when the table grows
-            <motion.div
-              key={i}
-              className='absolute top-0 left-0'
-              initial={reduced ? { x, y, opacity: 0 } : { x: ORBIT, y: ORBIT, opacity: 0, scale: 0.5 }}
-              animate={{ x, y, opacity: 1, scale: 1 }}
-              transition={springSoft}
-            >
-              <motion.button
-                whileTap={reduced || kind !== 'free' ? undefined : { scale: 0.9 }}
-                type='button'
-                title={label}
-                aria-label={label}
-                aria-pressed={kind === 'free' ? picked : undefined}
-                disabled={kind !== 'free'}
-                onClick={() => onToggle(i)}
+        {/* The bill, cut into one piece per person: the guest's pieces lit,
+            the paid ones green, the ones being paid amber */}
+        <div aria-hidden className='flex h-2.5 w-full gap-1'>
+          <AnimatePresence initial={false}>
+            {kinds.map((kind, i) => (
+              <motion.span
+                key={i}
+                initial={reduced ? { flexGrow: 1, opacity: 0 } : { flexGrow: 0, opacity: 0 }}
+                animate={{ flexGrow: 1, opacity: 1 }}
+                exit={reduced ? { opacity: 0 } : { flexGrow: 0, opacity: 0 }}
+                transition={springSoft}
                 className={cn(
-                  'flex items-center justify-center rounded-full border-2 text-caption font-bold',
-                  'focus-visible:ring-ring/50 transition-colors duration-200 outline-none focus-visible:ring-4',
-                  kind === 'paid' && 'border-emerald-500 bg-emerald-500 text-white',
-                  kind === 'held' && 'border-dashed border-amber-400 text-amber-500',
-                  kind === 'free' &&
-                    (picked
-                      ? 'border-foreground bg-foreground text-background shadow-md'
-                      : 'border-border bg-background text-muted-foreground hover:border-foreground/40')
+                  'min-w-0 basis-0 rounded-full transition-colors duration-300',
+                  kind === 'mine' && 'bg-foreground',
+                  kind === 'free' && 'bg-foreground/15',
+                  kind === 'held' && 'bg-amber-400',
+                  kind === 'paid' && 'bg-emerald-500'
                 )}
-                style={{ width: SEAT, height: SEAT }}
-              >
-                {kind === 'paid' ? (
-                  <Check className='h-5 w-5' strokeWidth={3} />
-                ) : kind === 'held' ? (
-                  <Loader2 className='h-4 w-4 animate-spin motion-reduce:animate-none' />
-                ) : picked ? (
-                  first ? (
-                    t('seatYou')
-                  ) : (
-                    <span dir='ltr'>+1</span>
-                  )
-                ) : (
-                  <Plus className='h-4 w-4 opacity-60' />
-                )}
-              </motion.button>
-            </motion.div>
-          )
-        })}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* How many at the table */}
+        <div className='flex w-full items-center justify-between gap-2'>
+          {stepper(-1)}
+          <div className='flex flex-col items-center leading-none' aria-live='polite'>
+            <span className='sr-only'>{t('peopleAtTable', { count: seats })}</span>
+            <span aria-hidden className='flex items-baseline gap-1.5'>
+              <Odometer value={String(seats)} className='text-display font-bold' />
+              <span className='text-name font-semibold'>{t('peopleUnit', { count: seats })}</span>
+            </span>
+            <span aria-hidden className='text-muted-foreground mt-1 text-caption'>
+              {t('onTheTable')}
+            </span>
+          </div>
+          {stepper(1)}
+        </div>
       </div>
 
-      <div className='flex flex-col items-center gap-0.5 text-center'>
-        <p className='text-body font-semibold tabular-nums'>
-          {t('youPayForSeats', { parts: mine.length, of: seats })}
-          <span className='text-muted-foreground'> · </span>
-          <Odometer value={price(share)} className='text-body font-bold' />
-        </p>
-        <p className='text-muted-foreground text-caption tabular-nums'>
-          {t('leftAfterYou', { amount: price(left) })}
-        </p>
-        {(plan.paid > 0 || plan.held > 0 || plan.free > 1) && (
-          <p className='text-muted-foreground mt-1 text-caption'>{t('seatsHint')}</p>
-        )}
+      {/* The people: tap the ones you are paying for */}
+      <div className='flex flex-col gap-3'>
+        <span className='px-1 text-caption font-semibold'>{t('whoYouPayFor')}</span>
+        <div className='flex flex-wrap justify-center gap-x-2 gap-y-3'>
+          <AnimatePresence initial={false} mode='popLayout'>
+            {kinds.map((kind, i) => {
+              const first = kind === 'mine' && i === mine[0]
+              const label =
+                kind === 'paid'
+                  ? t('seatPaid')
+                  : kind === 'held'
+                    ? t('lineBeingPaid')
+                    : t(kind === 'mine' ? 'seatYours' : 'seatFree', { n: i + 1 })
+              return (
+                <motion.div key={i} layout={!reduced} {...pop} transition={springSoft} className='flex w-12 flex-col items-center gap-1'>
+                  <motion.button
+                    type='button'
+                    whileTap={reduced || (kind !== 'free' && kind !== 'mine') ? undefined : { scale: 0.88 }}
+                    transition={spring}
+                    title={label}
+                    aria-label={label}
+                    aria-pressed={kind === 'free' || kind === 'mine' ? kind === 'mine' : undefined}
+                    disabled={kind === 'held' || kind === 'paid'}
+                    onClick={() => onToggle(i)}
+                    className={cn(
+                      'relative grid size-12 place-items-center rounded-full border-2 text-caption font-bold',
+                      'focus-visible:ring-ring/50 transition-[background-color,border-color,color,box-shadow] duration-200 outline-none focus-visible:ring-4',
+                      kind === 'paid' && 'border-emerald-500 bg-emerald-500 text-white',
+                      kind === 'held' && 'border-dashed border-amber-400 text-amber-500',
+                      kind === 'mine' && 'border-foreground bg-foreground text-background shadow-[0_6px_16px_-6px_rgb(0_0_0/0.45)]',
+                      kind === 'free' && 'border-foreground/20 text-muted-foreground hover:border-foreground/45 border-dashed'
+                    )}
+                  >
+                    {kind === 'paid' ? (
+                      <Check className='size-5' strokeWidth={3} />
+                    ) : kind === 'held' ? (
+                      <Loader2 className='size-4 animate-spin motion-reduce:animate-none' />
+                    ) : first ? (
+                      t('seatYou')
+                    ) : kind === 'mine' ? (
+                      <UserRoundCheck className='size-5' />
+                    ) : (
+                      <UserRound className='size-5' />
+                    )}
+                  </motion.button>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'w-full truncate text-center text-micro font-medium',
+                      kind === 'mine' ? 'text-foreground' : 'text-muted-foreground'
+                    )}
+                  >
+                    {kind === 'paid'
+                      ? t('personPaid')
+                      : kind === 'held'
+                        ? t('personPaying')
+                        : plan.perPerson.toFixed(2)}
+                  </span>
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+        </div>
+        <div className='flex flex-col items-center gap-0.5 text-center'>
+          <p className='text-muted-foreground text-caption tabular-nums'>{t('leftAfterYou', { amount: price(left) })}</p>
+          {(plan.paid > 0 || plan.held > 0 || plan.free > 1) && (
+            <p className='text-muted-foreground text-caption'>{t('seatsHint')}</p>
+          )}
+        </div>
       </div>
     </div>
   )

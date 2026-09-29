@@ -35,7 +35,7 @@ export function RequestTile({
   const disabled = locked || busy || phase === 'sending' || phase === 'onTheWay'
   const note =
     phase === 'sent'
-      ? `${t('sent')} · ${t('tapToCancel')}`
+      ? t('sent')
       : phase === 'onTheWay'
         ? state.by
           ? t('onTheWayBy', { name: state.by })
@@ -75,12 +75,15 @@ export function RequestTile({
           </motion.span>
         </AnimatePresence>
       </span>
-      <span className='flex min-w-0 flex-col'>
+      {/* A third of a phone is narrow: the status wraps rather than spills, and
+          the way to take it back sits on a line of its own, a size down */}
+      <span className='flex w-full min-w-0 flex-col'>
         <span className='text-note leading-snug font-semibold'>{label}</span>
         <AnimatePresence mode='popLayout' initial={false}>
           {note && (
-            <motion.span key={note} {...swap} className='text-muted-foreground truncate text-caption'>
-              {note}
+            <motion.span key={note} {...swap} className='text-muted-foreground flex flex-col text-caption text-balance break-words'>
+              <span>{note}</span>
+              {phase === 'sent' && <span className='text-micro'>{t('tapToCancel')}</span>}
             </motion.span>
           )}
         </AnimatePresence>

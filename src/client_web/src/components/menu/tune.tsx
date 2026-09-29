@@ -96,22 +96,22 @@ export function Tune({
     setOverrides({ ...selections, [key]: next })
   }
 
-  // The photo keeps its place on screen through the morph, whichever way it is laid out
-  const compact = steps.length > 0
-  const photoBox = (className: string) => (
+  // The photo keeps its place on screen through the morph: a short banner across the top, every dish alike,
+  // low enough that the options start on the first screen rather than under a photo to scroll past
+  const photoBox = (
     <motion.div
       ref={photo}
       layoutId={leaving ? undefined : `photo-${item.id}`}
       transition={springOpen}
       style={{ opacity: leaving ? 0 : undefined }}
-      className={cn('relative overflow-hidden', !hasPhoto && TONE_CLASS.primary, className)}
+      className={cn('relative aspect-[16/7] max-h-[180px] w-full overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
     >
       {hasPhoto ? (
         <img src={itemPictureUrl(item.id)} alt='' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', soldOut && 'grayscale')} />
       ) : (
-        // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just beside it)
+        // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
         <div className='grid size-full place-items-center'>
-          <UtensilsCrossed className={compact ? 'size-8 opacity-50' : 'size-16 opacity-50'} />
+          <UtensilsCrossed className='size-12 opacity-50' />
         </div>
       )}
     </motion.div>
@@ -129,31 +129,19 @@ export function Tune({
       className='bg-background absolute inset-0 z-30 flex flex-col overflow-hidden'
     >
       <div className='no-scrollbar flex-1 overflow-y-auto overscroll-contain'>
-        {!compact && <div className='h-[30svh] max-h-72'>{photoBox('size-full')}</div>}
+        {photoBox}
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
           transition={{ ...springOpen, delay: 0.06 }}
-          className={cn('flex flex-col gap-5 px-5 pb-6', compact ? 'pt-5' : 'pt-4')}
+          className='flex flex-col gap-5 px-5 pt-4 pb-6'
         >
-          {compact ? (
-            // With questions to answer the photo steps aside, a square beside the name, so the options start
-            // on the first screen rather than under a photo to scroll past
-            <div className='flex items-center gap-4 pe-12'>
-              {photoBox('size-24 shrink-0 rounded-[1.25rem]')}
-              <div className='min-w-0'>
-                <h2 className='heading text-headline'>{localized(item.name)}</h2>
-                {item.description && <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>}
-              </div>
-            </div>
-          ) : (
-            <div>
-              <h2 className='heading text-title'>{localized(item.name)}</h2>
-              {item.description && <p className='text-muted-foreground text-note mt-1'>{localized(item.description)}</p>}
-            </div>
-          )}
+          <div>
+            <h2 className='heading text-headline'>{localized(item.name)}</h2>
+            {item.description && <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>}
+          </div>
 
           {loadingPreference
             ? steps.length > 0 && <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
@@ -225,10 +213,7 @@ export function Tune({
         type='button'
         onClick={onClose}
         aria-label={t('close')}
-        className={cn(
-          'absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full',
-          compact ? 'bg-muted text-foreground' : 'bg-black/45 text-white backdrop-blur-sm'
-        )}
+        className='absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'
       >
         <X className='size-5' />
       </button>

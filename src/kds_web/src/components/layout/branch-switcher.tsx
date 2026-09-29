@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { BrandMark } from '@/components/brand-mark'
+import { BrandLockup, BrandMark, useBrandLockup } from '@/components/brand-mark'
 import { useBrandName } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 
@@ -31,6 +31,7 @@ export function BranchSwitcher() {
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
   const cafe = useBrandName()
+  const lockup = useBrandLockup()
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
@@ -40,7 +41,13 @@ export function BranchSwitcher() {
     queryClient.resetQueries()
   }
 
-  const brand = (
+  // The café's own wordmark or logo when it has one, the mark and name otherwise
+  const brand = lockup ? (
+    <>
+      <BrandLockup lockup={lockup} alt={cafe} />
+      {branches.length > 1 && <span className='text-muted-foreground truncate text-sm'>{label}</span>}
+    </>
+  ) : (
     <>
       <BrandMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>

@@ -14,8 +14,9 @@ export function CompactRow({ scroller, item, opening, landing, onOpen, onQuickAd
   const dish = useDish({ item, opening, landing, onOpen, onQuickAdd, photo })
   return (
     <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3 py-3', dish.soldOut && 'opacity-50')}>
-      {/* The whole row is what grows into the options */}
+      {/* The whole row is what grows into the options; mounted afresh as it takes its layout id (see DishPhotoBox) */}
       <motion.button
+        key={dish.morph ? 'morph' : 'still'}
         type='button'
         layoutId={dish.morph ? `card-${item.id}` : undefined}
         style={{ borderRadius: 16 }}

@@ -29,6 +29,10 @@ export function DishPhotoBox({
 }) {
   return (
     <motion.div
+      // Mounted afresh as it takes its layout ids: motion only lays claim to a layout id as the box
+      // mounts, so ids handed to one already on screen were never matched and the options appeared
+      // with no morph at all
+      key={dish.morph ? 'morph' : 'still'}
       ref={photoRef}
       layoutId={dish.morph ? `card-${item.id}` : undefined}
       style={{ borderRadius: radius }}

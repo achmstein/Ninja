@@ -278,6 +278,8 @@ function UpdateProfileDialog({
               id='profilePhone'
               type='tel'
               dir='ltr'
+              // a number reads left to right, but lines up with the other fields: right-aligned in Arabic
+              className='rtl:text-right'
               placeholder={phonePlaceholder || undefined}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}

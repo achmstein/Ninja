@@ -30,7 +30,7 @@ export function ZoomTile({
   shared: boolean
   /** Tapped: its card opens out of it and closes back into it */
   opening: boolean
-  /** Its photo is in the air: the tile is out of sight until it lands, then fades back */
+  /** A copy of its photo is in the air: the tile keeps its own photo in place, only without the layout ids its options grew out of */
   landing: boolean
   onOpen: (item: CatalogItemDto) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
@@ -61,8 +61,8 @@ export function ZoomTile({
         ref={photo}
         layoutId={morph ? `card-${item.id}` : undefined}
         initial={shared ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: landing ? 0 : 1, scale: 1 }}
-        transition={landing ? { duration: 0 } : { duration: 0.28 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.28 }}
         style={{ borderRadius: TILE_RADIUS }}
         className={cn(
           'relative aspect-[4/5] w-full overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',

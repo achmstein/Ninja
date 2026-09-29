@@ -104,6 +104,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             )}
             style={{ height: DOCK_H }}
           >
+            {/* The dock's grab handle, as on the tray's row: every row of the dock has it */}
+            <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
@@ -137,10 +139,15 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                   )}
                 </AnimatePresence>
                 {/* With a bill to show, the room's time rides along the top line */}
+                {/* The dot stands on its own so it sits between the name and the time in either direction;
+                    inside the time's ltr span it ended up after the time in Arabic */}
                 {clock && total > 0 && !stage && (
-                  <span dir='ltr' className='shrink-0 opacity-70'>
-                    · <Odometer value={clock} />
-                  </span>
+                  <>
+                    <span aria-hidden className='shrink-0 opacity-70'>·</span>
+                    <span dir='ltr' className='shrink-0 opacity-70'>
+                      <Odometer value={clock} />
+                    </span>
+                  </>
                 )}
               </span>
               {total > 0 ? (
