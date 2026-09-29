@@ -45,9 +45,11 @@ export type DeckPosition = { column: number; row: number }
  * The deck: one column of big cards per category, side by side. Both
  * directions are the browser's own scroll snapping, so a swipe feels native
  * on any phone and costs nothing when the finger lifts; in Arabic the
- * columns run right to left because the page does.
+ * columns run right to left because the page does. Memoised: the menu
+ * screen renders as its chrome moves (past the first card, the tabs asked
+ * back), and the deck has nothing to redraw for that.
  */
-export function Deck({
+export const Deck = memo(function Deck({
   columns,
   column,
   onColumnChange,
@@ -260,7 +262,7 @@ export function Deck({
       ))}
     </motion.div>
   )
-}
+})
 
 /**
  * The card after a category's last dish: the next category's name on its

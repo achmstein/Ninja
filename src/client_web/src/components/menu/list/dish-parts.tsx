@@ -93,9 +93,10 @@ export function RowAction({
   const t = useT()
   const localized = useLocalized()
   const swap = blurSwap(useReducedMotion())
-  const lines = useCart((s) => s.lines).filter((l) => l.productId === Number(item.id))
+  // How many of this dish are in the tray, as a number: every row on the menu has one of these, and
+  // following the whole cart re-rendered them all on each line added anywhere
+  const count = useCart((s) => s.lines.reduce((sum, l) => (l.productId === Number(item.id) ? sum + l.quantity : sum), 0))
   const setQuantity = useCart((s) => s.setQuantity)
-  const count = lines.reduce((sum, l) => sum + l.quantity, 0)
   const fill = 'bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)]'
   const round = small ? "relative size-10 before:absolute before:-inset-0.5 before:content-['']" : 'size-11'
 
@@ -113,7 +114,10 @@ export function RowAction({
   }
 
   const less = () => {
-    const newest = lines.at(-1)
+    const newest = useCart
+      .getState()
+      .lines.filter((l) => l.productId === Number(item.id))
+      .at(-1)
     if (newest) setQuantity(lineKey(newest), newest.quantity - 1)
   }
   return (

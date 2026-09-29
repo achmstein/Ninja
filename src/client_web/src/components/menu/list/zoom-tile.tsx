@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice } from '@/lib/i18n'
@@ -17,7 +17,7 @@ const TILE_RADIUS = 18
  * tiles; a tap opens the dish's options grown out of it, a held press puts
  * one straight in the tray.
  */
-export function ZoomTile({
+export const ZoomTile = memo(function ZoomTile({
   item,
   shared,
   opening,
@@ -99,4 +99,4 @@ export function ZoomTile({
       <span className='text-muted-foreground text-caption tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
     </button>
   )
-}
+})

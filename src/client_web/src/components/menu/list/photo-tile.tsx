@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -6,7 +6,7 @@ import { DishPhotoBox, DishPrice, RowAction } from './dish-parts'
 import { DISH_NAME, rise, useDish, type DishProps } from './use-dish'
 
 /** Photo grid: two big photo tiles a row, the name and price under each, the button on the photo's corner */
-export function PhotoTile({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const PhotoTile = memo(function PhotoTile({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const photo = useRef<HTMLDivElement>(null)
   const dish = useDish({ item, opening, landing, onOpen, onQuickAdd, photo })
@@ -28,4 +28,4 @@ export function PhotoTile({ scroller, item, opening, landing, onOpen, onQuickAdd
       </button>
     </motion.div>
   )
-}
+})

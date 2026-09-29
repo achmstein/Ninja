@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -13,7 +13,7 @@ import { DISH_NAME, DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
  * flies to the tray: the flight leaves from the options sheet as often as
  * from here, and a row is small enough that a copy lifting off reads fine.
  */
-export function Row({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const Row = memo(function Row({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const photo = useRef<HTMLDivElement>(null)
   const dish = useDish({ item, opening, landing, onOpen, onQuickAdd, photo })
@@ -32,4 +32,4 @@ export function Row({ scroller, item, opening, landing, onOpen, onQuickAdd }: Di
       {!dish.soldOut && <RowAction small item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
     </motion.div>
   )
-}
+})

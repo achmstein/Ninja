@@ -11,6 +11,10 @@ export type MenuList = 'row' | 'card' | 'compact' | 'hero'
  * What every dish of a list is given. The dish opens its options grown out
  * of its photo; its button puts a dish that needs no choosing straight in
  * the tray (and opens one that does), and a held press does the same.
+ * Every dish is memoised, as the deck's cards are, and the list hands it
+ * the same two handlers from render to render: a dish that renders
+ * re-measures every shared layout on the page, so only the one whose
+ * `opening` or `landing` changes should.
  */
 export type DishProps = {
   /** The list's scroller: a dish rises in as it scrolls into it */

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -6,7 +6,7 @@ import { RowAction } from './dish-parts'
 import { DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
 
 /** Compact: the name, a line of what it is, the price, the button; no photo, many to a screen */
-export function CompactRow({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const CompactRow = memo(function CompactRow({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const price = usePrice()
   // What the dish flies to the tray from: the round button, a small circle, not the wide row
@@ -39,4 +39,4 @@ export function CompactRow({ scroller, item, opening, landing, onOpen, onQuickAd
       )}
     </motion.div>
   )
-}
+})

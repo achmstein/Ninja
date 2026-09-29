@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -6,7 +6,7 @@ import { DishPhotoBox, RowAction } from './dish-parts'
 import { DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
 
 /** Magazine: one wide photo a dish, the name and price set on it under a shade, the button on its corner */
-export function HeroCard({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const HeroCard = memo(function HeroCard({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const price = usePrice()
   const photo = useRef<HTMLDivElement>(null)
@@ -32,4 +32,4 @@ export function HeroCard({ scroller, item, opening, landing, onOpen, onQuickAdd 
       )}
     </motion.div>
   )
-}
+})

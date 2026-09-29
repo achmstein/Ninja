@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
+import { useStore } from 'zustand'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart } from '@/lib/cart'
@@ -9,6 +10,7 @@ import { useLiveBills } from '@/lib/live-bills'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
 import { useCheckoutExtras } from '@/lib/use-checkout-extras'
+import { useHandler } from '@/lib/use-handler'
 import { usePlaceOrder } from '@/lib/use-place-order'
 import { cn } from '@/lib/utils'
 import { SignInSheet } from '@/components/auth/sign-in-options'
@@ -30,12 +32,10 @@ import { buildDeck, canQuickAdd, pickUsual, positionOf, quickAddChoice, TONE_CLA
 import { FlightLayer, type Flight } from './flights'
 import { itemPictureUrl } from './item-picture'
 import { MenuGrid } from './list/menu-grid'
+import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
 import { useMenuStyle } from './menu-style'
 import { OrderingPausedNote } from './paused-note'
 import { Tune, type TuneResult } from './tune'
-
-/** The dish open in place; `leaving` once it was added and its photo has taken off */
-type Tuning = { item: CatalogItemDto; leaving?: boolean }
 
 /**
  * The menu tab: ordering as one surface that never leaves the page, in the
@@ -49,17 +49,18 @@ type Tuning = { item: CatalogItemDto; leaving?: boolean }
  * past the first card, the dock's tabs folding with it, so a small screen
  * gives the cards its room; the tray and the app's tabs are one dock below.
  * The gestures are each acted out once by a fingertip, on a first visit.
+ *
+ * The screen itself holds only what moves between the deck and the whole
+ * menu. What a tap or a scroll changes (the dish open, the photos in the
+ * air, the tray, the tuck, the category in view) is read by the part that
+ * shows it (./menu-screen-store.ts), so none of those renders the menu.
  */
 export function MenuScreen({ menu }: HomeProps) {
   const t = useT()
   const localized = useLocalized()
   const reduced = useReducedMotion()
-  const cloudKitchen = useIsCloudKitchen()
   const add = useCart((s) => s.add)
-  const trayEmpty = useCart((s) => s.lines.length === 0)
-  const live = useLiveBills()
-  // An empty tray with nothing to show in its place (no bill, order, table or room) takes no row until a dish is on its way
-  const dockRow = useDockRowShown(live)
+  const [store] = useState(createMenuScreenStore)
 
   const columns = useMemo(() => buildDeck(menu.sections), [menu.sections])
   const usual = pickUsual(columns)
@@ -71,7 +72,7 @@ export function MenuScreen({ menu }: HomeProps) {
   // Until the customer moves, the deck sits on its first column (the usuals once they land)
   const [touched, setTouched] = useState(false)
   const column = touched ? Math.max(0, columns.findIndex((c) => c.id === activeId)) : 0
-  const start: DeckPosition = touched ? moved : { column: 0, row: 0 }
+  const start = useMemo<DeckPosition>(() => (touched ? moved : { column: 0, row: 0 }), [touched, moved])
   const rows = useRef<Record<number, number>>({})
   const [activeRow, setActiveRow] = useState(0)
   const [pastFirst, setPastFirst] = useState(false)
@@ -87,20 +88,11 @@ export function MenuScreen({ menu }: HomeProps) {
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
   const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
-  const [tuning, setTuning] = useState<Tuning | null>(null)
-  const [expanded, setExpanded] = useState(false)
-  // How far the order sheet is open (it follows a finger), and so how dark the page behind it is
-  const openness = useMotionValue(0)
-  const [scrim, setScrim] = useState(false)
-  useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
-  const [flights, setFlights] = useState<Flight[]>([])
-  const bare = trayEmpty && !dockRow && flights.length === 0
 
   // The whole menu scrolls like a page: the top bar goes up with it, and scrolling down tucks the
-  // dock's tabs (the tray staying), scrolling back up brings them back
+  // dock's tabs (the tray staying), scrolling back up brings them back. The dock follows that
+  // itself (MenuDock), so a scroll never renders the screen
   const [gridScroller, setGridScroller] = useState<HTMLDivElement | null>(null)
-  useTuckOnScroll(gridScroller, gridScroller != null && !expanded)
-  const scrolledDown = useTuck((s) => s.tucked)
   // The deck goes compact past its first card: the top bar goes up, the tabs fold and the cards grow
   // into both. By where the customer is rather than which way they last swiped, so going back a
   // card to compare two dishes keeps the room; the first card brings the chrome back
@@ -108,7 +100,6 @@ export function MenuScreen({ menu }: HomeProps) {
   // Asked back on the compact deck, the tabs come up over the next card's peek rather than taking
   // the cards' room: the categories and the dock rise over the deck's bottom, the cards unmoved
   const tabsOver = compact && tabsAsked
-  const tucked = gridScroller ? scrolledDown : compact && !tabsAsked
   // The top bar goes up with the whole menu's scroll, and past the deck's first card: as far as it
   // is tall, which is the café's (its header size)
   const bar = useRef<HTMLDivElement>(null)
@@ -124,16 +115,6 @@ export function MenuScreen({ menu }: HomeProps) {
     const run = animate(barY, compact ? -barHeight() : 0, reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' })
     return () => run.stop()
   }, [gridScroller, compact, barY, reduced])
-  // Nothing in the tray's row and the tabs tucked: the dock is gone, the categories left at the bottom
-  const docked = !(tucked && bare)
-  // The tabs tucked with the tray's row kept: the row settles onto the screen's bottom edge, full
-  // width, rounded on top only, rather than floating over a strip of page
-  const stuck = tucked && !bare
-  // The dish added from its open card: that card sits out while its photo flies, and comes back as it lands
-  const [landing, setLanding] = useState<number | null>(null)
-  const [bump, setBump] = useState(0)
-  const [signInOpen, setSignInOpen] = useState(false)
-  const [announce, setAnnounce] = useState('')
   const target = useRef<HTMLDivElement>(null)
   const flightId = useRef(0)
   // When the guest last touched the page: a scroll only counts as their swipe
@@ -145,21 +126,6 @@ export function MenuScreen({ menu }: HomeProps) {
   }
   const byGuest = () => performance.now() - lastInput.current < 1500
 
-  // The note, the code and the points, set in the tray's order and sent with it
-  const extras = useCheckoutExtras()
-
-  const order = usePlaceOrder({
-    onPlaced: (finish) => {
-      setExpanded(false)
-      extras.reset()
-      setAnnounce(t('orderPlacedSuccessfully'))
-      // In one render the tray empties (the hold button goes) and the pill at
-      // the top grows out of it, to follow the order from here
-      useOrderPill.getState().follow()
-      finish()
-    },
-  })
-
   const canOrder = menu.orderingEnabled
   const loading = menu.isLoading && columns.length === 0
 
@@ -167,8 +133,11 @@ export function MenuScreen({ menu }: HomeProps) {
   const swipeHint = useHint('swipe')
   const zoomHint = useHint('zoom')
   const holdHint = useHint('holdAdd')
-  const idle = !loading && columns.length > 0 && mode === 'deck' && !tuning && !expanded
   const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
+  // A dish or the order open over the deck is something going on. Only a cue still to show asks: with
+  // none left, or on the whole menu (which has none), opening either does not render the screen
+  const covered = useStore(store, (s) => current != null && mode === 'deck' && (s.tuning != null || s.expanded))
+  const idle = !loading && columns.length > 0 && mode === 'deck' && !covered
   // One cue on screen at a time (the tray's pull may be up); and one showing as a dish or the order
   // opens is over, so no fingertip or words are left over what opened
   const noCue = useNoCueOnScreen()
@@ -183,17 +152,21 @@ export function MenuScreen({ menu }: HomeProps) {
   useTimeout(!!current?.showing, gestureMs(current === swipeHint ? 'swipe' : current === zoomHint ? 'pinch' : 'hold'), () => current?.done())
   const holdHintId = holdHint.showing && activeItem && canQuickAdd(activeItem) ? Number(activeItem.id) : null
 
-  const selectColumn = useCallback(
-    (index: number) => {
-      setTouched(true)
-      setActiveId(columns[index]?.id ?? null)
-      setActiveRow(rows.current[index] ?? 0)
-      if (swipeHint.pending && byGuest()) swipeHint.done()
-    },
-    [columns, swipeHint]
-  )
+  const labels = columns.map((c) => c.label)
+  // The whole menu shows the categories alone (each usual is a tile in its own category)
+  const gridCategories = columns.filter((c) => c.kind === 'category')
+  const gridLabels = gridCategories.map((c) => c.label)
 
-  const onRowChange = (c: number, row: number) => {
+  // The deck, the list and the dock are memoised and keep the same handlers from render to render
+  // (each runs the latest of what is below), so a render of the screen passes them by
+  const selectColumn = useHandler((index: number) => {
+    setTouched(true)
+    setActiveId(columns[index]?.id ?? null)
+    setActiveRow(rows.current[index] ?? 0)
+    if (swipeHint.pending && byGuest()) swipeHint.done()
+  })
+
+  const onRowChange = useHandler((c: number, row: number) => {
     const was = rows.current[c] ?? 0
     rows.current[c] = row
     if (c !== column) return
@@ -208,70 +181,66 @@ export function MenuScreen({ menu }: HomeProps) {
     // for its shared layouts and made the scroll stutter
     if (row !== activeRow && holdHint.pending) setActiveRow(row)
     if (row > 0 && swipeHint.pending && byGuest()) swipeHint.done()
-  }
+  })
 
-  const zoomOut = useCallback(() => {
+  const zoomOut = useHandler(() => {
     const col = columns[column]
     const row = rows.current[column] ?? 0
     setGridFocus({
       id: col?.items[row] ? Number(col.items[row].id) : null,
       shared: new Set((col?.items ?? []).map((i) => Number(i.id))),
     })
-    setTuning(null)
+    store.setState({ tuning: null })
     setMode('grid')
     if (zoomHint.pending) zoomHint.done()
-  }, [columns, column, zoomHint])
+  })
 
-  // On the whole menu: the category in view, and the one the jump bar asked to scroll to
-  const [gridColumn, setGridColumn] = useState(0)
-  const [jump, setJump] = useState<{ index: number; n: number } | null>(null)
+  const zoomIn = useHandler((item?: CatalogItemDto) => {
+    const position = item ? positionOf(columns, item.id) : { column, row: rows.current[column] ?? 0 }
+    if (position) {
+      setTouched(true)
+      setActiveId(columns[position.column]?.id ?? null)
+      setMoved(position)
+      setActiveRow(position.row)
+      setPastFirst(position.row > 0)
+      // Back from the whole menu is a page opened afresh, which starts with its tabs
+      setTabsAsked(true)
+    }
+    setMode('deck')
+  })
 
-  const zoomIn = useCallback(
-    (item?: CatalogItemDto) => {
-      const position = item ? positionOf(columns, item.id) : { column, row: rows.current[column] ?? 0 }
-      if (position) {
-        setTouched(true)
-        setActiveId(columns[position.column]?.id ?? null)
-        setMoved(position)
-        setActiveRow(position.row)
-        setPastFirst(position.row > 0)
-        // Back from the whole menu is a page opened afresh, which starts with its tabs
-        setTabsAsked(true)
-      }
-      setMode('deck')
-    },
-    [columns, column]
-  )
-
-  const onZoom = useCallback((direction: 'out' | 'in') => (direction === 'out' ? zoomOut() : zoomIn()), [zoomOut, zoomIn])
+  const onZoom = useHandler((direction: 'out' | 'in') => (direction === 'out' ? zoomOut() : zoomIn()))
+  const zoomInFromGrid = useHandler(() => (classic ? undefined : zoomIn()))
+  // Back to the cards at the category in view, or where the deck was if that is the one
+  const backToCards = useHandler(() => {
+    const shown = gridCategories[store.getState().section]
+    zoomIn(shown && shown.id !== columns[column]?.id ? shown.items[0] : undefined)
+  })
 
   /** A photo lifts off where it is and flies into the tray; `land` runs as it gets there */
-  const fly = (item: CatalogItemDto, from: HTMLElement | null, land: () => void) => {
-    setAnnounce(t('ninjaAdded', { name: localized(item.name) }))
+  const fly = useHandler((item: CatalogItemDto, from: HTMLElement | null, land: () => void) => {
+    store.setState({ announce: t('ninjaAdded', { name: localized(item.name) }) })
     const to = target.current?.getBoundingClientRect()
     const box = from?.getBoundingClientRect()
     if (reduced || !to || !box || box.width === 0) {
       land()
-      setBump((b) => b + 1)
+      store.setState((s) => ({ bump: s.bump + 1 }))
       return
     }
-    const id = ++flightId.current
-    setFlights((f) => [
-      ...f,
-      {
-        id,
-        from: { x: box.x, y: box.y, width: box.width, height: box.height },
-        // The first thumbnail's slot
-        to: { x: to.x, y: to.y, width: 44, height: 44 },
-        src: item.pictureUri ? itemPictureUrl(item.id) : null,
-        toneClass: TONE_CLASS.primary,
-        radius: cornerOf(from),
-        land,
-      },
-    ])
-  }
+    const flight: Flight = {
+      id: ++flightId.current,
+      from: { x: box.x, y: box.y, width: box.width, height: box.height },
+      // The first thumbnail's slot
+      to: { x: to.x, y: to.y, width: 44, height: 44 },
+      src: item.pictureUri ? itemPictureUrl(item.id) : null,
+      toneClass: TONE_CLASS.primary,
+      radius: cornerOf(from),
+      land,
+    }
+    store.setState((s) => ({ flights: [...s.flights, flight] }))
+  })
 
-  const addLine = (item: CatalogItemDto, result: TuneResult) =>
+  const addLine = useHandler((item: CatalogItemDto, result: TuneResult) =>
     add({
       productId: Number(item.id),
       nameEn: item.name?.en ?? '',
@@ -282,9 +251,14 @@ export function MenuScreen({ menu }: HomeProps) {
       specialInstructions: result.instructions || undefined,
       customizations: result.customizations,
     })
+  )
 
+  const openDish = useHandler((item: CatalogItemDto) => store.setState({ tuning: { item } }))
+  // A list's dish takes its layout id a frame before its sheet opens, and asks for the sheet from
+  // that frame's callback: the sheet waits for the frame to be painted, as it did as React state
+  const openFromList = useHandler((item: CatalogItemDto) => afterThisFrame(() => openDish(item)))
 
-  const onQuickAdd = (item: CatalogItemDto, photo: HTMLElement | null) => {
+  const onQuickAdd = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!canOrder) {
       toast.warning(t('orderingUnavailable'))
       return
@@ -295,31 +269,42 @@ export function MenuScreen({ menu }: HomeProps) {
     }
     // Something to choose first: open it instead
     if (!canQuickAdd(item)) {
-      setTuning({ item })
+      store.setState({ tuning: { item } })
       return
     }
     navigator.vibrate?.(8)
     if (holdHint.pending) holdHint.done()
     const { customizations, unitPrice } = quickAddChoice(item)
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
-  }
+  })
 
+  const addFromTune = useHandler((tuning: Tuning, result: TuneResult, photo: HTMLElement | null) => {
+    // The photo itself goes to the tray: the open card lets go of it and fades,
+    // rather than folding back into its card while a copy flies
+    const item = tuning.item
+    store.setState({ landing: Number(item.id) })
+    fly(item, photo, () => {
+      addLine(item, result)
+      store.setState({ landing: null })
+    })
+    store.setState({ tuning: { ...tuning, leaving: true } })
+    requestAnimationFrame(() => afterThisFrame(() => store.setState({ tuning: null })))
+  })
 
-  const labels = columns.map((c) => c.label)
-  // The whole menu shows the categories alone (each usual is a tile in its own category)
-  const gridCategories = columns.filter((c) => c.kind === 'category')
-  const gridLabels = gridCategories.map((c) => c.label)
+  const notice = useMemo(() => (canOrder ? undefined : <OrderingPausedNote />), [canOrder])
 
   return (
     <MotionConfig reducedMotion='user'>
-      <LayoutGroup>
-        <div
-          className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'
-          onPointerDownCapture={noteInput}
-          onTouchStartCapture={noteInput}
-          onWheelCapture={noteInput}
-          onKeyDownCapture={noteInput}
-        >
+      <div
+        className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'
+        onPointerDownCapture={noteInput}
+        onTouchStartCapture={noteInput}
+        onWheelCapture={noteInput}
+        onKeyDownCapture={noteInput}
+      >
+        {/* The shared layouts (a dish and its open sheet, a card and its tile) are all up here: the dock is a
+            group of its own, so the tray's own layouts moving do not re-measure every card on the menu */}
+        <LayoutGroup>
           <div className='relative flex min-h-0 flex-1 flex-col'>
             {/* The first-visit demonstrations move the whole deck: a nudge up, then a breath out to the whole menu */}
             <motion.div
@@ -353,25 +338,24 @@ export function MenuScreen({ menu }: HomeProps) {
               ) : columns.length === 0 ? (
                 <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
               ) : mode === 'grid' ? (
-                <MenuGrid
+                <GridStage
+                  store={store}
                   columns={columns}
                   focusId={gridFocus.id}
                   sharedIds={gridFocus.shared}
-                  onOpen={(item) => setTuning({ item })}
+                  onOpen={openFromList}
                   onQuickAdd={onQuickAdd}
-                  onZoomIn={() => (classic ? undefined : zoomIn())}
-                  landingId={landing}
-                  jump={jump}
-                  onSection={setGridColumn}
+                  onZoomIn={zoomInFromGrid}
                   list={list}
                   // The café's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
                   title={classic ? t('menu') : undefined}
                   onScroller={setGridScroller}
-                  notice={canOrder ? undefined : <OrderingPausedNote />}
+                  notice={notice}
                 />
               ) : (
-                <Deck
+                <DeckStage
                   key={deckKey}
+                  store={store}
                   columns={columns}
                   column={column}
                   onColumnChange={selectColumn}
@@ -379,11 +363,9 @@ export function MenuScreen({ menu }: HomeProps) {
                   start={start}
                   usualId={usual ? Number(usual.id) : null}
                   holdHintId={holdHintId}
-                  onOpen={(item) => setTuning({ item })}
+                  onOpen={openDish}
                   onQuickAdd={onQuickAdd}
                   onZoom={onZoom}
-                  landingId={landing}
-                  openId={tuning ? Number(tuning.item.id) : null}
                 />
               )}
             </motion.div>
@@ -427,21 +409,8 @@ export function MenuScreen({ menu }: HomeProps) {
                 {mode === 'deck' ? (
                   <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
                 ) : (
-                  <LiquidTabs
-                    zoomed
-                    labels={gridLabels}
-                    active={gridColumn}
-                    onSelect={(index) => setJump((j) => ({ index, n: (j?.n ?? 0) + 1 }))}
-                    // Back to the cards at the category in view, or where the deck was if that is the one; a classic menu has none
-                    onZoomOut={
-                      classic
-                        ? undefined
-                        : () => {
-                            const shown = gridCategories[gridColumn]
-                            zoomIn(shown && shown.id !== columns[column]?.id ? shown.items[0] : undefined)
-                          }
-                    }
-                  />
+                  // A classic menu has no cards to go back to
+                  <GridTabs store={store} labels={gridLabels} onZoomOut={classic ? undefined : backToCards} />
                 )}
               </nav>
             )}
@@ -470,91 +439,229 @@ export function MenuScreen({ menu }: HomeProps) {
               )}
             </AnimatePresence>
 
-            <AnimatePresence>
-              {tuning && (
-                <Tune
-                  key={String(tuning.item.id)}
-                  item={tuning.item}
-                  canOrder={canOrder}
-                  onClose={() => setTuning(null)}
-                  leaving={tuning.leaving}
-                  onAdd={(result, photo) => {
-                    // The photo itself goes to the tray: the open card lets go of it and fades,
-                    // rather than folding back into its card while a copy flies
-                    const item = tuning.item
-                    setLanding(Number(item.id))
-                    fly(item, photo, () => {
-                      addLine(item, result)
-                      setLanding(null)
-                    })
-                    setTuning({ ...tuning, leaving: true })
-                    requestAnimationFrame(() => setTuning(null))
-                  }}
-                />
-              )}
-            </AnimatePresence>
+            <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} />
           </div>
+        </LayoutGroup>
 
-          {/* The order opened darkens what is behind it, not the dock itself */}
-          {scrim && (
-            <motion.div
-              aria-hidden
-              className='fixed inset-0 z-30 bg-black/40'
-              style={{ opacity: openness }}
-              onClick={() => setExpanded(false)}
-            />
-          )}
+        <LayoutGroup>
+          <MenuDock store={store} target={target} canOrder={canOrder} scroller={gridScroller} deckTucked={compact && !tabsAsked} />
+        </LayoutGroup>
+      </div>
 
-          {/* One dock: the tray over the app's tabs, a single dark slab floating off the edges */}
-          <div
-            className={cn(
-              'slab relative z-40 shrink-0 transition-[margin,padding,border-radius,box-shadow] duration-300 ease-out motion-reduce:transition-none',
-              stuck ? 'rounded-t-[1.75rem] rounded-b-none' : 'rounded-[1.75rem]',
-              docked && 'shadow-(--slab-shadow)'
-            )}
-            style={{
-              marginInline: stuck ? 0 : DOCK_SIDE,
-              marginBottom: stuck ? 0 : docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)',
-              paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined,
-            }}
-          >
-            <Tray
-              targetRef={target}
-              bump={bump}
-              expanded={expanded}
-              onExpandedChange={setExpanded}
-              openness={openness}
-              canOrder={canOrder}
-              // The hold sends the note, the code and the points set in the order with it
-              order={{ ...order, submit: () => order.submit(extras.payload()) }}
-              extras={extras}
-              bare={bare}
-              cloudKitchen={cloudKitchen}
-              onSignIn={() => setSignInOpen(true)}
-            />
-            {/* The bill running now, in the tray's row while the tray is empty */}
-            <DockBill live={live} trayEmpty={trayEmpty} />
-            {/* Scrolling down the whole menu folds the tabs, the tray staying: the order is what is at hand */}
-            <TuckedTabs tucked={tucked} className={bare ? undefined : 'border-background/10 border-t'} />
-          </div>
-        </div>
-
-        <FlightLayer
-          flights={flights}
-          onLand={(id) => {
-            flights.find((x) => x.id === id)?.land()
-            setFlights((f) => f.filter((x) => x.id !== id))
-            setBump((b) => b + 1)
-          }}
-        />
-        <p aria-live='polite' className='sr-only'>
-          {announce}
-        </p>
-        {order.dialogs}
-        <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
-      </LayoutGroup>
+      <Flights store={store} />
+      <Announcer store={store} />
     </MotionConfig>
   )
+}
+
+/** The whole menu, with what it follows from the store: the dish landing, the category asked for */
+function GridStage({ store, ...props }: Omit<ComponentProps<typeof MenuGrid>, 'landingId' | 'jump' | 'onSection'> & { store: MenuScreenStore }) {
+  const landingId = useStore(store, (s) => s.landing)
+  const jump = useStore(store, (s) => s.jump)
+  const onSection = useCallback((index: number) => store.setState({ section: index }), [store])
+  return <MenuGrid {...props} landingId={landingId} jump={jump} onSection={onSection} />
+}
+
+/** The deck, with what it follows from the store: the dish landing, the one open */
+function DeckStage({ store, ...props }: Omit<ComponentProps<typeof Deck>, 'landingId' | 'openId'> & { store: MenuScreenStore }) {
+  const landingId = useStore(store, (s) => s.landing)
+  const openId = useStore(store, (s) => (s.tuning ? Number(s.tuning.item.id) : null))
+  return <Deck {...props} landingId={landingId} openId={openId} />
+}
+
+/** On the whole menu the categories are a jump bar: the pill follows the one in view, a tap scrolls to one */
+function GridTabs({ store, labels, onZoomOut }: { store: MenuScreenStore; labels: string[]; onZoomOut?: () => void }) {
+  const active = useStore(store, (s) => s.section)
+  return (
+    <LiquidTabs
+      zoomed
+      labels={labels}
+      active={active}
+      onSelect={(index) => store.setState((s) => ({ jump: { index, n: (s.jump?.n ?? 0) + 1 } }))}
+      onZoomOut={onZoomOut}
+    />
+  )
+}
+
+/** The dish open in place, over the menu */
+function TuneLayer({
+  store,
+  canOrder,
+  onAdd,
+}: {
+  store: MenuScreenStore
+  canOrder: boolean
+  onAdd: (tuning: Tuning, result: TuneResult, photo: HTMLElement | null) => void
+}) {
+  const tuning = useStore(store, (s) => s.tuning)
+  return (
+    <AnimatePresence>
+      {tuning && (
+        <Tune
+          key={String(tuning.item.id)}
+          item={tuning.item}
+          canOrder={canOrder}
+          onClose={() => store.setState({ tuning: null })}
+          leaving={tuning.leaving}
+          onAdd={(result, photo) => onAdd(tuning, result, photo)}
+        />
+      )}
+    </AnimatePresence>
+  )
+}
+
+/** The photos in the air; each lands its dish in the order and gives the tray its nudge */
+function Flights({ store }: { store: MenuScreenStore }) {
+  const flights = useStore(store, (s) => s.flights)
+  const onLand = useCallback(
+    (id: number) => {
+      store
+        .getState()
+        .flights.find((x) => x.id === id)
+        ?.land()
+      store.setState((s) => ({ flights: s.flights.filter((x) => x.id !== id), bump: s.bump + 1 }))
+    },
+    [store]
+  )
+  return <FlightLayer flights={flights} onLand={onLand} />
+}
+
+function Announcer({ store }: { store: MenuScreenStore }) {
+  const announce = useStore(store, (s) => s.announce)
+  return (
+    <p aria-live='polite' className='sr-only'>
+      {announce}
+    </p>
+  )
+}
+
+/**
+ * One dock: the tray over the app's tabs, a single dark slab floating off
+ * the edges. It keeps the order's own state (open or not, the nudge as a
+ * dish lands, the note and the code going with it, the cart it sends), so
+ * opening the order or a line changing renders the dock, not the menu.
+ */
+const MenuDock = memo(function MenuDock({
+  store,
+  target,
+  canOrder,
+  scroller,
+  deckTucked,
+}: {
+  store: MenuScreenStore
+  target: RefObject<HTMLDivElement | null>
+  canOrder: boolean
+  /** The whole menu's scroller while it is on screen: its scroll tucks the dock's tabs */
+  scroller: HTMLDivElement | null
+  /** On the deck: the chrome has made way for the cards past the first one */
+  deckTucked: boolean
+}) {
+  const t = useT()
+  const cloudKitchen = useIsCloudKitchen()
+  const trayEmpty = useCart((s) => s.lines.length === 0)
+  const live = useLiveBills()
+  // An empty tray with nothing to show in its place (no bill, order, table or room) takes no row until a dish is on its way
+  const dockRow = useDockRowShown(live)
+  const inFlight = useStore(store, (s) => s.flights.length > 0)
+  const bare = trayEmpty && !dockRow && !inFlight
+  const bump = useStore(store, (s) => s.bump)
+  const expanded = useStore(store, (s) => s.expanded)
+  const setExpanded = useCallback((open: boolean) => store.setState({ expanded: open }), [store])
+  useTuckOnScroll(scroller, scroller != null && !expanded)
+  // How far the order sheet is open (it follows a finger), and so how dark the page behind it is
+  const openness = useMotionValue(0)
+  const [scrim, setScrim] = useState(false)
+  useMotionValueEvent(openness, 'change', (v) => setScrim(v > 0.001))
+  const [signInOpen, setSignInOpen] = useState(false)
+
+  // The note, the code and the points, set in the tray's order and sent with it
+  const extras = useCheckoutExtras()
+
+  const order = usePlaceOrder({
+    onPlaced: (finish) => {
+      setExpanded(false)
+      extras.reset()
+      store.setState({ announce: t('orderPlacedSuccessfully') })
+      // In one render the tray empties (the hold button goes) and the pill at
+      // the top grows out of it, to follow the order from here
+      useOrderPill.getState().follow()
+      finish()
+    },
+  })
+
+  return (
+    <>
+      {/* The order opened darkens what is behind it, not the dock itself */}
+      {scrim && (
+        <motion.div aria-hidden className='fixed inset-0 z-30 bg-black/40' style={{ opacity: openness }} onClick={() => setExpanded(false)} />
+      )}
+
+      <DockFrame scroller={scroller} deckTucked={deckTucked} bare={bare}>
+        <Tray
+          targetRef={target}
+          bump={bump}
+          expanded={expanded}
+          onExpandedChange={setExpanded}
+          openness={openness}
+          canOrder={canOrder}
+          // The hold sends the note, the code and the points set in the order with it
+          order={{ ...order, submit: () => order.submit(extras.payload()) }}
+          extras={extras}
+          bare={bare}
+          cloudKitchen={cloudKitchen}
+          onSignIn={() => setSignInOpen(true)}
+        />
+        {/* The bill running now, in the tray's row while the tray is empty */}
+        <DockBill live={live} trayEmpty={trayEmpty} />
+      </DockFrame>
+
+      {order.dialogs}
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
+    </>
+  )
+})
+
+/**
+ * The dock's slab, the one part of the menu that follows the tuck: it reads
+ * the flag itself, so a scroll that flips it restyles the slab and folds the
+ * tabs while the tray inside (`children`, made by the dock) is passed by.
+ */
+function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDivElement | null; deckTucked: boolean; bare: boolean; children: ReactNode }) {
+  const scrolledDown = useTuck((s) => s.tucked)
+  const tucked = scroller ? scrolledDown : deckTucked
+  // Nothing in the tray's row and the tabs tucked: the dock is gone, the categories left at the bottom
+  const docked = !(tucked && bare)
+  // The tabs tucked with the tray's row kept: the row settles onto the screen's bottom edge, full
+  // width, rounded on top only, rather than floating over a strip of page
+  const stuck = tucked && !bare
+  return (
+    <div
+      className={cn(
+        'slab relative z-40 shrink-0 transition-[margin,padding,border-radius,box-shadow] duration-300 ease-out motion-reduce:transition-none',
+        stuck ? 'rounded-t-[1.75rem] rounded-b-none' : 'rounded-[1.75rem]',
+        docked && 'shadow-(--slab-shadow)'
+      )}
+      style={{
+        marginInline: stuck ? 0 : DOCK_SIDE,
+        marginBottom: stuck ? 0 : docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)',
+        paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined,
+      }}
+    >
+      {children}
+      {/* Scrolling down the whole menu folds the tabs, the tray staying: the order is what is at hand */}
+      <TuckedTabs tucked={tucked} className={bare ? undefined : 'border-background/10 border-t'} />
+    </div>
+  )
+}
+
+/**
+ * Runs `fn` once the frame in progress has been painted. The store's updates render at once, so one
+ * made in a frame callback would render before that frame's paint, where React state set there
+ * rendered just after it; the two places that wait a frame on purpose hand their update on to this,
+ * which keeps the frame between their two renders and keeps both from landing in one long frame
+ */
+function afterThisFrame(fn: () => void) {
+  window.setTimeout(fn, 0)
 }
 
 /**

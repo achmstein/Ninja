@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { motion, useScroll } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
+import { useHandler } from '@/lib/use-handler'
 import { PageTitle } from '@/components/ninja/page/page'
 import { TABS_H } from '@/components/ninja/shell/chrome'
 import { pinchIntent, type DeckColumn } from '../deck/deck-model'
@@ -21,8 +22,10 @@ const SPY_SLACK = 24
  * back in the bar, returns to the cards. Either way a tap opens a dish's
  * options grown out of it, and a held press puts one straight in the tray.
  * The usuals are not repeated here: each of them is a dish in its category.
+ * Memoised, as the deck is: the menu screen around it renders for its own
+ * reasons (the chrome, the tray), and none of them is the list's.
  */
-export function MenuGrid({
+export const MenuGrid = memo(function MenuGrid({
   columns,
   focusId,
   sharedIds,
@@ -73,10 +76,13 @@ export function MenuGrid({
   // out of it; every other tile outside the deck's column has none, which keeps the zoom's first
   // frame cheap (each id is a box to measure)
   const [openingId, setOpeningId] = useState<number | null>(null)
-  const open = (item: CatalogItemDto) => {
+  // The dishes keep the same two handlers from render to render, so a render of the list (a dish
+  // opening, a category asked for) passes every dish by but the one it is about
+  const open = useHandler((item: CatalogItemDto) => {
     setOpeningId(Number(item.id))
     requestAnimationFrame(() => onOpen(item))
-  }
+  })
+  const quickAdd = useHandler(onQuickAdd)
   const focusColumn = categories.find((c) => c.items.some((i) => Number(i.id) === focusId))?.id
 
   // Which category is in view: the last one whose heading has reached the top of the room under
@@ -208,7 +214,7 @@ export function MenuGrid({
                   opening={Number(item.id) === openingId}
                   landing={Number(item.id) === landingId}
                   onOpen={open}
-                  onQuickAdd={onQuickAdd}
+                  onQuickAdd={quickAdd}
                 />
               ))}
             </div>
@@ -222,7 +228,7 @@ export function MenuGrid({
                   opening={Number(item.id) === openingId}
                   landing={Number(item.id) === landingId}
                   onOpen={open}
-                  onQuickAdd={onQuickAdd}
+                  onQuickAdd={quickAdd}
                 />
               ))}
             </div>
@@ -231,7 +237,7 @@ export function MenuGrid({
       ))}
     </motion.div>
   )
-}
+})
 
 /** Where the scroller's room starts under the top bar, px: its top padding */
 function roomTop(el: HTMLElement): number {
