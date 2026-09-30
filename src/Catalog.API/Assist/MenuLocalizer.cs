@@ -36,9 +36,9 @@ public sealed class MenuLocalizer(INinjaAgentFactory factory)
             Fill: LocalizerPostProcessor.FieldsToFill(request),
             Name: Pair(request.Name),
             Description: request.Description is null ? new LocalizedPair(string.Empty, string.Empty) : Pair(request.Description),
-            Category: category is null ? string.Empty : $"{category.Name.En} / {category.Name.Ar}",
+            Category: category is null ? string.Empty : category.Name.Both,
             Categories: request.SuggestCategory
-                ? categories.Select(c => new CategoryOption(c.Id, c.Name.En, c.Name.Ar ?? string.Empty)).ToList()
+                ? categories.Select(c => new CategoryOption(c.Id, c.Name.En, c.Name.Ar)).ToList()
                 : []);
 
         var agent = factory.Create(Definition);

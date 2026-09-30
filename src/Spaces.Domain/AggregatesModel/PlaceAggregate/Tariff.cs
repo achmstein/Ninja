@@ -17,7 +17,7 @@ public class RateOption
     {
         if (string.IsNullOrWhiteSpace(code))
             throw new SpacesDomainException("A rate option needs a code");
-        if (string.IsNullOrWhiteSpace(name.En))
+        if (name is null || name.IsEmpty)
             throw new SpacesDomainException("A rate option needs a name");
         if (hourlyRate <= 0)
             throw new SpacesDomainException("An hourly rate must be greater than zero");

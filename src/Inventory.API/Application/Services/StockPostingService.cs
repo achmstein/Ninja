@@ -272,7 +272,7 @@ public class StockPostingService(
 
             logger.LogInformation(
                 "Branch {BranchId}: {Item} low ({OnHand} {Unit}, reorder at {ReorderLevel})",
-                branchId, item.Name.En, change.Post, item.Unit, change.ReorderLevel);
+                branchId, item.Name.Primary, change.Post, item.Unit, change.ReorderLevel);
 
             await integrationEvents.AddAndSaveEventAsync(new StockLowIntegrationEvent(
                 branchId, item.Id, item.Name, item.Unit, change.Post, change.ReorderLevel!.Value));

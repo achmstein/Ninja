@@ -30,9 +30,10 @@ public static class RecipeProposalValidator
         var shelfByName = new Dictionary<string, StockItemView>(StringComparer.Ordinal);
         foreach (var item in shelf)
         {
-            shelfByName.TryAdd(TextFolding.Fold(item.Name.En), item);
-            if (!string.IsNullOrWhiteSpace(item.Name.Ar))
-                shelfByName.TryAdd(TextFolding.Fold(item.Name.Ar), item);
+            if (item.Name.En is { } en)
+                shelfByName.TryAdd(TextFolding.Fold(en), item);
+            if (item.Name.Ar is { } ar)
+                shelfByName.TryAdd(TextFolding.Fold(ar), item);
         }
 
         // Ingredients: one per key; a name already on the shelf resolves to that shelf item
@@ -44,12 +45,17 @@ public static class RecipeProposalValidator
             var key = AIJson.Clean(raw.Key, 60);
             var nameEn = AIJson.Clean(raw.NameEn, 120);
             var nameAr = AIJson.Clean(raw.NameAr, 120);
-            if (key.Length == 0 && nameEn.Length == 0)
+            if (key.Length == 0 && nameEn.Length == 0 && nameAr.Length == 0)
                 continue;
             if (key.Length == 0)
-                key = TextFolding.Fold(nameEn).Replace(' ', '-');
-            if (nameEn.Length == 0)
-                nameEn = key;
+                key = TextFolding.Fold(nameEn.Length > 0 ? nameEn : nameAr).Replace(' ', '-');
+            // A café that writes one language gets its ingredient in that one
+            if (nameEn.Length == 0 && nameAr.Length == 0)
+            {
+                if (TextFolding.HasArabic(key)) nameAr = key;
+                else nameEn = key;
+            }
+            var label = nameEn.Length > 0 ? nameEn : nameAr;
             if (byKey.ContainsKey(key))
             {
                 warnings.Add($"Ingredient \"{key}\" was proposed twice; the first is kept.");
@@ -65,22 +71,22 @@ public static class RecipeProposalValidator
             if (!Units.Contains(unit))
             {
                 if (unit.Length > 0)
-                    warnings.Add($"Ingredient \"{nameEn}\": unit \"{unit}\" is not one of pcs, g, ml; set to pcs.");
+                    warnings.Add($"Ingredient \"{label}\": unit \"{unit}\" is not one of pcs, g, ml; set to pcs.");
                 unit = "pcs";
             }
 
             StockItemView? existing = null;
-            if (shelfByName.TryGetValue(TextFolding.Fold(nameEn), out var byEn)) existing = byEn;
+            if (nameEn.Length > 0 && shelfByName.TryGetValue(TextFolding.Fold(nameEn), out var byEn)) existing = byEn;
             else if (nameAr.Length > 0 && shelfByName.TryGetValue(TextFolding.Fold(nameAr), out var byAr)) existing = byAr;
 
             decimal? packSize = raw.PackSize > 0 ? Math.Round(raw.PackSize, 3, MidpointRounding.AwayFromZero) : null;
             var packName = AIJson.Clean(raw.PackName, 40);
             var ingredient = new ProposedIngredient(
                 key,
-                new LocalizedText(nameEn, nameAr.Length == 0 ? null : nameAr),
+                new LocalizedText(nameEn, nameAr),
                 unit,
                 packSize,
-                packName.Length == 0 ? null : packName,
+                packName.Length == 0 ? null : LocalizedText.InScriptOf(packName),
                 raw.AutoSoldOut);
             byKey[key] = ingredient;
             if (existing is not null)
@@ -100,7 +106,7 @@ public static class RecipeProposalValidator
                 continue;
             }
             if (!answered.TryAdd(raw.CatalogItemId, raw))
-                warnings.Add($"\"{requestedById[raw.CatalogItemId].Name.En}\" was answered twice; the first is kept.");
+                warnings.Add($"\"{requestedById[raw.CatalogItemId].Name.Primary}\" was answered twice; the first is kept.");
         }
 
         var recipes = new List<ProposedRecipe>(requested.Count);
@@ -139,7 +145,7 @@ public static class RecipeProposalValidator
                     {
                         stockItemId = onShelf.Id;
                         unit = onShelf.Unit;
-                        label = onShelf.Name.En;
+                        label = onShelf.Name.Primary;
                     }
                     else if (key.Length > 0 && byKey.TryGetValue(key, out var proposed))
                     {
@@ -147,13 +153,13 @@ public static class RecipeProposalValidator
                         {
                             stockItemId = onShelfByName.Id;
                             unit = onShelfByName.Unit;
-                            label = onShelfByName.Name.En;
+                            label = onShelfByName.Name.Primary;
                         }
                         else
                         {
                             newKey = proposed.Key;
                             unit = proposed.Unit;
-                            label = proposed.Name.En;
+                            label = proposed.Name.Primary;
                         }
                     }
                     else

@@ -5,9 +5,15 @@ using System.Text.Json.Serialization;
 
 namespace Ninja.PrintConnector;
 
-public sealed record TicketText(string En, string? Ar)
+public sealed record TicketText(string? En, string? Ar)
 {
-    public string Pick(string language) => language == "ar" && !string.IsNullOrEmpty(Ar) ? Ar : (En.Length > 0 ? En : Ar ?? "");
+    /// <summary>The asked language, else the other one: a café may write its menu in only one.</summary>
+    public string Pick(string language)
+    {
+        var en = string.IsNullOrWhiteSpace(En) ? null : En;
+        var ar = string.IsNullOrWhiteSpace(Ar) ? null : Ar;
+        return (language == "ar" ? ar ?? en : en ?? ar) ?? "";
+    }
 }
 
 public sealed record TicketLine(TicketText ProductName, int Units, TicketText? CustomizationsDescription, string? SpecialInstructions);

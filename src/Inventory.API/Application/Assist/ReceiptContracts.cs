@@ -50,8 +50,8 @@ public sealed record ProposedLine(
 /// <param name="Name">English and Arabic, both filled in.</param>
 /// <param name="Unit">pcs, g, ml, kg or l.</param>
 /// <param name="PackSize">Base units per pack when bought by the pack (a 1.5 l bottle of water: 1500 ml).</param>
-/// <param name="PackName">What the pack is called ("bottle", "bag", "carton").</param>
-public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? PackSize, string? PackName);
+/// <param name="PackName">What the pack is called ("bottle", "bag", "carton"), in the side of its script.</param>
+public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? PackSize, LocalizedText? PackName);
 
 // What the model answers. Every field is required and nothing is nullable
 // so the JSON schema stays plain enough for every provider; "" and 0 mean
@@ -81,4 +81,4 @@ public sealed record ExtractedNewItem(string NameEn, string NameAr, string Unit,
 /// <summary>The text part of the prompt: which branch, which day, and what is already on the shelf.</summary>
 internal sealed record ReceiptPrompt(int BranchId, string Today, IReadOnlyList<CandidateItem> Candidates);
 
-internal sealed record CandidateItem(int Id, string En, string Ar, string Unit, decimal PackSize, string PackName);
+internal sealed record CandidateItem(int Id, string? En, string? Ar, string Unit, decimal PackSize, string PackName);

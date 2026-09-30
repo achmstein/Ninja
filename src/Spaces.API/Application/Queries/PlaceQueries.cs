@@ -31,7 +31,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         var query = context.Places.AsNoTracking().Where(p => p.BranchId == branchId);
         if (kind is { } k)
             query = query.Where(p => p.Kind == k);
-        var places = await query.OrderBy(p => p.Kind).ThenBy(p => p.Name.En).ToListAsync();
+        var places = await query.OrderBy(p => p.Kind).ThenBy(p => p.Name.En ?? p.Name.Ar).ToListAsync();
         if (timed is { } t)
             places = places.Where(p => p.IsTimed == t).ToList();
 

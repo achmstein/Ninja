@@ -17,7 +17,7 @@ public class PlaceReservedIntegrationEventHandler(
     public async Task Handle(PlaceReservedIntegrationEvent @event)
     {
         logger.LogInformation("Handling PlaceReservedIntegrationEvent: ReservationId={ReservationId}, Place={PlaceName}, Customer={CustomerName}",
-            @event.ReservationId, @event.PlaceName.En, @event.CustomerName);
+            @event.ReservationId, @event.PlaceName.Primary, @event.CustomerName);
 
         // Broadcast via SignalR first — live dashboards must not depend on
         // whether any FCM push subscriptions exist
@@ -52,8 +52,8 @@ public class PlaceReservedIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var title = NotificationMessages.NewReservationTitle.GetText(lang);
-            var body = NotificationMessages.NewReservationBody(customerDisplay, @event.PlaceName, lang).GetText(lang);
+            var title = NotificationMessages.NewReservationTitle.Get(lang);
+            var body = NotificationMessages.NewReservationBody(customerDisplay, @event.PlaceName, lang).Get(lang);
 
             var result = await fcmService.SendBatchNotificationsAsync(
                 tokens,
@@ -65,7 +65,7 @@ public class PlaceReservedIntegrationEventHandler(
                     { "reservationId", @event.ReservationId.ToString() },
                     { "placeId", @event.PlaceId.ToString() },
                     { "placeKind", @event.PlaceKind },
-                    { "placeName", @event.PlaceName.GetText(lang) },
+                    { "placeName", @event.PlaceName.Get(lang) },
                     { "customerName", @event.CustomerName ?? "" },
                     { "customerId", @event.CustomerId ?? "" }
                 });

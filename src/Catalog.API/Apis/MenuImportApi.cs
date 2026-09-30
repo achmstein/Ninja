@@ -69,10 +69,9 @@ public static class MenuImportApi
             var order = category.Id != 0 ? nextItemOrder.GetValueOrDefault(category.Id) : 0;
             foreach (var line in section.Items)
             {
-                var item = new CatalogItem(Clean(line.Name))
+                var item = new CatalogItem(Clean(line.Name), line.Description is null ? null : Clean(line.Description, MaxDescriptionLength))
                 {
                     CatalogType = category,
-                    Description = line.Description is null ? new LocalizedText() : Clean(line.Description, MaxDescriptionLength),
                     Price = line.Price,
                     IsAvailable = true,
                     DisplayOrder = order++,
@@ -119,28 +118,28 @@ public static class MenuImportApi
 
         foreach (var (category, c) in categories.Select((x, i) => (x, i + 1)))
         {
-            if (category.CatalogTypeId is null && string.IsNullOrWhiteSpace(category.Name?.En))
-                return $"Category {c} needs an English name, or an existing category.";
+            if (category.CatalogTypeId is null && Unnamed(category.Name))
+                return $"Category {c} needs a name, or an existing category.";
             if ((category.Items?.Count ?? 0) == 0)
                 return $"Category {c} has no items.";
 
             foreach (var (item, n) in category.Items!.Select((x, i) => (x, i + 1)))
             {
                 var where = $"Category {c}, item {n}";
-                if (string.IsNullOrWhiteSpace(item.Name?.En))
-                    return $"{where}: an English name is needed.";
+                if (Unnamed(item.Name))
+                    return $"{where}: a name is needed.";
                 if (item.Price < 0)
                     return $"{where}: the price cannot be negative.";
 
                 if (item.Choice is { } choice)
                 {
-                    if (string.IsNullOrWhiteSpace(choice.Name?.En))
-                        return $"{where}: the choice needs an English name.";
+                    if (Unnamed(choice.Name))
+                        return $"{where}: the choice needs a name.";
                     var options = choice.Options ?? [];
                     if (options.Count is < 2 or > MaxChoices)
                         return $"{where}: a choice has 2 to {MaxChoices} options.";
-                    if (options.Any(o => string.IsNullOrWhiteSpace(o.Name?.En)))
-                        return $"{where}: every option needs an English name.";
+                    if (options.Any(o => Unnamed(o.Name)))
+                        return $"{where}: every option needs a name.";
                     if (options.Any(o => o.Price < 0))
                         return $"{where}: an option's price cannot be negative.";
                 }
@@ -150,12 +149,13 @@ public static class MenuImportApi
         return null;
     }
 
+    private static bool Unnamed(LocalizedText? name) => name is null || name.IsEmpty;
+
+    /// <summary>Each language capped; the type already trims and turns a blank side into null.</summary>
     private static LocalizedText Clean(LocalizedText text, int maxLength = MaxNameLength)
     {
-        static string Cap(string value, int max) => value.Length > max ? value[..max].TrimEnd() : value;
-        var en = Cap((text.En ?? string.Empty).Trim(), maxLength);
-        var ar = Cap((text.Ar ?? string.Empty).Trim(), maxLength);
-        return new LocalizedText(en, ar.Length == 0 ? null : ar);
+        static string? Cap(string? value, int max) => value is { Length: var n } && n > max ? value[..max].TrimEnd() : value;
+        return new LocalizedText(Cap(text.En, maxLength), Cap(text.Ar, maxLength));
     }
 }
 

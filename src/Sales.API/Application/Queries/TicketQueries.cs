@@ -454,7 +454,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
         // categories, and a menu is a short list
         var items = tickets
             .SelectMany(t => t.Lines.Where(l => l.Total > 0).Select(l => (Ticket: t.Id, Line: l)))
-            .GroupBy(x => x.Line.CatalogItemId is { } id ? $"#{id}" : x.Line.Description.En)
+            .GroupBy(x => x.Line.CatalogItemId is { } id ? $"#{id}" : x.Line.Description.Primary)
             .Select(g => new ItemTotal(
                 g.First().Line.Description,
                 g.Sum(x => x.Line.Qty),

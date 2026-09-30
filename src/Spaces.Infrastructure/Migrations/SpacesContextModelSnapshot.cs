@@ -398,14 +398,13 @@ namespace Spaces.Infrastructure.Migrations
 
             modelBuilder.Entity("Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate.Place", b =>
                 {
-                    b.OwnsOne("Ninja.Spaces.Domain.SeedWork.LocalizedText", "Description", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Description", b1 =>
                         {
                             b1.Property<int>("PlaceId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("PlaceId");
 
@@ -417,14 +416,13 @@ namespace Spaces.Infrastructure.Migrations
                                 .HasForeignKey("PlaceId");
                         });
 
-                    b.OwnsOne("Ninja.Spaces.Domain.SeedWork.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("PlaceId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("PlaceId");
 
@@ -470,7 +468,7 @@ namespace Spaces.Infrastructure.Migrations
                                     b2.WithOwner()
                                         .HasForeignKey("TariffPlaceId");
 
-                                    b2.OwnsOne("Ninja.Spaces.Domain.SeedWork.LocalizedText", "Name", b3 =>
+                                    b2.OwnsOne("Ninja.LocalizedText", "Name", b3 =>
                                         {
                                             b3.Property<int>("RateOptionTariffPlaceId");
 
@@ -478,8 +476,7 @@ namespace Spaces.Infrastructure.Migrations
 
                                             b3.Property<string>("Ar");
 
-                                            b3.Property<string>("En")
-                                                .IsRequired();
+                                            b3.Property<string>("En");
 
                                             b3.HasKey("RateOptionTariffPlaceId", "RateOption__synthesizedOrdinal");
 
@@ -557,7 +554,7 @@ namespace Spaces.Infrastructure.Migrations
                                     b2.WithOwner()
                                         .HasForeignKey("TariffStayId");
 
-                                    b2.OwnsOne("Ninja.Spaces.Domain.SeedWork.LocalizedText", "Name", b3 =>
+                                    b2.OwnsOne("Ninja.LocalizedText", "Name", b3 =>
                                         {
                                             b3.Property<int>("RateOptionTariffStayId");
 
@@ -565,8 +562,7 @@ namespace Spaces.Infrastructure.Migrations
 
                                             b3.Property<string>("Ar");
 
-                                            b3.Property<string>("En")
-                                                .IsRequired();
+                                            b3.Property<string>("En");
 
                                             b3.HasKey("RateOptionTariffStayId", "RateOption__synthesizedOrdinal");
 

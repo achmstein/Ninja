@@ -30,4 +30,8 @@
     <InternalsVisibleTo Include="Notification.FunctionalTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\LocalizedText.cs" Link="Model\LocalizedText.cs" />
+  </ItemGroup>
+
 </Project>

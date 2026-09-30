@@ -667,12 +667,12 @@ public class OrdersWebApiTest
             CustomerNote: null,
             PointsToRedeem: 0,
             LoyaltyDiscount: 0,
-            Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = "Latte", UnitPrice = 50, Quantity = 1 }],
+            Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = new LocalizedText("Latte", null), UnitPrice = 50, Quantity = 1 }],
             GuestName: guestName,
             GuestPhone: guestPhone,
             PlaceId: placeId,
             PlaceKind: placeId is null ? null : "Table",
-            PlaceName: placeId is null ? null : "Table 7");
+            PlaceName: placeId is null ? null : new LocalizedText("Table 7", null));
 
     /// <summary>A café in Saudi Arabia takes the numbers its customers have.</summary>
     [TestMethod]

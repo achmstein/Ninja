@@ -937,14 +937,13 @@ namespace Sales.Infrastructure.Migrations
                         .HasForeignKey("RefundId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Ninja.Sales.Domain.SeedWork.LocalizedText", "Description", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Description", b1 =>
                         {
                             b1.Property<int>("RefundLineId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("RefundLineId");
 
@@ -962,14 +961,13 @@ namespace Sales.Infrastructure.Migrations
 
             modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.TicketAggregate.Ticket", b =>
                 {
-                    b.OwnsOne("Ninja.Sales.Domain.SeedWork.LocalizedText", "LocationName", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "LocationName", b1 =>
                         {
                             b1.Property<int>("TicketId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("TicketId");
 
@@ -991,14 +989,13 @@ namespace Sales.Infrastructure.Migrations
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Ninja.Sales.Domain.SeedWork.LocalizedText", "Description", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Description", b1 =>
                         {
                             b1.Property<int>("TicketLineId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("TicketLineId");
 
@@ -1010,14 +1007,13 @@ namespace Sales.Infrastructure.Migrations
                                 .HasForeignKey("TicketLineId");
                         });
 
-                    b.OwnsOne("Ninja.Sales.Domain.SeedWork.LocalizedText", "Details", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Details", b1 =>
                         {
                             b1.Property<int>("TicketLineId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("TicketLineId");
 

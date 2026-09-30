@@ -56,9 +56,9 @@ public class SessionMemberJoinedIntegrationEventHandler(
                 { "sessionId", @event.ReservationId.ToString() },
                 { "placeId", @event.PlaceId.ToString() },
                 { "placeKind", @event.PlaceKind },
-                { "placeName", @event.PlaceName.GetText(lang) },
-                { "placeNameEn", @event.PlaceName.GetText("en") },
-                { "placeNameAr", @event.PlaceName.GetText("ar") },
+                { "placeName", @event.PlaceName.Get(lang) },
+                { "placeNameEn", @event.PlaceName.Get("en") },
+                { "placeNameAr", @event.PlaceName.Get("ar") },
                 { "startTimeMs", startTimeMs },
                 { "locale", lang },
                 { "optionCode", @event.OptionCode ?? string.Empty }

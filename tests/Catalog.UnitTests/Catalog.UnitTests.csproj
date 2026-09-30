@@ -24,4 +24,9 @@
     <None Include="Assist\menu-sizes-*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- LocalizedText lives in the Ninja namespace (src/Shared) -->
+    <Using Include="Ninja" />
+  </ItemGroup>
+
 </Project>

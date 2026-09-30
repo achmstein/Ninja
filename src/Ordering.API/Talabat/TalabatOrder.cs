@@ -105,7 +105,7 @@ public sealed record TalabatOrder(
                 {
                     Id = Str(product, "id") ?? remoteCode!,
                     ProductId = itemId,
-                    ProductName = new LocalizedText(name),
+                    ProductName = LocalizedText.InScriptOf(name),
                     UnitPrice = Math.Round(paid / quantity, 2),
                     Quantity = quantity,
                     SpecialInstructions = Str(product, "comment"),
@@ -158,7 +158,7 @@ public sealed record TalabatOrder(
 
             var quantity = Math.Max(1, (int)(Num(topping, "quantity") ?? 1));
             var label = quantity > 1 ? $"{quantity}× {name}" : name;
-            into.Add(new BasketItemCustomization { OptionId = optionId, OptionName = new LocalizedText(label) });
+            into.Add(new BasketItemCustomization { OptionId = optionId, OptionName = LocalizedText.InScriptOf(label) });
 
             if (topping.TryGetProperty("children", out var children) && children.ValueKind == JsonValueKind.Array)
             {

@@ -18,7 +18,7 @@ public class ReceiptScannerTest
 {
     private static readonly List<StockItemView> Items =
     [
-        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, "bag", false, true),
+        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, new LocalizedText("bag", null), false, true),
         new(2, new LocalizedText("Red Bull", "ريد بول"), "pcs", null, null, true, true),
     ];
 
@@ -75,7 +75,7 @@ public class ReceiptScannerTest
     public async Task Too_many_candidates_are_cut_with_a_warning()
     {
         var many = Enumerable.Range(1, ReceiptScanner.MaxCandidates + 5)
-            .Select(i => new StockItemView(i, new LocalizedText($"Item {i}"), "pcs", null, null, false, true))
+            .Select(i => new StockItemView(i, new LocalizedText($"Item {i}", null), "pcs", null, null, false, true))
             .ToList();
 
         var proposal = await Scanner(Fake()).ScanAsync(1, Png, many, CancellationToken.None);

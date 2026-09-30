@@ -167,10 +167,10 @@ public class OnlinePaymentTest
 
     private static (Ticket Ticket, Bill Bill) Table(params (int Id, decimal Price)[] lines)
     {
-        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
         var built = lines.Select(l =>
         {
-            var line = new TicketLine(TicketLineSource.Order, new LocalizedText($"Item {l.Id}"), 1, l.Price, orderId: null);
+            var line = new TicketLine(TicketLineSource.Order, new LocalizedText($"Item {l.Id}", null), 1, l.Price, orderId: null);
             // Ids are the database's; the shares name lines by them
             typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(line, l.Id);
             return line;

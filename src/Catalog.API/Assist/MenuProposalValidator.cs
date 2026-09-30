@@ -37,8 +37,8 @@ public static partial class MenuProposalValidator
             }
 
             var name = Name(category.NameEn, category.NameAr);
-            var label = name.En.Length > 0 ? name.En : name.Ar ?? $"section {c}";
-            if (name.En.Length == 0 && string.IsNullOrEmpty(name.Ar))
+            var label = name.IsEmpty ? $"section {c}" : name.Primary;
+            if (name.IsEmpty)
             {
                 warnings.Add($"Section {c} has no readable name; it is skipped.");
                 continue;
@@ -62,7 +62,7 @@ public static partial class MenuProposalValidator
 
                 var itemName = Name(item.NameEn, item.NameAr);
                 var where = $"{label}, line {n}";
-                if (itemName.En.Length == 0 && string.IsNullOrEmpty(itemName.Ar))
+                if (itemName.IsEmpty)
                 {
                     warnings.Add($"{where}: no readable name; the line is skipped.");
                     continue;
@@ -70,12 +70,12 @@ public static partial class MenuProposalValidator
 
                 if (IsDuplicate(seen, itemName))
                 {
-                    warnings.Add($"{where}: \"{itemName.En}\" appears twice on the photo; the second is skipped.");
+                    warnings.Add($"{where}: \"{itemName.Primary}\" appears twice on the photo; the second is skipped.");
                     continue;
                 }
                 Remember(seen, itemName);
 
-                if (itemName.En.Length == 0)
+                if (itemName.En is null)
                     warnings.Add($"{where}: no English name was read; fill it in.");
 
                 var choice = Choice(item, where, warnings);
@@ -135,11 +135,11 @@ public static partial class MenuProposalValidator
         {
             var name = Name(raw.NameEn, raw.NameAr);
             var price = Math.Round(raw.Price, 2, MidpointRounding.AwayFromZero);
-            if (name.En.Length == 0 && string.IsNullOrEmpty(name.Ar))
+            if (name.IsEmpty)
                 continue;
             if (price <= 0 || price > MaxPrice)
             {
-                warnings.Add($"{where}: no price was read for \"{(name.En.Length > 0 ? name.En : name.Ar)}\"; that choice is left out.");
+                warnings.Add($"{where}: no price was read for \"{name.Primary}\"; that choice is left out.");
                 continue;
             }
             if (IsDuplicate(seen, name))
@@ -162,17 +162,15 @@ public static partial class MenuProposalValidator
         }
 
         var group = Name(item.ChoiceEn, item.ChoiceAr);
-        if (group.En.Length == 0)
-            group = new LocalizedText("Size", string.IsNullOrEmpty(group.Ar) ? "الحجم" : group.Ar);
+        if (group.IsEmpty)
+            group = new LocalizedText("Size", "الحجم");
 
         return new ProposedChoice(group, options.OrderBy(o => o.Price).ToList());
     }
 
     private static LocalizedText Name(string? en, string? ar, int maxLength = MaxNameLength)
     {
-        var cleanEn = AIJson.Clean(en, maxLength);
-        var cleanAr = AIJson.Clean(ar, maxLength);
-        return new LocalizedText(cleanEn, cleanAr.Length == 0 ? null : cleanAr);
+        return new LocalizedText(AIJson.Clean(en, maxLength), AIJson.Clean(ar, maxLength));
     }
 
     /// <summary>Names on both sides, folded, so "turkish  coffee" and "Turkish Coffee" are one.</summary>
@@ -181,26 +179,26 @@ public static partial class MenuProposalValidator
         var index = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var (id, name) in entries)
         {
-            if (!string.IsNullOrWhiteSpace(name.En)) index.TryAdd(Key(name.En), id);
-            if (!string.IsNullOrWhiteSpace(name.Ar)) index.TryAdd(Key(name.Ar!), id);
+            if (name.En is { } en) index.TryAdd(Key(en), id);
+            if (name.Ar is { } ar) index.TryAdd(Key(ar), id);
         }
         return index;
     }
 
     private static int? Lookup(Dictionary<string, int> index, LocalizedText name)
     {
-        if (name.En.Length > 0 && index.TryGetValue(Key(name.En), out var byEn)) return byEn;
-        if (name.Ar is { Length: > 0 } && index.TryGetValue(Key(name.Ar), out var byAr)) return byAr;
+        if (name.En is { } en && index.TryGetValue(Key(en), out var byEn)) return byEn;
+        if (name.Ar is { } ar && index.TryGetValue(Key(ar), out var byAr)) return byAr;
         return null;
     }
 
     private static bool IsDuplicate(HashSet<string> seen, LocalizedText name)
-        => (name.En.Length > 0 && seen.Contains(Key(name.En))) || (name.Ar is { Length: > 0 } && seen.Contains(Key(name.Ar)));
+        => (name.En is { } en && seen.Contains(Key(en))) || (name.Ar is { } ar && seen.Contains(Key(ar)));
 
     private static void Remember(HashSet<string> seen, LocalizedText name)
     {
-        if (name.En.Length > 0) seen.Add(Key(name.En));
-        if (name.Ar is { Length: > 0 }) seen.Add(Key(name.Ar));
+        if (name.En is { } en) seen.Add(Key(en));
+        if (name.Ar is { } ar) seen.Add(Key(ar));
     }
 
     /// <summary>Lower-cased, single-spaced, Arabic diacritics and tatweel removed.</summary>

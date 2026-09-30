@@ -10,15 +10,15 @@ public class RecipeProposalValidatorTest
 {
     private static readonly List<StockItemView> Shelf =
     [
-        new(1, new LocalizedText("Beans", "بن"), "g", 1000, "bag", false, true),
-        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, "carton", false, true),
+        new(1, new LocalizedText("Beans", "بن"), "g", 1000, new LocalizedText("bag", null), false, true),
+        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, new LocalizedText("carton", null), false, true),
     ];
 
     private const int Latte = 10, Cola = 11, Oat = 40, Large = 41;
 
     private static readonly List<MenuItemToTrack> Requested =
     [
-        new(Latte, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(Oat, "Milk", new LocalizedText("Oat Milk")), new(Large, "Size", new LocalizedText("Large"))]),
+        new(Latte, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(Oat, "Milk", new LocalizedText("Oat Milk", null)), new(Large, "Size", new LocalizedText("Large", null))]),
         new(Cola, new LocalizedText("Cola", "كولا"), null, "Drinks", 20, null),
     ];
 

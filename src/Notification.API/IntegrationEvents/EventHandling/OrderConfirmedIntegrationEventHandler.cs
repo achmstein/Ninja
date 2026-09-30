@@ -41,8 +41,8 @@ public class OrderConfirmedIntegrationEventHandler(
                 foreach (var subscription in subscriptions)
                 {
                     var lang = subscription.PreferredLanguage;
-                    var title = NotificationMessages.OrderConfirmedTitle.For(arabic.Standard).GetText(lang);
-                    var body = NotificationMessages.OrderConfirmedBody(@event.OrderId).For(arabic.Standard).GetText(lang);
+                    var title = NotificationMessages.OrderConfirmedTitle.For(arabic.Standard).Get(lang);
+                    var body = NotificationMessages.OrderConfirmedBody(@event.OrderId).For(arabic.Standard).Get(lang);
 
                     var success = await fcmService.SendNotificationAsync(
                         subscription.FcmToken,

@@ -21,7 +21,7 @@ public partial class CatalogContextSeed
         await context.SaveChangesAsync();
         logger.LogInformation("Seeded the sample {Business} menu: {NumTypes} categories, {NumItems} items", business, menu.Types.Count, menu.Items.Count);
 
-        var byName = menu.Items.ToDictionary(i => i.Name.En);
+        var byName = menu.Items.ToDictionary(i => i.Name.Primary);
         foreach (var (item, customization) in menu.Customizations)
         {
             customization.CatalogItemId = byName[item].Id;

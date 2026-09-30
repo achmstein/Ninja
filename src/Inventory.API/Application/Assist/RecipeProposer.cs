@@ -47,10 +47,10 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
 
         var prompt = new RecipesPrompt(
             items.Select(i => new PromptMenuItem(
-                i.CatalogItemId, i.Name.En, i.Name.Ar ?? string.Empty,
-                i.Description?.En ?? string.Empty, i.Category ?? string.Empty, i.Price,
-                (i.Options ?? []).Select(o => new PromptOption(o.Id, o.Group, o.Name.En, o.Name.Ar ?? string.Empty)).ToList())).ToList(),
-            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar ?? string.Empty, c.Unit, c.PackSize ?? 0, c.PackName ?? string.Empty)).ToList());
+                i.CatalogItemId, i.Name.En, i.Name.Ar,
+                i.Description?.Primary ?? string.Empty, i.Category ?? string.Empty, i.Price,
+                (i.Options ?? []).Select(o => new PromptOption(o.Id, o.Group, o.Name.En, o.Name.Ar)).ToList())).ToList(),
+            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar, c.Unit, c.PackSize ?? 0, c.PackName?.Both ?? string.Empty)).ToList());
 
         var agent = factory.Create(Definition);
         var messages = new List<ChatMessage>

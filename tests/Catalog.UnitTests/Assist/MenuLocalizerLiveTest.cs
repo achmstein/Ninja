@@ -28,14 +28,14 @@ public class MenuLocalizerLiveTest
     {
         var localizer = new MenuLocalizer(LiveProvider.FactoryOrInconclusive());
         var request = new LocalizeRequest(LocalizeKind.MenuItem,
-            new LocalizedText("Mango Juice"),
-            new LocalizedText("Fresh mango, blended to order"),
+            new LocalizedText("Mango Juice", null),
+            new LocalizedText("Fresh mango, blended to order", null),
             null, SuggestCategory: true);
 
         var response = await localizer.LocalizeAsync(request, Categories, CancellationToken.None);
         Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
 
-        Assert.AreEqual("Mango Juice", response.Name.En);
+        Assert.AreEqual("Mango Juice", (response.Name.En ?? ""));
         Assert.IsTrue(Regex.IsMatch(response.Name.Ar ?? "", @"\p{IsArabic}"), $"Arabic name expected, got '{response.Name.Ar}'");
         Assert.IsTrue(Regex.IsMatch(response.Description?.Ar ?? "", @"\p{IsArabic}"), $"Arabic description expected, got '{response.Description?.Ar}'");
         Assert.AreEqual(5, response.SuggestedCatalogTypeId, "Juices");
@@ -46,12 +46,12 @@ public class MenuLocalizerLiveTest
     public async Task A_name_alone_gets_a_description_written_in_both_languages()
     {
         var localizer = new MenuLocalizer(LiveProvider.FactoryOrInconclusive());
-        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Iced Caramel Latte"), null, 4, SuggestDescription: true);
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Iced Caramel Latte", null), null, 4, SuggestDescription: true);
 
         var response = await localizer.LocalizeAsync(request, Categories, CancellationToken.None);
         Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
 
-        Assert.AreEqual("Iced Caramel Latte", response.Name.En);
+        Assert.AreEqual("Iced Caramel Latte", (response.Name.En ?? ""));
         Assert.IsTrue(Regex.IsMatch(response.Name.Ar ?? "", @"\p{IsArabic}"), $"Arabic name expected, got '{response.Name.Ar}'");
         Assert.IsGreaterThan(10, (response.Description?.En ?? "").Length, $"English description expected, got '{response.Description?.En}'");
         Assert.IsTrue(Regex.IsMatch(response.Description?.Ar ?? "", @"\p{IsArabic}"), $"Arabic description expected, got '{response.Description?.Ar}'");
@@ -68,7 +68,7 @@ public class MenuLocalizerLiveTest
         Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
 
         Assert.AreEqual("لبن كامل الدسم", response.Name.Ar);
-        Assert.IsTrue(Regex.IsMatch(response.Name.En, "(?i)milk"), $"English name expected, got '{response.Name.En}'");
+        Assert.IsTrue(Regex.IsMatch((response.Name.En ?? ""), "(?i)milk"), $"English name expected, got '{(response.Name.En ?? "")}'");
         CollectionAssert.Contains(response.Filled.ToList(), "name.en");
     }
 }

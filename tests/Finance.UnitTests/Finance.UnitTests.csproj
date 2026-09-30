@@ -22,4 +22,9 @@
     <None Include="Application\bill-sample.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- LocalizedText lives in the Ninja namespace (src/Shared) -->
+    <Using Include="Ninja" />
+  </ItemGroup>
+
 </Project>

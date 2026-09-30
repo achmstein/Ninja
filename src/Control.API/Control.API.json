@@ -3522,7 +3522,10 @@
         "type": "object",
         "properties": {
           "en": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "ar": {
             "type": [
@@ -3984,7 +3987,10 @@
         "type": "object",
         "properties": {
           "nameEn": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "nameAr": {
             "type": [
@@ -5212,7 +5218,10 @@
             "type": "string"
           },
           "nameEn": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "nameAr": {
             "type": [
@@ -5695,7 +5704,10 @@
             "type": "string"
           },
           "nameEn": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "nameAr": {
             "type": [
@@ -6046,7 +6058,10 @@
         "type": "object",
         "properties": {
           "nameEn": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "nameAr": {
             "type": [

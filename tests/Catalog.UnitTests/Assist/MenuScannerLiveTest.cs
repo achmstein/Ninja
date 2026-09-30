@@ -41,21 +41,21 @@ public class MenuScannerLiveTest
         var proposal = await scanner.ScanAsync([new DataContent(bytes, "image/png")], Categories, Items, TestContext.CancellationToken);
         Console.WriteLine(JsonSerializer.Serialize(proposal, AIJson.Options));
 
-        Assert.HasCount(3, proposal.Categories, string.Join(", ", proposal.Categories.Select(c => c.Name.En)));
+        Assert.HasCount(3, proposal.Categories, string.Join(", ", proposal.Categories.Select(c => (c.Name.En ?? ""))));
         var all = proposal.Categories.SelectMany(c => c.Items).ToList();
-        Assert.HasCount(9, all, string.Join(", ", all.Select(i => i.Name.En)));
+        Assert.HasCount(9, all, string.Join(", ", all.Select(i => (i.Name.En ?? ""))));
 
         var hot = proposal.Categories[0];
         Assert.AreEqual(1, hot.CatalogTypeId, "the printed Hot Drinks is the existing Hot Drinks");
         Assert.IsNull(proposal.Categories[2].CatalogTypeId, "Desserts is new");
 
-        var turkish = all.Single(i => Regex.IsMatch(i.Name.En, "(?i)turkish"));
+        var turkish = all.Single(i => Regex.IsMatch((i.Name.En ?? ""), "(?i)turkish"));
         Assert.AreEqual(25m, turkish.Price);
         Assert.AreEqual(10, turkish.ExistingItemId);
 
-        var tea = all.Single(i => Regex.IsMatch(i.Name.En, "(?i)mint") && Regex.IsMatch(i.Name.En, "(?i)tea"));
+        var tea = all.Single(i => Regex.IsMatch((i.Name.En ?? ""), "(?i)mint") && Regex.IsMatch((i.Name.En ?? ""), "(?i)tea"));
         Assert.AreEqual(15m, tea.Price);
-        Assert.Contains("mint", tea.Description.En, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("mint", (tea.Description.En ?? ""), StringComparison.OrdinalIgnoreCase);
 
         Assert.IsTrue(all.All(i => Regex.IsMatch(i.Name.Ar ?? "", @"\p{IsArabic}")), "every item has an Arabic name");
         Assert.IsTrue(all.All(i => i.Price > 0), "every price was read");
@@ -77,17 +77,17 @@ public class MenuScannerLiveTest
         var proposal = await scanner.ScanAsync(pages, Categories, Items, TestContext.CancellationToken);
         Console.WriteLine(JsonSerializer.Serialize(proposal, AIJson.Options));
 
-        var hot = proposal.Categories.Single(c => Regex.IsMatch(c.Name.En, "(?i)hot"));
+        var hot = proposal.Categories.Single(c => Regex.IsMatch((c.Name.En ?? ""), "(?i)hot"));
         Assert.AreEqual(1, hot.CatalogTypeId);
-        Assert.IsTrue(hot.Items.Any(i => Regex.IsMatch(i.Name.En, "(?i)tea")), "page 2's Hot Drinks joined page 1's");
-        Assert.HasCount(3, proposal.Categories, string.Join(", ", proposal.Categories.Select(c => c.Name.En)));
+        Assert.IsTrue(hot.Items.Any(i => Regex.IsMatch((i.Name.En ?? ""), "(?i)tea")), "page 2's Hot Drinks joined page 1's");
+        Assert.HasCount(3, proposal.Categories, string.Join(", ", proposal.Categories.Select(c => (c.Name.En ?? ""))));
 
-        var latte = hot.Items.Single(i => i.Name.En.Equals("Latte", StringComparison.OrdinalIgnoreCase));
+        var latte = hot.Items.Single(i => (i.Name.En ?? "").Equals("Latte", StringComparison.OrdinalIgnoreCase));
         Assert.AreEqual(45m, latte.Price);
         CollectionAssert.AreEqual(new[] { 45m, 55m, 65m }, latte.Choice!.Options.Select(o => o.Price).ToList());
-        Assert.IsNull(hot.Items.Single(i => i.Name.En.Contains("Espresso", StringComparison.OrdinalIgnoreCase)).Choice, "one price, no choice");
+        Assert.IsNull(hot.Items.Single(i => (i.Name.En ?? "").Contains("Espresso", StringComparison.OrdinalIgnoreCase)).Choice, "one price, no choice");
 
-        var lemon = proposal.Categories.SelectMany(c => c.Items).Single(i => Regex.IsMatch(i.Name.En, "(?i)lemon"));
+        var lemon = proposal.Categories.SelectMany(c => c.Items).Single(i => Regex.IsMatch((i.Name.En ?? ""), "(?i)lemon"));
         CollectionAssert.AreEqual(new[] { 40m, 50m }, lemon.Choice!.Options.Select(o => o.Price).ToList());
         Assert.IsTrue(proposal.Categories.SelectMany(c => c.Items).All(i => Regex.IsMatch(i.Name.Ar ?? "", @"\p{IsArabic}")), "every item has an Arabic name");
     }

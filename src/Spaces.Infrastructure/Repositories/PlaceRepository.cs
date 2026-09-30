@@ -21,13 +21,13 @@ public class PlaceRepository : IPlaceRepository
     public async Task<Place?> GetAsync(int placeId) => await _context.Places.FindAsync(placeId);
 
     public async Task<List<Place>> GetAllAsync()
-        => await _context.Places.OrderBy(p => p.Kind).ThenBy(p => p.Name.En).ToListAsync();
+        => await _context.Places.OrderBy(p => p.Kind).ThenBy(p => p.Name.En ?? p.Name.Ar).ToListAsync();
 
     public async Task<List<Place>> GetByKindAsync(PlaceKind kind)
-        => await _context.Places.Where(p => p.Kind == kind).OrderBy(p => p.Name.En).ToListAsync();
+        => await _context.Places.Where(p => p.Kind == kind).OrderBy(p => p.Name.En ?? p.Name.Ar).ToListAsync();
 
     public async Task<List<Place>> GetByStatusAsync(PlaceStatus status)
-        => await _context.Places.Where(p => p.PhysicalStatus == status).OrderBy(p => p.Name.En).ToListAsync();
+        => await _context.Places.Where(p => p.PhysicalStatus == status).OrderBy(p => p.Name.En ?? p.Name.Ar).ToListAsync();
 
     public async Task<bool> ExistsAsync(int placeId) => await _context.Places.AnyAsync(p => p.Id == placeId);
 }

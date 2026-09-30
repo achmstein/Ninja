@@ -79,7 +79,7 @@ public class TicketLine : Entity
         string? guestId = null,
         int? catalogItemId = null)
     {
-        if (string.IsNullOrWhiteSpace(description.En))
+        if (description is null || description.IsEmpty)
             throw new SalesDomainException("A ticket line needs a description");
 
         if (qty == 0)

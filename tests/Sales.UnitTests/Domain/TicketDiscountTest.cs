@@ -104,7 +104,7 @@ public class TicketDiscountTest
     [TestMethod]
     public void Service_and_vat_follow_the_discounted_money()
     {
-        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
         ticket.AppendOrder(1, [Line("Latte", 2, 50)], loyaltyDiscount: 0);
         ticket.ApplyDiscount(0.10m, null, "Regular", "Sara", CashierCap);
 
@@ -141,7 +141,7 @@ public class TicketDiscountTest
     [TestMethod]
     public void A_fixed_discount_never_exceeds_the_bill_after_lines_leave()
     {
-        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
         ticket.AppendOrder(1, [new IdLine(1, "Latte", 1, 50), new IdLine(2, "Tea", 1, 50)], loyaltyDiscount: 0);
         ticket.ApplyDiscount(null, 60m, "Comp", "Owner", null);
 
@@ -160,13 +160,13 @@ public class TicketDiscountTest
     }
 
     private static TicketLine Line(string name, decimal qty, decimal unitPrice)
-        => new(TicketLineSource.Order, new LocalizedText(name), qty, unitPrice);
+        => new(TicketLineSource.Order, new LocalizedText(name, null), qty, unitPrice);
 
     /// <summary>A line with the id the database would have given it, so moves can name it.</summary>
     private sealed class IdLine : TicketLine
     {
         public IdLine(int id, string name, decimal qty, decimal unitPrice)
-            : base(TicketLineSource.Order, new LocalizedText(name), qty, unitPrice)
+            : base(TicketLineSource.Order, new LocalizedText(name, null), qty, unitPrice)
         {
             Id = id;
         }

@@ -720,14 +720,13 @@ namespace Ordering.Infrastructure.Migrations
 
             modelBuilder.Entity("Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate.KitchenStation", b =>
                 {
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("KitchenStationId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("KitchenStationId");
 
@@ -749,14 +748,13 @@ namespace Ordering.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("BuyerId");
 
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "PlaceName", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "PlaceName", b1 =>
                         {
                             b1.Property<int>("OrderId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("OrderId");
 
@@ -866,14 +864,13 @@ namespace Ordering.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "CustomizationsDescription", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "CustomizationsDescription", b1 =>
                         {
                             b1.Property<int>("OrderItemId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("OrderItemId");
 
@@ -885,14 +882,13 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasForeignKey("OrderItemId");
                         });
 
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "ProductName", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "ProductName", b1 =>
                         {
                             b1.Property<int>("OrderItemId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("OrderItemId");
 
@@ -929,14 +925,13 @@ namespace Ordering.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "StationName", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "StationName", b1 =>
                         {
                             b1.Property<int>("OrderStationPartId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("OrderStationPartId");
 
@@ -954,14 +949,13 @@ namespace Ordering.Infrastructure.Migrations
 
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.Place", b =>
                 {
-                    b.OwnsOne("Ninja.Ordering.Domain.Seedwork.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("PlaceId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("PlaceId");
 

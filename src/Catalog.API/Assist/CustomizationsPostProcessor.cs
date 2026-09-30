@@ -45,23 +45,23 @@ public static partial class CustomizationsPostProcessor
             }
 
             var name = CleanName(group.Name);
-            if (name.En.Length == 0)
+            if (name.IsEmpty)
             {
-                warnings.Add("Skipped a group with no English name.");
+                warnings.Add("Skipped a group with no name.");
                 continue;
             }
 
             if (Names(name.En, name.Ar).Any(taken.Contains))
             {
-                warnings.Add($"Skipped \"{name.En}\": the item already has it.");
+                warnings.Add($"Skipped \"{name.Primary}\": the item already has it.");
                 continue;
             }
 
-            var options = CleanOptions(group, name.En, request.Price, warnings);
+            var options = CleanOptions(group, name.Primary, request.Price, warnings);
             var needed = group.AllowMultiple ? 1 : 2;
             if (options.Count < needed)
             {
-                warnings.Add($"Skipped \"{name.En}\": it needs at least {needed} option{(needed == 1 ? "" : "s")}.");
+                warnings.Add($"Skipped \"{name.Primary}\": it needs at least {needed} option{(needed == 1 ? "" : "s")}.");
                 continue;
             }
 
@@ -69,7 +69,7 @@ public static partial class CustomizationsPostProcessor
                 taken.Add(n);
 
             if (!HasArabic(name.Ar) || options.Any(o => !HasArabic(o.Name.Ar)))
-                warnings.Add($"\"{name.En}\" is missing Arabic names; fill them in before adding it.");
+                warnings.Add($"\"{name.Primary}\" is missing Arabic names; fill them in before adding it.");
 
             groups.Add(new ProposedCustomization(name, group.IsRequired, group.AllowMultiple, options));
         }
@@ -96,10 +96,10 @@ public static partial class CustomizationsPostProcessor
             }
 
             var name = CleanName(option.Name);
-            if (name.En.Length == 0 || !seen.Add(name.En))
+            if (name.IsEmpty || !seen.Add(name.Primary))
                 continue;
 
-            var adjustment = SanePrice(option.PriceAdjustment, itemPrice, groupName, name.En, warnings);
+            var adjustment = SanePrice(option.PriceAdjustment, itemPrice, groupName, name.Primary, warnings);
 
             // A single-choice group keeps only its first default
             var isDefault = option.IsDefault && (group.AllowMultiple || !hasDefault);
@@ -134,9 +134,7 @@ public static partial class CustomizationsPostProcessor
 
     private static LocalizedText CleanName(LocalizedPair? pair)
     {
-        var en = AIJson.Clean(pair?.En, MaxNameLength);
-        var ar = AIJson.Clean(pair?.Ar, MaxNameLength);
-        return new LocalizedText(en, ar.Length == 0 ? null : ar);
+        return new LocalizedText(AIJson.Clean(pair?.En, MaxNameLength), AIJson.Clean(pair?.Ar, MaxNameLength));
     }
 
     private static IEnumerable<string> Names(string? en, string? ar)

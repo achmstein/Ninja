@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Ninja;
 using Ninja.Ordering.Domain.Seedwork;
 using Order = Ninja.Ordering.API.Application.Queries.Order;
 
@@ -261,7 +262,7 @@ public static partial class OrdersApi
         var place = request.PlaceId is int placeId ? await services.Places.FindAsync(placeId) : null;
         if (place is { IsActive: false })
         {
-            services.Logger.LogWarning("Order rejected - place {PlaceId} ({Name}) is not taking customers", place.PlaceId, place.Name.En);
+            services.Logger.LogWarning("Order rejected - place {PlaceId} ({Name}) is not taking customers", place.PlaceId, place.Name.Primary);
             return TypedResults.BadRequest("This place is not taking orders right now.");
         }
 

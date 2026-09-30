@@ -7,7 +7,7 @@ public record CreateStockItemCommand(
     LocalizedText Name,
     string Unit,
     decimal? PackSize,
-    string? PackName,
+    LocalizedText? PackName,
     bool AutoSoldOut) : IRequest<int>;
 
 public class CreateStockItemCommandHandler(IStockItemRepository stockItems) : IRequestHandler<CreateStockItemCommand, int>
@@ -36,7 +36,7 @@ public record UpdateStockItemCommand(
     LocalizedText Name,
     string Unit,
     decimal? PackSize,
-    string? PackName,
+    LocalizedText? PackName,
     bool AutoSoldOut,
     bool IsActive) : IRequest<bool>;
 

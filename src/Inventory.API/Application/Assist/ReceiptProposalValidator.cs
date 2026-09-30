@@ -1,5 +1,6 @@
 using System.Globalization;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 using Ninja.Inventory.API.Application.Queries;
 
 namespace Ninja.Inventory.API.Application.Assist;
@@ -50,7 +51,7 @@ public static class ReceiptProposalValidator
             if (item is null)
                 confidence = 0;
             else if (confidence < 0.5)
-                warnings.Add($"{tag}: the match to \"{item.Name.En}\" is a guess; check it.");
+                warnings.Add($"{tag}: the match to \"{item.Name.Primary}\" is a guess; check it.");
 
             // Quantity: packs win when the item is bought by the pack
             var quantity = Round(raw.Quantity, 3);
@@ -96,7 +97,7 @@ public static class ReceiptProposalValidator
             {
                 var change = (unitCost - last) / last;
                 if (Math.Abs(change) >= PriceChangeThreshold)
-                    warnings.Add($"{tag}: \"{item.Name.En}\" is {unitCost:0.####} per {item.Unit}, {(change > 0 ? "up" : "down")} {Math.Abs(change) * 100:0}% from {last:0.####} last time.");
+                    warnings.Add($"{tag}: \"{item.Name.Primary}\" is {unitCost:0.####} per {item.Unit}, {(change > 0 ? "up" : "down")} {Math.Abs(change) * 100:0}% from {last:0.####} last time.");
             }
 
             // A new item only when nothing matched
@@ -105,8 +106,12 @@ public static class ReceiptProposalValidator
             {
                 var nameEn = AIJson.Clean(raw.NewItem?.NameEn, 120);
                 var nameAr = AIJson.Clean(raw.NewItem?.NameAr, 120);
-                if (nameEn.Length == 0)
-                    nameEn = rawText.Length > 0 ? rawText : $"Receipt line {index}";
+                // Nothing read: the line's own text, in the slot of its script
+                if (nameEn.Length == 0 && nameAr.Length == 0)
+                {
+                    if (TextFolding.HasArabic(rawText)) nameAr = rawText;
+                    else nameEn = rawText.Length > 0 ? rawText : $"Receipt line {index}";
+                }
 
                 var unit = AIJson.Clean(raw.NewItem?.Unit, 10).ToLowerInvariant();
                 if (!Units.Contains(unit))
@@ -118,7 +123,7 @@ public static class ReceiptProposalValidator
 
                 decimal? packSize = raw.NewItem is { PackSize: > 0 } ? Round(raw.NewItem.PackSize, 3) : null;
                 var packName = AIJson.Clean(raw.NewItem?.PackName, 40);
-                newItem = new ProposedNewItem(new LocalizedText(nameEn, nameAr.Length == 0 ? null : nameAr), unit, packSize, packName.Length == 0 ? null : packName);
+                newItem = new ProposedNewItem(new LocalizedText(nameEn, nameAr), unit, packSize, packName.Length == 0 ? null : LocalizedText.InScriptOf(packName));
             }
 
             var suggestions = item is null ? StockItemMatcher.Suggest(rawText, candidates) : [];

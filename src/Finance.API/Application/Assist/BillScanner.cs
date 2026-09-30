@@ -42,7 +42,7 @@ public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timePro
 
         var prompt = new BillPrompt(
             today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
-            categories.Select(c => new CategoryCandidate(c.Id, c.Name.En, c.Name.Ar ?? string.Empty)).ToList(),
+            categories.Select(c => new CategoryCandidate(c.Id, c.Name.En, c.Name.Ar)).ToList(),
             known);
 
         var agent = factory.Create(Definition);

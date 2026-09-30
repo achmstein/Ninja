@@ -32,7 +32,7 @@ public class PaymentTenderTest
     public void The_platform_pays_exact_and_never_takes_change()
     {
         var ticket = Ticket.OpenForCounter(1, "Talabat 42");
-        ticket.AddManualLine(new LocalizedText("Latte"), 1, 95m, 0m, "talabat");
+        ticket.AddManualLine(new LocalizedText("Latte", null), 1, 95m, 0m, "talabat");
 
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.Settle([new Payment(PaymentTender.Talabat, 100, "talabat")], "talabat"));
         Assert.AreEqual(0m, ticket.Settle([new Payment(PaymentTender.Talabat, 95, "talabat")], "talabat"));

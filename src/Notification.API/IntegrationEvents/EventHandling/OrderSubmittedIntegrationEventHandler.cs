@@ -71,8 +71,8 @@ public class OrderSubmittedIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var title = NotificationMessages.NewOrderTitle.GetText(lang);
-            var body = NotificationMessages.NewOrderBody(@event.OrderId, buyerName).GetText(lang);
+            var title = NotificationMessages.NewOrderTitle.Get(lang);
+            var body = NotificationMessages.NewOrderBody(@event.OrderId, buyerName).Get(lang);
 
             var result = await fcmService.SendBatchNotificationsAsync(
                 tokens,

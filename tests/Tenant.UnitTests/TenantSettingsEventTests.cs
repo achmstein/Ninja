@@ -33,8 +33,8 @@ public sealed class TenantSettingsEventTests
 
         using var scope = services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<TenantContext>();
-        context.Tenants.Add(new API.Model.Tenant { Name = new LocalizedText("Chillax") });
-        context.Branches.Add(new API.Model.Branch { Name = new LocalizedText("El-Manshia") });
+        context.Tenants.Add(new API.Model.Tenant { Name = new LocalizedText("Chillax", null) });
+        context.Branches.Add(new API.Model.Branch { Name = new LocalizedText("El-Manshia", null) });
         context.SaveChanges();
 
         return (services, bus);
@@ -47,7 +47,7 @@ public sealed class TenantSettingsEventTests
             scope.ServiceProvider.GetRequiredService<TenantContext>(),
             new ConfigurationBuilder().Build(),
             bus,
-            new UpdateTenantRequest(new LocalizedText("Chillax"), null, null, AllOn, GuestOrdersAnywhere: guestOrdersAnywhere));
+            new UpdateTenantRequest(new LocalizedText("Chillax", null), null, null, AllOn, GuestOrdersAnywhere: guestOrdersAnywhere));
     }
 
     [TestMethod]

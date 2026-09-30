@@ -7,7 +7,7 @@ using Ninja.Sales.Domain.SeedWork;
 public class PlatformTicketTest
 {
     private static TicketLine Line(string name, int qty, decimal unitPrice)
-        => new(TicketLineSource.Order, new LocalizedText(name), qty, unitPrice, orderId: null);
+        => new(TicketLineSource.Order, new LocalizedText(name, null), qty, unitPrice, orderId: null);
 
     [TestMethod]
     public void A_platform_bill_is_named_by_its_code_and_is_a_counter_sale()

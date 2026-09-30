@@ -43,7 +43,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
         => await context.StockItems
             .AsNoTracking()
             .Where(s => includeInactive || s.IsActive)
-            .OrderBy(s => s.Name.En)
+            .OrderBy(s => s.Name.En ?? s.Name.Ar)
             .Select(s => ToView(s))
             .ToListAsync();
 
@@ -58,7 +58,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
         // Retired items keep their level rows; the admin asks for them to restore one
         var items = await context.StockItems.AsNoTracking()
             .Where(s => s.IsActive || includeRetired)
-            .OrderBy(s => s.Name.En)
+            .OrderBy(s => s.Name.En ?? s.Name.Ar)
             .ToListAsync();
         var levels = await context.StockLevels.AsNoTracking().Where(l => l.BranchId == branchId).ToDictionaryAsync(l => l.StockItemId);
         var lastCosts = await GetLastCostsAsync(branchId);
@@ -208,7 +208,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                     TransferredIn: Qty(MovementType.TransferIn), TransferredOut: -Qty(MovementType.TransferOut),
                     TransferredValue: Val(MovementType.TransferIn) + Val(MovementType.TransferOut));
             })
-            .OrderBy(r => r.Name.En)
+            .OrderBy(r => r.Name.Primary)
             .ToList();
 
         var stockValue = await context.StockLevels
@@ -287,7 +287,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                     VariancePercent: theoretical > 0 ? Math.Round(countVariance / theoretical * 100, 1, MidpointRounding.AwayFromZero) : null);
             })
             .Where(r => r.Opening != 0 || r.Closing != 0 || byItem.ContainsKey(r.StockItemId))
-            .OrderBy(r => r.Name.En)
+            .OrderBy(r => r.Name.Primary)
             .ToList();
 
         return new VarianceReport(
@@ -396,7 +396,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             r.Lines.OrderBy(l => l.Slot).ThenBy(l => l.Id).Select(l => new RecipeLineView(l.Id, l.StockItemId, Name(names, l.StockItemId), Unit(names, l.StockItemId), l.Quantity, l.OptionIds, l.Slot, l.IsNone)).ToList());
 
     private static LocalizedText Name(Dictionary<int, StockItem> names, int id)
-        => names.TryGetValue(id, out var s) ? s.Name : new LocalizedText($"#{id}");
+        => names.TryGetValue(id, out var s) ? s.Name : new LocalizedText($"#{id}", null);
 
     private static string Unit(Dictionary<int, StockItem> names, int id)
         => names.TryGetValue(id, out var s) ? s.Unit : string.Empty;

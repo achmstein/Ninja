@@ -40,7 +40,7 @@ public static class StockItemMatcher
     private static double Score(string query, HashSet<string> queryTokens, StockItemView item)
     {
         var best = 0.0;
-        foreach (var candidate in new[] { item.Name.En, item.Name.Ar, item.PackName })
+        foreach (var candidate in new[] { item.Name.En, item.Name.Ar, item.PackName?.En, item.PackName?.Ar })
         {
             var normalized = Normalize(candidate);
             if (normalized.Length == 0)

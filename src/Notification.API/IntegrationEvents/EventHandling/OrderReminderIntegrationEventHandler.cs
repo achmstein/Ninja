@@ -53,8 +53,8 @@ public class OrderReminderIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var title = NotificationMessages.OrderReminderTitle(@event.ReminderCount).GetText(lang);
-            var body = NotificationMessages.OrderReminderBody(@event.OrderId, buyerName, @event.MinutesPending).GetText(lang);
+            var title = NotificationMessages.OrderReminderTitle(@event.ReminderCount).Get(lang);
+            var body = NotificationMessages.OrderReminderBody(@event.OrderId, buyerName, @event.MinutesPending).Get(lang);
 
             var data = new Dictionary<string, string>
             {

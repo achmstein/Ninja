@@ -87,7 +87,7 @@ public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration
             var section = configuration.GetSection("Tenant");
             var tenant = new Model.Tenant
             {
-                Name = new LocalizedText(section["Name:En"] is { Length: > 0 } en ? en : "Ninja", section["Name:Ar"]),
+                Name = LocalizedText.From(section["Name:En"], section["Name:Ar"]) ?? new LocalizedText("Ninja", null),
                 PrimaryColor = section["PrimaryColor"] is { Length: > 0 } color ? color.ToLowerInvariant() : null,
                 CustomerUrl = section["CustomerUrl"] is { Length: > 0 } url ? url.TrimEnd('/') : null,
             };

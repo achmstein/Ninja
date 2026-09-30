@@ -311,7 +311,7 @@ public static class ViewModelMapping
             Id = stay.Id,
             PlaceId = stay.PlaceId,
             PlaceKind = place?.Kind ?? PlaceKind.Room,
-            PlaceName = place?.Name ?? new LocalizedText($"Place {stay.PlaceId}"),
+            PlaceName = place?.Name ?? new LocalizedText($"Place {stay.PlaceId}", $"مكان {stay.PlaceId}"),
             ReservationId = stay.ReservationId,
             CustomerId = stay.CustomerId,
             CustomerName = stay.CustomerName,
@@ -346,7 +346,7 @@ public static class ViewModelMapping
             Segments = stay.Segments.OrderBy(s => s.StartTime).Select(s => new StaySegmentViewModel
             {
                 OptionCode = s.OptionCode,
-                OptionName = stay.Tariff.Find(s.OptionCode)?.Name ?? new LocalizedText(s.OptionCode),
+                OptionName = stay.Tariff.Find(s.OptionCode)?.Name ?? new LocalizedText(s.OptionCode, null),
                 HourlyRate = s.HourlyRate,
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
@@ -362,7 +362,7 @@ public static class ViewModelMapping
             Id = r.Id,
             PlaceId = r.PlaceId,
             PlaceKind = place?.Kind ?? PlaceKind.Table,
-            PlaceName = place?.Name ?? new LocalizedText($"Place {r.PlaceId}"),
+            PlaceName = place?.Name ?? new LocalizedText($"Place {r.PlaceId}", $"مكان {r.PlaceId}"),
             PlaceIsTimed = place?.IsTimed ?? false,
             BranchId = r.BranchId,
             CustomerId = r.CustomerId,

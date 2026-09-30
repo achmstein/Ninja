@@ -84,16 +84,10 @@ public class CatalogItem
     /// </summary>
     private CatalogItem() { }
 
-    public CatalogItem(string name, string? description = null)
-    {
-        Name = new LocalizedText(name);
-        Description = new LocalizedText(description ?? string.Empty);
-    }
-
     [JsonConstructor]
     public CatalogItem(LocalizedText name, LocalizedText? description = null)
     {
         Name = name;
-        Description = description ?? new LocalizedText(string.Empty);
+        Description = description ?? new LocalizedText();
     }
 }

@@ -122,11 +122,16 @@ public static partial class ControlApi
         CreateTenantRequest request,
         CancellationToken ct)
     {
-        var slug = string.IsNullOrWhiteSpace(request.Slug) ? TenantNaming.SlugFrom(request.NameEn) : request.Slug.Trim().ToLowerInvariant();
+        var nameEn = Clean(request.NameEn);
+        var nameAr = Clean(request.NameAr);
+        if (nameEn is null && nameAr is null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required, in English or Arabic." });
+        // Only an English name spells a slug; a café named in Arabic types its own
+        var slug = string.IsNullOrWhiteSpace(request.Slug) ? (nameEn is null ? null : TenantNaming.SlugFrom(nameEn)) : request.Slug.Trim().ToLowerInvariant();
+        if (slug is null && string.IsNullOrWhiteSpace(request.Slug) && nameEn is null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Type the café's slug: it cannot be spelled from an Arabic name." });
         if (slug is null || !TenantNaming.IsValidSlug(slug))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The slug must be 3–24 lower-case letters, digits and single dashes, and not a reserved word." });
-        if (string.IsNullOrWhiteSpace(request.NameEn))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The English name is required." });
         if (string.IsNullOrWhiteSpace(request.OwnerEmail) || !request.OwnerEmail.Contains('@'))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The owner's email is required." });
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
@@ -159,8 +164,8 @@ public static partial class ControlApi
         var tenant = new Tenant
         {
             Slug = slug,
-            NameEn = request.NameEn.Trim(),
-            NameAr = string.IsNullOrWhiteSpace(request.NameAr) ? null : request.NameAr.Trim(),
+            NameEn = nameEn,
+            NameAr = nameAr,
             Kind = request.Kind,
             Seed = request.Seed ?? (request.Kind == TenantKind.Demo ? TenantSeed.Sample : TenantSeed.None),
             Country = locale.Country,
@@ -440,7 +445,7 @@ public record CapacityResponse(
     int ConnectionsMax);
 
 public record CreateTenantRequest(
-    string NameEn,
+    string? NameEn,
     string? NameAr,
     string OwnerEmail,
     TenantKind Kind = TenantKind.Demo,
@@ -492,7 +497,7 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
 /// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
 /// <param name="Update">Where the stack stands against what its tag points to now; null until the first check.</param>
 /// <param name="IsDrill">A scratch tenant the restore drill stamped; destroyed by the drill, never mailed about.</param>
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update, bool IsDrill)
+public record TenantSummary(string Slug, string? NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update, bool IsDrill)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p, TenantUpdate? update = null)
     {
@@ -519,7 +524,7 @@ public record TenantRecordDto(string? ContactName, string? Phone, string? Addres
 /// <param name="Jobs">What is running or waiting for this tenant, with each queued job's place in line.</param>
 public record TenantDetail(
     string Slug,
-    string NameEn,
+    string? NameEn,
     string? NameAr,
     TenantKind Kind,
     TenantStatus Status,

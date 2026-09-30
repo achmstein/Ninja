@@ -8,11 +8,11 @@ namespace Ninja.Spaces.UnitTests.Domain;
 [TestClass]
 public sealed class ReservationTests
 {
-    private static Place Room() => Place.Room("Room 1", 60m, 90m, 1);
+    private static Place Room() => Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1);
 
     private static Place BookableTable()
     {
-        var table = Place.Table("Table 4", 1);
+        var table = Place.Table(new LocalizedText("Table 4", null), 1);
         table.SetReservable(true);
         return table;
     }
@@ -68,7 +68,7 @@ public sealed class ReservationTests
     [TestMethod]
     public void Only_a_reservable_place_takes_one()
     {
-        Assert.ThrowsExactly<SpacesDomainException>(() => new Reservation(Place.Table("Table 4", 1), "c1", "Ahmed"));
+        Assert.ThrowsExactly<SpacesDomainException>(() => new Reservation(Place.Table(new LocalizedText("Table 4", null), 1), "c1", "Ahmed"));
 
         var off = Room();
         off.SetActive(false);

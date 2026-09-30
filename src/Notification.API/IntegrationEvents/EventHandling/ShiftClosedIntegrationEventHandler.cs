@@ -42,8 +42,8 @@ public class ShiftClosedIntegrationEventHandler(
             var lang = group.Key;
             var result = await fcmService.SendBatchNotificationsAsync(
                 group.Select(s => s.FcmToken).ToList(),
-                NotificationMessages.ShiftClosedTitle.GetText(lang),
-                NotificationMessages.ShiftClosedBody(@event).GetText(lang),
+                NotificationMessages.ShiftClosedTitle.Get(lang),
+                NotificationMessages.ShiftClosedBody(@event).Get(lang),
                 new Dictionary<string, string>
                 {
                     { "type", "shift_closed" },

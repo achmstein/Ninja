@@ -644,8 +644,8 @@ public sealed class RestoreDrillService(IServiceScopeFactory scopes, Provisionin
     /// </summary>
     public static void Shape(Tenant drill, Tenant source, BackupInfo newest, PlatformOptions platform)
     {
-        drill.NameEn = $"Drill: {source.NameEn}";
-        drill.NameAr = null;
+        drill.NameEn = source.NameEn is null ? null : $"Drill: {source.NameEn}";
+        drill.NameAr = source.NameAr is null ? null : $"تجربة: {source.NameAr}";
         drill.Kind = TenantKind.Demo;
         drill.IsDrill = true;
         drill.Status = TenantStatus.Requested;

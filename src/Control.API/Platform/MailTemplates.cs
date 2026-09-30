@@ -132,12 +132,12 @@ public static class MailTemplates
 
     public static MailMessage OpsProvisionFailed(Tenant t, Guid runId, string error, PlatformOptions platform)
         => Ops(OpsProvisionFailedName, t, platform, $"Stamp of {t.Slug} failed",
-            [$"Provisioning {t.NameEn} ({t.Slug}) failed in run {runId}.", $"Error: {error}"],
+            [$"Provisioning {t.DisplayName} ({t.Slug}) failed in run {runId}.", $"Error: {error}"],
             ("Open the tenant", $"{platform.ControlUrl.TrimEnd('/')}/t/{t.Slug}"));
 
     public static MailMessage OpsBackupFailed(Tenant t, string error, PlatformOptions platform)
         => Ops(OpsBackupFailedName, t, platform, $"Backup of {t.Slug} failed",
-            [$"The backup of {t.NameEn} ({t.Slug}) failed.", $"Error: {error}"],
+            [$"The backup of {t.DisplayName} ({t.Slug}) failed.", $"Error: {error}"],
             ("Open the tenant's backups", $"{platform.ControlUrl.TrimEnd('/')}/t/{t.Slug}?tab=backups"));
 
     public static MailMessage OpsBackupStale(IReadOnlyList<(string Slug, DateTimeOffset? LastAt)> stale, PlatformOptions platform)
@@ -212,7 +212,7 @@ public static class MailTemplates
 
     private static bool Arabic(Tenant t) => t.DefaultLanguage == "ar";
 
-    private static string Name(Tenant t) => Arabic(t) && !string.IsNullOrEmpty(t.NameAr) ? t.NameAr : t.NameEn;
+    private static string Name(Tenant t) => t.NameIn(Arabic(t));
 
     private static string Pick(bool ar, string en, string arabic) => ar ? arabic : en;
 

@@ -44,7 +44,7 @@ public sealed class MenuScanner(INinjaAgentFactory factory, ILogger<MenuScanner>
     public async Task<MenuProposal> ScanAsync(IReadOnlyList<DataContent> pages, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items, CancellationToken ct)
     {
         var prompt = JsonSerializer.Serialize(
-            new MenuScanPrompt(categories.Select(c => new CategoryOption(c.Id, c.Name.En, c.Name.Ar ?? string.Empty)).ToList()),
+            new MenuScanPrompt(categories.Select(c => new CategoryOption(c.Id, c.Name.En, c.Name.Ar)).ToList()),
             AIJson.Options);
 
         using var gate = new SemaphoreSlim(PagesAtOnce);

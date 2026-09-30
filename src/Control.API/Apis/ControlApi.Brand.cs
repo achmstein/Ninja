@@ -172,7 +172,7 @@ public static partial class ControlApi
     }
 }
 
-public record BrandText(string En, string? Ar);
+public record BrandText(string? En, string? Ar);
 
 public record BrandWordmark(string Url, int Width, int Height)
 {

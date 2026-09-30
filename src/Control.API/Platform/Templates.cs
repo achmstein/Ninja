@@ -43,7 +43,7 @@ public static partial class Templates
         => Render(Read("tenant-realm.json"), new Dictionary<string, string>
         {
             ["slug"] = tenant.Slug,
-            ["displayName"] = JsonEscape(tenant.NameEn),
+            ["displayName"] = JsonEscape(tenant.DisplayName),
             // The login page's mark: the tenant's icon, cut from its logo (a placeholder until one is uploaded), never cached past a revalidation
             ["displayNameHtml"] = JsonEscape($"<img src=\"{hosts.ApiUrl}/api/tenant/icons/icon-192.png\" alt=\"\">"),
             ["customerUrl"] = hosts.CustomerUrl,
@@ -490,7 +490,7 @@ public static partial class Templates
                     AppendTalabatRelay(sb, slug, platform);
                     break;
                 case "tenant":
-                    sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
+                    if (!string.IsNullOrEmpty(tenant.NameEn)) sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
                     if (!string.IsNullOrEmpty(tenant.NameAr)) sb.AppendLine($"      Tenant__Name__Ar: \"{Yaml(tenant.NameAr)}\"");
                     if (!string.IsNullOrEmpty(tenant.PrimaryColor)) sb.AppendLine($"      Tenant__PrimaryColor: \"{tenant.PrimaryColor}\"");
                     sb.AppendLine($"      Tenant__CustomerUrl: \"{hosts.CustomerUrl}\"");

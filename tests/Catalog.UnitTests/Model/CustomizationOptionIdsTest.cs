@@ -37,18 +37,18 @@ public sealed class CustomizationOptionIdsTest
     private static async Task<(CatalogContext Context, ItemCustomization Group)> ARoastGroupAsync()
     {
         var context = NewContext();
-        var item = new CatalogItem(new LocalizedText("Turkish Coffee")) { Price = 45 };
+        var item = new CatalogItem(new LocalizedText("Turkish Coffee", null)) { Price = 45 };
         context.CatalogItems.Add(item);
         await context.SaveChangesAsync();
 
-        var group = new ItemCustomization(new LocalizedText("Roast"))
+        var group = new ItemCustomization(new LocalizedText("Roast", null))
         {
             CatalogItemId = item.Id,
             Options =
             {
-                new CustomizationOption(new LocalizedText("Light")) { DisplayOrder = 0 },
-                new CustomizationOption(new LocalizedText("Medium")) { DisplayOrder = 1, IsDefault = true },
-                new CustomizationOption(new LocalizedText("Dark")) { DisplayOrder = 2 },
+                new CustomizationOption(new LocalizedText("Light", null)) { DisplayOrder = 0 },
+                new CustomizationOption(new LocalizedText("Medium", null)) { DisplayOrder = 1, IsDefault = true },
+                new CustomizationOption(new LocalizedText("Dark", null)) { DisplayOrder = 2 },
             },
         };
         context.ItemCustomizations.Add(group);
@@ -67,7 +67,7 @@ public sealed class CustomizationOptionIdsTest
         };
 
     private static CustomizationOption Sent(int id, string name, bool isDefault = false, int order = 0) =>
-        new(new LocalizedText(name)) { Id = id, IsDefault = isDefault, DisplayOrder = order };
+        new(new LocalizedText(name, null)) { Id = id, IsDefault = isDefault, DisplayOrder = order };
 
     // -----------------------------------------------------------------
     // The bug itself
@@ -157,7 +157,7 @@ public sealed class CustomizationOptionIdsTest
             AsSent(group,
             [
                 .. group.Options.Select(o => Sent(o.Id, o.Name.En!, o.IsDefault, o.DisplayOrder)),
-                new CustomizationOption(new LocalizedText("Extra dark")) { DisplayOrder = 3 },
+                new CustomizationOption(new LocalizedText("Extra dark", null)) { DisplayOrder = 3 },
             ]));
 
         var after = await context.CustomizationOptions

@@ -130,7 +130,7 @@ public class Stay : Entity, IAggregateRoot
 
         var option = Tariff.Require(optionCode);
         if (string.Equals(CurrentOptionCode, option.Code, StringComparison.OrdinalIgnoreCase))
-            throw new SpacesDomainException($"The stay is already on {option.Name.En}");
+            throw new SpacesDomainException($"The stay is already on {option.Name.Primary}");
 
         var now = DateTime.UtcNow;
         _segments.LastOrDefault(s => s.EndTime == null)?.End(now);

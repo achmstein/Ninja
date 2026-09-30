@@ -15,9 +15,9 @@ public class RecipeCostingTest
 
     private static readonly Dictionary<int, StockItem> Items = new()
     {
-        [Beans] = StockItem.Create(new LocalizedText("Beans", "بن"), "g", 1000, "bag", false),
-        [Milk] = StockItem.Create(new LocalizedText("Milk", "لبن"), "ml", 1000, "carton", false),
-        [OatMilk] = StockItem.Create(new LocalizedText("Oat Milk", "لبن شوفان"), "ml", 1000, "carton", false),
+        [Beans] = StockItem.Create(new LocalizedText("Beans", "بن"), "g", 1000, new LocalizedText("bag", null), false),
+        [Milk] = StockItem.Create(new LocalizedText("Milk", "لبن"), "ml", 1000, new LocalizedText("carton", null), false),
+        [OatMilk] = StockItem.Create(new LocalizedText("Oat Milk", "لبن شوفان"), "ml", 1000, new LocalizedText("carton", null), false),
         [Cup] = StockItem.Create(new LocalizedText("Cup", "كوب"), "pcs", null, null, true),
     };
 

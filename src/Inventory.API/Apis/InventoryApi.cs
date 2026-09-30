@@ -497,8 +497,8 @@ public static class InventoryApi
             return TypedResults.BadRequest("Pick at least one menu item.");
         if (items.Count > RecipeProposer.MaxItems)
             return TypedResults.BadRequest($"At most {RecipeProposer.MaxItems} menu items per call.");
-        if (items.Any(i => i.CatalogItemId <= 0 || string.IsNullOrWhiteSpace(i.Name.En)))
-            return TypedResults.BadRequest("Every menu item needs its id and an English name.");
+        if (items.Any(i => i.CatalogItemId <= 0 || i.Name is null || i.Name.IsEmpty))
+            return TypedResults.BadRequest("Every menu item needs its id and a name.");
 
         var shelf = await queries.GetStockItemsAsync(includeInactive: false);
 
@@ -569,7 +569,7 @@ public static class InventoryApi
 
 public record CreatedResponse(int Id);
 
-public record StockItemRequest(LocalizedText Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut, bool? IsActive = null);
+public record StockItemRequest(LocalizedText Name, string Unit, decimal? PackSize, LocalizedText? PackName, bool AutoSoldOut, bool? IsActive = null);
 
 public record ReorderLevelRequest(decimal? ReorderLevel);
 

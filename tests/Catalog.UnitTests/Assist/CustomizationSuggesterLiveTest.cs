@@ -39,7 +39,7 @@ public class CustomizationSuggesterLiveTest
         Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
 
         Assert.IsNotEmpty(response.Groups, "a latte should get at least a size");
-        Assert.IsTrue(response.Groups.Any(g => Regex.IsMatch(g.Name.En, "(?i)size")), string.Join(", ", response.Groups.Select(g => g.Name.En)));
+        Assert.IsTrue(response.Groups.Any(g => Regex.IsMatch((g.Name.En ?? ""), "(?i)size")), string.Join(", ", response.Groups.Select(g => (g.Name.En ?? ""))));
         Assert.IsTrue(response.Groups.All(g => Regex.IsMatch(g.Name.Ar ?? "", @"\p{IsArabic}")), "every group has an Arabic name");
         Assert.IsTrue(response.Groups.All(g => g.Options.All(o => o.PriceAdjustment >= 0)), "no discounts");
     }

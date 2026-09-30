@@ -72,7 +72,7 @@ public class PrintConnectorTest
     [TestMethod]
     public void A_station_prints_on_a_connector_s_printer_by_name_and_on_nothing_else()
     {
-        var station = new KitchenStation(1, new LocalizedText("Shisha"), [], false, true, "10.0.0.9", null, false, 0,
+        var station = new KitchenStation(1, new LocalizedText("Shisha", null), [], false, true, "10.0.0.9", null, false, 0,
             connectorId: 4, printerName: "XP-80C");
 
         Assert.AreEqual(4, station.ConnectorId);
@@ -84,6 +84,6 @@ public class PrintConnectorTest
     public void A_connector_without_a_printer_picked_is_refused()
     {
         Assert.ThrowsExactly<OrderingDomainException>(() =>
-            new KitchenStation(1, new LocalizedText("Shisha"), [], false, true, null, null, false, 0, connectorId: 4));
+            new KitchenStation(1, new LocalizedText("Shisha", null), [], false, true, null, null, false, 0, connectorId: 4));
     }
 }

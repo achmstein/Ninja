@@ -54,9 +54,9 @@ public class CustomizationSuggesterTest
     {
         ItemCustomization Group(string name, params string[] options)
         {
-            var group = new ItemCustomization(new LocalizedText(name));
+            var group = new ItemCustomization(new LocalizedText(name, null));
             foreach (var (option, i) in options.Select((o, i) => (o, i)))
-                group.Options.Add(new CustomizationOption(new LocalizedText(option)) { DisplayOrder = i });
+                group.Options.Add(new CustomizationOption(new LocalizedText(option, null)) { DisplayOrder = i });
             return group;
         }
 
@@ -79,10 +79,10 @@ public class CustomizationSuggesterTest
     [TestMethod]
     public void A_name_is_all_the_request_needs()
     {
-        Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText("Espresso"))));
+        Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText("Espresso", null))));
         Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(string.Empty, "إسبريسو"))));
-        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(" "))));
-        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(new string('x', LocalizerPostProcessor.MaxNameLength + 1)))));
+        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(" ", null))));
+        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(new string('x', LocalizerPostProcessor.MaxNameLength + 1), null))));
     }
 
     [TestMethod]

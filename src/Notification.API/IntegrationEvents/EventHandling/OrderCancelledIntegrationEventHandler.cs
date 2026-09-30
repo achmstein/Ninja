@@ -41,8 +41,8 @@ public class OrderCancelledIntegrationEventHandler(
                 foreach (var subscription in subscriptions)
                 {
                     var lang = subscription.PreferredLanguage;
-                    var title = NotificationMessages.OrderCancelledTitle.For(arabic.Standard).GetText(lang);
-                    var body = NotificationMessages.OrderCancelledBody(@event.OrderId).For(arabic.Standard).GetText(lang);
+                    var title = NotificationMessages.OrderCancelledTitle.For(arabic.Standard).Get(lang);
+                    var body = NotificationMessages.OrderCancelledBody(@event.OrderId).For(arabic.Standard).Get(lang);
 
                     var success = await fcmService.SendNotificationAsync(
                         subscription.FcmToken,

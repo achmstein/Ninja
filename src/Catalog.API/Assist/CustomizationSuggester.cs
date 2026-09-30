@@ -39,7 +39,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
             Item: new CustomizationsItem(
                 Pair(request.Name),
                 Pair(request.Description ?? new LocalizedText()),
-                category is null ? string.Empty : $"{category.Name.En} / {category.Name.Ar}",
+                category is null ? string.Empty : category.Name.Both,
                 request.Price),
             ExistingGroups: (request.ExistingGroups ?? []).Select(Label).ToList(),
             Examples: PickExamples(examples).Select(c => new CustomizationExample(Label(c.CatalogItem?.Name ?? new LocalizedText()), ToResult(c))).ToList());
@@ -65,7 +65,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
         var picked = new List<ItemCustomization>();
         foreach (var group in candidates)
         {
-            var shape = group.Name.En + "|" + string.Join(",", group.Options.OrderBy(o => o.DisplayOrder).Select(o => o.Name.En));
+            var shape = group.Name.Primary + "|" + string.Join(",", group.Options.OrderBy(o => o.DisplayOrder).Select(o => o.Name.Primary));
             if (seen.Add(shape))
                 picked.Add(group);
             if (picked.Count == MaxExamples)
@@ -82,7 +82,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
 
     private static LocalizedPair Pair(LocalizedText text) => new(text.En ?? string.Empty, text.Ar ?? string.Empty);
 
-    private static string Label(LocalizedText text) => string.IsNullOrWhiteSpace(text.Ar) ? text.En : $"{text.En} / {text.Ar}";
+    private static string Label(LocalizedText text) => text.Both;
 
     private const string Instructions = $"""
         #agent: {AgentKey}

@@ -8,8 +8,8 @@ namespace Ninja.Control.FunctionalTests;
 [TestClass]
 public sealed class RecordScenarios
 {
-    private static UpdateTenantRequest Record(string nameEn, string? plan = null, string? customerDomain = null, string? primaryColor = null)
-        => new(nameEn, "كافيه", primaryColor, customerDomain, "Mona", "+201000000000", "Zamalek", plan is null ? null : Enum.Parse<TenantPlan>(plan), "VIP", "EG", "EGP", "Africa/Cairo", "ar");
+    private static UpdateTenantRequest Record(string? nameEn, string? plan = null, string? customerDomain = null, string? primaryColor = null, string? nameAr = "كافيه")
+        => new(nameEn, nameAr, primaryColor, customerDomain, "Mona", "+201000000000", "Zamalek", plan is null ? null : Enum.Parse<TenantPlan>(plan), "VIP", "EG", "EGP", "Africa/Cairo", "ar");
 
     [TestMethod]
     public async Task The_record_is_edited_and_a_plan_given_there_goes_the_subscriptions_way()
@@ -84,9 +84,13 @@ public sealed class RecordScenarios
         var slug = Api.Slug("badrec");
         await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter);
 
-        var (status, detail) = await api.RefusedAsync(HttpMethod.Put, $"/api/control/tenants/{slug}", Record("  "));
+        var (status, detail) = await api.RefusedAsync(HttpMethod.Put, $"/api/control/tenants/{slug}", Record("  ", nameAr: " "));
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
-        Assert.Contains("English name", detail);
+        Assert.Contains("name is required", detail);
+
+        // A café named in Arabic only keeps no English name
+        (status, _) = await api.RefusedAsync(HttpMethod.Put, $"/api/control/tenants/{slug}", Record(null));
+        Assert.AreEqual(HttpStatusCode.OK, status);
 
         (status, detail) = await api.RefusedAsync(HttpMethod.Put, $"/api/control/tenants/{slug}", Record("Café", primaryColor: "blue"));
         Assert.AreEqual(HttpStatusCode.BadRequest, status);

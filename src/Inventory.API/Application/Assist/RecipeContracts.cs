@@ -39,7 +39,7 @@ public sealed record ProposedIngredient(
     LocalizedText Name,
     string Unit,
     decimal? PackSize,
-    string? PackName,
+    LocalizedText? PackName,
     bool AutoSoldOut);
 
 /// <param name="Kind">"unit": the item is a stock item of its own, one per sale; "recipe": the lines below.</param>
@@ -78,6 +78,6 @@ public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, dec
 /// <summary>The prompt: the menu items to track and what is already on the shelf.</summary>
 internal sealed record RecipesPrompt(IReadOnlyList<PromptMenuItem> Items, IReadOnlyList<CandidateItem> Shelf);
 
-internal sealed record PromptMenuItem(int Id, string En, string Ar, string Description, string Category, decimal Price, IReadOnlyList<PromptOption> Options);
+internal sealed record PromptMenuItem(int Id, string? En, string? Ar, string Description, string Category, decimal Price, IReadOnlyList<PromptOption> Options);
 
-internal sealed record PromptOption(int Id, string Group, string En, string Ar);
+internal sealed record PromptOption(int Id, string Group, string? En, string? Ar);

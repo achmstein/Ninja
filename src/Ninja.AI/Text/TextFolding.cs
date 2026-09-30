@@ -64,6 +64,12 @@ public static partial class TextFolding
         return Whitespace().Replace(builder.ToString(), " ").Trim();
     }
 
+    /// <summary>True when the text has an Arabic letter: which slot a name the model read belongs in.</summary>
+    public static bool HasArabic(string? text) => text is not null && ArabicLetter().IsMatch(text);
+
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
+
+    [GeneratedRegex(@"\p{IsArabic}")]
+    private static partial Regex ArabicLetter();
 }

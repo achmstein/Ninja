@@ -30,13 +30,13 @@ public static class ReceiptScannerFake
             var first = prompt.Candidates[0];
             var packs = first.PackSize > 0 ? 1 : 0;
             var quantity = first.PackSize > 0 ? first.PackSize : 2;
-            lines.Add(new ExtractedLine($"{first.En} x{quantity:0.###}", quantity, packs, 10m, quantity * 10m, first.Id, 0.95, none));
+            lines.Add(new ExtractedLine($"{first.En ?? first.Ar} x{quantity:0.###}", quantity, packs, 10m, quantity * 10m, first.Id, 0.95, none));
         }
 
         if (prompt.Candidates.Count > 1)
         {
             var second = prompt.Candidates[1];
-            lines.Add(new ExtractedLine($"{second.En} x1", 1, 0, 5.5m, 5.5m, second.Id, 0.8, none));
+            lines.Add(new ExtractedLine($"{second.En ?? second.Ar} x1", 1, 0, 5.5m, 5.5m, second.Id, 0.8, none));
         }
 
         lines.Add(new ExtractedLine(NewItemRawText, 12, 12, 8m, 96m, 0, 0,

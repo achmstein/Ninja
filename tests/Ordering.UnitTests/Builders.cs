@@ -20,7 +20,7 @@ public class OrderBuilder
             customerNote: "Test note",
             placeId: 1,
             placeKind: "Room",
-            placeName: "Room 1");
+            placeName: new LocalizedText("Room 1", null));
     }
 
     public OrderBuilder AddOne(
@@ -31,7 +31,7 @@ public class OrderBuilder
         string pictureUrl,
         int units = 1)
     {
-        order.AddOrderItem(productId, new LocalizedText(productName), unitPrice, discount, pictureUrl, units);
+        order.AddOrderItem(productId, new LocalizedText(productName, null), unitPrice, discount, pictureUrl, units);
         return this;
     }
 

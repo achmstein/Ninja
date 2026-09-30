@@ -12,7 +12,7 @@ public class ServiceRequest
     /// <summary>"Room", "Table" or "Station".</summary>
     public string? PlaceKind { get; set; }
     /// <summary>The place's name as the request named it: where the till goes.</summary>
-    public LocalizedText PlaceName { get; set; } = new LocalizedText(string.Empty);
+    public LocalizedText PlaceName { get; set; } = new LocalizedText();
     /// <summary>The rate option asked for by a <see cref="ServiceRequestType.ChangeOption"/> request ("multi", "single", ...).</summary>
     public string? OptionCode { get; set; }
     public int BranchId { get; set; }

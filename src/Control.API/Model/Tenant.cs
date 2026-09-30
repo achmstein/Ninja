@@ -78,9 +78,17 @@ public class Tenant
     /// <summary>Lower-case letters, digits and single dashes, 3–24 characters; the compose project is ninja-{slug}.</summary>
     public string Slug { get; set; } = "";
 
-    public string NameEn { get; set; } = "";
+    /// <summary>The café's name in English; null for a café that goes by its Arabic name only.</summary>
+    public string? NameEn { get; set; }
 
+    /// <summary>The café's name in Arabic; null for a café that goes by its English name only. One of the two is always there.</summary>
     public string? NameAr { get; set; }
+
+    /// <summary>The name in the given language, else the other one, else the slug.</summary>
+    public string NameIn(bool arabic) => (arabic ? NameAr ?? NameEn : NameEn ?? NameAr) ?? Slug;
+
+    /// <summary>The name for the platform's own lists, mail and logs: English first.</summary>
+    public string DisplayName => NameIn(arabic: false);
 
     public TenantKind Kind { get; set; }
 

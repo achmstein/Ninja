@@ -14,11 +14,11 @@ public sealed class ReservePlaceCommandTests
     private static ReservePlaceCommandHandler Handler(InMemorySpaces db, bool reservationsEnabled = true)
         => new(db.PlaceRepository, db.ReservationRepository, db.StayRepository, new FakeBranchSettings(reservationsEnabled), NullLogger<ReservePlaceCommandHandler>.Instance);
 
-    private static Place Room(InMemorySpaces db) => db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+    private static Place Room(InMemorySpaces db) => db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
 
     private static Place BookableTable(InMemorySpaces db)
     {
-        var table = Place.Table("Table 4", 1);
+        var table = Place.Table(new LocalizedText("Table 4", null), 1);
         table.SetReservable(true);
         return db.AddPlace(table);
     }
@@ -64,7 +64,7 @@ public sealed class ReservePlaceCommandTests
     public async Task A_table_the_owner_did_not_open_to_bookings_refuses()
     {
         var db = new InMemorySpaces();
-        var table = db.AddPlace(Place.Table("Table 1", 1));
+        var table = db.AddPlace(Place.Table(new LocalizedText("Table 1", null), 1));
 
         await Assert.ThrowsExactlyAsync<SpacesDomainException>(() => Handler(db).Handle(new ReservePlaceCommand(table.Id, "c1", "Ahmed"), default));
         Assert.IsEmpty(db.Reservations);
@@ -75,7 +75,7 @@ public sealed class ReservePlaceCommandTests
     {
         var db = new InMemorySpaces();
         var room1 = Room(db);
-        var room2 = db.AddPlace(Place.Room("Room 2", 60m, 90m, 1));
+        var room2 = db.AddPlace(Place.Room(new LocalizedText("Room 2", null), 60m, 90m, 1));
         var handler = Handler(db);
 
         await handler.Handle(new ReservePlaceCommand(room1.Id, "c1", "Ahmed"), default);

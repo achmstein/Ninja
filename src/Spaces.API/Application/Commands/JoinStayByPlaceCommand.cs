@@ -42,7 +42,7 @@ public class JoinStayByPlaceCommandHandler(
         return new JoinStayResult(
             stay.Id,
             stay.PlaceId,
-            stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}"),
+            stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}", $"مكان {stay.PlaceId}"),
             isOwner,
             stay.StartedAt);
     }

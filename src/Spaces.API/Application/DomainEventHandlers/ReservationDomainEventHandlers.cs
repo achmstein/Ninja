@@ -15,7 +15,7 @@ namespace Ninja.Spaces.API.Application.DomainEventHandlers;
 internal static class ReservationEventFields
 {
     public static string PlaceKind(this Reservation r) => (r.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Table).ToString();
-    public static LocalizedText PlaceName(this Reservation r) => r.Place?.Name ?? new LocalizedText($"Place {r.PlaceId}");
+    public static LocalizedText PlaceName(this Reservation r) => r.Place?.Name ?? new LocalizedText($"Place {r.PlaceId}", $"مكان {r.PlaceId}");
 }
 
 public class ReservationRequestedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<ReservationRequestedDomainEventHandler> logger)

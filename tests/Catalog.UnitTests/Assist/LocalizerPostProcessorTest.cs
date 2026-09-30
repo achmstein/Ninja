@@ -13,7 +13,7 @@ public class LocalizerPostProcessorTest
     ];
 
     private static LocalizeRequest EnglishItem(string en = "Turkish Coffee", string? descriptionEn = "Roasted fresh daily", bool suggest = false)
-        => new(LocalizeKind.MenuItem, new LocalizedText(en), descriptionEn is null ? null : new LocalizedText(descriptionEn), 1, suggest);
+        => new(LocalizeKind.MenuItem, new LocalizedText(en, null), descriptionEn is null ? null : new LocalizedText(descriptionEn, null), 1, suggest);
 
     [TestMethod]
     public void Fills_the_arabic_side_and_keeps_the_english_verbatim()
@@ -116,7 +116,7 @@ public class LocalizerPostProcessorTest
     [TestMethod]
     public void A_description_is_written_in_both_languages_when_asked_for_and_absent()
     {
-        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice"), null, 5, SuggestDescription: true);
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice", null), null, 5, SuggestDescription: true);
         var result = new LocalizeResult(
             new LocalizedPair("Mango Juice", "عصير مانجو"),
             new LocalizedPair("Fresh mango, blended to order.", "مانجو طازة، بتتخلط على طلبك."),
@@ -133,7 +133,7 @@ public class LocalizerPostProcessorTest
     [TestMethod]
     public void A_half_filled_description_is_translated_not_rewritten_even_when_writing_is_asked_for()
     {
-        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice"), new LocalizedText("Fresh mango"), 5, SuggestDescription: true);
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice", null), new LocalizedText("Fresh mango", null), 5, SuggestDescription: true);
         CollectionAssert.AreEqual(new[] { "name.ar", "description.ar" }, LocalizerPostProcessor.FieldsToFill(request).ToList());
 
         var result = new LocalizeResult(new LocalizedPair("Mango Juice", "عصير مانجو"), new LocalizedPair("Rewritten", "مانجو طازة"), 0, "");
@@ -164,16 +164,16 @@ public class LocalizerPostProcessorTest
         Assert.IsNull(LocalizerPostProcessor.Validate(EnglishItem()));
         Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.StockItem, new LocalizedText("", "سكر"))));
         Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", "شاي"), SuggestDescription: true)), "both names, a description to write");
-        Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", "شاي"), new LocalizedText("hot"))), "both names, a description to translate");
-        Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea"), new LocalizedText("", ""))), "an empty description is fine");
+        Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", "شاي"), new LocalizedText("hot", null))), "both names, a description to translate");
+        Assert.IsNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", null), new LocalizedText("", ""))), "an empty description is fine");
 
         Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", "شاي"))), "both filled, nothing to do");
         Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", "شاي"), new LocalizedText("hot", "سخن"), SuggestDescription: true)), "everything filled");
         Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("", ""))), "none filled");
-        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.Category, new LocalizedText("Tea"), new LocalizedText("hot"))), "category with description");
-        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.StockItem, new LocalizedText("Tea"), SuggestCategory: true)), "stock item with category");
-        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.StockItem, new LocalizedText("Tea"), SuggestDescription: true)), "stock item with description");
-        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea"), new LocalizedText("", "ساخن"))), "description in the other language");
-        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText(new string('x', 121)))), "too long");
+        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.Category, new LocalizedText("Tea", null), new LocalizedText("hot", null))), "category with description");
+        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.StockItem, new LocalizedText("Tea", null), SuggestCategory: true)), "stock item with category");
+        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.StockItem, new LocalizedText("Tea", null), SuggestDescription: true)), "stock item with description");
+        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", null), new LocalizedText("", "ساخن"))), "description in the other language");
+        Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText(new string('x', 121), null))), "too long");
     }
 }

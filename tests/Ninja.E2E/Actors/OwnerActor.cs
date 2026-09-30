@@ -150,7 +150,7 @@ public sealed class OwnerActor(ApiClient api)
         => CreateStockItemAsync(new LocalizedText(nameEn, nameEn), unit, null, null, autoSoldOut, ct);
 
     /// <summary>stock-item-dialog.tsx / the receipt review sheet: the whole item.</summary>
-    public async Task<int> CreateStockItemAsync(LocalizedText name, string unit, decimal? packSize, string? packName, bool autoSoldOut, CancellationToken ct)
+    public async Task<int> CreateStockItemAsync(LocalizedText name, string unit, decimal? packSize, LocalizedText? packName, bool autoSoldOut, CancellationToken ct)
         => (await Api.PostAsync<CreatedResponse>("/api/inventory/items", new
         {
             name = new { en = name.En, ar = name.Ar },

@@ -42,12 +42,12 @@ public static class BasketItemExtensions
 
     private static LocalizedText BuildLocalizedCustomizations(List<BasketItemCustomization> customizations)
     {
-        var enParts = customizations.Select(c => c.OptionName.En);
-        var arParts = customizations.Select(c => c.OptionName.Ar ?? c.OptionName.En);
-
+        // A language any option is written in gets the whole line, an option
+        // not written in it read in the other; a language none is written in
+        // stays empty
+        var names = customizations.Select(c => c.OptionName ?? new LocalizedText()).ToList();
         return new LocalizedText(
-            string.Join(", ", enParts),
-            string.Join(", ", arParts)
-        );
+            names.Any(n => n.En is not null) ? string.Join(", ", names.Select(n => n.Get("en"))) : null,
+            names.Any(n => n.Ar is not null) ? string.Join(", ", names.Select(n => n.Get("ar"))) : null);
     }
 }

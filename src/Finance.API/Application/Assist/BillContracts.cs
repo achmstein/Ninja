@@ -43,4 +43,4 @@ public sealed record BillExtraction(
 /// <summary>The text part of the prompt: which day it is, the categories to pick from, and the vendors already on file.</summary>
 internal sealed record BillPrompt(string Today, IReadOnlyList<CategoryCandidate> Categories, IReadOnlyList<string> Vendors);
 
-internal sealed record CategoryCandidate(int Id, string En, string Ar);
+internal sealed record CategoryCandidate(int Id, string? En, string? Ar);

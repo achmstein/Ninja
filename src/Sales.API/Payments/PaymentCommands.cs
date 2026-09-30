@@ -92,7 +92,7 @@ public class StartOnlinePaymentCommandHandler(
     }
 
     private static string BillName(Ticket ticket)
-        => ticket.LocationName?.En is { Length: > 0 } place ? $"Bill share, {place}" : "Bill share";
+        => ticket.LocationName is { IsEmpty: false } place ? $"Bill share, {place.Primary}" : "Bill share";
 }
 
 public sealed record ConfirmedPayment(int TicketId, bool Paid);

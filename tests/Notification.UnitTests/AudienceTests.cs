@@ -49,9 +49,9 @@ public sealed class AudienceTests
         var title = NotificationMessages.NewOrderTitle;
         var body = NotificationMessages.NewOrderBody(7, "Nadia");
 
-        Assert.AreEqual("طلب جديد!", title.GetText("ar"));
-        StringAssert.Contains(body.GetText("ar"), "طلب #7");
-        Assert.AreEqual("New Order!", title.GetText("en"));
+        Assert.AreEqual("طلب جديد!", title.Get("ar"));
+        StringAssert.Contains(body.Get("ar"), "طلب #7");
+        Assert.AreEqual("New Order!", title.Get("en"));
     }
 
     [TestMethod]
@@ -60,15 +60,15 @@ public sealed class AudienceTests
         var egyptianisms = new[] { "أوردر", "عايز", "دلوقتي", "مستني", "اتأكد", "اتلغى", "كاش", "فيزا" };
         var staff = new[]
         {
-            NotificationMessages.NewOrderTitle.GetText("ar"),
-            NotificationMessages.NewReservationTitle.GetText("ar"),
-            NotificationMessages.WaiterNeededTitle.GetText("ar"),
-            NotificationMessages.BillRequestedTitle.GetText("ar"),
-            NotificationMessages.ServiceRequestTitle.GetText("ar"),
-            NotificationMessages.ReservationCancelledTitle.GetText("ar"),
-            NotificationMessages.ShiftClosedTitle.GetText("ar"),
-            NotificationMessages.OrderReminderTitle(1).GetText("ar"),
-            NotificationMessages.OrderReminderTitle(4).GetText("ar"),
+            NotificationMessages.NewOrderTitle.Get("ar"),
+            NotificationMessages.NewReservationTitle.Get("ar"),
+            NotificationMessages.WaiterNeededTitle.Get("ar"),
+            NotificationMessages.BillRequestedTitle.Get("ar"),
+            NotificationMessages.ServiceRequestTitle.Get("ar"),
+            NotificationMessages.ReservationCancelledTitle.Get("ar"),
+            NotificationMessages.ShiftClosedTitle.Get("ar"),
+            NotificationMessages.OrderReminderTitle(1).Get("ar"),
+            NotificationMessages.OrderReminderTitle(4).Get("ar"),
         };
 
         foreach (var line in staff)
@@ -88,8 +88,8 @@ public sealed class AudienceTests
     {
         var title = NotificationMessages.OrderConfirmedTitle;
 
-        Assert.AreEqual("الأوردر اتأكد", title.For(standardArabic: false).GetText("ar"));
-        Assert.AreEqual("تم تأكيد الطلب", title.For(standardArabic: true).GetText("ar"));
+        Assert.AreEqual("الأوردر اتأكد", title.For(standardArabic: false).Get("ar"));
+        Assert.AreEqual("تم تأكيد الطلب", title.For(standardArabic: true).Get("ar"));
     }
 
     [TestMethod]
@@ -97,8 +97,8 @@ public sealed class AudienceTests
     {
         var body = NotificationMessages.OrderCancelledBody(42);
 
-        Assert.AreEqual(body.For(standardArabic: true).GetText("en"), body.For(standardArabic: false).GetText("en"));
-        StringAssert.Contains(body.For(standardArabic: false).GetText("en"), "#42");
+        Assert.AreEqual(body.For(standardArabic: true).Get("en"), body.For(standardArabic: false).Get("en"));
+        StringAssert.Contains(body.For(standardArabic: false).Get("en"), "#42");
     }
 
     [TestMethod]
@@ -133,13 +133,13 @@ public sealed class AudienceTests
         var cafe = Speaking("egyptian");
 
         // The café's copy: the back office's Arabic
-        var staff = NotificationMessages.ReservationCancelledBody("Nadia", place, "ar").GetText("ar");
+        var staff = NotificationMessages.ReservationCancelledBody("Nadia", place, "ar").Get("ar");
         StringAssert.Contains(staff, "ألغى");
 
         // The customer's copy: their café speaks Egyptian, so they get Egyptian
         var customer = NotificationMessages.YourReservationCancelledBody(place, "ar")
             .For(cafe.Standard)
-            .GetText("ar");
+            .Get("ar");
         StringAssert.Contains(customer, "اتلغى");
         Assert.AreNotEqual(staff, customer);
     }

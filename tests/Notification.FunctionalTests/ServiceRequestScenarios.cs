@@ -29,9 +29,9 @@ public static class Suite
         using var scope = Notifications.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NotificationContext>();
         db.Places.AddRange(
-            new Place { PlaceId = Room, Kind = "Room", Name = new("Sega room"), BranchId = Branch, IsTimed = true, HasOptions = false, IsActive = true },
-            new Place { PlaceId = TimedRoomWithRates, Kind = "Room", Name = new("PS5 room"), BranchId = Branch, IsTimed = true, HasOptions = true, IsActive = true },
-            new Place { PlaceId = PlainTable, Kind = "Table", Name = new("Table 4"), BranchId = Branch, IsTimed = false, HasOptions = false, IsActive = true });
+            new Place { PlaceId = Room, Kind = "Room", Name = new("Sega room", null), BranchId = Branch, IsTimed = true, HasOptions = false, IsActive = true },
+            new Place { PlaceId = TimedRoomWithRates, Kind = "Room", Name = new("PS5 room", null), BranchId = Branch, IsTimed = true, HasOptions = true, IsActive = true },
+            new Place { PlaceId = PlainTable, Kind = "Table", Name = new("Table 4", null), BranchId = Branch, IsTimed = false, HasOptions = false, IsActive = true });
         await db.SaveChangesAsync();
     }
 

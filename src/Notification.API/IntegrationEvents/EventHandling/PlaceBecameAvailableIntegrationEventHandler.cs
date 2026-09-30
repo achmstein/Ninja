@@ -18,7 +18,7 @@ public class PlaceBecameAvailableIntegrationEventHandler(
     public async Task Handle(PlaceBecameAvailableIntegrationEvent @event)
     {
         logger.LogInformation("Handling PlaceBecameAvailableIntegrationEvent for place {PlaceId}: {PlaceName}",
-            @event.PlaceId, @event.PlaceName.En);
+            @event.PlaceId, @event.PlaceName.Primary);
 
         // Get room availability subscriptions for this branch
         var subscriptions = await context.Subscriptions
@@ -36,8 +36,8 @@ public class PlaceBecameAvailableIntegrationEventHandler(
             {
                 var lang = group.Key;
                 var tokens = group.Select(s => s.FcmToken).ToList();
-                var title = NotificationMessages.RoomAvailableTitle.For(arabic.Standard).GetText(lang);
-                var body = NotificationMessages.RoomAvailableBody(@event.PlaceName, lang).For(arabic.Standard).GetText(lang);
+                var title = NotificationMessages.RoomAvailableTitle.For(arabic.Standard).Get(lang);
+                var body = NotificationMessages.RoomAvailableBody(@event.PlaceName, lang).For(arabic.Standard).Get(lang);
 
                 var result = await fcmService.SendBatchNotificationsAsync(
                     tokens,
@@ -48,7 +48,7 @@ public class PlaceBecameAvailableIntegrationEventHandler(
                         { "type", "room_available" },
                         { "placeId", @event.PlaceId.ToString() },
                         { "placeKind", @event.PlaceKind },
-                        { "placeName", @event.PlaceName.GetText(lang) }
+                        { "placeName", @event.PlaceName.Get(lang) }
                     });
 
                 totalSuccess += result.SuccessCount;

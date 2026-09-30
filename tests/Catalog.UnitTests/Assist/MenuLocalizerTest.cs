@@ -30,7 +30,7 @@ public class MenuLocalizerTest
     [TestMethod]
     public async Task English_in_arabic_out_with_a_suggested_category()
     {
-        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice"), new LocalizedText("Fresh mango"), null, SuggestCategory: true);
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice", null), new LocalizedText("Fresh mango", null), null, SuggestCategory: true);
 
         var response = await Localizer().LocalizeAsync(request, Categories, CancellationToken.None);
 
@@ -57,7 +57,7 @@ public class MenuLocalizerTest
     [TestMethod]
     public async Task A_name_alone_gets_the_other_language_a_description_and_a_category()
     {
-        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice"), null, null, SuggestCategory: true, SuggestDescription: true);
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice", null), null, null, SuggestCategory: true, SuggestDescription: true);
 
         var response = await Localizer().LocalizeAsync(request, Categories, CancellationToken.None);
 

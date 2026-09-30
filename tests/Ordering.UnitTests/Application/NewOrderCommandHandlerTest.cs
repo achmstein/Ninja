@@ -67,7 +67,7 @@ public class NewOrderRequestHandlerTest
 
     private Order FakeOrder()
     {
-        return new Order("1", "fakeName", branchId: 1, customerNote: "Test note", placeId: 1, placeKind: "Room", placeName: "VIP");
+        return new Order("1", "fakeName", branchId: 1, customerNote: "Test note", placeId: 1, placeKind: "Room", placeName: new LocalizedText("VIP", null));
     }
 
     private CreateOrderCommand FakeOrderRequest(Dictionary<string, object>? args = null)

@@ -137,7 +137,7 @@ public sealed class Provisioner(
             await Step(tenant, runId, "owner", async () =>
             {
                 tenant.OwnerInitialPassword ??= TenantNaming.NewPassword();
-                await keycloak.EnsureUserAsync(TenantNaming.Realm(tenant.Slug), tenant.OwnerEmail, tenant.NameEn, tenant.OwnerInitialPassword, ["Owner", "Admin", "Customer"], ct);
+                await keycloak.EnsureUserAsync(TenantNaming.Realm(tenant.Slug), tenant.OwnerEmail, tenant.DisplayName, tenant.OwnerInitialPassword, ["Owner", "Admin", "Customer"], ct);
                 return tenant.OwnerEmail;
             }, ct);
 

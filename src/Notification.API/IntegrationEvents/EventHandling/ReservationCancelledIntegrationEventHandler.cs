@@ -18,7 +18,7 @@ public class ReservationCancelledIntegrationEventHandler(
     public async Task Handle(ReservationCancelledIntegrationEvent @event)
     {
         logger.LogInformation("Handling ReservationCancelledIntegrationEvent: ReservationId={ReservationId}, Place={PlaceName}, Customer={CustomerName}",
-            @event.ReservationId, @event.PlaceName.En, @event.CustomerName);
+            @event.ReservationId, @event.PlaceName.Primary, @event.CustomerName);
 
         // Broadcast via SignalR first — live dashboards must not depend on
         // whether any FCM push subscriptions exist
@@ -64,8 +64,8 @@ public class ReservationCancelledIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var title = NotificationMessages.ReservationCancelledTitle.GetText(lang);
-            var body = NotificationMessages.ReservationCancelledBody(customerDisplay, @event.PlaceName, lang).GetText(lang);
+            var title = NotificationMessages.ReservationCancelledTitle.Get(lang);
+            var body = NotificationMessages.ReservationCancelledBody(customerDisplay, @event.PlaceName, lang).Get(lang);
 
             var result = await fcmService.SendBatchNotificationsAsync(
                 tokens,
@@ -77,7 +77,7 @@ public class ReservationCancelledIntegrationEventHandler(
                     { "reservationId", @event.ReservationId.ToString() },
                     { "placeId", @event.PlaceId.ToString() },
                     { "placeKind", @event.PlaceKind },
-                    { "placeName", @event.PlaceName.GetText(lang) },
+                    { "placeName", @event.PlaceName.Get(lang) },
                     { "customerName", @event.CustomerName ?? "" },
                     { "customerId", @event.CustomerId ?? "" }
                 });
@@ -111,8 +111,8 @@ public class ReservationCancelledIntegrationEventHandler(
             foreach (var subscription in customerSubscriptions)
             {
                 var lang = subscription.PreferredLanguage;
-                var title = NotificationMessages.YourReservationCancelledTitle.For(arabic.Standard).GetText(lang);
-                var body = NotificationMessages.YourReservationCancelledBody(@event.PlaceName, lang).For(arabic.Standard).GetText(lang);
+                var title = NotificationMessages.YourReservationCancelledTitle.For(arabic.Standard).Get(lang);
+                var body = NotificationMessages.YourReservationCancelledBody(@event.PlaceName, lang).For(arabic.Standard).Get(lang);
 
                 var success = await fcmService.SendNotificationAsync(
                     subscription.FcmToken,
@@ -124,7 +124,7 @@ public class ReservationCancelledIntegrationEventHandler(
                         { "reservationId", @event.ReservationId.ToString() },
                         { "placeId", @event.PlaceId.ToString() },
                         { "placeKind", @event.PlaceKind },
-                        { "placeName", @event.PlaceName.GetText(lang) }
+                        { "placeName", @event.PlaceName.Get(lang) }
                     });
 
                 logger.LogInformation("FCM reservation cancelled notification to customer {CustomerId} ({Lang}): {Result}",

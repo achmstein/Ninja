@@ -18,13 +18,13 @@ public class RecipeProposerTest
 {
     private static readonly List<StockItemView> Shelf =
     [
-        new(1, new LocalizedText("Beans", "بن"), "g", 1000, "bag", false, true),
+        new(1, new LocalizedText("Beans", "بن"), "g", 1000, new LocalizedText("bag", null), false, true),
     ];
 
     private static readonly List<MenuItemToTrack> Items =
     [
         new(10, new LocalizedText("Cola", "كولا"), null, "Drinks", 20, null),
-        new(11, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(40, "Milk", new LocalizedText("Oat Milk")), new(41, "Size", new LocalizedText("Large"))]),
+        new(11, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(40, "Milk", new LocalizedText("Oat Milk", null)), new(41, "Size", new LocalizedText("Large", null))]),
         new(12, new LocalizedText("Tea", "شاي"), null, "Tea", 15, null),
     ];
 
@@ -71,7 +71,7 @@ public class RecipeProposerTest
     public async Task Too_many_shelf_items_are_cut_with_a_warning()
     {
         var many = Enumerable.Range(1, RecipeProposer.MaxShelf + 5)
-            .Select(i => new StockItemView(i, new LocalizedText($"Item {i}"), "pcs", null, null, false, true))
+            .Select(i => new StockItemView(i, new LocalizedText($"Item {i}", null), "pcs", null, null, false, true))
             .ToList();
 
         var proposal = await Proposer(Fake()).ProposeAsync(Items, many, CancellationToken.None);

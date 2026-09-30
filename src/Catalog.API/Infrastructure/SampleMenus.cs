@@ -216,7 +216,7 @@ internal static class SampleMenus
     {
         foreach (var item in items)
         {
-            item.PictureFileName = $"sample-{kind}-{Slug(item.Name.En)}.jpg";
+            item.PictureFileName = $"sample-{kind}-{Slug(item.Name.Primary)}.jpg";
         }
         return items;
     }

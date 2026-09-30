@@ -23,7 +23,7 @@ public class ExpenseCategory : Entity, IAggregateRoot
 
     public void Update(LocalizedText name, int displayOrder, bool isActive)
     {
-        if (string.IsNullOrWhiteSpace(name.En) && string.IsNullOrWhiteSpace(name.Ar))
+        if (name is null || name.IsEmpty)
             throw new FinanceDomainException("A category needs a name.");
 
         Name = name;

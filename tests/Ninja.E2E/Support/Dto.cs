@@ -155,7 +155,7 @@ public sealed record StayMemberView(string CustomerId, string? CustomerName, str
 
 public sealed record CreatedResponse(int Id);
 
-public sealed record StockItemView(int Id, LocalizedText Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut, bool IsActive);
+public sealed record StockItemView(int Id, LocalizedText Name, string Unit, decimal? PackSize, LocalizedText? PackName, bool AutoSoldOut, bool IsActive);
 
 // The assistant's receipt proposal (Inventory.API Application/Assist/ReceiptContracts.cs)
 public sealed record ReceiptProposal(string? Supplier, string? InvoiceRef, string? Date, string Currency, decimal? PrintedTotal,
@@ -164,7 +164,7 @@ public sealed record ReceiptProposal(string? Supplier, string? InvoiceRef, strin
 public sealed record ProposedLine(int Index, string RawText, decimal Quantity, decimal? Packs, decimal UnitCost, decimal LineTotal,
     int? StockItemId, double Confidence, List<int> Suggestions, ProposedNewItem? NewItem);
 
-public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? PackSize, string? PackName);
+public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? PackSize, LocalizedText? PackName);
 
 // The assistant's localize answer (Catalog.API Assist/LocalizeContracts.cs)
 public sealed record LocalizeResponse(LocalizedText Name, LocalizedText? Description, int? SuggestedCatalogTypeId, List<string> Filled, List<string> Warnings);
@@ -208,7 +208,7 @@ public sealed record RecipeView(int CatalogItemId, List<RecipeLineView> Lines);
 // The assistant's stock rules for a batch of menu items (Inventory.API Application/Assist/RecipeContracts.cs)
 public sealed record RecipesProposal(List<ProposedIngredient> NewItems, List<ProposedRecipe> Recipes, List<string> Warnings, string? Notes);
 
-public sealed record ProposedIngredient(string Key, LocalizedText Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut);
+public sealed record ProposedIngredient(string Key, LocalizedText Name, string Unit, decimal? PackSize, LocalizedText? PackName, bool AutoSoldOut);
 
 public sealed record ProposedRecipe(int CatalogItemId, string Kind, List<ProposedRecipeLine> Lines, List<string> Warnings);
 

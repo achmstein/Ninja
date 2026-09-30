@@ -6,7 +6,7 @@ public record StockItemView(
     LocalizedText Name,
     string Unit,
     decimal? PackSize,
-    string? PackName,
+    LocalizedText? PackName,
     bool AutoSoldOut,
     bool IsActive);
 
@@ -16,7 +16,7 @@ public record StockLevelView(
     LocalizedText Name,
     string Unit,
     decimal? PackSize,
-    string? PackName,
+    LocalizedText? PackName,
     bool AutoSoldOut,
     bool IsActive,
     decimal OnHand,

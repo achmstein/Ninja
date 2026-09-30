@@ -131,7 +131,7 @@ public class Refund : Entity, IAggregateRoot
             var left = line.Qty - alreadyQty.GetValueOrDefault(line.Id);
 
             if (request.Qty > left + 0.0001m)
-                throw new SalesDomainException($"Only {left:0.##} of \"{line.Description.En}\" is left to refund.");
+                throw new SalesDomainException($"Only {left:0.##} of \"{line.Description.Primary}\" is left to refund.");
 
             var menuAmount = Money(line.Total * request.Qty / line.Qty);
 

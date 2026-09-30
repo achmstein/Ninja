@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja;
 using Ninja.Ordering.Domain.Seedwork;
 using Microsoft.AspNetCore.Http.HttpResults;
 

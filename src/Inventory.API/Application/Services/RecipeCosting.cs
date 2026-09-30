@@ -26,7 +26,7 @@ public static class RecipeCosting
             items.TryGetValue(line.StockItemId, out var item);
             lines.Add(new RecipeCostLineView(
                 line.StockItemId,
-                item?.Name ?? new LocalizedText("?"),
+                item?.Name ?? new LocalizedText("?", null),
                 item?.Unit ?? string.Empty,
                 line.Quantity,
                 line.OptionIds,

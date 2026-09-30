@@ -394,7 +394,6 @@ namespace Ninja.Control.API.Migrations
                         .HasColumnType("character varying(80)");
 
                     b.Property<string>("NameEn")
-                        .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 

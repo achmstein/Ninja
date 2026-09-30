@@ -1940,7 +1940,10 @@
         "type": "object",
         "properties": {
           "en": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "ar": {
             "type": [
@@ -2234,9 +2237,13 @@
             "format": "double"
           },
           "packName": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "autoSoldOut": {
@@ -2368,9 +2375,13 @@
             "format": "double"
           },
           "packName": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           }
         }
@@ -3277,9 +3288,13 @@
             "format": "double"
           },
           "packName": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "autoSoldOut": {
@@ -3329,9 +3344,13 @@
             "format": "double"
           },
           "packName": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "autoSoldOut": {
@@ -3383,9 +3402,13 @@
             "format": "double"
           },
           "packName": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "autoSoldOut": {

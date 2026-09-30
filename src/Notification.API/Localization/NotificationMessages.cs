@@ -20,8 +20,8 @@ public static class NotificationMessages
 
     public static readonly LocalizedText NewReservationTitle = new("New Reservation!", "حجز جديد!");
     public static LocalizedText NewReservationBody(string customerName, LocalizedText placeName, string lang) =>
-        new($"{customerName} reserved {placeName.GetText("en")}",
-            $"{customerName} حجز {placeName.GetText("ar")}");
+        new($"{customerName} reserved {placeName.Get("en")}",
+            $"{customerName} حجز {placeName.Get("ar")}");
 
     public static readonly LocalizedText NewOrderTitle = new("New Order!", "طلب جديد!");
     public static LocalizedText NewOrderBody(int orderId, string buyerName) =>
@@ -31,43 +31,43 @@ public static class NotificationMessages
     // Service requests, from a table or a room
     public static readonly LocalizedText WaiterNeededTitle = new("Waiter Needed", "طلب نادل");
     public static LocalizedText WaiterNeededBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} is calling for a waiter",
-            $"{placeName.GetText("ar")} - {userName} يطلب نادلًا");
+        new($"{placeName.Get("en")} - {userName} is calling for a waiter",
+            $"{placeName.Get("ar")} - {userName} يطلب نادلًا");
 
     public static readonly LocalizedText ControllerRequestTitle = new("Controller Request", "طلب ذراع تحكم");
     public static LocalizedText ControllerRequestBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} needs a different controller",
-            $"{placeName.GetText("ar")} - {userName} يطلب ذراع تحكم آخر");
+        new($"{placeName.Get("en")} - {userName} needs a different controller",
+            $"{placeName.Get("ar")} - {userName} يطلب ذراع تحكم آخر");
 
     public static readonly LocalizedText BillRequestedTitle = new("Bill Requested", "طلب الفاتورة");
     public static LocalizedText BillRequestedBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} wants to pay",
-            $"{placeName.GetText("ar")} - {userName} يريد الدفع");
+        new($"{placeName.Get("en")} - {userName} wants to pay",
+            $"{placeName.Get("ar")} - {userName} يريد الدفع");
 
     public static readonly LocalizedText SwitchToMultiTitle = new("Switch to Multi", "التحويل إلى متعدد");
     public static LocalizedText SwitchToMultiBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} wants to switch to multi",
-            $"{placeName.GetText("ar")} - {userName} يريد التحويل إلى متعدد");
+        new($"{placeName.Get("en")} - {userName} wants to switch to multi",
+            $"{placeName.Get("ar")} - {userName} يريد التحويل إلى متعدد");
 
     public static readonly LocalizedText SwitchToSingleTitle = new("Switch to Single", "التحويل إلى فردي");
     public static LocalizedText SwitchToSingleBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} wants to switch to single",
-            $"{placeName.GetText("ar")} - {userName} يريد التحويل إلى فردي");
+        new($"{placeName.Get("en")} - {userName} wants to switch to single",
+            $"{placeName.Get("ar")} - {userName} يريد التحويل إلى فردي");
 
     public static readonly LocalizedText ChangeOptionTitle = new("Rate Change", "تغيير التعرفة");
     public static LocalizedText ChangeOptionBody(LocalizedText placeName, string userName, string option) =>
-        new($"{placeName.GetText("en")} - {userName} wants to switch to {option}",
-            $"{placeName.GetText("ar")} - {userName} يريد التحويل إلى {option}");
+        new($"{placeName.Get("en")} - {userName} wants to switch to {option}",
+            $"{placeName.Get("ar")} - {userName} يريد التحويل إلى {option}");
 
     public static readonly LocalizedText ServiceRequestTitle = new("Service Request", "طلب مساعدة");
     public static LocalizedText ServiceRequestBody(LocalizedText placeName, string userName) =>
-        new($"{placeName.GetText("en")} - {userName} needs assistance",
-            $"{placeName.GetText("ar")} - {userName} يحتاج إلى مساعدة");
+        new($"{placeName.Get("en")} - {userName} needs assistance",
+            $"{placeName.Get("ar")} - {userName} يحتاج إلى مساعدة");
 
     public static readonly LocalizedText ReservationCancelledTitle = new("Reservation Cancelled", "تم إلغاء الحجز");
     public static LocalizedText ReservationCancelledBody(string customerName, LocalizedText placeName, string lang) =>
-        new($"{customerName} cancelled {placeName.GetText("en")}",
-            $"ألغى {customerName} حجز {placeName.GetText("ar")}");
+        new($"{customerName} cancelled {placeName.Get("en")}",
+            $"ألغى {customerName} حجز {placeName.Get("ar")}");
 
     /// <summary>Escalating, so a pending order cannot sit unseen.</summary>
     public static LocalizedText OrderReminderTitle(int reminderCount) => reminderCount switch
@@ -101,9 +101,9 @@ public static class NotificationMessages
     public static readonly CustomerText RoomAvailableTitle =
         new("Room Available!", "أوضة فاضية!", "غرفة متاحة!");
     public static CustomerText RoomAvailableBody(LocalizedText placeName, string lang) =>
-        new($"{placeName.GetText("en")} is now available. Book now!",
-            $"{placeName.GetText("ar")} فاضية دلوقتي. احجز دلوقتي!",
-            $"{placeName.GetText("ar")} متاحة الآن. احجز الآن!");
+        new($"{placeName.Get("en")} is now available. Book now!",
+            $"{placeName.Get("ar")} فاضية دلوقتي. احجز دلوقتي!",
+            $"{placeName.Get("ar")} متاحة الآن. احجز الآن!");
 
     public static readonly CustomerText OrderConfirmedTitle =
         new("Order Confirmed", "الأوردر اتأكد", "تم تأكيد الطلب");
@@ -122,9 +122,9 @@ public static class NotificationMessages
     public static readonly CustomerText YourReservationCancelledTitle =
         new("Reservation Cancelled", "حجزك اتلغى", "تم إلغاء حجزك");
     public static CustomerText YourReservationCancelledBody(LocalizedText placeName, string lang) =>
-        new($"Your reservation for {placeName.GetText("en")} has been cancelled",
-            $"حجزك في {placeName.GetText("ar")} اتلغى",
-            $"تم إلغاء حجزك في {placeName.GetText("ar")}");
+        new($"Your reservation for {placeName.Get("en")} has been cancelled",
+            $"حجزك في {placeName.Get("ar")} اتلغى",
+            $"تم إلغاء حجزك في {placeName.Get("ar")}");
 
     // -----------------------------------------------------------------
 

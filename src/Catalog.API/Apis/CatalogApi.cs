@@ -418,7 +418,7 @@ public static class CatalogApi
             .Include(c => c.CatalogType)
             .Include(c => c.Customizations)
                 .ThenInclude(c => c.Options)
-            .Where(c => c.Name.En.ToLower().Contains(name.ToLower()));
+            .Where(c => (c.Name.En != null && c.Name.En.ToLower().Contains(name.ToLower())) || (c.Name.Ar != null && c.Name.Ar.Contains(name)));
 
         var totalItems = await query.LongCountAsync();
 
@@ -514,10 +514,19 @@ public static class CatalogApi
         return TypedResults.Ok(category.ToDto());
     }
 
-    public static async Task<Created<CatalogTypeDto>> CreateCategory(
+    /// <summary>Every name on the menu is written in at least one of the café's languages.</summary>
+    private static bool Unnamed(LocalizedText? name) => name is null || name.IsEmpty;
+
+    private static BadRequest<ProblemDetails> NameRequired(string what) =>
+        TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{what} needs a name." });
+
+    public static async Task<Results<Created<CatalogTypeDto>, BadRequest<ProblemDetails>>> CreateCategory(
         CatalogContext context,
         CatalogType category)
     {
+        if (Unnamed(category.Name))
+            return NameRequired("A category");
+
         var newCategory = new CatalogType(category.Name) { DisplayOrder = category.DisplayOrder };
         context.CatalogTypes.Add(newCategory);
         await context.SaveChangesAsync();
@@ -525,11 +534,14 @@ public static class CatalogApi
         return TypedResults.Created($"/api/catalog/categories/{newCategory.Id}", newCategory.ToDto());
     }
 
-    public static async Task<Results<Ok<CatalogTypeDto>, NotFound>> UpdateCategory(
+    public static async Task<Results<Ok<CatalogTypeDto>, NotFound, BadRequest<ProblemDetails>>> UpdateCategory(
         CatalogContext context,
         [Description("The category id")] int id,
         CatalogType categoryToUpdate)
     {
+        if (Unnamed(categoryToUpdate.Name))
+            return NameRequired("A category");
+
         var category = await context.CatalogTypes.FindAsync(id);
 
         if (category is null)
@@ -616,15 +628,17 @@ public static class CatalogApi
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    public static async Task<Created<CatalogItemDto>> CreateItem(
+    public static async Task<Results<Created<CatalogItemDto>, BadRequest<ProblemDetails>>> CreateItem(
         [AsParameters] CatalogServices services,
         HttpContext httpContext,
         CatalogItem product)
     {
-        var item = new CatalogItem(product.Name)
+        if (Unnamed(product.Name))
+            return NameRequired("A menu item");
+
+        var item = new CatalogItem(product.Name, product.Description)
         {
             CatalogTypeId = product.CatalogTypeId,
-            Description = product.Description,
             PictureFileName = product.PictureFileName,
             Price = product.Price,
             IsAvailable = product.IsAvailable,
@@ -646,11 +660,14 @@ public static class CatalogApi
             item.ToDto(GetBaseUrl(httpContext)));
     }
 
-    public static async Task<Results<Ok, NotFound<ProblemDetails>>> UpdateItem(
+    public static async Task<Results<Ok, NotFound<ProblemDetails>, BadRequest<ProblemDetails>>> UpdateItem(
         [Description("The id of the menu item to update")] int id,
         [AsParameters] CatalogServices services,
         UpdateCatalogItemRequest productToUpdate)
     {
+        if (Unnamed(productToUpdate.Name))
+            return NameRequired("A menu item");
+
         var catalogItem = await services.Context.CatalogItems.SingleOrDefaultAsync(i => i.Id == id);
 
         if (catalogItem == null)
@@ -663,7 +680,7 @@ public static class CatalogApi
 
         // Update properties (PictureFileName is managed separately via the upload endpoint)
         catalogItem.Name = productToUpdate.Name;
-        catalogItem.Description = productToUpdate.Description;
+        catalogItem.Description = productToUpdate.Description ?? new LocalizedText();
         catalogItem.Price = productToUpdate.Price;
         catalogItem.CatalogTypeId = productToUpdate.CatalogTypeId;
         catalogItem.IsAvailable = productToUpdate.IsAvailable;
@@ -969,11 +986,16 @@ public static class CatalogApi
     }
 
     // Create customization handler
-    public static async Task<Results<Created<ItemCustomizationDto>, NotFound>> CreateCustomization(
+    public static async Task<Results<Created<ItemCustomizationDto>, NotFound, BadRequest<ProblemDetails>>> CreateCustomization(
         [AsParameters] CatalogServices services,
         [Description("The menu item id")] int id,
         ItemCustomization customization)
     {
+        if (Unnamed(customization.Name))
+            return NameRequired("A choice");
+        if (customization.Options.Any(o => Unnamed(o.Name)))
+            return NameRequired("Every option");
+
         var item = await services.Context.CatalogItems.FindAsync(id);
         if (item is null) return TypedResults.NotFound();
 
@@ -1002,12 +1024,17 @@ public static class CatalogApi
     }
 
     // Update customization handler
-    public static async Task<Results<Ok<ItemCustomizationDto>, NotFound>> UpdateCustomization(
+    public static async Task<Results<Ok<ItemCustomizationDto>, NotFound, BadRequest<ProblemDetails>>> UpdateCustomization(
         [AsParameters] CatalogServices services,
         [Description("The menu item id")] int id,
         [Description("The customization id")] int customizationId,
         ItemCustomization customizationToUpdate)
     {
+        if (Unnamed(customizationToUpdate.Name))
+            return NameRequired("A choice");
+        if (customizationToUpdate.Options.Any(o => Unnamed(o.Name)))
+            return NameRequired("Every option");
+
         var customization = await services.Context.ItemCustomizations
             .Include(c => c.Options)
             .FirstOrDefaultAsync(c => c.Id == customizationId && c.CatalogItemId == id);

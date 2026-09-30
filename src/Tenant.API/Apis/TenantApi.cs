@@ -98,8 +98,8 @@ public static partial class TenantApi
         IEventBus eventBus,
         UpdateTenantRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name.En))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The English name is required." });
+        if (request.Name is null || request.Name.IsEmpty)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required." });
 
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(color) && !HexColor().IsMatch(color))
@@ -287,7 +287,7 @@ public static partial class TenantApi
         var arabic = string.Equals(lang, "ar", StringComparison.OrdinalIgnoreCase);
 
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Model.Tenant.SingletonId);
-        var brand = tenant.Name.GetText(arabic ? "ar" : "en");
+        var brand = tenant.Name.Get(arabic ? "ar" : "en");
         var v = tenant.Version;
         WebManifestIcon[] icons =
         [

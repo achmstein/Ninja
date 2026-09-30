@@ -14,4 +14,8 @@
     <PackageReference Include="System.Reflection.TypeExtensions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\LocalizedText.cs" Link="SeedWork\LocalizedText.cs" />
+  </ItemGroup>
+
 </Project>

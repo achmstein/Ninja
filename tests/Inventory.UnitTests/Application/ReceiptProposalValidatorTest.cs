@@ -10,8 +10,8 @@ public class ReceiptProposalValidatorTest
 {
     private static readonly List<StockItemView> Items =
     [
-        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, "bag", false, true),
-        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, "carton", false, true),
+        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, new LocalizedText("bag", null), false, true),
+        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, new LocalizedText("carton", null), false, true),
         new(3, new LocalizedText("Red Bull", "ريد بول"), "pcs", null, null, true, true),
     ];
 
@@ -68,7 +68,20 @@ public class ReceiptProposalValidatorTest
         Assert.AreEqual("Sugar 1 kg", line.NewItem!.Name.En);
         Assert.AreEqual("g", line.NewItem.Unit);
         Assert.AreEqual(1000m, line.NewItem.PackSize);
-        Assert.AreEqual("bag", line.NewItem.PackName);
+        Assert.AreEqual("bag", line.NewItem.PackName?.En);
+    }
+
+    [TestMethod]
+    public void A_new_item_read_in_arabic_only_keeps_its_names_on_the_arabic_side()
+    {
+        var proposal = ReceiptProposalValidator.Validate(Receipt(
+            new ExtractedLine("بن محوج 250 جم", 250, 1, 1.2m, 300, 0, 0.9, new ExtractedNewItem("", "بن محوج", "g", 250, "كيس"))), Items, []);
+
+        var item = proposal.Lines.Single().NewItem!;
+        Assert.IsNull(item.Name.En);
+        Assert.AreEqual("بن محوج", item.Name.Ar);
+        Assert.IsNull(item.PackName?.En);
+        Assert.AreEqual("كيس", item.PackName?.Ar);
     }
 
     [TestMethod]

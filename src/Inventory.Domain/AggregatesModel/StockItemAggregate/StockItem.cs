@@ -18,8 +18,8 @@ public class StockItem : Entity, IAggregateRoot
     /// <summary>How many base units one purchase pack holds, when it is bought by the pack.</summary>
     public decimal? PackSize { get; private set; }
 
-    /// <summary>What the pack is called on the receipt: "bag", "case", "bottle".</summary>
-    public string? PackName { get; private set; }
+    /// <summary>What the pack is called, in the café's languages: "bag" / "كيس", "bottle" / "عبوة"; null when it is not bought by the pack.</summary>
+    public LocalizedText? PackName { get; private set; }
 
     /// <summary>
     /// When this runs out at a branch, the menu items whose recipe needs it
@@ -33,16 +33,16 @@ public class StockItem : Entity, IAggregateRoot
 
     protected StockItem() { }
 
-    public static StockItem Create(LocalizedText name, string unit, decimal? packSize, string? packName, bool autoSoldOut)
+    public static StockItem Create(LocalizedText name, string unit, decimal? packSize, LocalizedText? packName, bool autoSoldOut)
     {
         var item = new StockItem();
         item.Update(name, unit, packSize, packName, autoSoldOut);
         return item;
     }
 
-    public void Update(LocalizedText name, string unit, decimal? packSize, string? packName, bool autoSoldOut)
+    public void Update(LocalizedText name, string unit, decimal? packSize, LocalizedText? packName, bool autoSoldOut)
     {
-        if (string.IsNullOrWhiteSpace(name.En))
+        if (name is null || name.IsEmpty)
             throw new InventoryDomainException("A stock item needs a name.");
 
         if (string.IsNullOrWhiteSpace(unit))
@@ -51,10 +51,10 @@ public class StockItem : Entity, IAggregateRoot
         if (packSize is <= 0)
             throw new InventoryDomainException("A pack size must be positive.");
 
-        Name = new LocalizedText(name.En.Trim(), string.IsNullOrWhiteSpace(name.Ar) ? null : name.Ar.Trim());
+        Name = name;
         Unit = unit.Trim();
         PackSize = packSize;
-        PackName = string.IsNullOrWhiteSpace(packName) ? null : packName.Trim();
+        PackName = LocalizedText.Optional(packName);
         AutoSoldOut = autoSoldOut;
     }
 

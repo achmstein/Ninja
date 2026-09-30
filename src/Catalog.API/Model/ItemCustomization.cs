@@ -43,11 +43,6 @@ public class ItemCustomization
     /// </summary>
     private ItemCustomization() { }
 
-    public ItemCustomization(string name)
-    {
-        Name = new LocalizedText(name);
-    }
-
     [JsonConstructor]
     public ItemCustomization(LocalizedText name)
     {

@@ -40,11 +40,11 @@ public class Place : Entity, IAggregateRoot
 
     public Place(PlaceKind kind, LocalizedText name, int branchId, Tariff? tariff = null, LocalizedText? description = null, bool? reservable = null) : this()
     {
-        if (string.IsNullOrWhiteSpace(name.En))
+        if (name is null || name.IsEmpty)
             throw new SpacesDomainException("Place name is required");
         Kind = kind;
         Name = name;
-        Description = description;
+        Description = LocalizedText.Optional(description);
         BranchId = branchId;
         Tariff = tariff;
         Reservable = reservable ?? tariff is not null;
@@ -64,10 +64,10 @@ public class Place : Entity, IAggregateRoot
 
     public void UpdateDetails(LocalizedText name, LocalizedText? description)
     {
-        if (string.IsNullOrWhiteSpace(name.En))
+        if (name is null || name.IsEmpty)
             throw new SpacesDomainException("Place name is required");
         Name = name;
-        Description = description;
+        Description = LocalizedText.Optional(description);
         AddDomainEvent(new PlaceChangedDomainEvent(this));
     }
 

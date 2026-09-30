@@ -25,8 +25,8 @@ public static partial class ControlApi
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
 
-        if (string.IsNullOrWhiteSpace(request.NameEn))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The English name is required." });
+        if (string.IsNullOrWhiteSpace(request.NameEn) && string.IsNullOrWhiteSpace(request.NameAr))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required, in English or Arabic." });
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(color) && !HexColor().IsMatch(color))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The color must be #rrggbb." });
@@ -54,8 +54,8 @@ public static partial class ControlApi
         if (domainChanged && domain is not null && await context.Tenants.AnyAsync(t => t.Id != tenant.Id && t.CustomerDomain == domain && t.Status != TenantStatus.Destroyed, ct))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{domain} already belongs to another tenant." });
 
-        tenant.NameEn = request.NameEn.Trim();
-        tenant.NameAr = string.IsNullOrWhiteSpace(request.NameAr) ? null : request.NameAr.Trim();
+        tenant.NameEn = Clean(request.NameEn);
+        tenant.NameAr = Clean(request.NameAr);
         tenant.PrimaryColor = string.IsNullOrEmpty(color) ? null : color;
         tenant.CustomerDomain = domain;
         tenant.ContactName = Clean(request.ContactName);
@@ -133,7 +133,7 @@ public static partial class ControlApi
 }
 
 public record UpdateTenantRequest(
-    string NameEn,
+    string? NameEn,
     string? NameAr,
     string? PrimaryColor,
     string? CustomerDomain,

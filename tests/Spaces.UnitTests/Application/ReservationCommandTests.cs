@@ -27,7 +27,7 @@ public sealed class ReservationCommandTests
     public async Task Seating_at_a_timed_place_starts_the_clock_and_occupies_it()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room, option: Tariff.MultiCode, startOnConfirm: true);
 
         var result = await Handler(db).Handle(new SeatReservationCommand(reservation.Id), default);
@@ -51,7 +51,7 @@ public sealed class ReservationCommandTests
     public async Task The_till_s_rate_wins_over_the_customer_s()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room, option: Tariff.MultiCode, startOnConfirm: true);
 
         await Handler(db).Handle(new SeatReservationCommand(reservation.Id, Tariff.SingleCode), default);
@@ -63,7 +63,7 @@ public sealed class ReservationCommandTests
     public async Task Seating_at_a_plain_table_keeps_the_table_for_the_party_and_starts_no_clock()
     {
         var db = new InMemorySpaces();
-        var table = Place.Table("Table 4", 1);
+        var table = Place.Table(new LocalizedText("Table 4", null), 1);
         table.SetReservable(true);
         db.AddPlace(table);
         var reservation = Reserve(db, table, @for: DateTime.UtcNow.AddHours(2));
@@ -88,7 +88,7 @@ public sealed class ReservationCommandTests
     public async Task The_party_leaving_a_plain_table_frees_it()
     {
         var db = new InMemorySpaces();
-        var table = Place.Table("Table 4", 1);
+        var table = Place.Table(new LocalizedText("Table 4", null), 1);
         table.SetReservable(true);
         db.AddPlace(table);
         var reservation = Reserve(db, table);
@@ -106,7 +106,7 @@ public sealed class ReservationCommandTests
     public async Task A_party_at_a_timed_place_leaves_through_its_stay_which_closes_the_reservation()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room);
         var seated = await Handler(db).Handle(new SeatReservationCommand(reservation.Id), default);
 
@@ -125,7 +125,7 @@ public sealed class ReservationCommandTests
     public async Task Confirm_seats_only_when_the_customer_asked_for_the_clock_to_start_on_it()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var handler = Handler(db);
 
         var lazy = Reserve(db, room);
@@ -148,7 +148,7 @@ public sealed class ReservationCommandTests
     public async Task A_reserved_place_refuses_a_walk_in_until_the_reservation_is_seated_or_given_up()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room);
         var walkIn = new StartWalkInStayCommandHandler(db.StayRepository, db.ReservationRepository, db.PlaceRepository, NullLogger<StartWalkInStayCommandHandler>.Instance);
 
@@ -167,7 +167,7 @@ public sealed class ReservationCommandTests
     public async Task A_booking_for_later_does_not_block_a_walk_in_now()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         Reserve(db, room, customerId: null, @for: DateTime.UtcNow.AddHours(5));
         var walkIn = new StartWalkInStayCommandHandler(db.StayRepository, db.ReservationRepository, db.PlaceRepository, NullLogger<StartWalkInStayCommandHandler>.Instance);
 
@@ -179,7 +179,7 @@ public sealed class ReservationCommandTests
     public async Task A_customer_gives_up_only_their_own_reservation()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room, customerId: "c1");
         var handler = Handler(db);
 
@@ -195,7 +195,7 @@ public sealed class ReservationCommandTests
     public async Task Seating_at_a_timed_place_needs_the_place_free()
     {
         var db = new InMemorySpaces();
-        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var room = db.AddPlace(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1));
         var reservation = Reserve(db, room, customerId: null, @for: DateTime.UtcNow.AddHours(1));
         db.StayRepository.Add(Stay.CreateWalkIn(room.Id, room.Tariff!));
         room.SetOccupied();

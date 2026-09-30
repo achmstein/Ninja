@@ -50,7 +50,7 @@ public class OfferWindowTest
     [TestMethod]
     public void The_item_prices_by_its_window()
     {
-        var item = new CatalogItem(new LocalizedText("Latte"))
+        var item = new CatalogItem(new LocalizedText("Latte", null))
         {
             Price = 100,
             IsOnOffer = true,

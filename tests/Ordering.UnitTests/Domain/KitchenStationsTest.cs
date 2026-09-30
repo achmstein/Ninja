@@ -23,7 +23,7 @@ public class KitchenStationsTest
 
     private static KitchenStation Station(int id, string name, int[] categories, bool screen, bool printer, bool isDefault = false)
     {
-        var station = new KitchenStation(1, new LocalizedText(name), categories, screen, printer,
+        var station = new KitchenStation(1, new LocalizedText(name, null), categories, screen, printer,
             printer ? "192.168.1.50" : null, null, isDefault, id);
         typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(station, id);
         return station;
@@ -41,7 +41,7 @@ public class KitchenStationsTest
         var order = new Order("userId", "userName", 1);
         foreach (var product in products)
         {
-            order.AddOrderItem(product, new LocalizedText($"Product {product}"), 10, 0, null);
+            order.AddOrderItem(product, new LocalizedText($"Product {product}", null), 10, 0, null);
         }
         order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [Burger] = Food, [Lemonade] = Drinks, [Mint] = Shisha });
         order.SetConfirmedStatus(Routing());
@@ -63,7 +63,7 @@ public class KitchenStationsTest
     public void A_line_no_station_claims_goes_to_the_default_station()
     {
         var order = new Order("userId", "userName", 1);
-        order.AddOrderItem(99, new LocalizedText("Unlisted"), 10, 0, null);
+        order.AddOrderItem(99, new LocalizedText("Unlisted", null), 10, 0, null);
         order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [99] = 777 });
         order.SetConfirmedStatus(Routing());
 
@@ -75,7 +75,7 @@ public class KitchenStationsTest
     {
         // Catalog answered before it sent categories
         var order = new Order("userId", "userName", 1);
-        order.AddOrderItem(Lemonade, new LocalizedText("Lemonade"), 10, 0, null);
+        order.AddOrderItem(Lemonade, new LocalizedText("Lemonade", null), 10, 0, null);
         order.SetStockConfirmedStatus();
         order.SetConfirmedStatus(Routing());
 
@@ -174,11 +174,11 @@ public class KitchenStationsTest
         var bar = Station(200, "Bar", [Drinks], screen: true, printer: false);
         var routing = new KitchenRouting([Station(100, "Kitchen", [], true, false, isDefault: true), bar]);
         var order = new Order("userId", "userName", 1);
-        order.AddOrderItem(Lemonade, new LocalizedText("Lemonade"), 10, 0, null);
+        order.AddOrderItem(Lemonade, new LocalizedText("Lemonade", null), 10, 0, null);
         order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [Lemonade] = Drinks });
         order.SetConfirmedStatus(routing);
 
-        bar.Update(new LocalizedText("Juice bar"), [Drinks], showsOnScreen: false, printsTickets: true, "10.0.0.9", null, 0);
+        bar.Update(new LocalizedText("Juice bar", null), [Drinks], showsOnScreen: false, printsTickets: true, "10.0.0.9", null, 0);
 
         var part = order.StationParts.Single();
         Assert.AreEqual("Bar", part.StationName.En);
@@ -189,14 +189,14 @@ public class KitchenStationsTest
     public void A_station_must_show_or_print()
     {
         Assert.ThrowsExactly<OrderingDomainException>(() =>
-            new KitchenStation(1, new LocalizedText("Nowhere"), [], false, false, null, null, false, 0));
+            new KitchenStation(1, new LocalizedText("Nowhere", null), [], false, false, null, null, false, 0));
     }
 
     [TestMethod]
     public void A_station_that_prints_needs_its_printer()
     {
         Assert.ThrowsExactly<OrderingDomainException>(() =>
-            new KitchenStation(1, new LocalizedText("Shisha"), [], false, true, " ", null, false, 0));
+            new KitchenStation(1, new LocalizedText("Shisha", null), [], false, true, " ", null, false, 0));
     }
 
     [TestMethod]

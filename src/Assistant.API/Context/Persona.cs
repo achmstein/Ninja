@@ -42,7 +42,7 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
                 return null;
             }
         });
-        return Write(brand?.Name?.En ?? brand?.Name?.Ar, brand?.Assistant);
+        return Write(brand?.Name?.Display, brand?.Assistant);
     }
 
     /// <summary>The brief for a café of this name with these settings.</summary>

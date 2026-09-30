@@ -49,4 +49,8 @@
     <InternalsVisibleTo Include="Catalog.UnitTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\LocalizedText.cs" Link="Model\LocalizedText.cs" />
+  </ItemGroup>
+
 </Project>

@@ -50,7 +50,7 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
 
         var byCategory = live
             .GroupBy(e => e.CategoryId)
-            .Select(g => new CategoryTotal(g.Key, categories.GetValueOrDefault(g.Key) ?? new LocalizedText("?"), g.Sum(e => e.Amount)))
+            .Select(g => new CategoryTotal(g.Key, categories.GetValueOrDefault(g.Key) ?? new LocalizedText("?", null), g.Sum(e => e.Amount)))
             .OrderByDescending(c => c.Total)
             .ToList();
 
@@ -58,7 +58,7 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
             live.Sum(e => e.Amount),
             byCategory,
             rows.Select(e => new ExpenseView(
-                e.Id, e.BranchId, e.Date, e.CategoryId, categories.GetValueOrDefault(e.CategoryId) ?? new LocalizedText("?"),
+                e.Id, e.BranchId, e.Date, e.CategoryId, categories.GetValueOrDefault(e.CategoryId) ?? new LocalizedText("?", null),
                 e.Amount, e.PaidFrom, e.PartnerId, e.PartnerId is { } pid ? partners.GetValueOrDefault(pid) : null,
                 e.Vendor, e.Note, e.Reference, e.Source, e.RecordedBy, e.RecordedAt, e.VoidedAt, e.VoidedBy, e.VoidReason,
                 withReceipt.Contains(e.Id))).ToList());
@@ -74,7 +74,7 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
         var partners = await context.Partners.AsNoTracking().ToDictionaryAsync(p => p.Id, p => p.Name);
 
         return rows.Select(r => new RecurringExpenseView(
-            r.Id, r.BranchId, r.CategoryId, categories.GetValueOrDefault(r.CategoryId) ?? new LocalizedText("?"),
+            r.Id, r.BranchId, r.CategoryId, categories.GetValueOrDefault(r.CategoryId) ?? new LocalizedText("?", null),
             r.Amount, r.DayOfMonth, r.PaidFrom, r.PartnerId, r.PartnerId is { } pid ? partners.GetValueOrDefault(pid) : null,
             r.Vendor, r.Note, r.IsActive)).ToList();
     }
@@ -213,7 +213,7 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
         var goods = costs.FirstOrDefault(c => c.Key == CostFactKind.Goods)?.Amount ?? 0;
         var waste = costs.FirstOrDefault(c => c.Key == CostFactKind.Waste)?.Amount ?? 0;
         var byCategory = expenses
-            .Select(e => new CategoryTotal(e.Key, categories.GetValueOrDefault(e.Key) ?? new LocalizedText("?"), e.Amount))
+            .Select(e => new CategoryTotal(e.Key, categories.GetValueOrDefault(e.Key) ?? new LocalizedText("?", null), e.Amount))
             .OrderByDescending(c => c.Total)
             .ToList();
         var operating = byCategory.Sum(c => c.Total);

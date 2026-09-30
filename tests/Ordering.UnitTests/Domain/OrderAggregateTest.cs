@@ -18,7 +18,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var productId = 1;
-        var productName = new LocalizedText("FakeProductName");
+        var productName = new LocalizedText("FakeProductName", null);
         var unitPrice = 12;
         var discount = 15;
         var pictureUrl = "FakeUrl";
@@ -36,7 +36,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var productId = 1;
-        var productName = new LocalizedText("FakeProductName");
+        var productName = new LocalizedText("FakeProductName", null);
         var unitPrice = 12;
         var discount = 15;
         var pictureUrl = "FakeUrl";
@@ -51,7 +51,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var productId = 1;
-        var productName = new LocalizedText("FakeProductName");
+        var productName = new LocalizedText("FakeProductName", null);
         var unitPrice = 12;
         var discount = 15;
         var pictureUrl = "FakeUrl";
@@ -66,7 +66,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var productId = 1;
-        var productName = new LocalizedText("FakeProductName");
+        var productName = new LocalizedText("FakeProductName", null);
         var unitPrice = 12;
         var discount = 15;
         var pictureUrl = "FakeUrl";
@@ -84,7 +84,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var productId = 1;
-        var productName = new LocalizedText("FakeProductName");
+        var productName = new LocalizedText("FakeProductName", null);
         var unitPrice = 12;
         var discount = 15;
         var pictureUrl = "FakeUrl";
@@ -386,7 +386,7 @@ public class OrderAggregateTest
             guestPhone: guestPhone,
             placeId: placeId,
             placeKind: placeId is null ? null : "Table",
-            placeName: placeId is null ? null : new LocalizedText("Table 3"),
+            placeName: placeId is null ? null : new LocalizedText("Table 3", null),
             guestOrdersAnywhere: guestOrdersAnywhere);
 
     [TestMethod]
@@ -394,7 +394,7 @@ public class OrderAggregateTest
     {
         // 2 × 50 − 10 line discount = 90, minus 25 EGP loyalty = 65
         var order = new Order("user-1", "Nadia", branchId: 1, pointsToRedeem: 2500, loyaltyDiscount: 25);
-        order.AddOrderItem(1, new LocalizedText("Latte"), unitPrice: 50, discount: 10, pictureUrl: null, units: 2);
+        order.AddOrderItem(1, new LocalizedText("Latte", null), unitPrice: 50, discount: 10, pictureUrl: null, units: 2);
 
         Assert.AreEqual(90m, order.GetItemsTotal());
         Assert.AreEqual(65m, order.GetTotal());
@@ -404,7 +404,7 @@ public class OrderAggregateTest
     public void Total_never_goes_negative()
     {
         var order = new Order("user-1", "Nadia", branchId: 1, loyaltyDiscount: 500);
-        order.AddOrderItem(1, new LocalizedText("Latte"), unitPrice: 50, discount: 0, pictureUrl: null, units: 1);
+        order.AddOrderItem(1, new LocalizedText("Latte", null), unitPrice: 50, discount: 0, pictureUrl: null, units: 1);
 
         Assert.AreEqual(0m, order.GetTotal());
     }
@@ -454,7 +454,7 @@ public class OrderAggregateTest
     public void Order_carries_its_stay_and_place_ids()
     {
         var order = new Order("user-1", "Nadia", branchId: 1,
-            sessionId: 42, placeId: 7, placeKind: "Room", placeName: new LocalizedText("VIP"));
+            sessionId: 42, placeId: 7, placeKind: "Room", placeName: new LocalizedText("VIP", null));
 
         Assert.AreEqual(42, order.SessionId);
         Assert.AreEqual(7, order.PlaceId);

@@ -9,7 +9,7 @@ namespace Ninja.Spaces.UnitTests.Application;
 [TestClass]
 public sealed class PlaceViewModelTests
 {
-    private static Place Room() => InMemorySpaces.WithId(Place.Room("Room 1", 60m, 90m, 1), 7);
+    private static Place Room() => InMemorySpaces.WithId(Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1), 7);
 
     [TestMethod]
     public void A_reservation_for_now_shows_the_place_held_and_a_booking_for_later_does_not()
@@ -42,7 +42,7 @@ public sealed class PlaceViewModelTests
     public void A_party_seated_at_a_plain_table_keeps_it_until_they_leave()
     {
         var now = DateTime.UtcNow;
-        var table = InMemorySpaces.WithId(Place.Table("Table 4", 1), 9);
+        var table = InMemorySpaces.WithId(Place.Table(new LocalizedText("Table 4", null), 1), 9);
         table.SetReservable(true);
         var party = new Reservation(table, "c1", "Ahmed", partySize: 3);
         party.Seat();
@@ -110,7 +110,7 @@ public sealed class PlaceViewModelTests
     [TestMethod]
     public void The_place_view_says_whether_the_owner_opened_it_to_bookings()
     {
-        var table = InMemorySpaces.WithId(Place.Table("Table 4", 1), 9);
+        var table = InMemorySpaces.WithId(Place.Table(new LocalizedText("Table 4", null), 1), 9);
         Assert.IsFalse(table.ToViewModel(null, [], DateTime.UtcNow).Reservable);
         Assert.IsFalse(table.ToViewModel(null, [], DateTime.UtcNow).CanReserve);
 

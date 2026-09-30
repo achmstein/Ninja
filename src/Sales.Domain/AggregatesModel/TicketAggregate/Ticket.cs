@@ -368,16 +368,16 @@ public class Ticket : Entity, IAggregateRoot
         if (_lines.Any(l => l.Source == TicketLineSource.SessionTime))
             return;
 
-        var place = LocationName ?? new LocalizedText("Place");
-        var placeAr = string.IsNullOrWhiteSpace(place.Ar) ? place.En : place.Ar;
+        // The line reads in both languages whatever the café writes in: a
+        // place named in one language gives that name to both
+        var place = LocationName is { IsEmpty: false } named ? named : new LocalizedText("Place", "المكان");
         var perOption = lines.Count > 1;
 
         foreach (var line in lines.Where(l => l.Hours > 0))
         {
-            var optionAr = string.IsNullOrWhiteSpace(line.OptionName.Ar) ? line.OptionName.En : line.OptionName.Ar;
             var description = perOption
-                ? new LocalizedText($"{place.En} time — {line.OptionName.En}", $"وقت {placeAr} — {optionAr}")
-                : new LocalizedText($"{place.En} time", $"وقت {placeAr}");
+                ? new LocalizedText($"{place.Get("en")} time — {line.OptionName.Get("en")}", $"وقت {place.Get("ar")} — {line.OptionName.Get("ar")}")
+                : new LocalizedText($"{place.Get("en")} time", $"وقت {place.Get("ar")}");
 
             _lines.Add(new TicketLine(
                 TicketLineSource.SessionTime,

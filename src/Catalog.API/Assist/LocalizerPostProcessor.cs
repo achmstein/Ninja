@@ -128,13 +128,13 @@ public static partial class LocalizerPostProcessor
         return value;
     }
 
-    public static bool HasText(LocalizedText text) => !string.IsNullOrWhiteSpace(text.En) || !string.IsNullOrWhiteSpace(text.Ar);
+    public static bool HasText(LocalizedText text) => !text.IsEmpty;
 
     /// <summary>"en" or "ar" when exactly that side is empty; null when both are filled or both empty.</summary>
     private static string? EmptySide(LocalizedText text)
     {
-        var en = !string.IsNullOrWhiteSpace(text.En);
-        var ar = !string.IsNullOrWhiteSpace(text.Ar);
+        var en = text.En is not null;
+        var ar = text.Ar is not null;
         if (en == ar) return null;
         return en ? "ar" : "en";
     }

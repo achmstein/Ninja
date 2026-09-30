@@ -238,14 +238,13 @@ namespace Ninja.Notification.API.Migrations
 
             modelBuilder.Entity("Ninja.Notification.API.Model.Place", b =>
                 {
-                    b.OwnsOne("Ninja.Notification.API.Model.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("PlaceId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("PlaceId");
 
@@ -263,14 +262,13 @@ namespace Ninja.Notification.API.Migrations
 
             modelBuilder.Entity("Ninja.Notification.API.Model.ServiceRequest", b =>
                 {
-                    b.OwnsOne("Ninja.Notification.API.Model.LocalizedText", "PlaceName", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "PlaceName", b1 =>
                         {
                             b1.Property<int>("ServiceRequestId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("ServiceRequestId");
 

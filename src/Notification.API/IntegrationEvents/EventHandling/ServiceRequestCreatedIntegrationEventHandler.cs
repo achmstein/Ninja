@@ -18,7 +18,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
     {
         logger.LogInformation(
             "Handling ServiceRequestCreatedIntegrationEvent: {RequestType} at {PlaceName}",
-            @event.RequestType, @event.PlaceName.En);
+            @event.RequestType, @event.PlaceName.Primary);
 
         // Broadcast via SignalR first — live dashboards must not depend on
         // whether any FCM push subscriptions exist
@@ -66,7 +66,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
                     { "requestType", @event.RequestType.ToString() },
                     { "placeId", @event.PlaceId.ToString() },
                     { "placeKind", @event.PlaceKind },
-                    { "placeName", @event.PlaceName.GetText(lang) },
+                    { "placeName", @event.PlaceName.Get(lang) },
                     { "optionCode", @event.OptionCode ?? string.Empty }
                 });
 
@@ -74,7 +74,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             allUnregisteredTokens.AddRange(result.UnregisteredTokens);
             logger.LogInformation(
                 "Sent {SuccessCount}/{TotalCount} service request notifications in {Lang} for {RequestType} at {PlaceName}",
-                result.SuccessCount, tokens.Count, lang, @event.RequestType, @event.PlaceName.En);
+                result.SuccessCount, tokens.Count, lang, @event.RequestType, @event.PlaceName.Primary);
         }
 
         if (allUnregisteredTokens.Count > 0)
@@ -89,7 +89,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
 
         logger.LogInformation(
             "Sent {SuccessCount}/{TotalCount} total service request notifications for {RequestType} at {PlaceName}",
-            totalSuccess, subscriptions.Count, @event.RequestType, @event.PlaceName.En);
+            totalSuccess, subscriptions.Count, @event.RequestType, @event.PlaceName.Primary);
     }
 
     private static (string title, string body) GetLocalizedNotificationContent(
@@ -99,27 +99,27 @@ public class ServiceRequestCreatedIntegrationEventHandler(
         return @event.RequestType switch
         {
             ServiceRequestType.CallWaiter => (
-                NotificationMessages.WaiterNeededTitle.GetText(lang),
-                NotificationMessages.WaiterNeededBody(@event.PlaceName, @event.UserName).GetText(lang)),
+                NotificationMessages.WaiterNeededTitle.Get(lang),
+                NotificationMessages.WaiterNeededBody(@event.PlaceName, @event.UserName).Get(lang)),
             ServiceRequestType.ControllerChange => (
-                NotificationMessages.ControllerRequestTitle.GetText(lang),
-                NotificationMessages.ControllerRequestBody(@event.PlaceName, @event.UserName).GetText(lang)),
+                NotificationMessages.ControllerRequestTitle.Get(lang),
+                NotificationMessages.ControllerRequestBody(@event.PlaceName, @event.UserName).Get(lang)),
             ServiceRequestType.ReceiptToPay => (
-                NotificationMessages.BillRequestedTitle.GetText(lang),
-                NotificationMessages.BillRequestedBody(@event.PlaceName, @event.UserName).GetText(lang)),
+                NotificationMessages.BillRequestedTitle.Get(lang),
+                NotificationMessages.BillRequestedBody(@event.PlaceName, @event.UserName).Get(lang)),
             // The two-option room words when they fit; the option's code otherwise
             ServiceRequestType.ChangeOption when @event.OptionCode == "multi" => (
-                NotificationMessages.SwitchToMultiTitle.GetText(lang),
-                NotificationMessages.SwitchToMultiBody(@event.PlaceName, @event.UserName).GetText(lang)),
+                NotificationMessages.SwitchToMultiTitle.Get(lang),
+                NotificationMessages.SwitchToMultiBody(@event.PlaceName, @event.UserName).Get(lang)),
             ServiceRequestType.ChangeOption when @event.OptionCode == "single" => (
-                NotificationMessages.SwitchToSingleTitle.GetText(lang),
-                NotificationMessages.SwitchToSingleBody(@event.PlaceName, @event.UserName).GetText(lang)),
+                NotificationMessages.SwitchToSingleTitle.Get(lang),
+                NotificationMessages.SwitchToSingleBody(@event.PlaceName, @event.UserName).Get(lang)),
             ServiceRequestType.ChangeOption => (
-                NotificationMessages.ChangeOptionTitle.GetText(lang),
-                NotificationMessages.ChangeOptionBody(@event.PlaceName, @event.UserName, @event.OptionCode ?? "?").GetText(lang)),
+                NotificationMessages.ChangeOptionTitle.Get(lang),
+                NotificationMessages.ChangeOptionBody(@event.PlaceName, @event.UserName, @event.OptionCode ?? "?").Get(lang)),
             _ => (
-                NotificationMessages.ServiceRequestTitle.GetText(lang),
-                NotificationMessages.ServiceRequestBody(@event.PlaceName, @event.UserName).GetText(lang))
+                NotificationMessages.ServiceRequestTitle.Get(lang),
+                NotificationMessages.ServiceRequestBody(@event.PlaceName, @event.UserName).Get(lang))
         };
     }
 }

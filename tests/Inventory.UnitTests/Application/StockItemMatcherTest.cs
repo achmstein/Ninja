@@ -10,10 +10,10 @@ public class StockItemMatcherTest
 {
     private static readonly List<StockItemView> Items =
     [
-        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, "bag", false, true),
-        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, "carton", false, true),
+        new(1, new LocalizedText("Sugar", "سكر"), "g", 1000, new LocalizedText("bag", null), false, true),
+        new(2, new LocalizedText("Whole Milk", "لبن كامل الدسم"), "ml", 1000, new LocalizedText("carton", null), false, true),
         new(3, new LocalizedText("Red Bull", "ريد بول"), "pcs", null, null, true, true),
-        new(4, new LocalizedText("Turkish Coffee Beans", "بن تركي"), "g", 250, "pack", false, true),
+        new(4, new LocalizedText("Turkish Coffee Beans", "بن تركي"), "g", 250, new LocalizedText("pack", null), false, true),
     ];
 
     [TestMethod]

@@ -13,11 +13,13 @@ class ExpenseCategoryEntityTypeConfiguration : IEntityTypeConfiguration<ExpenseC
 
         builder.Ignore(c => c.DomainEvents);
 
+        // Either language may be the only one written; the name itself is always there
         builder.OwnsOne(c => c.Name, name =>
         {
-            name.Property(n => n.En).HasColumnName("NameEn").HasMaxLength(100).IsRequired();
+            name.Property(n => n.En).HasColumnName("NameEn").HasMaxLength(100);
             name.Property(n => n.Ar).HasColumnName("NameAr").HasMaxLength(100);
         });
+        builder.Navigation(c => c.Name).IsRequired();
     }
 }
 

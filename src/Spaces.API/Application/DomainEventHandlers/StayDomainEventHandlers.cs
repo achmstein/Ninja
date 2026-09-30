@@ -19,7 +19,7 @@ internal static class StayEventFields
 {
     public static int PlaceId(this Stay stay) => stay.PlaceId;
     public static string PlaceKind(this Stay stay) => (stay.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Room).ToString();
-    public static LocalizedText PlaceName(this Stay stay) => stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}");
+    public static LocalizedText PlaceName(this Stay stay) => stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}", $"مكان {stay.PlaceId}");
     public static int BranchId(this Stay stay) => stay.Place?.BranchId ?? 1;
 
     /// <summary>Everyone in the party, owner included, each once.</summary>
@@ -163,7 +163,7 @@ public class PlaceChangedDomainEventHandler(ISpacesIntegrationEventService outbo
     public async Task Handle(PlaceChangedDomainEvent notification, CancellationToken cancellationToken)
     {
         var place = notification.Place;
-        logger.LogInformation("Place changed: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.En);
+        logger.LogInformation("Place changed: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.Primary);
         await outbox.AddAndSaveEventAsync(place.ToUpdatedEvent());
     }
 }
@@ -208,7 +208,7 @@ public class PlaceDeletedDomainEventHandler(ISpacesIntegrationEventService outbo
     public async Task Handle(PlaceDeletedDomainEvent notification, CancellationToken cancellationToken)
     {
         var place = notification.Place;
-        logger.LogInformation("Place deleted: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.En);
+        logger.LogInformation("Place deleted: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.Primary);
         await outbox.AddAndSaveEventAsync(place.ToUpdatedEvent(deleted: true));
     }
 }

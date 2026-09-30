@@ -65,7 +65,7 @@ public class KitchenStation : Entity, IAggregateRoot
     public void Update(LocalizedText name, IEnumerable<int> categoryIds, bool showsOnScreen, bool printsTickets,
         string? printerHost, int? printerPort, int displayOrder, int? connectorId = null, string? printerName = null)
     {
-        if (string.IsNullOrWhiteSpace(name.En) && string.IsNullOrWhiteSpace(name.Ar))
+        if (name is null || name.IsEmpty)
         {
             throw new OrderingDomainException("A station needs a name.");
         }
@@ -93,7 +93,7 @@ public class KitchenStation : Entity, IAggregateRoot
             throw new OrderingDomainException("A printer port is between 1 and 65535.");
         }
 
-        Name = new LocalizedText(name.En.Trim(), string.IsNullOrWhiteSpace(name.Ar) ? null : name.Ar.Trim());
+        Name = name;
         CategoryIds = categoryIds.Where(id => id > 0).Distinct().Order().ToList();
         ShowsOnScreen = showsOnScreen;
         PrintsTickets = printsTickets;

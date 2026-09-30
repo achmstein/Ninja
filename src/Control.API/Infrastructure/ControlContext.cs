@@ -54,7 +54,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Slug).HasMaxLength(24).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
-            entity.Property(e => e.NameEn).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.NameEn).HasMaxLength(80);
             entity.Property(e => e.NameAr).HasMaxLength(80);
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.Slab).HasMaxLength(16);

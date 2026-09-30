@@ -38,7 +38,7 @@ public sealed class StayTests
     [TestMethod]
     public void Seating_a_reservation_starts_the_clock_with_the_customer_in_the_party()
     {
-        var room = Place.Room("Room 1", 60m, 90m, 1);
+        var room = Place.Room(new LocalizedText("Room 1", null), 60m, 90m, 1);
         var reservation = new Reservation(room, "c1", "Ahmed", startOnConfirm: true, requestedOptionCode: Tariff.MultiCode, notes: "birthday");
 
         var stay = Stay.FromReservation(reservation, room.Tariff!);

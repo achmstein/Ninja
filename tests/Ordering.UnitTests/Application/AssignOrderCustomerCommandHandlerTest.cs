@@ -156,7 +156,7 @@ public class AssignOrderCustomerCommandHandlerTest
     private static Order ConfirmedWalkIn()
     {
         var order = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
-        order.AddOrderItem(1, new LocalizedText("Latte"), 50, 0, null);
+        order.AddOrderItem(1, new LocalizedText("Latte", null), 50, 0, null);
         order.SetStockConfirmedStatus();
         order.SetConfirmedStatus();
         return order;

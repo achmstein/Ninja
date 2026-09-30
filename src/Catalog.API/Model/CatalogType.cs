@@ -24,11 +24,6 @@ public class CatalogType
     /// </summary>
     private CatalogType() { }
 
-    public CatalogType(string name)
-    {
-        Name = new LocalizedText(name);
-    }
-
     [JsonConstructor]
     public CatalogType(LocalizedText name)
     {

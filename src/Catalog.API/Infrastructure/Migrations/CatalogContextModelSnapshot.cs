@@ -571,14 +571,13 @@ namespace Catalog.API.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ninja.Catalog.API.Model.LocalizedText", "Description", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Description", b1 =>
                         {
                             b1.Property<int>("CatalogItemId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("CatalogItemId");
 
@@ -590,14 +589,13 @@ namespace Catalog.API.Infrastructure.Migrations
                                 .HasForeignKey("CatalogItemId");
                         });
 
-                    b.OwnsOne("Ninja.Catalog.API.Model.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("CatalogItemId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("CatalogItemId");
 
@@ -620,14 +618,13 @@ namespace Catalog.API.Infrastructure.Migrations
 
             modelBuilder.Entity("Ninja.Catalog.API.Model.CatalogType", b =>
                 {
-                    b.OwnsOne("Ninja.Catalog.API.Model.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("CatalogTypeId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("CatalogTypeId");
 
@@ -662,14 +659,13 @@ namespace Catalog.API.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ninja.Catalog.API.Model.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("CustomizationOptionId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("CustomizationOptionId");
 
@@ -695,14 +691,13 @@ namespace Catalog.API.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Ninja.Catalog.API.Model.LocalizedText", "Name", b1 =>
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
                         {
                             b1.Property<int>("ItemCustomizationId");
 
                             b1.Property<string>("Ar");
 
-                            b1.Property<string>("En")
-                                .IsRequired();
+                            b1.Property<string>("En");
 
                             b1.HasKey("ItemCustomizationId");
 

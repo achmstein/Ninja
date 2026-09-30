@@ -31,7 +31,7 @@ public class CreateOrderCommandValidatorTest
 
     private static CreateOrderCommand GuestCommand(bool guestOrdersAnywhere) =>
         new(
-            [new BasketItem { Id = "1", ProductId = 1, ProductName = new("Latte"), UnitPrice = 50, Quantity = 1 }],
+            [new BasketItem { Id = "1", ProductId = 1, ProductName = new("Latte", null), UnitPrice = 50, Quantity = 1 }],
             userId: string.Empty,
             userName: string.Empty,
             branchId: 1,

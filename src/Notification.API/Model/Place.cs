@@ -15,7 +15,7 @@ public class Place
     /// <summary>"Room", "Table" or "Station".</summary>
     public string Kind { get; set; } = "Room";
 
-    public LocalizedText Name { get; set; } = new(string.Empty);
+    public LocalizedText Name { get; set; } = new();
 
     public int BranchId { get; set; }
 

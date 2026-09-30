@@ -50,6 +50,6 @@ public class PlaceUpdatedIntegrationEventHandler(
         await context.SaveChangesAsync();
 
         logger.LogInformation("Place {PlaceId} projection: {Kind} {Name}, timed {Timed}, options {Options}, active {Active}",
-            @event.PlaceId, @event.Kind, @event.Name.En, @event.IsTimed, @event.HasOptions, @event.IsActive);
+            @event.PlaceId, @event.Kind, @event.Name.Primary, @event.IsTimed, @event.HasOptions, @event.IsActive);
     }
 }

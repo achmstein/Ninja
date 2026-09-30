@@ -11,14 +11,14 @@ public class TalabatCatalogBuilderTest
     {
         var drinks = new CatalogType(new LocalizedText("Drinks", "مشروبات")) { Id = 3, DisplayOrder = 1 };
         var milk = new ItemCustomization(new LocalizedText("Milk", "الحليب")) { Id = 5, IsRequired = true, AllowMultiple = false };
-        milk.Options.Add(new CustomizationOption(new LocalizedText("Whole")) { Id = 7, PriceAdjustment = 0 });
+        milk.Options.Add(new CustomizationOption(new LocalizedText("Whole", null)) { Id = 7, PriceAdjustment = 0 });
         milk.Options.Add(new CustomizationOption(new LocalizedText("Oat", "شوفان")) { Id = 8, PriceAdjustment = 7.5m });
-        var latte = new CatalogItem(new LocalizedText("Latte", "لاتيه"), new LocalizedText("Espresso and milk"))
+        var latte = new CatalogItem(new LocalizedText("Latte", "لاتيه"), new LocalizedText("Espresso and milk", null))
         {
             Id = 12, Price = 60, CatalogTypeId = 3, CatalogType = drinks, PictureFileName = "latte.webp",
         };
         latte.Customizations.Add(milk);
-        var tea = new CatalogItem(new LocalizedText("Tea")) { Id = 13, Price = 25, CatalogTypeId = 3, CatalogType = drinks };
+        var tea = new CatalogItem(new LocalizedText("Tea", null)) { Id = 13, Price = 25, CatalogTypeId = 3, CatalogType = drinks };
         return ([latte, tea], drinks);
     }
 
@@ -85,7 +85,7 @@ public class TalabatCatalogBuilderTest
     [TestMethod]
     public void A_dish_is_on_when_available_sold_here_and_in_stock()
     {
-        var item = new CatalogItem("Tea") { Id = 1, IsAvailable = true };
+        var item = new CatalogItem(new LocalizedText("Tea", null)) { Id = 1, IsAvailable = true };
 
         Assert.IsTrue(TalabatCatalogBuilder.ItemAvailable(item, null));
         Assert.IsFalse(TalabatCatalogBuilder.ItemAvailable(item, new BranchItemOverride { IsOutOfStock = true }));

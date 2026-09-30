@@ -38,11 +38,6 @@ public class CustomizationOption
     /// </summary>
     private CustomizationOption() { }
 
-    public CustomizationOption(string name)
-    {
-        Name = new LocalizedText(name);
-    }
-
     [JsonConstructor]
     public CustomizationOption(LocalizedText name)
     {

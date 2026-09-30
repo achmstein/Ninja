@@ -53,7 +53,7 @@ public static class TalabatCatalogBuilder
                 ["price"] = Price(branch?.PriceOverride ?? item.Price),
                 ["active"] = item.IsAvailable && branch?.IsOutOfStock != true,
             };
-            if (!string.IsNullOrWhiteSpace(item.Description.En))
+            if (!item.Description.IsEmpty)
                 product["description"] = Text(item.Description);
 
             if (!string.IsNullOrWhiteSpace(item.PictureFileName) && !string.IsNullOrWhiteSpace(picBaseUrl))
@@ -150,8 +150,9 @@ public static class TalabatCatalogBuilder
 
     private static JsonObject Text(LocalizedText text)
     {
-        var o = new JsonObject { ["default"] = text.En };
-        if (!string.IsNullOrWhiteSpace(text.Ar)) o["ar"] = text.Ar;
+        // Talabat's default is whatever the café writes, English first; its Arabic when there is one
+        var o = new JsonObject { ["default"] = text.Primary };
+        if (text.Ar is { } ar) o["ar"] = ar;
         return o;
     }
 

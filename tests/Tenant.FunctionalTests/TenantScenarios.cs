@@ -85,9 +85,9 @@ public sealed class TenantScenarios
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
         Assert.Contains("#rrggbb", detail);
 
-        (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, new { name = new { en = "" }, features = FeaturesView.All });
+        (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, new { name = new { en = "", ar = " " }, features = FeaturesView.All });
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
-        Assert.Contains("English name", detail);
+        Assert.Contains("name is required", detail);
     }
 
     private record ThemeView(string? Radius, string? Style, LayoutView? Layout);

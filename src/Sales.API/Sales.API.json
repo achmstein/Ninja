@@ -3596,7 +3596,10 @@
         "type": "object",
         "properties": {
           "en": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "ar": {
             "type": [

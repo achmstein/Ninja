@@ -58,4 +58,4 @@ internal sealed record LocalizePrompt(
     string Category,
     IReadOnlyList<CategoryOption> Categories);
 
-internal sealed record CategoryOption(int Id, string En, string Ar);
+internal sealed record CategoryOption(int Id, string? En, string? Ar);

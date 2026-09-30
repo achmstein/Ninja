@@ -74,7 +74,7 @@ public static class BillProposalValidator
             {
                 categoryId = category.Id;
                 if (confidence < 0.5)
-                    warnings.Add($"The category \"{category.Name.En}\" is a guess; check it.");
+                    warnings.Add($"The category \"{category.Name.Primary}\" is a guess; check it.");
             }
         }
         else

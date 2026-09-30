@@ -49,16 +49,16 @@ public class DocumentsTest
     [TestMethod]
     public void A_stock_item_needs_a_name_and_a_unit_and_a_sane_pack()
     {
-        var item = StockItem.Create(new LocalizedText(" Milk ", " لبن "), " ml ", 1000, " bag ", autoSoldOut: false);
+        var item = StockItem.Create(new LocalizedText(" Milk ", " لبن "), " ml ", 1000, new LocalizedText(" bag ", null), autoSoldOut: false);
 
         Assert.AreEqual("Milk", item.Name.En);
         Assert.AreEqual("لبن", item.Name.Ar);
         Assert.AreEqual("ml", item.Unit);
-        Assert.AreEqual("bag", item.PackName);
+        Assert.AreEqual("bag", item.PackName?.En);
         Assert.IsTrue(item.IsActive);
 
-        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText(""), "pcs", null, null, true));
-        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText("Cups"), " ", null, null, true));
-        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText("Cups"), "pcs", 0, "sleeve", true));
+        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText("", null), "pcs", null, null, true));
+        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText("Cups", null), " ", null, null, true));
+        Assert.ThrowsExactly<InventoryDomainException>(() => StockItem.Create(new LocalizedText("Cups", null), "pcs", 0, new LocalizedText("sleeve", null), true));
     }
 }

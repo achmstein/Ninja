@@ -2,6 +2,7 @@
 using Ninja.Tenant.API.Model;
 using Ninja.Tenant.API.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Ninja.Tenant.API.Apis;
 
@@ -70,18 +71,21 @@ public static class BranchApi
         return TypedResults.Ok(branches);
     }
 
-    public static async Task<Created<BranchResponse>> CreateBranch(
+    public static async Task<Results<Created<BranchResponse>, BadRequest<ProblemDetails>>> CreateBranch(
         TenantContext context,
         BranchSettingsService settings,
         CreateBranchRequest request)
     {
+        if (request.Name is null || request.Name.IsEmpty)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
+
         var branch = new Model.Branch
         {
             Name = request.Name,
-            Address = request.Address,
+            Address = LocalizedText.Optional(request.Address),
             Phone = request.Phone,
             TaxNumber = request.TaxNumber,
-            ReceiptFooter = request.ReceiptFooter,
+            ReceiptFooter = LocalizedText.Optional(request.ReceiptFooter),
             IsActive = true,
             DisplayOrder = request.DisplayOrder,
             DayStartTime = request.DayStartTime != null ? TimeOnly.Parse(request.DayStartTime) : new TimeOnly(17, 0),
@@ -99,21 +103,24 @@ public static class BranchApi
         return TypedResults.Created($"/api/branches/{branch.Id}", response);
     }
 
-    public static async Task<Results<Ok<BranchResponse>, NotFound>> UpdateBranch(
+    public static async Task<Results<Ok<BranchResponse>, NotFound, BadRequest<ProblemDetails>>> UpdateBranch(
         TenantContext context,
         BranchSettingsService settings,
         [Description("The branch ID")] int id,
         UpdateBranchRequest request)
     {
+        if (request.Name is null || request.Name.IsEmpty)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
+
         var branch = await context.Branches.FindAsync(id);
         if (branch == null)
             return TypedResults.NotFound();
 
         branch.Name = request.Name;
-        branch.Address = request.Address;
+        branch.Address = LocalizedText.Optional(request.Address);
         branch.Phone = request.Phone;
         branch.TaxNumber = request.TaxNumber;
-        branch.ReceiptFooter = request.ReceiptFooter;
+        branch.ReceiptFooter = LocalizedText.Optional(request.ReceiptFooter);
         branch.IsActive = request.IsActive;
         branch.DisplayOrder = request.DisplayOrder;
         if (request.DayStartTime != null) branch.DayStartTime = TimeOnly.Parse(request.DayStartTime);
