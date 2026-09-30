@@ -46,7 +46,7 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
 
         var prompt = new ReceiptPrompt(
             branchId,
-            DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), TenantClock.Zone).DateTime).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar ?? string.Empty, c.Unit, c.PackSize ?? 0, c.PackName ?? string.Empty)).ToList());
 
         var agent = factory.Create(Definition);

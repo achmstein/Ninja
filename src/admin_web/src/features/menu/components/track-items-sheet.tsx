@@ -25,7 +25,11 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
-import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
+import {
+  assistErrorMessage,
+  assistRetryAfter,
+  useAssistStore,
+} from '@/features/assist/errors'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
 import { PROPOSE_BATCH, toMenuItemToTrack } from '../track-items'
 import { RecipeReviewSheet } from './recipe-review-sheet'
@@ -151,12 +155,25 @@ export function TrackItemsSheet({
     const answers: RecipesProposal[] = []
     try {
       for (const [index, batch] of batches.entries()) {
-        answers.push(
-          await propose.mutateAsync({
-            body: { items: batch.map(toMenuItemToTrack) },
-            query: { 'api-version': API_VERSION },
-          })
-        )
+        const body = { items: batch.map(toMenuItemToTrack) }
+        // A busy assistant says how long to wait: wait and send the batch again, twice at most
+        for (let attempt = 0; ; attempt++) {
+          try {
+            answers.push(
+              await propose.mutateAsync({
+                body,
+                query: { 'api-version': API_VERSION },
+              })
+            )
+            break
+          } catch (error) {
+            const wait = assistRetryAfter(error)
+            if (wait == null || attempt === 2) throw error
+            await new Promise((resolve) =>
+              setTimeout(resolve, Math.min(wait, 60) * 1000)
+            )
+          }
+        }
         setProgress({ done: index + 1, total: batches.length })
       }
       setProposals(answers)

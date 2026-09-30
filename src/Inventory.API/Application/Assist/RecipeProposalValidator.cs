@@ -118,6 +118,7 @@ public static class RecipeProposalValidator
             var optionIds = (item.Options ?? []).Select(o => o.Id).ToHashSet();
             var lines = new List<ProposedRecipeLine>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
+            var defaultSlots = new HashSet<int>();
 
             if (kind == RecipeKinds.Recipe)
             {
@@ -176,8 +177,16 @@ public static class RecipeProposalValidator
                     var unknown = options.Where(id => !optionIds.Contains(id)).ToList();
                     if (unknown.Count > 0)
                     {
-                        itemWarnings.Add($"\"{label}\": tied to an option this item does not have; made a base line.");
-                        options = options.Where(optionIds.Contains).ToList();
+                        // Kept as a default it would count next to the real default ("oat milk" as a second milk)
+                        itemWarnings.Add($"\"{label}\": tied to an option this item does not have; dropped.");
+                        continue;
+                    }
+
+                    // One default per slot: a second would be counted on every sale on top of the first
+                    if (options.Count == 0 && line.Slot > 0 && !defaultSlots.Add(line.Slot))
+                    {
+                        itemWarnings.Add($"\"{label}\": a second default for the same thing; dropped.");
+                        continue;
                     }
 
                     var dedupeKey = $"{stockItemId?.ToString() ?? newKey}|{string.Join(",", options)}";

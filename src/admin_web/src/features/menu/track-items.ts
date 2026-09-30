@@ -15,8 +15,11 @@ import {
 } from '@/features/inventory/recipe-model'
 import { menuOptionsOf } from './menu-options'
 
-/** Menu items per assistant call; a longer list goes up in batches */
-export const PROPOSE_BATCH = 30
+/**
+ * Menu items per assistant call; a longer list goes up in batches. Small
+ * enough that a batch's recipes fit the answer's ceiling with room to spare
+ */
+export const PROPOSE_BATCH = 10
 
 /** A menu item as the proposer wants it: names, options, price; Inventory keeps no copy of the menu */
 export function toMenuItemToTrack(item: CatalogItemDto): MenuItemToTrack {
@@ -121,7 +124,41 @@ function draftOf(
   return { slots: drafts }
 }
 
-/** Several batches' answers become one review: ingredients merged by key, recipes in menu order */
+/** A name folded for matching: case, spacing and Arabic marks do not count */
+const foldName = (text: string | null | undefined): string =>
+  (text ?? '')
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+
+/** The draft with every "new:<alias>" pointed at the ingredient it was merged into */
+function remapNew(
+  draft: RecipeDraft,
+  aliases: Map<string, string>
+): RecipeDraft {
+  const remap = (id: string | null) =>
+    id?.startsWith(NEW_PREFIX) && aliases.has(id.slice(NEW_PREFIX.length))
+      ? NEW_PREFIX + aliases.get(id.slice(NEW_PREFIX.length))
+      : id
+  return {
+    slots: draft.slots.map((slot) => ({
+      ...slot,
+      stockItemId: remap(slot.stockItemId),
+      overrides: slot.overrides.map((o) => ({
+        ...o,
+        stockItemId: remap(o.stockItemId),
+      })),
+    })),
+  }
+}
+
+/**
+ * Several batches' answers become one review: recipes in menu order, and
+ * one ingredient for what the batches each proposed as new — by key, or by
+ * name when two batches named the same thing under different keys (each
+ * batch sees only the shelf, not the other batches' new ingredients).
+ */
 export function toReview(
   proposals: RecipesProposal[],
   items: CatalogItemDto[]
@@ -137,8 +174,20 @@ export function toReview(
   for (const proposal of proposals) {
     warnings.push(...proposal.warnings)
     if (proposal.notes) warnings.push(proposal.notes)
+    const aliases = new Map<string, string>()
     for (const item of proposal.newItems) {
       if (ingredients.has(item.key)) continue
+      const same = [...ingredients.values()].find(
+        (known) =>
+          (foldName(item.name.en) !== '' &&
+            foldName(known.name.en) === foldName(item.name.en)) ||
+          (foldName(item.name.ar) !== '' &&
+            foldName(known.name.ar) === foldName(item.name.ar))
+      )
+      if (same) {
+        aliases.set(item.key, same.key)
+        continue
+      }
       ingredients.set(item.key, {
         key: item.key,
         name: { en: item.name.en ?? '', ar: item.name.ar ?? '' },
@@ -155,7 +204,10 @@ export function toReview(
         catalogItemId: toNumber(recipe.catalogItemId),
         include: usable,
         kind: recipe.kind === 'unit' ? 'unit' : 'recipe',
-        draft: draftOf(recipe, itemById.get(toNumber(recipe.catalogItemId))),
+        draft: remapNew(
+          draftOf(recipe, itemById.get(toNumber(recipe.catalogItemId))),
+          aliases
+        ),
         warnings: recipe.warnings,
         done: false,
       })

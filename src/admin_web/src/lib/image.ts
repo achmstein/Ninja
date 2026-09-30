@@ -1,9 +1,11 @@
-// A phone photo is 3–8 MB and 4000 px on the long side; a model reads a
-// receipt just as well at 1600 px and the upload is ten times smaller.
+// A phone photo is 3–8 MB and 12 MP; a model reads a receipt or a menu just
+// as well at about 4 MP and the upload is several times smaller. The cap is
+// on the pixels, not the longest side: a long thermal receipt or a tall
+// menu keeps its width, so its small print stays readable.
 // Anything that fails (an old browser, an odd format) falls back to the
 // original file, which the server still accepts up to its own cap.
 
-const LONGEST_SIDE = 1600
+const MAX_PIXELS = 4_000_000
 const JPEG_QUALITY = 0.85
 
 /** What the assistant's scan endpoints take, and the server's cap on it */
@@ -24,7 +26,7 @@ export async function downscaleImage(file: File): Promise<File> {
   try {
     const scale = Math.min(
       1,
-      LONGEST_SIDE / Math.max(bitmap.width, bitmap.height)
+      Math.sqrt(MAX_PIXELS / (bitmap.width * bitmap.height))
     )
     if (scale === 1 && file.type === 'image/jpeg') return file
 

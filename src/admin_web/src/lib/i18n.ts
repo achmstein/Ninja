@@ -1211,6 +1211,9 @@ const webExtras = {
   assistBusy: { en: "The assistant is busy; try again in a minute", ar: "المساعد مشغول؛ حاول مجددًا بعد دقيقة" },
   assistUnavailable: { en: "The assistant is not set up on this server", ar: "المساعد غير مُهيّأ على هذا الخادم" },
   assistFailed: { en: "The assistant could not answer; try again", ar: "تعذّر على المساعد الرد؛ حاول مجددًا" },
+  assistTimedOut: { en: "The assistant took too long; try again", ar: "المساعد اتأخر في الرد؛ حاول مجددًا" },
+  assistTooLong: { en: "Too much for the assistant at once; send less (one page, fewer items)", ar: "كتير على المساعد مرة واحدة؛ ابعت أقل (صفحة واحدة أو أصناف أقل)" },
+  assistKeyRejected: { en: "The AI provider rejected this server's key; ask the platform to check it", ar: "مزوّد الذكاء الاصطناعي رفض مفتاح الخادم؛ اطلب من المنصة مراجعته" },
   // AI assistant: receipt scanning
   scanReceipt: { en: "Scan receipt", ar: "تصوير الفاتورة" },
   readingReceipt: { en: "Reading the receipt…", ar: "جارٍ قراءة الفاتورة…" },

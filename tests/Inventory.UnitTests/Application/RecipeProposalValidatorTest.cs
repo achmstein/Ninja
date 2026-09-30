@@ -106,11 +106,9 @@ public class RecipeProposalValidatorTest
         Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("\"bottle\"")), string.Join("; ", proposal.Warnings));
 
         var latte = proposal.Recipes[0];
-        Assert.HasCount(2, latte.Lines, string.Join("; ", latte.Warnings));
-        Assert.AreEqual(2, latte.Lines[0].StockItemId);
-        Assert.IsEmpty(latte.Lines[0].OptionIds, "the unknown option was stripped, leaving a base line");
-        Assert.AreEqual(1, latte.Lines[1].StockItemId);
-        Assert.AreEqual(5000m, latte.Lines[1].Quantity);
+        Assert.HasCount(1, latte.Lines, string.Join("; ", latte.Warnings));
+        Assert.AreEqual(1, latte.Lines[0].StockItemId, "the line tied to an unknown option is dropped, not made a second default");
+        Assert.AreEqual(5000m, latte.Lines[0].Quantity);
         Assert.IsTrue(latte.Warnings.Any(w => w.Contains("does not exist (id 99)")));
         Assert.IsTrue(latte.Warnings.Any(w => w.Contains("\"ghost\"")));
         Assert.IsTrue(latte.Warnings.Any(w => w.Contains("no quantity")));
@@ -167,6 +165,25 @@ public class RecipeProposalValidatorTest
         CollectionAssert.AreEqual(new[] { 1, 2, 2, 1 }, latte.Lines.Select(l => l.Slot).ToList());
         Assert.AreEqual(27m, latte.Lines[3].Quantity, "the large is the beans line again, with the bigger amount");
         Assert.IsEmpty(latte.Warnings, string.Join("; ", latte.Warnings));
+    }
+
+    [TestMethod]
+    public void A_second_default_in_a_slot_is_dropped()
+    {
+        var extraction = new RecipesExtraction(
+            [Ingredient("oat-milk", "Oat Milk", "لبن شوفان")],
+            [new ExtractedRecipe(Latte, "recipe",
+            [
+                new ExtractedRecipeLine(2, "", 200, [], 2),
+                new ExtractedRecipeLine(0, "oat-milk", 200, [], 2),
+            ])],
+            "");
+
+        var latte = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []).Recipes[0];
+
+        Assert.HasCount(1, latte.Lines);
+        Assert.AreEqual(2, latte.Lines[0].StockItemId, "the first default is the milk");
+        Assert.IsTrue(latte.Warnings.Any(w => w.Contains("second default")), string.Join("; ", latte.Warnings));
     }
 
     [TestMethod]

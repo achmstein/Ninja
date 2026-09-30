@@ -27,7 +27,7 @@ public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timePro
         "Reads the photo of a bill into an expense: date, amount, category, vendor",
         Instructions,
         Temperature: 0f,
-        MaxOutputTokens: 1024,
+        MaxOutputTokens: 4096,
         Vision: true,
         Timeout: TimeSpan.FromSeconds(90));
 
@@ -37,7 +37,8 @@ public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timePro
     public async Task<BillProposal> ScanAsync(DataContent image, IReadOnlyList<ExpenseCategoryView> categories, IReadOnlyList<string> vendors, CancellationToken ct)
     {
         var known = vendors.Count > MaxVendors ? vendors.Take(MaxVendors).ToList() : vendors;
-        var today = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
+        // The café's today, not the container's: in UTC a bill from just after midnight in Cairo is "tomorrow"
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), TenantClock.Zone).DateTime);
 
         var prompt = new BillPrompt(
             today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
