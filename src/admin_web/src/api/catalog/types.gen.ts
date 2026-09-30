@@ -153,6 +153,7 @@ export type LocalizeRequest = {
     catalogTypeId?: null | number | string;
     suggestCategory?: boolean;
     suggestDescription?: boolean;
+    languages?: null | string;
 };
 
 export type LocalizeResponse = {
@@ -332,6 +333,7 @@ export type SuggestCustomizationsRequest = {
     catalogTypeId?: null | number | string;
     price?: number | string;
     existingGroups?: null | Array<LocalizedText>;
+    languages?: null | string;
 };
 
 export type SuggestCustomizationsResponse = {
@@ -469,6 +471,8 @@ export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyo
 export type ScanMenuData = {
     body: {
         files: IFormFileCollection;
+    } & {
+        languages?: string;
     };
     path?: never;
     query?: {

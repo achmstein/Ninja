@@ -41,6 +41,7 @@ import {
   type Lang,
   type LocalizedValue,
   useDefaultLang,
+  useOnlyLang,
 } from '@/components/localized-input'
 import { halfFilled, hasText } from '@/features/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
@@ -195,6 +196,7 @@ export function ItemDetailsForm({
   // language it filled so what came back is in view.
   const assist = useLocalizeAssist()
   const customizations = useCustomizationsAssist()
+  const only = useOnlyLang()
   const [lang, setLang] = useState<Lang>(useDefaultLang())
   const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
   const [categoryTouched, setCategoryTouched] = useState(false)
@@ -202,10 +204,12 @@ export function ItemDetailsForm({
   const wantCategory =
     !isEditing && defaultCategoryId == null && !categoryTouched
   const nameTyped = hasText(form.name.en) || hasText(form.name.ar)
-  const wantsLocalize =
-    !!halfFilled(form.name) ||
-    !(hasText(form.description.en) && hasText(form.description.ar)) ||
-    wantCategory
+  // A business in one language has no name to translate, only its description to write
+  const wantsLocalize = only
+    ? !hasText(form.description[only]) || wantCategory
+    : !!halfFilled(form.name) ||
+      !(hasText(form.description.en) && hasText(form.description.ar)) ||
+      wantCategory
   const fillBlocker: 'assistNeedsName' | 'assistNothingMissing' | null =
     !nameTyped
       ? 'assistNeedsName'
@@ -240,7 +244,7 @@ export function ItemDetailsForm({
         // Show the language that was just filled in; a description written
         // in both stays on the one the user is typing in
         const source = halfFilled(form.name)
-        if (source) setLang(source === 'en' ? 'ar' : 'en')
+        if (source && !only) setLang(source === 'en' ? 'ar' : 'en')
         for (const warning of result.warnings) toast.warning(warning)
       }
       if (!isEditing) {

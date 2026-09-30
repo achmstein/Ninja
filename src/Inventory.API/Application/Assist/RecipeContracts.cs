@@ -1,4 +1,6 @@
 #nullable enable
+using Ninja.AI.Text;
+
 namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
@@ -6,7 +8,8 @@ namespace Ninja.Inventory.API.Application.Assist;
 /// Inventory keeps no copy of the menu, so the names, descriptions and
 /// options travel in the request; the shelf is added here.
 /// </summary>
-public sealed record ProposeRecipesRequest(IReadOnlyList<MenuItemToTrack> Items);
+/// <param name="Languages">The business's languages: "both", "ar" or "en"; a one-language business's new ingredients are named in that language only. Null is both.</param>
+public sealed record ProposeRecipesRequest(IReadOnlyList<MenuItemToTrack> Items, string? Languages = null);
 
 /// <param name="Options">The item's customization options (id, group and name) so a line can be tied to one.</param>
 public sealed record MenuItemToTrack(
@@ -76,7 +79,7 @@ public sealed record ExtractedRecipe(int CatalogItemId, string Kind, IReadOnlyLi
 public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot);
 
 /// <summary>The prompt: the menu items to track and what is already on the shelf.</summary>
-internal sealed record RecipesPrompt(IReadOnlyList<PromptMenuItem> Items, IReadOnlyList<CandidateItem> Shelf);
+internal sealed record RecipesPrompt(IReadOnlyList<PromptMenuItem> Items, IReadOnlyList<CandidateItem> Shelf, string Languages = ContentLanguages.Both);
 
 internal sealed record PromptMenuItem(int Id, string? En, string? Ar, string Description, string Category, decimal Price, IReadOnlyList<PromptOption> Options);
 

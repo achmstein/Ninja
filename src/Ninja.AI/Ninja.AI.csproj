@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\ContentLanguages.cs" Link="Text\ContentLanguages.cs" />
+  </ItemGroup>
+
 </Project>

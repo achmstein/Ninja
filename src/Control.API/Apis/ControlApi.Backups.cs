@@ -103,6 +103,7 @@ public static partial class ControlApi
             Currency = source.Currency,
             TimeZone = source.TimeZone,
             DefaultLanguage = source.DefaultLanguage,
+            ContentLanguages = source.ContentLanguages,
             IdentitySecret = TenantNaming.NewSecret(),
             ControlSecret = TenantNaming.NewSecret(),
             // The restored sales database holds the provider secrets under the source's key

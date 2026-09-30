@@ -80,6 +80,7 @@ export type BrandLocale = {
     timeZone: string;
     language: string;
     arabicStyle?: null | string;
+    contentLanguages?: null | string;
 };
 
 export type BrandText = {
@@ -191,6 +192,10 @@ export type CreateTenantRequest = {
      * Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on
      */
     socialSignIn?: null | boolean;
+    /**
+     * both, ar or en: the languages the business writes its menu, places and stock in; null is both
+     */
+    contentLanguages?: null | string;
 };
 
 export type ExtendRequest = {
@@ -477,6 +482,7 @@ export type TenantLocaleDto = {
     timeZone: string;
     language: string;
     arabicStyle?: string;
+    contentLanguages?: string;
 };
 
 export type TenantMetrics = {
@@ -624,6 +630,10 @@ export type UpdateTenantRequest = {
      * Whether customers may sign in with Google and Apple; null leaves it
      */
     socialSignIn?: null | boolean;
+    /**
+     * both, ar or en: the languages the business writes its menu, places and stock in; null leaves it
+     */
+    contentLanguages?: null | string;
 };
 
 export type UpgradeRequest = {

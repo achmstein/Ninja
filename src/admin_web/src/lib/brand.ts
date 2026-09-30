@@ -1,10 +1,10 @@
-import { useCafeTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
-import { useCurrency } from '@/lib/currency'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
+import { useCafeTheme } from '@/context/theme-provider'
 import { applyBrandTheme } from './brand-theme'
 
 /**
@@ -124,6 +124,7 @@ export function useBrand(): Brand | undefined {
   return useQuery(brandQueryOptions()).data
 }
 
+
 /** Keeps the page's head and theme in step with the brand and the language. Mount once. */
 export function useBrandEffects() {
   const brand = useBrand()
@@ -142,9 +143,17 @@ export function useBrandName(): string {
   return brandDisplayName(brand, language)
 }
 
-export function brandDisplayName(brand: Brand | undefined, language: Language): string {
+export function brandDisplayName(
+  brand: Brand | undefined,
+  language: Language
+): string {
   if (!brand) return ''
-  return (language === 'ar' ? brand.name.ar : brand.name.en) || brand.name.en || brand.name.ar || ''
+  return (
+    (language === 'ar' ? brand.name.ar : brand.name.en) ||
+    brand.name.en ||
+    brand.name.ar ||
+    ''
+  )
 }
 
 /**
@@ -200,6 +209,7 @@ export function useApiOrigin(): string {
  */
 export function defaultApiOrigin(): string {
   const { protocol, host } = window.location
-  if (host.startsWith('admin.')) return `${protocol}//${host.replace(/^admin\./, 'api.')}`
+  if (host.startsWith('admin.'))
+    return `${protocol}//${host.replace(/^admin\./, 'api.')}`
   return 'http://localhost:5000'
 }

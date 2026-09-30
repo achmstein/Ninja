@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../brand/brand_provider.dart';
 
 const String _localeKey = 'app_locale';
 
-/// Cached initial locale loaded before app starts
-Locale? _initialLocale;
+/// The language the customer picked on the settings page, loaded before the
+/// app starts; null until they pick one (only a pick is ever saved)
+String? _chosenLanguage;
 
-/// Call this before runApp() to preload the saved locale
+/// Call this before runApp() to preload the saved choice
 Future<void> initializeLocale() async {
   final prefs = await SharedPreferences.getInstance();
-  final savedLocale = prefs.getString(_localeKey);
-  _initialLocale = savedLocale != null ? Locale(savedLocale) : const Locale('ar');
+  _chosenLanguage = prefs.getString(_localeKey);
+}
+
+/// The language the app shows: a one-language business's only language; the
+/// customer's own choice; the business's default; Arabic.
+String openingLanguage({
+  required String contentLanguages,
+  required String businessDefault,
+  String? chosen,
+}) {
+  if (contentLanguages == 'ar' || contentLanguages == 'en') return contentLanguages;
+  if (chosen == 'ar' || chosen == 'en') return chosen!;
+  return businessDefault == 'en' ? 'en' : 'ar';
 }
 
 /// Provider for managing the app's locale/language setting
@@ -27,13 +40,19 @@ class LocaleNotifier extends Notifier<Locale> {
 
   @override
   Locale build() {
-    // Use preloaded locale or default to Arabic
-    return _initialLocale ?? const Locale('ar');
+    // Follows the business's setting as the brand arrives: the cached brand first, the network's after
+    final business = ref.watch(brandProvider.select((b) => b.locale));
+    return Locale(openingLanguage(
+      contentLanguages: business.contentLanguages,
+      businessDefault: business.language,
+      chosen: _chosenLanguage,
+    ));
   }
 
   Future<void> setLocale(Locale locale) async {
     if (!supportedLocales.contains(locale)) return;
 
+    _chosenLanguage = locale.languageCode;
     state = locale;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale.languageCode);

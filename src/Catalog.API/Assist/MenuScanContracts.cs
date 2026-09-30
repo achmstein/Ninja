@@ -1,3 +1,5 @@
+using Ninja.AI.Text;
+
 namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
@@ -48,4 +50,4 @@ public sealed record ExtractedItem(
 public sealed record ExtractedChoiceOption(string NameEn, string NameAr, decimal Price);
 
 /// <summary>The text part of the prompt: the categories the system already has, to match sections to.</summary>
-internal sealed record MenuScanPrompt(IReadOnlyList<CategoryOption> Categories);
+internal sealed record MenuScanPrompt(IReadOnlyList<CategoryOption> Categories, string Languages = ContentLanguages.Both);

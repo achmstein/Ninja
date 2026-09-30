@@ -250,7 +250,8 @@ foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, invent
        .WithEnvironment("Tenant__Currency", builder.Configuration["Tenant:Currency"] ?? "EGP")
        .WithEnvironment("Tenant__TimeZone", builder.Configuration["Tenant:TimeZone"] ?? "Africa/Cairo")
        .WithEnvironment("Tenant__DefaultLanguage", builder.Configuration["Tenant:DefaultLanguage"] ?? "ar")
-       .WithEnvironment("Tenant__ArabicStyle", builder.Configuration["Tenant:ArabicStyle"] ?? "egyptian");
+       .WithEnvironment("Tenant__ArabicStyle", builder.Configuration["Tenant:ArabicStyle"] ?? "egyptian")
+       .WithEnvironment("Tenant__ContentLanguages", builder.Configuration["Tenant:ContentLanguages"] ?? "both");
 }
 
 // The control plane: tenants and demos. In dev it dry-runs (records every

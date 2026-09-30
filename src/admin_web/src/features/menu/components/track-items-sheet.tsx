@@ -9,6 +9,7 @@ import {
   trackByUnitMutation,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -66,6 +67,7 @@ export function TrackItemsSheet({
 
   const trackByUnit = useMutation(trackByUnitMutation())
   const propose = useMutation(proposeRecipesMutation())
+  const languages = useContentLanguages()
 
   const groups = useMemo(() => {
     const needle = filter.trim().toLowerCase()
@@ -155,7 +157,7 @@ export function TrackItemsSheet({
     const answers: RecipesProposal[] = []
     try {
       for (const [index, batch] of batches.entries()) {
-        const body = { items: batch.map(toMenuItemToTrack) }
+        const body = { items: batch.map(toMenuItemToTrack), languages }
         // A busy assistant says how long to wait: wait and send the batch again, twice at most
         for (let attempt = 0; ; attempt++) {
           try {

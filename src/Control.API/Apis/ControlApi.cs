@@ -146,6 +146,9 @@ public static partial class ControlApi
             : request.ArabicStyle.Trim().ToLowerInvariant();
         if (arabicStyle is not ("standard" or "egyptian"))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The Arabic style must be standard or egyptian." });
+        var contentLanguages = string.IsNullOrWhiteSpace(request.ContentLanguages) ? ContentLanguages.Both : request.ContentLanguages.Trim().ToLowerInvariant();
+        if (!ContentLanguages.IsValid(contentLanguages))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The business's languages must be both, ar or en." });
         var defaultTheme = string.IsNullOrWhiteSpace(request.DefaultTheme) ? null : request.DefaultTheme.Trim().ToLowerInvariant();
         if (defaultTheme is not (null or "light" or "dark"))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The default theme must be light, dark, or none to follow the device." });
@@ -171,7 +174,9 @@ public static partial class ControlApi
             Country = locale.Country,
             Currency = locale.Currency,
             TimeZone = locale.TimeZone,
-            DefaultLanguage = locale.Language,
+            // A one-language business's customers open the app in that language
+            DefaultLanguage = ContentLanguages.Opening(contentLanguages, locale.Language),
+            ContentLanguages = contentLanguages,
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
             BusinessType = request.BusinessType,
             ArabicStyle = arabicStyle,
@@ -470,7 +475,8 @@ public record CreateTenantRequest(
     string? ArabicStyle = null,
     string? DefaultTheme = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null,
-    [property: Description("Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on")] bool? SocialSignIn = null);
+    [property: Description("Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on")] bool? SocialSignIn = null,
+    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null is both")] string? ContentLanguages = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -511,9 +517,10 @@ public record TenantSummary(string Slug, string? NameEn, string? NameAr, TenantK
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
 /// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's apps speak.</param>
-public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string ArabicStyle = "standard")
+/// <param name="ContentLanguages">"both", "ar" or "en": the languages the business writes its menu, places and stock in.</param>
+public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string ArabicStyle = "standard", string ContentLanguages = "both")
 {
-    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.ArabicStyle);
+    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.ArabicStyle, t.ContentLanguages);
 }
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);

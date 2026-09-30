@@ -8,7 +8,18 @@ import {
   updateTenantMutation,
   uploadTenantImageMutation,
 } from '@/api/tenant/@tanstack/react-query.gen'
-import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
+import {
+  brandQueryKey,
+  defaultCustomerOrigin,
+  useBrand,
+  useCustomerOrigin,
+  useIsCloudKitchen,
+  type Brand,
+} from '@/lib/brand'
+import {
+  contentLanguagesOf,
+  type ContentLanguages,
+} from '@/lib/content-languages'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
 import { RADII } from '@/lib/brand-theme'
@@ -172,6 +183,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const queryClient = useQueryClient()
 
   const [arabicStyle, setArabicStyle] = useState<string>(brand.locale.arabicStyle ?? 'egyptian')
+  const [contentLanguages, setContentLanguages] = useState<ContentLanguages>(
+    contentLanguagesOf(brand.locale.contentLanguages)
+  )
   const [name, setName] = useState<LocalizedValue>(toLocalizedValue(brand.name))
   const [color, setColor] = useState(brand.primaryColor ?? '')
   const [theme, setTheme] = useState<ThemeForm>(toThemeForm(brand.theme))
@@ -236,7 +250,7 @@ function BrandForm({ brand }: { brand: Brand }) {
         features,
         guestOrdersAnywhere,
         theme: fromThemeForm(theme),
-        locale: { ...brand.locale, arabicStyle },
+        locale: { ...brand.locale, arabicStyle, contentLanguages },
       },
     })
   }
@@ -412,6 +426,25 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('arabicStyleLabelHint')}</p>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-content-languages' className='text-xs'>
+                    {t('contentLanguagesLabel')}
+                  </Label>
+                  <Select
+                    value={contentLanguages}
+                    onValueChange={(value) => setContentLanguages(value as ContentLanguages)}
+                  >
+                    <SelectTrigger id='brand-content-languages' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='both'>{t('contentLanguagesBoth')}</SelectItem>
+                      <SelectItem value='ar'>{t('contentLanguagesAr')}</SelectItem>
+                      <SelectItem value='en'>{t('contentLanguagesEn')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('contentLanguagesHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-header' className='text-xs'>

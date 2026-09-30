@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 
 namespace Ninja.Catalog.API.Assist;
 
@@ -8,7 +9,8 @@ namespace Ninja.Catalog.API.Assist;
 /// names cleaned and capped, category ids accepted only from the list (a
 /// section named like an existing category takes its id), items already
 /// on the menu flagged by name, duplicates within the photo dropped, and
-/// every doubt said in a warning naming the section and line.
+/// every doubt said in a warning naming the section and line. A business that
+/// writes one language gets that language only (<see cref="ContentLanguages.Keep"/>).
 /// </summary>
 public static partial class MenuProposalValidator
 {
@@ -19,7 +21,7 @@ public static partial class MenuProposalValidator
     public const decimal MaxPrice = 10_000m;
     public const int MaxChoices = 8;
 
-    public static MenuProposal Validate(MenuExtraction extraction, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items)
+    public static MenuProposal Validate(MenuExtraction extraction, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items, string languages = ContentLanguages.Both)
     {
         var warnings = new List<string>();
         var proposed = new List<ProposedCategory>();
@@ -36,7 +38,7 @@ public static partial class MenuProposalValidator
                 break;
             }
 
-            var name = Name(category.NameEn, category.NameAr);
+            var name = Name(category.NameEn, category.NameAr, languages);
             var label = name.IsEmpty ? $"section {c}" : name.Primary;
             if (name.IsEmpty)
             {
@@ -60,7 +62,7 @@ public static partial class MenuProposalValidator
                     break;
                 }
 
-                var itemName = Name(item.NameEn, item.NameAr);
+                var itemName = Name(item.NameEn, item.NameAr, languages);
                 var where = $"{label}, line {n}";
                 if (itemName.IsEmpty)
                 {
@@ -75,10 +77,16 @@ public static partial class MenuProposalValidator
                 }
                 Remember(seen, itemName);
 
-                if (itemName.En is null)
-                    warnings.Add($"{where}: no English name was read; fill it in.");
+                // The business's own language is the one worth a nudge: English for a business in both
+                var missing = languages switch
+                {
+                    ContentLanguages.Arabic => itemName.Ar is null ? "Arabic" : null,
+                    _ => itemName.En is null ? "English" : null,
+                };
+                if (missing is not null)
+                    warnings.Add($"{where}: no {missing} name was read; fill it in.");
 
-                var choice = Choice(item, where, warnings);
+                var choice = Choice(item, where, warnings, languages);
                 // The item costs its cheapest choice; the others cost more by the difference
                 var price = choice?.Options[0].Price ?? Math.Round(item.Price, 2, MidpointRounding.AwayFromZero);
                 if (price <= 0)
@@ -95,7 +103,7 @@ public static partial class MenuProposalValidator
                 lines.Add(new ProposedItem(
                     AIJson.Clean(item.RawText, 200),
                     itemName,
-                    Name(item.DescriptionEn, item.DescriptionAr, MaxDescriptionLength),
+                    Name(item.DescriptionEn, item.DescriptionAr, languages, MaxDescriptionLength),
                     price,
                     existing,
                     choice));
@@ -123,7 +131,7 @@ public static partial class MenuProposalValidator
     /// first. Fewer than two left is no choice at all (one price is just the
     /// item's price).
     /// </summary>
-    private static ProposedChoice? Choice(ExtractedItem item, string where, List<string> warnings)
+    private static ProposedChoice? Choice(ExtractedItem item, string where, List<string> warnings, string languages)
     {
         var printed = item.Choices ?? [];
         if (printed.Count == 0)
@@ -133,7 +141,7 @@ public static partial class MenuProposalValidator
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var raw in printed)
         {
-            var name = Name(raw.NameEn, raw.NameAr);
+            var name = Name(raw.NameEn, raw.NameAr, languages);
             var price = Math.Round(raw.Price, 2, MidpointRounding.AwayFromZero);
             if (name.IsEmpty)
                 continue;
@@ -161,16 +169,18 @@ public static partial class MenuProposalValidator
             options = options.Take(MaxChoices).ToList();
         }
 
-        var group = Name(item.ChoiceEn, item.ChoiceAr);
+        var group = Name(item.ChoiceEn, item.ChoiceAr, languages);
         if (group.IsEmpty)
-            group = new LocalizedText("Size", "الحجم");
+            group = Name("Size", "الحجم", languages);
 
         return new ProposedChoice(group, options.OrderBy(o => o.Price).ToList());
     }
 
-    private static LocalizedText Name(string? en, string? ar, int maxLength = MaxNameLength)
+    /// <summary>Cleaned and capped; for a one-language business, that language's side only.</summary>
+    private static LocalizedText Name(string? en, string? ar, string languages, int maxLength = MaxNameLength)
     {
-        return new LocalizedText(AIJson.Clean(en, maxLength), AIJson.Clean(ar, maxLength));
+        var (keptEn, keptAr) = ContentLanguages.Keep(AIJson.Clean(en, maxLength), AIJson.Clean(ar, maxLength), languages);
+        return new LocalizedText(keptEn, keptAr);
     }
 
     /// <summary>Names on both sides, folded, so "turkish  coffee" and "Turkish Coffee" are one.</summary>

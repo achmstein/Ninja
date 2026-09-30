@@ -131,4 +131,47 @@ public class MenuProposalValidatorTest
         Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("\"Double\"")), string.Join("; ", proposal.Warnings));
         Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("only one price is kept")), string.Join("; ", proposal.Warnings));
     }
+
+    [TestMethod]
+    public void An_arabic_only_business_gets_arabic_names_only_and_no_nudge_about_english()
+    {
+        var latte = new ExtractedItem("لاتيه 40 / 50", "Latte", "لاتيه", "Espresso and milk", "إسبريسو ولبن", 40, "", "",
+            [new("Small", "صغير", 40), new("Large", "كبير", 50)]);
+        // The model put this one's Arabic on the English side: it still belongs to the business
+        var tea = new ExtractedItem("شاي 15", "شاي", "", "", "", 15, "", "", []);
+        var extraction = new MenuExtraction([new ExtractedCategory("Hot Drinks", "مشروبات سخنة", 1, [latte, tea])], "");
+
+        var proposal = MenuProposalValidator.Validate(extraction, Categories, Items, "ar");
+
+        var section = proposal.Categories.Single();
+        Assert.IsNull(section.Name.En);
+        Assert.AreEqual("مشروبات سخنة", section.Name.Ar);
+        var item = section.Items[0];
+        Assert.IsNull(item.Name.En);
+        Assert.AreEqual("لاتيه", item.Name.Ar);
+        Assert.IsNull(item.Description.En);
+        Assert.AreEqual("إسبريسو ولبن", item.Description.Ar);
+        Assert.IsNull(item.Choice!.Name.En, "the unnamed size is named in Arabic only");
+        Assert.AreEqual("الحجم", item.Choice.Name.Ar);
+        Assert.IsTrue(item.Choice.Options.All(o => o.Name.En is null));
+        Assert.AreEqual("شاي", section.Items[1].Name.Ar);
+        Assert.IsNull(section.Items[1].Name.En);
+        Assert.IsFalse(proposal.Warnings.Any(w => w.Contains("English")), string.Join("; ", proposal.Warnings));
+    }
+
+    [TestMethod]
+    public void An_english_only_business_keeps_an_arabic_only_line_and_says_it_needs_english()
+    {
+        var extraction = new MenuExtraction(
+            [new ExtractedCategory("Juices", "عصائر", 5, [Item("Orange Juice", "عصير برتقان", 40), Item("", "كركديه", 20)])],
+            "");
+
+        var proposal = MenuProposalValidator.Validate(extraction, Categories, Items, "en");
+
+        var items = proposal.Categories.Single().Items;
+        Assert.AreEqual("Orange Juice", items[0].Name.En);
+        Assert.IsNull(items[0].Name.Ar);
+        Assert.AreEqual("كركديه", items[1].Name.Ar, "a name in the other script is kept rather than lost");
+        Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("no English name")), string.Join("; ", proposal.Warnings));
+    }
 }

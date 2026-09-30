@@ -40,6 +40,7 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
             entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
             entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
             entity.Property(e => e.ArabicStyle).HasMaxLength(10);
+            entity.Property(e => e.ContentLanguages).HasMaxLength(4).IsRequired().HasDefaultValue(ContentLanguages.Both);
             entity.Property(e => e.BusinessType).HasMaxLength(20);
             entity.Ignore(e => e.EffectiveArabicStyle);
             entity.OwnsOne(e => e.Assistant, b => b.ToJson());
@@ -79,7 +80,7 @@ public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration
         // The stack's tenant, from the environment the stack was provisioned
         // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor,
         // Tenant__CustomerUrl, Tenant__Country, Tenant__Currency,
-        // Tenant__TimeZone, Tenant__DefaultLanguage, Tenant__ArabicStyle);
+        // Tenant__TimeZone, Tenant__DefaultLanguage, Tenant__ArabicStyle, Tenant__ContentLanguages);
         // "Ninja" in Egypt until
         // someone says otherwise.
         if (!await context.Tenants.AnyAsync())
@@ -96,6 +97,8 @@ public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration
             if (section["TimeZone"] is { Length: > 0 } timeZone) tenant.TimeZone = timeZone;
             if (section["DefaultLanguage"] is { Length: > 0 } language) tenant.DefaultLanguage = language.ToLowerInvariant();
             if (section["ArabicStyle"] is { Length: > 0 } arabic) tenant.ArabicStyle = arabic.ToLowerInvariant();
+            if (section["ContentLanguages"] is { Length: > 0 } content) tenant.ContentLanguages = ContentLanguages.Normalize(content);
+            tenant.DefaultLanguage = ContentLanguages.Opening(tenant.ContentLanguages, tenant.DefaultLanguage);
             context.Tenants.Add(tenant);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded the tenant");

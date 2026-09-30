@@ -48,6 +48,8 @@ type LocaleFieldsProps = {
   onCurrency: (currency: string) => void
   onTimeZone: (timeZone: string) => void
   onDefaultLanguage: (language: Language) => void
+  /** The business writes one language: its customers open the app in it, so there is nothing to pick */
+  languageLocked?: boolean
 }
 
 /** `EGP — ج.م` in Arabic; plain `USD` where the label is the code itself. */
@@ -67,6 +69,7 @@ export function LocaleFields({
   onCurrency,
   onTimeZone,
   onDefaultLanguage,
+  languageLocked,
 }: LocaleFieldsProps) {
   const t = useT()
   const country = countryOf(value.country)
@@ -130,6 +133,7 @@ export function LocaleFields({
           value={value.defaultLanguage}
           onValueChange={(v) => v && onDefaultLanguage(v as Language)}
           aria-label={t('defaultLanguage')}
+          disabled={languageLocked}
           className='w-full'
         >
           <ToggleGroupItem value='ar' className='flex-1'>
@@ -140,6 +144,47 @@ export function LocaleFields({
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
+    </div>
+  )
+}
+
+export type ContentLanguagesValue = 'both' | 'ar' | 'en'
+
+export function contentLanguagesFrom(value: string | null | undefined): ContentLanguagesValue {
+  return value === 'ar' || value === 'en' ? value : 'both'
+}
+
+/** Which languages the business writes its menu, places and stock in */
+export function ContentLanguagesField({
+  value,
+  onChange,
+}: {
+  value: ContentLanguagesValue
+  onChange: (value: ContentLanguagesValue) => void
+}) {
+  const t = useT()
+  return (
+    <div className='grid gap-2'>
+      <Label>{t('contentLanguages')}</Label>
+      <ToggleGroup
+        type='single'
+        variant='outline'
+        value={value}
+        onValueChange={(v) => v && onChange(v as ContentLanguagesValue)}
+        aria-label={t('contentLanguages')}
+        className='w-full'
+      >
+        <ToggleGroupItem value='both' className='flex-1'>
+          {t('contentLanguagesBoth')}
+        </ToggleGroupItem>
+        <ToggleGroupItem value='ar' className='flex-1'>
+          {t('arabic')}
+        </ToggleGroupItem>
+        <ToggleGroupItem value='en' className='flex-1'>
+          {t('english')}
+        </ToggleGroupItem>
+      </ToggleGroup>
+      <p className='text-muted-foreground text-xs'>{t('contentLanguagesHint')}</p>
     </div>
   )
 }

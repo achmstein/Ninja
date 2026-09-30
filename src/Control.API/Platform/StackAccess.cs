@@ -228,7 +228,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         ["locale"] = new JsonObject
         {
             ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
-            ["arabicStyle"] = tenant.ArabicStyle,
+            ["arabicStyle"] = tenant.ArabicStyle, ["contentLanguages"] = tenant.ContentLanguages,
         },
         ["businessType"] = BusinessProfiles.Key(tenant.BusinessType),
         ["guestOrdersAnywhere"] = BusinessProfiles.GuestOrdersAnywhere(tenant.BusinessType),

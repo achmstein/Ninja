@@ -22,6 +22,7 @@ import {
   proposeRecipesMutation,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -125,12 +126,13 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   // review sheet (the same one "Track items" uses) shows it before anything is saved
   const assistAvailable = useAssistStore((s) => !s.unavailable)
   const propose = useMutation(proposeRecipesMutation())
+  const languages = useContentLanguages()
   const [proposal, setProposal] = useState<RecipesProposal | null>(null)
   const askAssistant = async () => {
     try {
       setProposal(
         await propose.mutateAsync({
-          body: { items: [toMenuItemToTrack(item)] },
+          body: { items: [toMenuItemToTrack(item)], languages },
           query: { 'api-version': API_VERSION },
         })
       )

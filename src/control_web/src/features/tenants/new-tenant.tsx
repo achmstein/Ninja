@@ -74,7 +74,11 @@ import {
   type TenantSeedName,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { LocaleFields } from './new-tenant-locale'
+import {
+  ContentLanguagesField,
+  LocaleFields,
+  type ContentLanguagesValue,
+} from './new-tenant-locale'
 import {
   BusinessPicker,
   LookFields,
@@ -179,6 +183,7 @@ export function NewTenantPage() {
   const [timeZone, setTimeZone] = useState(FIRST_COUNTRY.timeZones[0])
   const [timeZoneTouched, setTimeZoneTouched] = useState(false)
   const [defaultLanguage, setDefaultLanguage] = useState<Language>(FIRST_COUNTRY.language)
+  const [contentLanguages, setContentLanguages] = useState<ContentLanguagesValue>('both')
   const [languageTouched, setLanguageTouched] = useState(false)
 
   // Brand
@@ -249,7 +254,7 @@ export function NewTenantPage() {
     if (!arabicTouched) setArabicStyle(country.code === 'EG' ? 'egyptian' : 'standard')
     if (!currencyTouched) setCurrency(country.currency)
     if (!timeZoneTouched) setTimeZone(country.timeZones[0])
-    if (!languageTouched) setDefaultLanguage(country.language)
+    if (!languageTouched && contentLanguages === 'both') setDefaultLanguage(country.language)
   }
 
   const submit = (e: React.FormEvent) => {
@@ -266,6 +271,7 @@ export function NewTenantPage() {
       currency,
       timeZone,
       defaultLanguage,
+      contentLanguages,
       slug: effectiveSlug,
       primaryColor: color ? color.toLowerCase() : null,
       slab: dock === 'neutral' ? 'neutral' : null,
@@ -526,7 +532,17 @@ export function NewTenantPage() {
                   setDefaultLanguage(v)
                   setLanguageTouched(true)
                 }}
+                languageLocked={contentLanguages !== 'both'}
               />
+              <div className='mt-4'>
+                <ContentLanguagesField
+                  value={contentLanguages}
+                  onChange={(v) => {
+                    setContentLanguages(v)
+                    if (v !== 'both') setDefaultLanguage(v)
+                  }}
+                />
+              </div>
               <div className='mt-4'>
                 <LookFields
                   arabicStyle={arabicStyle}

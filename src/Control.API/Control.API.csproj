@@ -46,4 +46,8 @@
     <InternalsVisibleTo Include="Control.FunctionalTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\ContentLanguages.cs" Link="Extensions\ContentLanguages.cs" />
+  </ItemGroup>
+
 </Project>

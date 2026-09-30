@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Ninja.AI.Text;
 
 namespace Ninja.Catalog.API.Assist;
 
@@ -22,14 +23,16 @@ public enum LocalizeKind
 /// <param name="Description">Menu items only; the empty side is filled in when the other has text.</param>
 /// <param name="CatalogTypeId">The menu item's category, as context for the wording.</param>
 /// <param name="SuggestCategory">Menu items only: also pick the most fitting category.</param>
-/// <param name="SuggestDescription">Menu items only: write the description in both languages when there is none.</param>
+/// <param name="SuggestDescription">Menu items only: write the description in the business's languages when there is none.</param>
+/// <param name="Languages">The business's languages: "both", "ar" or "en". A one-language business has no other side to fill: only its language is ever written. Null is both.</param>
 public sealed record LocalizeRequest(
     LocalizeKind Kind,
     LocalizedText Name,
     LocalizedText? Description = null,
     [property: Description("The menu item's category, as context")] int? CatalogTypeId = null,
     bool SuggestCategory = false,
-    bool SuggestDescription = false);
+    bool SuggestDescription = false,
+    string? Languages = null);
 
 /// <param name="Name">Both sides filled in; whatever came in is returned unchanged.</param>
 /// <param name="Description">Both sides, or null when none was asked for.</param>

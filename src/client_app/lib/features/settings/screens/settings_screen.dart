@@ -26,6 +26,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeState = ref.watch(themeProvider);
     // A style that keeps the page dark leaves nothing to choose
     final forcedDark = ref.watch(brandProvider.select((b) => b.theme.preset.forceDark));
+    // A business that writes one language speaks it, with nothing to switch
+    final oneLanguage = ref.watch(brandProvider.select((b) => b.locale.writesOneLanguage));
     final authState = ref.watch(authServiceProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -109,6 +111,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         // Two languages: the row states where it stands and
                         // flips on tap
+                        if (!oneLanguage)
                         FTile(
                           prefix: const Icon(FIcons.globe),
                           title: AppText(l10n.language),

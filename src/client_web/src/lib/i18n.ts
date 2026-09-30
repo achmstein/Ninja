@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { arStandard } from './i18n.ar-standard'
 import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
 import { preview } from '@/lib/preview'
+import { openingLanguage } from '@/lib/opening-language'
 import type { LocalizedText } from '@/api/catalog'
 import { messages, messagesArStandard, type Message } from './i18n.gen'
 
@@ -428,7 +429,11 @@ export type TranslationKey = keyof typeof dictionary
 
 type LanguageState = {
   language: Language
+  /** The customer picked the language on the settings page; the business's default never overrides that */
+  chosen: boolean
   setLanguage: (language: Language) => void
+  /** The business's brand is known: its only language, else its default unless the customer chose */
+  followBusiness: (locale: { language?: string | null; contentLanguages?: string | null } | null | undefined) => Language
 }
 
 /** Under the control panel's preview the choice lives in memory only, so the frame never changes a real visitor's language */
@@ -443,11 +448,26 @@ const memoryStorage = (() => {
 
 export const useLanguage = create<LanguageState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       language: preview.language ?? 'ar',
+      chosen: false,
       setLanguage: (language) => {
         applyDirection(language)
-        set({ language })
+        set({ language, chosen: true })
+      },
+      followBusiness: (locale) => {
+        const { language: current, chosen } = get()
+        const language = openingLanguage({
+          contentLanguages: locale?.contentLanguages,
+          businessDefault: locale?.language,
+          chosen: chosen ? current : null,
+          previewLanguage: preview.language,
+        })
+        if (language !== current) {
+          applyDirection(language)
+          set({ language })
+        }
+        return language
       },
     }),
     {

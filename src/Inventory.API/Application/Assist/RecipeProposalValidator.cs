@@ -10,7 +10,8 @@ namespace Ninja.Inventory.API.Application.Assist;
 /// trust: ingredients are matched to the shelf by folded name and never
 /// duplicated, every line points at a real shelf item or a proposed one,
 /// options belong to the item they are on, quantities are sane, and each
-/// requested item gets exactly one entry. Pure.
+/// requested item gets exactly one entry. A new ingredient of a
+/// one-language business is named in that language only. Pure.
 /// </summary>
 public static class RecipeProposalValidator
 {
@@ -23,8 +24,10 @@ public static class RecipeProposalValidator
     private const decimal LargeQuantity = 2000m;
     private const decimal LargePieces = 20m;
 
-    public static RecipesProposal Validate(RecipesExtraction extraction, IReadOnlyList<MenuItemToTrack> requested, IReadOnlyList<StockItemView> shelf, IReadOnlyList<string> extraWarnings)
+    public static RecipesProposal Validate(RecipesExtraction extraction, IReadOnlyList<MenuItemToTrack> requested, IReadOnlyList<StockItemView> shelf, IReadOnlyList<string> extraWarnings,
+        string languages = ContentLanguages.Both)
     {
+        languages = ContentLanguages.Normalize(languages);
         var warnings = new List<string>(extraWarnings);
         var shelfById = shelf.ToDictionary(s => s.Id);
         var shelfByName = new Dictionary<string, StockItemView>(StringComparer.Ordinal);
@@ -81,9 +84,11 @@ public static class RecipeProposalValidator
 
             decimal? packSize = raw.PackSize > 0 ? Math.Round(raw.PackSize, 3, MidpointRounding.AwayFromZero) : null;
             var packName = AIJson.Clean(raw.PackName, 40);
+            // Matched to the shelf by either name above; proposed in the business's language
+            var (keptEn, keptAr) = ContentLanguages.Keep(nameEn, nameAr, languages);
             var ingredient = new ProposedIngredient(
                 key,
-                new LocalizedText(nameEn, nameAr),
+                new LocalizedText(keptEn, keptAr),
                 unit,
                 packSize,
                 packName.Length == 0 ? null : LocalizedText.InScriptOf(packName),

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Ninja.AI.Agents;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 using Ninja.Inventory.API.Application.Queries;
 using Microsoft.Extensions.AI;
 
@@ -34,8 +35,9 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
 
     /// <param name="lastCosts">What the branch last paid per base unit, by stock item, so a line that moved is flagged.</param>
     public async Task<ReceiptProposal> ScanAsync(int branchId, DataContent image, IReadOnlyList<StockItemView> stockItems, CancellationToken ct,
-        IReadOnlyDictionary<int, decimal>? lastCosts = null)
+        IReadOnlyDictionary<int, decimal>? lastCosts = null, string languages = ContentLanguages.Both)
     {
+        languages = ContentLanguages.Normalize(languages);
         var warnings = new List<string>();
         var candidates = stockItems;
         if (candidates.Count > MaxCandidates)
@@ -47,7 +49,8 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
         var prompt = new ReceiptPrompt(
             branchId,
             DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), TenantClock.Zone).DateTime).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
-            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar, c.Unit, c.PackSize ?? 0, c.PackName?.Both ?? string.Empty)).ToList());
+            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar, c.Unit, c.PackSize ?? 0, c.PackName?.Both ?? string.Empty)).ToList(),
+            languages);
 
         var agent = factory.Create(Definition);
         var messages = new List<ChatMessage>
@@ -60,15 +63,16 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
         };
 
         var run = await agent.RunAsync<ReceiptExtraction>(messages, ct);
-        return ReceiptProposalValidator.Validate(run.Result, candidates, warnings, lastCosts);
+        return ReceiptProposalValidator.Validate(run.Result, candidates, warnings, lastCosts, languages);
     }
 
     private const string Instructions = $"""
         #agent: {AgentKey}
         You read supplier receipts and delivery notes for a café in Egypt. The user message has a JSON object
         (the branch, today's date, and the "candidates": the stock items already on the shelf with their id,
-        English and Arabic names, base unit, and pack size / pack name) followed by a photo of the receipt.
-
+        English and Arabic names, base unit, and pack size / pack name, and "languages") followed by a photo of the
+        receipt.
+        {ContentLanguages.PromptRule}
         Extract every purchasable line, top to bottom, into "lines":
         - Subtotal, VAT, discount, service, delivery and total rows are NOT lines. Put the grand total in printedTotal (0 if none).
         - rawText is the line exactly as printed. Amounts are EGP with Western digits; convert Arabic-Indic digits (٠-٩).

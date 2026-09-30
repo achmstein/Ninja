@@ -3,6 +3,7 @@ using Ninja.AI;
 using Ninja.AI.Agents;
 using Ninja.AI.Http;
 using Ninja.AI.Images;
+using Ninja.AI.Text;
 using Ninja.Catalog.API.Assist;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -110,6 +111,7 @@ public static class CatalogAssistApi
 
     public static async Task<Results<Ok<MenuProposal>, BadRequest<ProblemDetails>, ProblemHttpResult>> ScanMenu(
         [Description("The menu's pages, in order: one photo each")] IFormFileCollection files,
+        [FromForm, Description("The business's languages: both, ar or en; a one-language business's menu is read in that language only. Absent is both")] string? languages,
         [FromServices] MenuScanner scanner,
         [FromServices] IOptions<AIOptions> aiOptions,
         CatalogContext context,
@@ -141,7 +143,7 @@ public static class CatalogAssistApi
 
         try
         {
-            return TypedResults.Ok(await scanner.ScanAsync(pages, categories, items, ct));
+            return TypedResults.Ok(await scanner.ScanAsync(pages, categories, items, ct, languages ?? ContentLanguages.Both));
         }
         catch (AIException ex)
         {

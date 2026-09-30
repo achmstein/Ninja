@@ -49,8 +49,11 @@ public class Tenant
     /// <summary>IANA zone, the café's clock (the services read it from their own configuration; this is what the surfaces see).</summary>
     public string TimeZone { get; set; } = "Africa/Cairo";
 
-    /// <summary>"ar" or "en": what the customer app opens in.</summary>
+    /// <summary>"ar" or "en": what the customer app opens in. A one-language business's is that language.</summary>
     public string DefaultLanguage { get; set; } = "ar";
+
+    /// <summary>Which languages the business writes its own text in: "both", "ar" or "en" (<see cref="Ninja.ContentLanguages"/>).</summary>
+    public string ContentLanguages { get; set; } = Ninja.ContentLanguages.Both;
 
     /// <summary>
     /// Which Arabic the apps speak: "standard" (Modern Standard Arabic) or

@@ -4,7 +4,11 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from 'sileo'
-import { useBrandEffects } from '@/lib/brand'
+import { useBrand, useBrandEffects } from '@/lib/brand'
+import {
+  ContentLanguagesContext,
+  contentLanguagesOf,
+} from '@/lib/content-languages'
 import { useDirection } from '@/context/direction-provider'
 import { useTheme } from '@/context/theme-provider'
 import { NavigationProgress } from '@/components/navigation-progress'
@@ -28,12 +32,16 @@ function AppToaster() {
 
 function RootComponent() {
   useBrandEffects()
+  // Every form asks for the business's own languages, read once from the brand
+  const contentLanguages = contentLanguagesOf(
+    useBrand()?.locale?.contentLanguages
+  )
   // index.html painted the loading screen; from here the app paints its own
   useLayoutEffect(() => {
     document.getElementById('splash')?.remove()
   }, [])
   return (
-    <>
+    <ContentLanguagesContext.Provider value={contentLanguages}>
       <NavigationProgress />
       <Outlet />
       <AppToaster />
@@ -44,7 +52,7 @@ function RootComponent() {
           <TanStackRouterDevtools position='bottom-left' />
         </>
       )}
-    </>
+    </ContentLanguagesContext.Provider>
   )
 }
 
@@ -55,4 +63,3 @@ export const Route = createRootRouteWithContext<{
   notFoundComponent: NotFoundError,
   errorComponent: GeneralError,
 })
-

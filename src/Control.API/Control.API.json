@@ -3511,6 +3511,12 @@
               "null",
               "string"
             ]
+          },
+          "contentLanguages": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4142,6 +4148,13 @@
               "boolean"
             ],
             "description": "Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on"
+          },
+          "contentLanguages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "both, ar or en: the languages the business writes its menu, places and stock in; null is both"
           }
         }
       },
@@ -5456,6 +5469,10 @@
           "arabicStyle": {
             "type": "string",
             "default": "standard"
+          },
+          "contentLanguages": {
+            "type": "string",
+            "default": "both"
           }
         }
       },
@@ -6177,6 +6194,13 @@
               "boolean"
             ],
             "description": "Whether customers may sign in with Google and Apple; null leaves it"
+          },
+          "contentLanguages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "both, ar or en: the languages the business writes its menu, places and stock in; null leaves it"
           }
         }
       },

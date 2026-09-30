@@ -44,4 +44,8 @@
     <Compile Include="..\Shared\LocalizedText.cs" Link="Model\LocalizedText.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\ContentLanguages.cs" Link="Model\ContentLanguages.cs" />
+  </ItemGroup>
+
 </Project>

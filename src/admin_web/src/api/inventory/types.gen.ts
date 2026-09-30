@@ -128,6 +128,7 @@ export type ProposedRecipeLine = {
 
 export type ProposeRecipesRequest = {
     items: Array<MenuItemToTrack>;
+    languages?: null | string;
 };
 
 export type PurchaseLineInput = {
@@ -852,6 +853,8 @@ export type GetPurchaseResponse = GetPurchaseResponses[keyof GetPurchaseResponse
 export type ScanReceiptData = {
     body: {
         file: IFormFile;
+    } & {
+        languages?: string;
     };
     path?: never;
     query: {

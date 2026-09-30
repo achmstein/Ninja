@@ -128,4 +128,44 @@ public class CustomizationsPostProcessorTest
         Assert.HasCount(CustomizationsPostProcessor.MaxGroups, response.Groups);
         Assert.IsTrue(response.Warnings.Any(w => w.Contains("more than 5")), string.Join("; ", response.Warnings));
     }
+
+    [TestMethod]
+    public void An_english_only_business_gets_english_groups_and_no_nudge_about_arabic()
+    {
+        var english = new CustomizationGroupResult(
+            new LocalizedPair("Milk", ""), IsRequired: true, AllowMultiple: false,
+            [
+                new CustomizationOptionResult(new LocalizedPair("Whole", ""), 0m, true),
+                new CustomizationOptionResult(new LocalizedPair("Oat", ""), 10m, false),
+            ]);
+        var request = Latte() with { Languages = "en" };
+
+        var response = CustomizationsPostProcessor.Apply(new CustomizationsResult([Size(), english], ""), request);
+
+        Assert.HasCount(2, response.Groups);
+        Assert.IsEmpty(response.Warnings, string.Join("; ", response.Warnings));
+        Assert.IsTrue(response.Groups.All(g => g.Name.Ar is null && g.Options.All(o => o.Name.Ar is null)), "the Arabic the model wrote is dropped");
+        Assert.AreEqual("Size", response.Groups[0].Name.En);
+    }
+
+    [TestMethod]
+    public void An_arabic_only_business_gets_arabic_groups_and_is_told_when_one_has_none()
+    {
+        var englishOnly = new CustomizationGroupResult(
+            new LocalizedPair("Milk", ""), IsRequired: true, AllowMultiple: false,
+            [
+                new CustomizationOptionResult(new LocalizedPair("Whole", ""), 0m, true),
+                new CustomizationOptionResult(new LocalizedPair("Oat", ""), 10m, false),
+            ]);
+        var request = Latte() with { Languages = "ar" };
+
+        var response = CustomizationsPostProcessor.Apply(new CustomizationsResult([Size(), englishOnly], ""), request);
+
+        var size = response.Groups[0];
+        Assert.IsNull(size.Name.En);
+        Assert.AreEqual("الحجم", size.Name.Ar);
+        Assert.AreEqual("Milk", response.Groups[1].Name.En, "an English-only group is kept for the owner to fix, not lost");
+        Assert.IsTrue(response.Warnings.Any(w => w.Contains("\"Milk\" is missing Arabic names")), string.Join("; ", response.Warnings));
+        Assert.IsFalse(response.Warnings.Any(w => w.Contains("الحجم")), string.Join("; ", response.Warnings));
+    }
 }

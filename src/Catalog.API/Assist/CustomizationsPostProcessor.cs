@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 
 namespace Ninja.Catalog.API.Assist;
 
@@ -8,7 +9,7 @@ namespace Ninja.Catalog.API.Assist;
 /// take as they are: names cleaned and capped, groups the item already has
 /// dropped, options deduplicated, one default per single-choice group,
 /// prices sane against the item's own. Whatever is dropped or changed is
-/// said in a warning.
+/// said in a warning. A business that writes one language gets that language only.
 /// </summary>
 public static partial class CustomizationsPostProcessor
 {
@@ -30,6 +31,7 @@ public static partial class CustomizationsPostProcessor
 
     public static SuggestCustomizationsResponse Apply(CustomizationsResult result, SuggestCustomizationsRequest request)
     {
+        var languages = ContentLanguages.Normalize(request.Languages);
         var warnings = new List<string>();
         var groups = new List<ProposedCustomization>();
         var taken = new HashSet<string>(
@@ -44,7 +46,7 @@ public static partial class CustomizationsPostProcessor
                 break;
             }
 
-            var name = CleanName(group.Name);
+            var name = CleanName(group.Name, languages);
             if (name.IsEmpty)
             {
                 warnings.Add("Skipped a group with no name.");
@@ -57,7 +59,7 @@ public static partial class CustomizationsPostProcessor
                 continue;
             }
 
-            var options = CleanOptions(group, name.Primary, request.Price, warnings);
+            var options = CleanOptions(group, name.Primary, request.Price, warnings, languages);
             var needed = group.AllowMultiple ? 1 : 2;
             if (options.Count < needed)
             {
@@ -68,8 +70,12 @@ public static partial class CustomizationsPostProcessor
             foreach (var n in Names(name.En, name.Ar))
                 taken.Add(n);
 
-            if (!HasArabic(name.Ar) || options.Any(o => !HasArabic(o.Name.Ar)))
-                warnings.Add($"\"{name.Primary}\" is missing Arabic names; fill them in before adding it.");
+            // The business's own language is the one to nudge about: Arabic for a business in both
+            var missing = languages == ContentLanguages.English
+                ? (name.En is null || options.Any(o => o.Name.En is null) ? "English" : null)
+                : (!HasArabic(name.Ar) || options.Any(o => !HasArabic(o.Name.Ar)) ? "Arabic" : null);
+            if (missing is not null)
+                warnings.Add($"\"{name.Primary}\" is missing {missing} names; fill them in before adding it.");
 
             groups.Add(new ProposedCustomization(name, group.IsRequired, group.AllowMultiple, options));
         }
@@ -81,7 +87,7 @@ public static partial class CustomizationsPostProcessor
         return new SuggestCustomizationsResponse(groups, warnings);
     }
 
-    private static List<ProposedOption> CleanOptions(CustomizationGroupResult group, string groupName, decimal itemPrice, List<string> warnings)
+    private static List<ProposedOption> CleanOptions(CustomizationGroupResult group, string groupName, decimal itemPrice, List<string> warnings, string languages)
     {
         var options = new List<ProposedOption>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -95,7 +101,7 @@ public static partial class CustomizationsPostProcessor
                 break;
             }
 
-            var name = CleanName(option.Name);
+            var name = CleanName(option.Name, languages);
             if (name.IsEmpty || !seen.Add(name.Primary))
                 continue;
 
@@ -132,9 +138,10 @@ public static partial class CustomizationsPostProcessor
         return rounded;
     }
 
-    private static LocalizedText CleanName(LocalizedPair? pair)
+    private static LocalizedText CleanName(LocalizedPair? pair, string languages)
     {
-        return new LocalizedText(AIJson.Clean(pair?.En, MaxNameLength), AIJson.Clean(pair?.Ar, MaxNameLength));
+        var (en, ar) = ContentLanguages.Keep(AIJson.Clean(pair?.En, MaxNameLength), AIJson.Clean(pair?.Ar, MaxNameLength), languages);
+        return new LocalizedText(en, ar);
     }
 
     private static IEnumerable<string> Names(string? en, string? ar)

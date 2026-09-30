@@ -103,10 +103,9 @@ function pausedBy(error: unknown): boolean {
 
 export async function bootBrand(queryClient: QueryClient) {
   const cached = readCachedBrand()
-  const language = useLanguage.getState().language
   if (cached) {
     queryClient.setQueryData(brandQueryKey(), cached)
-    applyBrand(cached, language)
+    applyBrand(cached)
   }
 
   // Mirrored to localStorage the moment it lands, not only from
@@ -123,7 +122,11 @@ export async function bootBrand(queryClient: QueryClient) {
         return
       }
       const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
-      if (fresh) writeCachedBrand(fresh)
+      if (fresh) {
+        writeCachedBrand(fresh)
+        // A first visit waits for this: the business's language before the first render
+        useLanguage.getState().followBusiness(fresh.locale)
+      }
     })
   if (!cached) {
     await Promise.race([
@@ -134,7 +137,9 @@ export async function bootBrand(queryClient: QueryClient) {
 }
 
 /** Head tags and theme tokens for this brand. */
-export function applyBrand(brand: Brand, language: Language) {
+export function applyBrand(brand: Brand) {
+  // The language the business's setting allows: its only one, else its default until the customer picks
+  const language = useLanguage.getState().followBusiness(brand.locale)
   // Which Arabic the café speaks, and the light or dark a person who never chose starts in
   useArabicStyle.getState().set(brand.locale?.arabicStyle)
   useCafeTheme.getState().set(brand.theme?.mode)
@@ -173,7 +178,7 @@ export function useBrandEffects() {
   const language = useLanguage((s) => s.language)
   useEffect(() => {
     if (!brand) return
-    applyBrand(brand, language)
+    applyBrand(brand)
     writeCachedBrand(brand)
   }, [brand, language])
   useEffect(() => onDraftedTheme((input) => paint(input ?? brand)), [brand])

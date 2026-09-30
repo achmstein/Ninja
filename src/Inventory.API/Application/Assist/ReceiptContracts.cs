@@ -1,3 +1,4 @@
+using Ninja.AI.Text;
 namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
@@ -79,6 +80,6 @@ public sealed record ExtractedLine(
 public sealed record ExtractedNewItem(string NameEn, string NameAr, string Unit, decimal PackSize, string PackName);
 
 /// <summary>The text part of the prompt: which branch, which day, and what is already on the shelf.</summary>
-internal sealed record ReceiptPrompt(int BranchId, string Today, IReadOnlyList<CandidateItem> Candidates);
+internal sealed record ReceiptPrompt(int BranchId, string Today, IReadOnlyList<CandidateItem> Candidates, string Languages = ContentLanguages.Both);
 
 internal sealed record CandidateItem(int Id, string? En, string? Ar, string Unit, decimal PackSize, string PackName);

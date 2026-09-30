@@ -133,6 +133,9 @@ public static partial class TenantApi
             tenant.TimeZone = l.TimeZone;
             tenant.DefaultLanguage = l.Language;
             if (l.ArabicStyle is not null) tenant.ArabicStyle = l.ArabicStyle;
+            if (l.ContentLanguages is not null) tenant.ContentLanguages = l.ContentLanguages;
+            // A one-language business's customers open the app in that language
+            tenant.DefaultLanguage = ContentLanguages.Opening(tenant.ContentLanguages, tenant.DefaultLanguage);
         }
         // An owner may switch an entitled module off, never an unentitled one on
         tenant.ApplyFeatures(request.Features);
@@ -448,14 +451,16 @@ public static partial class TenantApi
         var timeZone = dto.TimeZone?.Trim() ?? "";
         var language = dto.Language?.Trim().ToLowerInvariant() ?? "";
         var arabic = string.IsNullOrWhiteSpace(dto.ArabicStyle) ? null : dto.ArabicStyle.Trim().ToLowerInvariant();
+        var content = string.IsNullOrWhiteSpace(dto.ContentLanguages) ? null : dto.ContentLanguages.Trim().ToLowerInvariant();
 
         if (!CountryCode().IsMatch(country)) error = "The country must be an ISO 3166-1 alpha-2 code.";
         else if (!CurrencyCode().IsMatch(currency)) error = "The currency must be an ISO 4217 code.";
         else if (!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _)) error = $"'{timeZone}' is not a known time zone.";
         else if (language is not ("ar" or "en")) error = "The language must be ar or en.";
         else if (arabic is not (null or "standard" or "egyptian")) error = "The Arabic style must be standard or egyptian.";
+        else if (content is not null && !ContentLanguages.IsValid(content)) error = "The business's languages must be both, ar or en.";
 
-        return new(country, currency, timeZone, language, arabic);
+        return new(country, currency, timeZone, language, arabic, ContentLanguages: content);
     }
 
     private static void SetCache(HttpContext http, string? v)
@@ -475,6 +480,7 @@ public static partial class TenantApi
 /// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's customers read. Null on a request leaves it as it is.</param>
 /// <param name="PhonePattern">The regex a phone number must match here, so the apps ask for what this country writes. Read-only: it follows the country.</param>
 /// <param name="PhonePlaceholder">The shape to show in a phone field, e.g. "01xxxxxxxxx". Read-only.</param>
+/// <param name="ContentLanguages">"both", "ar" or "en": which languages the business writes its menu, places and stock in. A one-language business's apps open in that language. Null on a request leaves it as it is.</param>
 public record TenantLocaleDto(
     string Country,
     string Currency,
@@ -482,12 +488,13 @@ public record TenantLocaleDto(
     string Language,
     string? ArabicStyle = null,
     string PhonePattern = "",
-    string PhonePlaceholder = "")
+    string PhonePlaceholder = "",
+    string? ContentLanguages = null)
 {
     public static TenantLocaleDto From(Model.Tenant t)
     {
         var phone = PhoneRules.For(t.Country);
-        return new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.EffectiveArabicStyle, phone.Pattern, phone.Placeholder);
+        return new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.EffectiveArabicStyle, phone.Pattern, phone.Placeholder, t.ContentLanguages);
     }
 }
 

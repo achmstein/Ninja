@@ -176,4 +176,25 @@ public class LocalizerPostProcessorTest
         Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Tea", null), new LocalizedText("", "ساخن"))), "description in the other language");
         Assert.IsNotNull(LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText(new string('x', 121), null))), "too long");
     }
+
+    [TestMethod]
+    public void A_one_language_business_is_never_asked_for_the_other_language()
+    {
+        var arabicName = new LocalizedText(null, "قهوة تركي");
+
+        // An Arabic-only business's Arabic name has nothing missing; a description is written in Arabic only
+        Assert.IsEmpty(LocalizerPostProcessor.FieldsToFill(new LocalizeRequest(LocalizeKind.MenuItem, arabicName, Languages: "ar")));
+        CollectionAssert.AreEqual(new[] { "description.ar" },
+            LocalizerPostProcessor.FieldsToFill(new LocalizeRequest(LocalizeKind.MenuItem, arabicName, SuggestDescription: true, Languages: "ar")).ToList());
+        Assert.AreEqual("Nothing to fill in.", LocalizerPostProcessor.Validate(new LocalizeRequest(LocalizeKind.MenuItem, arabicName, Languages: "ar")));
+
+        // An English-only business: a name typed in English is complete; one typed in Arabic gets its English
+        Assert.IsEmpty(LocalizerPostProcessor.FieldsToFill(EnglishItem(descriptionEn: null) with { Languages = "en" }));
+        CollectionAssert.AreEqual(new[] { "name.en" },
+            LocalizerPostProcessor.FieldsToFill(new LocalizeRequest(LocalizeKind.Category, arabicName, Languages: "en")).ToList());
+
+        // Both languages, as before
+        CollectionAssert.AreEqual(new[] { "name.en" },
+            LocalizerPostProcessor.FieldsToFill(new LocalizeRequest(LocalizeKind.Category, arabicName)).ToList());
+    }
 }

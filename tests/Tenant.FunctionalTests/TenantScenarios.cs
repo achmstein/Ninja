@@ -26,7 +26,9 @@ public static class Suite
 }
 
 /// <summary>What the apps read off the wire; named here so a change in the API's shape fails a test.</summary>
-public record TenantView(LocalizedView Name, string? PrimaryColor, string? CustomerUrl, FeaturesView Features, FeaturesView Entitlements, long Version);
+public record TenantView(LocalizedView Name, string? PrimaryColor, string? CustomerUrl, FeaturesView Features, FeaturesView Entitlements, long Version, LocaleView? Locale = null);
+
+public record LocaleView(string Country, string Currency, string TimeZone, string Language, string? ContentLanguages);
 public record LocalizedView(string En, string? Ar);
 public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false)
 {
@@ -55,6 +57,37 @@ public sealed class TenantScenarios
 
     private static object Update(FeaturesView features, string name = "Chillax", string? color = "#112233")
         => new { name = new { en = name, ar = "تشيلاكس" }, primaryColor = color, customerUrl = (string?)null, features };
+
+    private static object InLanguages(string contentLanguages, string language = "en", string? nameEn = null)
+        => new
+        {
+            name = new { en = nameEn, ar = "تشيلاكس" },
+            primaryColor = "#112233",
+            customerUrl = (string?)null,
+            features = FeaturesView.All,
+            locale = new { country = "EG", currency = "EGP", timeZone = "Africa/Cairo", language, contentLanguages },
+        };
+
+    [TestMethod]
+    public async Task A_business_that_writes_one_language_opens_its_apps_in_it()
+    {
+        await ResetAsync();
+        try
+        {
+            var saved = await Owner.PutAsync<TenantView>(Tenant, InLanguages("ar", language: "en"));
+            Assert.AreEqual("ar", saved.Locale!.ContentLanguages);
+            Assert.AreEqual("ar", saved.Locale.Language, "an Arabic-only business's customers open the app in Arabic");
+            Assert.IsNull(saved.Name.En, "and it needs no English name");
+
+            var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, InLanguages("fr"));
+            Assert.AreEqual(HttpStatusCode.BadRequest, status);
+            Assert.Contains("both, ar or en", detail);
+        }
+        finally
+        {
+            await Owner.PutAsync<TenantView>(Tenant, InLanguages("both", language: "ar", nameEn: "Chillax"));
+        }
+    }
 
     [TestMethod]
     public async Task A_stack_nobody_has_told_otherwise_serves_its_seed_brand_with_every_switch_usable()

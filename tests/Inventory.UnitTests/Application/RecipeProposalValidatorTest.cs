@@ -193,4 +193,20 @@ public class RecipeProposalValidatorTest
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
         CollectionAssert.Contains(proposal.Recipes[0].Warnings.ToList(), "No usable ingredient lines were proposed; set it up by hand or sell it as a unit.");
     }
+
+    [TestMethod]
+    public void A_new_ingredient_of_a_one_language_business_is_named_in_that_language_and_still_matches_the_shelf_by_either()
+    {
+        var extraction = new RecipesExtraction(
+            [Ingredient("oat-milk", "Oat Milk", "لبن شوفان"), Ingredient("milk", "Full Cream Milk", "لبن كامل الدسم")],
+            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "oat-milk", 200, [], 1), new ExtractedRecipeLine(0, "milk", 200, [], 2)])],
+            "");
+
+        var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, [], "en");
+
+        var oat = proposal.NewItems.Single();
+        Assert.AreEqual("Oat Milk", oat.Name.En);
+        Assert.IsNull(oat.Name.Ar, "the Arabic the model wrote is dropped for an English-only business");
+        Assert.IsTrue(proposal.Recipes[0].Lines.Any(l => l.StockItemId == 2), "the milk still matched the shelf by its Arabic name");
+    }
 }

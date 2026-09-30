@@ -9,7 +9,8 @@ namespace Ninja.Inventory.API.Application.Assist;
 /// Turns what the model read into a proposal the review sheet can trust:
 /// ids are checked against the shelf, quantities are recomputed from
 /// packs, money is reconciled, and every doubt becomes a warning on the
-/// line it belongs to. Pure, so it is easy to test against odd answers.
+/// line it belongs to. A new item of a one-language business is named in that
+/// language only. Pure, so it is easy to test against odd answers.
 /// </summary>
 public static class ReceiptProposalValidator
 {
@@ -21,8 +22,9 @@ public static class ReceiptProposalValidator
     public const decimal PriceChangeThreshold = 0.10m;
 
     public static ReceiptProposal Validate(ReceiptExtraction extraction, IReadOnlyList<StockItemView> candidates, IReadOnlyList<string> extraWarnings,
-        IReadOnlyDictionary<int, decimal>? lastCosts = null)
+        IReadOnlyDictionary<int, decimal>? lastCosts = null, string languages = ContentLanguages.Both)
     {
+        languages = ContentLanguages.Normalize(languages);
         var byId = candidates.ToDictionary(c => c.Id);
         var warnings = new List<string>(extraWarnings);
         var lines = new List<ProposedLine>();
@@ -123,7 +125,8 @@ public static class ReceiptProposalValidator
 
                 decimal? packSize = raw.NewItem is { PackSize: > 0 } ? Round(raw.NewItem.PackSize, 3) : null;
                 var packName = AIJson.Clean(raw.NewItem?.PackName, 40);
-                newItem = new ProposedNewItem(new LocalizedText(nameEn, nameAr), unit, packSize, packName.Length == 0 ? null : LocalizedText.InScriptOf(packName));
+                var (keptEn, keptAr) = ContentLanguages.Keep(nameEn, nameAr, languages);
+                newItem = new ProposedNewItem(new LocalizedText(keptEn, keptAr), unit, packSize, packName.Length == 0 ? null : LocalizedText.InScriptOf(packName));
             }
 
             var suggestions = item is null ? StockItemMatcher.Suggest(rawText, candidates) : [];

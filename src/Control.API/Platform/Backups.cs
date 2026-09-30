@@ -654,6 +654,7 @@ public sealed class RestoreDrillService(IServiceScopeFactory scopes, Provisionin
         drill.Currency = source.Currency;
         drill.TimeZone = source.TimeZone;
         drill.DefaultLanguage = source.DefaultLanguage;
+        drill.ContentLanguages = source.ContentLanguages;
         // The realm gets an owner that is ours; the customer's address must not receive a password for a stack that is destroyed within the hour
         drill.OwnerEmail = string.IsNullOrWhiteSpace(platform.Mail.OpsTo) ? $"drill@{platform.Domain}" : platform.Mail.OpsTo.Trim().ToLowerInvariant();
         drill.WelcomeSentAt = DateTimeOffset.UtcNow;

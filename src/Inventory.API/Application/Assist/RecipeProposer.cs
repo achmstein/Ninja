@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Ninja.AI.Agents;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 using Ninja.Inventory.API.Application.Queries;
 using Microsoft.Extensions.AI;
 
@@ -35,8 +36,11 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
     /// <summary>False when no chat model is configured; the endpoint answers 503.</summary>
     public bool IsEnabled => factory.IsEnabled;
 
-    public async Task<RecipesProposal> ProposeAsync(IReadOnlyList<MenuItemToTrack> items, IReadOnlyList<StockItemView> shelf, CancellationToken ct)
+    /// <param name="languages">The business's languages ("both", "ar" or "en"): a one-language business's new ingredients are named in that language only.</param>
+    public async Task<RecipesProposal> ProposeAsync(IReadOnlyList<MenuItemToTrack> items, IReadOnlyList<StockItemView> shelf, CancellationToken ct,
+        string languages = ContentLanguages.Both)
     {
+        languages = ContentLanguages.Normalize(languages);
         var warnings = new List<string>();
         var candidates = shelf;
         if (candidates.Count > MaxShelf)
@@ -50,7 +54,8 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
                 i.CatalogItemId, i.Name.En, i.Name.Ar,
                 i.Description?.Primary ?? string.Empty, i.Category ?? string.Empty, i.Price,
                 (i.Options ?? []).Select(o => new PromptOption(o.Id, o.Group, o.Name.En, o.Name.Ar)).ToList())).ToList(),
-            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar, c.Unit, c.PackSize ?? 0, c.PackName?.Both ?? string.Empty)).ToList());
+            candidates.Select(c => new CandidateItem(c.Id, c.Name.En, c.Name.Ar, c.Unit, c.PackSize ?? 0, c.PackName?.Both ?? string.Empty)).ToList(),
+            languages);
 
         var agent = factory.Create(Definition);
         var messages = new List<ChatMessage>
@@ -59,7 +64,7 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
         };
 
         var run = await agent.RunAsync<RecipesExtraction>(messages, ct);
-        return RecipeProposalValidator.Validate(run.Result, items, candidates, warnings);
+        return RecipeProposalValidator.Validate(run.Result, items, candidates, warnings, languages);
     }
 
     private const string Instructions = $"""
@@ -67,8 +72,8 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
         You set up stock tracking for the menu of a café in Egypt (coffee, tea, juices, soft drinks, shisha, snacks,
         desserts). The user message is a JSON object with "items" (menu items: id, English and Arabic name, description,
         category, price in EGP, and their customization options with id, group and name) and "shelf" (the stock items
-        already tracked: id, names, base unit, pack size and pack name).
-
+        already tracked: id, names, base unit, pack size and pack name), and "languages".
+        {ContentLanguages.PromptRule}
         For every item answer one entry in "recipes" with its catalogItemId and:
         - kind "unit" when a sale is one whole stock item that is bought as such (a can of soda, a bottle of water, a
           packaged snack, a shisha head sold as one) — then lines is empty; the item itself becomes the stock item.

@@ -121,7 +121,7 @@ public sealed class Provisioner(
                     ["locale"] = new JsonObject
                     {
                         ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
-                        ["arabicStyle"] = tenant.ArabicStyle,
+                        ["arabicStyle"] = tenant.ArabicStyle, ["contentLanguages"] = tenant.ContentLanguages,
                     },
                     ["businessType"] = BusinessProfiles.Key(tenant.BusinessType),
                     // The kind of place decides where guests start ordering from; a restored stack keeps what its dump says

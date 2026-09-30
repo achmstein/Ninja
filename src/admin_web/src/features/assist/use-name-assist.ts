@@ -6,6 +6,7 @@ import {
   type Lang,
   type LocalizedValue,
   useDefaultLang,
+  useOnlyLang,
 } from '@/components/localized-input'
 import { halfFilled, hasText } from './helpers'
 import { localizeBlocker, useLocalizeAssist } from './use-localize-assist'
@@ -23,6 +24,8 @@ export function useNameAssist(
 ) {
   const t = useT()
   const assist = useLocalizeAssist()
+  // A business that writes one language has no other side to fill
+  const only = useOnlyLang()
   const [lang, setLang] = useState<Lang>(useDefaultLang())
   const [suggested, setSuggested] = useState<Partial<Record<Lang, boolean>>>({})
   const blocker = localizeBlocker(name)
@@ -49,14 +52,15 @@ export function useNameAssist(
     }
   }
 
-  const slot: AssistSlot | undefined = assist.available
-    ? {
-        onClick: ask,
-        pending: assist.isPending,
-        disabled: !!blocker,
-        label: blocker ? t(blocker) : t('assistFillOtherLanguage'),
-      }
-    : undefined
+  const slot: AssistSlot | undefined =
+    assist.available && !only
+      ? {
+          onClick: ask,
+          pending: assist.isPending,
+          disabled: !!blocker,
+          label: blocker ? t(blocker) : t('assistFillOtherLanguage'),
+        }
+      : undefined
 
   /** Wrap the field's onChange with this so an edit clears the tint */
   const onChange = (value: LocalizedValue, typed: Lang) => {

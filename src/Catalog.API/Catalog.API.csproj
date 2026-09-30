@@ -53,4 +53,7 @@
     <Compile Include="..\Shared\LocalizedText.cs" Link="Model\LocalizedText.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+  </ItemGroup>
+
 </Project>

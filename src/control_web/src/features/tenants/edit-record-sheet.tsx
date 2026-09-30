@@ -51,6 +51,10 @@ import {
   type ArabicStyle,
   type DefaultTheme,
 } from './new-tenant-business'
+import {
+  ContentLanguagesField,
+  contentLanguagesFrom,
+} from './new-tenant-locale'
 
 const FORM_ID = 'edit-record'
 
@@ -102,6 +106,9 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [currency, setCurrency] = useState(tenant.locale.currency)
   const [timeZone, setTimeZone] = useState(tenant.locale.timeZone)
   const [defaultLanguage, setDefaultLanguage] = useState(tenant.locale.language)
+  const [contentLanguages, setContentLanguages] = useState(
+    contentLanguagesFrom(tenant.locale.contentLanguages)
+  )
   const [business, setBusiness] = useState<BusinessType>(tenant.businessType ?? 'Other')
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
     tenant.locale.arabicStyle === 'egyptian' ? 'egyptian' : 'standard'
@@ -163,6 +170,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         currency,
         timeZone,
         defaultLanguage,
+        contentLanguages,
         arabicStyle,
         defaultTheme,
         businessType: business,
@@ -276,7 +284,11 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
           </div>
           <div className='grid min-w-0 gap-2'>
             <Label htmlFor='record-language'>{t('defaultLanguage')}</Label>
-            <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
+            <Select
+              value={defaultLanguage}
+              onValueChange={setDefaultLanguage}
+              disabled={contentLanguages !== 'both'}
+            >
               <SelectTrigger id='record-language' className='w-full'>
                 <SelectValue />
               </SelectTrigger>
@@ -301,6 +313,15 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className='min-w-0 sm:col-span-2'>
+          <ContentLanguagesField
+            value={contentLanguages}
+            onChange={(v) => {
+              setContentLanguages(v)
+              if (v !== 'both') setDefaultLanguage(v)
+            }}
+          />
         </div>
         <div className='min-w-0 sm:col-span-2'>
           <LookFields

@@ -181,4 +181,22 @@ public class ReceiptProposalValidatorTest
         Assert.IsEmpty(proposal.Lines);
         CollectionAssert.Contains(proposal.Warnings.ToList(), "No purchasable lines were found on the receipt.");
     }
+
+    [TestMethod]
+    public void A_new_item_of_a_one_language_business_is_named_in_that_language_only()
+    {
+        var line = new ExtractedLine("سكر 1 كيلو", 1000, 1, 0.05m, 50, 0, 0.9, new ExtractedNewItem("Sugar", "سكر", "g", 1000, "كيس"));
+
+        var arabic = ReceiptProposalValidator.Validate(Receipt(line), Items, [], languages: "ar").Lines.Single().NewItem!;
+        Assert.IsNull(arabic.Name.En);
+        Assert.AreEqual("سكر", arabic.Name.Ar);
+
+        var english = ReceiptProposalValidator.Validate(Receipt(line), Items, [], languages: "en").Lines.Single().NewItem!;
+        Assert.AreEqual("Sugar", english.Name.En);
+        Assert.IsNull(english.Name.Ar);
+
+        var both = ReceiptProposalValidator.Validate(Receipt(line), Items, []).Lines.Single().NewItem!;
+        Assert.AreEqual("Sugar", both.Name.En);
+        Assert.AreEqual("سكر", both.Name.Ar);
+    }
 }

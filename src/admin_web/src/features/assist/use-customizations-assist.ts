@@ -6,6 +6,7 @@ import {
 } from '@/api/catalog'
 import { suggestCustomizationsMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
 import { assistErrorMessage, useAssistStore } from './errors'
@@ -31,6 +32,7 @@ type SuggestArgs = {
  */
 export function useCustomizationsAssist() {
   const available = useAssistStore((s) => !s.unavailable)
+  const languages = useContentLanguages()
   const mutation = useMutation({
     ...suggestCustomizationsMutation(),
     onError: (error) => toast.error(assistErrorMessage(error)),
@@ -50,6 +52,7 @@ export function useCustomizationsAssist() {
       existingGroups: (args.existingGroups ?? []).flatMap((name) =>
         name ? [name] : []
       ),
+      languages,
     }
     return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
   }

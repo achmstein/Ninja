@@ -68,6 +68,7 @@ public static partial class ControlApi
             tenant.TimeZone = brand.Locale.TimeZone;
             tenant.DefaultLanguage = brand.Locale.Language;
             if (brand.Locale.ArabicStyle is { } arabic) tenant.ArabicStyle = arabic;
+            if (brand.Locale.ContentLanguages is { } content) tenant.ContentLanguages = ContentLanguages.Normalize(content);
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("brand.updated", slug, request, ct);
         }
@@ -211,7 +212,8 @@ public record BrandIcons(string Icon192, string Icon512, string Maskable512, str
 public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false);
 
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
-public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null);
+/// <param name="ContentLanguages">both, ar or en; null leaves the stack's (a stack older than the setting sends none).</param>
+public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null, string? ContentLanguages = null);
 
 /// <summary>The stack's brand (Tenant.API's tenant response) as the control app reads it, with every image URL made absolute on the customer host.</summary>
 public record BrandDto(

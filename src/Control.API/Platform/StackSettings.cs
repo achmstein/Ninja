@@ -33,7 +33,7 @@ public static class StackSettings
         brand["locale"] = new JsonObject
         {
             ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
-            ["arabicStyle"] = tenant.ArabicStyle,
+            ["arabicStyle"] = tenant.ArabicStyle, ["contentLanguages"] = tenant.ContentLanguages,
         };
         // Only the label: the switches, the menu and whether guests order away from a table stay as the café has them
         brand["businessType"] = BusinessProfiles.Key(tenant.BusinessType);

@@ -1,6 +1,7 @@
 import { createContext, useContext, useId, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { type LocalizedText } from '@/api/catalog'
+import { useContentLanguages } from '@/lib/content-languages'
 import { useLanguage, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -45,7 +46,8 @@ export function primaryText(text: LocalizedText | null | undefined): string {
   return text?.en?.trim() || text?.ar?.trim() || ''
 }
 
-const ARABIC_LETTER = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
+const ARABIC_LETTER =
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
 
 /**
  * A text whose language nobody said (a line read off a receipt): Arabic
@@ -66,12 +68,23 @@ const LangContext = createContext<{
 } | null>(null)
 
 /**
- * The language a localized field starts in: the one the UI is in, so an
- * Arabic-speaking admin types Arabic first and an English-speaking one
- * English. Read once, when the field or form mounts.
+ * The business's only language when it writes its text in one, null when it
+ * writes both: its fields then ask for that language alone, with no switch
+ */
+export function useOnlyLang(): Lang | null {
+  const languages = useContentLanguages()
+  return languages === 'both' ? null : languages
+}
+
+/**
+ * The language a localized field starts in: the business's only one, else the
+ * one the UI is in, so an Arabic-speaking admin types Arabic first and an
+ * English-speaking one English. Read once, when the field or form mounts.
  */
 export function useDefaultLang(): Lang {
-  return useLanguage((s) => s.language)
+  const only = useOnlyLang()
+  const ui = useLanguage((s) => s.language)
+  return only ?? ui
 }
 
 /**
@@ -91,9 +104,10 @@ export function LocalizedFields({
   onLangChange?: (lang: Lang) => void
   children: React.ReactNode
 }) {
+  const only = useOnlyLang()
   const uiLang = useDefaultLang()
   const [own, setOwn] = useState<Lang>(defaultLang ?? uiLang)
-  const lang = controlled ?? own
+  const lang = only ?? controlled ?? own
   const setLang = (next: Lang) => {
     setOwn(next)
     onLangChange?.(next)
@@ -107,8 +121,10 @@ export function LocalizedFields({
 
 function useLang(): [Lang, (lang: Lang) => void] {
   const shared = useContext(LangContext)
+  const only = useOnlyLang()
   const uiLang = useDefaultLang()
   const [local, setLocal] = useState<Lang>(uiLang)
+  if (only) return [only, setLocal]
   return shared ? [shared.lang, shared.setLang] : [local, setLocal]
 }
 
@@ -151,6 +167,7 @@ type LocalizedInputProps = {
  * One field for a bilingual text. The switch at its end picks which
  * language is being typed; the other language's item shows a dot while it
  * is still empty, so nothing gets published half-translated by accident.
+ * A business that writes one language gets a plain field in that language.
  * With `assist`, a sparkle button asks the assistant to fill in the other
  * language; what it filled shows tinted until the user edits it.
  */
@@ -175,6 +192,7 @@ export function LocalizedInput({
   const generated = useId()
   const fieldId = id ?? generated
   const [lang, setLang] = useLang()
+  const only = useOnlyLang()
 
   const control = {
     id: fieldId,
@@ -190,7 +208,7 @@ export function LocalizedInput({
   }
   const isSuggested = !!suggested?.[lang]
 
-  const languageSwitch = (
+  const languageSwitch = only ? null : (
     <ToggleGroup
       type='single'
       size='sm'

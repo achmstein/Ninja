@@ -56,6 +56,15 @@
     <Project Path="src/Spaces.Domain/Spaces.Domain.csproj" />
     <Project Path="src/Spaces.Infrastructure/Spaces.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Shared/">
+    <File Path="src/Shared/ActivityExtensions.cs" />
+    <File Path="src/Shared/ContentLanguages.cs" />
+    <File Path="src/Shared/HostEnvironmentExtensions.cs" />
+    <File Path="src/Shared/LocalizedText.cs" />
+    <File Path="src/Shared/MigrateDbContextExtensions.cs" />
+    <File Path="src/Shared/SeedProfile.cs" />
+    <File Path="src/Shared/TenantClock.cs" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ninja.AI.UnitTests/Ninja.AI.UnitTests.csproj" />
     <Project Path="tests/Ninja.AppHost.UnitTests/Ninja.AppHost.UnitTests.csproj" />

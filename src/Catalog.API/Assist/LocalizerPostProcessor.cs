@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Ninja.AI.Json;
+using Ninja.AI.Text;
 
 namespace Ninja.Catalog.API.Assist;
 
@@ -24,25 +25,27 @@ public static partial class LocalizerPostProcessor
     /// The fields the model is told to produce and the only ones taken from
     /// its answer: the empty side of a half-filled name or description, both
     /// sides of a description that is asked for and empty, the category when
-    /// asked for.
+    /// asked for. Never a language the business does not write.
     /// </summary>
     public static IReadOnlyList<string> FieldsToFill(LocalizeRequest request)
     {
+        var languages = ContentLanguages.Normalize(request.Languages);
+        bool Writes(string side) => ContentLanguages.Writes(languages, side);
         var fill = new List<string>();
 
-        if (EmptySide(request.Name) is { } nameSide)
+        if (EmptySide(request.Name) is { } nameSide && Writes(nameSide))
             fill.Add($"name.{nameSide}");
 
         var description = request.Description ?? new LocalizedText();
         if (HasText(description))
         {
-            if (EmptySide(description) is { } side)
+            if (EmptySide(description) is { } side && Writes(side))
                 fill.Add($"description.{side}");
         }
         else if (request.SuggestDescription)
         {
-            fill.Add(DescriptionEn);
-            fill.Add(DescriptionAr);
+            if (Writes("en")) fill.Add(DescriptionEn);
+            if (Writes("ar")) fill.Add(DescriptionAr);
         }
 
         if (request.SuggestCategory)
@@ -156,14 +159,18 @@ public static partial class LocalizerPostProcessor
         {
             var description = request.Description!;
             // One source language: a half-filled description is filled from the same side as the name
-            if (EmptySide(description) is { } missing && EmptySide(request.Name) is { } nameMissing && missing != nameMissing)
+            // (a one-language business fills no other side, so it has no direction to get wrong)
+            if (ContentLanguages.Normalize(request.Languages) == ContentLanguages.Both
+                && EmptySide(description) is { } missing && EmptySide(request.Name) is { } nameMissing && missing != nameMissing)
                 return "Fill in the description in the same language as the name.";
             if ((description.En?.Length ?? 0) > MaxDescriptionLength || (description.Ar?.Length ?? 0) > MaxDescriptionLength)
                 return $"The description is longer than {MaxDescriptionLength} characters.";
         }
 
         if (FieldsToFill(request).Count == 0)
-            return "Nothing to fill in: both languages are already filled in.";
+            return ContentLanguages.Normalize(request.Languages) == ContentLanguages.Both
+                ? "Nothing to fill in: both languages are already filled in."
+                : "Nothing to fill in.";
 
         return null;
     }

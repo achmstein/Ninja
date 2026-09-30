@@ -186,6 +186,11 @@ class TenantLocale {
   /// `standard` or `egyptian`: which Arabic the app speaks
   final String arabicStyle;
 
+  /// `both`, `ar` or `en`: the languages the business writes its menu, places
+  /// and names in. A one-language business's app speaks that language and offers
+  /// no switch.
+  final String contentLanguages;
+
   /// What a phone number looks like here, as the tenant sends it: the same
   /// rule the sign-in page and the server check against.
   final String phonePattern;
@@ -199,6 +204,7 @@ class TenantLocale {
     this.timeZone = 'Africa/Cairo',
     this.language = 'ar',
     this.arabicStyle = 'egyptian',
+    this.contentLanguages = 'both',
     this.phonePattern = r'^\+?[0-9]{7,15}$',
     this.phonePlaceholder = '',
   });
@@ -209,6 +215,9 @@ class TenantLocale {
 
   /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
   bool get speaksStandardArabic => arabicStyle == 'standard';
+
+  /// The business writes one language only: the app speaks it, with no switch
+  bool get writesOneLanguage => contentLanguages != 'both';
 
   static const egypt = TenantLocale();
 
@@ -227,6 +236,12 @@ class TenantLocale {
       // Older stacks do not say: Egyptian for Egypt, Standard anywhere else
       arabicStyle: read('arabicStyle', read('country', egypt.country).toUpperCase() == 'EG' ? 'egyptian' : 'standard')
           .toLowerCase(),
+      // Older stacks do not say: both
+      contentLanguages: switch (read('contentLanguages', 'both').toLowerCase()) {
+        'ar' => 'ar',
+        'en' => 'en',
+        _ => 'both',
+      },
       phonePattern: read('phonePattern', egypt.phonePattern),
       phonePlaceholder: read('phonePlaceholder', egypt.phonePlaceholder),
     );
@@ -238,6 +253,7 @@ class TenantLocale {
         'timeZone': timeZone,
         'language': language,
         'arabicStyle': arabicStyle,
+        'contentLanguages': contentLanguages,
         'phonePattern': phonePattern,
         'phonePlaceholder': phonePlaceholder,
       };
@@ -251,10 +267,11 @@ class TenantLocale {
           other.timeZone == timeZone &&
           other.language == language &&
           other.arabicStyle == arabicStyle &&
+          other.contentLanguages == contentLanguages &&
           other.phonePattern == phonePattern;
 
   @override
-  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle, phonePattern);
+  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle, contentLanguages, phonePattern);
 }
 
 /// The dark scheme's own seeds, for a brand whose lifted colours do not

@@ -1,3 +1,5 @@
+using Ninja.AI.Text;
+
 namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
@@ -12,12 +14,14 @@ namespace Ninja.Catalog.API.Assist;
 /// <param name="CatalogTypeId">The item's category, when one is picked.</param>
 /// <param name="Price">The item's price in pounds; 0 when not typed yet.</param>
 /// <param name="ExistingGroups">Names of the groups the item already has, so none is proposed twice.</param>
+/// <param name="Languages">The business's languages: "both", "ar" or "en"; a one-language business's groups come back in that language only. Null is both.</param>
 public sealed record SuggestCustomizationsRequest(
     LocalizedText Name,
     LocalizedText? Description = null,
     int? CatalogTypeId = null,
     decimal Price = 0,
-    IReadOnlyList<LocalizedText>? ExistingGroups = null);
+    IReadOnlyList<LocalizedText>? ExistingGroups = null,
+    string? Languages = null);
 
 /// <param name="Groups">Proposed groups, in the order to show them; groups the item already has are left out.</param>
 /// <param name="Warnings">Anything worth a second look, in plain words.</param>
@@ -42,7 +46,8 @@ public sealed record CustomizationOptionResult(LocalizedPair Name, decimal Price
 internal sealed record CustomizationsPrompt(
     CustomizationsItem Item,
     IReadOnlyList<string> ExistingGroups,
-    IReadOnlyList<CustomizationExample> Examples);
+    IReadOnlyList<CustomizationExample> Examples,
+    string Languages = ContentLanguages.Both);
 
 internal sealed record CustomizationsItem(LocalizedPair Name, LocalizedPair Description, string Category, decimal Price);
 

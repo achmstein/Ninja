@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { type MenuProposal } from '@/api/catalog'
 import { scanMenuMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { isPdf, pdfToImages } from '@/lib/pdf-pages'
@@ -23,6 +24,7 @@ export function useMenuScan() {
   const [proposal, setProposal] = useState<MenuProposal | null>(null)
   const [preparing, setPreparing] = useState(false)
 
+  const languages = useContentLanguages()
   const scan = useMutation({
     ...scanMenuMutation(),
     onSuccess: (data) => setProposal(data),
@@ -83,7 +85,7 @@ export function useMenuScan() {
     if (!pages || pages.length === 0) return
     try {
       await scan.mutateAsync({
-        body: { files: pages },
+        body: { files: pages, languages },
         query: { 'api-version': API_VERSION },
       })
     } catch {

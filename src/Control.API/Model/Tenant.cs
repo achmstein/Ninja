@@ -118,6 +118,9 @@ public class Tenant
     /// <summary>"standard" or "egyptian": which Arabic the café's apps speak.</summary>
     public string ArabicStyle { get; set; } = "standard";
 
+    /// <summary>"both", "ar" or "en": which languages the business writes its menu, places and stock in (<see cref="Ninja.ContentLanguages"/>).</summary>
+    public string ContentLanguages { get; set; } = Ninja.ContentLanguages.Both;
+
     /// <summary>"light" or "dark" for someone who has not chosen; null follows the device.</summary>
     public string? DefaultTheme { get; set; }
 

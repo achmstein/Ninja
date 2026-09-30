@@ -433,6 +433,7 @@ public static partial class Templates
             sb.AppendLine($"      Tenant__TimeZone: \"{tenant.TimeZone}\"");
             sb.AppendLine($"      Tenant__DefaultLanguage: \"{tenant.DefaultLanguage}\"");
             sb.AppendLine($"      Tenant__ArabicStyle: \"{tenant.ArabicStyle}\"");
+            sb.AppendLine($"      Tenant__ContentLanguages: \"{tenant.ContentLanguages}\"");
 
             var db = service switch
             {

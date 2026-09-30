@@ -81,6 +81,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
             entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
             entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.ContentLanguages).HasMaxLength(4).IsRequired().HasDefaultValue(ContentLanguages.Both);
             entity.Property(e => e.ContactName).HasMaxLength(80);
             entity.Property(e => e.Phone).HasMaxLength(30);
             entity.Property(e => e.Address).HasMaxLength(200);

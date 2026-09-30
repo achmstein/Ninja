@@ -157,11 +157,24 @@
                   "files"
                 ],
                 "type": "object",
-                "properties": {
-                  "files": {
-                    "$ref": "#/components/schemas/IFormFileCollection"
+                "allOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "files": {
+                        "$ref": "#/components/schemas/IFormFileCollection"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "languages": {
+                        "type": "string"
+                      }
+                    }
                   }
-                }
+                ]
               }
             }
           },
@@ -3930,6 +3943,12 @@
           "suggestDescription": {
             "type": "boolean",
             "default": false
+          },
+          "languages": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4754,6 +4773,12 @@
             "items": {
               "$ref": "#/components/schemas/LocalizedText"
             }
+          },
+          "languages": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

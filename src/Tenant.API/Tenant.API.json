@@ -1062,6 +1062,12 @@
           "phonePlaceholder": {
             "type": "string",
             "default": ""
+          },
+          "contentLanguages": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

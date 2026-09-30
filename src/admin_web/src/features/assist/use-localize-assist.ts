@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { type LocalizeRequest, type LocalizeResponse } from '@/api/catalog'
 import { localizeMenuTextMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
 import { assistErrorMessage, useAssistStore } from './errors'
@@ -30,6 +31,8 @@ type LocalizeArgs = {
  */
 export function useLocalizeAssist() {
   const available = useAssistStore((s) => !s.unavailable)
+  // The assistant writes only the languages the business writes
+  const languages = useContentLanguages()
   const mutation = useMutation({
     ...localizeMenuTextMutation(),
     onError: (error) => toast.error(assistErrorMessage(error)),
@@ -47,6 +50,7 @@ export function useLocalizeAssist() {
       catalogTypeId: args.catalogTypeId ?? null,
       suggestCategory: args.suggestCategory ?? false,
       suggestDescription: args.suggestDescription ?? false,
+      languages,
     }
     return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
   }

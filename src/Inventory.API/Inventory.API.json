@@ -821,11 +821,24 @@
                   "file"
                 ],
                 "type": "object",
-                "properties": {
-                  "file": {
-                    "$ref": "#/components/schemas/IFormFile"
+                "allOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "file": {
+                        "$ref": "#/components/schemas/IFormFile"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "languages": {
+                        "type": "string"
+                      }
+                    }
                   }
-                }
+                ]
               }
             }
           },
@@ -2485,6 +2498,12 @@
             "items": {
               "$ref": "#/components/schemas/MenuItemToTrack"
             }
+          },
+          "languages": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

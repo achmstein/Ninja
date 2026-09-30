@@ -515,6 +515,11 @@ const webExtras = {
 
   // Menu component dialogs/sheets
   nameIsRequired: { en: "A name is required", ar: "الاسم مطلوب" },
+  contentLanguagesLabel: { en: "Menu languages", ar: "لغات القائمة" },
+  contentLanguagesBoth: { en: "Arabic and English", ar: "العربية والإنجليزية" },
+  contentLanguagesAr: { en: "Arabic only", ar: "العربية فقط" },
+  contentLanguagesEn: { en: "English only", ar: "الإنجليزية فقط" },
+  contentLanguagesHint: { en: "What you write your menu, places and stock in. With one language every name is asked for once, customers see the app in it, and the assistant writes only it.", ar: "اللغة التي تكتب بها قائمتك وأماكنك ومخزونك. مع لغة واحدة يُطلب كل اسم مرة واحدة، ويرى العملاء التطبيق بها، ويكتب المساعد بها فقط." },
   clickToAddPhoto: { en: "Click to add a photo.", ar: "انقر لإضافة صورة." },
   clickToReplacePhoto: { en: "Click to replace the photo.", ar: "انقر لتغيير الصورة." },
   photoHint: { en: "JPG or PNG, square works best.", ar: "JPG أو PNG، ويُفضَّل أن تكون مربعة." },
@@ -1338,7 +1343,7 @@ const webExtras = {
   removeChoice: { en: "One price only", ar: "سعر واحد فقط" },
   savingMenu: { en: "Saving the menu…", ar: "جارٍ حفظ القائمة…" },
   setUpMenuTitle: { en: "Set up your menu", ar: "جهّز قائمة الطعام" },
-  setUpMenuBody: { en: "Photograph your printed menu, or pick its PDF: the assistant reads every page into categories, items, prices and sizes in English and Arabic, and you check it before anything is saved.", ar: "صوّر قائمتك المطبوعة أو اختر ملف PDF الخاص بها: يقرأ المساعد كل صفحة إلى أقسام وأصناف وأسعار وأحجام بالعربية والإنجليزية، وتراجعها قبل حفظ أي شيء." },
+  setUpMenuBody: { en: "Photograph your printed menu, or pick its PDF: the assistant reads every page into categories, items, prices and sizes in your menu's languages, and you check it before anything is saved.", ar: "صوّر قائمتك المطبوعة أو اختر ملف PDF الخاص بها: يقرأ المساعد كل صفحة إلى أقسام وأصناف وأسعار وأحجام بلغات قائمتك، وتراجعها قبل حفظ أي شيء." },
   scanMenuPages: { en: "Scan the menu (photos or PDF)", ar: "امسح القائمة (صور أو PDF)" },
   orBuildByHand: { en: "Or build it by hand", ar: "أو أنشئها يدويًا" },
   reviewMenuScan: { en: "Check the menu", ar: "راجع القائمة" },

@@ -97,6 +97,7 @@ export type TenantLocaleDto = {
     arabicStyle?: null | string;
     phonePattern?: string;
     phonePlaceholder?: string;
+    contentLanguages?: null | string;
 };
 
 export type TenantResponse = {

@@ -37,6 +37,9 @@ public static partial class ControlApi
         var arabicStyle = string.IsNullOrWhiteSpace(request.ArabicStyle) ? tenant.ArabicStyle : request.ArabicStyle.Trim().ToLowerInvariant();
         if (arabicStyle is not ("standard" or "egyptian"))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The Arabic style must be standard or egyptian." });
+        var contentLanguages = string.IsNullOrWhiteSpace(request.ContentLanguages) ? tenant.ContentLanguages : request.ContentLanguages.Trim().ToLowerInvariant();
+        if (!ContentLanguages.IsValid(contentLanguages))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The business's languages must be both, ar or en." });
         // "device" follows the device, as null does on the record; null here leaves it
         var theme = request.DefaultTheme?.Trim().ToLowerInvariant();
         var defaultTheme = theme is null ? tenant.DefaultTheme : theme is "" or "device" ? null : theme;
@@ -65,7 +68,8 @@ public static partial class ControlApi
         tenant.Country = locale.Country;
         tenant.Currency = locale.Currency;
         tenant.TimeZone = locale.TimeZone;
-        tenant.DefaultLanguage = locale.Language;
+        tenant.ContentLanguages = contentLanguages;
+        tenant.DefaultLanguage = ContentLanguages.Opening(contentLanguages, locale.Language);
         tenant.ArabicStyle = arabicStyle;
         tenant.DefaultTheme = defaultTheme;
         tenant.Slab = slab;
@@ -150,7 +154,8 @@ public record UpdateTenantRequest(
     [property: Description("light, dark or device; null leaves it")] string? DefaultTheme = null,
     [property: Description("The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
-    [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null);
+    [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null,
+    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null);
 
 /// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
 public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);

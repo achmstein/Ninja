@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { type ReceiptProposal } from '@/api/inventory'
 import { scanReceiptMutation } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { toast } from '@/lib/toast'
@@ -18,6 +19,7 @@ export function useReceiptScan() {
   const available = useAssistStore((s) => !s.unavailable)
   const [proposal, setProposal] = useState<ReceiptProposal | null>(null)
 
+  const languages = useContentLanguages()
   const scan = useMutation({
     ...scanReceiptMutation(),
     onSuccess: (data) => setProposal(data),
@@ -36,7 +38,7 @@ export function useReceiptScan() {
     }
     try {
       await scan.mutateAsync({
-        body: { file: image },
+        body: { file: image, languages },
         query: { 'api-version': API_VERSION },
       })
     } catch {

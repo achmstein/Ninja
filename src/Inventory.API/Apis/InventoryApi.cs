@@ -1,8 +1,10 @@
 #nullable enable
+using System.ComponentModel;
 using Ninja.AI;
 using Ninja.AI.Agents;
 using Ninja.AI.Http;
 using Ninja.AI.Images;
+using Ninja.AI.Text;
 using Ninja.Inventory.API.Application.Assist;
 using Ninja.Inventory.API.Application.Commands;
 using Ninja.Inventory.API.Application.Queries;
@@ -326,6 +328,7 @@ public static class InventoryApi
 
     public static async Task<Results<Ok<ReceiptProposal>, BadRequest<string>, ProblemHttpResult>> ScanReceipt(
         IFormFile file,
+        [FromForm, Description("The business's languages: both, ar or en; a new item of a one-language business is named in that language only. Absent is both")] string? languages,
         HttpContext httpContext,
         [FromServices] ReceiptScanner scanner,
         [FromServices] IInventoryQueries queries,
@@ -346,7 +349,7 @@ public static class InventoryApi
 
         try
         {
-            return TypedResults.Ok(await scanner.ScanAsync(branchId, image, stockItems, ct, lastCosts));
+            return TypedResults.Ok(await scanner.ScanAsync(branchId, image, stockItems, ct, lastCosts, languages ?? ContentLanguages.Both));
         }
         catch (AIException ex)
         {
@@ -504,7 +507,7 @@ public static class InventoryApi
 
         try
         {
-            return TypedResults.Ok(await proposer.ProposeAsync(items, shelf, ct));
+            return TypedResults.Ok(await proposer.ProposeAsync(items, shelf, ct, request.Languages ?? ContentLanguages.Both));
         }
         catch (AIException ex)
         {
