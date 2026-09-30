@@ -131,7 +131,7 @@ export function LiveFloor({
             )}
           </h2>
           <Button variant='link' size='sm' className='h-auto p-0' asChild>
-            <Link to='/orders'>{t('viewAll')}</Link>
+            <Link to='/orders/live'>{t('viewAll')}</Link>
           </Button>
         </div>
         {isLoading ? (
@@ -195,7 +195,7 @@ export function LiveFloor({
             {pending.length > MAX_ROWS && (
               <li className='py-2 text-center'>
                 <Button variant='link' size='sm' asChild>
-                  <Link to='/orders'>
+                  <Link to='/orders/live'>
                     {t('viewAllOrdersCount', { count: pending.length })}
                   </Link>
                 </Button>

@@ -46,33 +46,31 @@ export function TalabatSettingsPage() {
 
   return (
     <Main>
-      <div className='mx-auto w-full max-w-3xl space-y-6'>
-        <PageHeader
-          title={
-            <span className='flex items-center gap-3'>
-              <img src={logo} alt={t('talabatNav')} className='h-6 w-auto' />
-            </span>
-          }
-          description={t('talabatDescription')}
-          badge={
-            status &&
-            (status.connected ? (
-              <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
-                {t('talabatConnected')}
-              </Badge>
-            ) : (
-              <Badge variant='outline'>{t('talabatNotConnected')}</Badge>
-            ))
-          }
-        />
-        {query.error ? (
-          <ErrorState error={query.error} onRetry={() => query.refetch()} />
-        ) : status ? (
-          <TalabatSettings status={status} />
-        ) : (
-          <Skeleton className='h-[32rem] w-full' />
-        )}
-      </div>
+      <PageHeader
+        title={
+          <span className='flex items-center gap-3'>
+            <img src={logo} alt={t('talabatNav')} className='h-6 w-auto' />
+          </span>
+        }
+        description={t('talabatDescription')}
+        badge={
+          status &&
+          (status.connected ? (
+            <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
+              {t('talabatConnected')}
+            </Badge>
+          ) : (
+            <Badge variant='outline'>{t('talabatNotConnected')}</Badge>
+          ))
+        }
+      />
+      {query.error ? (
+        <ErrorState error={query.error} onRetry={() => query.refetch()} />
+      ) : status ? (
+        <TalabatSettings status={status} />
+      ) : (
+        <Skeleton className='h-[32rem] w-full' />
+      )}
     </Main>
   )
 }

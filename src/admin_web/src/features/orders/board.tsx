@@ -13,7 +13,6 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
-import { OrdersTabs } from './components/orders-tabs'
 import { PendingOrderCard } from './components/pending-order-card'
 import { PlatformRejectReasonPicker } from './components/platform-badge'
 import {
@@ -24,7 +23,7 @@ import {
 } from './status'
 import { useOrderActions } from './use-order-actions'
 
-const route = getRouteApi('/_authenticated/orders/')
+const route = getRouteApi('/_authenticated/orders/live')
 
 // Past this many tickets the wall needs grouping to stay scannable
 const FILTER_THRESHOLD = 12
@@ -97,7 +96,8 @@ export function OrdersBoard() {
     <>
       <Main>
         <PageHeader
-          title={t('orders')}
+          title={t('liveOrders')}
+          back={{ to: '/orders' }}
           badge={
             <>
               {pending.length > 0 && (
@@ -112,9 +112,8 @@ export function OrdersBoard() {
             </>
           }
         >
-          <div className='flex flex-wrap items-center justify-between gap-2'>
-            <OrdersTabs value='live' pendingCount={pending.length} />
-            {showFilter && (
+          {showFilter && (
+            <div className='flex flex-wrap items-center gap-2'>
               <ToggleGroup
                 type='single'
                 variant='outline'
@@ -145,8 +144,8 @@ export function OrdersBoard() {
                   </span>
                 </ToggleGroupItem>
               </ToggleGroup>
-            )}
-          </div>
+            </div>
+          )}
         </PageHeader>
 
         {pendingQuery.isError ? (

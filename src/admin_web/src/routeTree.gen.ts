@@ -50,6 +50,7 @@ import { Route as AuthenticatedPlacesHistoryRouteImport } from './routes/_authen
 import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll/payslips'
 import { Route as AuthenticatedPayrollEmployeesRouteImport } from './routes/_authenticated/payroll/employees'
 import { Route as AuthenticatedPayrollAttendanceRouteImport } from './routes/_authenticated/payroll/attendance'
+import { Route as AuthenticatedOrdersLiveRouteImport } from './routes/_authenticated/orders/live'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedInventoryReportsRouteImport } from './routes/_authenticated/inventory/reports'
 import { Route as AuthenticatedInventoryMenuCostRouteImport } from './routes/_authenticated/inventory/menu-cost'
@@ -291,6 +292,11 @@ const AuthenticatedPayrollAttendanceRoute =
     path: '/payroll/attendance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrdersLiveRoute = AuthenticatedOrdersLiveRouteImport.update({
+  id: '/orders/live',
+  path: '/orders/live',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrdersHistoryRoute =
   AuthenticatedOrdersHistoryRouteImport.update({
     id: '/orders/history',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/orders/live': typeof AuthenticatedOrdersLiveRoute
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
@@ -436,6 +443,7 @@ export interface FileRoutesByTo {
   '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/orders/live': typeof AuthenticatedOrdersLiveRoute
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/_authenticated/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/_authenticated/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/_authenticated/orders/live': typeof AuthenticatedOrdersLiveRoute
   '/_authenticated/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/_authenticated/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/_authenticated/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
@@ -548,6 +557,7 @@ export interface FileRouteTypes {
     | '/inventory/menu-cost'
     | '/inventory/reports'
     | '/orders/history'
+    | '/orders/live'
     | '/payroll/attendance'
     | '/payroll/employees'
     | '/payroll/payslips'
@@ -602,6 +612,7 @@ export interface FileRouteTypes {
     | '/inventory/menu-cost'
     | '/inventory/reports'
     | '/orders/history'
+    | '/orders/live'
     | '/payroll/attendance'
     | '/payroll/employees'
     | '/payroll/payslips'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inventory/menu-cost'
     | '/_authenticated/inventory/reports'
     | '/_authenticated/orders/history'
+    | '/_authenticated/orders/live'
     | '/_authenticated/payroll/attendance'
     | '/_authenticated/payroll/employees'
     | '/_authenticated/payroll/payslips'
@@ -995,6 +1007,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPayrollAttendanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/live': {
+      id: '/_authenticated/orders/live'
+      path: '/orders/live'
+      fullPath: '/orders/live'
+      preLoaderRoute: typeof AuthenticatedOrdersLiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/history': {
       id: '/_authenticated/orders/history'
       path: '/orders/history'
@@ -1092,6 +1111,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventoryMenuCostRoute: typeof AuthenticatedInventoryMenuCostRoute
   AuthenticatedInventoryReportsRoute: typeof AuthenticatedInventoryReportsRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
+  AuthenticatedOrdersLiveRoute: typeof AuthenticatedOrdersLiveRoute
   AuthenticatedPayrollAttendanceRoute: typeof AuthenticatedPayrollAttendanceRoute
   AuthenticatedPayrollEmployeesRoute: typeof AuthenticatedPayrollEmployeesRoute
   AuthenticatedPayrollPayslipsRoute: typeof AuthenticatedPayrollPayslipsRoute
@@ -1139,6 +1159,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInventoryMenuCostRoute: AuthenticatedInventoryMenuCostRoute,
   AuthenticatedInventoryReportsRoute: AuthenticatedInventoryReportsRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
+  AuthenticatedOrdersLiveRoute: AuthenticatedOrdersLiveRoute,
   AuthenticatedPayrollAttendanceRoute: AuthenticatedPayrollAttendanceRoute,
   AuthenticatedPayrollEmployeesRoute: AuthenticatedPayrollEmployeesRoute,
   AuthenticatedPayrollPayslipsRoute: AuthenticatedPayrollPayslipsRoute,

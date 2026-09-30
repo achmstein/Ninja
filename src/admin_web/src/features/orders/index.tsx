@@ -26,12 +26,12 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { getOrdersColumns } from './columns'
+import { LiveOrdersButton } from './components/live-orders-button'
 import { OrderDetailsSheet } from './components/order-details-sheet'
-import { OrdersTabs } from './components/orders-tabs'
 import { isCancelled, orderStatuses } from './status'
 import { useOrderActions } from './use-order-actions'
 
-const route = getRouteApi('/_authenticated/orders/history')
+const route = getRouteApi('/_authenticated/orders/')
 
 type SortParam = 'date_desc' | 'date_asc' | 'total_desc' | 'total_asc'
 
@@ -178,9 +178,10 @@ export function OrdersManagement() {
   return (
     <>
       <Main>
-        <PageHeader title={t('orders')}>
-          <OrdersTabs value='history' pendingCount={pendingOrders.length} />
-        </PageHeader>
+        <PageHeader
+          title={t('orders')}
+          actions={<LiveOrdersButton pendingCount={pendingOrders.length} />}
+        />
 
         <DataTableToolbar
           table={table}

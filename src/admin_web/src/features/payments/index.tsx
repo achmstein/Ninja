@@ -60,32 +60,30 @@ export function PaymentSettingsPage() {
 
   return (
     <Main>
-      <div className='mx-auto w-full max-w-3xl space-y-6'>
-        <PageHeader
-          title={t('onlinePaymentsNav')}
-          description={t('paySettingsDescription')}
-          badge={
-            settings &&
-            (settings.ready ? (
-              <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
-                {t('payReady')}
-              </Badge>
-            ) : settings.simulated ? (
-              <Badge variant='secondary'>{t('payDemoBadge')}</Badge>
-            ) : (
-              <Badge variant='outline'>{t('payNotReady')}</Badge>
-            ))
-          }
-        />
-        {query.error ? (
-          <ErrorState error={query.error} onRetry={() => query.refetch()} />
-        ) : settings ? (
-          // Re-seeded from every save: the secrets go back to "kept"
-          <SettingsForm key={query.dataUpdatedAt} settings={settings} />
-        ) : (
-          <Skeleton className='h-[40rem] w-full' />
-        )}
-      </div>
+      <PageHeader
+        title={t('onlinePaymentsNav')}
+        description={t('paySettingsDescription')}
+        badge={
+          settings &&
+          (settings.ready ? (
+            <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
+              {t('payReady')}
+            </Badge>
+          ) : settings.simulated ? (
+            <Badge variant='secondary'>{t('payDemoBadge')}</Badge>
+          ) : (
+            <Badge variant='outline'>{t('payNotReady')}</Badge>
+          ))
+        }
+      />
+      {query.error ? (
+        <ErrorState error={query.error} onRetry={() => query.refetch()} />
+      ) : settings ? (
+        // Re-seeded from every save: the secrets go back to "kept"
+        <SettingsForm key={query.dataUpdatedAt} settings={settings} />
+      ) : (
+        <Skeleton className='h-[40rem] w-full' />
+      )}
     </Main>
   )
 }

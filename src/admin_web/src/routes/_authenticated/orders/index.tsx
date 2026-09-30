@@ -1,15 +1,20 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { OrdersBoard } from '@/features/orders/board'
+import { pagedSearch, rangeSearch } from '@/lib/search-schemas'
+import { OrdersManagement } from '@/features/orders'
 
-const boardSearchSchema = z.object({
-  // Group the live queue by where the order came from
-  place: z.enum(['rooms', 'tables', 'counter']).optional(),
+const ordersSearchSchema = z.object({
+  ...pagedSearch,
+  ...rangeSearch,
+  status: z.array(z.string()).optional(),
+  // Order number or customer name
+  q: z.string().optional(),
+  sort: z.enum(['date_desc', 'date_asc', 'total_desc', 'total_asc']).optional(),
 })
 
-// Orders opens on the live queue (rooms-style IA); the paginated table
-// lives on the History tab at /orders/history
+// Orders opens on the history table; the live queue is one button away at
+// /orders/live
 export const Route = createFileRoute('/_authenticated/orders/')({
-  validateSearch: boardSearchSchema,
-  component: OrdersBoard,
+  validateSearch: ordersSearchSchema,
+  component: OrdersManagement,
 })

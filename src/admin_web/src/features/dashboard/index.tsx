@@ -30,7 +30,7 @@ import { Trends } from './components/trends'
 
 type AttentionLine = {
   key: string
-  to: '/orders' | '/requests' | '/inventory'
+  to: '/orders/live' | '/requests' | '/inventory'
   search?: Record<string, unknown>
   dot: string
   text: string
@@ -126,7 +126,7 @@ export function Dashboard() {
   if (pending.length > 0) {
     attention.push({
       key: 'orders',
-      to: '/orders',
+      to: '/orders/live',
       dot:
         oldestUrgency === 'delayed'
           ? 'bg-destructive'
@@ -206,7 +206,7 @@ export function Dashboard() {
           value={pending.length}
           tone={pending.length > 0 ? 'warning' : 'default'}
           loading={pendingQuery.isPending}
-          to='/orders'
+          to='/orders/live'
         />
         {!cloudKitchen && features.timeBilling && (
           <Stat

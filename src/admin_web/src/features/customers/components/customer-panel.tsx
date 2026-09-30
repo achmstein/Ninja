@@ -196,7 +196,7 @@ function CustomerHub({
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuItem asChild>
-              <Link to='/orders/history' search={{ q: name }}>
+              <Link to='/orders' search={{ q: name }}>
                 {t('viewAllOrders')}
               </Link>
             </DropdownMenuItem>
@@ -606,7 +606,7 @@ function RecentOrders({
       <div className='flex items-center justify-between'>
         <h3 className='text-sm font-medium'>{t('recentOrders')}</h3>
         <Button variant='link' size='sm' className='h-auto p-0' asChild>
-          <Link to='/orders/history' search={{ q: name }}>
+          <Link to='/orders' search={{ q: name }}>
             {t('viewAllOrders')}
           </Link>
         </Button>

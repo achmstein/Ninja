@@ -943,7 +943,7 @@ const webExtras = {
   talabatPreviewCounts: { en: "{dishes} dishes, {options} options in {categories} categories", ar: "{dishes} صنفًا، {options} خيارًا في {categories} فئات" },
   talabatPreviewShow: { en: "Show what is sent", ar: "عرض ما يُرسل" },
   talabatPreviewHide: { en: "Hide", ar: "إخفاء" },
-  live:{ en: "Live", ar: "مباشر" },
+  liveOrders: { en: "Live orders", ar: "الطلبات المباشرة" },
   ordersWaitingLine: { plural: "count", en: {"one":"{count} order waiting","other":"{count} orders waiting"}, ar: {"one":"طلب واحد ينتظر","two":"طلبان ينتظران","few":"{count} طلبات تنتظر","other":"{count} طلبًا ينتظر"} },
   oldestAge: { en: "oldest {age}", ar: "أقدمها {age}" },
   requestsWaitingLine: { plural: "count", en: {"one":"{count} service request","other":"{count} service requests"}, ar: {"one":"طلب خدمة واحد","two":"طلبا خدمة","few":"{count} طلبات خدمة","other":"{count} طلب خدمة"} },
