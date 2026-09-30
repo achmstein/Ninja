@@ -444,6 +444,12 @@ export function applyBrandTheme(input: BrandThemeInput | null | undefined) {
   applied = input ?? null
   applyThemeColor(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
   const existing = document.getElementById(STYLE_ID)
+  // No theme is the neutral staff theme (styles/theme.css), not the customer style's defaults:
+  // those would round every button into a pill and swap the admin's fonts
+  if (!input) {
+    existing?.remove()
+    return
+  }
   const tokens = brandTokens(input)
   ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic, heading: tokens.fontHeading })
   const css = brandThemeCss(input)
