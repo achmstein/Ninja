@@ -19,7 +19,7 @@ export function toLatinDigits(text: string): string {
 }
 
 /**
- * The one form of a number in the café's country: separators dropped, 00
+ * The one form of a number in the business's country: separators dropped, 00
  * read as +, the country's own code (+20, +966, +971) or a missing trunk 0
  * turned back into the local 0-number; elsewhere an international number
  * keeps its plus. Empty when nothing number-like was typed.

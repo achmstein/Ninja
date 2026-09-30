@@ -54,7 +54,7 @@ export function isRoom(place: PlaceViewModel | null | undefined): boolean {
 
 /**
  * A place with a clock: it has a tariff, so it runs stays. Pass the time
- * billing switch where the café's is at hand: with it off, a place that
+ * billing switch where the business's is at hand: with it off, a place that
  * kept its tariff from a bigger plan is a plain table here.
  */
 export function isTimed(

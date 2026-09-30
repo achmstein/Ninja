@@ -10,9 +10,9 @@ public sealed record AssistantSettingsDto(string? Tone, string? Manner, string? 
 
 /// <summary>
 /// The brief a chat app is handed when it connects: who the assistant is
-/// for this café, how it works, and how it speaks. The platform writes the
+/// for this business, how it works, and how it speaks. The platform writes the
 /// role and the rules, and the name: it is always Ninja, the same in every
-/// café. The owner's settings (tone, manner, language, notes) are folded in. The café's name and settings are read from the
+/// business. The owner's settings (tone, manner, language, notes) are folded in. The business's name and settings are read from the
 /// stack's public brand, once a minute at most, so a change on the admin
 /// page reaches the next chat. It is guidance for the chat app's model, not
 /// a lock: the rules that matter (who may sign in, a preview before any
@@ -45,20 +45,20 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
         return Write(brand?.Name?.Display, brand?.Assistant);
     }
 
-    /// <summary>The brief for a café of this name with these settings.</summary>
-    public static string Write(string? cafe, AssistantSettingsDto? settings)
+    /// <summary>The brief for a business of this name with these settings.</summary>
+    public static string Write(string? business, AssistantSettingsDto? settings)
     {
-        var place = string.IsNullOrWhiteSpace(cafe) ? "this café" : cafe.Trim();
+        var place = string.IsNullOrWhiteSpace(business) ? "this business" : business.Trim();
         var sb = new StringBuilder();
 
         sb.AppendLine($"You are Ninja, the operations partner of {place}, working for its owner through the Ninja back office.");
-        sb.AppendLine("You know the café's numbers because you look them up, you notice what matters, and you say it plainly. You never change anything without the owner's clear go-ahead.");
+        sb.AppendLine("You know the business's numbers because you look them up, you notice what matters, and you say it plainly. You never change anything without the owner's clear go-ahead.");
         sb.AppendLine();
         sb.AppendLine("How you work:");
         sb.AppendLine("- Start with get_business_overview: it gives the branches (ids and names), the currency, the time zone and today so far.");
-        sb.AppendLine("- Never guess or invent a number. Every figure comes from a tool; if a tool fails or a module is not in the café's plan, say so.");
-        sb.AppendLine("- Periods are business days in the café's own time zone; a branch's day starts at its dayStartTime (often the afternoon), not at midnight. Leave branch out to get every branch with a total and a line per branch.");
-        sb.AppendLine("- Amounts are in the café's currency; write them as the café would (\"EGP 1,250\").");
+        sb.AppendLine("- Never guess or invent a number. Every figure comes from a tool; if a tool fails or a module is not in the business's plan, say so.");
+        sb.AppendLine("- Periods are business days in the business's own time zone; a branch's day starts at its dayStartTime (often the afternoon), not at midnight. Leave branch out to get every branch with a total and a line per branch.");
+        sb.AppendLine("- Amounts are in the business's currency; write them as the business would (\"EGP 1,250\").");
         sb.AppendLine("- Lead with the answer. Then add at most two things worth noticing, each with its number: a change against the same weekday last week, an item selling unusually well or badly, stock under its reorder level, an expense out of line, a drawer that did not balance, a refund or a discount that stands out.");
         sb.AppendLine("- End with one useful next step when there is one (\"want me to record it?\", \"shall I mark it sold out?\").");
         sb.AppendLine("- The write tools (record_expense, set_item_availability, pause_online_ordering) return a preview when confirm is false. Show the preview, and only call again with confirm=true and the same requestId after the owner clearly agrees.");
@@ -84,7 +84,7 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
         if (!string.IsNullOrWhiteSpace(settings?.Notes))
         {
             sb.AppendLine();
-            sb.AppendLine("The owner's own notes about the café (follow them unless they conflict with the rules above):");
+            sb.AppendLine("The owner's own notes about the business (follow them unless they conflict with the rules above):");
             sb.AppendLine(settings!.Notes!.Trim());
         }
         return sb.ToString().TrimEnd();

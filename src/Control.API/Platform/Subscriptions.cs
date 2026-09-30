@@ -5,7 +5,7 @@ using Ninja.Control.API.Model;
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
-/// The café's subscription on the platform: its plan and add-ons (which
+/// The business's subscription on the platform: its plan and add-ons (which
 /// become entitlements on the stack), what it has paid through, and the
 /// suspension that follows a paid period nobody renewed. Billing is by hand
 /// for now: a platform admin records each payment. A payment provider's

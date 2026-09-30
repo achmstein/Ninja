@@ -6,8 +6,8 @@ using Ninja.Ordering.API.Extensions;
 using Ninja.Ordering.Domain.Seedwork;
 
 /// <summary>
-/// Command to create a new cafe order.
-/// Simplified for cafe - no address or payment details.
+/// Command to create a new business order.
+/// Simplified for business - no address or payment details.
 /// Returns the new order's id, or 0 for a deduplicated retry (the original
 /// id isn't recorded against the request id — callers treat 0 as "already
 /// placed" and fall back to looking the order up).
@@ -114,7 +114,7 @@ public class CreateOrderCommand : IRequest<int>
     public string? PromoCode { get; private set; }
 
     /// <summary>
-    /// The café takes a guest's order without a place, to collect. Read from
+    /// The business takes a guest's order without a place, to collect. Read from
     /// the branch's projected settings by the endpoint, never from a body.
     /// </summary>
     [DataMember]

@@ -5,7 +5,7 @@ namespace Ninja.Ordering.UnitTests.Domain;
 
 /// <summary>
 /// Builder for creating Order instances in tests.
-/// Simplified for cafe ordering - no address or payment details.
+/// Simplified for business ordering - no address or payment details.
 /// </summary>
 public class OrderBuilder
 {

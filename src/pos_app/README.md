@@ -2,7 +2,7 @@
 
 The till as a native Android-tablet app: the same screens as `src/pos_web`
 (React + shadcn/ui), built on Forui so the look matches by construction, plus
-what a browser cannot do — ESC/POS printing over the café LAN, a cash-drawer
+what a browser cannot do — ESC/POS printing over the business's LAN, a cash-drawer
 kick, a locked-down (kiosk) tablet, and later an offline sales queue.
 
 Forked from `src/admin_app` (Riverpod, GoRouter, dio, signalr_netcore, ARB
@@ -61,10 +61,10 @@ tablet would: type `http://localhost:5000` (`/api/tenant` there names the
 realm) and it is connected.
 
 A release build is generic: the platform's download page
-(`https://{domain}/apps`, built by `mobile-deploy.yml`) serves every café,
+(`https://{domain}/apps`, built by `mobile-deploy.yml`) serves every business,
 and the tablet is connected to its own on first open — the QR code on the
-admin's Apps page, or the café's address typed. Settings and the foot of the
-sign-in form have "Change café". A record pins a build to one stack instead
+admin's Apps page, or the business's address typed. Settings and the foot of the
+sign-in form have "Change business". A record pins a build to one stack instead
 (`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
 The launcher icon and splash are the platform's (`assets/images/ninja_*.png`;
 regenerate with `dart run flutter_launcher_icons && dart run flutter_native_splash:create`).
@@ -76,7 +76,7 @@ role (the backend's `Pos` policy). The Keycloak client is `pos-app`
 ## Printer and cash drawer
 
 Settings (header menu → Settings) takes the address of an 80 mm network
-thermal printer on the café LAN; it is spoken to on the raw ESC/POS port
+thermal printer on the business's LAN; it is spoken to on the raw ESC/POS port
 (9100) with no driver. Receipts are rendered as an image
 (`lib/features/receipt/receipt_sheet.dart`, painted off screen by
 `lib/core/printing/widget_rasterizer.dart`) so Arabic and the layout come out

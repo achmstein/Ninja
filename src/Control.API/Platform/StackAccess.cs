@@ -149,7 +149,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         if (path.StartsWith("/api/tenant/images/", StringComparison.Ordinal))
             return method == HttpMethod.Get ? new(HttpStatusCode.NotFound) : Json(BrandOf(tenant));
 
-        // The café's figures, as its services would report them: steady numbers seeded by the slug
+        // The business's figures, as its services would report them: steady numbers seeded by the slug
         var seed = tenant.Slug.Aggregate(17, (h, c) => h * 31 + c) & 0x7fffffff;
         switch (path)
         {
@@ -196,7 +196,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
             features[key] = (features[key]?.GetValue<bool>() ?? false) && (entitled[key]?.GetValue<bool>() ?? true);
     }
 
-    /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on but online payments (which waits for the café's payment keys).</summary>
+    /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on but online payments (which waits for the business's payment keys).</summary>
     public static JsonObject NeutralBrand(Tenant tenant, TenantHosts hosts) => new()
     {
         ["name"] = new JsonObject { ["en"] = tenant.NameEn, ["ar"] = tenant.NameAr },

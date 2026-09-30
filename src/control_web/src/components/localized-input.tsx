@@ -24,7 +24,7 @@ export function toLocalizedValue(
   return { en: text?.en ?? '', ar: text?.ar ?? '' }
 }
 
-/** Back to the API's shape: trimmed, an empty side becomes null; a café may go by one language */
+/** Back to the API's shape: trimmed, an empty side becomes null; a business may go by one language */
 export function fromLocalizedValue(value: LocalizedValue): {
   en: string | null
   ar: string | null

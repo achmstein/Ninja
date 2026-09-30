@@ -16,7 +16,7 @@ import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
 
 /**
- * The café on Talabat, as Talabat's onboarding gives it: its chain there and
+ * The business on Talabat, as Talabat's onboarding gives it: its chain there and
  * its market. What Talabat needs from us in return — the plugin URL and each
  * branch's remote id — sits beside it to copy.
  */

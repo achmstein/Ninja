@@ -2,7 +2,7 @@
 namespace Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
-/// One line of what the café owes an employee or has given them. Append
+/// One line of what the business owes an employee or has given them. Append
 /// only; the balance is the sum. An advance is money already handed over,
 /// so it lowers what is due without anyone doing arithmetic.
 /// </summary>
@@ -53,6 +53,6 @@ public class LedgerEntry : Entity, IAggregateRoot
 
     public static bool Credits(LedgerEntryType type) => type is LedgerEntryType.Earned or LedgerEntryType.Bonus;
 
-    /// <summary>The line's effect on the balance: what the café owes goes up or down.</summary>
+    /// <summary>The line's effect on the balance: what the business owes goes up or down.</summary>
     public decimal Signed => Credits(Type) ? Amount : -Amount;
 }

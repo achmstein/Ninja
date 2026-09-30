@@ -65,7 +65,7 @@ export async function deleteAccount(): Promise<void> {
   await apiClient.delete(`${BASE}/delete-account`)
 }
 
-// Claiming an account the café added at the counter (name and phone, no
+// Claiming an account the business added at the counter (name and phone, no
 // email): anonymous, with the one-time token from the link or QR the
 // cashier showed.
 

@@ -3,7 +3,7 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What a café can be sold: the nine switches Tenant.API keeps, as modules.</summary>
+/// <summary>What a business can be sold: the nine switches Tenant.API keeps, as modules.</summary>
 public enum Module
 {
     /// <summary>Booking a place ahead or holding it on the way: any place the owner opens to it, with or without a clock.</summary>
@@ -16,7 +16,7 @@ public enum Module
     Finance,
     Payroll,
     Kds,
-    /// <summary>Guests pay or split the bill online, through the café's own Paymob account. An add-on on every plan.</summary>
+    /// <summary>Guests pay or split the bill online, through the business's own Paymob account. An add-on on every plan.</summary>
     OnlinePayments,
 }
 
@@ -36,7 +36,7 @@ public static class PlanCatalog
     /// <summary>
     /// The service a module runs in, for the five that have one of their own.
     /// Reservations and Time billing live in Spaces beside the plain tables
-    /// every café has; Kds is a screen, not a service.
+    /// every business has; Kds is a screen, not a service.
     /// </summary>
     private static readonly IReadOnlyDictionary<Module, string> ServiceOf = new Dictionary<Module, string>
     {
@@ -51,14 +51,14 @@ public static class PlanCatalog
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
         [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
-        // Online payments goes through the café's own payment account: bought on its own, whatever the plan
+        // Online payments goes through the business's own payment account: bought on its own, whatever the plan
         [TenantPlan.Pro] = All.Except([Module.OnlinePayments]).ToHashSet(),
     };
 
     /// <summary>
     /// The paths a module owns on the gateway; blocked (402) when the module
     /// is not in the plan. Neither Spaces module keeps /api/places itself:
-    /// plain tables and their QR codes live there and every café has those.
+    /// plain tables and their QR codes live there and every business has those.
     /// </summary>
     public static readonly IReadOnlyList<(Module Module, string Path)> Routes =
     [

@@ -2,9 +2,9 @@ import 'tenant_connection.dart';
 
 /// Application configuration for the kitchen display tablet app
 ///
-/// Which café this app talks to is data, not code. One generic build goes
-/// to every café from the platform's download page; the first time it opens
-/// it asks for the café's address and keeps the [TenantConnection] it finds
+/// Which business this app talks to is data, not code. One generic build goes
+/// to every business from the platform's download page; the first time it opens
+/// it asks for the business's address and keeps the [TenantConnection] it finds
 /// on the device. A build can still be pinned to one stack instead:
 /// `tenants/<slug>.json` at the repository root, passed as
 /// `--dart-define-from-file`, and then it never asks. Debug builds reach the
@@ -24,7 +24,7 @@ class AppConfig {
   /// A build told its stack at build time never asks for one
   static bool get isPinned => _apiUrl.isNotEmpty;
 
-  /// The café this device was connected to, when the build is not pinned
+  /// The business this device was connected to, when the build is not pinned
   static TenantConnection? get connection => TenantConnection.current.value;
 
   /// Whether there is a stack to talk to. Until there is, the connect
@@ -39,7 +39,7 @@ class AppConfig {
     if (_apiUrl.isNotEmpty) return _apiUrl;
     if (connection case final connection?) return connection.apiUrl;
     if (!_isRelease) return 'http://localhost:5000';
-    throw StateError('Not connected to a café: the connect screen comes first');
+    throw StateError('Not connected to a business: the connect screen comes first');
   }
 
   // API endpoints (through BFF) - trailing slash required for Dio path resolution
@@ -50,15 +50,15 @@ class AppConfig {
   static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
 
   /// The OpenID issuer to sign in against: the realm a pinned build was
-  /// given, else the one the café's API named when this device connected
+  /// given, else the one the business's API named when this device connected
   /// (its own realm on the platform's auth host), else the AppHost's
   /// Keycloak through adb reverse in debug. Never a default realm: the app
-  /// signs in against the café's, or against none.
+  /// signs in against the business's, or against none.
   static String get identityUrl {
     if (_authUrl.isNotEmpty && _realm.isNotEmpty) return '$_authUrl/realms/$_realm';
     if (connection?.authority case final authority?) return authority;
     if (!_isRelease && _realm.isNotEmpty) return 'http://localhost:8080/realms/$_realm';
-    throw StateError('No realm to sign in against: the café\'s API did not name one');
+    throw StateError('No realm to sign in against: the business\'s API did not name one');
   }
 
   // OIDC configuration (Resource Owner Password Credentials, like pos_app).

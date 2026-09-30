@@ -13,11 +13,11 @@ namespace Ninja.Control.API.Apis;
 public sealed record TalabatRelayRequest(string Token, string Kind, string Url, string RemoteOrderId, string? Reason, DateTime? AcceptanceTime);
 
 /// <summary>
-/// Talabat's plugin, for every café at once (Delivery Hero's POS Plugin API).
+/// Talabat's plugin, for every business at once (Delivery Hero's POS Plugin API).
 /// Talabat knows one integration — Ninja — at one address, and routes by the
 /// remote id each branch was registered with ("{slug}-{branchId}"). Its calls
-/// land here, are checked against its signature, and go on to the café's own
-/// stack; what the café does with an order comes back through the relay and
+/// land here, are checked against its signature, and go on to the business's own
+/// stack; what the business does with an order comes back through the relay and
 /// goes on to Talabat under Ninja's account.
 /// </summary>
 public static class TalabatApi
@@ -33,7 +33,7 @@ public static class TalabatApi
         api.MapGet("/menuimport/{remoteId}", MenuImport).WithName("TalabatMenuImport");
         api.MapPost("/catalog-callback", CatalogCallback).WithName("TalabatCatalogCallback");
 
-        // The cafés' side, each with its own key
+        // The businesses' side, each with its own key
         api.MapPost("/relay/status", RelayStatus).WithName("TalabatRelayStatus");
         api.MapPost("/relay/catalog", RelayCatalog).WithName("TalabatRelayCatalog");
         api.MapPost("/relay/items", RelayItems).WithName("TalabatRelayItems");
@@ -44,9 +44,9 @@ public static class TalabatApi
 
     /// <summary>
     /// A new order for a branch. Answered within seconds, as Talabat asks:
-    /// 200 with our order id once the café has it; 400 with Talabat's reason
+    /// 200 with our order id once the business has it; 400 with Talabat's reason
     /// when it cannot take it as sent (Talabat rejects it at once); 502 when
-    /// the café's stack cannot be reached, so Talabat tries again.
+    /// the business's stack cannot be reached, so Talabat tries again.
     /// </summary>
     public static async Task<IResult> Dispatch(
         HttpContext http, string remoteId, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
@@ -57,15 +57,15 @@ public static class TalabatApi
         var (tenant, branchId) = await FindAsync(context, remoteId, ct);
         if (tenant is null)
         {
-            logger.LogWarning("Talabat dispatched an order for {RemoteId}, which is no café here", remoteId);
-            return Rejected("CLOSED", $"No café is registered as {remoteId}.");
+            logger.LogWarning("Talabat dispatched an order for {RemoteId}, which is no business here", remoteId);
+            return Rejected("CLOSED", $"No business is registered as {remoteId}.");
         }
         if (tenant.Status != TenantStatus.Running)
         {
             logger.LogWarning("Talabat dispatched an order for {RemoteId}, but {Slug} is {Status}", remoteId, tenant.Slug, tenant.Status);
             return tenant.Status == TenantStatus.Upgrading
                 ? Results.StatusCode(StatusCodes.Status502BadGateway)
-                : Rejected("CLOSED", "The café is not open on Ninja.");
+                : Rejected("CLOSED", "The business is not open on Ninja.");
         }
 
         var body = await ReadBodyAsync(http, ct);
@@ -99,7 +99,7 @@ public static class TalabatApi
         }
     }
 
-    /// <summary>Talabat says an order was cancelled, picked up, or something the café may want to know.</summary>
+    /// <summary>Talabat says an order was cancelled, picked up, or something the business may want to know.</summary>
     public static async Task<IResult> OrderStatus(
         HttpContext http, string remoteId, string remoteOrderId, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
     {
@@ -138,7 +138,7 @@ public static class TalabatApi
         return Results.Ok();
     }
 
-    /// <summary>Talabat asks for a branch's menu: the café's catalog sends it, through the relay, as it would after an edit.</summary>
+    /// <summary>Talabat asks for a branch's menu: the business's catalog sends it, through the relay, as it would after an edit.</summary>
     public static async Task<IResult> MenuImport(
         HttpContext http, string remoteId, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
     {
@@ -160,7 +160,7 @@ public static class TalabatApi
         }
     }
 
-    /// <summary>How a menu Ninja sent was taken: passed on to the café whose branch it was, for its Talabat page.</summary>
+    /// <summary>How a menu Ninja sent was taken: passed on to the business whose branch it was, for its Talabat page.</summary>
     public static async Task<IResult> CatalogCallback(
         HttpContext http, ControlContext context, IStackProxy stacks, IOptions<PlatformOptions> options, ILoggerFactory loggers, CancellationToken ct)
     {
@@ -179,7 +179,7 @@ public static class TalabatApi
             return Results.Ok();
         }
 
-        // Each vendor in the import is one of ours; its café hears the overall status
+        // Each vendor in the import is one of ours; its business hears the overall status
         var vendors = (result?["details"] as JsonArray)?.OfType<JsonObject>()
             .Select(d => d["posVendorId"]?.GetValue<string>())
             .OfType<string>()
@@ -203,7 +203,7 @@ public static class TalabatApi
     }
 
     /// <summary>
-    /// A café tells Talabat what it did with an order: the stack names itself
+    /// A business tells Talabat what it did with an order: the stack names itself
     /// and shows its key, and the change goes to the middleware address the
     /// order gave for it, under Ninja's account. The middleware's own answer
     /// comes back as it was, for the stack to retry or give up on.
@@ -238,8 +238,8 @@ public static class TalabatApi
     }
 
     /// <summary>
-    /// A branch's whole menu, as the café's catalog built it, submitted to the
-    /// café's own chain for that branch alone (a branch's prices and what it
+    /// A branch's whole menu, as the business's catalog built it, submitted to the
+    /// business's own chain for that branch alone (a branch's prices and what it
     /// has may differ). Talabat imports it in the background and reports back
     /// on the catalog callback.
     /// </summary>
@@ -298,7 +298,7 @@ public static class TalabatApi
         var remoteId = TalabatNaming.RemoteId(caller.Slug, request.BranchId);
         var path = $"/v2/chains/{Uri.EscapeDataString(chain)}/remoteVendors/{Uri.EscapeDataString(remoteId)}/availability";
         var current = await middleware.CallPathAsync(HttpMethod.Get, path, null, ct);
-        // 204: Talabat is still finding out; the café's stack asks again shortly
+        // 204: Talabat is still finding out; the business's stack asks again shortly
         if (current.Status == StatusCodes.Status204NoContent) return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
         if (current.Status is < 200 or >= 300) return Results.Text(current.Body, "application/json", statusCode: current.Status);
 
@@ -319,7 +319,7 @@ public static class TalabatApi
         return Results.Text(result.Body, "application/json", statusCode: result.Status);
     }
 
-    /// <summary>The café's stack, by its slug and the key derived for it.</summary>
+    /// <summary>The business's stack, by its slug and the key derived for it.</summary>
     private static async Task<(Tenant? Tenant, IResult? Refused)> CallerAsync(HttpContext http, ControlContext context, PlatformOptions platform, CancellationToken ct)
     {
         if (!platform.Talabat.Configured || string.IsNullOrWhiteSpace(platform.EncryptionKey))
@@ -332,7 +332,7 @@ public static class TalabatApi
         return tenant is null ? (null, Results.Unauthorized()) : (tenant, null);
     }
 
-    private static IResult NotOnTalabat() => Results.Conflict("The café has no chain at Talabat yet; the platform sets it from Talabat's onboarding.");
+    private static IResult NotOnTalabat() => Results.Conflict("The business has no chain at Talabat yet; the platform sets it from Talabat's onboarding.");
 
     /// <summary>Anything without the middleware's signature, or while the integration is off, is turned away.</summary>
     private static IResult? Refuse(HttpContext http, PlatformOptions platform)

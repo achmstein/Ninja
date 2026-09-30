@@ -7,7 +7,7 @@ namespace Ninja.PrintConnector;
 
 public sealed record TicketText(string? En, string? Ar)
 {
-    /// <summary>The asked language, else the other one: a café may write its menu in only one.</summary>
+    /// <summary>The asked language, else the other one: a business may write its menu in only one.</summary>
     public string Pick(string language)
     {
         var en = string.IsNullOrWhiteSpace(En) ? null : En;
@@ -42,7 +42,7 @@ public sealed record KitchenTicket(
 public sealed record Paired(int ConnectorId, string Key, int BranchId, string Language);
 
 /// <summary>
-/// The café's API as the connector sees it: pairing once, then the queue,
+/// The business's API as the connector sees it: pairing once, then the queue,
 /// every call signed with the connector's key. Outbound only.
 /// </summary>
 public sealed class QueueClient(HttpClient http, string? key)

@@ -1,13 +1,13 @@
 # Talabat integration
 
-Ninja is one POS integration partner at Talabat (Delivery Hero's POS middleware). Every café goes through
-that one integration; no café holds Talabat credentials.
+Ninja is one POS integration partner at Talabat (Delivery Hero's POS middleware). Every business goes through
+that one integration; no business holds Talabat credentials.
 
 ## How it fits
 
 ```
-Talabat middleware ──(signed HS512)──► control.{domain}/api/talabat ──(ninja-control token)──► café stack
-café stack ──(relay key derived from its slug)──► control-api:8080/api/talabat/relay ──(Ninja's login)──► middleware
+Talabat middleware ──(signed HS512)──► control.{domain}/api/talabat ──(ninja-control token)──► business stack
+business stack ──(relay key derived from its slug)──► control-api:8080/api/talabat/relay ──(Ninja's login)──► middleware
 ```
 
 - **Orders in:** `POST /api/talabat/order/{remoteId}` → Ordering `POST /api/orders/talabat` (branch from the remote id).
@@ -22,7 +22,7 @@ café stack ──(relay key derived from its slug)──► control-api:8080/ap
 - **Availability out:** a dish or option sold out/back at a branch goes at once (`catalog/items/availability`).
   A branch paused or opened in Ninja closes or opens it on Talabat (owner can turn that off).
 - **Bills:** a Talabat order gets its own bill ("Talabat {code}"), VAT inside the price, no service. When Talabat
-  pays the café (paid online, or Talabat's rider) it settles itself to the tender "Talabat"; cash the café collects
+  pays the business (paid online, or Talabat's rider) it settles itself to the tender "Talabat"; cash the business collects
   (own rider or pickup, not prepaid) stays open for the till.
 
 ## Going live
@@ -34,7 +34,7 @@ café stack ──(relay key derived from its slug)──► control-api:8080/ap
    Ordering and Catalog get the relay.
 3. **Tell Talabat:** plugin base URL `https://control.{domain}/api/talabat`; whitelist nothing (Talabat calls in);
    the Middle East egress IPs are Talabat's, not ours.
-4. **Per café:** Talabat's onboarding gives a chain code and vendor codes. In the control app, set the café's chain
+4. **Per business:** Talabat's onboarding gives a chain code and vendor codes. In the control app, set the business's chain
    code (and the global entity if not the default: `HF_EG` for Egypt, `TB_{country}` in the Gulf). Register each
    branch at Talabat with remote id `{slug}-{branchId}`.
 5. **Owner:** in the admin, Settings → Talabat, switch the branches on. The menu is sent; check the result there

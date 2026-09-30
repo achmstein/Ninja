@@ -3,7 +3,7 @@ namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
 /// Unit tests for IdentifiedCommandHandler.
-/// Simplified for cafe - no address or payment parameters.
+/// Simplified for business - no address or payment parameters.
 /// </summary>
 [TestClass]
 public class IdentifiedCommandHandlerTest

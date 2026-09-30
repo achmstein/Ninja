@@ -37,7 +37,7 @@ public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timePro
     public async Task<BillProposal> ScanAsync(DataContent image, IReadOnlyList<ExpenseCategoryView> categories, IReadOnlyList<string> vendors, CancellationToken ct)
     {
         var known = vendors.Count > MaxVendors ? vendors.Take(MaxVendors).ToList() : vendors;
-        // The café's today, not the container's: in UTC a bill from just after midnight in Cairo is "tomorrow"
+        // The business's today, not the container's: in UTC a bill from just after midnight in Cairo is "tomorrow"
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), TenantClock.Zone).DateTime);
 
         var prompt = new BillPrompt(
@@ -61,7 +61,7 @@ public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timePro
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You read bills and receipts for the expenses of a café in Egypt: utility bills (electricity, gas, water,
+        You read bills and receipts for the expenses of a café, restaurant, kitchen or game station in Egypt: utility bills (electricity, gas, water,
         internet), rent receipts, repair and maintenance invoices, licence fees, advertising invoices, cash receipts
         from a shop. The user message has a JSON object (today's date, the expense "categories" to choose from with
         their id and English and Arabic names, and "vendors": the names of vendors earlier expenses were recorded

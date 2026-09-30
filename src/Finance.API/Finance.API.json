@@ -898,7 +898,7 @@
         "tags": [
           "Finance"
         ],
-        "summary": "The branch's partners with what the café holds of theirs",
+        "summary": "The branch's partners with what the business holds of theirs",
         "operationId": "GetPartners",
         "parameters": [
           {

@@ -19,7 +19,7 @@ type NavLink = BaseNavItem & {
   /** About tables and rooms: not shown to a cloud kitchen, which has none */
   needsPlaces?: boolean
   /**
-   * An add-on's setup: shown once the café has bought it, even before the
+   * An add-on's setup: shown once the business has bought it, even before the
    * owner switches it on (the setup comes first)
    */
   entitled?: FeatureKey

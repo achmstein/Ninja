@@ -366,7 +366,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                     params={{ slug: tenant.slug }}
                     className='inline-flex items-center gap-2 hover:underline'
                   >
-                    {/* The café's mark on a white tile, the way its app icon is cut; the initial until a stack serves one */}
+                    {/* The business's mark on a white tile, the way its app icon is cut; the initial until a stack serves one */}
                     <Avatar className='rounded-md bg-white ring-1 ring-border'>
                       <AvatarImage src={tenant.logoUrl ?? undefined} alt='' className='object-contain p-0.5' />
                       <AvatarFallback className='rounded-md bg-muted font-semibold'>

@@ -42,7 +42,7 @@ public sealed record BranchResponse(
     /// <summary>Both names, for a sentence: "Maadi / المعادي".</summary>
     public string BothNames => NameAr is { } ar ? $"{DisplayName} / {ar}" : DisplayName;
 
-    /// <summary>When the branch's business day starts ("17:00" for a night cafe); midnight when unset.</summary>
+    /// <summary>When the branch's business day starts ("17:00" for a night business); midnight when unset.</summary>
     public TimeOnly DayStart
         => TimeOnly.TryParseExact(DayStartTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t) ? t : TimeOnly.MinValue;
 }

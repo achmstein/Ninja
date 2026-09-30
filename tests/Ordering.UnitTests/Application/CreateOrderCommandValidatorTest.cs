@@ -22,7 +22,7 @@ public class CreateOrderCommandValidatorTest
     }
 
     [TestMethod]
-    public void Guest_order_without_a_place_is_valid_where_the_cafe_takes_them_from_anywhere()
+    public void Guest_order_without_a_place_is_valid_where_the_business_takes_them_from_anywhere()
     {
         var result = Validator.Validate(GuestCommand(guestOrdersAnywhere: true));
 

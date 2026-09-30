@@ -1,5 +1,5 @@
 /**
- * What a customer sees when the café's stack is off (suspended by the
+ * What a customer sees when the business's stack is off (suspended by the
  * platform, or stopped): the edge answers every API call with a 503 that
  * says "paused", and there is nothing else to show. Both languages at once:
  * this can render before the brand, and with it the language, is known.

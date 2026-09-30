@@ -22,7 +22,7 @@ enum TicketType {
 /// Account=3, Online=4. Online is what guests paid from their phones (pay
 /// at table): the server adds it at settle, the till never offers it, and
 /// it is never cash in the drawer. Talabat=5 is a Talabat order Talabat
-/// pays the café for: the server settles it when the order lands, and the
+/// pays the business for: the server settles it when the order lands, and the
 /// till never offers it either.
 enum PaymentTender {
   cash(0, 'Cash'),

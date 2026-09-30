@@ -109,7 +109,7 @@ type ImageSlotGridProps = {
   defaultOpen?: boolean
 }
 
-/** The two slots every café fills and the cover photo, then the four variants behind a disclosure. */
+/** The two slots every business fills and the cover photo, then the four variants behind a disclosure. */
 export function ImageSlotGrid({ srcOf, busySlot, onUpload, onRemove, defaultOpen }: ImageSlotGridProps) {
   const t = useT()
   const field = (slot: ImageSlot) => (

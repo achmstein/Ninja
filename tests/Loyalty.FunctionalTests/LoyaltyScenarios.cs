@@ -35,7 +35,7 @@ public record TierView(string Name, int PointsRequired, string Benefits);
 public record StatsView(int TotalAccounts, Dictionary<string, int> AccountsByTier, int PointsIssuedToday);
 
 /// <summary>
-/// A café's loyalty card through the API: joining, earning, being adjusted
+/// A business's loyalty card through the API: joining, earning, being adjusted
 /// by the back office, and who may look at whose card.
 /// </summary>
 [TestClass]
@@ -55,7 +55,7 @@ public sealed class LoyaltyScenarios
         Assert.AreEqual(0, joined.PointsBalance);
         Assert.AreEqual("Bronze", joined.CurrentTier);
 
-        // Points are the café's to give: the till and the back office award them, never the member
+        // Points are the business's to give: the till and the back office award them, never the member
         var earned = await admin.PostAsync<TransactionView>("/api/loyalty/transactions/earn?api-version=1.0", new EarnPointsRequest(userId, 1200, "Purchase", "order-1", "Two coffees"));
         Assert.AreEqual(1200, earned.Points);
 
@@ -140,7 +140,7 @@ public sealed class LoyaltyScenarios
     }
 
     [TestMethod]
-    public async Task The_stats_count_the_cards_the_cafe_has_given_out()
+    public async Task The_stats_count_the_cards_the_business_has_given_out()
     {
         var admin = Suite.Loyalty.As(Persona.Admin());
         var userId = NewCustomer();

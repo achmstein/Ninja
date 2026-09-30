@@ -3,7 +3,7 @@ import { useBrand, useBrandName } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
 /**
- * The café's mark on a staff surface: its logo when one is uploaded (the
+ * The business's mark on a staff surface: its logo when one is uploaded (the
  * dark one on a dark page), otherwise a neutral tile with the name's first
  * letter. The staff apps keep the neutral theme, so the tile is ink on
  * paper rather than the brand colour. Square; size it with className.

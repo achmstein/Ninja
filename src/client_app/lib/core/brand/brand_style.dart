@@ -36,7 +36,7 @@ class BrandStyle extends ThemeExtension<BrandStyle> {
     forceDark: false,
   );
 
-  /// The style [theme] names, its layout with the café's own parts over it
+  /// The style [theme] names, its layout with the business's own parts over it
   factory BrandStyle.fromTheme(TenantTheme theme) {
     final preset = theme.preset;
     return BrandStyle(

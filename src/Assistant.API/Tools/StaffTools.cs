@@ -11,7 +11,7 @@ namespace Ninja.Assistant.API.Tools;
 public sealed class StaffTools(TenantContext tenant, NinjaApiClient api, TimeProvider clock)
 {
     [McpServerTool(Name = "get_staff", Title = "Staff", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("The employees per branch with job title, start date and balance: a positive balance is what the cafe still owes them (unpaid wages), a negative one an advance they took. Use for 'who works at', 'how much do we owe staff', 'who has an advance'.")]
+    [Description("The employees per branch with job title, start date and balance: a positive balance is what the business still owes them (unpaid wages), a negative one an advance they took. Use for 'who works at', 'how much do we owe staff', 'who has an advance'.")]
     public async Task<CallToolResult> GetStaff(
         [Description(BranchDescription)] string? branch = null,
         [Description("Include employees who have left")] bool includeInactive = false,

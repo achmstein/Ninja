@@ -97,8 +97,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    // Which café this till belongs to, under the platform's name
-    final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
+    // Which business this till belongs to, under the platform's name
+    final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
 
     return Scaffold(
       backgroundColor: theme.colors.background,
@@ -112,12 +112,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Brand: the café's mark and name, then what this app is
+                  // Brand: the business's mark and name, then what this app is
                   const Center(child: BrandMark(size: 96)),
                   const SizedBox(height: 16),
                   Center(
                     child: AppText(
-                      cafe.isEmpty ? l10n.appName : cafe,
+                      business.isEmpty ? l10n.appName : business,
                       style: theme.typography.xl2.copyWith(
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.5,
@@ -125,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                  if (cafe.isNotEmpty) ...[
+                  if (business.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Center(
                       child: AppText(

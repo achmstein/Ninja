@@ -983,7 +983,7 @@ export const getBranchOverridesOptions = (options: Options<GetBranchOverridesDat
 export const getTalabatQueryKey = (options?: Options<GetTalabatData>) => createQueryKey('getTalabat', options);
 
 /**
- * Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused
+ * Talabat for the business: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused
  */
 export const getTalabatOptions = (options?: Options<GetTalabatData>) => queryOptions<GetTalabatResponse, AxiosError<DefaultError>, GetTalabatResponse, ReturnType<typeof getTalabatQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

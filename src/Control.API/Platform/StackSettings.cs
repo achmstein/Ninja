@@ -35,7 +35,7 @@ public static class StackSettings
             ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
             ["arabicStyle"] = tenant.ArabicStyle, ["contentLanguages"] = tenant.ContentLanguages,
         };
-        // Only the label: the switches, the menu and whether guests order away from a table stay as the café has them
+        // Only the label: the switches, the menu and whether guests order away from a table stay as the business has them
         brand["businessType"] = BusinessProfiles.Key(tenant.BusinessType);
         return brand;
     }

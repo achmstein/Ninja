@@ -80,7 +80,7 @@ export function NinjaNav({ className }: { className?: string }) {
 }
 
 /**
- * The bottom bar on every tab but the menu when the café wears the Ninja style:
+ * The bottom bar on every tab but the menu when the business wears the Ninja style:
  * the same dark slab, floating off the edges and lifted clear of the
  * phone's home indicator.
  */

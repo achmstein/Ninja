@@ -117,7 +117,7 @@ final paymentsApiProvider = Provider<ApiClient>((ref) {
 
 final payRepositoryProvider = Provider<PayRepository>((ref) => PayRepository(ref.read(paymentsApiProvider)));
 
-/// The guest's pretend checkout on a demo café's customer site, for a
+/// The guest's pretend checkout on a demo business's customer site, for a
 /// payment still in checkout; null when the site is not known
 Uri? simulatedCheckoutUrl(String? customerUrl, String key) {
   final origin = customerUrl?.trim();
@@ -131,7 +131,7 @@ const _tileRefresh = Duration(seconds: 15);
 
 /// A bill as a guest pays it, for the bills tab: re-read now and then so a
 /// friend's share lands without a pull. Null when there is nothing to show
-/// (nothing open, or the café does not take payments at the table).
+/// (nothing open, or the business does not take payments at the table).
 final payViewProvider = FutureProvider.autoDispose.family<PayView?, PaySource>((ref, source) async {
   final timer = Timer(_tileRefresh, ref.invalidateSelf);
   ref.onDispose(timer.cancel);

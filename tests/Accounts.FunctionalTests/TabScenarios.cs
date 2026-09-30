@@ -45,7 +45,7 @@ public record TabLineView(int Id, string Type, decimal Amount, string? Descripti
 public record TabSummaryView(int Id, string CustomerId, string? CustomerName, decimal Balance);
 
 /// <summary>
-/// The house account: what a regular owes the café. A manager keys a
+/// The house account: what a regular owes the business. A manager keys a
 /// charge or a payment in; everything else arrives from the till as an
 /// event — a bill settled on account, a credit note, a tab paid down.
 /// </summary>
@@ -123,7 +123,7 @@ public sealed class TabScenarios
 
         await Suite.BackOffice.RefusedAsync(HttpMethod.Post, Suite.Url($"/{customer}/payment"), new { amount = 200m });
         var tab = await TabAsync(customer);
-        Assert.AreEqual(-50m, tab.Balance, "paying more than is owed leaves the café holding fifty of theirs");
+        Assert.AreEqual(-50m, tab.Balance, "paying more than is owed leaves the business holding fifty of theirs");
         Assert.AreEqual(2, tab.Transactions.Count(t => t.Type == "payment"));
 
         var (nothingToPay, _) = await Suite.BackOffice.RefusedAsync(HttpMethod.Post, Suite.Url($"/{ACustomer()}/payment"), new { amount = 10m });
@@ -234,7 +234,7 @@ public sealed class TabScenarios
 
         await ServiceUnderTest<Program>.EventuallyAsync(
             async () => (await TabAsync(customer)).CustomerName == "Mostafa Kamel",
-            "the name the café calls them is the name on their profile");
+            "the name the business calls them is the name on their profile");
 
         var found = await Suite.BackOffice.GetAsync<List<TabSummaryView>>(Suite.Url("/search") + "?q=Mostafa Kamel");
         Assert.AreEqual(customer, found.Single().CustomerId, "and that is the name a manager searches by");

@@ -3,7 +3,7 @@ import { useT } from '@/lib/i18n'
 import { ErrorState } from '@/components/error-state'
 
 /**
- * Online payments are an add-on: its settings exist once the café has bought
+ * Online payments are an add-on: its settings exist once the business has bought
  * it, whether or not the owner has switched it on yet (setting up the
  * account comes first). A URL typed by hand without it lands here.
  */

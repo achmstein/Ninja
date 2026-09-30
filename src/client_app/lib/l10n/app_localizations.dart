@@ -1857,23 +1857,23 @@ abstract class AppLocalizations {
   /// **'Thanks for rating!'**
   String get ratedThanks;
 
-  /// No description provided for @haveCafeCode.
+  /// No description provided for @haveBusinessCode.
   ///
   /// In en, this message translates to:
-  /// **'Have a code from the café?'**
-  String get haveCafeCode;
+  /// **'Have a code from {name}?'**
+  String haveBusinessCode(String name);
 
   /// No description provided for @claimTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your account at {cafe}'**
-  String claimTitle(String cafe);
+  /// **'Your account at {name}'**
+  String claimTitle(String name);
 
   /// No description provided for @claimIntro.
   ///
   /// In en, this message translates to:
-  /// **'The café added you at the counter. Add an email and a password to sign in and see your points and orders.'**
-  String get claimIntro;
+  /// **'{name} added you at the counter. Add an email and a password to sign in and see your points and orders.'**
+  String claimIntro(String name);
 
   /// No description provided for @claimSubmit.
   ///
@@ -1890,8 +1890,8 @@ abstract class AppLocalizations {
   /// No description provided for @claimExpired.
   ///
   /// In en, this message translates to:
-  /// **'This link has expired. Ask the café for a new one.'**
-  String get claimExpired;
+  /// **'This link has expired. Ask {name} for a new one.'**
+  String claimExpired(String name);
 
   /// No description provided for @claimUsed.
   ///
@@ -1914,8 +1914,8 @@ abstract class AppLocalizations {
   /// No description provided for @claimScanOrPaste.
   ///
   /// In en, this message translates to:
-  /// **'Scan the café\'s QR code or paste the link'**
-  String get claimScanOrPaste;
+  /// **'Scan the QR code from {name} or paste the link'**
+  String claimScanOrPaste(String name);
 
   /// No description provided for @claimScan.
   ///
@@ -1926,7 +1926,7 @@ abstract class AppLocalizations {
   /// No description provided for @claimPointCamera.
   ///
   /// In en, this message translates to:
-  /// **'Point the camera at the café\'s QR code'**
+  /// **'Point the camera at the QR code'**
   String get claimPointCamera;
 
   /// No description provided for @claimPasteLabel.
@@ -1938,8 +1938,8 @@ abstract class AppLocalizations {
   /// No description provided for @claimPasteHint.
   ///
   /// In en, this message translates to:
-  /// **'Paste what the café sent you'**
-  String get claimPasteHint;
+  /// **'Paste what {name} sent you'**
+  String claimPasteHint(String name);
 
   /// No description provided for @claimContinue.
   ///

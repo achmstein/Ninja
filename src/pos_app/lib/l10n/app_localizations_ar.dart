@@ -24,14 +24,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
-  String get connectTitle => 'ما اسم المقهى؟';
+  String get connectTitle => 'ما اسم النشاط؟';
 
   @override
   String get connectHint =>
-      'أدخل عنوان المقهى، أو امسح الرمز من صفحة التطبيقات في تطبيق الإدارة.';
+      'أدخل عنوان النشاط، أو امسح الرمز من صفحة التطبيقات في تطبيق الإدارة.';
 
   @override
-  String get cafeAddress => 'عنوان المقهى';
+  String get businessAddress => 'عنوان النشاط';
 
   @override
   String get connect => 'اتصال';
@@ -47,11 +47,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يستجب أي شيء على هذا العنوان. تحقق منه، وتأكد أن الجهاز اللوحي متصل بالإنترنت.';
 
   @override
-  String get connectNotACafe => 'هذا العنوان ليس مقهى على ninja.';
+  String get connectNotABusiness => 'هذا العنوان ليس نشاطًا على ninja.';
 
   @override
   String get connectPaused =>
-      'هذا المقهى موقوف. يمكن لمالكه معرفة السبب من تطبيق الإدارة.';
+      'هذا النشاط موقوف. يمكن لمالكه معرفة السبب من تطبيق الإدارة.';
 
   @override
   String get thisDevice => 'هذا الجهاز';
@@ -60,11 +60,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get connectedTo => 'متصل بـ';
 
   @override
-  String get changeCafe => 'تغيير المقهى';
+  String get changeBusiness => 'تغيير النشاط';
 
   @override
-  String get changeCafeConfirm =>
-      'سيتم تسجيل الخروج ونسيان هذا المقهى، ويعود الجهاز اللوحي إلى شاشة الاتصال.';
+  String get changeBusinessConfirm =>
+      'سيتم تسجيل الخروج ونسيان هذا النشاط، ويعود الجهاز اللوحي إلى شاشة الاتصال.';
 
   @override
   String get language => 'اللغة';
@@ -1282,7 +1282,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get printerHint =>
-      'طابعة 80 مم على شبكة المقهى. يُطبع الإيصال كصورة، لذا تصلح أي علامة تجارية؛ ويُفتح الدرج عن طريق الطابعة.';
+      'طابعة 80 مم على شبكة النشاط. يُطبع الإيصال كصورة، لذا تصلح أي علامة تجارية؛ ويُفتح الدرج عن طريق الطابعة.';
 
   @override
   String get printerHost => 'عنوان الطابعة';
@@ -1576,8 +1576,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkCopied => 'تم نسخ الرابط';
 
   @override
-  String appLinkMessage(String name, String cafe, String url) {
-    return 'مرحبًا $name، نقاطك في $cafe بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): $url';
+  String appLinkMessage(String name, String business, String url) {
+    return 'مرحبًا $name، نقاطك في $business بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): $url';
   }
 
   @override

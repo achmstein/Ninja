@@ -4,7 +4,7 @@ using Testcontainers.RabbitMq;
 namespace Ninja.Testing;
 
 /// <summary>
-/// The shared services a café's stack runs on, once for a test assembly: a
+/// The shared services a business's stack runs on, once for a test assembly: a
 /// Postgres the service migrates its own database into, and a RabbitMQ it
 /// publishes and subscribes on. A suite starts them from its
 /// <c>[AssemblyInitialize]</c> and stops them from its cleanup.

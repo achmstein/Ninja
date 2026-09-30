@@ -57,7 +57,7 @@ import { toast } from '@/lib/toast'
 import { RecordPaymentDialog, SuspendDialog } from '../dialogs'
 
 /**
- * What the café pays for: its plan and the modules bought on top, what that
+ * What the business pays for: its plan and the modules bought on top, what that
  * entitles the stack to, where the subscription stands, and the payments
  * recorded by hand. A demo is entitled to everything until it converts.
  */

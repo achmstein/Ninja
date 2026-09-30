@@ -4,7 +4,7 @@ import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from '@/compone
 /**
  * A font picker's options, each name in its own face: the text families
  * first, then the display faces under their own label, as they are meant
- * for headings and the café's name more than for a whole menu.
+ * for headings and the business's name more than for a whole menu.
  */
 export function FontOptions({ catalog, displayLabel }: { catalog: readonly BrandFont[]; displayLabel: string }) {
   const text = catalog.filter((f) => !f.display)

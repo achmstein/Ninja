@@ -107,7 +107,7 @@ function CartLineRow({
   const money = useMoney()
 
   const key = lineKey(line)
-  // A café may write its menu in one language only: each name falls back to the other
+  // A business may write its menu in one language only: each name falls back to the other
   const name =
     (language === 'ar' ? line.nameAr : line.nameEn) ||
     line.nameEn ||

@@ -507,7 +507,7 @@
         "tags": [
           "Payroll"
         ],
-        "summary": "What the café owes someone, line by line, with the balance",
+        "summary": "What the business owes someone, line by line, with the balance",
         "operationId": "GetEmployeeLedger",
         "parameters": [
           {

@@ -50,7 +50,7 @@ internal static class Extensions
         // Register the command validators for the validator behavior (validators based on FluentValidation library)
         services.AddValidatorsFromAssemblyContaining<CancelOrderCommandValidator>();
 
-        // Where the café is: a phone number is read the way its country writes one
+        // Where the business is: a phone number is read the way its country writes one
         services.AddSingleton<TenantCountry>();
         services.AddScoped<IOrderQueries, OrderQueries>();
         services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
@@ -68,7 +68,7 @@ internal static class Extensions
         services.AddHostedService<Ninja.Ordering.API.BackgroundServices.PendingOrderReminderService>();
 
         // Talabat: the platform relays its orders here with its own token, and
-        // passes what the café does with them back through the relay
+        // passes what the business does with them back through the relay
         services.AddAuthorizationBuilder()
             .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"));
         services.Configure<Ninja.Ordering.API.Talabat.TalabatOptions>(builder.Configuration.GetSection(Ninja.Ordering.API.Talabat.TalabatOptions.Section));
@@ -86,7 +86,7 @@ internal static class Extensions
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
 
-        // The café's own settings, the same way: one row that every branch reads
+        // The business's own settings, the same way: one row that every branch reads
         eventBus.AddSubscription<TenantSettingsChangedIntegrationEvent, TenantSettingsChangedIntegrationEventHandler>();
 
         // Spaces' places, projected locally: an order names a place and a

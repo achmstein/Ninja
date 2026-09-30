@@ -234,7 +234,7 @@ internal static class Extensions
             yarp.AddRoute("/api/accounts/{*any}", accountsCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // The café's own service: its branches, and the brand, settings and uploads
+            // The business's own service: its branches, and the brand, settings and uploads
             var tenantCluster = yarp.AddCluster(tenantApi);
             yarp.AddRoute("/api/branches/{*any}", tenantCluster);
             // The brand, icons and manifest: read by <link> and <img> tags, so no api-version

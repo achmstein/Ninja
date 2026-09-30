@@ -35,7 +35,7 @@ function AppleIcon() {
   )
 }
 
-/** The café's Google and Apple, where it has them on (the brand's auth.social) */
+/** The business's Google and Apple, where it has them on (the brand's auth.social) */
 function useSocial() {
   const social = useBrand()?.auth?.social ?? []
   return {
@@ -74,8 +74,8 @@ function useSignIn() {
 /**
  * Branded sign-in entry (option 3): Google and Apple skip the Keycloak form
  * entirely via kc_idp_hint — the user only sees the native provider prompt.
- * Only the ones the café has on (the brand's auth.social), each sent to the
- * provider its realm names for it (a stamped café's goes through the
+ * Only the ones the business has on (the brand's auth.social), each sent to the
+ * provider its realm names for it (a stamped business's goes through the
  * platform's hub). Email goes to the themed Keycloak page.
  */
 export function SignInOptions({ onCard = false }: { onCard?: boolean }) {

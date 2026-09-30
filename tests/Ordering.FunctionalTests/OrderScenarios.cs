@@ -76,7 +76,7 @@ public sealed class OrderScenarios
         placeName = new { en = "Table 3", ar = "ترابيزة ٣" },
     };
 
-    /// <summary>A retry on café Wi-Fi must not become a second order, so every command carries its own id.</summary>
+    /// <summary>A retry on business Wi-Fi must not become a second order, so every command carries its own id.</summary>
     private static async Task<HttpResponseMessage> SendAsync(Caller caller, HttpMethod method, string path, object? body, Guid? requestId = null)
     {
         var request = new HttpRequestMessage(method, path)

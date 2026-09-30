@@ -6,7 +6,7 @@ public class OrderStatusChangedToPaidIntegrationEventHandler(
 {
     public Task Handle(OrderStatusChangedToPaidIntegrationEvent @event)
     {
-        // For cafe orders, we don't track stock/inventory
+        // For business orders, we don't track stock/inventory
         // Orders are confirmed and sent to POS
         logger.LogInformation("Order {OrderId} has been paid. Items: {@OrderStockItems}",
             @event.OrderId, @event.OrderStockItems);

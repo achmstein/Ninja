@@ -5,11 +5,11 @@ import '../../l10n/app_localizations.dart';
 import 'brand_provider.dart';
 
 /// The platform, as the vendor line names it. Every staff surface carries
-/// the café's own name and mark; the platform is a line at the foot of a
+/// the business's own name and mark; the platform is a line at the foot of a
 /// page (ninja-plan.md).
 const String platformName = 'ninja';
 
-/// The café's mark, square: its logo when one is uploaded, otherwise a
+/// The business's mark, square: its logo when one is uploaded, otherwise a
 /// rounded tile in the theme's primary with the name's first letter. The
 /// staff apps keep the neutral theme, so the tile is ink on paper. [color]
 /// sets the tile where the theme's primary would not read, such as a splash
@@ -60,8 +60,8 @@ class BrandMark extends ConsumerWidget {
 }
 
 /// The platform's wordmark in its display face, for the loading screen: the
-/// one place the platform, not the café, is what there is to show, since
-/// the café is not known until the app has read it.
+/// one place the platform, not the business, is what there is to show, since
+/// the business is not known until the app has read it.
 class PlatformWordmark extends StatelessWidget {
   final double size;
   final Color color;

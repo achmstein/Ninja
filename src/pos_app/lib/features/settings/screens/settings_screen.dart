@@ -22,7 +22,7 @@ import '../../../core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Per-till settings, as the till lists everything else: this device (the
-/// café, kiosk mode, the app's version), the receipt printer, and the sales
+/// business, kiosk mode, the app's version), the receipt printer, and the sales
 /// waiting to sync. Language and theme live in the header menu.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});

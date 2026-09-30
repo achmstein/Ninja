@@ -307,7 +307,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     await _load();
   }
 
-  // Back to a demo café's pretend checkout for a share already started
+  // Back to a demo business's pretend checkout for a share already started
   Future<void> _continueShare(PayShare share, Uri url) async {
     final started = StartedPayment(
       key: share.key!,
@@ -893,7 +893,7 @@ class _ShareRow extends StatelessWidget {
   /// The guest's own share in checkout: let it go (null while it goes)
   final VoidCallback? onCancel;
 
-  /// A demo café's pretend checkout, opened again
+  /// A demo business's pretend checkout, opened again
   final VoidCallback? onContinue;
   final bool showContinue;
 
@@ -1099,7 +1099,7 @@ class _WhyNot extends StatelessWidget {
 }
 
 /// The server's reason a bill cannot be paid now, in the guest's words;
-/// null for the reasons the guest is not told (the café takes no payments)
+/// null for the reasons the guest is not told (the business takes no payments)
 String? payWhyText(AppLocalizations l10n, String? why) => switch (why) {
       'closed' => l10n.payWhyClosed,
       'clock-running' => l10n.payWhyClockRunning,

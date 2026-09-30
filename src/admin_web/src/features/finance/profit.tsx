@@ -38,7 +38,7 @@ const route = getRouteApi('/_authenticated/finance/profit')
 /**
  * The month as one statement: what came in, what it cost, what is left.
  * Sales from the till, cost of goods from the storeroom, wages from
- * payroll, the rest from the expense register — and the ratio a café
+ * payroll, the rest from the expense register — and the ratio a business
  * lives by, prime cost (goods + wages) over sales.
  */
 export function Profit() {

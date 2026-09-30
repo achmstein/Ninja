@@ -11,7 +11,7 @@ type WordmarkProps = {
  * a hairline and "control" in small letterspaced caps say which of its
  * apps this is, as a label rather than a second word. A Latin wordmark, so
  * it keeps its own direction on an Arabic page. Tenant apps never render
- * this; their chrome carries the café's mark instead.
+ * this; their chrome carries the business's mark instead.
  */
 export function Wordmark({ size = 'sm', className }: WordmarkProps) {
   return (

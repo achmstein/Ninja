@@ -4,7 +4,7 @@ import { useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 /**
- * The café's mark on a staff surface: its logo when one is uploaded (the
+ * The business's mark on a staff surface: its logo when one is uploaded (the
  * dark one on a dark page), otherwise a neutral tile with the name's first
  * letter. The staff apps keep the neutral theme, so the tile is ink on
  * paper rather than the brand colour. Square; size it with className.
@@ -42,10 +42,10 @@ export function BrandMark({ className }: { className?: string }) {
 }
 
 /**
- * The café's wide lockup for the header, the way the customer app picks it:
+ * The business's wide lockup for the header, the way the customer app picks it:
  * the wordmark for this language and scheme (the dark one falling back to
  * the light one, Arabic to English), else the square logo. Null when the
- * café has neither, and the mark and name stand in.
+ * business has neither, and the mark and name stand in.
  */
 export function useBrandLockup(): { url: string; chip: boolean } | null {
   const brand = useBrand()

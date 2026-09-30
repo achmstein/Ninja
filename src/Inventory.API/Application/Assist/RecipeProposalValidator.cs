@@ -52,7 +52,7 @@ public static class RecipeProposalValidator
                 continue;
             if (key.Length == 0)
                 key = TextFolding.Fold(nameEn.Length > 0 ? nameEn : nameAr).Replace(' ', '-');
-            // A café that writes one language gets its ingredient in that one
+            // A business that writes one language gets its ingredient in that one
             if (nameEn.Length == 0 && nameAr.Length == 0)
             {
                 if (TextFolding.HasArabic(key)) nameAr = key;

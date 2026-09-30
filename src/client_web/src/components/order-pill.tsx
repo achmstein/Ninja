@@ -5,6 +5,7 @@ import { Check, ReceiptText, Send, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useBrandName } from '@/lib/brand'
 import { useArabicStyle, useLanguage, useLocalized, usePrice } from '@/lib/i18n'
 import { island, type IslandFace } from '@/lib/island'
 import { useLiveOrder } from '@/lib/live-order'
@@ -39,10 +40,10 @@ const NOTES = {
 /** How long the island stays open to say that the order has moved on, ms */
 const ANNOUNCE_MS = 4200
 
-/** The stages worth interrupting for (the café turned the order down); the others only change the dock quietly */
+/** The stages worth interrupting for (the business turned the order down); the others only change the dock quietly */
 const LOUD: PillStage[] = ['cancelled']
 
-/** A stage in the island's colours: waiting on the café, done, or turned down */
+/** A stage in the island's colours: waiting on the business, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
   sent: 'loading',
   confirmed: 'success',
@@ -65,6 +66,7 @@ export function OrderPill() {
   const setShown = useOrderPill((s) => s.setShown)
   const language = useLanguage((s) => s.language)
   const standard = useArabicStyle((s) => s.standard)
+  const businessName = useBrandName()
   const price = usePrice()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -124,7 +126,7 @@ export function OrderPill() {
 
   // What is worth interrupting for (turned down) the island says out loud, opened with the order's
   // dishes; the rest of the way the dock's quiet change is enough
-  const say = (w: Parameters<typeof words>[0]) => words(w, language, standard)
+  const say = (w: Parameters<typeof words>[0]) => words(w, language, standard, businessName)
   const items = order?.items ?? []
   const total = order?.total
   const told = useRef<PillStage | null>(null)

@@ -11,7 +11,7 @@ namespace Ninja.Assistant.API.Tools;
 public sealed class OverviewTools(TenantContext tenant, NinjaApiClient api, TimeProvider clock)
 {
     [McpServerTool(Name = "get_business_overview", Title = "Business overview", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Start here, before any other tool. Returns the cafe's branches (id, English name and Arabic nameAr, whether active, when its business day starts, whether online ordering is on), the currency, the time zone and the local time, and today so far: settled tickets and net sales per branch. Use the branch ids and names it returns in the other tools.")]
+    [Description("Start here, before any other tool. Returns the business's branches (id, English name and Arabic nameAr, whether active, when its business day starts, whether online ordering is on), the currency, the time zone and the local time, and today so far: settled tickets and net sales per branch. Use the branch ids and names it returns in the other tools.")]
     public async Task<CallToolResult> GetBusinessOverview(CancellationToken ct = default)
     {
         var snapshot = await tenant.LoadAsync(ct);

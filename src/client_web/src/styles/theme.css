@@ -14,8 +14,8 @@
   /* The header and the wordmark in it; the brand's header size seed raises both */
   --header-h: 3.5rem;
   --wordmark-h: 1.75rem;
-  /* The top bar the chrome draws: the café's header, never shorter than the island in it needs, so
-     whatever logo a café has (a tall one, a script whose tails run low) keeps room above and below */
+  /* The top bar the chrome draws: the business's header, never shorter than the island in it needs, so
+     whatever logo a business has (a tall one, a script whose tails run low) keeps room above and below */
   --bar-h: max(4rem, var(--header-h));
   /* The gap from the top bar to the first thing under it (a page's title, the menu's), on every page */
   --page-top: 0.75rem;

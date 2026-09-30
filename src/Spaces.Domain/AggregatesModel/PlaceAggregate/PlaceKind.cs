@@ -10,7 +10,7 @@ public enum PlaceKind
     /// <summary>A PlayStation room: timed, with a rate option per player mode.</summary>
     Room = 1,
 
-    /// <summary>A café table: takes orders; timed only when it carries a tariff.</summary>
+    /// <summary>A business table: takes orders; timed only when it carries a tariff.</summary>
     Table = 2,
 
     /// <summary>A game station (pool, ping pong): timed, usually one rate.</summary>

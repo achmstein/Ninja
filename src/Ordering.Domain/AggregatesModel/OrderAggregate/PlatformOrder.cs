@@ -1,13 +1,13 @@
 #nullable enable
 namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
-/// <summary>How a delivery platform's order leaves the café.</summary>
+/// <summary>How a delivery platform's order leaves the business.</summary>
 public enum PlatformExpedition
 {
     /// <summary>The platform's rider collects it at the counter and delivers it; no address reaches us.</summary>
     PlatformDelivery = 0,
 
-    /// <summary>The café's own rider delivers it, to the address the platform sends.</summary>
+    /// <summary>The business's own rider delivers it, to the address the platform sends.</summary>
     VendorDelivery = 1,
 
     /// <summary>The customer collects it.</summary>
@@ -36,9 +36,9 @@ public static class PlatformRejectReasons
 
 /// <summary>
 /// What a delivery platform (Talabat) said about an order it dispatched to the
-/// café, kept on the order: the token the platform knows it by, the code the
+/// business, kept on the order: the token the platform knows it by, the code the
 /// rider asks for at the counter, how it leaves, and where to report back.
-/// No delivery logic hangs off it — the platform runs the delivery; the café
+/// No delivery logic hangs off it — the platform runs the delivery; the business
 /// makes the order and hands it over.
 /// </summary>
 public class PlatformOrder
@@ -63,7 +63,7 @@ public class PlatformOrder
     /// <summary>When the customer expects it: delivered, or ready to collect.</summary>
     public DateTime? DueAt { get; private set; }
 
-    /// <summary>Where the café's rider takes it; only a vendor delivery has one.</summary>
+    /// <summary>Where the business's rider takes it; only a vendor delivery has one.</summary>
     public string? DeliveryAddress { get; private set; }
 
     /// <summary>The customer paid the platform; nothing is collected at the door.</summary>
@@ -85,7 +85,7 @@ public class PlatformOrder
     public string? PickedUpUrl { get; private set; }
 
     /// <summary>
-    /// Why the café turned it down, in the platform's words (ITEM_UNAVAILABLE,
+    /// Why the business turned it down, in the platform's words (ITEM_UNAVAILABLE,
     /// TOO_BUSY, …); set when the order is cancelled on our side.
     /// </summary>
     public string? RejectReason { get; private set; }
@@ -121,7 +121,7 @@ public class PlatformOrder
         Expedition = expedition;
         RiderPickupAt = riderPickupAt;
         DueAt = dueAt;
-        // Only the café's own rider needs to know where it goes
+        // Only the business's own rider needs to know where it goes
         DeliveryAddress = expedition == PlatformExpedition.VendorDelivery && !string.IsNullOrWhiteSpace(deliveryAddress) ? deliveryAddress : null;
         PaidOnline = paidOnline;
         CollectFromCustomer = paidOnline ? null : collectFromCustomer;

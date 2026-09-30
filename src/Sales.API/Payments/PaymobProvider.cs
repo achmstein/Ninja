@@ -11,8 +11,8 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Sales.API.Payments;
 
 /// <summary>
-/// Paymob's Intention API and Unified Checkout, on the café's own account:
-/// an intention is created server-side with the café's secret key (amounts
+/// Paymob's Intention API and Unified Checkout, on the business's own account:
+/// an intention is created server-side with the business's secret key (amounts
 /// in the currency's minor unit), the guest pays on Paymob's checkout page,
 /// and Paymob's transaction callback, signed with HMAC-SHA512 over twenty
 /// fixed fields, says how it went. The redirect back is never trusted; the
@@ -41,7 +41,7 @@ public sealed class PaymobProvider(HttpClient http, IOptions<PaymentsOptions> op
 
     public async Task<CheckoutSession> StartCheckoutAsync(ProviderAccount account, CheckoutRequest request, CancellationToken ct)
     {
-        if (account.PublicKey is null) throw new PaymentProviderException("The café's Paymob public key is not set.");
+        if (account.PublicKey is null) throw new PaymentProviderException("The business's Paymob public key is not set.");
 
         var (first, last) = SplitName(request.PayerName);
         var body = new JsonObject
@@ -119,7 +119,7 @@ public sealed class PaymobProvider(HttpClient http, IOptions<PaymentsOptions> op
             error.Length == 0 ? null : error);
     }
 
-    /// <summary>Paymob's HMAC: the signed fields' values concatenated in order, HMAC-SHA512 with the café's secret, lower-case hex.</summary>
+    /// <summary>Paymob's HMAC: the signed fields' values concatenated in order, HMAC-SHA512 with the business's secret, lower-case hex.</summary>
     internal static string Sign(JsonElement obj, string hmacSecret)
     {
         var concatenated = string.Concat(SignedFields.Select(f => Field(obj, f)));

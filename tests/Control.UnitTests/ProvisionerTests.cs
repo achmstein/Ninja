@@ -135,7 +135,7 @@ public sealed class ProvisionerTests
     /// <summary>
     /// Whether a guest may order away from a table starts from the kind of
     /// place: a cloud kitchen has no tables, so its guests order from anywhere;
-    /// a café seats them and starts with orders from the table. The stack is
+    /// a business seats them and starts with orders from the table. The stack is
     /// told the kind too, so its apps can leave the tables out.
     /// </summary>
     [TestMethod]
@@ -158,7 +158,7 @@ public sealed class ProvisionerTests
         Assert.IsNotNull(_stack.SeededBrand, string.Join(", ", Steps()));
         Assert.AreEqual(anywhere, _stack.SeededBrand["guestOrdersAnywhere"]!.GetValue<bool>());
         Assert.AreEqual(key, _stack.SeededBrand["businessType"]!.GetValue<string>());
-        // Every new café starts in Ninja, the platform's signature style
+        // Every new business starts in Ninja, the platform's signature style
         Assert.AreEqual("ninja", _stack.SeededBrand["theme"]!["style"]!.GetValue<string>());
     }
 
@@ -237,7 +237,7 @@ public sealed class ProvisionerTests
         Assert.IsTrue(RestoredIntoTenantDb());
     }
 
-    /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter café stays without inventory, finance and payroll.</summary>
+    /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter business stays without inventory, finance and payroll.</summary>
     [TestMethod]
     public async Task An_upgrade_keeps_the_stack_in_the_plans_shape()
     {
@@ -373,7 +373,7 @@ public sealed class ProvisionerTests
         foreach (var up in ups)
             Assert.Contains("--remove-orphans", up);
 
-        // What the upgrade stamped runs the café's own service under its new name, and nothing under the old
+        // What the upgrade stamped runs the business's own service under its new name, and nothing under the old
         var compose = ComposeOnDisk();
         Assert.Contains("  blue-tenant-api:", compose);
         Assert.Contains("Database=blue_tenantdb;", compose);
@@ -389,7 +389,7 @@ public sealed class ProvisionerTests
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
         CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
-        Assert.AreEqual(TenantStatus.Running, _tenant.Status, "the café is back on what worked");
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status, "the business is back on what worked");
         Assert.AreEqual("v1", _tenant.ImageTag);
         Assert.IsNull(_tenant.PreviousImageTag, "the tag that failed is nothing to go back to");
         StringAssert.StartsWith(_tenant.LastError, "upgrade to v2 rolled back");

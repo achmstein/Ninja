@@ -13,7 +13,7 @@ class OnlinePaymentView {
   /// Their share of the bill: what counts against the total
   final double amount;
 
-  /// The provider's fee the guest paid on top; not the café's money
+  /// The provider's fee the guest paid on top; not the business's money
   final double fee;
 
   /// "Pending", "Paid" or "Refunded"

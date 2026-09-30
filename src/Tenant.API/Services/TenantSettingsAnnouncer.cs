@@ -5,7 +5,7 @@ using Ninja.EventBus.Abstractions;
 namespace Ninja.Tenant.API.Services;
 
 /// <summary>
-/// Says the café's own settings once each time the service starts, so a
+/// Says the business's own settings once each time the service starts, so a
 /// consumer that has never heard them — a stack upgraded from when they rode
 /// on every branch's event, a service whose copy was lost — has them without
 /// the owner touching a switch. Saying the same thing again changes nothing
@@ -33,7 +33,7 @@ public class TenantSettingsAnnouncer(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogWarning(ex, "Could not say the café's settings yet; trying again in {Wait}", wait);
+                logger.LogWarning(ex, "Could not say the business's settings yet; trying again in {Wait}", wait);
             }
 
             await Task.Delay(wait, stoppingToken);
@@ -49,6 +49,6 @@ public class TenantSettingsAnnouncer(
 
         await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
 
-        logger.LogInformation("Said the café's settings: guest orders anywhere {GuestOrdersAnywhere}", tenant.GuestOrdersAnywhere);
+        logger.LogInformation("Said the business's settings: guest orders anywhere {GuestOrdersAnywhere}", tenant.GuestOrdersAnywhere);
     }
 }

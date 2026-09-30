@@ -66,9 +66,9 @@ function copy(value: string, message: string) {
 }
 
 /**
- * The owner's assistant: every café stack runs an MCP server at its API
+ * The owner's assistant: every business stack runs an MCP server at its API
  * host's /mcp. The owner adds it once as a custom connector in Claude or
- * ChatGPT, signs in against the café's own realm (Owner role only), and
+ * ChatGPT, signs in against the business's own realm (Owner role only), and
  * asks. Nothing here talks to the server; this page is the how-to.
  */
 export function AssistantPage() {
@@ -164,7 +164,7 @@ export function AssistantPage() {
         </CardContent>
       </Card>
 
-      {/* How it speaks: the café's own name, tone, manner, language and notes */}
+      {/* How it speaks: the business's own name, tone, manner, language and notes */}
       <PersonalityCard />
 
       {/* The server's prompts, one tap in Claude */}

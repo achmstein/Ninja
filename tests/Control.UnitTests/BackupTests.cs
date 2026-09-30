@@ -229,7 +229,7 @@ public sealed class BackupTests
         RestoreDrillService.Shape(drill, source, newest, platform);
 
         Assert.IsTrue(drill.IsDrill);
-        Assert.AreEqual("ops@ninja.app", drill.OwnerEmail, "the realm's owner is ours, not the café's");
+        Assert.AreEqual("ops@ninja.app", drill.OwnerEmail, "the realm's owner is ours, not the business's");
         Assert.IsNotNull(drill.WelcomeSentAt, "no welcome, no temporary password in anyone's inbox");
         Assert.AreEqual("v2", drill.ImageTag, "the build the backup was taken on");
         Assert.AreEqual("blue/20260901-030000", drill.RestoreFrom);

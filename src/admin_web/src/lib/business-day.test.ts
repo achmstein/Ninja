@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatDay, parseDay, presetWindow } from './business-day'
 
-// A café's day is not the calendar's: one that closes at two in the
+// A business's day is not the calendar's: one that closes at two in the
 // morning is still on Friday's takings at 01:00 on Saturday. Every report
 // window on the back office's pages comes from here, so a mistake moves a
 // night's money to the wrong day.
@@ -12,7 +12,7 @@ const DAY = { start: '08:00', end: '23:00' } // opens at eight, closes at eleven
 const local = (year: number, month: number, day: number, hour = 0, minute = 0) =>
   new Date(year, month - 1, day, hour, minute, 0, 0)
 
-describe('today, for a café that closes after midnight', () => {
+describe('today, for a business that closes after midnight', () => {
   it('is the window that opened yesterday when the night is still going', () => {
     const atOne = local(2026, 3, 15, 1) // Sunday, 01:00: still Saturday's night
     const today = presetWindow('today', LATE.start, LATE.end, {}, atOne)
@@ -27,13 +27,13 @@ describe('today, for a café that closes after midnight', () => {
     expect(today.to.toISOString()).toBe(local(2026, 3, 16, 2).toISOString())
   })
 
-  it('is the calendar day for a café that closes before midnight', () => {
+  it('is the calendar day for a business that closes before midnight', () => {
     const today = presetWindow('today', DAY.start, DAY.end, {}, local(2026, 3, 15, 20))
     expect(today.from.toISOString()).toBe(local(2026, 3, 15, 8).toISOString())
     expect(today.to.toISOString()).toBe(local(2026, 3, 15, 23).toISOString())
   })
 
-  it('is the whole calendar day when the café never said its hours', () => {
+  it('is the whole calendar day when the business never said its hours', () => {
     const today = presetWindow('today', null, null, {}, local(2026, 3, 15, 20))
     expect(today.from.toISOString()).toBe(local(2026, 3, 15).toISOString())
     expect(today.to.toISOString()).toBe(local(2026, 3, 16).toISOString())
@@ -90,7 +90,7 @@ describe('a range the owner picked', () => {
 })
 
 describe('a day in a URL', () => {
-  it('goes out as yyyy-MM-dd in the café’s own time and comes back the same day', () => {
+  it('goes out as yyyy-MM-dd in the business’s own time and comes back the same day', () => {
     expect(formatDay(local(2026, 3, 15, 23, 30))).toBe('2026-03-15')
     expect(parseDay('2026-03-15')?.toISOString()).toBe(local(2026, 3, 15).toISOString())
   })

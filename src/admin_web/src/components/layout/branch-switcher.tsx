@@ -22,7 +22,7 @@ import { useBrandName } from '@/lib/brand'
 import { BrandMark } from '@/components/brand-mark'
 
 /**
- * The sidebar header, in the shadcn-admin team-switcher shape: the café's
+ * The sidebar header, in the shadcn-admin team-switcher shape: the business's
  * mark in the tile, its name as the title, and the active branch as the
  * subtitle. Picking a branch scopes every branch-aware API call via the
  * X-Branch-Id header. Only the branches the token allows are offered; with
@@ -38,7 +38,7 @@ export function BranchSwitcher() {
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
-  const cafe = useBrandName()
+  const businessName = useBrandName()
   const switchable = branches.length > 1
 
   const handleSelect = (id: number) => {
@@ -69,9 +69,9 @@ export function BranchSwitcher() {
     <>
       <BrandMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{cafe || label}</span>
-        {/* One branch: the café is the place, and its branch says nothing more */}
-        {cafe && switchable && <span className='truncate text-xs'>{label}</span>}
+        <span className='truncate font-semibold'>{businessName || label}</span>
+        {/* One branch: the business is the place, and its branch says nothing more */}
+        {businessName && switchable && <span className='truncate text-xs'>{label}</span>}
       </div>
     </>
   )

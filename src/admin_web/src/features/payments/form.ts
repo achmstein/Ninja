@@ -13,8 +13,8 @@ export type SecretEdit =
   | { mode: 'replace'; value: string }
   | { mode: 'remove' }
 
-/** Fee mode as Sales.Domain numbers it: the café absorbs it, or the guest pays it on top. */
-export const FEE_CAFE = 0
+/** Fee mode as Sales.Domain numbers it: the business absorbs it, or the guest pays it on top. */
+export const FEE_BUSINESS = 0
 export const FEE_GUEST = 1
 
 export type PaymentsForm = {
@@ -48,7 +48,7 @@ export function toForm(view: PaymentSettingsView): PaymentsForm {
     // A number on the wire today; the name too, should enums ever be spelled
     feeMode: ['1', 'Guest'].includes(String(view.feeMode))
       ? FEE_GUEST
-      : FEE_CAFE,
+      : FEE_BUSINESS,
     feePercent: text(view.feePercent),
     feeFixed: text(view.feeFixed),
     allowItems: view.allowItems,

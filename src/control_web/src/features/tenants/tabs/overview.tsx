@@ -25,7 +25,7 @@ const dlClass = 'grid grid-cols-[auto_1fr] content-start items-center gap-x-4 ga
 const dtClass = 'text-muted-foreground'
 
 /**
- * Where the stack lives, who owns it, what we know about the café, and the
+ * Where the stack lives, who owns it, what we know about the business, and the
  * latest run. The record column edits in a sheet; the rest is the stack's.
  */
 export function OverviewTab({

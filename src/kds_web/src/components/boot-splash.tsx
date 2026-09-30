@@ -4,7 +4,7 @@ import { NinjaWordmark } from '@/components/ninja-wordmark'
  * The loading screen: the platform's wordmark on the dark tile colour and a
  * ring that turns, the same as index.html paints before any script runs,
  * so the page never changes its face between the first paint and the app.
- * Shown while the session is being read; the café takes over from there.
+ * Shown while the session is being read; the business takes over from there.
  */
 export function BootSplash() {
   return (

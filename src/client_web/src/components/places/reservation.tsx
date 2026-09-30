@@ -41,7 +41,7 @@ function Opened({ hold }: { hold: ReservationViewModel }) {
       style={{ ...DOCK_EDGES, borderRadius: 32, '--dock-row': `${row}px` } as CSSProperties}
       role='dialog'
       aria-label={localized(hold.placeName)}
-      // Between the top bar (the café's height, --bar-h) and the dock, at the dock's side margins; the slab's tints for what is inside
+      // Between the top bar (the business's height, --bar-h) and the dock, at the dock's side margins; the slab's tints for what is inside
       className='slab fixed top-[calc(env(safe-area-inset-top)+var(--bar-h)+8px)] bottom-[calc(84px+var(--dock-row))] z-20 mx-auto overflow-hidden shadow-(--slab-shadow) [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]'
     >
       {/* Contained: what changes inside (the clock each second) never lays out or repaints the page around it */}

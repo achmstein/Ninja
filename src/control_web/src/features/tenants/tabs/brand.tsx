@@ -55,7 +55,7 @@ import { toast } from '@/lib/toast'
 
 const DEFAULT = '__default__'
 
-/** The menu's styles the café may choose (the brand's menu item part); none is the classic list */
+/** The menu's styles the business may choose (the brand's menu item part); none is the classic list */
 const MENU_LAYOUTS: { key: string; label: TranslationKey }[] = [
   { key: 'card', label: 'menuLayoutGrid' },
   { key: 'compact', label: 'menuLayoutCompact' },
@@ -95,7 +95,7 @@ const imagesOf = (brand: BrandDto): BrandImages => ({
 })
 
 /**
- * The café's brand as its running stack holds it: name, colours, theme,
+ * The business's brand as its running stack holds it: name, colours, theme,
  * features and images, next to the real customer app in a phone. Off a
  * running stack there is nothing to edit, so a mock shows what is on record.
  */
@@ -290,7 +290,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         primaryColor: orNull(primary),
         customerUrl: customerUrl.trim() || null,
         features,
-        // The starting light or dark and the locale are the record's; they go back as the café has them
+        // The starting light or dark and the locale are the record's; they go back as the business has them
         theme: { ...theme, mode: brand.theme.mode ?? null },
         locale: brand.locale,
       },

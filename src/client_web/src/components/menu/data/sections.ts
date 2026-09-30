@@ -1,6 +1,6 @@
 import type { CatalogItemDto, LocalizedText } from '@/api/catalog'
 
-/** What a section of the menu is: the customer's own picks, the café's most popular, or one of its categories. */
+/** What a section of the menu is: the customer's own picks, the business's most popular, or one of its categories. */
 export type SectionKind = 'usuals' | 'favorites' | 'popular' | 'offers' | 'category'
 
 export type MenuSectionData = {
@@ -74,7 +74,7 @@ const hasPhoto = (item: CatalogItemDto) => !!item.pictureUri
 /**
  * The dish a showcase opens with: the best offer that has a photo, else the
  * first popular one with a photo, else any available item with a photo;
- * null when nothing has a photo (the café's cover stands in).
+ * null when nothing has a photo (the business's cover stands in).
  */
 export function pickHero(offers: CatalogItemDto[], sections: MenuSectionData[]): CatalogItemDto | null {
   const available = (i: CatalogItemDto) => i.isAvailable !== false

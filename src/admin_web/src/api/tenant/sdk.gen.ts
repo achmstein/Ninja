@@ -98,7 +98,7 @@ export const updateTenant = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
+ * How the owner's AI assistant speaks: its tone, manner, language and the business's notes for it
  */
 export const setTenantAssistant = <ThrowOnError extends boolean = false>(options: Options<SetTenantAssistantData, ThrowOnError>): RequestResult<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError> => (options.client ?? client).put<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError>({
     responseType: 'json',
@@ -111,7 +111,7 @@ export const setTenantAssistant = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * The modules the café's plan allows; a switch outside them goes off. The control plane only
+ * The modules the business's plan allows; a switch outside them goes off. The control plane only
  */
 export const setTenantEntitlements = <ThrowOnError extends boolean = false>(options: Options<SetTenantEntitlementsData, ThrowOnError>): RequestResult<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError> => (options.client ?? client).put<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError>({
     responseType: 'json',
@@ -157,7 +157,7 @@ export const uploadTenantImage = <ThrowOnError extends boolean = false>(options:
 export const getTenantIcon = <ThrowOnError extends boolean = false>(options: Options<GetTenantIconData, ThrowOnError>): RequestResult<unknown, GetTenantIconErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantIconErrors, ThrowOnError>({ url: '/api/tenant/icons/{name}', ...options });
 
 /**
- * The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet
+ * The business's colours for its sign-in pages; the login theme loads it beside its own stylesheet
  */
 export const getTenantLoginCss = <ThrowOnError extends boolean = false>(options?: Options<GetTenantLoginCssData, ThrowOnError>): RequestResult<GetTenantLoginCssResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetTenantLoginCssResponses, unknown, ThrowOnError>({ url: '/api/tenant/login.css', ...options });
 

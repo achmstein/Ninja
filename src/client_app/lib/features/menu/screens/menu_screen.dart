@@ -374,7 +374,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       if (entry.key.id == -1) continue;
       final matchingItems = entry.value
           .where((item) =>
-              // Either language finds it, whichever the café writes in
+              // Either language finds it, whichever the business writes in
               [item.name.en, item.name.ar, item.description.en, item.description.ar]
                   .any((text) => text != null && normalizeSearch(text).contains(query)))
           .toList();
@@ -1810,7 +1810,7 @@ class _QuantityStepper extends StatelessWidget {
 ///
 /// * [HeaderLayout.left]: the classic header, the title at the start
 /// * [HeaderLayout.center]: the brand centred
-/// * [HeaderLayout.banner]: the café's cover photo with the brand over it,
+/// * [HeaderLayout.banner]: the business's cover photo with the brand over it,
 ///   light on a dark scrim whatever the page's scheme; without a cover, the
 ///   brand large on a panel of its accent
 class MenuHeader extends ConsumerWidget {
@@ -1929,7 +1929,7 @@ class MenuHeader extends ConsumerWidget {
   }
 }
 
-/// The brand for a header: the wordmark when the café has one, else its
+/// The brand for a header: the wordmark when the business has one, else its
 /// mark with the name beside it, set as a heading
 class _BrandLockup extends ConsumerWidget {
   final double height;

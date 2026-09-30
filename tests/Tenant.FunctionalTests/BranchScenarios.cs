@@ -18,7 +18,7 @@ public record BranchView(
     bool RequireSignInForTableOrders);
 
 /// <summary>
-/// The café's branches: the list every app reads, the owner's to add and
+/// The business's branches: the list every app reads, the owner's to add and
 /// edit, and the pause switches the till and the admin flip during a day.
 /// </summary>
 [TestClass]

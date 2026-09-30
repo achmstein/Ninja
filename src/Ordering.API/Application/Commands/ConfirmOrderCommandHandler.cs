@@ -1,7 +1,7 @@
 namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
-/// Handler for confirming cafe orders (admin action). Confirming is also
+/// Handler for confirming business orders (admin action). Confirming is also
 /// what sends the order to the kitchen, split by the branch's stations as
 /// they stand right now.
 /// </summary>

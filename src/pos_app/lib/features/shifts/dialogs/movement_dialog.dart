@@ -300,7 +300,7 @@ class _ButtonGrid extends StatelessWidget {
 }
 
 /// The list behind a kind: one name a row, scrolling past a few rows, with
-/// what the café owes at the end of the row where that is the counter's
+/// what the business owes at the end of the row where that is the counter's
 /// business (a daily worker's wage, a supplier's tab).
 class _PickList extends ConsumerWidget {
   final MovementPick pick;
@@ -363,7 +363,7 @@ class _PickButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final balance = item.balance ?? 0;
     // Owed to them reads as the plain amount; a negative balance is money
-    // they owe the café — flagged, the way the payroll page shows it
+    // they owe the business — flagged, the way the payroll page shows it
     final hint = balance == 0
         ? null
         : balance < 0

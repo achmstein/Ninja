@@ -1,6 +1,6 @@
 # Chillax Finance — Design & Plan
 
-**Goal:** see where the café's money goes beyond stock and staff — rent, bills, repairs, the supplier tab, and what the owners take — so that a month can be read as sales, costs and profit, per branch, with the partners' money kept apart from the café's.
+**Goal:** see where the business's money goes beyond stock and staff — rent, bills, repairs, the supplier tab, and what the owners take — so that a month can be read as sales, costs and profit, per branch, with the partners' money kept apart from the business's.
 
 **Status:** decided 2026-09-13; all three phases built the same day.
 
@@ -8,7 +8,7 @@
 
 ## 1. Where we were
 
-Money left the café through three doors and two were counted:
+Money left the business through three doors and two were counted:
 
 - **Stock** — `Inventory.API` receipts: supplier (free text), invoice, lines with unit cost. Every sale snapshots what it cost, so the cost of goods is a sum.
 - **Staff** — `Payroll.API`: wages, salaries, advances, what is owed.
@@ -25,8 +25,8 @@ Three facts from the owner (2026-09-13) shaped the design: most non-stock expens
 ### D2 — Three registers, one shape each
 
 - **Expense** — date, category, amount, how it was paid (drawer / bank / a partner's own money), vendor (free text, remembered), note, branch. Append-only; a mistake is voided with a reason and re-entered, like a receipt. Categories are a short editable list with sensible defaults (إيجار، كهرباء، غاز، مياه، إنترنت، صيانة، تسويق، رخص، أخرى).
-- **Supplier account** — a supplier is a record (name, phone, notes); its account is a ledger per branch: **Invoice** (+, a delivery received), **Payment** (−), **Credit** (−, a return or a discount). Balance = what the café owes them. Paid on delivery is an invoice and a payment on the same day; a tab is invoices that wait.
-- **Partner account** — a partner is a record with the branches they own. Their account per branch is a ledger: **Drawing** (−, money taken), **Contribution** (+, money put in, including an expense they paid from their own pocket). Balance = what the café holds of theirs. Drawings are never expenses and never touch the P&L.
+- **Supplier account** — a supplier is a record (name, phone, notes); its account is a ledger per branch: **Invoice** (+, a delivery received), **Payment** (−), **Credit** (−, a return or a discount). Balance = what the business owes them. Paid on delivery is an invoice and a payment on the same day; a tab is invoices that wait.
+- **Partner account** — a partner is a record with the branches they own. Their account per branch is a ledger: **Drawing** (−, money taken), **Contribution** (+, money put in, including an expense they paid from their own pocket). Balance = what the business holds of theirs. Drawings are never expenses and never touch the P&L.
 
 ### D3 — No double counting: cost lives in one place
 

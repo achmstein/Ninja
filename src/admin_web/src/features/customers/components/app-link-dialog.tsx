@@ -42,7 +42,7 @@ export function AppLinkDialog({
   const t = useT()
   const locale = useLocale()
   const origin = useCustomerOrigin()
-  const cafe = useBrandName()
+  const businessName = useBrandName()
   const country = useBrand()?.locale?.country ?? 'EG'
   const name = getCustomerDisplayName(customer)
 
@@ -62,7 +62,7 @@ export function AppLinkDialog({
         minute: '2-digit',
       })
     : ''
-  const message = t('appLinkMessage', { name, cafe, url })
+  const message = t('appLinkMessage', { name, business: businessName, url })
 
   const copy = async () => {
     try {

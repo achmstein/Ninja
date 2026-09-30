@@ -1,7 +1,7 @@
 import { formatMoney, useCurrency } from './currency'
 import { useLanguage } from './i18n'
 
-// Same money shape the admin dashboard uses, in the café's currency:
+// Same money shape the admin dashboard uses, in the business's currency:
 // `12.50 EGP` / `12.50 ج.م`. Generated API number fields are typed
 // `number | string` (the backend serializes decimals loosely), so this
 // accepts both.

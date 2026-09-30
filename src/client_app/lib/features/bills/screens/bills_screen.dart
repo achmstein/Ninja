@@ -19,7 +19,7 @@ import '../widgets/bill_tile.dart';
 import '../widgets/order_tile.dart';
 
 /// The bills tab: the customer's bills, not their orders. Everything the
-/// cafe charges — the rounds, a place's time, a discount, service and VAT
+/// business charges — the rounds, a place's time, a discount, service and VAT
 /// — lands on a Sales ticket, and the till's own arithmetic is what the
 /// customer sees. One tile per bill they are on today, open ones first;
 /// an order the till has not confirmed yet waits above, since it is on no
@@ -206,7 +206,7 @@ class _EarlierTab extends ConsumerWidget {
   }
 }
 
-/// What the customer owes the cafe, as the till decided it: the balance of
+/// What the customer owes the business, as the till decided it: the balance of
 /// their tab in Accounts, where a settled share lands when the cashier puts
 /// it on account. No sum of the open bills — the app cannot know their
 /// part of an unsettled place's time, so it does not guess one. Only for

@@ -31,7 +31,7 @@ public class OrdersWebApiTest
         _identityServiceMock = Substitute.For<IIdentityService>();
         _loggerMock = Substitute.For<ILogger<OrderServices>>();
         _branchSettingsMock = Substitute.For<IBranchSettingsQueries>();
-        // The café takes guests at a table only unless a test says otherwise
+        // The business takes guests at a table only unless a test says otherwise
         _tenantSettingsMock = Substitute.For<ITenantSettingsQueries>();
         // The branch is taking orders unless a test says otherwise
         _branchSettingsMock.IsOrderingEnabledAsync(Arg.Any<int>()).Returns(true);
@@ -45,7 +45,7 @@ public class OrdersWebApiTest
     /// <summary>These fixtures use Egyptian numbers, so the rules are Egypt's.</summary>
     private static readonly TenantCountry Egypt = CountryOf("EG");
 
-    /// <summary>A café that writes phone numbers another way.</summary>
+    /// <summary>A business that writes phone numbers another way.</summary>
     private static readonly TenantCountry SaudiArabia = CountryOf("SA");
 
     private static TenantCountry CountryOf(string code) =>
@@ -502,10 +502,10 @@ public class OrdersWebApiTest
     }
 
     [TestMethod]
-    public async Task Create_guest_order_without_a_destination_is_taken_where_the_cafe_allows_it()
+    public async Task Create_guest_order_without_a_destination_is_taken_where_the_business_allows_it()
     {
-        // Arrange - the café takes guests' orders from anywhere, to collect;
-        // the setting is Ordering's projection of Tenant.API's café settings
+        // Arrange - the business takes guests' orders from anywhere, to collect;
+        // the setting is Ordering's projection of Tenant.API's business settings
         _tenantSettingsMock.AllowsGuestOrdersAnywhereAsync().Returns(true);
         _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
             .Returns(Task.FromResult(42));
@@ -674,9 +674,9 @@ public class OrdersWebApiTest
             PlaceKind: placeId is null ? null : "Table",
             PlaceName: placeId is null ? null : new LocalizedText("Table 7", null));
 
-    /// <summary>A café in Saudi Arabia takes the numbers its customers have.</summary>
+    /// <summary>A business in Saudi Arabia takes the numbers its customers have.</summary>
     [TestMethod]
-    public async Task A_guest_phone_is_read_the_way_the_cafes_country_writes_one()
+    public async Task A_guest_phone_is_read_the_way_the_business_country_writes_one()
     {
         _identityServiceMock.GetUserIdentity().Returns((string)null);
         var httpContext = new DefaultHttpContext();
@@ -698,9 +698,9 @@ public class OrdersWebApiTest
         Assert.IsInstanceOfType<BadRequest<string>>(egyptian.Result);
     }
 
-    /// <summary>The same number, judged by the café it is given to.</summary>
+    /// <summary>The same number, judged by the business it is given to.</summary>
     [TestMethod]
-    public async Task An_egyptian_cafe_still_takes_an_egyptian_number()
+    public async Task An_egyptian_business_still_takes_an_egyptian_number()
     {
         var result = await CreateGuestOrderAsync(GuestRequest(guestPhone: "01012345678"));
         Assert.IsInstanceOfType<Ok>(result.Result);

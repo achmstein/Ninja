@@ -12,7 +12,7 @@ import '../../features/service_requests/services/service_requests_service.dart';
 import '../../features/shifts/models/shift.dart';
 import '../../features/shifts/services/shifts_service.dart';
 import '../../features/shifts/services/till_picks_service.dart';
-import '../../features/tables/models/cafe_table.dart';
+import '../../features/tables/models/dining_table.dart';
 import '../../features/tables/services/tables_service.dart';
 import '../../features/tickets/models/enums.dart';
 import '../../features/tickets/models/move_lines.dart';
@@ -33,7 +33,6 @@ import '../brand/tenant_brand.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../services/branch_service.dart';
-import '../../features/sale/models/sale_line.dart';
 
 /// Design-time mode: `flutter run --dart-define=POS_DEMO=true`.
 ///
@@ -123,7 +122,7 @@ class _DemoBranchRepository implements BranchRepository {
       (await getBranches()).firstWhere((b) => b.id == id);
 }
 
-/// Nobody pays from their phone in the demo café
+/// Nobody pays from their phone in the demo business
 class _DemoOnlinePaymentsRepository implements OnlinePaymentsRepository {
   @override
   Future<List<OnlinePaymentView>> list(int ticketId) async => const [];
@@ -972,11 +971,11 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
 
 class _DemoTablesRepository implements TablesRepository {
   @override
-  Future<List<CafeTable>> getTables() async => [
+  Future<List<DiningTable>> getTables() async => [
         for (var n = 1; n <= 8; n++)
-          if (n != 4) CafeTable(id: 20 + n, name: _lt('Table $n', 'ترابيزة $n')),
-        CafeTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
-        CafeTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
+          if (n != 4) DiningTable(id: 20 + n, name: _lt('Table $n', 'ترابيزة $n')),
+        DiningTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
+        DiningTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
       ];
 }
 

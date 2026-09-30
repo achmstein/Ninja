@@ -24,8 +24,8 @@ namespace Ninja.Spaces.API.Apis;
 public static class PlacesApi
 {
     /// <summary>Why a place cannot be given a rate or opened to bookings: the switch is off, by the plan or by the owner.</summary>
-    internal const string TimeBillingOff = "Time billing is off for this café: a place cannot be charged by the hour.";
-    internal const string ReservationsOff = "Reservations are off for this café: a place cannot take bookings.";
+    internal const string TimeBillingOff = "Time billing is off here: a place cannot be charged by the hour.";
+    internal const string ReservationsOff = "Reservations are off here: a place cannot take bookings.";
 
     public static IEndpointRouteBuilder MapPlacesApi(this IEndpointRouteBuilder app)
     {

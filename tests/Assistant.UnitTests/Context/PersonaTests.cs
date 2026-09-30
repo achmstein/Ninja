@@ -12,7 +12,7 @@ public sealed class PersonaTests
     {
         var brief = Persona.Write(null, null);
 
-        StringAssert.StartsWith(brief, "You are Ninja, the operations partner of this café", "it is always Ninja");
+        StringAssert.StartsWith(brief, "You are Ninja, the operations partner of this business", "it is always Ninja");
         StringAssert.Contains(brief, "Never guess or invent a number");
         StringAssert.Contains(brief, "confirm=true and the same requestId", "the write rule is always there");
         StringAssert.Contains(brief, "- Brief:");

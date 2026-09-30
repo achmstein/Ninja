@@ -65,7 +65,7 @@ public static class PayrollApi
         // The ledger
         api.MapGet("/employees/{id:int}/ledger", GetLedger)
             .WithName("GetEmployeeLedger")
-            .WithSummary("What the café owes someone, line by line, with the balance");
+            .WithSummary("What the business owes someone, line by line, with the balance");
 
         api.MapPost("/employees/{id:int}/ledger", PostLedgerEntry)
             .WithName("PostLedgerEntry")

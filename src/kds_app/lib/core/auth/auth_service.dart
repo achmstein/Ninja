@@ -262,7 +262,7 @@ class AuthService extends Notifier<AuthState> {
     } on DioException catch (e) {
       debugPrint('Token refresh error: ${e.response?.data ?? e.message}');
       // Only clear tokens if server explicitly rejected them (auth errors)
-      // Don't clear on network errors - the café's internet may just be down
+      // Don't clear on network errors - the business's internet may just be down
       final statusCode = e.response?.statusCode;
       if (statusCode == 400 || statusCode == 401) {
         await _clearTokens();

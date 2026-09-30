@@ -30,7 +30,7 @@ public static class Suite
     }
 
     /// <summary>
-    /// What the café's plan allows, as Tenant.API's event would have left
+    /// What the business's plan allows, as Tenant.API's event would have left
     /// it: the projection Spaces keeps and reads, written here directly so a
     /// scenario is about the rule and not about the broker.
     /// </summary>
@@ -60,7 +60,7 @@ public record TariffView(List<RateOptionView> Options, int RoundingMinutes);
 public record RateOptionView(string Code, LocalizedView Name, decimal HourlyRate);
 
 /// <summary>
-/// The places a café has: plain tables every café keeps, and the rates and
+/// The places a business has: plain tables every business keeps, and the rates and
 /// bookings that are a module's — refused while the module is off, whatever
 /// the request says.
 /// </summary>
@@ -86,7 +86,7 @@ public sealed class PlaceScenarios
     public Task EveryModuleOn() => Suite.ModulesAsync(reservations: true, timeBilling: true);
 
     [TestMethod]
-    public async Task Every_cafe_has_plain_tables_and_the_apps_can_list_them()
+    public async Task Every_business_has_plain_tables_and_the_apps_can_list_them()
     {
         var id = await Admin.PostAsync<int>(Places, NewPlace("Table 1"), HttpStatusCode.Created);
 
@@ -122,13 +122,13 @@ public sealed class PlaceScenarios
         Assert.AreEqual(HttpStatusCode.BadRequest, created);
         Assert.Contains("Time billing is off", detail);
 
-        // A plain table is still a café's to add, and a rate cannot be put on it afterwards either
+        // A plain table is still a business's to add, and a rate cannot be put on it afterwards either
         var id = await Admin.PostAsync<int>(Places, NewPlace("Table 2"), HttpStatusCode.Created);
         var (tariff, why) = await Admin.RefusedAsync(HttpMethod.Put, Place(id, "/tariff"), new { tariff = Tariff() });
         Assert.AreEqual(HttpStatusCode.BadRequest, tariff);
         Assert.Contains("Time billing is off", why);
 
-        // Taking a rate off is always allowed: a café that gave the module up still edits its places
+        // Taking a rate off is always allowed: a business that gave the module up still edits its places
         await Suite.ModulesAsync(reservations: true, timeBilling: true);
         var timed = await Admin.PostAsync<int>(Places, NewPlace("Room 2", kind: 1, tariff: Tariff()), HttpStatusCode.Created);
         await Suite.ModulesAsync(reservations: true, timeBilling: false);

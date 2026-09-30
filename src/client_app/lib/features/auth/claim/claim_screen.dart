@@ -12,7 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../places/screens/qr_scan_screen.dart';
 import 'claim_service.dart';
 
-/// A customer the café added at the counter (a name and a phone, nothing
+/// A customer the business added at the counter (a name and a phone, nothing
 /// to sign in with) takes the account over: the link the till shared opens
 /// here, or they bring the code in from the sign-in page by scanning the
 /// till's QR or pasting the link. They give an email and a password; the
@@ -182,8 +182,11 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
   static bool _looksLikeEmail(String email) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
+  /// The business the customer is signing up with, in the app's language: the words name it
+  String get _businessName => ref.watch(brandProvider).displayName(Localizations.localeOf(context));
+
   String _linkMessage(AppLocalizations l10n, ClaimFailure failure) => switch (failure) {
-        ClaimFailure.expired => l10n.claimExpired,
+        ClaimFailure.expired => l10n.claimExpired(_businessName),
         ClaimFailure.used => l10n.claimUsed,
         ClaimFailure.tooManyAttempts => l10n.claimTooMany,
         ClaimFailure.network => l10n.claimFailed,
@@ -194,7 +197,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
+    final name = _businessName;
 
     final Widget body;
     if (_linkFailure != null) {
@@ -223,7 +226,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                 const Center(child: BrandWordmark(height: 96)),
                 const SizedBox(height: 24),
                 AppText(
-                  _token == null && _linkFailure == null ? l10n.haveCafeCode : l10n.claimTitle(cafe),
+                  _token == null && _linkFailure == null ? l10n.haveBusinessCode(name) : l10n.claimTitle(name),
                   style: TextStyle(fontWeight: FontWeight.bold, color: colors.foreground, fontSize: 24),
                   textAlign: TextAlign.center,
                 ),
@@ -260,7 +263,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppText(
-          l10n.claimScanOrPaste,
+          l10n.claimScanOrPaste(_businessName),
           style: TextStyle(color: colors.mutedForeground, fontSize: 15),
           textAlign: TextAlign.center,
         ),
@@ -274,7 +277,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         FTextField(
           control: FTextFieldControl.managed(controller: _codeController),
           label: AppText(l10n.claimPasteLabel),
-          hint: l10n.claimPasteHint,
+          hint: l10n.claimPasteHint(_businessName),
           textInputAction: TextInputAction.go,
           onSubmit: _useCode,
         ),
@@ -318,7 +321,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppText(
-          l10n.claimIntro,
+          l10n.claimIntro(_businessName),
           style: TextStyle(color: colors.mutedForeground, fontSize: 15),
           textAlign: TextAlign.center,
         ),
@@ -333,7 +336,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
               subtitle: AppText(_formError!),
             ),
           ),
-        // Who the café added: theirs to read, not to change here
+        // Who the business added: theirs to read, not to change here
         _readOnly(l10n.name, preview.name),
         if (preview.phoneNumber != null) ...[
           const SizedBox(height: 12),

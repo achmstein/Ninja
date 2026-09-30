@@ -30,7 +30,7 @@ export const movementTypeKeys: Record<string, TranslationKey> = {
   TransferIn: 'movementTypeTransferIn',
 }
 
-// The units a café actually stocks in; anything else is typed in
+// The units a business actually stocks in; anything else is typed in
 export const UNITS = ['pcs', 'g', 'ml', 'kg', 'l'] as const
 export const CUSTOM_UNIT = 'custom'
 

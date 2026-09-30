@@ -74,7 +74,7 @@ final onlinePaymentsRepositoryProvider = Provider<OnlinePaymentsRepository>((ref
 /// often, so "Paying…" turns to paid (and the bill may settle itself) soon
 const onlinePendingPoll = Duration(seconds: 5);
 
-/// The online payments on one bill, when the café takes payments at the
+/// The online payments on one bill, when the business takes payments at the
 /// table (none asked for otherwise: the gateway refuses the module's calls).
 /// Re-read on the till's own ticket nudges (SignalR, and the open-bills
 /// poll behind it), and every few seconds while one is still paying.

@@ -19,7 +19,7 @@ type Box = { x: number; y: number; w: number; h: number }
  * flies in: the two frames and their corners, the photo's natural size
  * (each end shows it "cover", cropped its own way) and the room's size,
  * which the clip is measured from. `src` is the photo, or null for the plate
- * on the café's colour; `gray` for a dish sold out.
+ * on the business's colour; `gray` for a dish sold out.
  */
 export type Flight = {
   from: Box

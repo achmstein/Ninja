@@ -10,7 +10,7 @@ export type Dock = 'brand' | 'neutral'
 export const dockOf = (slab: string | null | undefined): Dock => (slab === 'neutral' ? 'neutral' : 'brand')
 
 /**
- * The customer app's dock, the café's to choose: a deep shade of its brand
+ * The customer app's dock, the business's to choose: a deep shade of its brand
  * colour, or black. Each choice shows its colour as a swatch, as the colour
  * fields beside it do.
  */

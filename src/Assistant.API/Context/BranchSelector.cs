@@ -18,7 +18,7 @@ public static class BranchSelector
             var active = all.Where(b => b.IsActive).OrderBy(b => b.DisplayOrder).ThenBy(b => b.Id).ToList();
             return active.Count > 0
                 ? ApiResult<IReadOnlyList<BranchResponse>>.Ok(active)
-                : ApiResult<IReadOnlyList<BranchResponse>>.Fail("This cafe has no active branch.", null);
+                : ApiResult<IReadOnlyList<BranchResponse>>.Fail("This business has no active branch.", null);
         }
 
         var one = Find(all, text);
@@ -27,7 +27,7 @@ public static class BranchSelector
             : ApiResult<IReadOnlyList<BranchResponse>>.Ok([one]);
     }
 
-    /// <summary>For a write: exactly one branch. When the cafe has one active branch it needs no naming.</summary>
+    /// <summary>For a write: exactly one branch. When the business has one active branch it needs no naming.</summary>
     public static ApiResult<BranchResponse> SelectOne(IReadOnlyList<BranchResponse> all, string? branch)
     {
         var text = branch?.Trim();
@@ -37,7 +37,7 @@ public static class BranchSelector
             return active.Count switch
             {
                 1 => ApiResult<BranchResponse>.Ok(active[0]),
-                0 => ApiResult<BranchResponse>.Fail("This cafe has no active branch.", null),
+                0 => ApiResult<BranchResponse>.Fail("This business has no active branch.", null),
                 _ => ApiResult<BranchResponse>.Fail($"Say which branch: {Names(active)}.", null),
             };
         }
@@ -72,7 +72,7 @@ public static class BranchSelector
 
     private static string NotFound(IReadOnlyList<BranchResponse> all, string text)
         => all.Count == 0
-            ? $"No branch matches '{text}'; this cafe has no branches yet."
+            ? $"No branch matches '{text}'; this business has no branches yet."
             : $"No branch matches '{text}'. The branches are {Names(all)}.";
 
     private static string Names(IEnumerable<BranchResponse> branches)

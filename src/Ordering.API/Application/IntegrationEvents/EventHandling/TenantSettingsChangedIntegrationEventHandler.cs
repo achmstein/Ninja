@@ -3,7 +3,7 @@ using Ninja.Ordering.Infrastructure.Projections;
 namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// Keeps Ordering's projection of the café's own settings: an upsert of the
+/// Keeps Ordering's projection of the business's own settings: an upsert of the
 /// one row, guarded against out-of-order delivery — an event older than what
 /// the row already holds is dropped rather than letting a stale "off" undo a
 /// newer "on".

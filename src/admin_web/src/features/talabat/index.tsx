@@ -36,7 +36,7 @@ const REFUSAL_KINDS: Record<string, TranslationKey> = {
 /**
  * Talabat, the owner's side: which branches sell there, whether pausing a
  * branch here closes it there, how the last menu went and sending it now.
- * Ninja's connection and the café's chain at Talabat are the platform's to
+ * Ninja's connection and the business's chain at Talabat are the platform's to
  * set; until they are, the page says so and still keeps the owner's choices.
  */
 export function TalabatSettingsPage() {
@@ -141,7 +141,7 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
         </Alert>
       )}
 
-      {/* Where the café sells on Talabat */}
+      {/* Where the business sells on Talabat */}
       <Card>
         <CardContent className='space-y-4 pt-6'>
           <div className='space-y-1'>

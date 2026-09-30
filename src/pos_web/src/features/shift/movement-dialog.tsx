@@ -50,7 +50,7 @@ const IN_KINDS: Kind[] = [
   { value: 0, key: 'payOutOther', picks: null },
 ]
 
-// `balance` is what the café owes the person or supplier right now — the
+// `balance` is what the business owes the person or supplier right now — the
 // evening's wage, the tab a delivery is settling. A hint beside the name,
 // never the amount itself: the cashier still keys what actually changes
 // hands. Absent where it is nobody's business at the counter (a monthly
@@ -195,7 +195,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
 
   const submit = () =>
     addMovement.mutate({
-      // A retry on café Wi-Fi must not become a second command
+      // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: shiftId },
       query: { 'api-version': API_VERSION },

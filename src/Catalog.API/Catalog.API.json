@@ -3027,7 +3027,7 @@
         "tags": [
           "Talabat"
         ],
-        "summary": "Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused",
+        "summary": "Talabat for the business: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused",
         "operationId": "GetTalabat",
         "parameters": [
           {

@@ -3,7 +3,7 @@
   <!--
     Finance.API through its front door, on the shared Postgres and RabbitMQ
     (tests/Ninja.Testing): the month's register of expenses, the accounts
-    the café keeps with its suppliers and partners, and the profit the till,
+    the business keeps with its suppliers and partners, and the profit the till,
     the storeroom and payroll report into.
     Needs docker, so it runs as its own PR job.
   -->

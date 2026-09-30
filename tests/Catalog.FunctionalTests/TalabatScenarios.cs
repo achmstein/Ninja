@@ -7,7 +7,7 @@ namespace Ninja.Catalog.FunctionalTests;
 public record TalabatStatus(bool Connected, int[] BranchIds, bool SyncOpenClose, DateTime? MenuChangedAt, DateTime? MenuSentAt, string? LastMenuResult, int Pending);
 
 /// <summary>
-/// The café on Talabat, from its catalog: putting a branch on Talabat sends it
+/// The business on Talabat, from its catalog: putting a branch on Talabat sends it
 /// the menu, an edit marks the menu for sending, a stock-out goes at once,
 /// and what Talabat would be sent can be read. Nothing is actually sent here:
 /// the test stack has no relay, so it all waits in the queue.
@@ -47,7 +47,7 @@ public sealed class TalabatScenarios
         Assert.IsTrue((await Owner.GetAsync<TalabatStatus>(Talabat())).Pending > pendingBefore, "the stock-out is queued");
         await Till.SendAsync<JsonElement>(HttpMethod.Patch, $"/api/catalog/items/{id}/availability?{Version}", new { isAvailable = true }, HttpStatusCode.OK);
 
-        // Only the owner decides where the café sells; the platform may ask for the menu, nobody else
+        // Only the owner decides where the business sells; the platform may ask for the menu, nobody else
         var (adminStatus, _) = await Admin.RefusedAsync(HttpMethod.Put, Talabat(), new { branchIds = Array.Empty<int>() });
         Assert.AreEqual(HttpStatusCode.Forbidden, adminStatus);
         var push = await Suite.Catalog.As(Persona.ControlPlane(), Suite.Branch).RawAsync(HttpMethod.Post, Talabat("/push"));

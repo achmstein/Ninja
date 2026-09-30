@@ -47,7 +47,7 @@ const problemText: Record<ClaimProblem, TranslationKey> = {
 }
 
 /**
- * A customer the café added at the counter by name and phone takes the
+ * A customer the business added at the counter by name and phone takes the
  * account over: the link says whose it is, they give an email and a
  * password, and the same account (points and orders included) is theirs
  * to sign in to. Open to anyone with the link; nothing here needs a
@@ -59,7 +59,7 @@ function ClaimPage() {
   const auth = useAuth()
   const { resolvedTheme } = useTheme()
   const language = useLanguage((s) => s.language)
-  const cafe = useBrandName()
+  const name = useBrandName()
   const reduced = useReducedMotion()
   const { token } = Route.useSearch()
 
@@ -108,12 +108,12 @@ function ClaimPage() {
         ? formProblem
         : null
 
-  const title = t('claimTitle', { cafe })
+  const title = t('claimTitle', { name })
 
   if (linkProblem) {
     return (
       <NinjaPage title={title}>
-        <Empty icon={Link2Off} title={t(problemText[linkProblem])}>
+        <Empty icon={Link2Off} title={t(problemText[linkProblem], { name })}>
           {linkProblem === 'used' && (
             <Button size='lg' className='w-full max-w-sm rounded-full' onClick={() => signIn()}>
               {t('signIn')}
@@ -162,7 +162,7 @@ function ClaimPage() {
                       )}
                     </div>
                   )}
-                  <p className='text-muted-foreground text-note'>{t('claimIntro')}</p>
+                  <p className='text-muted-foreground text-note'>{t('claimIntro', { name })}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -192,7 +192,7 @@ function ClaimPage() {
                     aria-invalid={fieldProblem === 'badEmail' || fieldProblem === 'emailTaken'}
                   />
                   {(fieldProblem === 'badEmail' || fieldProblem === 'emailTaken') && (
-                    <p className='text-destructive text-note'>{t(problemText[fieldProblem])}</p>
+                    <p className='text-destructive text-note'>{t(problemText[fieldProblem], { name })}</p>
                   )}
                 </div>
                 <div className='space-y-2'>
@@ -222,7 +222,7 @@ function ClaimPage() {
                 </div>
 
                 {(fieldProblem === 'tooMany' || fieldProblem === 'failed') && (
-                  <p className='text-destructive text-center text-note'>{t(problemText[fieldProblem])}</p>
+                  <p className='text-destructive text-center text-note'>{t(problemText[fieldProblem], { name })}</p>
                 )}
                 {auth.isAuthenticated && <p className='text-muted-foreground text-center text-note'>{t('claimSignedInNote')}</p>}
 

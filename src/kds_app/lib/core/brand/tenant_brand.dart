@@ -13,7 +13,7 @@ class TenantFeatures {
   final bool payroll;
   final bool kds;
 
-  /// Guests pay or split the bill online. An add-on the café buys and turns
+  /// Guests pay or split the bill online. An add-on the business buys and turns
   /// on, so off until the brand says otherwise (and when a stack older than
   /// it says nothing).
   final bool onlinePayments;

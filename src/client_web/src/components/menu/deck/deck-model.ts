@@ -54,7 +54,7 @@ export function positionOf(columns: DeckColumn[], itemId: number | string | unde
   return fallback
 }
 
-/** The options in the order the café set them. */
+/** The options in the order the business set them. */
 export function sortedOptions(customization: ItemCustomizationDto) {
   return [...(customization.options ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
 }
@@ -65,7 +65,7 @@ export function canQuickAdd(item: CatalogItemDto): boolean {
   return !(item.customizations ?? []).some((c) => c.isRequired)
 }
 
-/** The line a long press adds: the café's defaults, nothing sold out, one of it. */
+/** The line a long press adds: the business's defaults, nothing sold out, one of it. */
 export function quickAddChoice(item: CatalogItemDto): { customizations: CartCustomization[]; unitPrice: number } {
   const selections = withoutOutOfStock(item.customizations, defaultSelections(item.customizations))
   const customizations = selectionsToCustomizations(item, selections)

@@ -59,7 +59,7 @@ class SignalRService {
       final hub = _hubConnection!;
       hub.onclose(({error}) {
         debugPrint('SignalR connection closed: $error');
-        // Automatic reconnect gave up: the café Wi-Fi was out for minutes.
+        // Automatic reconnect gave up: the Wi-Fi was out for minutes.
         // A kiosk never leaves the foreground, so no resume will reopen the
         // hub — schedule it here. A close we asked for has already been
         // replaced (or cleared) and is left alone.

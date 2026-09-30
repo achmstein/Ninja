@@ -67,7 +67,7 @@ public sealed record TalabatOrder(
         var riderPickupAt = Time(delivery, "riderPickupTime");
 
         // Delivery Hero's own rule: pickup says so; a delivery with a rider
-        // pickup time is the platform's rider, without one it is the café's
+        // pickup time is the platform's rider, without one it is the business's
         var expedition = expeditionType?.Contains("pickup", StringComparison.OrdinalIgnoreCase) == true
             ? PlatformExpedition.Pickup
             : riderPickupAt is null ? PlatformExpedition.VendorDelivery : PlatformExpedition.PlatformDelivery;

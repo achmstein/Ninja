@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/dialog'
 
 /**
- * The table's id in a scanned code, when the code is one of this café's
+ * The table's id in a scanned code, when the code is one of this business's
  * place links (https://{customer host}/p/{id}); null for anything else. A
- * link to another café, or any other page, is not a table here.
+ * link to another business, or any other page, is not a table here.
  */
 export function placeIdFromCode(text: string, origin: string): number | null {
   let url: URL
@@ -49,7 +49,7 @@ function nativeDetector(): Detector | null {
  * opens a scanned link in the browser, which an app installed to the home
  * screen is not (on an iPhone it does not even share its storage), so a
  * guest in the installed app had no way to their table. A code that is one
- * of this café's place links goes where the link would: /p/{id}.
+ * of this business's place links goes where the link would: /p/{id}.
  */
 export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()

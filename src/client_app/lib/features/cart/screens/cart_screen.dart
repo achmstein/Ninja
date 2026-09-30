@@ -262,7 +262,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     _buildPromoSection(cart.totalPrice, colors),
                                     const SizedBox(height: 16),
 
-                                    // Points redemption, while the café runs loyalty
+                                    // Points redemption, while the business runs loyalty
                                     if (ref.watch(featuresProvider).loyalty) ...[
                                       _buildPointsRedemption(cart.totalPrice, colors),
                                       const SizedBox(height: 16),

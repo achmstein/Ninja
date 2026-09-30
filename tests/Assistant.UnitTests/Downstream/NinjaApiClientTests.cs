@@ -72,7 +72,7 @@ public sealed class NinjaApiClientTests
         Assert.AreEqual(HttpStatusCode.Forbidden, staff.Status);
 
         var levels = await bench.Api.GetAsync<List<StockLevelView>>("inventory-api", "/api/inventory/levels", 1, CancellationToken.None);
-        StringAssert.Contains(levels.Error, "not included in this cafe's plan");
+        StringAssert.Contains(levels.Error, "not included in this business's plan");
 
         var shift = await bench.Api.GetAsync<ShiftView>("sales-api", "/api/shifts/current", 1, CancellationToken.None);
         Assert.AreEqual(HttpStatusCode.NotFound, shift.Status);

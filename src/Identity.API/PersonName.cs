@@ -27,7 +27,7 @@ public static class PersonName
     /// </summary>
     public static bool Complete(string? first, string? last) => !string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last);
 
-    /// <summary>The name as one line, for what shows it whole (a bill, a receipt, the café's lists)</summary>
+    /// <summary>The name as one line, for what shows it whole (a bill, a receipt, the business's lists)</summary>
     public static string Display(string? first, string? last) => $"{first} {last}".Trim();
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

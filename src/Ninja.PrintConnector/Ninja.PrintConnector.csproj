@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <!--
-    The Ninja Print Connector: one self-contained exe a café downloads from
+    The Ninja Print Connector: one self-contained exe a business downloads from
     admin, runs once to pair, and leaves running as a Windows service that
     prints the kitchen's tickets. Published with:
       dotnet publish -c Release -r win-x64

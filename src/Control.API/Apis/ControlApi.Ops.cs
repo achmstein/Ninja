@@ -7,7 +7,7 @@ using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.API.Apis;
 
-/// <summary>A running tenant from the outside: its containers, their logs, the services' health, and the café's figures through its own APIs.</summary>
+/// <summary>A running tenant from the outside: its containers, their logs, the services' health, and the business's figures through its own APIs.</summary>
 public static partial class ControlApi
 {
     private static void MapOpsApi(RouteGroupBuilder api)

@@ -40,7 +40,7 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        // Rooms & Tables is every café's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
+        // Rooms & Tables is every business's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
         { title: 'placesNav', url: '/places', icon: Armchair, needsPlaces: true },
         // A waiter call or a bill request comes from any table's scan page, whatever the plan
         { title: 'requests', url: '/requests', icon: ConciergeBell, needsPlaces: true },
@@ -146,7 +146,7 @@ export const sidebarData: SidebarData = {
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
-        // Online payments: the café's own payment account, fee and splits
+        // Online payments: the business's own payment account, fee and splits
         {
           title: 'onlinePaymentsNav',
           url: '/payments',
@@ -157,7 +157,7 @@ export const sidebarData: SidebarData = {
         { title: 'talabatNav', url: '/talabat', icon: Bike },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
-        // The owner's assistant: this café's MCP server in their own Claude or ChatGPT, in every plan
+        // The owner's assistant: this business's MCP server in their own Claude or ChatGPT, in every plan
         { title: 'assistantNav', url: '/assistant', icon: Sparkles },
       ],
     },

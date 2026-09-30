@@ -7,7 +7,7 @@ import '../brand/brand_mark.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
 
-/// Header branch switcher, same contract as pos_web's: the café's mark and
+/// Header branch switcher, same contract as pos_web's: the business's mark and
 /// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the
 /// X-Branch-Id header, so everything on screen refetches. Only the branches
 /// the token allows are listed; with a single one there is nothing to switch
@@ -23,7 +23,7 @@ class BranchSwitcher extends ConsumerWidget {
 
     final active = branchState.selectedBranch;
     final branchLabel = active?.name.localized(context) ?? l10n.branches;
-    final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
+    final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
     final switchable = branchState.branches.length > 1;
 
     Widget brand({required bool withChevron}) => Row(
@@ -39,15 +39,15 @@ class BranchSwitcher extends ConsumerWidget {
                 // beside the button's own vertical padding (pos_web's
                 // `leading-tight`)
                 Text(
-                  cafe.isEmpty ? branchLabel : cafe,
+                  business.isEmpty ? branchLabel : business,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.0,
                     color: theme.colors.foreground,
                   ),
                 ),
-                // One branch: the café is the place, and its branch says nothing more
-                if (cafe.isNotEmpty && switchable)
+                // One branch: the business is the place, and its branch says nothing more
+                if (business.isNotEmpty && switchable)
                   Text(
                     branchLabel,
                     style: theme.typography.xs.copyWith(

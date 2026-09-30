@@ -9,11 +9,11 @@ public enum PaymentTender
     /// <summary>Settled onto the customer's account tab (Accounts.API posts the charge).</summary>
     Account = 3,
 
-    /// <summary>Paid by the guest from their phone through the café's payment provider (OnlinePayment); never cash in the drawer.</summary>
+    /// <summary>Paid by the guest from their phone through the business's payment provider (OnlinePayment); never cash in the drawer.</summary>
     Online = 4,
 
     /// <summary>
-    /// A delivery platform's order the platform pays the café for (Talabat):
+    /// A delivery platform's order the platform pays the business for (Talabat):
     /// settled by Sales itself when the order lands; never cash in the drawer,
     /// never offered at the till.
     /// </summary>

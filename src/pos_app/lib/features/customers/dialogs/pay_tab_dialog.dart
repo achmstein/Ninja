@@ -53,7 +53,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
   late String _amountStr;
   bool _saving = false;
   TabPaymentSlip? _slip;
-  // One request id per dialog: a retry on café Wi-Fi must not take the money twice
+  // One request id per dialog: a retry on shaky Wi-Fi must not take the money twice
   final String _requestId = const Uuid().v4();
 
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;

@@ -7,7 +7,7 @@ namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 /// <summary>
 /// The profit projection's feeds. Each handler writes one fact keyed on
 /// what produced it, so the bus delivering twice changes nothing, and each
-/// dates the fact to the café's business day.
+/// dates the fact to the business's business day.
 /// </summary>
 public class TicketSettledIntegrationEventHandler(
     IProfitRepository facts,

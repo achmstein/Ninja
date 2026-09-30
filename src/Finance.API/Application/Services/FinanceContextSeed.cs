@@ -4,7 +4,7 @@ using Ninja.Finance.Infrastructure;
 namespace Ninja.Finance.API.Application.Services;
 
 /// <summary>
-/// The usual café expense categories, once, on an empty list. The owner
+/// The usual business expense categories, once, on an empty list. The owner
 /// renames, reorders or retires them from the page; nothing here runs
 /// again once a category exists.
 /// </summary>

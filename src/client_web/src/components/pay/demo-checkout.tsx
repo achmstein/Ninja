@@ -53,7 +53,7 @@ export function checkCard(
 }
 
 /**
- * A demo café's checkout, dressed as a payment page: the café as the
+ * A demo business's checkout, dressed as a payment page: the business as the
  * merchant, what is being paid, a card form or a wallet number, Pay and
  * Cancel. Nothing is charged: the test card 4242… goes through, 4000…0002
  * is declined, and Sales marks the payment just as a provider's callback

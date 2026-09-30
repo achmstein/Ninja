@@ -116,7 +116,7 @@ class ClaimLink {
   final DateTime expiresAt;
   const ClaimLink(this.token, this.expiresAt);
 
-  /// On the café's customer host, where the claim page lives
+  /// On the business's customer host, where the claim page lives
   Uri url(String customerOrigin) => Uri.parse('$customerOrigin/claim?token=${Uri.encodeQueryComponent(token)}');
 }
 

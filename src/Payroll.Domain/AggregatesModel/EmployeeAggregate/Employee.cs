@@ -2,7 +2,7 @@
 namespace Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
 
 /// <summary>
-/// Someone who works at the café. Its own record with its own name: a login
+/// Someone who works at the business. Its own record with its own name: a login
 /// is optional (<see cref="UserId"/>), because a runner or a cleaner never
 /// touches a screen. Leaving is an end date, never a delete — the ledger and
 /// old payslips stay under the name they were issued to.

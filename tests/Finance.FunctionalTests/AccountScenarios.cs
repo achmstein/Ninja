@@ -18,7 +18,7 @@ public record TillPickView(int Id, string Name);
 public record TillSupplierView(int Id, string Name, decimal Balance);
 
 /// <summary>
-/// The two accounts a café keeps outside the drawer: what it owes the
+/// The two accounts a business keeps outside the drawer: what it owes the
 /// people it buys from, and what it holds of its partners' money. Both are
 /// per branch, and the partners' side is the owner's alone.
 /// </summary>
@@ -103,7 +103,7 @@ public sealed class AccountScenarios
         });
 
         var ledger = await owner.GetAsync<PartnerLedgerView>(Suite.Url($"/partners/{hany}/ledger"));
-        Assert.AreEqual(3000m, ledger.Balance, "five thousand in, two out: the café holds three");
+        Assert.AreEqual(3000m, ledger.Balance, "five thousand in, two out: the business holds three");
         Assert.AreEqual(5000m, ledger.Entries.Single(e => e.Type == PartnerEntryType.Contribution).Signed);
         Assert.AreEqual(-2000m, ledger.Entries.Single(e => e.Type == PartnerEntryType.Drawing).Signed);
 
@@ -143,7 +143,7 @@ public sealed class AccountScenarios
         });
 
         var ledger = await owner.GetAsync<PartnerLedgerView>(Suite.Url($"/partners/{samia}/ledger"));
-        Assert.AreEqual(5000m, ledger.Balance, "the rent she paid is money the café owes her");
+        Assert.AreEqual(5000m, ledger.Balance, "the rent she paid is money the business owes her");
         var entry = ledger.Entries.Single();
         Assert.AreEqual(PartnerEntryType.Contribution, entry.Type);
         Assert.AreEqual($"expense:{expense.Id}", entry.Reference, "and it is the expense that put it there");
@@ -155,7 +155,7 @@ public sealed class AccountScenarios
         Assert.AreEqual(0m, after.Balance, "voiding the bill takes the credit back off her account");
         Assert.AreEqual(PartnerEntryType.Drawing, after.Entries.First().Type);
 
-        // A partner of another café is not one here
+        // A partner of another business is not one here
         var stranger = await APartnerAsync(owner, $"Stranger {branch}", Suite.NewBranch(), 10m);
         var (notHere, why) = await books.RefusedAsync(HttpMethod.Post, Suite.Url("/expenses"), new
         {
@@ -166,7 +166,7 @@ public sealed class AccountScenarios
     }
 
     [TestMethod]
-    public async Task Who_the_cafe_buys_from_is_edited_switched_off_and_refused_when_it_is_nobody()
+    public async Task Who_the_business_buys_from_is_edited_switched_off_and_refused_when_it_is_nobody()
     {
         var branch = Suite.NewBranch();
         var books = Suite.BackOfficeAt(branch);
@@ -190,7 +190,7 @@ public sealed class AccountScenarios
         Assert.AreEqual("Milk on Mondays", kept.Notes);
 
         Assert.IsFalse((await Suite.TillAt(branch).GetAsync<List<TillSupplierView>>($"/api/finance/till/suppliers?{Suite.Version}")).Any(s => s.Id == grocer),
-            "and the till does not offer to pay someone the café no longer buys from");
+            "and the till does not offer to pay someone the business no longer buys from");
 
         var (noName, _) = await books.RefusedAsync(HttpMethod.Post, Suite.Url("/suppliers"), new { name = "  " });
         Assert.AreEqual(HttpStatusCode.BadRequest, noName);

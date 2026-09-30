@@ -11,7 +11,7 @@ import { Odometer } from '@/components/ninja/odometer'
 import { TONE_CLASS } from '../deck/deck-model'
 import type { useDish } from './use-dish'
 
-/** The photo box of a list's dish: the photo, or the plate on the café's colour; its options grow out of it when opened */
+/** The photo box of a list's dish: the photo, or the plate on the business's colour; its options grow out of it when opened */
 export function DishPhotoBox({
   item,
   dish,

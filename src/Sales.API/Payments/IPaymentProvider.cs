@@ -25,11 +25,11 @@ public sealed record CheckoutSession(string ProviderReference, string CheckoutUr
 /// <summary>What a verified callback says happened.</summary>
 public sealed record CallbackOutcome(string ProviderReference, string? OurReference, string TransactionId, bool Success, bool Pending, decimal Amount, string? Error);
 
-/// <summary>The café's provider account, opened for one call.</summary>
+/// <summary>The business's provider account, opened for one call.</summary>
 public sealed record ProviderAccount(string SecretKey, string? PublicKey, string? HmacSecret, IReadOnlyList<int> IntegrationIds);
 
 /// <summary>
-/// A payment provider the café has its own merchant account with. Paymob is
+/// A payment provider the business has its own merchant account with. Paymob is
 /// the first; Kashier, Geidea or Fawry would each be another of these.
 /// </summary>
 public interface IPaymentProvider
@@ -38,7 +38,7 @@ public interface IPaymentProvider
 
     Task<CheckoutSession> StartCheckoutAsync(ProviderAccount account, CheckoutRequest request, CancellationToken ct);
 
-    /// <summary>The callback's outcome, or null when its signature does not check out with the café's secret.</summary>
+    /// <summary>The callback's outcome, or null when its signature does not check out with the business's secret.</summary>
     CallbackOutcome? VerifyCallback(ProviderAccount account, JsonElement body, string? signature);
 
     Task RefundAsync(ProviderAccount account, string transactionId, decimal amount, CancellationToken ct);

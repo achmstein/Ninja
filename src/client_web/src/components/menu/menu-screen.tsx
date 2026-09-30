@@ -41,7 +41,7 @@ import { Tune, type TuneResult } from './tune'
 
 /**
  * The menu tab: ordering as one surface that never leaves the page, in the
- * style the café chose (./menu-style.ts). A list (the default) or the tiles
+ * style the business chose (./menu-style.ts). A list (the default) or the tiles
  * are one scrolling page under the tab's title (./list/menu-grid.tsx). On
  * the deck, dishes are big cards (up and down within a category, sideways
  * between them). Either way a dish opens in place into its options; what is added flies into
@@ -82,7 +82,7 @@ export function MenuScreen({ menu }: HomeProps) {
   // card back (scrolling up) brings them back, as does the first card (the top)
   const [tabsAsked, setTabsAsked] = useState(false)
 
-  // The café's own menu (a list, or the tiles alone) is the whole menu from the start, with no cards
+  // The business's own menu (a list, or the tiles alone) is the whole menu from the start, with no cards
   // to zoom back into; the deck opens on its cards
   const style = useMenuStyle()
   const list = style.kind === 'list' ? style.list : undefined
@@ -126,7 +126,7 @@ export function MenuScreen({ menu }: HomeProps) {
   // the cards' room: the categories and the dock rise over the deck's bottom, the cards unmoved
   const tabsOver = compact && tabsAsked
   // The top bar goes up with the whole menu's scroll, and past the deck's first card: as far as it
-  // is tall, which is the café's (its header size)
+  // is tall, which is the business's (its header size)
   const bar = useRef<HTMLDivElement>(null)
   const barHeight = () => bar.current?.offsetHeight ?? 64
   const barY = useMotionValue(0)
@@ -400,7 +400,7 @@ export function MenuScreen({ menu }: HomeProps) {
                       onQuickAdd={onQuickAdd}
                       onZoomIn={zoomInFromGrid}
                       list={list}
-                      // The café's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
+                      // The business's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
                       title={classic ? t('menu') : undefined}
                       onScroller={setGridScroller}
                       notice={notice}
@@ -436,7 +436,7 @@ export function MenuScreen({ menu }: HomeProps) {
             )}
           </motion.div>
 
-          {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
+          {/* The bar over the cards: the business, where you are; on the whole menu, the way back */}
           <NinjaTopBar
             ref={bar}
             className='absolute inset-x-0 top-0'

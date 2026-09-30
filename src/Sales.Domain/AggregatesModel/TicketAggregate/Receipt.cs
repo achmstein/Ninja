@@ -4,7 +4,7 @@ namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 /// <summary>
 /// The numbered, frozen record of a settled ticket. Reprinting rereads it;
 /// nothing about it ever changes. Numbers run per branch, gap-free enough for
-/// a café: they come from a counter row locked inside the settle transaction.
+/// a business: they come from a counter row locked inside the settle transaction.
 /// </summary>
 public class Receipt : Entity, IAggregateRoot
 {

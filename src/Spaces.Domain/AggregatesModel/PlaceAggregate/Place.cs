@@ -26,7 +26,7 @@ public class Place : Entity, IAggregateRoot
     /// <summary>
     /// Takes reservations: a customer can book it ahead or hold it on the
     /// way. On by default for a timed place; a plain table is opted in by
-    /// the owner, so a café that only seats people sees no change.
+    /// the owner, so a business that only seats people sees no change.
     /// </summary>
     public bool Reservable { get; private set; }
 
@@ -58,7 +58,7 @@ public class Place : Entity, IAggregateRoot
     public static Place Room(LocalizedText name, decimal singleRate, decimal multiRate, int branchId, LocalizedText? description = null)
         => new(PlaceKind.Room, name, branchId, Tariff.Room(singleRate, multiRate), description);
 
-    /// <summary>A café table that only receives orders.</summary>
+    /// <summary>A business table that only receives orders.</summary>
     public static Place Table(LocalizedText name, int branchId)
         => new(PlaceKind.Table, name, branchId);
 

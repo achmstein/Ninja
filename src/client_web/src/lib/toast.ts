@@ -24,7 +24,7 @@ const HOLDS: Record<ToastType, number> = { success: 3200, info: 3200, warning: 3
  *
  * Say something only when the screen does not already: a dish flying into
  * the tray, a tick on a button or a page changing needs no toast as well.
- * Failures, choices (Undo) and news from the café do.
+ * Failures, choices (Undo) and news from the business do.
  */
 const show = (type: ToastType, message: string, options?: ToastOptions) =>
   island.flash(

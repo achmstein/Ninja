@@ -11,8 +11,8 @@ import '../../l10n/app_localizations.dart';
 import 'confirm_dialog.dart';
 import 'settings_list.dart';
 
-/// Which café this tablet is connected to, as a settings row, and the way out: a tablet that
-/// moves to another café (or was pointed at the wrong one) is signed out,
+/// Which business this tablet is connected to, as a settings row, and the way out: a tablet that
+/// moves to another business (or was pointed at the wrong one) is signed out,
 /// forgets what it cached, and starts over at the connect screen. A build
 /// pinned to one stack has nothing to change and shows nothing.
 class ConnectionRow extends ConsumerWidget {
@@ -28,10 +28,10 @@ class ConnectionRow extends ConsumerWidget {
     Future<void> change() async {
       final ok = await showConfirmDialog(
         context,
-        title: l10n.changeCafe,
-        description: l10n.changeCafeConfirm,
+        title: l10n.changeBusiness,
+        description: l10n.changeBusinessConfirm,
         cancelLabel: l10n.cancel,
-        actionLabel: l10n.changeCafe,
+        actionLabel: l10n.changeBusiness,
         destructive: true,
       );
       if (!ok) return;
@@ -43,7 +43,7 @@ class ConnectionRow extends ConsumerWidget {
     }
 
     return SettingsRow(
-      title: connection.cafeName.isEmpty ? l10n.connectedTo : connection.cafeName,
+      title: connection.businessName.isEmpty ? l10n.connectedTo : connection.businessName,
       subtitle: connection.host,
       trailing: SizedBox(
         height: 44,
@@ -51,7 +51,7 @@ class ConnectionRow extends ConsumerWidget {
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: change,
-          child: Text(l10n.changeCafe, style: theme.typography.base.forButton),
+          child: Text(l10n.changeBusiness, style: theme.typography.base.forButton),
         ),
       ),
     );

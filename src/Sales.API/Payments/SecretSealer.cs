@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Sales.API.Payments;
 
 /// <summary>
-/// Seals the café's provider secrets before they reach the database, with
+/// Seals the business's provider secrets before they reach the database, with
 /// the stack's payments key (AES-256-GCM, a fresh nonce each time). The key
 /// is in the stack's environment, never in the database, so a dump or a
 /// backup of Sales holds the secrets only as "sealed:v1:…".

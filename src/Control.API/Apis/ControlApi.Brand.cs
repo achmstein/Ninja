@@ -11,7 +11,7 @@ namespace Ninja.Control.API.Apis;
 
 /// <summary>
 /// The tenant's brand, read and written through its own stack (the same
-/// endpoints the café's admin app uses, signed as the platform's service
+/// endpoints the business's admin app uses, signed as the platform's service
 /// account), and the images uploaded before the stack exists, which the
 /// brand step of provisioning carries in.
 /// </summary>
@@ -185,7 +185,7 @@ public record BrandWordmark(string Url, int Width, int Height)
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
 /// <param name="Mode">light or dark for someone who has not chosen; null follows the device. The record edits it; the Brand tab sends it back as it came.</param>
-/// <param name="Style">ninja, classic, minimal, bold, cozy or night; null is classic. A new café starts in <see cref="Platform.Provisioner.NewCafeStyle"/>.</param>
+/// <param name="Style">ninja, classic, minimal, bold, cozy or night; null is classic. A new business starts in <see cref="Platform.Provisioner.NewBusinessStyle"/>.</param>
 /// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice.</param>
 /// <param name="Slab">The dock's colour: neutral (black); null a deep shade of the brand colour. The stack replaces the whole theme, so the Brand tab sends it back as it came.</param>
 public record BrandTheme(

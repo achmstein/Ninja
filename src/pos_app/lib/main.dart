@@ -39,7 +39,7 @@ void main() async {
   await initializeSale();
   await initializeOfflineQueue();
   await initializeBrand();
-  // Which café this tablet serves; the connect screen asks when none is known
+  // Which business this tablet serves; the connect screen asks when none is known
   await TenantConnection.initialize();
 
   // A till that crashes costs money: every Flutter and async error goes to
@@ -58,7 +58,7 @@ void main() async {
   }
 
   runApp(
-    // Until the tablet is connected to a café the connect screen is the app;
+    // Until the tablet is connected to a business the connect screen is the app;
     // the demo has its samples and never asks
     ConnectGate(
       skip: kDemoMode,

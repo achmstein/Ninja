@@ -37,9 +37,9 @@ public class StartOnlinePaymentCommandHandler(
             throw new SalesDomainException("Online payments are off here.");
         var settings = await payments.GetSettingsAsync();
         var provider = providers.For(settings)
-            ?? throw new SalesDomainException("This café has not set up online payments yet.");
+            ?? throw new SalesDomainException("Online payments are not set up here yet.");
         if (!settings.Allows(command.Share.Mode))
-            throw new SalesDomainException("This café does not split bills that way.");
+            throw new SalesDomainException("Bills are not split that way here.");
 
         await payments.LockTicketAsync(command.TicketId);
         var ticket = await tickets.GetAsync(command.TicketId)
@@ -294,7 +294,7 @@ public class SavePaymentSettingsCommandHandler(
         if (command.SecretKey is not null || command.HmacSecret is not null)
         {
             if (!sealer.CanSeal)
-                throw new SalesDomainException("This café cannot keep payment secrets yet; ask for its stack to be upgraded.");
+                throw new SalesDomainException("This business cannot keep payment secrets yet; ask for its stack to be upgraded.");
             string? Seal(string? value) => value is null ? null : value.Trim().Length == 0 ? "" : sealer.Seal(value.Trim());
             var key = command.SecretKey?.Trim();
             settings.SetSecrets(Seal(command.SecretKey), key is { Length: >= 4 } ? key[^4..] : null, Seal(command.HmacSecret), now);
@@ -328,7 +328,7 @@ public static class PayRules
     public static ProviderAccount Account(PaymentSettings settings, SecretSealer sealer)
     {
         if (settings.SealedSecretKey is null)
-            throw new SalesDomainException("This café has not set up online payments yet.");
+            throw new SalesDomainException("Online payments are not set up here yet.");
         return new ProviderAccount(
             sealer.Open(settings.SealedSecretKey),
             settings.PublicKey,

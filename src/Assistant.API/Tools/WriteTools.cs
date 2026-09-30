@@ -29,10 +29,10 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
     [McpServerTool(Name = "record_expense", Title = "Record an expense", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Records an operating expense (rent, electricity, supplies, a repair, ...) for one branch, the way the back office's Add expense form does. " + ConfirmDescription)]
     public async Task<CallToolResult> RecordExpense(
-        [Description("Amount in the cafe's currency, e.g. 350")] decimal amount,
-        [Description("Expense category name as the cafe uses it (e.g. Electricity, Rent); ask get_expenses to see the categories in use")] string category,
+        [Description("Amount in the business's currency, e.g. 350")] decimal amount,
+        [Description("Expense category name as the business uses it (e.g. Electricity, Rent); ask get_expenses to see the categories in use")] string category,
         [Description("The business date, yyyy-MM-dd; default today")] string? date = null,
-        [Description("Branch id or name; required when the cafe has more than one active branch")] string? branch = null,
+        [Description("Branch id or name; required when the business has more than one active branch")] string? branch = null,
         [Description("drawer (cash from the till, default) or bank")] string paidFrom = "drawer",
         [Description("Who was paid, e.g. the utility or shop")] string? vendor = null,
         [Description("A short note: period, meter, invoice number")] string? note = null,
@@ -92,7 +92,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
     public async Task<CallToolResult> SetItemAvailability(
         [Description("Menu item name (English or Arabic) or its id")] string item,
         [Description("true = on sale, false = sold out")] bool available,
-        [Description("Branch id or name; required when the cafe has more than one active branch")] string? branch = null,
+        [Description("Branch id or name; required when the business has more than one active branch")] string? branch = null,
         [Description(RequestIdDescription)] string? requestId = null,
         [Description(ConfirmDescription)] bool confirm = false,
         CancellationToken ct = default)
@@ -139,7 +139,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
     [Description("Pauses (paused=true) or resumes (paused=false) online and table ordering for one branch. While paused, customers cannot place orders from the app or a table QR; the till keeps working. " + ConfirmDescription)]
     public async Task<CallToolResult> PauseOnlineOrdering(
         [Description("true = stop taking online orders, false = take them again")] bool paused,
-        [Description("Branch id or name; required when the cafe has more than one active branch")] string? branch = null,
+        [Description("Branch id or name; required when the business has more than one active branch")] string? branch = null,
         [Description(RequestIdDescription)] string? requestId = null,
         [Description(ConfirmDescription)] bool confirm = false,
         CancellationToken ct = default)

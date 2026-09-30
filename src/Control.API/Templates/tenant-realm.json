@@ -346,7 +346,7 @@
       "attributes": {
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true",
-        "consent.screen.text": "Read the cafe's sales, profit, stock and staff figures, and record expenses or pause ordering when you ask"
+        "consent.screen.text": "Read the business's sales, profit, stock and staff figures, and record expenses or pause ordering when you ask"
       },
       "protocolMappers": [
         {

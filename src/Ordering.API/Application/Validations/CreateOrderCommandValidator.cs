@@ -1,14 +1,14 @@
 ﻿namespace Ninja.Ordering.API.Application.Validations;
 
 /// <summary>
-/// Simplified validator for cafe orders.
+/// Simplified validator for business orders.
 /// No address or payment validation needed.
 /// </summary>
 public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {
     public CreateOrderCommandValidator(TenantCountry country, ILogger<CreateOrderCommandValidator> logger)
     {
-        // A guest's phone is read the way this café's country writes one
+        // A guest's phone is read the way this business's country writes one
         var guestPhonePattern = PhoneRules.For(country.Code).Pattern;
 
         // A signed-in order is identified by its user; a guest order stands on
@@ -39,7 +39,7 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 
             // A guest order has to be going somewhere in the building. Ordering
             // ahead to collect is for account holders, who can be held to it —
-            // unless the café takes guests' orders from anywhere.
+            // unless the business takes guests' orders from anywhere.
             RuleFor(command => command.HasDestination).Equal(true)
                 .Unless(command => command.GuestOrdersAnywhere)
                 .WithMessage("A table or room is required to order as a guest.");

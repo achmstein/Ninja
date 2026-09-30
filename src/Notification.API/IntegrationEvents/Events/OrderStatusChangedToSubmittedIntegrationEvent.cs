@@ -27,7 +27,7 @@ public record OrderStatusChangedToSubmittedIntegrationEvent : IntegrationEvent
 }
 
 /// <summary>
-/// Order status for cafe orders (copy from Ordering.Domain for integration event deserialization)
+/// Order status (copy from Ordering.Domain for integration event deserialization)
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<OrderStatus>))]
 public enum OrderStatus

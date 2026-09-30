@@ -4,7 +4,7 @@ import 'models/pay_view.dart';
 
 /// Online payments (docs/online-payments-plan.md), the arithmetic the guest's
 /// phone shows before it asks the server: what a share comes to, the fee
-/// when the café passes the provider's on. Each one mirrors
+/// when the business passes the provider's on. Each one mirrors
 /// Sales' OnlineShares, so the summary the guest confirms is the amount the
 /// server charges; the server decides in the end all the same.
 
@@ -31,7 +31,7 @@ double roundMoney(double value) {
   return value < 0 ? -rounded : rounded;
 }
 
-/// The guest's fee on a share when the café passes the provider's fee on:
+/// The guest's fee on a share when the business passes the provider's fee on:
 /// solved so that what the provider keeps (a percentage of the charge plus
 /// a fixed part) is what the fee covers. Zero when there is nothing to pay
 /// or no fee to pass on.
@@ -81,7 +81,7 @@ double customShare(String text) {
 class PaySummary {
   final double share;
 
-  /// The provider's fee the guest pays; 0 when the café absorbs it
+  /// The provider's fee the guest pays; 0 when the business absorbs it
   final double fee;
 
   /// What the card is charged
@@ -95,7 +95,7 @@ PaySummary paySummary(double share, PayOptions options) {
   return PaySummary(share: share, fee: fee, total: roundMoney(share + fee));
 }
 
-/// Whether the café takes payments at the table at all: "off" and
+/// Whether the business takes payments at the table at all: "off" and
 /// "not-set-up" hide every pay button, and the guest is not told why.
 bool offersPay(String? why) => why != 'off' && why != 'not-set-up';
 

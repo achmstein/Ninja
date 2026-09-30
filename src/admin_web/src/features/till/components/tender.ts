@@ -3,7 +3,7 @@ import { type TranslationKey } from '@/lib/i18n'
 // PaymentTender as Sales.Domain numbers it (Cash=0, Card=1, InstaPay=2,
 // Account=3, Online=4, Talabat=5). Query params take the number; the read
 // models spell the name. Online is what guests paid from their phones (online
-// payments); Talabat is a Talabat order Talabat pays the café for, settled
+// payments); Talabat is a Talabat order Talabat pays the business for, settled
 // when it lands. Neither is cash, neither is in the drawer.
 type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online' | 'Talabat'
 
@@ -21,7 +21,7 @@ export const TENDERS: {
 ]
 
 /**
- * The tenders worth offering: Online only where the café takes payments at
+ * The tenders worth offering: Online only where the business takes payments at
  * the table, or where some was taken anyway (switched off since); Talabat
  * only where some was taken.
  */

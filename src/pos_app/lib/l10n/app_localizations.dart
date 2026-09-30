@@ -131,20 +131,20 @@ abstract class AppLocalizations {
   /// No description provided for @connectTitle.
   ///
   /// In en, this message translates to:
-  /// **'Which café is this?'**
+  /// **'Which business is this?'**
   String get connectTitle;
 
   /// No description provided for @connectHint.
   ///
   /// In en, this message translates to:
-  /// **'Type your café\'s address, or scan the code on the Apps page of your admin app.'**
+  /// **'Type your business\'s address, or scan the code on the Apps page of your admin app.'**
   String get connectHint;
 
-  /// No description provided for @cafeAddress.
+  /// No description provided for @businessAddress.
   ///
   /// In en, this message translates to:
-  /// **'Café address'**
-  String get cafeAddress;
+  /// **'Business address'**
+  String get businessAddress;
 
   /// No description provided for @connect.
   ///
@@ -170,16 +170,16 @@ abstract class AppLocalizations {
   /// **'Nothing answered at that address. Check it, and that the tablet is online.'**
   String get connectUnreachable;
 
-  /// No description provided for @connectNotACafe.
+  /// No description provided for @connectNotABusiness.
   ///
   /// In en, this message translates to:
-  /// **'That address is not a café on ninja.'**
-  String get connectNotACafe;
+  /// **'That address is not a business on ninja.'**
+  String get connectNotABusiness;
 
   /// No description provided for @connectPaused.
   ///
   /// In en, this message translates to:
-  /// **'This café is paused. Its owner can see why in the admin app.'**
+  /// **'This business is paused. Its owner can see why in the admin app.'**
   String get connectPaused;
 
   /// No description provided for @thisDevice.
@@ -194,17 +194,17 @@ abstract class AppLocalizations {
   /// **'Connected to'**
   String get connectedTo;
 
-  /// No description provided for @changeCafe.
+  /// No description provided for @changeBusiness.
   ///
   /// In en, this message translates to:
-  /// **'Change café'**
-  String get changeCafe;
+  /// **'Change business'**
+  String get changeBusiness;
 
-  /// No description provided for @changeCafeConfirm.
+  /// No description provided for @changeBusinessConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Sign out and forget this café. The tablet starts over at the connect screen.'**
-  String get changeCafeConfirm;
+  /// **'Sign out and forget this business. The tablet starts over at the connect screen.'**
+  String get changeBusinessConfirm;
 
   /// No description provided for @language.
   ///
@@ -2405,7 +2405,7 @@ abstract class AppLocalizations {
   /// No description provided for @printerHint.
   ///
   /// In en, this message translates to:
-  /// **'An 80 mm network printer on the café Wi-Fi. Receipts print as an image, so any make works; the cash drawer kicks through the printer.'**
+  /// **'An 80 mm network printer on the business\'s Wi-Fi. Receipts print as an image, so any make works; the cash drawer kicks through the printer.'**
   String get printerHint;
 
   /// No description provided for @printerHost.
@@ -2879,8 +2879,8 @@ abstract class AppLocalizations {
   /// No description provided for @appLinkMessage.
   ///
   /// In en, this message translates to:
-  /// **'Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}'**
-  String appLinkMessage(String name, String cafe, String url);
+  /// **'Hi {name}, your points at {business} are waiting. Set up your account here (works for 30 minutes): {url}'**
+  String appLinkMessage(String name, String business, String url);
 
   /// No description provided for @alreadyHasAccount.
   ///

@@ -4,15 +4,15 @@ Status: planned 2026-09-25, not started. Implement in a fresh session.
 
 ## Goal
 
-Every café keeps the same customer flow (menu → item → cart → checkout →
-orders → bills), but can look distinctly its own. Today two cafés differ
+Every business keeps the same customer flow (menu → item → cart → checkout →
+orders → bills), but can look distinctly its own. Today two businesses differ
 only in colours, fonts, corner radius and header size, so they look alike.
 Add **styles**: curated presets that change how the customer apps are
 dressed (component variants + tokens), chosen per brand, previewed live,
 with per-part overrides.
 
 Out of scope: staff apps (admin, till, KDS) keep colours and fonts only;
-no per-café custom CSS/HTML; no flow changes.
+no per-business custom CSS/HTML; no flow changes.
 
 ## What exists (read these first)
 
@@ -51,7 +51,7 @@ in control_web).
 A small shared table, one per platform, identical content:
 - `src/client_web/src/lib/styles.ts` and `src/client_app/lib/core/brand/styles.dart`
 - Each preset = layout choices + token defaults (radius, font pair, shadow,
-  border weight, spacing scale, heading weight/case). The café's own
+  border weight, spacing scale, heading weight/case). The business's own
   colours/fonts/radius **override** the preset's defaults when set.
 
 | Preset | MenuItem | Categories | Header | Buttons | Surface | Density | Type |
@@ -102,4 +102,4 @@ A small shared table, one per platform, identical content:
 - Per-part override works and survives a style change.
 - No horizontal scroll at 360px; RTL correct; dark mode correct.
 - Staff apps unchanged.
-- Old cafés (no `Style`) look exactly as today (classic).
+- Old businesses (no `Style`) look exactly as today (classic).

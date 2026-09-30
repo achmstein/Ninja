@@ -40,13 +40,13 @@ public class Tenant
     /// <summary>The customer app's look beyond the primary color; every field optional, the platform's default when null.</summary>
     public TenantTheme Theme { get; set; } = new();
 
-    /// <summary>ISO 3166-1 alpha-2, the café's country.</summary>
+    /// <summary>ISO 3166-1 alpha-2, the business's country.</summary>
     public string Country { get; set; } = "EG";
 
     /// <summary>ISO 4217, what every price is shown in.</summary>
     public string Currency { get; set; } = "EGP";
 
-    /// <summary>IANA zone, the café's clock (the services read it from their own configuration; this is what the surfaces see).</summary>
+    /// <summary>IANA zone, the business's clock (the services read it from their own configuration; this is what the surfaces see).</summary>
     public string TimeZone { get; set; } = "Africa/Cairo";
 
     /// <summary>"ar" or "en": what the customer app opens in. A one-language business's is that language.</summary>
@@ -57,7 +57,7 @@ public class Tenant
 
     /// <summary>
     /// Which Arabic the apps speak: "standard" (Modern Standard Arabic) or
-    /// "egyptian". Null reads as Egyptian for an Egyptian café and Standard
+    /// "egyptian". Null reads as Egyptian for an Egyptian business and Standard
     /// anywhere else — what the tenant was made with before it was a choice.
     /// </summary>
     public string? ArabicStyle { get; set; }
@@ -66,7 +66,7 @@ public class Tenant
 
     /// <summary>
     /// What kind of place it is — "coffee_shop", "restaurant", "cloud_kitchen",
-    /// "game_station" or "other" — chosen when the café was created and
+    /// "game_station" or "other" — chosen when the business was created and
     /// changeable from the control plane. It picked the starting switches and
     /// the kitchen's first station; after that the surfaces read it, and a
     /// cloud kitchen's apps leave out the tables it does not have.
@@ -81,7 +81,7 @@ public class Tenant
     /// </summary>
     public bool GuestOrdersAnywhere { get; set; }
 
-    /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a café that only seats people.</summary>
+    /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a business that only seats people.</summary>
     public bool ReservationsEnabled { get; set; } = true;
 
     /// <summary>Time billing: a tariff on a place, the clock, the cost line on the bill (PlayStation rooms, pool tables).</summary>
@@ -103,14 +103,14 @@ public class Tenant
     public bool KdsEnabled { get; set; } = true;
 
     /// <summary>
-    /// Guests pay or split the bill online through the café's own payment
+    /// Guests pay or split the bill online through the business's own payment
     /// account. Off until the owner turns it on: it is no use before the
-    /// café's payment keys are in.
+    /// business's payment keys are in.
     /// </summary>
     public bool OnlinePaymentsEnabled { get; set; }
 
     /// <summary>
-    /// What the café's plan allows, set by the control plane: an owner may
+    /// What the business's plan allows, set by the control plane: an owner may
     /// switch an entitled module off, never an unentitled one on. All on by
     /// default, so a stack nobody has told otherwise (the dev host, a stack
     /// stamped before plans) keeps every switch usable.
@@ -167,7 +167,7 @@ public class Tenant
         ApplyFeatures(Features);
     }
 
-    /// <summary>How the owner's AI assistant (always "Ninja") speaks: its tone, manner and language, and the café's own notes for it.</summary>
+    /// <summary>How the owner's AI assistant (always "Ninja") speaks: its tone, manner and language, and the business's own notes for it.</summary>
     public AssistantSettings Assistant { get; set; } = new();
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
@@ -255,17 +255,17 @@ public class TenantTheme
     /// <summary>
     /// The looks the customer apps know how to wear: each dresses the same
     /// screens differently (how an item, the categories and the header are
-    /// laid out, the buttons, the surfaces, the spacing). The café's own
+    /// laid out, the buttons, the surfaces, the spacing). The business's own
     /// seeds win over a style's defaults. "ninja" is the platform's
-    /// signature style, listed first; the control plane brands a new café
+    /// signature style, listed first; the control plane brands a new business
     /// with it when it provisions the stack.
     /// </summary>
     public static readonly string[] Styles = ["ninja", "classic", "minimal", "bold", "cozy", "night"];
 
-    /// <summary>One of <see cref="Styles"/>; null is "classic", the look every café had before styles.</summary>
+    /// <summary>One of <see cref="Styles"/>; null is "classic", the look every business had before styles.</summary>
     public string? Style { get; set; }
 
-    /// <summary>Parts the café dresses its own way instead of as the style does; null keeps the style's choice for all.</summary>
+    /// <summary>Parts the business dresses its own way instead of as the style does; null keeps the style's choice for all.</summary>
     public TenantLayout? Layout { get; set; }
 }
 
@@ -323,7 +323,7 @@ public class AssistantSettings
     /// <summary>One of <see cref="Languages"/>; null is match.</summary>
     public string? Language { get; set; }
 
-    /// <summary>The café's own notes for it ("we call the terrace tables T1–T4", "flag any discount over 20%").</summary>
+    /// <summary>The business's own notes for it ("we call the terrace tables T1–T4", "flag any discount over 20%").</summary>
     public string? Notes { get; set; }
 }
 

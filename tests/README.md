@@ -7,7 +7,7 @@
 | `Ninja.E2E` | Whole workflows across every service — a cashier's day replayed through the BFF with the calls the React apps make — with each downstream effect asserted five ways: the consuming service's projection, the event on RabbitMQ, the outbox row, the SignalR push, and the service logs (a handler that throws has its message dead-lettered by `RabbitMQEventBus`; the log shows it). | Docker Desktop |
 | `*.FunctionalTests` | One service through its own front door, in process, on a Postgres and a RabbitMQ shared by the suite (`Ninja.Testing`): the calls the apps make, the answers they read, and what a refusal looks like. Thirteen of them, one per service plus the control plane. | Docker |
 | `Control.IntegrationTests` | The control plane's adapters against the real things they drive (a broker, a Keycloak). | Docker |
-| `Control.AcceptanceTests` | One café stamped on a real docker host and destroyed again. Opt-in: `NINJA_ACCEPTANCE=1`. | A local platform |
+| `Control.AcceptanceTests` | One business stamped on a real docker host and destroyed again. Opt-in: `NINJA_ACCEPTANCE=1`. | A local platform |
 
 ## Running
 

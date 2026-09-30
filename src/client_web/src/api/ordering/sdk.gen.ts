@@ -30,7 +30,7 @@ export const getOrdersByUser = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * Create a new cafe order
+ * Create a new order
  *
  * Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.
  */

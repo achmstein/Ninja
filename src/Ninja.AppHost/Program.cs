@@ -14,7 +14,7 @@ builder.AddForwardedHeaders();
 
 // Docker Compose deployment configuration
 builder.AddDockerComposeEnvironment("ninja")
-    // Tenant.API's uploads (the café's logo and icons); the volume was named when the service was Branch.API
+    // Tenant.API's uploads (the business's logo and icons); the volume was named when the service was Branch.API
     .ConfigureComposeFile(file => file.AddVolume(new Aspire.Hosting.Docker.Resources.ServiceNodes.Volume { Name = "branch-uploads" }));
 
 // Container registry prefix for GHCR images
@@ -69,7 +69,7 @@ var keycloak = builder.AddKeycloak("keycloak", port: isTestMode ? null : 8080)
     .WithLifetime(containerLifetime)
     // Every realm in the folder: chillax (tenant one) and ninja (the platform's own)
     .WithRealmImport("./KeycloakConfiguration/realms")
-    // The one login theme every realm uses; the realm says which café it is
+    // The one login theme every realm uses; the realm says which business it is
     .WithBindMount("./KeycloakConfiguration/themes/ninja", "/opt/keycloak/themes/ninja", isReadOnly: true)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
@@ -126,7 +126,7 @@ var spacesApi = builder.AddProject<Projects.Spaces_API>("spaces-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
-// Online payments: the key Sales seals the café's provider secrets with. A
+// Online payments: the key Sales seals the business's provider secrets with. A
 // stamped stack gets its own from the control plane (PAYMENTS_KEY); locally
 // a fixed one, so secrets saved yesterday still open today.
 var paymentsKey = builder.AddParameter("payments-key",

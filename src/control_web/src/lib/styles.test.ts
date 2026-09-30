@@ -16,7 +16,7 @@ describe('styles', () => {
     expect(NINJA_LAYOUT).toMatchObject({ menuItem: 'hero', categories: 'tabs', buttons: 'pill' })
   })
 
-  it("fills the seeds a café left unset with Ninja's, and keeps the café's own", () => {
+  it("fills the seeds a business left unset with Ninja's, and keeps the business's own", () => {
     expect(withStyleDefaults({ style: 'classic' })).toMatchObject({
       radius: 'xl',
       fontLatin: 'Plus Jakarta Sans',

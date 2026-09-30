@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-/// Text the café writes in its own languages: English, Arabic or both.
-/// A café that works in one language fills only that side and the other is
+/// Text the business writes in its own languages: English, Arabic or both.
+/// A business that works in one language fills only that side and the other is
 /// null, so each side means what its name says. Reading answers in the asked
 /// language and falls back to the other one; an empty side counts as missing.
 class LocalizedText {
-  /// English text; null when the café writes this in Arabic only
+  /// English text; null when the business writes this in Arabic only
   final String? en;
 
-  /// Arabic text; null when the café writes this in English only
+  /// Arabic text; null when the business writes this in English only
   final String? ar;
 
   const LocalizedText({this.en, this.ar});

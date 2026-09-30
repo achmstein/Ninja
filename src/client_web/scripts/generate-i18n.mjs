@@ -13,7 +13,7 @@ const outFile = join(here, '..', 'src', 'lib', 'i18n.gen.ts')
 
 const en = JSON.parse(readFileSync(join(arbDir, 'app_en.arb'), 'utf8'))
 const ar = JSON.parse(readFileSync(join(arbDir, 'app_ar.arb'), 'utf8'))
-// Modern Standard Arabic, for a café that speaks it; app_ar.arb is Egyptian
+// Modern Standard Arabic, for a business that speaks it; app_ar.arb is Egyptian
 const standardFile = join(arbDir, 'app_ar_001.arb')
 const arStandard = existsSync(standardFile) ? JSON.parse(readFileSync(standardFile, 'utf8')) : {}
 
@@ -107,7 +107,7 @@ export const messages = {
 ${entries.join('\n')}
 } as const satisfies Record<string, Message>
 
-/** Modern Standard Arabic, read instead of \`ar\` when the café speaks it. */
+/** Modern Standard Arabic, read instead of \`ar\` when the business speaks it. */
 export const messagesArStandard: Partial<Record<keyof typeof messages, string | PluralForms>> = {
 ${standardEntries.join('\n')}
 }

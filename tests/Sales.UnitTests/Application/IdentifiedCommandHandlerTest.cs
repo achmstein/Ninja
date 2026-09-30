@@ -9,7 +9,7 @@ using NSubstitute;
 namespace Ninja.Sales.UnitTests.Application;
 
 /// <summary>
-/// The till retries on café Wi-Fi: the same request id must run a command
+/// The till retries on business Wi-Fi: the same request id must run a command
 /// once, and answer the retry without doing the work again.
 /// </summary>
 [TestClass]

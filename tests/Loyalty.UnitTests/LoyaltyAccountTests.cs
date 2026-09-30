@@ -91,7 +91,7 @@ public sealed class LoyaltyAccountTests
     }
 
     [TestMethod]
-    public void A_hundred_points_are_worth_one_of_the_cafes_money()
+    public void A_hundred_points_are_worth_one_of_the_business_money()
     {
         Assert.AreEqual(100, LoyaltyApi.RedemptionPointsPerUnit);
     }

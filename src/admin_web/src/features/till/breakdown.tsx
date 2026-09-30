@@ -29,7 +29,7 @@ const SUNDAY = Date.UTC(2023, 0, 1)
 /**
  * The window cut four ways: when the money came in (hour, weekday), who
  * took it, and what sold. Hours and weekdays are in this browser's clock,
- * which is the café's. No chart library: a bar is a div.
+ * which is the business's. No chart library: a bar is a div.
  */
 export function TillBreakdown() {
   const t = useT()

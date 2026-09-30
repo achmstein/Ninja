@@ -112,7 +112,7 @@ public record TicketDetail
 public record BillView
 {
     public int Id { get; init; }
-    /// <summary>"Room" or "Cafe".</summary>
+    /// <summary>"Room", "Table" or "Counter".</summary>
     public string Type { get; init; } = string.Empty;
     /// <summary>"Open", "Settled" or "Voided".</summary>
     public string Status { get; init; } = string.Empty;

@@ -31,7 +31,7 @@ export function useBranchFlags() {
   })
 
   const takingOrders = branch?.isOrderingEnabled ?? true
-  // A café without reservations takes none: its switch is not shown, so it never reads as paused
+  // A business without reservations takes none: its switch is not shown, so it never reads as paused
   const reservations = useFeatures().reservations
   const takingReservations = branch?.isReservationsEnabled ?? true
 

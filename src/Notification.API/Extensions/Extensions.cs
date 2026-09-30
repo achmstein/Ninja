@@ -21,7 +21,7 @@ public static class Extensions
         // Add database seeder
         builder.Services.AddMigration<NotificationContext, NotificationContextSeed>();
 
-        // Which Arabic this cafe speaks, stamped beside the rest of its locale
+        // Which Arabic this business speaks, stamped beside the rest of its locale
         builder.Services.AddSingleton<TenantArabic>();
 
         // Add FCM service

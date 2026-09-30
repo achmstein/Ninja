@@ -1,6 +1,6 @@
 namespace Ninja.Spaces.API.Application.Queries;
 
-/// <summary>The two switches Spaces owns a part of, as the café has them now.</summary>
+/// <summary>The two switches Spaces owns a part of, as the business has them now.</summary>
 public record TenantFeaturesViewModel(bool Reservations, bool TimeBilling)
 {
     /// <summary>A stack that has never said: everything on.</summary>
@@ -8,7 +8,7 @@ public record TenantFeaturesViewModel(bool Reservations, bool TimeBilling)
 }
 
 /// <summary>
-/// Reads Spaces' projection of the café's switches (see
+/// Reads Spaces' projection of the business's switches (see
 /// Ninja.Spaces.Infrastructure.Projections.TenantFeatures).
 /// </summary>
 public interface ITenantFeaturesQueries

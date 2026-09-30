@@ -8,9 +8,9 @@ import '../config/tenant_connection.dart';
 import '../providers/branch_provider.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Under the sign-in form: which café this tablet is connected to, and a
+/// Under the sign-in form: which business this tablet is connected to, and a
 /// way to change it before anyone signs in (a tablet pointed at the wrong
-/// café cannot reach settings). Nothing on a build pinned to one stack.
+/// business cannot reach settings). Nothing on a build pinned to one stack.
 class ConnectionFoot extends ConsumerWidget {
   const ConnectionFoot({super.key});
 
@@ -42,7 +42,7 @@ class ConnectionFoot extends ConsumerWidget {
             variant: FButtonVariant.ghost,
             mainAxisSize: MainAxisSize.min,
             onPress: change,
-            child: Text(l10n.changeCafe, style: muted.copyWith(color: theme.colors.foreground)),
+            child: Text(l10n.changeBusiness, style: muted.copyWith(color: theme.colors.foreground)),
           ),
         ],
       ),

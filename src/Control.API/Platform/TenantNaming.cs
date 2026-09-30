@@ -61,7 +61,7 @@ public static partial class TenantNaming
     [GeneratedRegex("^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]$")]
     private static partial Regex HostnamePattern();
 
-    /// <summary>A public host name as a café would own one: lower-case RFC 1123 labels, at least two of them, a letter starting the last. Written into the edge's config, so nothing else may pass.</summary>
+    /// <summary>A public host name as a business would own one: lower-case RFC 1123 labels, at least two of them, a letter starting the last. Written into the edge's config, so nothing else may pass.</summary>
     public static bool IsValidHostname(string? host)
         => host is not null && HostnamePattern().IsMatch(host);
 
@@ -74,19 +74,19 @@ public static partial class TenantNaming
 
     /// <summary>
     /// The realm the platform's Google and Apple apps are registered against, with one redirect URI each:
-    /// every café's browser sign-in goes through it (docs/social-auth-multi-tenant.md). Customers are
-    /// still the café's own, in its realm; the hub only vouches for who they are.
+    /// every business's browser sign-in goes through it (docs/social-auth-multi-tenant.md). Customers are
+    /// still the business's own, in its realm; the hub only vouches for who they are.
     /// </summary>
     public const string HubRealm = "ninja-hub";
 
-    /// <summary>The café's client in the hub for one provider ("blue-google"), each going straight to it.</summary>
+    /// <summary>The business's client in the hub for one provider ("blue-google"), each going straight to it.</summary>
     public static string HubClient(string slug, string provider) => $"{slug}-{provider}";
 
     /// <summary>The hub's browser flow that sends a client straight to one provider ("hub-google").</summary>
     public static string HubFlow(string provider) => $"hub-{provider}";
 
     /// <summary>
-    /// The café realm's provider that signs in through the hub ("ninja-google"): named apart from the
+    /// The business realm's provider that signs in through the hub ("ninja-google"): named apart from the
     /// hidden "google" and "apple", which only vouch for the native apps' tokens.
     /// </summary>
     public static string BrokerAlias(string provider) => $"ninja-{provider}";
@@ -112,7 +112,7 @@ public static partial class TenantNaming
 
     public static string Gateway(string slug) => $"{slug}-gateway";
 
-    /// <summary>Tenant.API's uploads (the café's logo and icons). Named when the service was Branch.API, and left as it was.</summary>
+    /// <summary>Tenant.API's uploads (the business's logo and icons). Named when the service was Branch.API, and left as it was.</summary>
     public static string UploadsVolume(string slug) => $"{slug}-branch-uploads";
 
     /// <summary>The volume as docker names it: compose prefixes the project, so anything outside the compose file (a backup) must too.</summary>
@@ -146,7 +146,7 @@ public static partial class TenantNaming
     }
 }
 
-/// <summary>The public hosts one tenant gets; the customer one may be the café's own domain.</summary>
+/// <summary>The public hosts one tenant gets; the customer one may be the business's own domain.</summary>
 public sealed record TenantHosts(string Customer, string Admin, string Pos, string Kds, string Api, string Scheme = "https")
 {
     public static TenantHosts For(Tenant tenant, PlatformOptions platform)
@@ -187,7 +187,7 @@ public sealed record TenantHosts(string Customer, string Admin, string Pos, stri
     }
 
     /// <summary>
-    /// A café's own domain as the record keeps it: trimmed, lower-case, a
+    /// A business's own domain as the record keeps it: trimmed, lower-case, a
     /// real host name, and not one of the platform's own (those are served
     /// already). Null for none; the error says why one was refused.
     /// </summary>
@@ -198,7 +198,7 @@ public sealed record TenantHosts(string Customer, string Admin, string Pos, stri
         var host = value.Trim().ToLowerInvariant();
         if (!TenantNaming.IsValidHostname(host))
         {
-            error = "The customer domain must be a host name like menu.cafe.com.";
+            error = "The customer domain must be a host name like menu.example.com.";
             return null;
         }
         if (host == platform.Domain || host.EndsWith($".{platform.Domain}", StringComparison.Ordinal))

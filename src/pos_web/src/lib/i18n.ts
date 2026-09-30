@@ -293,7 +293,7 @@ const dictionary = {
   sendOnWhatsApp: { en: "Send on WhatsApp", ar: "إرسال عبر واتساب" },
   copyLink: { en: "Copy link", ar: "نسخ الرابط" },
   linkCopied: { en: "Link copied", ar: "تم نسخ الرابط" },
-  appLinkMessage: { en: "Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}", ar: "مرحبًا {name}، نقاطك في {cafe} بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): {url}" },
+  appLinkMessage: { en: "Hi {name}, your points at {business} are waiting. Set up your account here (works for 30 minutes): {url}", ar: "مرحبًا {name}، نقاطك في {business} بانتظارك. فعّل حسابك من هنا (الرابط صالح لمدة ٣٠ دقيقة): {url}" },
   alreadyHasAccount: { en: "This customer already has their own account", ar: "لدى هذا العميل حساب خاص به بالفعل" },
   tooManyLinks: { en: "Too many links just now, try again in a minute", ar: "روابط كثيرة خلال وقت قصير، حاول بعد دقيقة" },
 

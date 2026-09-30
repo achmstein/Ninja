@@ -2,7 +2,7 @@
  * The customer app's style. Ninja is the only style for now; others will
  * come back later on top of it, so the shape stays: a table of presets
  * keyed by name, each with its layout, its headings and defaults for the
- * café's seeds (corners, fonts, header size), which the café's own seeds
+ * business's seeds (corners, fonts, header size), which the business's own seeds
  * always win over.
  *
  * The server still accepts the older style names and per-part layouts; the
@@ -43,7 +43,7 @@ export type Headings = {
 export type StylePreset = {
   layout: Layout
   headings: Headings
-  /** Seeds the style suggests; the café's own seeds win */
+  /** Seeds the style suggests; the business's own seeds win */
   defaults: {
     radius?: string
     fontLatin?: string
@@ -68,7 +68,7 @@ export const STYLES: Record<StyleKey, StylePreset> = {
 
 export const DEFAULT_STYLE: StyleKey = 'ninja'
 
-/** The layout Ninja wears; for now a café can't dress single parts otherwise. */
+/** The layout Ninja wears; for now a business can't dress single parts otherwise. */
 export const NINJA_LAYOUT: Layout = STYLES.ninja.layout
 
 /** The style a theme wears: Ninja, whatever it names (none, an older style, one this build does not know). */
@@ -84,7 +84,7 @@ type Seeds = { style?: string | null; radius?: string | null; fontLatin?: string
 
 /**
  * The seeds a theme paints with once its style's defaults fill what the
- * café left unset (all of them, for a café with no theme yet). The café's own values always win.
+ * business left unset (all of them, for a business with no theme yet). The business's own values always win.
  */
 export function withStyleDefaults(theme: Seeds | null | undefined): Seeds {
   const d = presetOf(theme).defaults

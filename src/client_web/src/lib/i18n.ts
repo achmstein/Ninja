@@ -56,14 +56,14 @@ const webExtras = {
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
   // The in-app scanner: an installed app cannot be reached by the phone's camera
-  // A demo café's pretend checkout (online payments without a payment account)
+  // A demo business's pretend checkout (online payments without a payment account)
   demoCheckoutTitle: {
     en: 'Demo payment',
     ar: 'دفع تجريبي',
   },
   demoCheckoutNote: {
-    en: 'This café is trying out online payments. No card is charged and no money moves.',
-    ar: 'الكافيه بيجرب الدفع من الترابيزة. مفيش كارت هيتسحب منه ولا فلوس هتتحول.',
+    en: 'Online payments are only being tried out here. No card is charged and no money moves.',
+    ar: 'الدفع من الترابيزة هنا لسه تجريبي. مفيش كارت هيتسحب منه ولا فلوس هتتحول.',
   },
   demoPay: {
     en: 'Pay (demo)',
@@ -122,7 +122,7 @@ const webExtras = {
     en: "The camera isn't available. Allow it for this app in your phone's settings, or scan the code with the phone's camera.",
     ar: 'الكاميرا مش متاحة. اسمح بيها للتطبيق من إعدادات الموبايل، أو امسح الكود بكاميرا الموبايل.',
   },
-  // A café that takes guests' orders from anywhere: one without a table is
+  // A business that takes guests' orders from anywhere: one without a table is
   // collected at the counter
   guestOrderToCollect: {
     en: "No table: you'll collect your order at the counter",
@@ -231,7 +231,7 @@ const webExtras = {
     en: 'Tap “Add” at the top: the app is on your home screen',
     ar: 'دوس «Add» فوق، والتطبيق هيبقى على الشاشة الرئيسية',
   },
-  // Claiming the account the café added at the counter: the web-only
+  // Claiming the account the business added at the counter: the web-only
   // claim* strings; the rest come from the ARB files, shared with the app
   claimDoneHint: {
     en: 'Sign in with {email} to see your points and orders.',
@@ -378,7 +378,7 @@ const webExtras = {
   ninjaHeldFor: { en: 'Held for you', ar: 'محجوزة ليك' },
   ninjaHoldWalkOver: { en: 'Walk over and show this at the counter', ar: 'تعالى ووري ده للكاشير' },
   ninjaHoldFor: { en: 'For {time}', ar: 'الساعة {time}' },
-  ninjaHoldRanOut: { en: 'Your hold ran out. The café may still have it for you.', ar: 'وقت الحجز خلص. ممكن الكافيه لسه ماسكهالك.' },
+  ninjaHoldRanOut: { en: 'Your hold ran out. {name} may still have it for you.', ar: 'وقت الحجز خلص. ممكن {name} لسه ماسكهالك.' },
   ninjaHoldLeft: { en: '{time} left to arrive', ar: 'فاضل {time} توصل' },
   // Bills: each bill a stack of its rounds
   ninjaRoundCount: {
@@ -488,9 +488,9 @@ function applyDirection(language: Language) {
 export type TranslateParams = Record<string, string | number>
 
 /**
- * Which Arabic the café speaks, from its brand: the dictionary's own Arabic
+ * Which Arabic the business speaks, from its brand: the dictionary's own Arabic
  * is Egyptian; Modern Standard lives in ./i18n.ar-standard and wins when
- * the café chose it.
+ * the business chose it.
  */
 export const useArabicStyle = create<{ standard: boolean; set: (style: string | null | undefined) => void }>()(
   (set) => ({
@@ -528,7 +528,7 @@ function format(
 
 export function useT() {
   const language = useLanguage((s) => s.language)
-  // Re-render when the café's Arabic arrives with its brand
+  // Re-render when the business's Arabic arrives with its brand
   useArabicStyle((s) => s.standard)
   return (key: TranslationKey, params?: TranslateParams) =>
     format(dictionary[key], language, params, key)

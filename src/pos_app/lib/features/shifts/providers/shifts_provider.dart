@@ -76,7 +76,7 @@ class BranchFlags {
   final bool takingOrders;
   final bool takingReservations;
 
-  /// Whether the café takes reservations at all; without them its switch is not shown and never pauses it
+  /// Whether the business takes reservations at all; without them its switch is not shown and never pauses it
   final bool reservations;
 
   const BranchFlags({required this.branchId, required this.known, required this.takingOrders, required this.takingReservations, this.reservations = true});

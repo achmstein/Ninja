@@ -20,7 +20,7 @@ export const IMAGE_SLOTS = [
 
 export type ImageSlot = (typeof IMAGE_SLOTS)[number]
 
-/** The two slots every café fills; the other four sit behind a disclosure. */
+/** The two slots every business fills; the other four sit behind a disclosure. */
 export const MAIN_SLOTS: ImageSlot[] = ['logo', 'wordmark-en']
 export const VARIANT_SLOTS: ImageSlot[] = ['logo-dark', 'wordmark-en-dark', 'wordmark-ar', 'wordmark-ar-dark']
 

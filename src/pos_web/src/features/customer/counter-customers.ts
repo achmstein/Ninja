@@ -97,7 +97,7 @@ export async function issueClaimLink(customerId: string) {
   return response.data
 }
 
-/** Where the customer opens the link: the café's customer host. */
+/** Where the customer opens the link: the business's customer host. */
 export function claimUrl(customerOrigin: string, token: string): string {
   return `${customerOrigin.replace(/\/$/, '')}/claim?token=${encodeURIComponent(token)}`
 }

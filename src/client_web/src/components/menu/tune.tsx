@@ -47,7 +47,7 @@ export type TuneResult = {
  * the one scroll: the ones that must be answered first, the extras last,
  * every one the same pills, which show what is picked themselves. The
  * choices are the classic item sheet's: the customer's saved picks or the
- * café's defaults, nothing sold out, a required question must be answered;
+ * business's defaults, nothing sold out, a required question must be answered;
  * until they are, the button names the one left and goes to it.
  */
 export function Tune({
@@ -88,7 +88,7 @@ export function Tune({
   const unitPrice = effectiveBasePrice(item) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
   const soldOut = item.isAvailable === false
 
-  // The questions, all on the one scroll: in the café's order, the ones that must be answered first
+  // The questions, all on the one scroll: in the business's order, the ones that must be answered first
   const byOrder = [...(item.customizations ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
   const steps = [...byOrder.filter((c) => c.isRequired), ...byOrder.filter((c) => !c.isRequired)]
   const picked = (c: ItemCustomizationDto) => selections[String(c.id)] ?? []
@@ -235,7 +235,7 @@ export function Tune({
               className={cn('size-full object-cover', soldOut && 'grayscale')}
             />
           ) : (
-            // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
+            // No photo: the plate on the business's colour, as everywhere a dish has none (its name is just below)
             <div className='grid size-full place-items-center'>
               <UtensilsCrossed className='size-12 opacity-50' />
             </div>

@@ -1,6 +1,6 @@
 # Chillax Payroll — Design & Plan
 
-**Goal:** know who works at the café, whether they came in, what they are owed and what they were paid — for people paid by the day and people paid by the month — without a login for every runner and cleaner, and with the cash that leaves the drawer for a salary or an advance landing on the right person's account.
+**Goal:** know who works at the business, whether they came in, what they are owed and what they were paid — for people paid by the day and people paid by the month — without a login for every runner and cleaner, and with the cash that leaves the drawer for a salary or an advance landing on the right person's account.
 
 **Status:** decided 2026-09-13; all three phases built the same day (PIN clock-in deliberately left out).
 
@@ -25,7 +25,7 @@ Identity is *who can sign in*; Payroll is *who works here*. `Employee` has its o
 
 ### D3 — The ledger is the truth; a payslip is a statement
 
-Every amount owed or paid is one signed line on the employee's ledger: **Earned** (+), **Bonus** (+), **Deduction** (−), **Advance** (−), **Payment** (−). Balance = the sum = what the café owes the person. An advance is money already handed over, so it reduces what is due without anyone doing arithmetic. A payslip for a period posts the period's *Earned* line and reports the balance; paying it posts a *Payment*. Cadence is free: a daily worker paid every evening (Phase 2, from the till) and one paid weekly both come out right.
+Every amount owed or paid is one signed line on the employee's ledger: **Earned** (+), **Bonus** (+), **Deduction** (−), **Advance** (−), **Payment** (−). Balance = the sum = what the business owes the person. An advance is money already handed over, so it reduces what is due without anyone doing arithmetic. A payslip for a period posts the period's *Earned* line and reports the balance; paying it posts a *Payment*. Cadence is free: a daily worker paid every evening (Phase 2, from the till) and one paid weekly both come out right.
 
 ### D4 — Pay terms are dated; a change inside a period splits it *(revised 2026-09-13)*
 

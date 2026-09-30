@@ -1,7 +1,7 @@
 namespace Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
-/// What a ledger line is. Earned and Bonus raise what the café owes;
+/// What a ledger line is. Earned and Bonus raise what the business owes;
 /// Deduction, Advance and Payment lower it.
 /// </summary>
 public enum LedgerEntryType

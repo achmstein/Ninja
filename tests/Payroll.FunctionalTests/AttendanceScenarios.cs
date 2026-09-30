@@ -71,7 +71,7 @@ public sealed class AttendanceScenarios
             marks = new object[] { new { employeeId = mona, status = (int)AttendanceStatus.Present, overtimeHours = 20m } },
         });
         Assert.AreEqual(HttpStatusCode.BadRequest, tooLong);
-        Assert.Contains("16", why, "a day has a limit, however busy the café is");
+        Assert.Contains("16", why, "a day has a limit, however busy the business is");
     }
 
     [TestMethod]

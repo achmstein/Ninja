@@ -51,10 +51,10 @@ tablet would: type `http://localhost:5000` (`/api/tenant` there names the
 realm) and it is connected.
 
 A release build is generic: the platform's download page
-(`https://{domain}/apps`, built by `mobile-deploy.yml`) serves every café,
+(`https://{domain}/apps`, built by `mobile-deploy.yml`) serves every business,
 and the tablet is connected to its own on first open — the QR code on the
-admin's Apps page, or the café's address typed. Settings and the foot of the
-sign-in form have "Change café". A record pins a build to one stack instead
+admin's Apps page, or the business's address typed. Settings and the foot of the
+sign-in form have "Change business". A record pins a build to one stack instead
 (`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
 The launcher icon and splash are the platform's (`assets/images/ninja_*.png`;
 regenerate with `dart run flutter_launcher_icons && dart run flutter_native_splash:create`).

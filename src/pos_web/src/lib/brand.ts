@@ -1,4 +1,4 @@
-import { useCafeTheme } from '@/context/theme-provider'
+import { useBusinessTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
 import { useCurrency } from '@/lib/currency'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -17,7 +17,7 @@ export type Brand = TenantResponse
 export type FeatureKey = keyof TenantFeatures
 
 const CACHE_KEY = 'ninja-brand'
-/** A staff surface carries the café's name, mark and icons and keeps the neutral theme; the café's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
+/** A staff surface carries the business's name, mark and icons and keeps the neutral theme; the business's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
 const STAFF = true
 export const PLATFORM_NAME = 'ninja'
 const APP = 'pos'
@@ -91,10 +91,10 @@ export async function bootBrand(queryClient: QueryClient) {
   }
 }
 
-/** Head tags and theme tokens: the café's icons everywhere; its theme only on the customer's surface. */
+/** Head tags and theme tokens: the business's icons everywhere; its theme only on the customer's surface. */
 export function applyBrand(brand: Brand, language: Language) {
-  useCafeTheme.getState().set(brand.theme?.mode)
-  // Prices are the café's whatever the surface wears
+  useBusinessTheme.getState().set(brand.theme?.mode)
+  // Prices are the business's whatever the surface wears
   useCurrency.getState().set(brand.locale.currency)
   if (STAFF) {
     setLink('icon', brand.icons.favicon, 'image/png')
@@ -154,7 +154,7 @@ export function useFeatures(): TenantFeatures {
 
 /**
  * A cloud kitchen has no tables: its till works from counter bills and
- * away orders only, never a floor. Said by the kind of place the café was
+ * away orders only, never a floor. Said by the kind of place the business was
  * created as ("cloud_kitchen").
  */
 export function useIsCloudKitchen(): boolean {

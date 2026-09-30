@@ -388,7 +388,7 @@ export function PressRing({ pressing, small = false, blur = true }: { pressing: 
   )
 }
 
-/** What a card shows: the photo under a scrim with the name, or, without a photo, the name set big on the café's colour. */
+/** What a card shows: the photo under a scrim with the name, or, without a photo, the name set big on the business's colour. */
 export function CardFace({
   item,
   usual,

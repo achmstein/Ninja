@@ -25,7 +25,7 @@ public static class TalabatCatalogBuilder
     /// <param name="items">Every menu item, with its type and its customizations' options loaded.</param>
     /// <param name="overrides">This branch's overrides.</param>
     /// <param name="stockOuts">The options out at this branch.</param>
-    /// <param name="picBaseUrl">The café's public address; a dish's photo is sent as {it}/api/catalog/items/{id}/pic.</param>
+    /// <param name="picBaseUrl">The business's public address; a dish's photo is sent as {it}/api/catalog/items/{id}/pic.</param>
     public static JsonObject Build(
         IReadOnlyList<CatalogItem> items,
         IReadOnlyList<BranchItemOverride> overrides,
@@ -150,7 +150,7 @@ public static class TalabatCatalogBuilder
 
     private static JsonObject Text(LocalizedText text)
     {
-        // Talabat's default is whatever the café writes, English first; its Arabic when there is one
+        // Talabat's default is whatever the business writes, English first; its Arabic when there is one
         var o = new JsonObject { ["default"] = text.Primary };
         if (text.Ar is { } ar) o["ar"] = ar;
         return o;

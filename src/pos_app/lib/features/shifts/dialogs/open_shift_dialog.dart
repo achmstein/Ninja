@@ -38,7 +38,7 @@ class _OpenShiftDialog extends ConsumerStatefulWidget {
 class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
   String _amount = '';
   bool _pending = false;
-  // A retry on café Wi-Fi must not become a second command
+  // A retry on business Wi-Fi must not become a second command
   final String _requestId = const Uuid().v4();
 
   double? get _value => _amount.isEmpty ? null : double.tryParse(_amount);

@@ -34,10 +34,10 @@ const initialState: ThemeProviderState = {
 const ThemeContext = createContext<ThemeProviderState>(initialState)
 
 /**
- * The café's starting theme, from its brand: what a person who never
+ * The business's starting theme, from its brand: what a person who never
  * chose sees. Null follows the app's own default.
  */
-export const useCafeTheme = create<{ mode: ResolvedTheme | null; set: (mode: string | null | undefined) => void }>()(
+export const useBusinessTheme = create<{ mode: ResolvedTheme | null; set: (mode: string | null | undefined) => void }>()(
   (set) => ({
     mode: null,
     set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
@@ -50,12 +50,12 @@ export function ThemeProvider({
   storageKey = THEME_COOKIE_NAME,
   ...props
 }: ThemeProviderProps) {
-  // Null until the person picks: then the café's starting theme stands in
+  // Null until the person picks: then the business's starting theme stands in
   const [chosen, _setTheme] = useState<Theme | null>(
     () => (getCookie(storageKey) as Theme) || null
   )
-  const cafe = useCafeTheme((s) => s.mode)
-  const theme: Theme = chosen ?? cafe ?? defaultTheme
+  const business = useBusinessTheme((s) => s.mode)
+  const theme: Theme = chosen ?? business ?? defaultTheme
 
   // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
   const resolvedTheme = useMemo((): ResolvedTheme => {

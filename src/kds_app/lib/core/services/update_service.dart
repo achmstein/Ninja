@@ -72,7 +72,7 @@ class UpdateState {
 
 /// Keeps the kitchen display on the newest build from the platform's download page.
 ///
-/// On start and every few hours it asks the café's stack where the page is
+/// On start and every few hours it asks the business's stack where the page is
 /// (`/api/tenant` → `appsUrl`), reads `ninja-kds.json` there and, when the
 /// build is newer than the one installed, downloads the APK. It installs on
 /// its own only when nobody is in the middle of anything: right after the

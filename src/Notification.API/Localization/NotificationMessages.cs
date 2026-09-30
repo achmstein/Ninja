@@ -8,14 +8,14 @@ namespace Ninja.Notification.API.Localization;
 /// Every push the platform sends, in the words the reader expects.
 ///
 /// The back office reads one Arabic, so a staff line is a plain
-/// <see cref="LocalizedText"/>. A café chooses the Arabic its customers get,
+/// <see cref="LocalizedText"/>. A business chooses the Arabic its customers get,
 /// so a customer line is a <see cref="CustomerText"/> and the handler asks it
-/// for the one this café speaks.
+/// for the one this business speaks.
 /// </summary>
 public static class NotificationMessages
 {
     // -----------------------------------------------------------------
-    // To the café: the till, the kitchen, the owner's phone
+    // To the business: the till, the kitchen, the owner's phone
     // -----------------------------------------------------------------
 
     public static readonly LocalizedText NewReservationTitle = new("New Reservation!", "حجز جديد!");

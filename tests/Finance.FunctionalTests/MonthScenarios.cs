@@ -88,7 +88,7 @@ public sealed class MonthScenarios
         Assert.AreEqual(150m, month.Expenses);
         Assert.AreEqual("Electricity", month.ExpensesByCategory.Single().CategoryName.En);
         Assert.AreEqual(200m, month.Profit, "900 in, 300 of goods, 50 wasted, 200 of wages, 150 of bills");
-        Assert.AreEqual(0.5556m, month.PrimeCostRatio, "goods and labour over net sales: the ratio every café watches");
+        Assert.AreEqual(0.5556m, month.PrimeCostRatio, "goods and labour over net sales: the ratio every business watches");
         Assert.AreEqual(0.2222m, month.Margin);
 
         var quiet = await owner.GetAsync<ProfitView>(ProfitUrl(2026, 4));
@@ -262,7 +262,7 @@ public sealed class MonthScenarios
         {
             var again = await owner.GetAsync<List<ProfitMonthView>>(Suite.Url("/profit/trend") + "&months=3");
             return again[0].NetSales == 800m;
-        }, "the month the café is in shows what it has taken so far");
+        }, "the month the business is in shows what it has taken so far");
 
         var latest = (await owner.GetAsync<List<ProfitMonthView>>(Suite.Url("/profit/trend") + "&months=3"))[0];
         Assert.AreEqual(100m, latest.Expenses);

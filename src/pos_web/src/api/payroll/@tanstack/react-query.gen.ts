@@ -182,7 +182,7 @@ export const markAttendanceMutation = (options?: Partial<Options<MarkAttendanceD
 export const getEmployeeLedgerQueryKey = (options: Options<GetEmployeeLedgerData>) => createQueryKey('getEmployeeLedger', options);
 
 /**
- * What the café owes someone, line by line, with the balance
+ * What the business owes someone, line by line, with the balance
  */
 export const getEmployeeLedgerOptions = (options: Options<GetEmployeeLedgerData>) => queryOptions<GetEmployeeLedgerResponse, AxiosError<DefaultError>, GetEmployeeLedgerResponse, ReturnType<typeof getEmployeeLedgerQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

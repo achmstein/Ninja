@@ -14,8 +14,8 @@ namespace Ninja.Control.API.Platform;
 /// Ninja's one account with Talabat (Delivery Hero's POS integration): the
 /// middleware it calls, the credentials it logs in with, and the secret the
 /// middleware signs its own calls with. They belong to Ninja, the integration
-/// partner, not to a café — so they stay here, on the platform, and every
-/// café's stack goes through the relay instead of holding them. Empty leaves
+/// partner, not to a business — so they stay here, on the platform, and every
+/// business's stack goes through the relay instead of holding them. Empty leaves
 /// the integration off.
 /// </summary>
 public sealed class TalabatOptions
@@ -38,13 +38,13 @@ public sealed class TalabatOptions
         && !string.IsNullOrWhiteSpace(Password) && !string.IsNullOrWhiteSpace(Secret);
 }
 
-/// <summary>The names and keys the relay knows a café's branch by.</summary>
+/// <summary>The names and keys the relay knows a business's branch by.</summary>
 public static class TalabatNaming
 {
     /// <summary>
-    /// The remote id a branch is registered with at Talabat: the café's slug
+    /// The remote id a branch is registered with at Talabat: the business's slug
     /// and the branch, "{slug}-{branchId}". Talabat routes every order by it,
-    /// so it has to be unique across every café on the platform.
+    /// so it has to be unique across every business on the platform.
     /// </summary>
     public static string RemoteId(string slug, int branchId) => $"{slug}-{branchId.ToString(CultureInfo.InvariantCulture)}";
 
@@ -62,9 +62,9 @@ public static class TalabatNaming
     }
 
     /// <summary>
-    /// A café's key to the relay: derived from the platform's encryption key
+    /// A business's key to the relay: derived from the platform's encryption key
     /// and the slug, so it is stamped and checked without being stored, and
-    /// one café's key opens nothing for another.
+    /// one business's key opens nothing for another.
     /// </summary>
     public static string RelayKey(string slug, string platformKey)
     {
@@ -134,7 +134,7 @@ public sealed record TalabatCallResult(int Status, string Body);
 /// Calls Talabat's middleware as Ninja: logs in (the token lives half an
 /// hour; kept until shortly before) and posts a status change to the address
 /// the order named for it — only ever an address on the middleware itself, so
-/// no café can have the platform send its token anywhere else.
+/// no business can have the platform send its token anywhere else.
 /// </summary>
 public sealed class TalabatMiddleware(IHttpClientFactory http, IOptions<PlatformOptions> options, ILogger<TalabatMiddleware> logger)
 {
@@ -226,8 +226,8 @@ public sealed class TalabatMiddleware(IHttpClientFactory http, IOptions<Platform
     };
 }
 
-/// <param name="BranchId">The café's branch; its remote id is derived from the café's own slug.</param>
-/// <param name="Catalog">Talabat's catalog object ({ items: { … } }), as the café's catalog built it.</param>
+/// <param name="BranchId">The business's branch; its remote id is derived from the business's own slug.</param>
+/// <param name="Catalog">Talabat's catalog object ({ items: { … } }), as the business's catalog built it.</param>
 public sealed record TalabatCatalogRelay(int BranchId, JsonObject Catalog);
 
 /// <param name="Type">ITEM for menu items, TOPPING for options.</param>

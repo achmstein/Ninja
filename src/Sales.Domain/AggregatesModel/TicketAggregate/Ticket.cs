@@ -286,7 +286,7 @@ public class Ticket : Entity, IAggregateRoot
             Platform = platform,
         };
 
-    /// <summary>The delivery platform whose order this bill is ("Talabat"); null for every bill of the café's own.</summary>
+    /// <summary>The delivery platform whose order this bill is ("Talabat"); null for every bill of the business's own.</summary>
     public string? Platform { get; private set; }
 
     private static string? CleanLabel(string? label)
@@ -368,7 +368,7 @@ public class Ticket : Entity, IAggregateRoot
         if (_lines.Any(l => l.Source == TicketLineSource.SessionTime))
             return;
 
-        // The line reads in both languages whatever the café writes in: a
+        // The line reads in both languages whatever the business writes in: a
         // place named in one language gives that name to both
         var place = LocationName is { IsEmpty: false } named ? named : new LocalizedText("Place", "المكان");
         var perOption = lines.Count > 1;

@@ -14,7 +14,7 @@ import '../../../l10n/app_localizations.dart';
 import '../services/customer_search_service.dart';
 
 /// Where customers open the menu: the brand's customer host, else the
-/// café's API host when provisioning has not said (the till has no page
+/// business's API host when provisioning has not said (the till has no page
 /// origin of its own to fall back on, as pos_web does).
 String customerOrigin(WidgetRef ref) {
   final url = ref.read(brandProvider).customerUrl;
@@ -63,8 +63,8 @@ class _AppLinkDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     final brand = ref.watch(brandProvider);
-    final cafe = brand.displayName(Localizations.localeOf(context));
-    final message = l10n.appLinkMessage(name, cafe, url);
+    final business = brand.displayName(Localizations.localeOf(context));
+    final message = l10n.appLinkMessage(name, business, url);
 
     return DialogScroll(
       child: Column(

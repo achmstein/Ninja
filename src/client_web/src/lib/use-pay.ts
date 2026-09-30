@@ -17,7 +17,7 @@ export type PaySource =
  *  is re-read this often. */
 const LIVE_MS = 4_000
 
-/** Nothing will change for the guest: the café takes no payments here, or
+/** Nothing will change for the guest: the business takes no payments here, or
  *  the bill is closed. */
 const settled = (view: PayView | undefined) =>
   view != null && (!offersPay(view.why) || view.why === 'closed')

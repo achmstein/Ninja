@@ -73,7 +73,7 @@ export const getTenant = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
+ * The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
  */
 export const updateTenant = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantData, ThrowOnError>): RequestResult<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError>({
     responseType: 'json',
@@ -144,7 +144,7 @@ export const getPlatformUpdates = <ThrowOnError extends boolean = false>(options
 export const secureTenant = <ThrowOnError extends boolean = false>(options: Options<SecureTenantData, ThrowOnError>): RequestResult<SecureTenantResponses, SecureTenantErrors, ThrowOnError> => (options.client ?? client).post<SecureTenantResponses, SecureTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/secure', ...options });
 
 /**
- * Fill a running demo with a month of a café's life (suppliers, stock, recipes, staff, expenses, sales), once
+ * Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once
  */
 export const fillDemoData = <ThrowOnError extends boolean = false>(options: Options<FillDemoDataData, ThrowOnError>): RequestResult<FillDemoDataResponses, FillDemoDataErrors, ThrowOnError> => (options.client ?? client).post<FillDemoDataResponses, FillDemoDataErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/demo-data', ...options });
 
@@ -295,7 +295,7 @@ export const getTenantMetrics = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * A one-time link that opens the café's admin app signed in as its owner
+ * A one-time link that opens the business's admin app signed in as its owner
  */
 export const impersonateOwner = <ThrowOnError extends boolean = false>(options: Options<ImpersonateOwnerData, ThrowOnError>): RequestResult<ImpersonateOwnerResponses, ImpersonateOwnerErrors, ThrowOnError> => (options.client ?? client).post<ImpersonateOwnerResponses, ImpersonateOwnerErrors, ThrowOnError>({
     responseType: 'json',
@@ -508,7 +508,7 @@ export const resetOperatorAuthenticator = <ThrowOnError extends boolean = false>
 export const signOutOperator = <ThrowOnError extends boolean = false>(options: Options<SignOutOperatorData, ThrowOnError>): RequestResult<SignOutOperatorResponses, SignOutOperatorErrors, ThrowOnError> => (options.client ?? client).post<SignOutOperatorResponses, SignOutOperatorErrors, ThrowOnError>({ url: '/api/control/operators/{id}/sign-out', ...options });
 
 /**
- * The café's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there
+ * The business's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there
  */
 export const updateTenantTalabat = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantTalabatData, ThrowOnError>): RequestResult<UpdateTenantTalabatResponses, UpdateTenantTalabatErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantTalabatResponses, UpdateTenantTalabatErrors, ThrowOnError>({
     responseType: 'json',

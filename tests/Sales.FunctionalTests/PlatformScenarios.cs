@@ -9,7 +9,7 @@ namespace Ninja.Sales.FunctionalTests;
 /// <summary>
 /// A delivery platform's order reaching the bills: its own ticket named by the
 /// platform's code, settled at once to the platform when the platform pays the
-/// café, left open for the till when the café collects the cash itself.
+/// business, left open for the till when the business collects the cash itself.
 /// </summary>
 [TestClass]
 public sealed class PlatformScenarios
@@ -71,7 +71,7 @@ public sealed class PlatformScenarios
     }
 
     [TestMethod]
-    public async Task Cash_the_cafe_collects_itself_stays_open_on_its_own_bill()
+    public async Task Cash_the_business_collects_itself_stays_open_on_its_own_bill()
     {
         var orderId = Interlocked.Increment(ref _nextOrder);
 

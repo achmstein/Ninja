@@ -321,7 +321,7 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   for (const [role, value] of Object.entries(colors.light)) light[VAR_OF[role as keyof SchemeColors]] = oklch(value)
   for (const [role, value] of Object.entries(colors.dark)) dark[VAR_OF[role as keyof SchemeColors]] = oklch(value)
 
-  // The style's defaults fill whatever seed the café left unset
+  // The style's defaults fill whatever seed the business left unset
   const theme = withStyleDefaults(input?.theme)
   if (theme?.radius && RADII[theme.radius]) {
     light['--radius'] = RADII[theme.radius]

@@ -52,7 +52,7 @@ void main() {
   });
 
   group('WhatsApp', () {
-    test('a local mobile gets the café country code', () {
+    test("a local mobile gets the business's country code", () {
       expect(whatsAppNumber('01012345678', 'EG'), '201012345678');
       expect(whatsAppNumber('0512345678', 'SA'), '966512345678');
       expect(whatsAppNumber('0501234567', 'AE'), '971501234567');

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
-/// Order aggregate root for cafe orders.
+/// Order aggregate root.
 /// Simple flow: Submitted -> Confirmed (goes to POS) or Cancelled
 /// </summary>
 public class Order
@@ -140,7 +140,7 @@ public class Order
 
     /// <summary>
     /// What the delivery platform said about an order it dispatched here;
-    /// null on every order placed in the café's own apps or at its till.
+    /// null on every order placed in the business's own apps or at its till.
     /// </summary>
     public PlatformOrder? Platform { get; private set; }
 
@@ -279,7 +279,7 @@ public class Order
             // to carry it to, and ordering ahead — which is what a destination
             // less order really is — is reserved for account holders who can
             // be held to it. In practice this always means a table: a room
-            // session belongs to an account. A café that takes guests' orders
+            // session belongs to an account. A business that takes guests' orders
             // from anywhere lets one go without: it is collected, and the
             // phone above is how the counter finds whoever ordered it.
             if (!HasDestination && !guestOrdersAnywhere)

@@ -127,7 +127,7 @@ public class RehireCommandHandler(IEmployeeRepository employees) : IRequestHandl
 
 static class EmployeeCommands
 {
-    /// <summary>The café's day right now, for "this month".</summary>
+    /// <summary>The business's day right now, for "this month".</summary>
     public static DateOnly Today() => BusinessDay.Of(DateTime.UtcNow);
 
     /// <summary>One login belongs to one employee; the unique index is the backstop.</summary>

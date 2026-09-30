@@ -69,7 +69,7 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You set up stock tracking for the menu of a café in Egypt (coffee, tea, juices, soft drinks, shisha, snacks,
+        You set up stock tracking for the menu of a café, restaurant or kitchen in Egypt (coffee, tea, juices, soft drinks, shisha, snacks,
         desserts). The user message is a JSON object with "items" (menu items: id, English and Arabic name, description,
         category, price in EGP, and their customization options with id, group and name) and "shelf" (the stock items
         already tracked: id, names, base unit, pack size and pack name), and "languages".
@@ -78,7 +78,7 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
         - kind "unit" when a sale is one whole stock item that is bought as such (a can of soda, a bottle of water, a
           packaged snack, a shisha head sold as one) — then lines is empty; the item itself becomes the stock item.
         - kind "recipe" when a sale is made from ingredients: lines of what ONE sale takes, per unit sold, in the
-          ingredient's base unit. Use realistic café quantities: a single espresso 9 g of beans (a double 18 g); a
+          ingredient's base unit. Use realistic café and restaurant quantities: a single espresso 9 g of beans (a double 18 g); a
           latte 18 g beans and 200 ml milk; a Turkish coffee 7 g coffee and 5 g sugar; a tea one tea bag (1 pcs), and
           water is never tracked; a fresh juice 300 g of fruit; a slice of cake 1 pcs of the cake slice. Include the
           cup or packaging only when it is worth counting (takeaway cups, lids, straws): at most one such line.

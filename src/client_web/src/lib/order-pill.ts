@@ -7,7 +7,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * turned down) until it is done with. The customer app says only what the
  * till has said: that it has the order, and that it confirmed it. Whether
  * the kitchen has finished it is not the customer's to be told, since not
- * every café has a kitchen screen to say so. This file is the pure logic
+ * every business has a kitchen screen to say so. This file is the pure logic
  * (which order, what it says, when it goes) and the little store that
  * remembers there is an order to follow.
  */
@@ -51,7 +51,7 @@ export function stageOf(order: PillOrder): PillStage {
   if (status === 'cancelled' || order.voidedAt) return 'cancelled'
   if (order.paidAt) return 'paid'
   if (status === 'confirmed') return 'confirmed'
-  // AwaitingValidation / Submitted: with the café, not yet taken on
+  // AwaitingValidation / Submitted: with the business, not yet taken on
   return 'sent'
 }
 
@@ -138,9 +138,9 @@ export const PILL_WORDS = {
   seeBills: { en: 'See your bill', ar: 'شوف الحساب', arStandard: 'اعرض الفاتورة' },
   hide: { en: 'Hide', ar: 'اخفي', arStandard: 'إخفاء' },
   sentNote: {
-    en: 'The café has it. It will be confirmed in a moment.',
-    ar: 'الطلب وصل للكافيه وهيتأكد حالًا.',
-    arStandard: 'وصل الطلب إلى المقهى وسيُؤكَّد بعد قليل.',
+    en: '{name} has it. It will be confirmed in a moment.',
+    ar: 'الطلب وصل لـ{name} وهيتأكد حالًا.',
+    arStandard: 'وصل الطلب إلى {name} وسيُؤكَّد بعد قليل.',
   },
   confirmedNote: {
     en: 'Confirmed. It is on your bill.',
@@ -149,14 +149,15 @@ export const PILL_WORDS = {
   },
   paidNote: { en: 'Paid. Thank you.', ar: 'اتدفع. شكرًا.', arStandard: 'تم الدفع. شكرًا لك.' },
   cancelledNote: {
-    en: 'The café could not take this order.',
-    ar: 'الكافيه مقدرش ياخد الطلب ده.',
-    arStandard: 'لم يتمكن المقهى من قبول هذا الطلب.',
+    en: '{name} could not take this order.',
+    ar: '{name} مقدرش ياخد الطلب ده.',
+    arStandard: 'لم يتمكن {name} من قبول هذا الطلب.',
   },
 } satisfies Record<string, Words>
 
-export function words(w: Words, language: 'en' | 'ar', standard: boolean): string {
-  return language === 'en' ? w.en : standard ? w.arStandard : w.ar
+/** The words in the language asked; a `{name}` in them is the business's name */
+export function words(w: Words, language: 'en' | 'ar', standard: boolean, name = ''): string {
+  return (language === 'en' ? w.en : standard ? w.arStandard : w.ar).replaceAll('{name}', name)
 }
 
 type PillState = {

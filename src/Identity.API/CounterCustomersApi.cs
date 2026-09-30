@@ -173,7 +173,7 @@ public static class CounterCustomersApi
         }).RequireAuthorization("Pos");
 
         // A one-time link for a counter customer to take their account over in
-        // the app. The apps build the URL on the café's customer host
+        // the app. The apps build the URL on the business's customer host
         app.MapPost("/api/identity/customers/{userId}/claim-link", async (string userId, HttpContext http, KeycloakAdmin keycloak, ILogger<CounterCustomerLog> logger) =>
         {
             HttpClient client;

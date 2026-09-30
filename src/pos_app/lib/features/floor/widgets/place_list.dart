@@ -20,7 +20,7 @@ class PlaceList extends StatefulWidget {
   final List<TicketSummary> tickets;
   final List<Reservation> reservations;
   final bool busy;
-  /// The café bills time: without it a place with a tariff is a plain table
+  /// The business bills time: without it a place with a tariff is a plain table
   final bool timeBilling;
   final VoidCallback onNewTab;
   final ValueChanged<Place> onPick;

@@ -4,11 +4,11 @@ using System.Security.Cryptography;
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
-/// A browser session Keycloak minted for the café's owner, waiting to be
+/// A browser session Keycloak minted for the business's owner, waiting to be
 /// handed to the platform admin's browser. The cookies belong to the auth
 /// host, so the control app cannot set them itself: it opens a one-time
 /// link on that host, which replays them and sends the browser on to the
-/// café's admin app, signed in.
+/// business's admin app, signed in.
 /// </summary>
 public sealed record ImpersonationTicket(string Slug, IReadOnlyList<string> SetCookies, string RedirectUrl, DateTimeOffset ExpiresAt);
 

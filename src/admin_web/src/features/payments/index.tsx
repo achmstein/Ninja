@@ -24,7 +24,7 @@ import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import {
-  FEE_CAFE,
+  FEE_BUSINESS,
   FEE_GUEST,
   toForm,
   toRequest,
@@ -49,7 +49,7 @@ function problemDetail(e: unknown): string | undefined {
 }
 
 /**
- * Online payments, the owner's side: the café's own Paymob account (keys,
+ * Online payments, the owner's side: the business's own Paymob account (keys,
  * integrations, the callback to paste into Paymob), who pays the fee and
  * how guests may split a bill.
  */
@@ -129,7 +129,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
 
   return (
     <form onSubmit={submit} className='space-y-6'>
-      {/* A demo café without its own account yet: guests' payments are pretend until the keys are in */}
+      {/* A demo business without its own account yet: guests' payments are pretend until the keys are in */}
       {settings.simulated && (
         <Alert>
           <FlaskConical />
@@ -147,7 +147,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
         </Alert>
       )}
 
-      {/* The café's own account at the provider */}
+      {/* The business's own account at the provider */}
       <Card>
         <CardContent className='space-y-5 pt-6'>
           <h2 className='font-semibold'>{t('payAccount')}</h2>
@@ -265,8 +265,8 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
             onValueChange={(v) => v && set('feeMode', Number(v))}
             className='w-full sm:w-auto'
           >
-            <ToggleGroupItem value={String(FEE_CAFE)} className='px-4'>
-              {t('payFeeCafe')}
+            <ToggleGroupItem value={String(FEE_BUSINESS)} className='px-4'>
+              {t('payFeeBusiness')}
             </ToggleGroupItem>
             <ToggleGroupItem value={String(FEE_GUEST)} className='px-4'>
               {t('payFeeGuest')}
@@ -275,7 +275,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
           <p className='text-muted-foreground text-xs'>
             {form.feeMode === FEE_GUEST
               ? t('payFeeGuestHint')
-              : t('payFeeCafeHint')}
+              : t('payFeeBusinessHint')}
           </p>
           <div className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-1.5'>

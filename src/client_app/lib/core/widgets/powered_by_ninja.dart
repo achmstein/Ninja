@@ -5,7 +5,7 @@ import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
 
 /// "Powered by ninja", for the About sheet: the platform's wordmark in its
-/// own display face (Original Surfer), the one place a café's app carries
+/// own display face (Original Surfer), the one place a business's app carries
 /// it. A Latin wordmark, so it keeps left-to-right on an Arabic screen.
 class PoweredByNinja extends StatelessWidget {
   const PoweredByNinja({super.key});

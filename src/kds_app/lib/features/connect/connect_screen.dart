@@ -10,10 +10,10 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The wall before the app: until this tablet knows which café it serves,
+/// The wall before the app: until this tablet knows which business it serves,
 /// the connect screen is all there is. Once it does, [child] (the whole
 /// Riverpod app) is built fresh, so every client reads the new host; when
-/// the café is changed from settings, the app is torn down the same way.
+/// the business is changed from settings, the app is torn down the same way.
 class ConnectGate extends StatelessWidget {
   final Widget Function() child;
 
@@ -27,7 +27,7 @@ class ConnectGate extends StatelessWidget {
         valueListenable: TenantConnection.current,
         builder: (context, connection, _) {
           if (skip || AppConfig.isConnected) {
-            // A new key per connection: nothing of the last café survives
+            // A new key per connection: nothing of the last business survives
             return KeyedSubtree(key: ValueKey(connection?.apiUrl), child: child());
           }
           return const _ConnectApp();
@@ -35,7 +35,7 @@ class ConnectGate extends StatelessWidget {
       );
 }
 
-/// The connect screen as its own app: the platform's look (the café is not
+/// The connect screen as its own app: the platform's look (the business is not
 /// known yet), the device's saved language, and the same fonts.
 class _ConnectApp extends StatefulWidget {
   const _ConnectApp();
@@ -83,7 +83,7 @@ class _ConnectAppState extends State<_ConnectApp> {
       );
 }
 
-/// "Which café is this?": the address as the café's admin shows it, typed or
+/// "Which business is this?": the address as the business's admin shows it, typed or
 /// scanned from the QR code on its Apps page.
 class ConnectScreen extends StatefulWidget {
   final ValueChanged<Locale>? onLanguage;
@@ -135,7 +135,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
   String _failureText(AppLocalizations l10n, ConnectFailure failure) => switch (failure) {
         ConnectFailure.invalidAddress => l10n.connectInvalidAddress,
         ConnectFailure.unreachable => l10n.connectUnreachable,
-        ConnectFailure.notACafe => l10n.connectNotACafe,
+        ConnectFailure.notABusiness => l10n.connectNotABusiness,
         ConnectFailure.paused => l10n.connectPaused,
       };
 
@@ -196,8 +196,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         onSubmitted: _connect,
                         style: const TextStyle(color: ink),
                         decoration: InputDecoration(
-                          labelText: l10n.cafeAddress,
-                          hintText: 'api.cafe.example.com',
+                          labelText: l10n.businessAddress,
+                          hintText: 'api.business.example.com',
                           hintStyle: const TextStyle(color: Color(0xFF52525B)),
                           labelStyle: const TextStyle(color: muted),
                           errorText: _failure == null ? null : _failureText(l10n, _failure!),

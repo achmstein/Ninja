@@ -14,7 +14,7 @@ class TenantFeatures {
   final bool payroll;
   final bool kds;
 
-  /// Guests pay or split the bill online. An add-on the café buys and turns
+  /// Guests pay or split the bill online. An add-on the business buys and turns
   /// on, so off until the brand says otherwise (and when a stack older than
   /// it says nothing).
   final bool onlinePayments;
@@ -209,7 +209,7 @@ class TenantLocale {
     this.phonePlaceholder = '',
   });
 
-  /// Whether this is a number a cafe in that country would recognise.
+  /// Whether this is a number a business in that country would recognise.
   bool isValidPhone(String phone) =>
       RegExp(phonePattern).hasMatch(phone.trim());
 
@@ -340,7 +340,7 @@ class TenantTheme {
   /// know) is classic
   final String? style;
 
-  /// The parts the café dressed its own way over its style (`menuItem`,
+  /// The parts the business dressed its own way over its style (`menuItem`,
   /// `categories`, `header`, `buttons`, `surface`, `density`), as sent;
   /// null leaves every part to the style. Resolved by `resolveLayout`.
   final Map<String, String>? layout;
@@ -459,7 +459,7 @@ class TenantBrand {
   /// The wide logos; the mark and the name stand in for a missing one
   final TenantWordmarks wordmarks;
 
-  /// The café's cover photo, for the banner header; null when there is none
+  /// The business's cover photo, for the banner header; null when there is none
   final TenantCover? cover;
   final TenantTheme theme;
   final TenantLocale locale;
@@ -469,7 +469,7 @@ class TenantBrand {
   final TenantFeatures features;
   final int version;
 
-  /// The customer site ("https://cafe.example.com"), or null when the stack
+  /// The customer site ("https://business.example.com"), or null when the stack
   /// was not told
   final String? customerUrl;
 

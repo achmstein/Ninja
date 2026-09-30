@@ -7,7 +7,7 @@ namespace Ninja.Assistant.API.Tools;
 /// <summary>What the period tools share: resolve, fan out per branch, format the query.</summary>
 internal static class ToolSupport
 {
-    public const string PeriodDescription = "Named period: today, yesterday, this_week, last_week, this_month, last_month, last_7_days, last_30_days, this_year. Ignored when from/to are given. Days are the cafe's business days in its own time zone.";
+    public const string PeriodDescription = "Named period: today, yesterday, this_week, last_week, this_month, last_month, last_7_days, last_30_days, this_year. Ignored when from/to are given. Days are the business's business days in its own time zone.";
     public const string FromDescription = "First day, yyyy-MM-dd (inclusive). With 'to' omitted, just that day.";
     public const string ToDescription = "Last day, yyyy-MM-dd (inclusive).";
     public const string BranchDescription = "Branch id or name (English or Arabic). Omit for every active branch: the answer then has a total plus a line per branch.";

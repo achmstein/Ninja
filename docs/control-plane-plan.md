@@ -162,7 +162,7 @@ operator's view; this is the map.
   prices stay out of code until then.
 - Client-side encryption of the offsite archives (they leave the box as
   plain `.tar.gz`; a private bucket with server-side encryption until then).
-- Social sign-in per tenant (a café's own Google and Apple apps).
+- Social sign-in per tenant (a business's own Google and Apple apps).
 - Moving the Chillax stack onto a stamp (last step of Phase 3 in
   `docs/ninja-plan.md`); its seed profile is `chillax`.
 

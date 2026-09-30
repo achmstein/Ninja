@@ -33,7 +33,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
   const t = useT()
   const locale = useLocale()
   const origin = useCustomerOrigin()
-  const cafe = useBrandName()
+  const business = useBrandName()
   const country = useBrand()?.locale.country ?? 'EG'
   const [link, setLink] = useState<{ url: string; expiresAt: Date } | null>(null)
 
@@ -73,7 +73,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
   }
 
   const message = link
-    ? t('appLinkMessage', { name: customer?.name ?? '', cafe, url: link.url })
+    ? t('appLinkMessage', { name: customer?.name ?? '', business, url: link.url })
     : ''
 
   return (

@@ -257,7 +257,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once",
+        "summary": "The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once",
         "operationId": "UpdateTenant",
         "parameters": [
           {
@@ -775,7 +775,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "Fill a running demo with a month of a café's life (suppliers, stock, recipes, staff, expenses, sales), once",
+        "summary": "Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once",
         "operationId": "FillDemoData",
         "parameters": [
           {
@@ -1800,7 +1800,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "A one-time link that opens the café's admin app signed in as its owner",
+        "summary": "A one-time link that opens the business's admin app signed in as its owner",
         "operationId": "ImpersonateOwner",
         "parameters": [
           {
@@ -3072,7 +3072,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "The café's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there",
+        "summary": "The business's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there",
         "operationId": "UpdateTenantTalabat",
         "parameters": [
           {
@@ -5405,7 +5405,7 @@
                 "type": "null"
               },
               {
-                "description": "The café on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat",
+                "description": "The business on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat",
                 "$ref": "#/components/schemas/TenantTalabatDto"
               }
             ]
@@ -6176,7 +6176,7 @@
                 "type": "null"
               },
               {
-                "description": "The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it",
+                "description": "The kind of place; on a running business only the label changes, never its menu, switches or guest ordering. Null leaves it",
                 "$ref": "#/components/schemas/BusinessType"
               }
             ]

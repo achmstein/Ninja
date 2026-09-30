@@ -37,7 +37,7 @@ const line = (id: number, share: number, extra: Partial<PayLineView> = {}): PayL
 const options = (extra: Partial<PayOptionsView> = {}): PayOptionsView => ({
   ready: true,
   currency: 'EGP',
-  feeMode: 'Cafe',
+  feeMode: 'Business',
   feePercent: 0,
   feeFixed: 0,
   allowItems: true,
@@ -117,7 +117,7 @@ describe('customShare', () => {
 })
 
 describe('paySummary', () => {
-  it('charges the share alone when the café absorbs the fee', () => {
+  it('charges the share alone when the business absorbs the fee', () => {
     expect(paySummary(100, options())).toEqual({
       share: 100,
       fee: 0,

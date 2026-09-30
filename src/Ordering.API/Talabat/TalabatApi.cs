@@ -15,9 +15,9 @@ public sealed record TalabatRefused(string Reason, string Message);
 public sealed record TalabatStatusRequest(string Status, string? Message);
 
 /// <summary>
-/// Talabat's side of the café, as the platform relays it (docs: Talabat
+/// Talabat's side of the business, as the platform relays it (docs: Talabat
 /// integration). Talabat calls Ninja once, at the platform; the platform
-/// knows the café by the vendor's remote id and forwards here with its own
+/// knows the business by the vendor's remote id and forwards here with its own
 /// token and the branch. Nothing else may call these.
 /// </summary>
 public static class TalabatApi

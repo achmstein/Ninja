@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
-/// Order status for cafe orders.
+/// Order status.
 /// AwaitingValidation -> Submitted (stock confirmed) -> Confirmed (admin action) or Cancelled
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]

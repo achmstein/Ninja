@@ -10,14 +10,14 @@
 /// menu, how the categories and the header are laid out, the shape of the
 /// buttons, whether surfaces are flat, outlined or lifted, how much air
 /// there is, and how headings are set. It also brings defaults for the
-/// café's seeds (corners, fonts, header size), which the café's own seeds
-/// always win over. A café may dress single parts its own way; those
+/// business's seeds (corners, fonts, header size), which the business's own seeds
+/// always win over. A business may dress single parts its own way; those
 /// choices survive a change of style.
 library;
 
 import 'tenant_brand.dart';
 
-/// Ninja first: the platform's signature style, and the one a new café
+/// Ninja first: the platform's signature style, and the one a new business
 /// starts in.
 enum StyleKey { ninja, classic, minimal, bold, cozy, night }
 
@@ -106,7 +106,7 @@ class Headings {
   const Headings({this.font, required this.weight, required this.scale, required this.uppercase, required this.tracking});
 }
 
-/// Seeds the style suggests; the café's own seeds win.
+/// Seeds the style suggests; the business's own seeds win.
 class StyleDefaults {
   final String? radius;
   final String? fontLatin;
@@ -148,7 +148,7 @@ const Map<StyleKey, StylePreset> styles = {
     defaults: StyleDefaults(radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic'),
     forceDark: false,
   ),
-  // Today's look, exactly: the default for every café that never chose
+  // Today's look, exactly: the default for every business that never chose
   StyleKey.classic: StylePreset(
     layout: Layout(
       menuItem: MenuItemLayout.row,
@@ -234,7 +234,7 @@ StylePreset presetOf(String? style) => styles[styleOf(style)]!;
 T? _pick<T extends Enum>(List<T> values, Object? value) =>
     value is String ? values.where((v) => v.name == value).firstOrNull : null;
 
-/// The layout the customer app wears: the style's, with each part the café
+/// The layout the customer app wears: the style's, with each part the business
 /// chose itself put over it. A value this build does not know falls back to
 /// the style's, so an older app never breaks on a newer brand.
 Layout resolveLayout(String? style, Map<String, dynamic>? overrides) {
@@ -251,7 +251,7 @@ Layout resolveLayout(String? style, Map<String, dynamic>? overrides) {
 }
 
 /// The seeds a theme paints with once its style's defaults fill what the
-/// café left unset. The café's own values always win.
+/// business left unset. The business's own values always win.
 TenantTheme withStyleDefaults(TenantTheme theme) {
   final d = presetOf(theme.style).defaults;
   return theme.copyWith(

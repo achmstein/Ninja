@@ -389,7 +389,7 @@ export const closeShift = <ThrowOnError extends boolean = false>(options: Option
 /**
  * The open bill at a table, as a guest pays it
  *
- * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.
+ * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the business lets guests split. 404 when nothing is open there.
  */
 export const getPlaceBillToPay = <ThrowOnError extends boolean = false>(options: Options<GetPlaceBillToPayData, ThrowOnError>): RequestResult<GetPlaceBillToPayResponses, GetPlaceBillToPayErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceBillToPayResponses, GetPlaceBillToPayErrors, ThrowOnError>({
     responseType: 'json',
@@ -442,7 +442,7 @@ export const listOnlinePayments = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * A demo café's pretend payment: paid or declined, as the guest picks
+ * A demo business's pretend payment: paid or declined, as the guest picks
  *
  * Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.
  */
@@ -469,7 +469,7 @@ export const cancelOnlinePayment = <ThrowOnError extends boolean = false>(option
 export const refundOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<RefundOnlinePaymentData, ThrowOnError>): RequestResult<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).post<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/refund', ...options });
 
 /**
- * How the café takes payments at the table; secrets only as whether they are set
+ * How the business takes payments at the table; secrets only as whether they are set
  */
 export const getPaymentSettings = <ThrowOnError extends boolean = false>(options: Options<GetPaymentSettingsData, ThrowOnError>): RequestResult<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError> => (options.client ?? client).get<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError>({
     responseType: 'json',
@@ -478,7 +478,7 @@ export const getPaymentSettings = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Change the café's payment account, fee and split options
+ * Change the business's payment account, fee and split options
  */
 export const savePaymentSettings = <ThrowOnError extends boolean = false>(options: Options<SavePaymentSettingsData, ThrowOnError>): RequestResult<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError> => (options.client ?? client).put<SavePaymentSettingsResponses, SavePaymentSettingsErrors, ThrowOnError>({
     responseType: 'json',

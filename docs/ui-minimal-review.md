@@ -38,7 +38,7 @@ Bonus: four near‑duplicate “— add them in the admin app” empty states in
 | 1 | "Pins the kitchen display so Home, Recents and notifications…" (206) | `kioskHint` kds_app arb:60 |
 | 2 | "Pins the till so Home, Recents…" (195) | `kioskHint` pos_app arb:687 |
 | 3 | "Counter sales rung up while the network was down…" (148) | `offlineSalesHint` pos_app arb:720 |
-| 4 | "An 80 mm network printer on the café Wi‑Fi…" (133) | `printerHint` pos_app arb:674 |
+| 4 | "An 80 mm network printer on the business Wi‑Fi…" (133) | `printerHint` pos_app arb:674 |
 | 5 | "End it first so the time lands on this bill. Settled now…" (121) | `settleWithSessionHint` i18n.ts:238 / arb:255 |
 | 6 | "Pick what goes back. Each item returns what was paid…" (120) | `refundHint` i18n.ts:255 / arb:292 → keep only "{amount} left" |
 | 7 | "End it first so its time lands on this bill, then void or settle…" (109) | `voidWithSessionHint` i18n.ts:243 / arb:257 |

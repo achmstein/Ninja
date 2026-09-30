@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Ninja.Tenant.UnitTests;
 
 /// <summary>
-/// Whether a guest may order from anywhere is the café's, not a branch's: it
+/// Whether a guest may order from anywhere is the business's, not a branch's: it
 /// goes out on its own event when the owner changes it and once at every
 /// start, and never on a branch's.
 /// </summary>
@@ -51,7 +51,7 @@ public sealed class TenantSettingsEventTests
     }
 
     [TestMethod]
-    public async Task Turning_guest_orders_anywhere_on_says_so_once_for_the_cafe()
+    public async Task Turning_guest_orders_anywhere_on_says_so_once_for_the_business()
     {
         var (services, bus) = AStack();
 
@@ -75,7 +75,7 @@ public sealed class TenantSettingsEventTests
     }
 
     [TestMethod]
-    public async Task Every_start_says_the_cafe_settings_as_they_stand()
+    public async Task Every_start_says_the_business_settings_as_they_stand()
     {
         var (services, bus) = AStack();
         await UpdateAsync(services, bus, guestOrdersAnywhere: true);
@@ -102,7 +102,7 @@ public sealed class TenantSettingsEventTests
         var said = bus.Published.OfType<BranchSettingsChangedIntegrationEvent>().Single();
         Assert.AreEqual(1, said.BranchId);
         Assert.IsFalse(said.IsOrderingEnabled);
-        Assert.IsNull(typeof(BranchSettingsChangedIntegrationEvent).GetProperty("GuestOrdersAnywhere"), "the café's setting has its own event");
+        Assert.IsNull(typeof(BranchSettingsChangedIntegrationEvent).GetProperty("GuestOrdersAnywhere"), "the business's setting has its own event");
     }
 
     private sealed class RecordingBus : IEventBus

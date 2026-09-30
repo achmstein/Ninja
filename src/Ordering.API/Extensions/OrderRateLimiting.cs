@@ -24,7 +24,7 @@ public static class OrderRateLimiting
     /// Ceiling on anonymous order creation per address per <see cref="Window"/>,
     /// regardless of guest id. The per-guest limit partitions on a value the
     /// client chooses, so rotating ids would dodge it; every rotation still
-    /// shares this bucket. Sized for a full café behind one NAT'd wifi IP —
+    /// shares this bucket. Sized for a full business behind one NAT'd wifi IP —
     /// generous for real service, far too small to flood a kitchen.
     /// </summary>
     private const int AnonymousOrdersPerWindowPerAddress = 60;

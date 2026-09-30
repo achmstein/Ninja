@@ -121,7 +121,7 @@ final myReservationsProvider =
 /// Stays notifier - refreshes on demand (app resume, screen focus,
 /// pull-to-refresh). The reservations ride along: every screen that asks
 /// for fresh stays is asking what is happening with this customer in the
-/// café, and a reservation that just got seated is part of that answer.
+/// business, and a reservation that just got seated is part of that answer.
 class MyStaysNotifier extends Notifier<AsyncValue<List<Stay>>> {
   late PlaceRepository _roomService;
 

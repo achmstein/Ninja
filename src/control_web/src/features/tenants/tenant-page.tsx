@@ -160,7 +160,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     onError: failed,
   })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
-  // A month of a café's life in a demo, once; the steps say what landed
+  // A month of a business's life in a demo, once; the steps say what landed
   const fillDemo = useMutation({ ...fillDemoDataMutation(), onSuccess: queued, onError: failed })
   // The record is gone: back to the list, which no longer has it
   const forget = useMutation({

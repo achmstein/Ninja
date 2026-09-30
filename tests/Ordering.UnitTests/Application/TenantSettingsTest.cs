@@ -14,7 +14,7 @@ using Ninja.Ordering.Infrastructure.Projections;
 using Ninja.ServiceDefaults;
 
 /// <summary>
-/// Whether a guest may order from anywhere is the café's: one row Ordering
+/// Whether a guest may order from anywhere is the business's: one row Ordering
 /// keeps from Tenant.API's event, read for every branch — including one
 /// Ordering has no settings row for yet.
 /// </summary>
@@ -84,7 +84,7 @@ public class TenantSettingsTest
     }
 
     [TestMethod]
-    public async Task A_guest_without_a_place_is_refused_when_the_cafe_says_no_whatever_the_branch_row()
+    public async Task A_guest_without_a_place_is_refused_when_the_business_says_no_whatever_the_branch_row()
     {
         await using var context = NewContext();
         await HandleAsync(context, guestOrdersAnywhere: false, Noon);
@@ -97,7 +97,7 @@ public class TenantSettingsTest
     }
 
     [TestMethod]
-    public async Task A_guest_without_a_place_is_refused_by_a_cafe_that_has_never_said()
+    public async Task A_guest_without_a_place_is_refused_by_a_business_that_has_never_said()
     {
         await using var context = NewContext();
         context.BranchSettings.Add(new BranchSettings { BranchId = 1, IsOrderingEnabled = true, UpdatedAt = Noon });

@@ -8,7 +8,7 @@ import 'package:pos_app/features/floor/widgets/place_list.dart';
 import 'package:pos_app/features/places/models/place.dart';
 import 'package:pos_app/l10n/app_localizations.dart';
 
-/// The column of places with no bill yet. What matters here is the café's
+/// The column of places with no bill yet. What matters here is the business's
 /// clock: with time billing out of the plan, a room that kept its rates is
 /// a plain table on this floor — no running clock, no maintenance state —
 /// or the till would send the cashier into a dialog Spaces refuses.

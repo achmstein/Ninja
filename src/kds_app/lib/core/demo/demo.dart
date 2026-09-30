@@ -89,7 +89,7 @@ class _DemoKitchenRepository implements KitchenRepository {
   @override
   Future<List<KitchenOrder>> getKitchenOrders({int? stationId}) async => List.of(_orders);
 
-  /// One kitchen, as a café that never split it
+  /// One kitchen, as a business that never split it
   @override
   Future<List<KitchenStation>> getStations() async => [
         KitchenStation(id: 1, name: _lt('Kitchen', 'المطبخ'), isDefault: true),

@@ -5,7 +5,7 @@ namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
 /// Unit tests for CreateOrderCommandHandler.
-/// Simplified for cafe - no address or payment details.
+/// Simplified for business - no address or payment details.
 /// </summary>
 [TestClass]
 public class NewOrderRequestHandlerTest

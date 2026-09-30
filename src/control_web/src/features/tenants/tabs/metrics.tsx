@@ -35,7 +35,7 @@ import { statusLabelKey, tenantStatus } from '@/lib/tenant'
 const RANGES = [7, 30, 90] as const
 
 /**
- * What the café did over the last days, read from its own APIs: the
+ * What the business did over the last days, read from its own APIs: the
  * headline numbers, orders and revenue per day, and what sold most.
  */
 export function MetricsTab({ tenant }: { tenant: TenantDetail }) {

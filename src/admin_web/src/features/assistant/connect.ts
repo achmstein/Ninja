@@ -1,5 +1,5 @@
 /**
- * The owner's assistant is the café's own MCP server, behind the API host
+ * The owner's assistant is the business's own MCP server, behind the API host
  * at /mcp (docs/owner-assistant.md). The address must be exactly what the
  * server's Assistant:PublicUrl says, byte for byte: no trailing slash.
  */

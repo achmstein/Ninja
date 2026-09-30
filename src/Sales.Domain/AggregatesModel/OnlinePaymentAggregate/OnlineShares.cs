@@ -94,7 +94,7 @@ public static class OnlineShares
     }
 
     /// <summary>
-    /// The guest's fee on a share when the café passes the provider's fee
+    /// The guest's fee on a share when the business passes the provider's fee
     /// on: a percentage of what is charged plus a fixed part, solved so that
     /// what the provider keeps is what the fee covers.
     /// </summary>

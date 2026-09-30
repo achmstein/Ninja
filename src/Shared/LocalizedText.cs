@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 namespace Ninja;
 
 /// <summary>
-/// A text the café writes in its own languages: English, Arabic or both. A
-/// café that works in one language fills only that side and the other stays
+/// A text the business writes in its own languages: English, Arabic or both. A
+/// business that works in one language fills only that side and the other stays
 /// null — never "" and never a copy of the first, so each side always means
 /// what its name says. A blank side is stored as null, both sides trimmed.
 /// Read it with <see cref="Get"/>, which answers in the asked language and

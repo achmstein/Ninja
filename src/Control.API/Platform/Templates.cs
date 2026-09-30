@@ -188,7 +188,7 @@ public static partial class Templates
             ["displayName"] = displayName,
             ["providerId"] = providerId,
             ["enabled"] = true,
-            // The provider has already verified the address; asking the café's customer to verify it again is a dead end on a phone
+            // The provider has already verified the address; asking the business's customer to verify it again is a dead end on a phone
             ["trustEmail"] = true,
             ["storeToken"] = false,
             ["addReadTokenRoleOnCreate"] = false,
@@ -249,7 +249,7 @@ public static partial class Templates
     };
 
     /// <summary>
-    /// A café's client in the hub for one provider: its only redirect is the café realm's broker
+    /// A business's client in the hub for one provider: its only redirect is the business realm's broker
     /// endpoint for it, and its browser flow is the hub's straight-to-that-provider one.
     /// </summary>
     public static JsonObject HubClient(string slug, string provider, string secret, string flowId, PlatformOptions platform) => new()
@@ -270,15 +270,15 @@ public static partial class Templates
         ["authenticationFlowBindingOverrides"] = new JsonObject { ["browser"] = flowId },
     };
 
-    /// <summary>Where the hub hands a person back to the café's realm for one provider.</summary>
+    /// <summary>Where the hub hands a person back to the business's realm for one provider.</summary>
     public static string BrokerEndpoint(string slug, string provider, PlatformOptions platform)
         => $"{platform.KeycloakPublicUrl.TrimEnd('/')}/realms/{TenantNaming.Realm(slug)}/broker/{TenantNaming.BrokerAlias(provider)}/endpoint";
 
     /// <summary>
-    /// The café realm's own "Google" or "Apple" for the browser: plain OIDC against its client in the
-    /// hub. Shown on the café's login page; the browser goes to the hub only (the one address the
+    /// The business realm's own "Google" or "Apple" for the browser: plain OIDC against its client in the
+    /// hub. Shown on the business's login page; the browser goes to the hub only (the one address the
     /// providers know), Keycloak itself to the hub's tokens and keys on the network. The customer is
-    /// created in the café's realm from the hub's token, and asked there for what the café needs
+    /// created in the business's realm from the hub's token, and asked there for what the business needs
     /// (a phone number) that Google and Apple do not give.
     /// </summary>
     public static JsonObject TenantBroker(string slug, string provider, string secret, PlatformOptions platform)
@@ -323,7 +323,7 @@ public static partial class Templates
     /// <summary>
     /// What Tenant.API tells the apps about signing in with Google or Apple ("google=ninja-google,
     /// apple=ninja-apple": each provider, and the hint the browser app sends for it); null when the
-    /// café has it off or the platform holds no app.
+    /// business has it off or the platform holds no app.
     /// </summary>
     public static string? SocialSignIn(Tenant tenant, PlatformOptions platform)
     {
@@ -473,13 +473,13 @@ public static partial class Templates
                     sb.AppendLine("      Assistant__TokenExchange__ClientId: \"assistant-api\"");
                     sb.AppendLine("      Assistant__TokenExchange__ClientSecret: \"${ASSISTANT_SECRET}\"");
                     // It calls the other services by their Aspire names; service discovery reads these. A service the plan
-                    // leaves out gets no line, so its name does not resolve and the tools say "not in this cafe's plan".
+                    // leaves out gets no line, so its name does not resolve and the tools say "not in this business's plan".
                     foreach (var target in new[] { "tenant", "sales", "finance", "inventory", "ordering", "payroll", "catalog" })
                         if (services.Contains(target))
                             sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;
                 case "sales":
-                    // Online payments: the key the café's provider secrets are sealed with, and where the provider calls back
+                    // Online payments: the key the business's provider secrets are sealed with, and where the provider calls back
                     sb.AppendLine("      Payments__Key: \"${PAYMENTS_KEY}\"");
                     sb.AppendLine($"      Payments__CallbackBaseUrl: \"{hosts.ApiUrl}\"");
                     sb.AppendLine($"      Payments__ReturnBaseUrl: \"{hosts.CustomerUrl}\"");
@@ -487,7 +487,7 @@ public static partial class Templates
                     if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
                     break;
                 case "ordering" when platform.Talabat.Configured:
-                    // Talabat: what the café does with its orders goes back through the platform's relay, which holds Ninja's account
+                    // Talabat: what the business does with its orders goes back through the platform's relay, which holds Ninja's account
                     AppendTalabatRelay(sb, slug, platform);
                     break;
                 case "tenant":
@@ -571,23 +571,23 @@ public static partial class Templates
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
             $"ASSISTANT_SECRET={tenant.AssistantSecret}",
             $"PAYMENTS_KEY={tenant.PaymentsKey}",
-            // The café's key to the Talabat relay, derived from the platform's key; only when the platform has a Talabat account
+            // The business's key to the Talabat relay, derived from the platform's key; only when the platform has a Talabat account
             $"TALABAT_RELAY_KEY={(platform.Talabat.Configured && !string.IsNullOrWhiteSpace(platform.EncryptionKey) ? TalabatNaming.RelayKey(tenant.Slug, platform.EncryptionKey) : "")}",
-            // The shared key reaches only the stacks whose plan includes the assistant: one café's compromise is not every café's
+            // The shared key reaches only the stacks whose plan includes the assistant: one business's compromise is not every business's
             $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
             "",
         ]);
     }
 
     /// <summary>
-    /// One Caddy site per café on its own domain, proxied to that café's
+    /// One Caddy site per business on its own domain, proxied to that business's
     /// gateway; imported by the platform Caddyfile, rewritten on every
     /// provision and destroy. The wildcard blocks cover the platform hosts.
     /// </summary>
     public static string CustomDomains(IEnumerable<Tenant> tenants, PlatformOptions platform)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("# Cafés on their own domains, written by the control plane; do not edit.");
+        sb.AppendLine("# Businesses on their own domains, written by the control plane; do not edit.");
         foreach (var tenant in tenants.Where(t => !string.IsNullOrEmpty(t.CustomerDomain)).OrderBy(t => t.Slug))
         {
             sb.AppendLine();
@@ -595,13 +595,13 @@ public static partial class Templates
             sb.AppendLine("\ttls {");
             sb.AppendLine("\t\ton_demand");
             sb.AppendLine("\t}");
-            // Only the control app and the café's own admin may frame the customer app (their live brand previews)
+            // Only the control app and the business's own admin may frame the customer app (their live brand previews)
             sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')} {TenantHosts.For(tenant, platform).AdminUrl}\"");
             sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
             sb.AppendLine("\thandle {");
             sb.AppendLine("\t\timport spa /srv/client-web");
             sb.AppendLine("\t}");
-            // The paused answer is its own snippet, not part of tenant_api: a café on its
+            // The paused answer is its own snippet, not part of tenant_api: a business on its
             // own domain must hear the same {"code":"paused"} as one on {slug}.{domain},
             // or its app shows a bare 502 while the stack is suspended
             sb.AppendLine("\timport paused_api");

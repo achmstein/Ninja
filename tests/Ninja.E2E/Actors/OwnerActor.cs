@@ -410,7 +410,7 @@ public sealed class OwnerActor(ApiClient api)
         return await r.Content.ReadFromJsonAsync<int>(ApiClient.Json, ct);
     }
 
-    /// <summary>The same, unchecked: for the calls a café's plan is supposed to refuse.</summary>
+    /// <summary>The same, unchecked: for the calls a business's plan is supposed to refuse.</summary>
     public Task<HttpResponseMessage> TryCreatePlaceAsync(string nameEn, CancellationToken ct, int kind = 0, object? tariff = null, bool? reservable = null)
         => Api.PostAsync("/api/places", new { kind, name = new { en = nameEn }, tariff, reservable }, ct, ensureSuccess: false);
 

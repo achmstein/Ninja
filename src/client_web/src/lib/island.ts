@@ -8,7 +8,7 @@ import { create } from 'zustand'
  * icon, so everything the app says goes through this one id:
  * - the live face: what the customer is waiting on (their order), sticky,
  *   changing in place as it moves on;
- * - a flash: something to say now (a failure, an Undo, news from the café),
+ * - a flash: something to say now (a failure, an Undo, news from the business),
  *   which morphs the island for a moment and then morphs back to the live
  *   face, or away when there is none.
  * While it is on screen the bar's brand folds and its chips step aside

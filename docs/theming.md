@@ -1,7 +1,7 @@
-# Theming: how a café's brand becomes the customer app's look
+# Theming: how a business's brand becomes the customer app's look
 
 The customer surfaces (client_web, client_app, printed paper) wear the
-café's brand. Staff surfaces (admin, till, kitchen, control) are Ninja and
+business's brand. Staff surfaces (admin, till, kitchen, control) are Ninja and
 stay neutral. This is the pattern every surface follows, and why.
 
 ## The pattern
@@ -82,4 +82,4 @@ The seeds are a value object, so more than one theme is a matter of
 storing more than one: platform presets (named seed sets an owner picks
 from), a seasonal theme with a date window, or a high-contrast variant
 derived from the same seeds. Per-branch themes are not planned: the brand
-is the café's.
+is the business's.

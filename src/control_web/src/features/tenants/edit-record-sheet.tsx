@@ -59,9 +59,9 @@ import {
 const FORM_ID = 'edit-record'
 
 /**
- * The record Control keeps about a café, edited in place: names, colour,
+ * The record Control keeps about a business, edited in place: names, colour,
  * domain, contact, plan, notes, and what the wizard chose — the kind of
- * place, the locale, its Arabic and starting theme. A running café takes
+ * place, the locale, its Arabic and starting theme. A running business takes
  * the name, locale, Arabic, theme and kind at once. The form mounts with
  * the sheet, so every opening starts from what the server has.
  */

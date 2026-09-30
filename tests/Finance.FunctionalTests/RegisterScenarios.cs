@@ -79,7 +79,7 @@ public record ExpenseView(
 public record RecurringView(int Id, int BranchId, int CategoryId, decimal Amount, int DayOfMonth, PaidFrom PaidFrom, string? Vendor, bool IsActive);
 
 /// <summary>
-/// The month's register: the categories a café starts with, a bill keyed
+/// The month's register: the categories a business starts with, a bill keyed
 /// in, the photo of it, one voided with a reason, and the monthly bills
 /// that post themselves.
 /// </summary>
@@ -114,13 +114,13 @@ public sealed class RegisterScenarios
     }
 
     [TestMethod]
-    public async Task A_cafe_starts_with_the_bills_every_cafe_has()
+    public async Task A_business_starts_with_the_bills_every_business_has()
     {
         var categories = await BackOffice.GetAsync<List<CategoryView>>(Suite.Url("/categories"));
 
         Assert.IsTrue(categories.Any(c => c.Name.En == "Rent"), "rent, electricity and the rest are there from the first day");
         Assert.IsTrue(categories.Any(c => c.Name.En == "Electricity"));
-        Assert.AreEqual("إيجار", categories.First(c => c.Name.En == "Rent").Name.Ar, "in both the languages the café reads");
+        Assert.AreEqual("إيجار", categories.First(c => c.Name.En == "Rent").Name.Ar, "in both the languages the business reads");
 
         var mine = await BackOffice.PostAsync<CreatedView>(Suite.Url("/categories"), new
         {

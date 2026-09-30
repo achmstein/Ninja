@@ -6,7 +6,7 @@ using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 namespace Ninja.Spaces.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// Keeps Spaces' projection of the café's switches: an upsert of the one
+/// Keeps Spaces' projection of the business's switches: an upsert of the one
 /// row, guarded against out-of-order delivery — an event older than what
 /// the row already holds is dropped rather than letting a stale "off" undo
 /// a newer "on".

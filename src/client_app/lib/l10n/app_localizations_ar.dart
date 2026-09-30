@@ -962,16 +962,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ratedThanks => 'شكراً على تقييمك!';
 
   @override
-  String get haveCafeCode => 'معاك كود من الكافيه؟';
-
-  @override
-  String claimTitle(String cafe) {
-    return 'حسابك في $cafe';
+  String haveBusinessCode(String name) {
+    return 'معاك كود من $name؟';
   }
 
   @override
-  String get claimIntro =>
-      'الكافيه ضافك من الكاشير. حط إيميل وباسورد عشان تدخل وتشوف نقاطك وطلباتك.';
+  String claimTitle(String name) {
+    return 'حسابك في $name';
+  }
+
+  @override
+  String claimIntro(String name) {
+    return '$name ضافك من الكاشير. حط إيميل وباسورد عشان تدخل وتشوف نقاطك وطلباتك.';
+  }
 
   @override
   String get claimSubmit => 'اعمل حسابي';
@@ -980,7 +983,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get claimDone => 'حسابك جاهز';
 
   @override
-  String get claimExpired => 'اللينك ده خلص. اطلب لينك جديد من الكافيه.';
+  String claimExpired(String name) {
+    return 'اللينك ده خلص. اطلب لينك جديد من $name.';
+  }
 
   @override
   String get claimUsed => 'اللينك ده اتستخدم قبل كده. سجّل دخول بدل كده.';
@@ -992,19 +997,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get claimEmailTaken => 'الإيميل ده عليه حساب بالفعل';
 
   @override
-  String get claimScanOrPaste => 'صوّر كود الكافيه أو الزق اللينك';
+  String claimScanOrPaste(String name) {
+    return 'صوّر الكود اللي من $name أو الزق اللينك';
+  }
 
   @override
   String get claimScan => 'صوّر الكود';
 
   @override
-  String get claimPointCamera => 'وجّه الكاميرا على كود الكافيه';
+  String get claimPointCamera => 'وجّه الكاميرا على الكود';
 
   @override
   String get claimPasteLabel => 'اللينك أو الكود';
 
   @override
-  String get claimPasteHint => 'الزق اللي الكافيه بعتهولك';
+  String claimPasteHint(String name) {
+    return 'الزق اللي $name بعتهولك';
+  }
 
   @override
   String get claimContinue => 'كمّل';
@@ -1828,16 +1837,19 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get ratedThanks => 'شكرًا على تقييمك!';
 
   @override
-  String get haveCafeCode => 'هل لديك رمز من المقهى؟';
-
-  @override
-  String claimTitle(String cafe) {
-    return 'حسابك في $cafe';
+  String haveBusinessCode(String name) {
+    return 'هل لديك رمز من $name؟';
   }
 
   @override
-  String get claimIntro =>
-      'أضافك المقهى عند الكاشير. أضف بريدًا إلكترونيًا وكلمة مرور لتسجيل الدخول ومتابعة نقاطك وطلباتك.';
+  String claimTitle(String name) {
+    return 'حسابك في $name';
+  }
+
+  @override
+  String claimIntro(String name) {
+    return 'أضافك $name عند الكاشير. أضف بريدًا إلكترونيًا وكلمة مرور لتسجيل الدخول ومتابعة نقاطك وطلباتك.';
+  }
 
   @override
   String get claimSubmit => 'إنشاء حسابي';
@@ -1846,8 +1858,9 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get claimDone => 'حسابك جاهز';
 
   @override
-  String get claimExpired =>
-      'انتهت صلاحية هذا الرابط. اطلب رابطًا جديدًا من المقهى.';
+  String claimExpired(String name) {
+    return 'انتهت صلاحية هذا الرابط. اطلب رابطًا جديدًا من $name.';
+  }
 
   @override
   String get claimUsed =>
@@ -1860,19 +1873,23 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get claimEmailTaken => 'هذا البريد الإلكتروني مرتبط بحساب بالفعل';
 
   @override
-  String get claimScanOrPaste => 'امسح رمز المقهى أو الصق الرابط';
+  String claimScanOrPaste(String name) {
+    return 'امسح الرمز من $name أو الصق الرابط';
+  }
 
   @override
   String get claimScan => 'امسح الرمز';
 
   @override
-  String get claimPointCamera => 'وجّه الكاميرا نحو رمز المقهى';
+  String get claimPointCamera => 'وجّه الكاميرا نحو الرمز';
 
   @override
   String get claimPasteLabel => 'الرابط أو الرمز';
 
   @override
-  String get claimPasteHint => 'الصق ما أرسله إليك المقهى';
+  String claimPasteHint(String name) {
+    return 'الصق ما أرسله إليك $name';
+  }
 
   @override
   String get claimContinue => 'متابعة';

@@ -8,12 +8,12 @@ using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.API.Apis;
 
-/// <summary>The café's record on the platform (contact, plan, notes, what it is stamped with), a demo's conversion, and the audit trail.</summary>
+/// <summary>The business's record on the platform (contact, plan, notes, what it is stamped with), a demo's conversion, and the audit trail.</summary>
 public static partial class ControlApi
 {
     private static void MapRecordApi(RouteGroupBuilder api)
     {
-        api.MapPut("/tenants/{slug}", UpdateTenant).WithName("UpdateTenant").WithSummary("The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once").RequireAuthorization("Platform");
+        api.MapPut("/tenants/{slug}", UpdateTenant).WithName("UpdateTenant").WithSummary("The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/convert", Convert).WithName("ConvertTenant").WithSummary("A demo becomes a customer: no expiry, on a plan").RequireAuthorization("Platform");
         api.MapGet("/audit", ListAudit).WithName("ListAudit").WithSummary("Every platform action, newest first, for one tenant or all").RequireAuthorization("Platform");
     }
@@ -26,7 +26,7 @@ public static partial class ControlApi
         if (tenant is null) return TypedResults.NotFound();
 
         if (string.IsNullOrWhiteSpace(request.NameEn) && string.IsNullOrWhiteSpace(request.NameAr))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required, in English or Arabic." });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The business's name is required, in English or Arabic." });
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(color) && !HexColor().IsMatch(color))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The color must be #rrggbb." });
@@ -75,7 +75,7 @@ public static partial class ControlApi
         tenant.Slab = slab;
         var socialChanged = request.SocialSignIn is { } social && social != tenant.SocialSignIn;
         if (socialChanged) tenant.SocialSignIn = request.SocialSignIn!.Value;
-        // The kind of place is a label on a running café: its menu, switches and guest ordering stay as they are
+        // The kind of place is a label on a running business: its menu, switches and guest ordering stay as they are
         if (request.BusinessType is { } business) tenant.BusinessType = business;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.updated", slug, request, ct);
@@ -84,7 +84,7 @@ public static partial class ControlApi
         if (request.Plan is { } plan && plan != tenant.Plan)
             await subscriptions.ApplyAsync(tenant, plan, tenant.Addons, tenant.GraceDays, ct);
 
-        // A café's own domain reaches the edge straight away
+        // A business's own domain reaches the edge straight away
         if (domainChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "edge"), ct);
 
@@ -92,9 +92,9 @@ public static partial class ControlApi
         if (socialChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "social"), ct);
 
-        // A running café's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
+        // A running business's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
         if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, ct) is { } refused)
-            return TypedResults.Problem(detail: $"Saved on the record, but the café did not take it: {refused}", statusCode: StatusCodes.Status502BadGateway);
+            return TypedResults.Problem(detail: $"Saved on the record, but the business did not take it: {refused}", statusCode: StatusCodes.Status502BadGateway);
 
         return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
     }
@@ -152,7 +152,7 @@ public record UpdateTenantRequest(
     string? DefaultLanguage,
     [property: Description("standard or egyptian; null leaves it")] string? ArabicStyle = null,
     [property: Description("light, dark or device; null leaves it")] string? DefaultTheme = null,
-    [property: Description("The kind of place; on a running café only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
+    [property: Description("The kind of place; on a running business only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null,
     [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null);

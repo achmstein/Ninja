@@ -18,7 +18,7 @@ public static class Extensions
 
         builder.AddDefaultAuthentication();
 
-        // Online payments: the café's own provider account, its secrets sealed with the stack's payments key
+        // Online payments: the business's own provider account, its secrets sealed with the stack's payments key
         services.Configure<Ninja.Sales.API.Payments.PaymentsOptions>(builder.Configuration.GetSection("Payments"));
         services.AddSingleton<Ninja.Sales.API.Payments.SecretSealer>();
         services.AddHttpClient<Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));

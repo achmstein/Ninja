@@ -95,7 +95,7 @@ public sealed class DoorScenarios
         Assert.AreEqual("Laila", user["firstName"]!.GetValue<string>());
         Assert.AreEqual("Mansour", user["lastName"]!.GetValue<string>(), "a name with a space is a first and a last");
         Assert.IsTrue(user["enabled"]!.GetValue<bool>());
-        Assert.IsTrue(user["emailVerified"]!.GetValue<bool>(), "a café does not send a customer looking for a verification mail before their coffee");
+        Assert.IsTrue(user["emailVerified"]!.GetValue<bool>(), "a business does not send a customer looking for a verification mail before their coffee");
         Assert.AreEqual("01000000000", Attribute(user, "phoneNumber"));
         Assert.AreEqual("a-good-password", Suite.Keycloak.PasswordsSet[user["id"]!.GetValue<string>()].Single());
         Assert.IsEmpty(Suite.Keycloak.RolesOf(user["id"]!.GetValue<string>()), "a customer carries no staff role");
@@ -208,12 +208,12 @@ public sealed class DoorScenarios
         Assert.AreEqual("Kamel", user["lastName"]!.GetValue<string>());
         Assert.AreEqual("01222222222", Attribute(user, "phoneNumber"), "Keycloak drops what a write leaves out, so the write leaves nothing out");
 
-        // The name the rest of the café knows them by follows: Accounts' suite reads the other end of that event
+        // The name the rest of the business knows them by follows: Accounts' suite reads the other end of that event
 
         var profile = await Suite.Signed(id).GetAsync<MyProfileView>(Suite.Url("/my-profile"));
         Assert.AreEqual("Mostafa Kamel", profile.Name, "their own page says the name they just gave");
         Assert.AreEqual("01222222222", profile.PhoneNumber);
-        Assert.IsTrue(profile.IsProfileComplete, "a name and a number is all a café needs of a customer");
+        Assert.IsTrue(profile.IsProfileComplete, "a name and a number is all a business needs of a customer");
 
         var (aStranger, _) = await Suite.Signed(Guid.NewGuid().ToString()).RefusedAsync(HttpMethod.Post, Suite.Url("/update-name"), new { newName = "Nobody" });
         Assert.AreEqual(HttpStatusCode.NotFound, aStranger, "a token for a login Keycloak does not have changes nothing");
@@ -233,7 +233,7 @@ public sealed class DoorScenarios
 
         await ServiceUnderTest<Program>.EventuallyAsync(
             async () => (await Suite.Till.GetAsync<List<UserView>>(Suite.Url("/users") + "?search=Dina Rashed")).Count > 0,
-            "a customer the café signed up is on the cashier's next search");
+            "a customer the business signed up is on the cashier's next search");
 
         var found = (await Suite.Till.GetAsync<List<UserView>>(Suite.Url("/users") + "?search=Dina Rashed")).First();
         Assert.AreEqual(email, found.Email);
@@ -254,7 +254,7 @@ public sealed class DoorScenarios
             "somebody who is not there is an empty answer");
 
         var (byCustomer, _) = await Suite.Signed("a-customer").RefusedAsync(HttpMethod.Get, Suite.Url("/users"));
-        Assert.AreEqual(HttpStatusCode.Forbidden, byCustomer, "the café's customer list is not a customer's to read");
+        Assert.AreEqual(HttpStatusCode.Forbidden, byCustomer, "the business's customer list is not a customer's to read");
     }
 
     [TestMethod]

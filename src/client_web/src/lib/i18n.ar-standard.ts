@@ -1,4 +1,4 @@
-// Modern Standard Arabic for the dictionary in ./i18n.ts, used when the café speaks Standard Arabic
+// Modern Standard Arabic for the dictionary in ./i18n.ts, used when the business speaks Standard Arabic
 export const arStandard: Record<string, string | Record<string, string>> = {
   all: 'الكل',
   unavailable: 'غير متاح',
@@ -23,7 +23,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   addingToBill: 'تم التأكيد، ويُضاف إلى فاتورتك',
   poweredBy: 'مدعوم من',
   demoCheckoutTitle: 'دفع تجريبي',
-  demoCheckoutNote: 'يجرّب هذا المقهى الدفع أونلاين. لن تُخصم أي مبالغ من بطاقتك.',
+  demoCheckoutNote: 'الدفع أونلاين هنا تجريبي فقط. لن تُخصم أي مبالغ من بطاقتك.',
   demoPay: 'ادفع (تجربة)',
   demoDecline: 'رفض',
   demoBanner: 'دفع تجريبي: لن تُخصم أي مبالغ من بطاقة حقيقية',
@@ -191,7 +191,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaHeldFor: 'محجوزة لك',
   ninjaHoldWalkOver: 'تفضّل بالحضور وأظهر هذه الشاشة عند الكاشير',
   ninjaHoldFor: 'الساعة {time}',
-  ninjaHoldRanOut: 'انتهت مدة الحجز. قد يظل المقهى محتفظًا به لك.',
+  ninjaHoldRanOut: 'انتهت مدة الحجز. قد يظل {name} محتفظًا به لك.',
   ninjaHoldLeft: 'متبقٍ {time} للوصول',
   ninjaRoundCount: { '=1': 'طلب واحد', '=2': 'طلبان', other: '{count} طلبات' },
   ninjaEarlierBills: 'الفواتير السابقة',

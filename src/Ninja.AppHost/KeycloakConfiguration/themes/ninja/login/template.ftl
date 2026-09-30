@@ -1,9 +1,9 @@
 <#import "footer.ftl" as loginFooter>
 <#--
-  The page frame every login-flow template renders into: the café's mark and
+  The page frame every login-flow template renders into: the business's mark and
   name above a shadcn-style card, in the platform's slate palette. One theme
-  serves every realm: the realm's display name is the café's name and its
-  HTML display name is the café's mark (the control plane points it at the
+  serves every realm: the realm's display name is the business's name and its
+  HTML display name is the business's mark (the control plane points it at the
   tenant's icon). Light or dark
   follows the app the user came from (the `theme` query parameter on the
   redirect, remembered in a cookie for the later pages of the flow), then
@@ -23,7 +23,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>${msg("loginTitle",(realm.displayName!'')?trim)}</title>
     <#-- The platform's N tile (the N of its display face, traced: a favicon
-         cannot load a web font); the café's own icon is what the header shows -->
+         cannot load a web font); the business's own icon is what the header shows -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Cpath d='M49.03 14.8Q49.03 14.8 49.03 15.77Q49.03 16.74 48.99 18.44Q48.96 20.13 48.88 22.42Q48.81 24.72 48.68 27.38Q48.55 30.05 48.35 32.93Q48.16 35.82 47.85 38.69Q47.55 41.56 47.16 44.29Q46.78 47.02 46.24 49.35L41.61 49.54Q40.4 47.72 38.9 45.42Q37.39 43.12 35.76 40.58Q34.12 38.05 32.44 35.42Q30.75 32.79 29.2 30.32Q25.54 24.52 21.66 18.36Q21.54 24.96 21.49 30.92Q21.47 33.47 21.47 36.11Q21.47 38.75 21.48 41.2Q21.49 43.65 21.55 45.76Q21.61 47.87 21.71 49.35L16.55 50Q16.16 47.96 15.89 45.37Q15.62 42.78 15.44 39.92Q15.26 37.05 15.16 34.08Q15.07 31.12 15.02 28.3Q14.92 21.73 15.02 14.75L24.69 14L42.02 44.08Q42.29 40.93 42.34 37.31Q42.39 33.68 42.25 29.83Q42.12 25.98 41.81 22.02Q41.49 18.07 41.03 14.24Z' fill='%23fafafa'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
             <link href="${url.resourcesPath}/${style}?v=${properties.themeVersion!'1'}" rel="stylesheet">
         </#list>
     </#if>
-    <#-- The café's colours, after the theme's own so they win: from the café's
+    <#-- The business's colours, after the theme's own so they win: from the business's
          API host, which the header's mark already comes from (the control plane
          stamps the mark as <img src="{api}/api/tenant/icons/…">). A realm with
          no such mark (the platform's, the hub) keeps the platform's palette. -->
@@ -109,12 +109,12 @@
 <body class="${properties.kcBodyClass!} ${bodyClass}<#if appLook> nj-app</#if>" data-page-id="login-${pageId}">
 <main class="nj-page">
     <#-- The platform's own realm gets the platform's brand: its N tile and
-         its lowercase wordmark in the display face. Every café realm keeps
+         its lowercase wordmark in the display face. Every business realm keeps
          its own mark and name, in the UI face. -->
     <#assign platformRealm = (realm.name == 'ninja')>
     <header class="nj-brand<#if platformRealm> nj-brand-platform</#if>">
-        <#-- In the app's look, the café's own drawing alone at the head of the page, as its app's
-             header shows it: the wordmark or the logo, from the café's sign-in sheet (--nj-logo,
+        <#-- In the app's look, the business's own drawing alone at the head of the page, as its app's
+             header shows it: the wordmark or the logo, from the business's sign-in sheet (--nj-logo,
              /api/tenant/login.css), else its icon. No name beside it: the drawing is the name -->
         <#if appLook && brandApi?? && (brandApi?starts_with('https://') || brandApi?starts_with('http://'))>
             <span class="nj-logo" role="img" aria-label="${(realm.displayName!'')?trim}" style="--nj-icon: url('${brandApi}/api/tenant/icons/icon-192.png')"></span>

@@ -53,14 +53,14 @@ describe('a place with a clock', () => {
   const room: PlaceViewModel = { id: 1, kind: 1, isTimed: true, tariff }
   const table: PlaceViewModel = { id: 2, kind: PLACE_TABLE, isTimed: false }
 
-  it('is timed when it has a tariff and the café bills time', () => {
+  it('is timed when it has a tariff and the business bills time', () => {
     expect(isTimed(room)).toBe(true)
     expect(isTimed(room, true)).toBe(true)
     expect(isTimed(table)).toBe(false)
   })
 
   it('is a plain table when the clock is not in the plan, tariff or no tariff', () => {
-    // A café that dropped to a smaller plan keeps the rates it set; the
+    // A business that dropped to a smaller plan keeps the rates it set; the
     // floor must open the room as a table, or the till asks Spaces for a
     // stay it will refuse
     expect(isTimed(room, false)).toBe(false)

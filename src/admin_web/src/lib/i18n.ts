@@ -14,7 +14,7 @@ type LocalizedTextLike = {
 const webExtras = {
   // The tenant's brand (Administration → Brand)
   brandNav: { en: "Brand", ar: "الهوية" },
-  // Online payments (Administration → Payments): the café's own Paymob account
+  // Online payments (Administration → Payments): the business's own Paymob account
   onlinePaymentsNav: { en: "Payments", ar: "المدفوعات" },
   paySettingsDescription: { en: "Guests pay or split their bill from their phone, straight into your own Paymob account.", ar: "يدفع الضيوف فاتورتهم أو يقسمونها من موبايلاتهم، مباشرةً إلى حساب Paymob الخاص بك." },
   payReady: { en: "Ready", ar: "جاهز" },
@@ -38,9 +38,9 @@ const webExtras = {
   payCallbackHint: { en: "Paste this into Paymob → Developers → Payment Integrations → Transaction processed callback.", ar: "الصق هذا الرابط في Paymob ← Developers ← Payment Integrations ← Transaction processed callback." },
   payCallbackCopied: { en: "Callback URL copied", ar: "تم نسخ رابط الإشعار" },
   payFee: { en: "Payment fee", ar: "رسوم الدفع" },
-  payFeeCafe: { en: "Café absorbs it", ar: "يتحملها المقهى" },
+  payFeeBusiness: { en: "Business absorbs it", ar: "يتحملها النشاط" },
   payFeeGuest: { en: "Guest pays it", ar: "يدفعها الضيف" },
-  payFeeCafeHint: { en: "Guests pay their share and nothing more; the fee comes out of what you receive.", ar: "يدفع الضيف نصيبه فقط، وتُخصم الرسوم مما تستلمه." },
+  payFeeBusinessHint: { en: "Guests pay their share and nothing more; the fee comes out of what you receive.", ar: "يدفع الضيف نصيبه فقط، وتُخصم الرسوم مما تستلمه." },
   payFeeGuestHint: { en: "The fee is added on top of each guest's share, shown before they pay.", ar: "تُضاف الرسوم على نصيب كل ضيف، وتظهر له قبل الدفع." },
   payFeePercent: { en: "Percent (%)", ar: "النسبة (%)" },
   payFeeFixed: { en: "Fixed amount", ar: "مبلغ ثابت" },
@@ -52,17 +52,17 @@ const webExtras = {
   paySettingsSaved: { en: "Payment settings saved", ar: "تم حفظ إعدادات الدفع" },
   paySettingsSaveFailed: { en: "Couldn't save the payment settings", ar: "تعذّر حفظ إعدادات الدفع" },
   payUpgradeTitle: { en: "Your system needs an upgrade first", ar: "يجب تحديث النظام أولًا" },
-  payUpgradeDescription: { en: "Your café's system must be upgraded before payment keys can be saved. The rest of the settings can be changed now.", ar: "يجب تحديث نظام المقهى قبل حفظ مفاتيح الدفع. باقي الإعدادات يمكن تعديلها الآن." },
+  payUpgradeDescription: { en: "Your business's system must be upgraded before payment keys can be saved. The rest of the settings can be changed now.", ar: "يجب تحديث نظام النشاط قبل حفظ مفاتيح الدفع. باقي الإعدادات يمكن تعديلها الآن." },
   payProblemCurrency: { en: "Enter a three-letter currency code, like EGP", ar: "أدخل رمز عملة من ثلاثة أحرف، مثل EGP" },
   payProblemIntegrationId: { en: "Integration IDs are whole numbers", ar: "أرقام التكامل أعداد صحيحة" },
   payProblemFee: { en: "The fee must be 0 or more, and the percent at most 100", ar: "يجب أن تكون الرسوم صفرًا أو أكثر، والنسبة 100 على الأكثر" },
-  // A demo café without its own Paymob account: guests' payments are pretend until the keys are in
+  // A demo business without its own Paymob account: guests' payments are pretend until the keys are in
   payDemoBadge: { en: "Demo payments", ar: "مدفوعات تجريبية" },
   payDemoNotice: { en: "Demo mode: guests can try paying online with pretend payments. Enter your Paymob account to take real payments.", ar: "وضع التجربة: يمكن للضيوف تجربة الدفع أونلاين بمدفوعات وهمية. أدخل حساب Paymob الخاص بك لاستقبال مدفوعات حقيقية." },
-  // The owner's AI assistant (Administration → AI assistant): the café's MCP server in Claude or ChatGPT
+  // The owner's AI assistant (Administration → AI assistant): the business's MCP server in Claude or ChatGPT
   assistantNav: { en: "AI assistant", ar: "المساعد الذكي" },
-  assistantDescription: { en: "Ask Claude or ChatGPT about your café in your own words: sales, profit, stock, staff. It reads your numbers live and changes something only when you confirm.", ar: "اسأل Claude أو ChatGPT عن مقهاك بكلامك: المبيعات والأرباح والمخزون والموظفين. يقرأ أرقامك مباشرةً، ولا يغيّر شيئًا إلا بعد تأكيدك." },
-  assistantAddressTitle: { en: "Your café's connector address", ar: "عنوان الربط الخاص بمقهاك" },
+  assistantDescription: { en: "Ask Claude or ChatGPT about your business in your own words: sales, profit, stock, staff. It reads your numbers live and changes something only when you confirm.", ar: "اسأل Claude أو ChatGPT عن نشاطك بكلامك: المبيعات والأرباح والمخزون والموظفين. يقرأ أرقامك مباشرةً، ولا يغيّر شيئًا إلا بعد تأكيدك." },
+  assistantAddressTitle: { en: "Your business's connector address", ar: "عنوان الربط الخاص بنشاطك" },
   assistantAddressHint: { en: "Add it once in Claude or ChatGPT and sign in with your owner account. That's all the setup there is.", ar: "أضِفه مرة واحدة في Claude أو ChatGPT وسجّل الدخول بحساب المالك. هذا كل الإعداد المطلوب." },
   assistantCommandCopied: { en: "Command copied", ar: "تم نسخ الأمر" },
   assistantPromptCopied: { en: "Question copied: paste it into your chat", ar: "تم نسخ السؤال: الصقه في المحادثة" },
@@ -83,7 +83,7 @@ const webExtras = {
   assistantClaudeCode1: { en: "Run this once in a terminal:", ar: "شغّل هذا الأمر مرة واحدة في الطرفية:" },
   assistantClaudeCode2: { en: "Start Claude Code, type /mcp, pick ninja and choose Authenticate.", ar: "افتح Claude Code، واكتب ‎/mcp‎، واختر ninja ثم Authenticate." },
   assistantClaudeCode3: { en: "Sign in with your ninja owner account in the browser window that opens.", ar: "سجّل الدخول بحساب المالك في ninja في نافذة المتصفح التي تُفتح." },
-  assistantClaudeCode4: { en: "Back in Claude Code, ask about your café.", ar: "ارجع إلى Claude Code واسأل عن مقهاك." },
+  assistantClaudeCode4: { en: "Back in Claude Code, ask about your business.", ar: "ارجع إلى Claude Code واسأل عن نشاطك." },
   assistantChatGpt1: { en: "On chatgpt.com, open Settings → Connectors and turn on Developer mode under Advanced. Your plan must allow custom connectors.", ar: "على chatgpt.com، افتح Settings ← Connectors وفعّل Developer mode من Advanced. يجب أن تسمح باقتك بالموصلات المخصصة." },
   assistantChatGpt2: { en: "Choose Create, name it “{name}”, paste the address and pick OAuth for authentication:", ar: "اختر Create، وسمّه «{name}»، والصق العنوان واختر OAuth للمصادقة:" },
   assistantChatGpt3: { en: "Sign in with your ninja owner account when asked, and allow access.", ar: "سجّل الدخول بحساب المالك في ninja عند الطلب، ثم اسمح بالوصول." },
@@ -106,10 +106,10 @@ const webExtras = {
   assistantTroubleOwnerQ: { en: "The sign-in says you're not allowed", ar: "تسجيل الدخول يقول إنه غير مسموح لك" },
   assistantTroubleOwnerA: { en: "Only the owner's account can connect. Sign in with the account that has the Owner role, not a manager's or a cashier's.", ar: "لا يمكن الربط إلا بحساب المالك. سجّل الدخول بالحساب الذي له دور المالك، وليس بحساب مدير أو كاشير." },
   assistantTroubleReachQ: { en: "The connector can't reach the address", ar: "الموصل لا يستطيع الوصول إلى العنوان" },
-  assistantTroubleReachA: { en: "Check the address was pasted whole, ending in /mcp, and that your café's system is running: if this admin page loads, it is. Then try again in a minute.", ar: "تأكد أن العنوان لُصق كاملًا وينتهي بـ ‎/mcp‎، وأن نظام مقهاك يعمل: إذا كانت لوحة الإدارة هذه تفتح فهو يعمل. ثم حاول مرة أخرى بعد دقيقة." },
+  assistantTroubleReachA: { en: "Check the address was pasted whole, ending in /mcp, and that your business's system is running: if this admin page loads, it is. Then try again in a minute.", ar: "تأكد أن العنوان لُصق كاملًا وينتهي بـ ‎/mcp‎، وأن نظام نشاطك يعمل: إذا كانت لوحة الإدارة هذه تفتح فهو يعمل. ثم حاول مرة أخرى بعد دقيقة." },
   assistantTroubleChatGptQ: { en: "ChatGPT doesn't offer custom connectors", ar: "ChatGPT لا يعرض الموصلات المخصصة" },
   assistantTroubleChatGptA: { en: "Custom connectors need Developer mode, and not every ChatGPT plan has it. Check your plan's settings, or use Claude instead.", ar: "الموصلات المخصصة تحتاج Developer mode، وليست كل باقات ChatGPT تتيحه. راجع إعدادات باقتك، أو استخدم Claude بدلًا منه." },
-  // The assistant's personality: how it speaks, from the café's brand
+  // The assistant's personality: how it speaks, from the business's brand
   assistantPersonalityTitle: { en: "Personality", ar: "الشخصية" },
   assistantPersonalityHint: { en: "How your assistant speaks to you. Leave anything as it is to keep the default.", ar: "طريقة حديث المساعد معك. اترك أي خيار كما هو للإبقاء على الإعداد الافتراضي." },
   assistantTone: { en: "Tone", ar: "أسلوب الإجابة" },
@@ -124,7 +124,7 @@ const webExtras = {
   assistantLanguageArEg: { en: "Egyptian Arabic", ar: "العامية المصرية" },
   assistantLanguageAr: { en: "Modern Standard Arabic", ar: "العربية الفصحى" },
   assistantNotes: { en: "Notes for your assistant", ar: "ملاحظات للمساعد" },
-  assistantNotesHint: { en: "Anything it should know about your café. For example: “We call the terrace tables T1–T4”, “Flag any discount over 20%”.", ar: "أي شيء يجب أن يعرفه عن مقهاك. مثلًا: «نسمّي طاولات التراس T1–T4»، «نبّهني إلى أي خصم يزيد على 20٪»." },
+  assistantNotesHint: { en: "Anything it should know about your business. For example: “We call the terrace tables T1–T4”, “Flag any discount over 20%”.", ar: "أي شيء يجب أن يعرفه عن نشاطك. مثلًا: «نسمّي طاولات التراس T1–T4»، «نبّهني إلى أي خصم يزيد على 20٪»." },
   assistantPreview: { en: "It will introduce itself as Ninja and answer {tone}, {manner}, {language}.", ar: "سيقدّم نفسه باسم Ninja ويجيب {tone}، {manner}، {language}." },
   assistantPreviewBrief: { en: "briefly", ar: "باختصار" },
   assistantPreviewDetailed: { en: "in detail", ar: "بالتفصيل" },
@@ -157,7 +157,7 @@ const webExtras = {
   assistantRoutineCopied: { en: "Request copied: paste it into your chat", ar: "تم نسخ الطلب: الصقه في المحادثة" },
   // The native apps (Administration → Apps)
   appsNav: { en: "Apps", ar: "التطبيقات" },
-  appsDescription: { en: "The till and the kitchen display for Android tablets. One app for every café: install it, then connect it to yours with the code below.", ar: "الكاشير وشاشة المطبخ لأجهزة أندرويد اللوحية. تطبيق واحد لكل المقاهي: ثبّته، ثم اربطه بمقهاك باستخدام الرمز أدناه." },
+  appsDescription: { en: "The till and the kitchen display for Android tablets. One app for every business: install it, then connect it to yours with the code below.", ar: "الكاشير وشاشة المطبخ لأجهزة أندرويد اللوحية. تطبيق واحد لكل الأنشطة: ثبّته، ثم اربطه بنشاطك باستخدام الرمز أدناه." },
   appsPosTitle: { en: "ninja POS", ar: "ninja POS" },
   appsPosAbout: { en: "The till: the floor, tickets, payments and shifts, on a landscape tablet by the counter.", ar: "الكاشير: الصالة والتذاكر والدفع والورديات، على جهاز لوحي أفقي بجوار الكاونتر." },
   appsKdsTitle: { en: "ninja KDS", ar: "ninja KDS" },
@@ -167,7 +167,7 @@ const webExtras = {
   appsNotPublishedHere: { en: "Downloads are not published in this environment", ar: "التنزيل غير متاح في هذه البيئة" },
   appsOpenWeb: { en: "Open the web version", ar: "افتح نسخة الويب" },
   appsConnectTitle: { en: "Connect a tablet", ar: "اربط جهازًا لوحيًا" },
-  appsConnectHint: { en: "When the app first opens it asks which café it belongs to. Scan this code from the app, or type the address.", ar: "عند فتح التطبيق أول مرة يسأل عن المقهى الذي يتبعه. امسح هذا الرمز من التطبيق، أو اكتب العنوان." },
+  appsConnectHint: { en: "When the app first opens it asks which business it belongs to. Scan this code from the app, or type the address.", ar: "عند فتح التطبيق أول مرة يسأل عن النشاط الذي يتبعه. امسح هذا الرمز من التطبيق، أو اكتب العنوان." },
   appsAddressCopied: { en: "Address copied", ar: "تم نسخ العنوان" },
   appsIosHint: { en: "iPhones and iPads use the web version, added to the home screen.", ar: "يستخدم iPhone وiPad نسخة الويب، مضافةً إلى الشاشة الرئيسية." },
   copy: { en: "Copy", ar: "نسخ" },
@@ -403,7 +403,7 @@ const webExtras = {
   staff: { en: "Staff", ar: "الموظفون" },
 
   // Page subtitles
-  // Café tables (seating customers order from - no sessions, no billing)
+  // Tables (seating customers order from - no sessions, no billing)
   tables: { en: "Tables", ar: "الطاولات" },
   printQrSheet: { en: "Print QR sheet", ar: "اطبع ورقة الرموز" },
   qrSheetSubtitle: { en: "Cut along the cards and put one on each table.", ar: "قُصّ البطاقات وضع واحدة على كل طاولة." },
@@ -922,8 +922,8 @@ const webExtras = {
   talabatDescription: { en: "Sell on Talabat: which branches take its orders, and the menu Talabat shows", ar: "البيع على طلبات: أي الفروع تستقبل طلباتها، والقائمة التي تعرضها طلبات" },
   talabatConnected: { en: "Connected", ar: "متصل" },
   talabatNotConnected: { en: "Not connected", ar: "غير متصل" },
-  talabatNotConnectedTitle: { en: "Talabat isn't set up for this café yet", ar: "طلبات غير مُعدّة لهذا المقهى بعد" },
-  talabatNotConnectedBody: { en: "Ninja's Talabat connection isn't set up for this café yet — contact Ninja. You can still choose your branches; the menu goes once it is.", ar: "اتصال نينجا بطلبات غير مُعدّ لهذا المقهى بعد — تواصل مع نينجا. يمكنك اختيار فروعك الآن، وتُرسل القائمة فور الإعداد." },
+  talabatNotConnectedTitle: { en: "Talabat isn't set up for this business yet", ar: "طلبات غير مُعدّة لهذا النشاط بعد" },
+  talabatNotConnectedBody: { en: "Ninja's Talabat connection isn't set up for this business yet — contact Ninja. You can still choose your branches; the menu goes once it is.", ar: "اتصال نينجا بطلبات غير مُعدّ لهذا النشاط بعد — تواصل مع نينجا. يمكنك اختيار فروعك الآن، وتُرسل القائمة فور الإعداد." },
   talabatBranches: { en: "Branches on Talabat", ar: "الفروع على طلبات" },
   talabatBranchesHint: { en: "A branch you turn on gets its menu sent to Talabat.", ar: "الفرع الذي تفعّله تُرسل قائمته إلى طلبات." },
   talabatSyncOpenClose: { en: "Close on Talabat when a branch is paused", ar: "إغلاق الفرع على طلبات عند إيقافه هنا" },
@@ -1131,7 +1131,7 @@ const webExtras = {
   partnerSaved: { en: "Partner saved", ar: "تم حفظ الشريك" },
   noPartners: { en: "No partners set for this branch", ar: "لا يوجد شركاء مسجلون لهذا الفرع" },
   partnerBranches: { en: "Partner in", ar: "شريك في" },
-  partnerBalance: { en: "In the café", ar: "رصيده في المقهى" },
+  partnerBalance: { en: "In the business", ar: "رصيده في النشاط" },
   partnerDrewNet: { en: "Drew", ar: "مسحوباته" },
   partnerDrawing: { en: "Drawing", ar: "سحب" },
   partnerContribution: { en: "Contribution", ar: "إيداع" },
@@ -1144,7 +1144,7 @@ const webExtras = {
   labourCost: { en: "Wages", ar: "الأجور" },
   operatingExpenses: { en: "Expenses", ar: "المصروفات" },
   primeCost: { en: "Prime cost", ar: "التكلفة الأساسية" },
-  primeCostHint: { en: "goods + wages ÷ sales; a healthy café stays near 60%", ar: "البضاعة + الأجور ÷ المبيعات؛ المقهى السليم يبقى في حدود 60%" },
+  primeCostHint: { en: "goods + wages ÷ sales; a healthy business stays near 60%", ar: "البضاعة + الأجور ÷ المبيعات؛ النشاط السليم يبقى في حدود 60%" },
   vatNote: { en: "Sales include {amount} VAT collected for the tax authority.", ar: "المبيعات تشمل {amount} ضريبة قيمة مضافة محصّلة لمصلحة الضرائب." },
   month: { en: "Month", ar: "الشهر" },
   monthMoney: { en: "{month} in money", ar: "أموال {month}" },

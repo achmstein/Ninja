@@ -400,7 +400,7 @@ export function MenuManagement() {
             ))}
           </div>
         ) : items.length === 0 && !query ? (
-          // A new menu: the fastest way in is the menu the café already has
+          // A new menu: the fastest way in is the menu the business already has
           <EmptyState
             icon={ScanLine}
             title={t('setUpMenuTitle')}

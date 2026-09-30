@@ -39,7 +39,7 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
     const m = minutes % 60
     return h > 0 ? `${t('hoursShort', { count: h })} ${t('minutesShort', { count: m })}` : t('minutesShort', { count: m })
   }
-  // The base rate wears the café's colour, which the dark slab is made of: on it, the slab's own light instead
+  // The base rate wears the business's colour, which the dark slab is made of: on it, the slab's own light instead
   const color = (code: string | undefined) => {
     const c = optionColor(stay.tariff, code)
     return active && c.dot === 'bg-primary' ? { dot: 'bg-background', text: '', chip: 'bg-muted' } : c

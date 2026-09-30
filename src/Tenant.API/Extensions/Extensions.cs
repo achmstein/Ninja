@@ -34,7 +34,7 @@ public static class Extensions
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(TenantIntegrationEventContext.Default));
 
-        // The café's own settings once at every start, after the migration
+        // The business's own settings once at every start, after the migration
         // above has made sure the tenant row is there
         builder.Services.AddHostedService<TenantSettingsAnnouncer>();
     }

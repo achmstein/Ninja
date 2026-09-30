@@ -11,9 +11,9 @@ import '../../bills/services/bills_service.dart';
 import '../services/pay_service.dart';
 import 'pay_sheet.dart';
 
-/// Under an open bill, when the café takes payments at the table: what the
+/// Under an open bill, when the business takes payments at the table: what the
 /// table has paid online so far and what is left, and the two ways to pay
-/// it from the phone. Nothing at all when the café does not.
+/// it from the phone. Nothing at all when the business does not.
 class PayBillBar extends ConsumerWidget {
   final int ticketId;
 

@@ -1,6 +1,6 @@
 # Chillax Inventory — Design & Plan
 
-**Goal:** know what is on the shelf, get warned before it runs out, take items off the menu when it does, and see where stock goes: easy for a café to run day to day, powerful enough to price a latte's ingredients.
+**Goal:** know what is on the shelf, get warned before it runs out, take items off the menu when it does, and see where stock goes: easy for a business to run day to day, powerful enough to price a latte's ingredients.
 
 **Status:** decided and built 2026-09-12 (Phases 1–3). 2026-09-15: measured against the field (section 7); Phase 4 (cost control) built, Phases 5–6 planned.
 
@@ -28,7 +28,7 @@ A **stock item** is anything the storeroom counts: an ingredient (milk, beans, c
 
 ### D3 — Stock leaves at confirmation and never comes back by itself
 
-Deduction happens on `OrderStatusChangedToConfirmed` (which offline POS replays also raise). Voids and refunds never restock: a café cannot know whether the drink was made. Staff post a "Return to stock" adjustment when an unopened item comes back. Cancellation before confirmation needs no compensation because nothing was deducted. No Sales change was needed.
+Deduction happens on `OrderStatusChangedToConfirmed` (which offline POS replays also raise). Voids and refunds never restock: a business cannot know whether the drink was made. Staff post a "Return to stock" adjustment when an unopened item comes back. Cancellation before confirmation needs no compensation because nothing was deducted. No Sales change was needed.
 
 ### D4 — Automatic sold-out, opt-in per stock item
 
@@ -87,7 +87,7 @@ Known, accepted: an offline replay that syncs *after* a count double-deducts (th
 
 ## 7. Where the field is ahead, and the phases that close it *(owner, 2026-09-15)*
 
-Measured against the restaurant inventory tools (MarketMan, xtraCHEF/Toast, Restaurant365, Lightspeed, Apicbase) and the general ones the café used before (Loyverse, Odoo). What is already here — event-driven depletion with idempotency and a replay guard, **option-level** depletion and per-option 86 (most tools only 86 whole items), transfers at cost, a moving average that feeds the P&L by itself, a full ledger, AI receipt reading — is not rebuilt. What they have and Phases 1–3 do not:
+Measured against the restaurant inventory tools (MarketMan, xtraCHEF/Toast, Restaurant365, Lightspeed, Apicbase) and the general ones the business used before (Loyverse, Odoo). What is already here — event-driven depletion with idempotency and a replay guard, **option-level** depletion and per-option 86 (most tools only 86 whole items), transfers at cost, a moving average that feeds the P&L by itself, a full ledger, AI receipt reading — is not rebuilt. What they have and Phases 1–3 do not:
 
 | Capability | Chillax today | Value for two branches | Phase |
 |---|---|---|---|
@@ -105,7 +105,7 @@ Measured against the restaurant inventory tools (MarketMan, xtraCHEF/Toast, Rest
 | **Period close** — no back-dated movements once the month is closed | None | Medium (accounting hygiene) | 6 |
 | **Purchase orders** — order → send → receive against it, partials, discrepancies | Receive only | Medium; a suggested-order list shared to WhatsApp covers most of it | 6, if the list is not enough |
 | Slow-moving / dead stock | None | Low-medium, trivial | 6 |
-| Expiry / lots (FEFO), barcodes, forecasting, offline counting | None | Low for a café | not planned |
+| Expiry / lots (FEFO), barcodes, forecasting, offline counting | None | Low for a business | not planned |
 
 ### Phase 4 — cost control *(decided 2026-09-15)*
 

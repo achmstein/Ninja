@@ -41,7 +41,7 @@ class NetworkStatus {
 final networkStatus = NetworkStatus();
 
 /// `true` while the backend answers. While it does not, a probe every
-/// quarter minute asks again, so a till that lost the café Wi-Fi notices
+/// quarter minute asks again, so a till that lost the Wi-Fi notices
 /// it is back without anyone tapping anything.
 class OnlineNotifier extends Notifier<bool> {
   static const _probeEvery = Duration(seconds: 15);

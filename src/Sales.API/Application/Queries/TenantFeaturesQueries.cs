@@ -4,7 +4,7 @@ using Ninja.Sales.Infrastructure;
 namespace Ninja.Sales.API.Application.Queries;
 
 /// <summary>
-/// Reads Sales' projection of the café's switches (see
+/// Reads Sales' projection of the business's switches (see
 /// Ninja.Sales.Infrastructure.Projections.TenantFeatures).
 /// </summary>
 public interface ITenantFeaturesQueries

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 namespace Ninja.ServiceDefaults;
 
 /// <summary>
-/// Where this café is, from the locale the control plane stamps beside the
+/// Where this business is, from the locale the control plane stamps beside the
 /// rest of its settings (Tenant__Country). Services run one container per
 /// tenant, so it is read once at startup.
 /// </summary>

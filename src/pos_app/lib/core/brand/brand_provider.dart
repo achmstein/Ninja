@@ -25,7 +25,7 @@ Future<void> initializeBrand() async {
   }
 }
 
-/// Drop the cached brand: the tablet is leaving this café
+/// Drop the cached brand: the tablet is leaving this business
 Future<void> forgetBrand() async {
   _initialBrand = null;
   try {
@@ -65,7 +65,7 @@ class BrandNotifier extends Notifier<TenantBrand> {
   }
 }
 
-/// The café this till runs for. On screen the till is Ninja; the café's
+/// The business this till runs for. On screen the till is Ninja; the business's
 /// name and logo go on the paper it prints, and its switches shape the UI.
 final brandProvider = NotifierProvider<BrandNotifier, TenantBrand>(BrandNotifier.new);
 

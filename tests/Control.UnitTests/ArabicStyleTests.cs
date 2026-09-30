@@ -4,7 +4,7 @@ using Ninja.Control.API.Platform;
 namespace Ninja.Control.UnitTests;
 
 /// <summary>
-/// A cafe speaks one Arabic and everything the platform sends it follows:
+/// A business speaks one Arabic and everything the platform sends it follows:
 /// the owner's mail and the login page. Only the lines that actually read
 /// differently carry a Standard of their own; the rest fall back.
 /// </summary>
@@ -18,7 +18,7 @@ public sealed class ArabicStyleTests
         Mail = { Host = "smtp.test", From = "no-reply@ninja.app", OpsTo = "ops@ninja.app" },
     };
 
-    private static Tenant Cafe(string arabicStyle) => new()
+    private static Tenant Business(string arabicStyle) => new()
     {
         Slug = "blue",
         NameEn = "Blue Bottle",
@@ -33,14 +33,14 @@ public sealed class ArabicStyleTests
 
     /// <summary>
     /// The owner reads the back office, and the back office reads one Arabic.
-    /// The café's own choice is about its customers, so the mail must not move
+    /// The business's own choice is about its customers, so the mail must not move
     /// with it.
     /// </summary>
     [TestMethod]
-    public void The_owners_mail_reads_the_same_whichever_arabic_the_cafe_chose()
+    public void The_owners_mail_reads_the_same_whichever_arabic_the_business_chose()
     {
-        var egyptian = MailTemplates.Welcome(Cafe("egyptian"), Hosts(Cafe("egyptian")), Platform.Mail);
-        var standard = MailTemplates.Welcome(Cafe("standard"), Hosts(Cafe("standard")), Platform.Mail);
+        var egyptian = MailTemplates.Welcome(Business("egyptian"), Hosts(Business("egyptian")), Platform.Mail);
+        var standard = MailTemplates.Welcome(Business("standard"), Hosts(Business("standard")), Platform.Mail);
 
         Assert.AreEqual(standard.Subject, egyptian.Subject);
         Assert.AreEqual(standard.Text, egyptian.Text);
@@ -49,9 +49,9 @@ public sealed class ArabicStyleTests
     }
 
     [TestMethod]
-    public void An_english_cafe_gets_english_mail()
+    public void An_english_business_gets_english_mail()
     {
-        var t = Cafe("standard");
+        var t = Business("standard");
         t.DefaultLanguage = "en";
         var mail = MailTemplates.Welcome(t, Hosts(t), Platform.Mail);
 
@@ -63,7 +63,7 @@ public sealed class ArabicStyleTests
     {
         foreach (var style in new[] { "egyptian", "standard" })
         {
-            var t = Cafe(style);
+            var t = Business(style);
             var subject = MailTemplates.DemoExpiring(t, Hosts(t), 2, Platform.Mail).Subject;
             StringAssert.Contains(subject, "يومان", style);
             Assert.IsFalse(subject.Contains("يومين"), style);

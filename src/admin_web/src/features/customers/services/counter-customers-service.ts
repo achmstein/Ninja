@@ -23,7 +23,7 @@ export function existingCustomerOf(error: unknown): Customer | null {
   return null
 }
 
-/** The claim page on the café's customer host. */
+/** The claim page on the business's customer host. */
 export function claimUrl(customerOrigin: string, token: string): string {
   return `${customerOrigin}/claim?token=${encodeURIComponent(token)}`
 }

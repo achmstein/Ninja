@@ -25,7 +25,7 @@ public class SalesFact : Entity, IAggregateRoot
     /// <summary>What the customer paid (a sale) or got back (a refund).</summary>
     public decimal Amount { get; private set; }
 
-    /// <summary>The VAT inside a sale, when the café charges it; not income.</summary>
+    /// <summary>The VAT inside a sale, when the business charges it; not income.</summary>
     public decimal Vat { get; private set; }
 
     public string Reference { get; private set; } = string.Empty;

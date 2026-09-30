@@ -13,7 +13,7 @@ import { useFeatures } from '@/lib/brand'
 
 /**
  * The places a customer may book: in service, and offering something the
- * café actually sells — a clock while it bills time, a booking while it
+ * business actually sells — a clock while it bills time, a booking while it
  * takes them. A room that kept its rate from a bigger plan is not on the
  * list, because nothing would come of tapping it.
  */
@@ -40,7 +40,7 @@ export function useBookablePlaces() {
 }
 
 /**
- * Where the customer is in the cafe right now (docs/visit-tab.html):
+ * Where the customer is in the business right now (docs/visit-tab.html):
  *
  * - `stay`: a clock runs for them somewhere — always wins
  * - `table`: they scanned a table and no clock runs; the table lives
@@ -94,8 +94,8 @@ export function seatOf(
 }
 
 /**
- * Whether the second tab is there at all: the café books something, and
- * there is something to book. A café on a plan with neither has no tab,
+ * Whether the second tab is there at all: the business books something, and
+ * there is something to book. A business on a plan with neither has no tab,
  * however its places are set up.
  */
 export function visitTabVisible(
@@ -142,7 +142,7 @@ export function useVisitTab(): {
       },
     }
   }
-  // A café with rooms books rooms; a restaurant books tables — same tab, its own icon
+  // A business with rooms books rooms; a restaurant books tables — same tab, its own icon
   return {
     label: t('rooms'),
     icon: hasRooms ? Gamepad2 : CalendarClock,

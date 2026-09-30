@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Ninja.Catalog.API.Talabat;
 
-/// <param name="Connected">Whether the platform has handed this café the relay (Ninja has a Talabat account).</param>
+/// <param name="Connected">Whether the platform has handed this business the relay (Ninja has a Talabat account).</param>
 /// <param name="Pending">Changes still on their way to Talabat.</param>
 /// <param name="Failed">Changes Talabat refused in the last day, newest first.</param>
 public sealed record TalabatStatusView(
@@ -27,7 +27,7 @@ public sealed record TalabatSettingsRequest(int[] BranchIds, bool SyncOpenClose 
 public sealed record TalabatImportResult(string Status, string? Message);
 
 /// <summary>
-/// The café's side of Talabat in its catalog: which branches sell there and
+/// The business's side of Talabat in its catalog: which branches sell there and
 /// how their menus went, sending the menu now, and a look at exactly what
 /// Talabat is sent. The platform uses the push when Talabat asks for a menu.
 /// </summary>
@@ -39,7 +39,7 @@ public static class TalabatApi
 
         api.MapGet("/", GetStatus)
             .WithName("GetTalabat")
-            .WithSummary("Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused")
+            .WithSummary("Talabat for the business: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused")
             .RequireAuthorization("Owner");
 
         api.MapPut("/", SaveSettings)

@@ -11,9 +11,9 @@ import { PaidSoFar, PayWhy } from './pay-progress'
 import { PaySheet, type PayStart } from './pay-sheet'
 
 /**
- * Under an open bill at a table or room, where the café takes payments at
+ * Under an open bill at a table or room, where the business takes payments at
  * the table: paid so far, what is left, and the two ways in — the whole
- * of what is left, or a split. Nothing at all where the café does not
+ * of what is left, or a split. Nothing at all where the business does not
  * offer it, so a guest is never told about a feature they cannot use.
  * It reads on its own as a light card, and tucked under the bill's slab
  * as the slab's lower lip.

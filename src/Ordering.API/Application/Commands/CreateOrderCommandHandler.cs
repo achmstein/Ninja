@@ -3,7 +3,7 @@ namespace Ninja.Ordering.API.Application.Commands;
 using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
-/// Handler for creating cafe orders.
+/// Handler for creating business orders.
 /// </summary>
 public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
 {
@@ -61,7 +61,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units, item.CustomizationsDescription, item.SpecialInstructions, item.OptionIds);
         }
 
-        _logger.LogInformation("Creating Cafe Order - Order: {@Order}", order);
+        _logger.LogInformation("Creating order - Order: {@Order}", order);
 
         _orderRepository.Add(order);
 

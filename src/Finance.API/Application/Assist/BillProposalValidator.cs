@@ -18,7 +18,7 @@ public static class BillProposalValidator
     /// <summary>A bill older than this is probably a misread year.</summary>
     private static readonly TimeSpan OldBill = TimeSpan.FromDays(2 * 365);
 
-    /// <summary>A café's single expense above this is worth a second look.</summary>
+    /// <summary>A business's single expense above this is worth a second look.</summary>
     private const decimal LargeAmount = 1_000_000m;
 
     public static BillProposal Validate(BillExtraction extraction, IReadOnlyList<ExpenseCategoryView> categories, IReadOnlyList<string> vendors, DateOnly today)

@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Which café this tablet serves. One generic build of the app goes to every
-/// café (the platform's download page); the first time it opens, it asks for
-/// the café's address and keeps what it finds here, on the device. From then
+/// Which business this tablet serves. One generic build of the app goes to every
+/// business (the platform's download page); the first time it opens, it asks for
+/// the business's address and keeps what it finds here, on the device. From then
 /// on [AppConfig] reads the stack's host and the realm to sign in against from
 /// this record, the way a build with `API_URL` baked in reads its defines.
 class TenantConnection {
@@ -18,15 +18,15 @@ class TenantConnection {
   /// and the build's own setting stands
   final String? authority;
 
-  /// The café's name at the time of connecting, for the settings line
-  final String cafeName;
+  /// The business's name at the time of connecting, for the settings line
+  final String businessName;
 
-  const TenantConnection({required this.apiUrl, required this.authority, required this.cafeName});
+  const TenantConnection({required this.apiUrl, required this.authority, required this.businessName});
 
   /// The host as the settings line and the login foot show it
   String get host => Uri.tryParse(apiUrl)?.host ?? apiUrl;
 
-  Map<String, dynamic> toJson() => {'apiUrl': apiUrl, 'authority': authority, 'cafeName': cafeName};
+  Map<String, dynamic> toJson() => {'apiUrl': apiUrl, 'authority': authority, 'businessName': businessName};
 
   static TenantConnection? fromJson(Object? json) {
     if (json is! Map<String, dynamic>) return null;
@@ -35,14 +35,15 @@ class TenantConnection {
     return TenantConnection(
       apiUrl: apiUrl,
       authority: json['authority'] as String?,
-      cafeName: json['cafeName'] as String? ?? '',
+      // A device connected before the rename saved it as cafeName
+      businessName: json['businessName'] as String? ?? json['cafeName'] as String? ?? '',
     );
   }
 
   static const _key = 'ninja-connection';
 
   /// The connection this device has, read before the first frame; the
-  /// connect screen sets it, "change café" clears it
+  /// connect screen sets it, "change business" clears it
   static final ValueNotifier<TenantConnection?> current = ValueNotifier(null);
 
   /// Call before runApp()
@@ -69,7 +70,7 @@ class TenantConnection {
   }
 
   /// What the user typed or scanned, as the hosts to try: the address as
-  /// given, and its `api.` host when it was the café's own (`lucaffe.ninja.app`
+  /// given, and its `api.` host when it was the business's own (`lucaffe.ninja.app`
   /// or `admin.lucaffe.ninja.app` both proxy /api, but the gateway's own host
   /// is the one to keep). No scheme means https; localhost and bare IPs are
   /// the dev machine and stay as typed.
@@ -92,7 +93,7 @@ class TenantConnection {
     return [origin, uri.replace(host: apiHost, path: '', query: null, fragment: null).toString().replaceAll(RegExp(r'/+$'), '')];
   }
 
-  /// Find the café at [input]: the first host that answers `/api/tenant` is
+  /// Find the business at [input]: the first host that answers `/api/tenant` is
   /// it. Throws [ConnectException] with the reason when none does.
   static Future<TenantConnection> probe(String input, {Dio? dio}) async {
     final hosts = candidates(input);
@@ -109,7 +110,7 @@ class TenantConnection {
         final response = await client.get<Object?>('$apiUrl/api/tenant');
         final data = response.data;
         if (data is! Map<String, dynamic> || data['name'] is! Map<String, dynamic>) {
-          lastError = const ConnectException(ConnectFailure.notACafe);
+          lastError = const ConnectException(ConnectFailure.notABusiness);
           continue;
         }
         final name = data['name'] as Map<String, dynamic>;
@@ -117,7 +118,7 @@ class TenantConnection {
         return TenantConnection(
           apiUrl: apiUrl,
           authority: auth is Map<String, dynamic> ? auth['authority'] as String? : null,
-          cafeName: (name['en'] as String?)?.trim().isNotEmpty == true
+          businessName: (name['en'] as String?)?.trim().isNotEmpty == true
               ? (name['en'] as String).trim()
               : (name['ar'] as String? ?? '').trim(),
         );
@@ -134,7 +135,7 @@ class TenantConnection {
   }
 }
 
-enum ConnectFailure { invalidAddress, unreachable, notACafe, paused }
+enum ConnectFailure { invalidAddress, unreachable, notABusiness, paused }
 
 class ConnectException implements Exception {
   final ConnectFailure failure;

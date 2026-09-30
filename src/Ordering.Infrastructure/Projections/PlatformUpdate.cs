@@ -1,7 +1,7 @@
 #nullable enable
 namespace Ninja.Ordering.Infrastructure.Projections;
 
-/// <summary>What the café tells the platform about one of its orders.</summary>
+/// <summary>What the business tells the platform about one of its orders.</summary>
 public enum PlatformUpdateKind
 {
     Accepted,

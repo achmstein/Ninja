@@ -30,7 +30,7 @@ export function BranchSwitcher() {
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
-  const cafe = useBrandName()
+  const business = useBrandName()
   const lockup = useBrandLockup()
 
   const handleSelect = (id: number) => {
@@ -41,19 +41,19 @@ export function BranchSwitcher() {
     queryClient.resetQueries()
   }
 
-  // The café's own wordmark or logo when it has one, the mark and name otherwise
+  // The business's own wordmark or logo when it has one, the mark and name otherwise
   const brand = lockup ? (
     <>
-      <BrandLockup lockup={lockup} alt={cafe} />
+      <BrandLockup lockup={lockup} alt={business} />
       {branches.length > 1 && <span className='text-muted-foreground truncate text-sm'>{label}</span>}
     </>
   ) : (
     <>
       <BrandMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{cafe || label}</span>
-        {/* One branch: the café is the place, and its branch says nothing more */}
-        {cafe && branches.length > 1 && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
+        <span className='truncate font-semibold'>{business || label}</span>
+        {/* One branch: the business is the place, and its branch says nothing more */}
+        {business && branches.length > 1 && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
       </div>
     </>
   )

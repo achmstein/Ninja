@@ -4,7 +4,7 @@ using Ninja.Finance.Infrastructure.Idempotency;
 namespace Ninja.Finance.API.Application.Commands;
 
 /// <summary>
-/// A command together with the client's request id. A till on café Wi-Fi
+/// A command together with the client's request id. A till on business Wi-Fi
 /// retries; the id is what keeps a retried open-tab from becoming two tabs
 /// and a retried refund from becoming two credit notes.
 /// </summary>

@@ -3,7 +3,7 @@ using Ninja.Tenant.API.Services;
 
 namespace Ninja.Tenant.UnitTests;
 
-/// <summary>The café's colours for its sign-in pages.</summary>
+/// <summary>The business's colours for its sign-in pages.</summary>
 [TestClass]
 public sealed class LoginCssTests
 {
@@ -19,7 +19,7 @@ public sealed class LoginCssTests
     }
 
     [TestMethod]
-    public void The_dark_scheme_takes_its_own_seed_when_the_cafe_set_one()
+    public void The_dark_scheme_takes_its_own_seed_when_the_business_set_one()
     {
         var tenant = new API.Model.Tenant { PrimaryColor = "#0055ff", Theme = new TenantTheme { Dark = new TenantThemeDark { Primary = "#88aaff" } } };
         var css = LoginCss.For(tenant, Api);
@@ -42,7 +42,7 @@ public sealed class LoginCssTests
     }
 
     [TestMethod]
-    public void The_cafes_fonts_are_loaded_first_and_named_for_the_pages()
+    public void The_business_fonts_are_loaded_first_and_named_for_the_pages()
     {
         var css = LoginCss.For(new API.Model.Tenant { PrimaryColor = "#0055ff", Theme = new TenantTheme { FontLatin = "Satoshi", FontArabic = "Readex Pro" } }, Api);
         Assert.IsTrue(css.StartsWith("@import url('https://api.fontshare.com/v2/css?f[]=satoshi", StringComparison.Ordinal));
@@ -91,14 +91,14 @@ public sealed class LoginCssTests
         var tenant = new API.Model.Tenant { Images = new() { [TenantImageSlots.Logo] = new TenantImage { Version = 1, Width = 512, Height = 512 } } };
         // Only the origin of the API's address, whatever follows it
         StringAssert.Contains(LoginCss.Logo(tenant, "http://localhost:5000/some/path?x=1"), "url('http://localhost:5000/api/tenant/images/logo?v=1')");
-        // No host to address it on (a path alone would be asked of Keycloak's): the page keeps the café's icon
+        // No host to address it on (a path alone would be asked of Keycloak's): the page keeps the business's icon
         Assert.AreEqual("", LoginCss.Logo(tenant, null));
         Assert.AreEqual("", LoginCss.Logo(tenant, "/api"));
         Assert.AreEqual("", LoginCss.Logo(tenant, "javascript:alert(1)"));
     }
 
     [TestMethod]
-    public void A_font_off_the_cafes_lists_never_reaches_the_sheet()
+    public void A_font_off_the_business_lists_never_reaches_the_sheet()
     {
         var css = LoginCss.For(new API.Model.Tenant { Theme = new TenantTheme { FontLatin = "x'); } body { display:none" } }, Api);
         Assert.IsFalse(css.Contains("@import"));

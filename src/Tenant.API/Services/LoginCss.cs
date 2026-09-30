@@ -4,12 +4,12 @@ using System.Text.RegularExpressions;
 namespace Ninja.Tenant.API.Services;
 
 /// <summary>
-/// The café's colours and fonts for its sign-in pages. One Keycloak theme
-/// serves every café, in the platform's palette; the theme loads this beside
+/// The business's colours and fonts for its sign-in pages. One Keycloak theme
+/// serves every business, in the platform's palette; the theme loads this beside
 /// its own stylesheet, from the API host its header mark already comes from,
-/// so the buttons and the focus ring wear the café's colour as its apps do,
+/// so the buttons and the focus ring wear the business's colour as its apps do,
 /// and the customer's pages (drawn as the app) its fonts. No colours for a
-/// café that keeps the neutral palette; no fonts for one that chose none.
+/// business that keeps the neutral palette; no fonts for one that chose none.
 /// </summary>
 public static partial class LoginCss
 {
@@ -17,15 +17,15 @@ public static partial class LoginCss
     public static string For(Model.Tenant tenant, string? apiUrl) => Fonts(tenant) + Colours(tenant) + Logo(tenant, apiUrl);
 
     /// <summary>
-    /// The café's own drawing at the head of the customer's pages, picked as the app's header picks
+    /// The business's own drawing at the head of the customer's pages, picked as the app's header picks
     /// it: the wide wordmark for the page's language and scheme (dark to light, Arabic to English),
     /// else the logo (the dark one on a dark page). As --nj-logo with its shape and size, per
     /// language and scheme; a combination with nothing uploaded unsets it, and the page shows the
-    /// café's icon instead. Nothing at all when the café uploaded no image.
+    /// business's icon instead. Nothing at all when the business uploaded no image.
     /// The address is absolute, on the API's host: a url() in a custom property is resolved against
     /// the sheet that uses it (the theme's own, on Keycloak's host), so a path alone asked Keycloak for
     /// the image and the page showed nothing. With no known host there is no logo, and the page keeps
-    /// the café's icon, which the theme addresses on the API's host itself.
+    /// the business's icon, which the theme addresses on the API's host itself.
     /// </summary>
     public static string Logo(Model.Tenant tenant, string? apiUrl)
     {
@@ -39,7 +39,7 @@ public static partial class LoginCss
         };
         if (variants.All(v => v.Pick is null)) return "";
 
-        var css = new System.Text.StringBuilder("/* The café's logo on its customer's pages, as its app's header shows it */\n");
+        var css = new System.Text.StringBuilder("/* The business's logo on its customer's pages, as its app's header shows it */\n");
         // Each later selector is at least as specific as the ones before it, so the last that matches wins
         foreach (var (selector, pick) in variants)
         {
@@ -88,7 +88,7 @@ public static partial class LoginCss
     }
 
     /// <summary>
-    /// The café's chosen families (only names from its lists reach this sheet), loaded from where
+    /// The business's chosen families (only names from its lists reach this sheet), loaded from where
     /// each is served, as --font-latin / --font-arabic for the customer's pages; nothing when it
     /// chose none, the theme falling back to the app's own
     /// </summary>
@@ -122,7 +122,7 @@ public static partial class LoginCss
         if (light is null) return "/* The neutral palette: nothing to change */\n";
         var dark = Hex(tenant.Theme?.Dark?.Primary) ?? light;
         return $$"""
-            /* The café's colours on its sign-in pages (only #rrggbb values reach this sheet) */
+            /* The business's colours on its sign-in pages (only #rrggbb values reach this sheet) */
             :root {
             {{Tokens(light)}}}
             :root[data-theme='dark'] {

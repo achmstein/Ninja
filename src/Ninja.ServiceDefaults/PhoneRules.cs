@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Ninja.ServiceDefaults;
 
 /// <summary>
-/// What a phone number looks like where the café is. One rule, read by
+/// What a phone number looks like where the business is. One rule, read by
 /// everything that checks a number: the realm's user profile (stamped by
 /// the control plane), the order a guest places, and the apps, which are
 /// handed the pattern with the rest of the tenant's locale rather than
@@ -20,7 +20,7 @@ public static class PhoneRules
         _ => (@"^\+?[0-9]{7,15}$", "+xxxxxxxxxxx"),
     };
 
-    /// <summary>Whether this is a number a café in that country would recognise.</summary>
+    /// <summary>Whether this is a number a business in that country would recognise.</summary>
     public static bool IsValid(string? phone, string? country) =>
         !string.IsNullOrWhiteSpace(phone) &&
         Regex.IsMatch(phone.Trim(), For(country).Pattern, RegexOptions.None, TimeSpan.FromSeconds(1));

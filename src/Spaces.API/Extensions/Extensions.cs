@@ -65,7 +65,7 @@ public static class Extensions
             // Tenant.API's flags, projected locally: a branch with reservations
             // paused refuses customer reservations without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
-            // The café's switches, projected locally: a place is only given a rate or opened to
+            // The business's switches, projected locally: a place is only given a rate or opened to
             // bookings while the module is on, whatever the request says
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             // Sales' receipt, projected onto the stay it covered: the

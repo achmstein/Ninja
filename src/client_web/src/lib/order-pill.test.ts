@@ -21,7 +21,7 @@ const placedAt = Date.parse('2026-09-26T18:00:00Z')
 const iso = (msAfterPlaced: number) => new Date(placedAt + msAfterPlaced).toISOString()
 
 describe('stageOf', () => {
-  it('is sent while the café has not taken the order on', () => {
+  it('is sent while the business has not taken the order on', () => {
     expect(stageOf({ status: 'AwaitingValidation' })).toBe('sent')
     expect(stageOf({ status: 'Submitted' })).toBe('sent')
     expect(stageOf({})).toBe('sent')

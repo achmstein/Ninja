@@ -648,7 +648,7 @@ export const getPlaceBillToPayQueryKey = (options: Options<GetPlaceBillToPayData
 /**
  * The open bill at a table, as a guest pays it
  *
- * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.
+ * For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the business lets guests split. 404 when nothing is open there.
  */
 export const getPlaceBillToPayOptions = (options: Options<GetPlaceBillToPayData>) => queryOptions<GetPlaceBillToPayResponse, AxiosError<DefaultError>, GetPlaceBillToPayResponse, ReturnType<typeof getPlaceBillToPayQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -739,7 +739,7 @@ export const listOnlinePaymentsOptions = (options: Options<ListOnlinePaymentsDat
 });
 
 /**
- * A demo café's pretend payment: paid or declined, as the guest picks
+ * A demo business's pretend payment: paid or declined, as the guest picks
  *
  * Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.
  */
@@ -796,7 +796,7 @@ export const refundOnlinePaymentMutation = (options?: Partial<Options<RefundOnli
 export const getPaymentSettingsQueryKey = (options: Options<GetPaymentSettingsData>) => createQueryKey('getPaymentSettings', options);
 
 /**
- * How the café takes payments at the table; secrets only as whether they are set
+ * How the business takes payments at the table; secrets only as whether they are set
  */
 export const getPaymentSettingsOptions = (options: Options<GetPaymentSettingsData>) => queryOptions<GetPaymentSettingsResponse, AxiosError<DefaultError>, GetPaymentSettingsResponse, ReturnType<typeof getPaymentSettingsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -812,7 +812,7 @@ export const getPaymentSettingsOptions = (options: Options<GetPaymentSettingsDat
 });
 
 /**
- * Change the café's payment account, fee and split options
+ * Change the business's payment account, fee and split options
  */
 export const savePaymentSettingsMutation = (options?: Partial<Options<SavePaymentSettingsData>>): UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> => {
     const mutationOptions: UseMutationOptions<SavePaymentSettingsResponse, AxiosError<SavePaymentSettingsError>, Options<SavePaymentSettingsData>> = {

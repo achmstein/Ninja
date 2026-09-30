@@ -147,7 +147,7 @@ export const getTenantOptions = (options: Options<GetTenantData>) => queryOption
 });
 
 /**
- * The record: contact, plan, notes, own domain, and what the café was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
+ * The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once
  */
 export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>>): UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> => {
     const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
@@ -312,7 +312,7 @@ export const secureTenantMutation = (options?: Partial<Options<SecureTenantData>
 };
 
 /**
- * Fill a running demo with a month of a café's life (suppliers, stock, recipes, staff, expenses, sales), once
+ * Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once
  */
 export const fillDemoDataMutation = (options?: Partial<Options<FillDemoDataData>>): UseMutationOptions<unknown, AxiosError<FillDemoDataError>, Options<FillDemoDataData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<FillDemoDataError>, Options<FillDemoDataData>> = {
@@ -606,7 +606,7 @@ export const getTenantMetricsOptions = (options: Options<GetTenantMetricsData>) 
 });
 
 /**
- * A one-time link that opens the café's admin app signed in as its owner
+ * A one-time link that opens the business's admin app signed in as its owner
  */
 export const impersonateOwnerMutation = (options?: Partial<Options<ImpersonateOwnerData>>): UseMutationOptions<ImpersonateOwnerResponse, AxiosError<ImpersonateOwnerError>, Options<ImpersonateOwnerData>> => {
     const mutationOptions: UseMutationOptions<ImpersonateOwnerResponse, AxiosError<ImpersonateOwnerError>, Options<ImpersonateOwnerData>> = {
@@ -1089,7 +1089,7 @@ export const signOutOperatorMutation = (options?: Partial<Options<SignOutOperato
 };
 
 /**
- * The café's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there
+ * The business's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there
  */
 export const updateTenantTalabatMutation = (options?: Partial<Options<UpdateTenantTalabatData>>): UseMutationOptions<UpdateTenantTalabatResponse, AxiosError<UpdateTenantTalabatError>, Options<UpdateTenantTalabatData>> => {
     const mutationOptions: UseMutationOptions<UpdateTenantTalabatResponse, AxiosError<UpdateTenantTalabatError>, Options<UpdateTenantTalabatData>> = {

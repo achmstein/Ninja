@@ -2,7 +2,7 @@
 
   <!--
     The platform on a real docker host: the control plane at
-    https://control.localhost stamps a throwaway café, and the assertions are
+    https://control.localhost stamps a throwaway business, and the assertions are
     the box itself — docker ps, rabbitmqctl, a probe through the tenant's
     gateway. This is the one suite that can prove the containers obeyed; the
     functional suite proves the plane decided correctly.

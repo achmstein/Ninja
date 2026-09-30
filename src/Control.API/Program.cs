@@ -23,7 +23,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControlApi();
-// Talabat's plugin for every café, at control.{domain}/api/talabat
+// Talabat's plugin for every business, at control.{domain}/api/talabat
 app.MapTalabatApi();
 
 app.Run();

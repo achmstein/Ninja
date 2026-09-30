@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * The platform's wordmark as one path (its display face traced, so no
- * font is loaded for it): the vendor line under a café's own name. Height
+ * font is loaded for it): the vendor line under a business's own name. Height
  * by className; the width follows.
  */
 export function NinjaWordmark({ className }: { className?: string }) {

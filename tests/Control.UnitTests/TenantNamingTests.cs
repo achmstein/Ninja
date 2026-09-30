@@ -42,7 +42,7 @@ public sealed class TenantNamingTests
     }
 
     [TestMethod]
-    public void The_cafes_own_service_is_tenant_with_its_own_database_and_queue()
+    public void The_business_own_service_is_tenant_with_its_own_database_and_queue()
     {
         CollectionAssert.Contains(TenantNaming.Services, "tenant");
         CollectionAssert.DoesNotContain(TenantNaming.Services, "branch");
@@ -75,7 +75,7 @@ public sealed class TenantNamingTests
         => Assert.AreEqual(valid, TenantNaming.IsValidSlug(slug));
 
     [TestMethod]
-    public void Hosts_hang_off_the_platform_domain_unless_the_cafe_brought_its_own()
+    public void Hosts_hang_off_the_platform_domain_unless_the_business_brought_its_own()
     {
         var platform = new PlatformOptions { Domain = "ninja.app" };
         var tenant = new Tenant { Slug = "blue" };

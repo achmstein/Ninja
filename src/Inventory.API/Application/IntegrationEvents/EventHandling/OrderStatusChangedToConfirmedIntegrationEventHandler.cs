@@ -10,7 +10,7 @@ namespace Ninja.Inventory.API.Application.IntegrationEvents.EventHandling;
 /// order: the bus delivers at least once, and the order's reference on its
 /// movements (plus the unique index behind it) means a redelivery posts
 /// nothing. Items without a recipe are not tracked and post nothing. A
-/// void or refund later never puts stock back (the café cannot know whether
+/// void or refund later never puts stock back (the business cannot know whether
 /// the drink was made); staff record a return by hand when one happens.
 /// </summary>
 public class OrderStatusChangedToConfirmedIntegrationEventHandler(

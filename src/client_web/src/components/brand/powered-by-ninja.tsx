@@ -7,9 +7,9 @@ const FONT_LINK_ID = 'ninja-wordmark-font'
 
 /**
  * "Powered by ninja", for the About dialog: the platform's wordmark in its
- * own display face, the one place a café's app carries it. The face is
+ * own display face, the one place a business's app carries it. The face is
  * fetched only when this shows, and only its five letters, so nothing of
- * the café's own look changes. Links to the platform when the stack knows
+ * the business's own look changes. Links to the platform when the stack knows
  * where it is.
  */
 export function PoweredByNinja({ className }: { className?: string }) {

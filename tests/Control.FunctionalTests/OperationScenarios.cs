@@ -37,7 +37,7 @@ public sealed class OperationScenarios
     }
 
     [TestMethod]
-    public async Task A_restore_makes_a_new_cafe_from_a_backup_and_leaves_the_old_one_running()
+    public async Task A_restore_makes_a_new_business_from_a_backup_and_leaves_the_old_one_running()
     {
         var api = Api.AsPlatformAdmin();
         var slug = Api.Slug("source");
@@ -51,7 +51,7 @@ public sealed class OperationScenarios
         var restored = await api.RestoreAsync(slug, backup.Id, into);
         Assert.AreEqual(into, restored.Slug);
         Assert.AreEqual(TenantKind.Customer, restored.Kind);
-        Assert.AreEqual(TenantPlan.Starter, restored.Record.Plan, "the café comes back on the plan it was on");
+        Assert.AreEqual(TenantPlan.Starter, restored.Record.Plan, "the business comes back on the plan it was on");
 
         var copy = await api.SettledAsync(into);
         Assert.AreEqual(TenantStatus.Running, copy.Status, copy.LastError);

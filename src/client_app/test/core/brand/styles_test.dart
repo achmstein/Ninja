@@ -5,7 +5,7 @@ import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/theme/theme_provider.dart';
 
 /// The port of client_web's lib/styles.ts: the same presets, resolved the
-/// same way, so the app and the site dress a café alike.
+/// same way, so the app and the site dress a business alike.
 void main() {
   group('resolveLayout', () {
     test('no style is classic, which is the app as it always was', () {
@@ -45,7 +45,7 @@ void main() {
       expect(styleOf('counter'), StyleKey.ninja);
     });
 
-    test("the café's own parts go over its style's", () {
+    test("the business's own parts go over its style's", () {
       final layout = resolveLayout('bold', {'menuItem': 'card', 'density': 'airy'});
       expect(layout.menuItem, MenuItemLayout.card);
       expect(layout.density, DensityLayout.airy);
@@ -72,7 +72,7 @@ void main() {
 
     test('night keeps the app dark whatever the customer chose; other styles leave the choice alone', () {
       const night = TenantBrand(name: LocalizedText(en: 'Bar'), theme: TenantTheme(style: 'night'));
-      const cozy = TenantBrand(name: LocalizedText(en: 'Cafe'), theme: TenantTheme(style: 'cozy'));
+      const cozy = TenantBrand(name: LocalizedText(en: 'Business'), theme: TenantTheme(style: 'cozy'));
       const light = ThemeState(themeMode: AppThemeMode.light);
       expect(light.effectiveMode(night), AppThemeMode.dark);
       expect(light.effectiveMode(cozy), AppThemeMode.light);
@@ -91,7 +91,7 @@ void main() {
   });
 
   group('withStyleDefaults', () {
-    test("the style's seeds fill what the café left unset", () {
+    test("the style's seeds fill what the business left unset", () {
       final theme = withStyleDefaults(const TenantTheme(style: 'bold'));
       expect(theme.radius, 'xl');
       expect(theme.fontLatin, 'Satoshi');
@@ -99,7 +99,7 @@ void main() {
       expect(theme.headerSize, 'md');
     });
 
-    test("the café's own seeds win", () {
+    test("the business's own seeds win", () {
       final theme = withStyleDefaults(const TenantTheme(style: 'cozy', radius: 'none', fontLatin: 'Inter'));
       expect(theme.radius, 'none');
       expect(theme.fontLatin, 'Inter');

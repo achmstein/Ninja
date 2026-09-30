@@ -601,7 +601,7 @@ export const getBranchOverrides = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Talabat for the café: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused
+ * Talabat for the business: its branches there, the last menu sent and what Talabat said, what is still on its way or was refused
  */
 export const getTalabat = <ThrowOnError extends boolean = false>(options?: Options<GetTalabatData, ThrowOnError>): RequestResult<GetTalabatResponses, GetTalabatErrors, ThrowOnError> => (options?.client ?? client).get<GetTalabatResponses, GetTalabatErrors, ThrowOnError>({
     responseType: 'json',

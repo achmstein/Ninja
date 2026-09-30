@@ -5,7 +5,7 @@ using Ninja.Ordering.Domain.Seedwork;
 
 /// <summary>
 /// Unit tests for Order aggregate.
-/// Simplified for cafe - no address or payment details.
+/// Simplified for business - no address or payment details.
 /// </summary>
 [TestClass]
 public class OrderAggregateTest
@@ -336,9 +336,9 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
-    public void Guest_order_without_a_destination_is_allowed_where_the_cafe_takes_them_from_anywhere()
+    public void Guest_order_without_a_destination_is_allowed_where_the_business_takes_them_from_anywhere()
     {
-        // The café said a guest may order away from a table: it is collected,
+        // The business said a guest may order away from a table: it is collected,
         // and the phone on it is how the counter finds whoever ordered
         var order = NewGuestOrder(guestOrdersAnywhere: true);
 

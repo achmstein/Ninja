@@ -22,7 +22,7 @@ describe('checkoutBlock', () => {
     expect(checkoutBlock({ ...base, isGuest: false })).toBeNull()
   })
 
-  it('asks a guest with no table to scan one, unless the café takes guest orders anywhere', () => {
+  it('asks a guest with no table to scan one, unless the business takes guest orders anywhere', () => {
     expect(checkoutBlock(base)).toBe('table')
     expect(checkoutBlock({ ...base, guestOrdersAnywhere: true })).toBeNull()
   })
@@ -86,7 +86,7 @@ describe('orderBody', () => {
     expect(body).toMatchObject({ userId: 'u1', userName: 'Ali', pointsToRedeem: 100, loyaltyDiscount: 5, placeId: null })
   })
 
-  it('sends a name the café wrote in one language as that language only', () => {
+  it('sends a name the business wrote in one language as that language only', () => {
     const arabicOnly: CartLine = {
       productId: 2,
       nameEn: '',

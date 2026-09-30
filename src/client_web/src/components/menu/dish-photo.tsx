@@ -6,7 +6,7 @@ import { TONE_CLASS } from './deck/deck-model'
 
 /**
  * A dish's photo, or where it has none (or it will not load) a plate on a
- * tone of the café's palette: the same stand-in in the tray, its order and
+ * tone of the business's palette: the same stand-in in the tray, its order and
  * the dish's options as on the classic menu, so a dish without a photo
  * never shows as an empty circle or a lone letter.
  */

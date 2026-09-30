@@ -18,7 +18,7 @@ public sealed class MenuLocalizer(INinjaAgentFactory factory)
     public static readonly AgentDefinition Definition = new(
         AgentKey,
         "Menu localizer",
-        "Fills in the English or Arabic side of a café menu text, writes a description, picks a category",
+        "Fills in the English or Arabic side of a menu text, writes a description, picks a category",
         Instructions,
         Temperature: 0.3f,
         MaxOutputTokens: 512,
@@ -55,7 +55,7 @@ public sealed class MenuLocalizer(INinjaAgentFactory factory)
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You complete texts for the menu of a café in Egypt. The user message is a JSON object with the kind of text
+        You complete texts for the menu of a café, restaurant or kitchen in Egypt. The user message is a JSON object with the kind of text
         (MenuItem, Category or StockItem), a "fill" list naming exactly the fields you must produce, the name and
         description as typed so far (some sides empty), the item's category as context, and, when a category is
         wanted, a list of categories to choose from.
@@ -68,7 +68,7 @@ public sealed class MenuLocalizer(INinjaAgentFactory factory)
         - Both "description.en" and "description.ar" together: there is no description yet, write one from the name
           and category — what it is and how it is made or served, one plain sentence, at most 15 words, the same
           meaning in both languages. Nothing the name does not imply: no origins, no health claims, no "best".
-        - Arabic is Egyptian café Arabic, the way the menu already reads: "قهوة تركي", "شاي مصري تقليدي، زي ما بتحبه",
+        - Arabic is Egyptian menu Arabic, the way the menu already reads: "قهوة تركي", "شاي مصري تقليدي، زي ما بتحبه",
           "قهوتنا التركي المميزة، محمصة طازة كل يوم", "مشروبات مثلجة", "مقرمشات". Prefer everyday words
           (زي، بتحبه، طازة) over formal ones (مثل، تفضله، طازجة).
         - English is Title Case for names ("Turkish Coffee", "Iced Latte") and a plain short sentence for descriptions.

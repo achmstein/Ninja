@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// One family of the brand-font catalog: the weights of 400–700 it has, and
-/// whether it is a display face (for headings and the café's name).
+/// whether it is a display face (for headings and the business's name).
 class BrandFontEntry {
   final String family;
   final List<int> weights;
@@ -11,7 +11,7 @@ class BrandFontEntry {
   const BrandFontEntry(this.family, this.weights, {this.display = false});
 }
 
-/// The Latin families a café can choose, in the pickers' order: the same
+/// The Latin families a business can choose, in the pickers' order: the same
 /// list as the web apps' lib/brand-fonts.ts and Tenant.API's
 /// TenantTheme.LatinFonts.
 const latinFonts = [

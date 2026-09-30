@@ -65,7 +65,7 @@ Read: `get_business_overview` (call first), `get_sales_summary`, `get_sales_brea
 
 Write (preview, then confirm): `record_expense`, `set_item_availability`, `pause_online_ordering`.
 
-Periods are business days in the tenant's zone, each branch from its own `dayStartTime`; `today` at 02:00 in a café whose day starts at 17:00 is still yesterday. Leave `branch` out for every active branch, with a total and a line per branch. Answers are JSON, Arabic kept readable, lists trimmed to `top`, and a reply over 60 000 characters is refused with a hint rather than cut.
+Periods are business days in the tenant's zone, each branch from its own `dayStartTime`; `today` at 02:00 in a business whose day starts at 17:00 is still yesterday. Leave `branch` out for every active branch, with a total and a line per branch. Answers are JSON, Arabic kept readable, lists trimmed to `top`, and a reply over 60 000 characters is refused with a hint rather than cut.
 
 ## Connecting
 

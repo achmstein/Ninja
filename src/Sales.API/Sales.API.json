@@ -2305,7 +2305,7 @@
           "Payments"
         ],
         "summary": "The open bill at a table, as a guest pays it",
-        "description": "For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.",
+        "description": "For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the business lets guests split. 404 when nothing is open there.",
         "operationId": "GetPlaceBillToPay",
         "parameters": [
           {
@@ -2574,7 +2574,7 @@
         "tags": [
           "Payments"
         ],
-        "summary": "A demo café's pretend payment: paid or declined, as the guest picks",
+        "summary": "A demo business's pretend payment: paid or declined, as the guest picks",
         "description": "Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.",
         "operationId": "SimulateOnlinePayment",
         "parameters": [
@@ -2743,7 +2743,7 @@
         "tags": [
           "Payments"
         ],
-        "summary": "How the café takes payments at the table; secrets only as whether they are set",
+        "summary": "How the business takes payments at the table; secrets only as whether they are set",
         "operationId": "GetPaymentSettings",
         "parameters": [
           {
@@ -2783,7 +2783,7 @@
         "tags": [
           "Payments"
         ],
-        "summary": "Change the café's payment account, fee and split options",
+        "summary": "Change the business's payment account, fee and split options",
         "operationId": "SavePaymentSettings",
         "parameters": [
           {

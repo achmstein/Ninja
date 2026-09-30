@@ -64,7 +64,7 @@ public record SupplierLedgerView(int SupplierId, decimal Balance, IReadOnlyList<
 
 public record PartnerShareView(int BranchId, decimal Percent);
 
-/// <summary>A partner as the list shows them: with what the café holds of theirs at the branch.</summary>
+/// <summary>A partner as the list shows them: with what the business holds of theirs at the branch.</summary>
 public record PartnerView(int Id, string Name, string? Phone, string? UserId, IReadOnlyList<int> BranchIds, IReadOnlyList<PartnerShareView> Shares, bool IsActive, decimal Balance);
 
 public record PartnerEntryView(
@@ -94,7 +94,7 @@ public record TillCategoryView(int Id, LocalizedText Name);
 /// <summary>
 /// A month's profit and loss at a branch. Sales less refunds is what came
 /// in; goods, waste, labour and the expenses by category are what went out;
-/// prime cost (goods + labour) over net sales is the ratio every café
+/// prime cost (goods + labour) over net sales is the ratio every business
 /// watches. Partners' money is nowhere in it.
 /// </summary>
 public record ProfitView(

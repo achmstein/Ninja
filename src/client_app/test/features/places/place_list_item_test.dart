@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 
-/// A room on the customer's list. The café's plan decides whether it can be
+/// A room on the customer's list. The business's plan decides whether it can be
 /// booked at all: with bookings off, the row still shows the room and its
 /// rate — it is a real room — but nothing on it invites a reservation the
 /// services would refuse.
@@ -27,7 +27,7 @@ final _room = Place(
 
 Widget _list(Place room, {required bool canReserve}) => ProviderScope(
       overrides: [
-        // The café's currency, without the brand call that would fetch it
+        // The business's currency, without the brand call that would fetch it
         moneyProvider.overrideWithValue(const MoneyFormat('EGP', Locale('en'))),
       ],
       child: MaterialApp(
@@ -48,7 +48,7 @@ Widget _list(Place room, {required bool canReserve}) => ProviderScope(
     );
 
 void main() {
-  testWidgets('a room the café takes bookings for invites one', (tester) async {
+  testWidgets('a room the business takes bookings for invites one', (tester) async {
     await tester.pumpWidget(_list(_room, canReserve: true));
     await tester.pump();
 

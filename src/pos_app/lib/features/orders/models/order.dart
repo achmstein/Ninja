@@ -90,12 +90,12 @@ class OrderItem {
   }
 }
 
-/// How a delivery platform's order leaves the café
+/// How a delivery platform's order leaves the business
 enum PlatformExpedition {
   /// The platform's rider collects it at the counter
   platformDelivery,
 
-  /// The café's own rider takes it to the address
+  /// The business's own rider takes it to the address
   vendorDelivery,
 
   /// The customer collects it
@@ -110,7 +110,7 @@ enum PlatformExpedition {
 
 /// What a delivery platform (Talabat) said about its order, as the counter
 /// reads it: the code the rider asks for, how it leaves, and (only when the
-/// café's own rider takes it) where to
+/// business's own rider takes it) where to
 class PlatformOrder {
   /// "Talabat"
   final String name;

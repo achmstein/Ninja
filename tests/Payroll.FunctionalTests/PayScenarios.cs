@@ -12,7 +12,7 @@ using Ninja.Testing;
 namespace Ninja.Payroll.FunctionalTests;
 
 /// <summary>
-/// What the café owes someone and how it is settled: the ledger, the
+/// What the business owes someone and how it is settled: the ledger, the
 /// payslip that adds a period up, the wage the till already handed over.
 /// </summary>
 [TestClass]
@@ -42,7 +42,7 @@ public sealed class PayScenarios
         => books.PostAsync<GeneratedView>(Suite.Url("/payslips"), new { employeeId = employee, periodStart = from, periodEnd = to });
 
     [TestMethod]
-    public async Task What_the_cafe_owes_someone_is_the_ledger_line_by_line()
+    public async Task What_the_business_owes_someone_is_the_ledger_line_by_line()
     {
         var branch = Suite.NewBranch();
         var books = Suite.BackOfficeAt(branch);

@@ -6,7 +6,7 @@ namespace Ninja.Notification.UnitTests;
 
 /// <summary>
 /// A push reads in the words its reader expects: the back office gets one
-/// Arabic whatever the café chose, a customer gets the Arabic their café
+/// Arabic whatever the business chose, a customer gets the Arabic their business
 /// speaks. The two are told apart by type, so this pins that they stay so.
 /// </summary>
 [TestClass]
@@ -22,17 +22,17 @@ public sealed class AudienceTests
             .Build());
 
     // ---------------------------------------------------------------
-    // Which Arabic a café speaks
+    // Which Arabic a business speaks
 
     [TestMethod]
-    public void A_cafe_that_says_nothing_follows_its_country()
+    public void A_business_that_says_nothing_follows_its_country()
     {
         Assert.IsFalse(Speaking(null, "EG").Standard, "Egypt speaks Egyptian unless told otherwise");
         Assert.IsTrue(Speaking(null, "SA").Standard, "everywhere else speaks Standard");
     }
 
     [TestMethod]
-    public void A_cafe_that_says_so_is_taken_at_its_word()
+    public void A_business_that_says_so_is_taken_at_its_word()
     {
         Assert.IsFalse(Speaking("egyptian", "SA").Standard);
         Assert.IsTrue(Speaking("standard", "EG").Standard);
@@ -43,7 +43,7 @@ public sealed class AudienceTests
     // The back office
 
     [TestMethod]
-    public void A_staff_push_reads_the_same_whichever_arabic_the_cafe_chose()
+    public void A_staff_push_reads_the_same_whichever_arabic_the_business_chose()
     {
         // These are plain LocalizedText, so there is nothing to choose from
         var title = NotificationMessages.NewOrderTitle;
@@ -84,7 +84,7 @@ public sealed class AudienceTests
     // The customer
 
     [TestMethod]
-    public void A_customer_push_follows_the_cafes_own_arabic()
+    public void A_customer_push_follows_the_business_own_arabic()
     {
         var title = NotificationMessages.OrderConfirmedTitle;
 
@@ -130,15 +130,15 @@ public sealed class AudienceTests
     public void A_cancelled_reservation_tells_each_side_in_its_own_words()
     {
         var place = new LocalizedText("Room 3", "أوضة 3");
-        var cafe = Speaking("egyptian");
+        var business = Speaking("egyptian");
 
-        // The café's copy: the back office's Arabic
+        // The business's copy: the back office's Arabic
         var staff = NotificationMessages.ReservationCancelledBody("Nadia", place, "ar").Get("ar");
         StringAssert.Contains(staff, "ألغى");
 
-        // The customer's copy: their café speaks Egyptian, so they get Egyptian
+        // The customer's copy: their business speaks Egyptian, so they get Egyptian
         var customer = NotificationMessages.YourReservationCancelledBody(place, "ar")
-            .For(cafe.Standard)
+            .For(business.Standard)
             .Get("ar");
         StringAssert.Contains(customer, "اتلغى");
         Assert.AreNotEqual(staff, customer);

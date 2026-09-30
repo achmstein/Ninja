@@ -13,7 +13,7 @@ public sealed record PayLineView(int Id, LocalizedText Description, LocalizedTex
 /// <param name="Key">The caller's own payment only, so they can go back to its checkout or cancel it; null for anyone else's.</param>
 public sealed record PayShareView(string? PayerName, decimal Amount, string Status, DateTime? PaidAt, bool IsMine, Guid? Key = null);
 
-/// <summary>How the café takes payments, as the guest's phone needs it.</summary>
+/// <summary>How the business takes payments, as the guest's phone needs it.</summary>
 public sealed record PayOptionsView(
     bool Ready,
     string Currency,
@@ -30,7 +30,7 @@ public sealed record PayOptionsView(
 
 /// <summary>
 /// A bill as a guest pays it: what is on it, what is paid, what is held,
-/// what is left, and how the café lets them split it. The phone polls it
+/// what is left, and how the business lets them split it. The phone polls it
 /// while the sheet is open, so every guest sees the others' shares land.
 /// </summary>
 /// <param name="CanPay">Whether a payment can start now; <paramref name="Why"/> says why not.</param>
@@ -61,7 +61,7 @@ public sealed record PaymentStatusView(Guid Key, int TicketId, string Status, de
 /// <summary>An online payment on a bill, as the till lists it.</summary>
 public sealed record OnlinePaymentView(Guid Key, string Mode, string? PayerName, decimal Amount, decimal Fee, string Status, DateTime CreatedAt, DateTime? PaidAt, string? TransactionId, DateTime? RefundedAt);
 
-/// <summary>The café's payment settings as the owner edits them; secrets only as whether they are set.</summary>
+/// <summary>The business's payment settings as the owner edits them; secrets only as whether they are set.</summary>
 public sealed record PaymentSettingsView(
     string Provider,
     string Currency,

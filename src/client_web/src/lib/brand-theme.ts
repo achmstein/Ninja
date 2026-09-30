@@ -255,7 +255,7 @@ export function brandColors(input: BrandThemeInput | null | undefined): { light:
     dark.ring = d
     // The slab (the dock, the tray, the dark cards) is a deep shade of the brand's colour: near-black
     // with its hue on a light page, a raised surface of it on a dark one; a grey brand keeps it neutral
-    // A café that wants its dock black keeps the neutral one (styles/theme.css) whatever its colour
+    // A business that wants its dock black keeps the neutral one (styles/theme.css) whatever its colour
     if (theme?.slab !== 'neutral') {
       const slabLight: Oklch = { l: 0.23, c: Math.min(primary.c, 0.09), h: primary.h }
       const slabDark: Oklch = { l: 0.28, c: Math.min(primary.c, 0.07), h: primary.h }
@@ -325,7 +325,7 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   for (const [role, value] of Object.entries(colors.light)) light[VAR_OF[role as keyof SchemeColors]] = oklch(value)
   for (const [role, value] of Object.entries(colors.dark)) dark[VAR_OF[role as keyof SchemeColors]] = oklch(value)
 
-  // The style's defaults fill whatever seed the café left unset
+  // The style's defaults fill whatever seed the business left unset
   const theme = withStyleDefaults(input?.theme)
   if (theme?.radius && RADII[theme.radius]) light['--radius'] = RADII[theme.radius]
   if (theme?.headerSize && HEADER_SIZES[theme.headerSize]) {

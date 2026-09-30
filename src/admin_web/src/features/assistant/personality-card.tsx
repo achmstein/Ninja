@@ -52,7 +52,7 @@ function problemDetail(e: unknown): string | undefined {
   return data?.detail
 }
 
-/** How the owner's assistant speaks, kept on the café's brand. */
+/** How the owner's assistant speaks, kept on the business's brand. */
 export function PersonalityCard() {
   const brand = useBrand()
   const t = useT()

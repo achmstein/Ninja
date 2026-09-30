@@ -35,7 +35,7 @@ void main() {
       expect(TenantConnection.candidates(' https://api.lucaffe.ninja.app/ '), ['https://api.lucaffe.ninja.app']);
     });
 
-    test("the café's own host first, then its api. host", () {
+    test("the business's own host first, then its api. host", () {
       expect(TenantConnection.candidates('lucaffe.ninja.app'),
           ['https://lucaffe.ninja.app', 'https://api.lucaffe.ninja.app']);
       expect(TenantConnection.candidates('admin.lucaffe.ninja.app'),
@@ -60,12 +60,12 @@ void main() {
       'auth': {'authority': 'https://auth.ninja.app/realms/lucaffe'},
     };
 
-    test('keeps the first host that is a café, with its realm', () async {
+    test('keeps the first host that is a business, with its realm', () async {
       final stacks = _Stacks({'https://api.lucaffe.ninja.app': tenant});
       final c = await TenantConnection.probe('lucaffe.ninja.app', dio: _dio(stacks));
       expect(c.apiUrl, 'https://api.lucaffe.ninja.app');
       expect(c.authority, 'https://auth.ninja.app/realms/lucaffe');
-      expect(c.cafeName, 'Lucaffe');
+      expect(c.businessName, 'Lucaffe');
       expect(c.host, 'api.lucaffe.ninja.app');
       expect(stacks.asked, ['https://lucaffe.ninja.app/api/tenant', 'https://api.lucaffe.ninja.app/api/tenant']);
     });
@@ -76,14 +76,14 @@ void main() {
       expect(c.authority, isNull);
     });
 
-    test('says why when no host answers, is not a café, or is paused', () async {
+    test('says why when no host answers, is not a business, or is paused', () async {
       expect(
         () => TenantConnection.probe('nowhere.example', dio: _dio(_Stacks({}))),
         throwsA(isA<ConnectException>().having((e) => e.failure, 'failure', ConnectFailure.unreachable)),
       );
       expect(
         () => TenantConnection.probe('api.blog.example', dio: _dio(_Stacks({'https://api.blog.example': {'title': 'hi'}}))),
-        throwsA(isA<ConnectException>().having((e) => e.failure, 'failure', ConnectFailure.notACafe)),
+        throwsA(isA<ConnectException>().having((e) => e.failure, 'failure', ConnectFailure.notABusiness)),
       );
       expect(
         () => TenantConnection.probe('api.late.ninja.app', dio: _dio(_Stacks({'https://api.late.ninja.app': 503}))),
@@ -97,12 +97,17 @@ void main() {
   });
 
   test('the record round-trips through the device', () {
-    const c = TenantConnection(apiUrl: 'https://api.x.ninja.app', authority: null, cafeName: 'X');
+    const c = TenantConnection(apiUrl: 'https://api.x.ninja.app', authority: null, businessName: 'X');
     final back = TenantConnection.fromJson(c.toJson());
     expect(back?.apiUrl, c.apiUrl);
     expect(back?.authority, isNull);
-    expect(back?.cafeName, 'X');
+    expect(back?.businessName, 'X');
     expect(TenantConnection.fromJson({'apiUrl': ''}), isNull);
     expect(TenantConnection.fromJson('junk'), isNull);
+  });
+
+  test('a connection saved before the rename keeps its business name', () {
+    final old = TenantConnection.fromJson({'apiUrl': 'https://api.x.ninja.app', 'authority': null, 'cafeName': 'X'});
+    expect(old?.businessName, 'X');
   });
 }

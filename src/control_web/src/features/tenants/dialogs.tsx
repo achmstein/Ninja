@@ -214,7 +214,7 @@ export function FleetUpgradeDialog({
   const [tag, setTag] = useState('')
   const [chosen, setChosen] = useState<string[]>([])
   const [canary, setCanary] = useState<string>('none')
-  // With many cafés the list is found, not scrolled
+  // With many businesses the list is found, not scrolled
   const [find, setFind] = useState('')
   const needle = find.trim().toLowerCase()
   const listed = needle ? tenants.filter((x) => x.name.toLowerCase().includes(needle) || x.slug.includes(needle)) : tenants

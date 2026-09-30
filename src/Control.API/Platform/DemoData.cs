@@ -6,7 +6,7 @@ using Ninja.Control.API.Model;
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
-/// Fills a new demo with a month of a café's life, so every screen has
+/// Fills a new demo with a month of a business's life, so every screen has
 /// something true to show: suppliers and what they delivered, stock and the
 /// recipes that tie the menu to it, staff with their attendance and pay,
 /// running costs, regulars with points, and thirty days of sales at its
@@ -261,7 +261,7 @@ public sealed class DemoData(IStackProxy stack, ILogger<DemoData> logger)
             var count = rng.Next(busy ? profile.Visits.Busy - 2 : profile.Visits.Quiet - 2, busy ? profile.Visits.Busy + 1 : profile.Visits.Quiet + 1);
             for (var v = 0; v < count; v++)
             {
-                // Between ten in the morning and eleven at night, the café's time
+                // Between ten in the morning and eleven at night, the business's time
                 var local = day.ToDateTime(new TimeOnly(10, 0)).AddMinutes(rng.Next(0, 13 * 60));
                 var placedAt = new DateTimeOffset(local, zone.GetUtcOffset(local)).ToUniversalTime();
                 var settledAt = placedAt.AddMinutes(rng.Next(25, 80));

@@ -53,7 +53,7 @@ public class TalabatCatalogBuilderTest
     }
 
     [TestMethod]
-    public void The_photo_is_the_cafes_public_picture_address()
+    public void The_photo_is_the_business_public_picture_address()
     {
         var (items, _) = Menu();
 

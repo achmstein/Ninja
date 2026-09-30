@@ -2,7 +2,7 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What kind of place a café is, chosen when it is created.</summary>
+/// <summary>What kind of place a business is, chosen when it is created.</summary>
 public enum BusinessType
 {
     CoffeeShop = 0,
@@ -28,7 +28,7 @@ public static class BusinessProfiles
         // Tables are booked, a kitchen cooks; nothing runs on a clock
         [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
         // Rooms and consoles by the hour, booked ahead, snacks from a small kitchen.
-        // Online payments starts off everywhere: it needs the café's own payment
+        // Online payments starts off everywhere: it needs the business's own payment
         // account keys before a guest can use it, so the owner turns it on
         [BusinessType.GameStation] = PlanCatalog.All.Except([Module.OnlinePayments]).ToHashSet(),
         [BusinessType.Other] = PlanCatalog.All.Except([Module.OnlinePayments]).ToHashSet(),

@@ -101,7 +101,7 @@ void main() {
 
   group('paySummary', () {
     const guestPays = PayOptions(feeMode: 'Guest', feePercent: 2.75, feeFixed: 3);
-    const cafePays = PayOptions(feeMode: 'Cafe', feePercent: 2.75, feeFixed: 3);
+    const businessPays = PayOptions(feeMode: 'Business', feePercent: 2.75, feeFixed: 3);
 
     test('the fee is on the share alone', () {
       final summary = paySummary(100, guestPays);
@@ -109,8 +109,8 @@ void main() {
       expect(summary.total, roundMoney(100 + summary.fee));
     });
 
-    test('the café absorbing the fee charges the share only', () {
-      final summary = paySummary(100, cafePays);
+    test('the business absorbing the fee charges the share only', () {
+      final summary = paySummary(100, businessPays);
       expect(summary.fee, 0);
       expect(summary.total, 100);
     });
@@ -123,7 +123,7 @@ void main() {
     expect(defaultParts(80), maxParts);
   });
 
-  test('only a café with no payments at the table hides the pay buttons', () {
+  test('only a business with no payments at the table hides the pay buttons', () {
     expect(offersPay('off'), isFalse);
     expect(offersPay('not-set-up'), isFalse);
     expect(offersPay('paid'), isTrue);

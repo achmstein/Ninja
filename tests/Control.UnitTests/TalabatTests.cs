@@ -62,7 +62,7 @@ public sealed class TalabatTests
     }
 
     [TestMethod]
-    public void A_cafes_relay_key_opens_only_its_own_door()
+    public void A_business_relay_key_opens_only_its_own_door()
     {
         var key = TalabatNaming.RelayKey("blue", "platform-key");
 

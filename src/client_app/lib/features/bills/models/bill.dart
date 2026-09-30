@@ -6,7 +6,7 @@ import '../../places/models/place.dart';
 class Bill {
   final int id;
 
-  /// "Room" or "Cafe"
+  /// "Room", "Table" or "Counter"
   final String type;
 
   /// "Open", "Settled" or "Voided"

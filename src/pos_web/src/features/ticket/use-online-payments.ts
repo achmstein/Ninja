@@ -8,7 +8,7 @@ import { useFeatures } from '@/lib/brand'
  * refreshes it (a payment landing publishes one); while somebody is at the
  * provider's checkout it also polls every 5s, so the bill unlocks the moment
  * they finish, and otherwise keeps the ticket screen's 20s fallback.
- * Off entirely when the café has no online payments: the gateway answers 402.
+ * Off entirely when the business has no online payments: the gateway answers 402.
  */
 export function useOnlinePayments(ticketId: number, enabled: boolean) {
   const features = useFeatures()

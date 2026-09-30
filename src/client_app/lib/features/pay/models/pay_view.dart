@@ -80,12 +80,12 @@ class PayShare {
       );
 }
 
-/// How the café takes payments (Sales `PayOptionsView`).
+/// How the business takes payments (Sales `PayOptionsView`).
 class PayOptions {
   final bool ready;
   final String currency;
 
-  /// "Cafe" (the café absorbs the provider's fee) or "Guest"
+  /// "Business" (the business absorbs the provider's fee) or "Guest"
   final String feeMode;
   final double feePercent;
   final double feeFixed;
@@ -96,13 +96,13 @@ class PayOptions {
   final bool wallet;
   final bool applePay;
 
-  /// A demo café without a provider: its checkout is a pretend page
+  /// A demo business without a provider: its checkout is a pretend page
   final bool simulated;
 
   const PayOptions({
     this.ready = false,
     this.currency = 'EGP',
-    this.feeMode = 'Cafe',
+    this.feeMode = 'Business',
     this.feePercent = 0,
     this.feeFixed = 0,
     this.allowItems = false,
@@ -120,7 +120,7 @@ class PayOptions {
   factory PayOptions.fromJson(Map<String, dynamic> json) => PayOptions(
         ready: json['ready'] as bool? ?? false,
         currency: json['currency'] as String? ?? 'EGP',
-        feeMode: json['feeMode'] as String? ?? 'Cafe',
+        feeMode: json['feeMode'] as String? ?? 'Business',
         feePercent: _num(json['feePercent']),
         feeFixed: _num(json['feeFixed']),
         allowItems: json['allowItems'] as bool? ?? false,
@@ -134,7 +134,7 @@ class PayOptions {
 }
 
 /// A bill as a guest pays it (Sales `PayView`): what is on it, what is paid,
-/// held and left, and how the café lets them split it.
+/// held and left, and how the business lets them split it.
 class PayView {
   final int ticketId;
   final int? placeId;

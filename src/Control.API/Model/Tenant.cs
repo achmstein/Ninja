@@ -4,7 +4,7 @@ public enum TenantKind
 {
     /// <summary>A prospect's instance: expires, then is stopped and later destroyed.</summary>
     Demo = 0,
-    /// <summary>A paying café.</summary>
+    /// <summary>A paying business.</summary>
     Customer = 1,
 }
 
@@ -23,7 +23,7 @@ public enum TenantStatus
     Suspended = 8,
 }
 
-/// <summary>Where the café stands with its subscription; the stack's own status is separate (a PastDue café keeps running until its grace is over).</summary>
+/// <summary>Where the business stands with its subscription; the stack's own status is separate (a PastDue business keeps running until its grace is over).</summary>
 public enum SubscriptionStatus
 {
     /// <summary>A demo.</summary>
@@ -38,7 +38,7 @@ public enum SubscriptionStatus
 
 /// <summary>
 /// What the stack's empty databases are planted with (the services read it
-/// as <c>Seed__Profile</c>). A demo gets the sample café so it looks alive;
+/// as <c>Seed__Profile</c>). A demo gets the sample business so it looks alive;
 /// a customer starts empty and fills the menu from the admin app.
 /// </summary>
 public enum TenantSeed
@@ -47,7 +47,7 @@ public enum TenantSeed
     Sample = 1,
 }
 
-/// <summary>What the café pays for; the names are the platform's, the prices are not in the code.</summary>
+/// <summary>What the business pays for; the names are the platform's, the prices are not in the code.</summary>
 public enum TenantPlan
 {
     Free = 0,
@@ -67,9 +67,9 @@ public static class TenantLocale
 }
 
 /// <summary>
-/// One café on the platform: a full stack of its own under one compose
+/// One business on the platform: a full stack of its own under one compose
 /// project, its own databases on the shared Postgres, its own realm, its own
-/// RabbitMQ vhost. The slug names all of them and every host the café gets.
+/// RabbitMQ vhost. The slug names all of them and every host the business gets.
 /// </summary>
 public class Tenant
 {
@@ -78,10 +78,10 @@ public class Tenant
     /// <summary>Lower-case letters, digits and single dashes, 3–24 characters; the compose project is ninja-{slug}.</summary>
     public string Slug { get; set; } = "";
 
-    /// <summary>The café's name in English; null for a café that goes by its Arabic name only.</summary>
+    /// <summary>The business's name in English; null for a business that goes by its Arabic name only.</summary>
     public string? NameEn { get; set; }
 
-    /// <summary>The café's name in Arabic; null for a café that goes by its English name only. One of the two is always there.</summary>
+    /// <summary>The business's name in Arabic; null for a business that goes by its English name only. One of the two is always there.</summary>
     public string? NameAr { get; set; }
 
     /// <summary>The name in the given language, else the other one, else the slug.</summary>
@@ -94,7 +94,7 @@ public class Tenant
 
     public TenantStatus Status { get; set; } = TenantStatus.Requested;
 
-    /// <summary>Chosen at creation (demos default to the sample café); the stack reads it once, on its first boot.</summary>
+    /// <summary>Chosen at creation (demos default to the sample business); the stack reads it once, on its first boot.</summary>
     public TenantSeed Seed { get; set; }
 
     /// <summary>ISO 3166-1 alpha-2; decides the phone pattern of the realm and the defaults below.</summary>
@@ -103,7 +103,7 @@ public class Tenant
     /// <summary>ISO 4217; what every price is shown in.</summary>
     public string Currency { get; set; } = TenantLocale.DefaultCurrency;
 
-    /// <summary>IANA zone; the café's business day and its offers' hours.</summary>
+    /// <summary>IANA zone; the business's business day and its offers' hours.</summary>
     public string TimeZone { get; set; } = TenantLocale.DefaultTimeZone;
 
     /// <summary>"ar" or "en": what the customer app opens in.</summary>
@@ -115,7 +115,7 @@ public class Tenant
     /// <summary>What kind of place it is: it picks the switches the stack starts with.</summary>
     public Platform.BusinessType BusinessType { get; set; } = Platform.BusinessType.Other;
 
-    /// <summary>"standard" or "egyptian": which Arabic the café's apps speak.</summary>
+    /// <summary>"standard" or "egyptian": which Arabic the business's apps speak.</summary>
     public string ArabicStyle { get; set; } = "standard";
 
     /// <summary>"both", "ar" or "en": which languages the business writes its menu, places and stock in (<see cref="Ninja.ContentLanguages"/>).</summary>
@@ -130,12 +130,12 @@ public class Tenant
     /// <summary>Whether its customers may sign in with Google and Apple (the platform's apps, through the hub realm). On unless turned off.</summary>
     public bool SocialSignIn { get; set; } = true;
 
-    /// <summary>A café's own customer host ("menu.cafe.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
+    /// <summary>A business's own customer host ("menu.example.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 
     public string OwnerEmail { get; set; } = "";
 
-    /// <summary>The café's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
+    /// <summary>The business's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
     public string? ContactName { get; set; }
 
     public string? Phone { get; set; }
@@ -165,13 +165,13 @@ public class Tenant
     public string? Notes { get; set; }
 
     /// <summary>
-    /// The café's chain at Talabat, as Talabat's onboarding gives it; null while
-    /// it is not on Talabat. The relay only ever sends the café's menu and
+    /// The business's chain at Talabat, as Talabat's onboarding gives it; null while
+    /// it is not on Talabat. The relay only ever sends the business's menu and
     /// availability to this chain, whatever the stack asks.
     /// </summary>
     public string? TalabatChainCode { get; set; }
 
-    /// <summary>Talabat's market for the café (its "global entity", e.g. TB_EG); null reads it from the country.</summary>
+    /// <summary>Talabat's market for the business (its "global entity", e.g. TB_EG); null reads it from the country.</summary>
     public string? TalabatGlobalEntityId { get; set; }
 
     /// <summary>A scratch tenant the restore drill stamps and destroys: nobody is mailed about it and the demo sweep leaves it alone.</summary>
@@ -189,8 +189,8 @@ public class Tenant
     public string AssistantSecret { get; set; } = "";
 
     /// <summary>
-    /// The key Sales encrypts the café's payment provider secrets with. It
-    /// lives here and in the stack's .env, never in the café's database, so a
+    /// The key Sales encrypts the business's payment provider secrets with. It
+    /// lives here and in the stack's .env, never in the business's database, so a
     /// backup of that database holds the provider keys only as ciphertext.
     /// Filled by the credentials step for stacks stamped before there was one.
     /// </summary>

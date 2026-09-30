@@ -11,7 +11,7 @@ import '../providers/shifts_provider.dart';
 /// The branch's two customer-facing switches — taking orders, taking
 /// reservations — for a mid-day pause. The shift flips both on its own
 /// (open → on, close → off); the switches are for in between, so they sit
-/// on the shift screen the header chip leads to. A café without reservations
+/// on the shift screen the header chip leads to. A business without reservations
 /// has only the one.
 class TradingSwitches extends ConsumerStatefulWidget {
   const TradingSwitches({super.key});

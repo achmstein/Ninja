@@ -11,7 +11,7 @@ import {
   type BrandThemeInput,
 } from './brand-theme'
 
-const cafe: BrandThemeInput = {
+const brand: BrandThemeInput = {
   primaryColor: '#0ea5e9',
   theme: { accent: '#f59e0b', surface: '#fffbf5', radius: 'xl', fontLatin: 'Satoshi', fontArabic: 'Tajawal' },
 }
@@ -25,7 +25,7 @@ describe('brand tokens', () => {
   })
 
   it('light takes the seeds as given, dark is derived from the same seeds', () => {
-    const { light, dark } = brandColors(cafe)
+    const { light, dark } = brandColors(brand)
     expect(oklchToHex(light.primary!)).toBe('#0ea5e9')
     expect(oklchToHex(light.background!)).toBe('#fffbf5')
     // Amber is light: near-black ink on it, not white
@@ -57,19 +57,19 @@ describe('brand tokens', () => {
   })
 
   it('writes the variables shadcn reads, the radius and a font per script', () => {
-    const tokens = brandTokens(cafe)
+    const tokens = brandTokens(brand)
     expect(tokens.light['--primary']).toMatch(/^oklch\(/)
     expect(tokens.dark['--primary']).toMatch(/^oklch\(/)
     expect(tokens.light['--radius']).toBe('1.5rem')
     expect(tokens.light['--font-latin']).toBe("'Satoshi'")
     expect(tokens.light['--font-arabic']).toBe("'Tajawal'")
     expect(brandTokens({ theme: { fontLatin: 'Comic Sans MS' } }).fontLatin).toBeNull()
-    expect(brandThemeCss(cafe)).toContain('.dark{')
+    expect(brandThemeCss(brand)).toContain('.dark{')
   })
 
   it('the chrome colour is the page of each scheme', () => {
-    expect(brandThemeColor(cafe, 'light')).toBe('#fffbf5')
-    expect(brandThemeColor(cafe, 'dark')).toMatch(/^#[0-9a-f]{6}$/)
+    expect(brandThemeColor(brand, 'light')).toBe('#fffbf5')
+    expect(brandThemeColor(brand, 'dark')).toMatch(/^#[0-9a-f]{6}$/)
     expect(brandThemeColor({ primaryColor: '#0ea5e9' }, 'light')).toBeNull()
   })
 
@@ -77,6 +77,6 @@ describe('brand tokens', () => {
     // A mid-grey primary: neither white nor black reaches 4.5 on it
     const issues = contrastIssues({ primaryColor: '#777777' })
     expect(issues.some((i) => i.pair === 'primary' && i.scheme === 'light')).toBe(true)
-    expect(contrastIssues(cafe)).toEqual([])
+    expect(contrastIssues(brand)).toEqual([])
   })
 })

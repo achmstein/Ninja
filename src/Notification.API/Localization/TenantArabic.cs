@@ -1,7 +1,7 @@
 namespace Ninja.Notification.API.Localization;
 
 /// <summary>
-/// Which Arabic this cafe speaks. Notification.API runs one container per
+/// Which Arabic this business speaks. Notification.API runs one container per
 /// tenant, so the style arrives as configuration (Tenant__ArabicStyle) the
 /// control plane stamps beside the rest of the tenant's locale. The rule
 /// for an unset style is Tenant.API's: Egypt speaks Egyptian, everywhere
@@ -22,6 +22,6 @@ public sealed class TenantArabic
         Standard = !string.Equals(style.Trim(), "egyptian", StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>True when the cafe reads Modern Standard Arabic.</summary>
+    /// <summary>True when the business reads Modern Standard Arabic.</summary>
     public bool Standard { get; }
 }

@@ -36,7 +36,7 @@ public sealed class RecordScenarios
     }
 
     [TestMethod]
-    public async Task A_cafes_own_domain_reaches_the_edge_straight_away_and_belongs_to_one_tenant()
+    public async Task A_business_own_domain_reaches_the_edge_straight_away_and_belongs_to_one_tenant()
     {
         var api = Api.AsPlatformAdmin();
         var slug = Api.Slug("domain");
@@ -49,7 +49,7 @@ public sealed class RecordScenarios
 
         var updated = await api.UpdateAsync(slug, Record("Domain Café", customerDomain: domain));
         Assert.AreEqual(domain, updated.CustomerDomain);
-        Assert.Contains(domain, updated.Hosts.Customer, "the customer host moves to the café's own domain");
+        Assert.Contains(domain, updated.Hosts.Customer, "the customer host moves to the business's own domain");
         await api.SettledAsync(slug);
         Assert.IsTrue((await api.AuditAsync(slug)).Any(a => a.Action == "tenant.edge.done"), "the edge was rewritten for it");
 
@@ -88,7 +88,7 @@ public sealed class RecordScenarios
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
         Assert.Contains("name is required", detail);
 
-        // A café named in Arabic only keeps no English name
+        // A business named in Arabic only keeps no English name
         (status, _) = await api.RefusedAsync(HttpMethod.Put, $"/api/control/tenants/{slug}", Record(null));
         Assert.AreEqual(HttpStatusCode.OK, status);
 

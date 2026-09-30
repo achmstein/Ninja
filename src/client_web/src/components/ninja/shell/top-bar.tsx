@@ -33,14 +33,14 @@ export function NinjaTopBar({
   const pill = useIsland((s) => s.busy)
   const brand = (
     <Link to='/' className='flex min-w-0 items-center gap-2'>
-      {/* However tall the café made its logo, it keeps room above and below it in the bar */}
+      {/* However tall the business made its logo, it keeps room above and below it in the bar */}
       <BrandWordmark className='max-h-[calc(var(--bar-h)-1.25rem)] max-w-[50vw]' />
     </Link>
   )
   return (
     <motion.div
       ref={ref}
-      // As tall as the café's header (--bar-h, styles/theme.css), so every brand's logo sits with room round it
+      // As tall as the business's header (--bar-h, styles/theme.css), so every brand's logo sits with room round it
       className={cn('bg-background z-30 mx-auto flex h-(--bar-h) w-full max-w-lg items-center justify-between gap-3 px-4', className)}
       style={style}
     >

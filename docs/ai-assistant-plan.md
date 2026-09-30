@@ -8,7 +8,7 @@
 
 ## 1. Where we were
 
-Every menu item, category and stock item carries a `LocalizedText` (En + Ar). The seed menu speaks an Egyptian café Arabic ("قهوة تركي", "شاي مصري تقليدي، زي ما بتحبه"), but a new item typed at the counter usually got one language and a warning dot on the other. Deliveries were keyed from a paper receipt into the receive dialog: pick the item, type the packs, type the total, again for each line.
+Every menu item, category and stock item carries a `LocalizedText` (En + Ar). The seed menu speaks an Egyptian business Arabic ("قهوة تركي", "شاي مصري تقليدي، زي ما بتحبه"), but a new item typed at the counter usually got one language and a warning dot on the other. Deliveries were keyed from a paper receipt into the receive dialog: pick the item, type the packs, type the total, again for each line.
 
 The repo already carried the bones of an AI integration inherited from eShop — dead `AddOpenAI`/`AddOllama` helpers in the AppHost, `Experimental.Microsoft.Extensions.AI` in the telemetry sources, a commented `OpenAi` connection string — and nothing using them.
 

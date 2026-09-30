@@ -38,7 +38,7 @@ export const Route = createFileRoute('/(auth)/sign-in')({
  */
 function SignIn() {
   const t = useT()
-  const cafe = useBrandName()
+  const business = useBrandName()
   const auth = useAuth()
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
@@ -113,9 +113,9 @@ function SignIn() {
         <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
           <span className='text-2xl font-semibold tracking-tight'>
-            {cafe || t('posName')}
+            {business || t('posName')}
           </span>
-          {cafe && <span className='text-muted-foreground'>{t('posName')}</span>}
+          {business && <span className='text-muted-foreground'>{t('posName')}</span>}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>

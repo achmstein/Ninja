@@ -169,7 +169,7 @@ public sealed class FinanceTools(TenantContext tenant, NinjaApiClient api, TimeP
     }
 
     [McpServerTool(Name = "get_supplier_balances", Title = "Supplier and partner balances", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("What the cafe currently owes each supplier (unpaid deliveries) and where each partner's account stands. Use for 'who do we owe', 'supplier balance', 'partner account'.")]
+    [Description("What the business currently owes each supplier (unpaid deliveries) and where each partner's account stands. Use for 'who do we owe', 'supplier balance', 'partner account'.")]
     public async Task<CallToolResult> GetSupplierBalances(
         [Description(BranchDescription)] string? branch = null,
         [Description("Include inactive suppliers and partners")] bool includeInactive = false,

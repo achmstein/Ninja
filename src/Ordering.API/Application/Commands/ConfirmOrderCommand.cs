@@ -1,7 +1,7 @@
 namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
-/// Command to confirm a cafe order (admin action).
+/// Command to confirm a business order (admin action).
 /// Confirmed orders are sent to POS.
 /// </summary>
 [DataContract]

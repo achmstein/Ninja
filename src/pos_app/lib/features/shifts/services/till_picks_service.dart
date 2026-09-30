@@ -4,7 +4,7 @@ import '../../../core/models/money.dart';
 import '../../../core/network/api_client.dart';
 
 /// One entry of a pay-out picker: an employee, a supplier, a partner or an
-/// expense category. [balance] is what the café owes the person or supplier
+/// expense category. [balance] is what the business owes the person or supplier
 /// right now — a hint beside the name, never the amount itself: the cashier
 /// still keys what actually changes hands. Null where it is nobody's
 /// business at the counter (a monthly employee's salary) or meaningless (a

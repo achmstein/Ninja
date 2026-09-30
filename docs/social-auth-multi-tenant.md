@@ -4,8 +4,8 @@
 every stamped realm carries the platform's shared Google and Apple providers,
 hidden, so `client_app`'s token exchange works on any tenant. The browser
 half: the `ninja-hub` realm holds the same apps with one redirect URI each,
-and each café's realm signs in through it as `ninja-google` / `ninja-apple`.
-Google and Apple are a per-café switch in the control plane (on by default);
+and each business's realm signs in through it as `ninja-google` / `ninja-apple`.
+Google and Apple are a per-business switch in the control plane (on by default);
 the brand's `auth.social` tells both apps which buttons to show.
 
 ## Setting it up (once, for the platform)
@@ -18,14 +18,14 @@ the brand's `auth.social` tells both apps which buttons to show.
    `https://auth.<platform-domain>/realms/ninja-hub/broker/google/endpoint`.
 3. **Apple developer**, the Services ID: domain `auth.<platform-domain>`, return
    URL `https://auth.<platform-domain>/realms/ninja-hub/broker/apple/endpoint`.
-4. Nothing per café. Provisioning (and an upgrade, and turning the switch on)
-   makes the hub if it is missing, the café's two clients in it, and the café
-   realm's `ninja-google` / `ninja-apple`. Destroying a café removes its clients.
+4. Nothing per business. Provisioning (and an upgrade, and turning the switch on)
+   makes the hub if it is missing, the business's two clients in it, and the business
+   realm's `ninja-google` / `ninja-apple`. Destroying a business removes its clients.
 
-A café already running gets the hub the next time it is provisioned or
+A business already running gets the hub the next time it is provisioned or
 upgraded, or when its switch is turned off and on again (the `social` job).
 A rotated Apple secret reaches the hub the same way: on the next provision,
-upgrade or `social` job of any café.
+upgrade or `social` job of any business.
 
 Before this, a stamped realm had no identity providers at all, and Chillax's
 provider credentials — still committed to this repository — were the only
@@ -85,9 +85,9 @@ being self-serve.
 
 ## What not to do
 
-**A provider app per café.** The consent screen would carry the café's own
+**A provider app per business.** The consent screen would carry the business's own
 name, which is the only real argument for it. Against it: Apple wants a paid
-developer account per café, both vendors want domain verification, and the
+developer account per business, both vendors want domain verification, and the
 owner would have to be walked through Google Cloud before they can sell a
 coffee. Onboarding friction that large is a different product.
 
@@ -98,8 +98,8 @@ but the manual step rules this out long before the cap does.
 
 **One realm for all customers.** Social login becomes trivial: one realm, one
 redirect URI, nothing per tenant. It also throws away the isolation the rest
-of the platform is built on, where a tenant is a realm and a database. A café
-would be able to see nothing of another café's customers, but they would
+of the platform is built on, where a tenant is a realm and a database. A business
+would be able to see nothing of another business's customers, but they would
 share a user store and a password policy, and impersonation and export would
 stop being per-tenant operations. Named here because it is genuinely the
 simplest answer and should be rejected deliberately rather than by omission.
@@ -107,7 +107,7 @@ simplest answer and should be rejected deliberately rather than by omission.
 ## The shape to build
 
 Keep one shared Google/Apple app: the platform is the brand the customer sees
-signing in, not the café. Then split the flows, because they want different
+signing in, not the business. Then split the flows, because they want different
 things.
 
 ```
@@ -146,7 +146,7 @@ does not belong in the same blast radius.
 
 What it costs: one more redirect hop, and every tenant's browser login now
 depends on the hub realm being up. Users stay separate records per tenant,
-which is correct — a customer of one café is not a customer of another.
+which is correct — a customer of one business is not a customer of another.
 
 ## What changes where
 
@@ -165,11 +165,11 @@ which is correct — a customer of one café is not a customer of another.
 | Change | Where |
 |---|---|
 | The hub realm (`ninja-hub`, a reserved slug): the apps shown, no registration, nothing required in its user profile, duplicate emails allowed; a straight-to-provider browser flow each (`hub-google`, `hub-apple`: the identity-provider redirector alone, no cookie step) | `Templates.HubRealm`/`HubProviders`, `KeycloakRestAdmin.EnsureHubAsync` |
-| A café's client in the hub per provider (`<slug>-google`, `<slug>-apple`), its one redirect the café realm's broker endpoint, bound to the provider's flow; the café realm's `ninja-google`/`ninja-apple` (plain OIDC, shown) with the same secret | `Templates.HubClient`/`TenantBroker`, `EnsureTenantBrokersAsync` |
-| Per-café switch `Tenant.SocialSignIn` (on by default); off removes the clients and providers; the `social` job applies a change; destroy removes the clients | `Model/Tenant.cs`, `Provisioner.SocialAsync`, the record's edit and the new-tenant form |
+| A business's client in the hub per provider (`<slug>-google`, `<slug>-apple`), its one redirect the business realm's broker endpoint, bound to the provider's flow; the business realm's `ninja-google`/`ninja-apple` (plain OIDC, shown) with the same secret | `Templates.HubClient`/`TenantBroker`, `EnsureTenantBrokersAsync` |
+| Per-business switch `Tenant.SocialSignIn` (on by default); off removes the clients and providers; the `social` job applies a change; destroy removes the clients | `Model/Tenant.cs`, `Provisioner.SocialAsync`, the record's edit and the new-tenant form |
 | The realm brought up to date on an upgrade too, before the new stack tells the apps | `Provisioner.UpgradeAsync` |
 | `Tenant__SocialSignIn` ("google=ninja-google,apple=ninja-apple") into Tenant.API, out as `auth.social` | `Templates.Compose`, `TenantAuth.SocialOf` |
-| The web app's buttons only for the café's providers, each with its hint; the phone app's only for its providers | `sign-in-options.tsx`, `login_screen.dart` |
+| The web app's buttons only for the business's providers, each with its hint; the phone app's only for its providers | `sign-in-options.tsx`, `login_screen.dart` |
 | The login theme's Google and Apple marks on `ninja-google`/`ninja-apple` | `themes/ninja/login/resources/css/ninja.css` |
 
 Still to do:
@@ -185,7 +185,7 @@ Still to do:
   inside `config`. Read back from the dev realm's `google` provider through
   the admin API.
 - **Apple domain verification.** A wildcard over `*.<platform-domain>` should
-  cover every stamped tenant, but a café on its own `CustomerDomain` will not
+  cover every stamped tenant, but a business on its own `CustomerDomain` will not
   be covered. Under the hub design only the hub's host is ever a redirect
   target, which probably makes this a non-issue — worth proving before
   relying on it.

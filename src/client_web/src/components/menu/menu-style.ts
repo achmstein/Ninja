@@ -3,13 +3,13 @@ import { useDraftedMenuItem } from '@/lib/preview'
 import type { MenuList } from './list/dishes'
 
 /**
- * How the café shows its menu (the brand's menu item part):
+ * How the business shows its menu (the brand's menu item part):
  * - `deck`: big cards to swipe, pinched out to a grid of small tiles
  * - `tiles`: that grid of small tiles alone, the whole menu from the start
- * - a list (`row`, the default; `card`, `compact`, `hero`): the café's own
+ * - a list (`row`, the default; `card`, `compact`, `hero`): the business's own
  *   menu, a page of dishes under their categories
  * A menu is scanned and compared, which a list lets the eye do, so a list
- * is what a café gets when it picks nothing; the cards to swipe are its own
+ * is what a business gets when it picks nothing; the cards to swipe are its own
  * choice, for a short menu with a photo of every dish. Under the panel's
  * preview, the style it is drafting, before it is saved.
  */

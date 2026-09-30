@@ -15,7 +15,7 @@ const SPY_SLACK = 24
 
 /**
  * The menu as one scrolling page: each category a heading over its dishes.
- * Two menus use it. The café's own list (`list`: rows, a photo grid,
+ * Two menus use it. The business's own list (`list`: rows, a photo grid,
  * compact rows or magazine cards) opens under the page's large title, as
  * every tab does. The deck zoomed out shows its cards as small tiles, the
  * photos of the ones that were on screen flying into theirs; a pinch open, or the way
@@ -48,9 +48,9 @@ export const MenuGrid = memo(function MenuGrid({
   jump: { index: number; n: number } | null
   /** The category in view changed, as the jump bar lights it */
   onSection: (index: number) => void
-  /** The café's own menu (no deck behind it): a row per dish, a photo grid, compact text rows, or magazine cards */
+  /** The business's own menu (no deck behind it): a row per dish, a photo grid, compact text rows, or magazine cards */
   list?: MenuList
-  /** The page's large title over the café's own menu, as every tab has one */
+  /** The page's large title over the business's own menu, as every tab has one */
   title?: string
   /** Its scrolling box, handed up while it is on screen, so the chrome around it can follow its scroll */
   onScroller?: (el: HTMLDivElement | null) => void

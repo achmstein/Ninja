@@ -186,7 +186,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       );
     }
 
-    // The stack says whether this place may be reserved; the café's bookings switch says whether any may
+    // The stack says whether this place may be reserved; the business's bookings switch says whether any may
     final available = scan.canReserve && ref.watch(featuresProvider).reservations && scan.displayStatus == PlaceStatus.available;
 
     return Scaffold(

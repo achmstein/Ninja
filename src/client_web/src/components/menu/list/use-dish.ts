@@ -4,7 +4,7 @@ import { springSoft } from '@/lib/motion'
 import { usePress } from '@/components/ninja/gestures/use-press'
 import { canQuickAdd } from '../deck/deck-model'
 
-/** The menu styles a café may choose instead of the deck (the brand's menu item part) */
+/** The menu styles a business may choose instead of the deck (the brand's menu item part) */
 export type MenuList = 'row' | 'card' | 'compact' | 'hero'
 
 /**

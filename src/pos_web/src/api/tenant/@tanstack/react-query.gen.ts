@@ -163,7 +163,7 @@ export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>
 };
 
 /**
- * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
+ * How the owner's AI assistant speaks: its tone, manner, language and the business's notes for it
  */
 export const setTenantAssistantMutation = (options?: Partial<Options<SetTenantAssistantData>>): UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> => {
     const mutationOptions: UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> = {
@@ -180,7 +180,7 @@ export const setTenantAssistantMutation = (options?: Partial<Options<SetTenantAs
 };
 
 /**
- * The modules the café's plan allows; a switch outside them goes off. The control plane only
+ * The modules the business's plan allows; a switch outside them goes off. The control plane only
  */
 export const setTenantEntitlementsMutation = (options?: Partial<Options<SetTenantEntitlementsData>>): UseMutationOptions<SetTenantEntitlementsResponse, AxiosError<DefaultError>, Options<SetTenantEntitlementsData>> => {
     const mutationOptions: UseMutationOptions<SetTenantEntitlementsResponse, AxiosError<DefaultError>, Options<SetTenantEntitlementsData>> = {
@@ -269,7 +269,7 @@ export const getTenantIconOptions = (options: Options<GetTenantIconData>) => que
 export const getTenantLoginCssQueryKey = (options?: Options<GetTenantLoginCssData>) => createQueryKey('getTenantLoginCss', options);
 
 /**
- * The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet
+ * The business's colours for its sign-in pages; the login theme loads it beside its own stylesheet
  */
 export const getTenantLoginCssOptions = (options?: Options<GetTenantLoginCssData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantLoginCssQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

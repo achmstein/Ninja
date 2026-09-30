@@ -128,7 +128,7 @@ public record PayslipView(
     string? Note);
 
 /// <summary>
-/// The register: who works at the café, on what pay, who set it, and who
+/// The register: who works at the business, on what pay, who set it, and who
 /// left. What someone is paid is the owner's call; everything else is the
 /// branch manager's.
 /// </summary>
@@ -149,7 +149,7 @@ public sealed class RegisterScenarios
         Assert.AreEqual(branch, listed.BranchId);
         Assert.IsTrue(listed.IsActive);
         Assert.AreEqual(0m, listed.Balance, "nobody is owed anything on the first day");
-        Assert.AreEqual(4, listed.PaidDaysOff, "four paid days off a month unless the café says otherwise");
+        Assert.AreEqual(4, listed.PaidDaysOff, "four paid days off a month unless the business says otherwise");
         Assert.AreEqual(PayScheme.Daily, listed.CurrentTerms!.Scheme);
         Assert.AreEqual(200m, listed.CurrentTerms.Rate);
         Assert.AreEqual(new DateOnly(2026, 3, 1), listed.CurrentTerms.EffectiveFrom, "the pay runs from the day they started");
@@ -223,7 +223,7 @@ public sealed class RegisterScenarios
         var gone = (await books.GetAsync<List<EmployeeView>>(Suite.Url("/employees") + "&includeInactive=true")).Single();
         Assert.IsFalse(gone.IsActive);
         Assert.AreEqual(new DateOnly(2026, 3, 31), gone.EndedOn);
-        Assert.AreEqual(300m, gone.Balance, "and what the café still owes them does not go away");
+        Assert.AreEqual(300m, gone.Balance, "and what the business still owes them does not go away");
 
         Assert.IsEmpty(await Suite.TillAt(branch).GetAsync<List<TillEmployeeView>>($"/api/payroll/till/employees?{Suite.Version}"),
             "the till does not offer a wage to someone who left");

@@ -32,7 +32,7 @@ public class PlatformOrderTest
     }
 
     [TestMethod]
-    public void Only_the_cafes_own_rider_keeps_an_address_and_paid_online_collects_nothing()
+    public void Only_the_business_own_rider_keeps_an_address_and_paid_online_collects_nothing()
     {
         Assert.IsNull(Talabat(PlatformExpedition.PlatformDelivery).DeliveryAddress);
         Assert.AreEqual("Tahrir St", Talabat(PlatformExpedition.VendorDelivery).DeliveryAddress);

@@ -1,4 +1,4 @@
-/// Text the API sends as `{en, ar}`, either side possibly missing (a café may
+/// Text the API sends as `{en, ar}`, either side possibly missing (a business may
 /// write its menu in one language); [pick] reads the one a ticket prints in,
 /// falling back to the other. An empty side counts as missing.
 class TicketText {

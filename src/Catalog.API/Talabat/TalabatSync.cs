@@ -7,7 +7,7 @@ namespace Ninja.Catalog.API.Talabat;
 
 /// <summary>
 /// How this stack reaches Talabat: through the platform's relay, which holds
-/// Ninja's Talabat account and the café's chain there. Stamped by the control
+/// Ninja's Talabat account and the business's chain there. Stamped by the control
 /// plane; without it nothing is sent.
 /// </summary>
 public sealed class TalabatOptions

@@ -42,7 +42,7 @@ if (args.Contains("--uninstall"))
     return 0;
 }
 
-// Run by a person: pair with the café, then install and start the service
+// Run by a person: pair with the business, then install and start the service
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 Console.WriteLine("Ninja Print Connector");
 Console.WriteLine("Prints the kitchen's tickets on this PC's printers.");
@@ -54,7 +54,7 @@ while (link is null)
     Console.Write("Paste the pairing link from admin (Branches → Kitchen → Pair a Windows PC): ");
     var typed = Console.ReadLine()?.Trim();
     if (typed?.Contains("/connect/", StringComparison.OrdinalIgnoreCase) == true) link = typed;
-    else Console.WriteLine("That is not a pairing link. It looks like https://api.your-cafe…/connect/ABCD2345");
+    else Console.WriteLine("That is not a pairing link. It looks like https://api.your-business…/connect/ABCD2345");
 }
 
 var at = link.IndexOf("/connect/", StringComparison.OrdinalIgnoreCase);

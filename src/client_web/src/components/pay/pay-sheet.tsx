@@ -33,7 +33,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PaidSoFar, PayWhy, SharesList } from './pay-progress'
 import { AmountPicker, SeatsTable } from './split-pickers'
 
-/** 'full' pays what is left, 'split' offers the café's ways to split, and
+/** 'full' pays what is left, 'split' offers the business's ways to split, and
  *  'any' offers both (the table's sheet, a retry). */
 export type PayStart = 'full' | 'split' | 'any'
 
@@ -53,7 +53,7 @@ const MODE_LABEL: Record<SplitKind, TranslationKey> = {
 
 const num = (value: number | string | null | undefined) => Number(value ?? 0) || 0
 
-/** The ways this sheet offers, in order: what the café allows of them. */
+/** The ways this sheet offers, in order: what the business allows of them. */
 function modesFor(view: PayView, start: PayStart): SplitKind[] {
   const splits: SplitKind[] = []
   if (view.options.allowItems && view.lines.length > 0) splits.push('items')
@@ -66,7 +66,7 @@ function modesFor(view: PayView, start: PayStart): SplitKind[] {
 /**
  * Online payments (docs/online-payments-plan.md): the bill as it stands on
  * the dock's slab (what is left, rolling; the bar filling as shares land;
- * who is paying right now), the ways the café lets a table split it on
+ * who is paying right now), the ways the business lets a table split it on
  * one liquid track, the fee, and one button that sends the guest to the
  * provider's checkout. Re-read every few seconds while open, so shares
  * others pay land here as they happen; the server re-checks every sum
@@ -434,10 +434,10 @@ function ItemsPicker({
 }
 
 /** Where the money is taken: the provider's secure page, whatever ways
- *  to pay the café set up there. */
+ *  to pay the business set up there. */
 function Methods({ view }: { view: PayView }) {
   const t = useT()
-  // A demo café: the next page is ours, and nothing is charged
+  // A demo business: the next page is ours, and nothing is charged
   const Icon = view.options.simulated ? FlaskConical : Lock
   return (
     <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-caption'>

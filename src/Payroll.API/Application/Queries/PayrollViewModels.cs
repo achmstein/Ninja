@@ -74,7 +74,7 @@ public record PayslipView(
 
 /// <summary>
 /// An employee as the till picks them for a wage or an advance. <c>Balance</c>
-/// is what the café owes them right now — carried only for daily workers, whose
+/// is what the business owes them right now — carried only for daily workers, whose
 /// evening pay-out it is; a monthly employee's balance stays in the back office.
 /// </summary>
 public record TillEmployeeView(int Id, string Name, string? JobTitle, PayScheme Scheme, decimal? Balance);

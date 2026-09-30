@@ -5,7 +5,7 @@ using Ninja.Control.API.Platform;
 namespace Ninja.Control.AcceptanceTests;
 
 /// <summary>
-/// A throwaway café stamped on this box, taken up a plan and back down: the
+/// A throwaway business stamped on this box, taken up a plan and back down: the
 /// containers that run, the queues on its vhost and what its gateway
 /// answers are read from the box itself, not from the control plane's word
 /// for it. Then it is destroyed and forgotten, so the box is as it was.
@@ -22,7 +22,7 @@ public sealed class PlanShapeAcceptance : AcceptanceTest
         => services.Where(s => s != "gateway").Select(TenantNaming.Queue).Order().ToArray();
 
     [TestMethod]
-    public async Task A_cafe_runs_what_its_plan_includes_up_a_plan_down_a_plan_and_through_a_stop()
+    public async Task A_business_runs_what_its_plan_includes_up_a_plan_down_a_plan_and_through_a_stop()
     {
         var api = new ControlApi();
         var slug = $"acc-{Guid.NewGuid():N}"[..12];
@@ -35,7 +35,7 @@ public sealed class PlanShapeAcceptance : AcceptanceTest
             Assert.AreEqual(TenantStatus.Running, tenant.Status, tenant.LastError);
 
             // 1. Starter: ten containers, nine queues, the three modules blocked at the edge
-            CollectionAssert.AreEqual(StarterServices.Order().ToArray(), Box.Containers(slug).ToArray(), "the containers a Starter café runs");
+            CollectionAssert.AreEqual(StarterServices.Order().ToArray(), Box.Containers(slug).ToArray(), "the containers a Starter business runs");
             CollectionAssert.AreEqual(QueuesFor(StarterServices), Box.Queues(slug).ToArray(), "a service that is not stamped has no queue");
             CollectionAssert.AreEqual(StarterServices.Where(s => s != "gateway").Order().ToArray(), tenant.Services.Order().ToArray(), "the control plane names the same nine");
             Assert.AreEqual(HttpStatusCode.PaymentRequired, await Box.GatewayAsync(slug, "/api/inventory/items?api-version=1.0"), "inventory is not in the plan");
@@ -65,7 +65,7 @@ public sealed class PlanShapeAcceptance : AcceptanceTest
             await api.StopAsync(slug);
             var stopped = await api.SettledAsync(slug, Patience, Step);
             Assert.AreEqual(TenantStatus.Stopped, stopped.Status);
-            Assert.IsEmpty(Box.Containers(slug), "a stopped café runs nothing");
+            Assert.IsEmpty(Box.Containers(slug), "a stopped business runs nothing");
 
             Step("Start");
             await api.StartAsync(slug);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { allowedFilter } from './filter'
 
 // The customer list narrows two ways, and each belongs to a module. A link
-// saved when the café had both must not open a page that asks a service it
+// saved when the business had both must not open a page that asks a service it
 // no longer pays for.
 
 const both = { tabs: true, loyalty: true }
@@ -29,7 +29,7 @@ describe('the list a link asks for', () => {
     expect(allowedFilter('guests', both)).toBe('guests')
   })
 
-  it('is the whole list for a café with neither', () => {
+  it('is the whole list for a business with neither', () => {
     expect(allowedFilter('owing', { tabs: false, loyalty: false })).toBeUndefined()
     expect(allowedFilter('members', { tabs: false, loyalty: false })).toBeUndefined()
   })

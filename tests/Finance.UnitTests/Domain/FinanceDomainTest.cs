@@ -19,7 +19,7 @@ public class FinanceDomainTest
         var paidByPartner = new Expense(1, new DateOnly(2026, 9, 2), 3, 200, PaidFrom.Partner, 7, null, "plumber", "owner");
         Assert.AreEqual(7, paidByPartner.PartnerId);
 
-        // A partner named on drawer money is ignored: it was the café's cash
+        // A partner named on drawer money is ignored: it was the business's cash
         var fromDrawer = new Expense(1, new DateOnly(2026, 9, 2), 3, 200, PaidFrom.Drawer, 7, null, null, "till");
         Assert.IsNull(fromDrawer.PartnerId);
 

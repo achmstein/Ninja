@@ -2,7 +2,7 @@
 
   <!--
     Payroll.API through its front door, on the shared Postgres and RabbitMQ
-    (tests/Ninja.Testing): the register of who works at the café and on what
+    (tests/Ninja.Testing): the register of who works at the business and on what
     pay, the days they were in, the account of what they are owed, and the
     payslip that adds a period up.
     Needs docker, so it runs as its own PR job.

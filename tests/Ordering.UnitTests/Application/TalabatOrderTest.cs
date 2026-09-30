@@ -78,7 +78,7 @@ public class TalabatOrderTest
     }
 
     [TestMethod]
-    public void A_delivery_without_a_rider_is_the_cafes_own_and_keeps_the_address()
+    public void A_delivery_without_a_rider_is_the_business_own_and_keeps_the_address()
     {
         var json = Dispatch.Replace("\"riderPickupTime\": \"2026-09-29T17:35:00.000Z\"", "\"riderPickupTime\": null");
 

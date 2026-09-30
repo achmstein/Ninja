@@ -4,7 +4,7 @@ using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.FunctionalTests;
 
-/// <summary>Billing by hand: a payment moves what is paid through, a café that does not pay is suspended, and a payment or a resume brings it back.</summary>
+/// <summary>Billing by hand: a payment moves what is paid through, a business that does not pay is suspended, and a payment or a resume brings it back.</summary>
 [TestClass]
 public sealed class BillingScenarios
 {

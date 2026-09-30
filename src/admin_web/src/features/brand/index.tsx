@@ -74,7 +74,7 @@ const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPla
   { key: 'onlinePayments', label: 'featureOnlinePayments', addon: true },
 ]
 
-/** The two slots every café fills and the cover photo, then the four variants behind a disclosure. */
+/** The two slots every business fills and the cover photo, then the four variants behind a disclosure. */
 const MAIN_SLOTS: { slot: ImageSlot; label: TranslationKey }[] = [
   { slot: 'logo', label: 'brandLogo' },
   { slot: 'wordmark-en', label: 'brandWordmarkEn' },
@@ -135,7 +135,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkAccent: t.dark?.accent ?? '',
   darkSurface: t.dark?.surface ?? '',
   slab: t.slab === 'neutral' ? 'neutral' : '',
-  // Rows are what a café gets when it chooses nothing, so a saved 'row' reads as that
+  // Rows are what a business gets when it chooses nothing, so a saved 'row' reads as that
   menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
 })
 
@@ -155,7 +155,7 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     // Ninja is the only style for now, worn whole
     style: 'ninja',
     slab: f.slab || null,
-    // The one part the café picks for now: the classic list instead of the cards
+    // The one part the business picks for now: the classic list instead of the cards
     layout: f.menuItem ? { menuItem: f.menuItem, categories: null, header: null, buttons: null, surface: null, density: null } : null,
   }
 }
@@ -568,7 +568,7 @@ function BrandForm({ brand }: { brand: Brand }) {
               </div>
             </div>
 
-            {/* The café's, not a branch's: every branch takes guests' orders the same way, and it changes live */}
+            {/* The business's, not a branch's: every branch takes guests' orders the same way, and it changes live */}
             <div className='space-y-2'>
               <Label>{t('guestOrdering')}</Label>
               <div className='flex items-start justify-between gap-4 rounded-lg border p-3'>

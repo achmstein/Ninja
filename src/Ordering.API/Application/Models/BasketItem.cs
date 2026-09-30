@@ -5,7 +5,7 @@ namespace Ninja.Ordering.API.Application.Models;
 
 /// <summary>
 /// Represents a basket item received from the Basket API.
-/// Enhanced for cafe with customization support.
+/// Enhanced for business with customization support.
 /// </summary>
 public class BasketItem
 {

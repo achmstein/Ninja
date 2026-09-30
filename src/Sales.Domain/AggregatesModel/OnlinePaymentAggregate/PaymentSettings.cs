@@ -4,17 +4,17 @@ namespace Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
 /// <summary>Who carries the provider's fee.</summary>
 public enum FeeMode
 {
-    /// <summary>The café absorbs it; the guest pays their share and nothing more.</summary>
-    Cafe = 0,
+    /// <summary>The business absorbs it; the guest pays their share and nothing more.</summary>
+    Business = 0,
 
     /// <summary>The guest pays it, shown as its own line.</summary>
     Guest = 1,
 }
 
 /// <summary>
-/// How this café takes payments at the table: its own provider account
+/// How this business takes payments at the table: its own provider account
 /// (Ninja never holds the money), who carries the fee, and which ways
-/// of splitting guests may use. One row per café. The provider's secret key
+/// of splitting guests may use. One row per business. The provider's secret key
 /// and callback secret are kept sealed (the API seals them with a key that
 /// is not in this database), and are never read back out.
 /// </summary>
@@ -24,7 +24,7 @@ public class PaymentSettings : Entity, IAggregateRoot
 
     public string Provider { get; private set; } = "paymob";
 
-    /// <summary>The currency the provider charges in, as the café's integrations are set up ("EGP").</summary>
+    /// <summary>The currency the provider charges in, as the business's integrations are set up ("EGP").</summary>
     public string Currency { get; private set; } = "EGP";
 
     /// <summary>The provider's secret key, sealed; null until the owner enters it.</summary>
@@ -84,7 +84,7 @@ public class PaymentSettings : Entity, IAggregateRoot
         _ => false,
     };
 
-    /// <summary>The café's choices; the sealed secrets are changed only through <see cref="SetSecrets"/>.</summary>
+    /// <summary>The business's choices; the sealed secrets are changed only through <see cref="SetSecrets"/>.</summary>
     public void Update(
         string currency,
         string? publicKey,
@@ -138,7 +138,7 @@ public class PaymentSettings : Entity, IAggregateRoot
         UpdatedAt = now;
     }
 
-    /// <summary>The fee a guest pays on their share; 0 when the café carries it.</summary>
+    /// <summary>The fee a guest pays on their share; 0 when the business carries it.</summary>
     public decimal GuestFee(decimal amount)
         => FeeMode == FeeMode.Guest ? OnlineShares.GuestFee(amount, FeePercent, FeeFixed) : 0m;
 }

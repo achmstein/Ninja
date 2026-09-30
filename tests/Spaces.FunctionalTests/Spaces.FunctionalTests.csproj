@@ -2,7 +2,7 @@
 
   <!--
     Spaces.API through its front door, on the shared Postgres and RabbitMQ
-    (tests/Ninja.Testing): the places a café has, what may be given a rate
+    (tests/Ninja.Testing): the places a business has, what may be given a rate
     or opened to bookings while its module is on, and who may do it.
     Needs docker, so it runs as its own PR job.
   -->

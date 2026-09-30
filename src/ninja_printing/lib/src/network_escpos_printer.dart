@@ -17,7 +17,7 @@ abstract class EscPosPrinter {
   Future<void> send(List<int> bytes);
 }
 
-/// An 80 mm thermal printer on the café network, spoken to on the raw
+/// An 80 mm thermal printer on the business's network, spoken to on the raw
 /// port every ESC/POS printer listens on. One connection per job: connect,
 /// write, close — no session to keep alive, nothing to recover.
 class NetworkEscPosPrinter implements EscPosPrinter {

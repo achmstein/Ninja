@@ -24,14 +24,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
-  String get connectTitle => 'Which café is this?';
+  String get connectTitle => 'Which business is this?';
 
   @override
   String get connectHint =>
-      'Type your café\'s address, or scan the code on the Apps page of your admin app.';
+      'Type your business\'s address, or scan the code on the Apps page of your admin app.';
 
   @override
-  String get cafeAddress => 'Café address';
+  String get businessAddress => 'Business address';
 
   @override
   String get connect => 'Connect';
@@ -47,11 +47,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing answered at that address. Check it, and that the tablet is online.';
 
   @override
-  String get connectNotACafe => 'That address is not a café on ninja.';
+  String get connectNotABusiness => 'That address is not a business on ninja.';
 
   @override
   String get connectPaused =>
-      'This café is paused. Its owner can see why in the admin app.';
+      'This business is paused. Its owner can see why in the admin app.';
 
   @override
   String get thisDevice => 'This device';
@@ -60,11 +60,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectedTo => 'Connected to';
 
   @override
-  String get changeCafe => 'Change café';
+  String get changeBusiness => 'Change business';
 
   @override
-  String get changeCafeConfirm =>
-      'Sign out and forget this café. The tablet starts over at the connect screen.';
+  String get changeBusinessConfirm =>
+      'Sign out and forget this business. The tablet starts over at the connect screen.';
 
   @override
   String get language => 'Language';
@@ -1275,7 +1275,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printerHint =>
-      'An 80 mm network printer on the café Wi-Fi. Receipts print as an image, so any make works; the cash drawer kicks through the printer.';
+      'An 80 mm network printer on the business\'s Wi-Fi. Receipts print as an image, so any make works; the cash drawer kicks through the printer.';
 
   @override
   String get printerHost => 'Printer address';
@@ -1564,8 +1564,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkCopied => 'Link copied';
 
   @override
-  String appLinkMessage(String name, String cafe, String url) {
-    return 'Hi $name, your points at $cafe are waiting. Set up your account here (works for 30 minutes): $url';
+  String appLinkMessage(String name, String business, String url) {
+    return 'Hi $name, your points at $business are waiting. Set up your account here (works for 30 minutes): $url';
   }
 
   @override

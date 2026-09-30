@@ -59,7 +59,7 @@ function currencyLabel(code: string): string {
 }
 
 /**
- * Where the café is and what follows from it. The country is picked from
+ * Where the business is and what follows from it. The country is picked from
  * the list; the money, the clock and the first language come with it and
  * can each be changed by hand.
  */

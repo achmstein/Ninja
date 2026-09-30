@@ -7,7 +7,7 @@ namespace Ninja.Ordering.API.Talabat;
 
 /// <summary>
 /// How this stack reaches Talabat: through the platform, which holds Ninja's
-/// Talabat credentials (one set for every café) and signs the call. The
+/// Talabat credentials (one set for every business) and signs the call. The
 /// control plane stamps these; without them nothing is sent.
 /// </summary>
 public sealed class TalabatOptions
@@ -17,10 +17,10 @@ public sealed class TalabatOptions
     /// <summary>The platform's relay, on the shared network: http://control-api:8080.</summary>
     public string? RelayUrl { get; set; }
 
-    /// <summary>This café's slug, which the relay knows it by.</summary>
+    /// <summary>This business's slug, which the relay knows it by.</summary>
     public string? Tenant { get; set; }
 
-    /// <summary>This café's key to the relay, derived by the platform from the slug; it proves the caller is this stack.</summary>
+    /// <summary>This business's key to the relay, derived by the platform from the slug; it proves the caller is this stack.</summary>
     public string? RelayKey { get; set; }
 
     public bool Configured => !string.IsNullOrWhiteSpace(RelayUrl) && !string.IsNullOrWhiteSpace(Tenant) && !string.IsNullOrWhiteSpace(RelayKey);

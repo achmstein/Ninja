@@ -3,7 +3,7 @@
  * thumb, a deck of big cards, options in place, the order in a tray, held to
  * send. Its pills and lifted surfaces are the stylesheet's own tokens
  * (styles/theme.css); what it brings here is how headings are set and the
- * seeds it suggests, which the café's own seeds always win over. More styles
+ * seeds it suggests, which the business's own seeds always win over. More styles
  * come back later on top of it.
  */
 
@@ -18,7 +18,7 @@ export type StylePreset = {
     /** Letter spacing, em */
     tracking: number
   }
-  /** Seeds the style suggests; the café's own seeds win */
+  /** Seeds the style suggests; the business's own seeds win */
   defaults: {
     radius?: string
     fontLatin?: string
@@ -33,8 +33,8 @@ export const NINJA: StylePreset = {
 }
 
 /**
- * The seeds a theme paints with once the style's defaults fill what the café
- * left unset (all of them, for a café with no theme yet). The café's own
+ * The seeds a theme paints with once the style's defaults fill what the business
+ * left unset (all of them, for a business with no theme yet). The business's own
  * values always win.
  */
 type Seeds = { radius?: string | null; fontLatin?: string | null; fontArabic?: string | null; headerSize?: string | null }

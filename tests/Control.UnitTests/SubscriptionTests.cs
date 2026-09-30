@@ -47,7 +47,7 @@ public sealed class SubscriptionTests
         }
         Assert.Contains(Module.OnlinePayments, PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo), "a demo has everything");
         foreach (var type in Enum.GetValues<BusinessType>())
-            Assert.DoesNotContain(Module.OnlinePayments, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with online payments off: it waits for the cafe's payment keys");
+            Assert.DoesNotContain(Module.OnlinePayments, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with online payments off: it waits for the business's payment keys");
     }
 
     [TestMethod]

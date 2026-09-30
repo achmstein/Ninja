@@ -18,7 +18,7 @@ const extraTitles: Record<string, TranslationKey> = {
  */
 export function usePageTitle() {
   const t = useT()
-  const cafe = useBrandName()
+  const businessName = useBrandName()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function usePageTitle() {
       )
       .sort((a, b) => b.url.length - a.url.length)[0]
 
-    const name = cafe || t('adminName')
+    const name = businessName || t('adminName')
     document.title = match ? `${t(match.title)} · ${name}` : name
-  }, [pathname, t, cafe])
+  }, [pathname, t, businessName])
 }

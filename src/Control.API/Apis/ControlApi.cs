@@ -31,7 +31,7 @@ public static partial class ControlApi
         api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Running tenants (all, or the slugs given) onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
         api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
-        api.MapPost("/tenants/{slug}/demo-data", FillDemo).WithName("FillDemoData").WithSummary("Fill a running demo with a month of a café's life (suppliers, stock, recipes, staff, expenses, sales), once").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/demo-data", FillDemo).WithName("FillDemoData").WithSummary("Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
@@ -125,11 +125,11 @@ public static partial class ControlApi
         var nameEn = Clean(request.NameEn);
         var nameAr = Clean(request.NameAr);
         if (nameEn is null && nameAr is null)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required, in English or Arabic." });
-        // Only an English name spells a slug; a café named in Arabic types its own
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The business's name is required, in English or Arabic." });
+        // Only an English name spells a slug; a business named in Arabic types its own
         var slug = string.IsNullOrWhiteSpace(request.Slug) ? (nameEn is null ? null : TenantNaming.SlugFrom(nameEn)) : request.Slug.Trim().ToLowerInvariant();
         if (slug is null && string.IsNullOrWhiteSpace(request.Slug) && nameEn is null)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Type the café's slug: it cannot be spelled from an Arabic name." });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Type the business's slug: it cannot be spelled from an Arabic name." });
         if (slug is null || !TenantNaming.IsValidSlug(slug))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The slug must be 3–24 lower-case letters, digits and single dashes, and not a reserved word." });
         if (string.IsNullOrWhiteSpace(request.OwnerEmail) || !request.OwnerEmail.Contains('@'))
@@ -141,7 +141,7 @@ public static partial class ControlApi
         if (localeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
         var arabicStyle = string.IsNullOrWhiteSpace(request.ArabicStyle)
-            // An Egyptian café speaks Egyptian unless told otherwise; everyone else, Standard
+            // An Egyptian business speaks Egyptian unless told otherwise; everyone else, Standard
             ? (locale.Country == "EG" ? "egyptian" : "standard")
             : request.ArabicStyle.Trim().ToLowerInvariant();
         if (arabicStyle is not ("standard" or "egyptian"))
@@ -239,7 +239,7 @@ public static partial class ControlApi
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
-        // A customer's café holds its own records; pretend ones never go in
+        // A customer's business holds its own records; pretend ones never go in
         if (tenant.Kind != TenantKind.Demo)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = "Only a demo is filled with demo data." });
         return await Enqueue(context, queue, audit, slug, "demo-data", [TenantStatus.Running], ct);
@@ -276,7 +276,7 @@ public static partial class ControlApi
     /// <summary>
     /// A destroyed tenant is a row nobody needs on the list any more. Only
     /// from Destroyed: destroy first is what takes the stack down, and the
-    /// one step keeps a mis-click from wiping a café. The audit rows are
+    /// one step keeps a mis-click from wiping a business. The audit rows are
     /// keyed by slug, not by id, so the history reads on after the record.
     /// </summary>
     public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> Forget(ControlContext context, IAuditWriter audit, string slug, CancellationToken ct)
@@ -387,7 +387,7 @@ public static partial class ControlApi
         if (host == $"auth.{platform.Domain}" || host == $"control.{platform.Domain}" || host == platform.Domain)
             return TypedResults.Ok();
 
-        // One row, by the slug the host names or the café's own domain; never the whole table per certificate
+        // One row, by the slug the host names or the business's own domain; never the whole table per certificate
         var slug = TenantHosts.SlugFromHost(host, platform);
         var known = await context.Tenants.AsNoTracking()
             .Where(t => t.Status != TenantStatus.Destroyed)
@@ -499,7 +499,7 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
     public static TenantHostsDto From(TenantHosts h) => new(h.CustomerUrl, h.AdminUrl, h.PosUrl, h.KdsUrl, h.ApiUrl);
 }
 
-/// <param name="LogoUrl">The café's mark as its running stack serves it, or null while there is no stack to serve one.</param>
+/// <param name="LogoUrl">The business's mark as its running stack serves it, or null while there is no stack to serve one.</param>
 /// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
 /// <param name="Update">Where the stack stands against what its tag points to now; null until the first check.</param>
 /// <param name="IsDrill">A scratch tenant the restore drill stamped; destroyed by the drill, never mailed about.</param>
@@ -516,7 +516,7 @@ public record TenantSummary(string Slug, string? NameEn, string? NameAr, TenantK
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
-/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's apps speak.</param>
+/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the business's apps speak.</param>
 /// <param name="ContentLanguages">"both", "ar" or "en": the languages the business writes its menu, places and stock in.</param>
 public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string ArabicStyle = "standard", string ContentLanguages = "both")
 {
@@ -525,7 +525,7 @@ public record TenantLocaleDto(string Country, string Currency, string TimeZone, 
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);
 
-/// <summary>The café's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
+/// <summary>The business's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
 public record TenantRecordDto(string? ContactName, string? Phone, string? Address, TenantPlan Plan, string? Notes);
 
 /// <param name="Jobs">What is running or waiting for this tenant, with each queued job's place in line.</param>
@@ -564,7 +564,7 @@ public record TenantDetail(
     [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null,
     [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple")] bool SocialSignIn = true,
-    [property: Description("The café on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null)
+    [property: Description("The business on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -588,5 +588,5 @@ public record TenantDetail(
             TenantTalabatDto.From(t, p));
 }
 
-/// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>
+/// <summary>Where the business stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>
 public record TenantSubscriptionDto(SubscriptionStatus Status, DateTimeOffset? PaidThrough, int GraceDays, DateTimeOffset? SuspendedAt, Module[] Addons, Module[] Entitlements);

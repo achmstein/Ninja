@@ -1,9 +1,9 @@
 namespace Ninja.Catalog.API.Talabat;
 
 /// <summary>
-/// The café on Talabat, as its catalog keeps it: which branches sell there,
+/// The business on Talabat, as its catalog keeps it: which branches sell there,
 /// whether a branch's open/paused switch closes it there too, and how the last
-/// menu went. One row. The café's chain at Talabat is the platform's to set;
+/// menu went. One row. The business's chain at Talabat is the platform's to set;
 /// nothing here names it.
 /// </summary>
 public class TalabatSettings

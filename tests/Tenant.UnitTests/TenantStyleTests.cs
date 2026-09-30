@@ -2,7 +2,7 @@ using Ninja.Tenant.API.Model;
 
 namespace Ninja.Tenant.UnitTests;
 
-/// <summary>The styles a café may wear: Ninja, the platform's signature style, first.</summary>
+/// <summary>The styles a business may wear: Ninja, the platform's signature style, first.</summary>
 [TestClass]
 public sealed class TenantStyleTests
 {
@@ -14,8 +14,8 @@ public sealed class TenantStyleTests
     }
 
     [TestMethod]
-    public void A_cafe_that_never_chose_is_still_classic()
+    public void A_business_that_never_chose_is_still_classic()
     {
-        Assert.IsNull(new TenantTheme().Style, "no style is classic; only provisioning gives a new café Ninja");
+        Assert.IsNull(new TenantTheme().Style, "no style is classic; only provisioning gives a new business Ninja");
     }
 }

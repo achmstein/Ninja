@@ -23,7 +23,7 @@ class SaleCustomization {
     this.priceAdjustment = 0,
   });
 
-  /// Either language may be the only one the café writes
+  /// Either language may be the only one the business writes
   LocalizedText get customizationName => LocalizedText(en: customizationNameEn, ar: customizationNameAr);
 
   LocalizedText get optionName => LocalizedText(en: optionNameEn, ar: optionNameAr);
@@ -82,7 +82,7 @@ class SaleLine {
 
   double get total => price * quantity;
 
-  /// The item's name as the café writes it: English, Arabic or both
+  /// The item's name as the business writes it: English, Arabic or both
   LocalizedText get name => LocalizedText(en: nameEn, ar: nameAr);
 
   /// The chosen options and the note, as Sales stores a line's details: a

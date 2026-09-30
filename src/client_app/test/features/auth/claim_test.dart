@@ -35,7 +35,7 @@ class _Claims implements ClaimRepository {
   }
 }
 
-/// The café, answering without the network
+/// The business, answering without the network
 class _Tenant implements TenantRepository {
   @override
   Future<TenantBrand> getBrand() async => const TenantBrand(name: LocalizedText(en: 'Chillax', ar: 'تشيلاكس'));
@@ -69,7 +69,7 @@ void main() {
   group('claimTokenFrom', () {
     test('reads the token off the link the till shared', () {
       expect(claimTokenFrom('https://chillax.site/claim?token=$_token'), _token);
-      expect(claimTokenFrom('  https://cafe.example/claim?token=$_token  '), _token);
+      expect(claimTokenFrom('  https://business.example/claim?token=$_token  '), _token);
     });
 
     test('takes a link pasted without its scheme, or the bare token', () {
@@ -100,7 +100,7 @@ void main() {
   });
 
   group('ClaimScreen', () {
-    testWidgets('shows who the café added, read-only, above the form', (tester) async {
+    testWidgets('shows who the business added, read-only, above the form', (tester) async {
       await tester.pumpWidget(_app(_Claims(), token: _token));
       await tester.pumpAndSettle();
 
@@ -113,7 +113,7 @@ void main() {
       await tester.pumpWidget(_app(_Claims(previewFails: ClaimFailure.expired), token: _token));
       await tester.pumpAndSettle();
 
-      expect(find.text('This link has expired. Ask the café for a new one.'), findsOneWidget);
+      expect(find.text('This link has expired. Ask Chillax for a new one.'), findsOneWidget);
       expect(find.text('Use another code'), findsOneWidget);
     });
 
@@ -159,7 +159,7 @@ void main() {
       await tester.pumpWidget(_app(_Claims()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Have a code from the café?'), findsOneWidget);
+      expect(find.text('Have a code from Chillax?'), findsOneWidget);
       await tester.enterText(find.byType(EditableText).first, 'not a link');
       await tester.ensureVisible(find.text('Continue'));
       await tester.tap(find.text('Continue'));

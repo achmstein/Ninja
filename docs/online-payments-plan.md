@@ -1,8 +1,8 @@
 # Online payments (online payment and bill splitting)
 
 Status: built 2026-09-26; waiting on a Paymob sandbox account for the end-to-end test.
-Decided: Paymob; each café's own merchant account; OnlinePayments is an add-on on
-every plan (included in none); fee and tips are the café's choice.
+Decided: Paymob; each business's own merchant account; OnlinePayments is an add-on on
+every plan (included in none); fee and tips are the business's choice.
 
 As built (differences from the design below):
 - Payment settings and the provider secrets live in Sales (the only service
@@ -24,17 +24,17 @@ a custom amount), online payment fee line, Apple Pay / card / local debit.
 
 A guest at a table (or a signed-in customer on their bill) pays part or all
 of the bill online from the customer app. The till sees online payments live;
-the bill closes itself when fully paid. Sold per café as a module.
+the bill closes itself when fully paid. Sold per business as a module.
 
 ## Decisions to confirm with the user before coding
 1. **Provider: Paymob** (Egypt; cards, Apple Pay, wallets, Meeza). Needs a
    test (sandbox) merchant account from the user.
-2. **Money flow: each café's own Paymob merchant account** (keys entered by
+2. **Money flow: each business's own Paymob merchant account** (keys entered by
    the owner). Ninja never holds funds. (The alternative — Ninja as payment
    facilitator — is out of scope.)
 3. **Plan**: new module `OnlinePayments`; included in which plans vs add-on.
-4. Fee: café chooses whether the guest pays the online fee (percentage +
-   fixed, shown as its own line) or the café absorbs it. Tips: optional.
+4. Fee: business chooses whether the guest pays the online fee (percentage +
+   fixed, shown as its own line) or the business absorbs it. Tips: optional.
 
 ## What exists (read these first)
 
@@ -55,9 +55,9 @@ the bill closes itself when fully paid. Sold per café as a module.
   per the decision), `TenantFeatures.OnlinePayments` on Tenant.API, the features
   event, admin switch (only when entitled), client_web/client_app feature
   flag (`features.onlinePayments`).
-- **Payment settings** (Tenant.API, café-wide, owner-only, admin "Payments"
+- **Payment settings** (Tenant.API, business-wide, owner-only, admin "Payments"
   page): provider = paymob, API/secret key, public key, integration ids per
-  method (card, Apple Pay, wallet), HMAC secret, fee mode (guest|café) with
+  method (card, Apple Pay, wallet), HMAC secret, fee mode (guest|business) with
   percent + fixed, tips on/off + presets, allowed split modes. **Secrets
   encrypted at rest** (use ASP.NET Data Protection with a key persisted in
   the tenant's volume, or the platform's secret store — decide), never
@@ -81,12 +81,12 @@ a new microservice:
   remaining; expire holds.
 
 ### Paymob integration (verify every detail against Paymob's current docs)
-- Create a payment **intention** server-side with the café's secret key
+- Create a payment **intention** server-side with the business's secret key
   (amount in piasters, billing data from name/phone, items, integration ids,
   notification/redirection URLs) → returns a client secret; the customer app
   opens Paymob's **unified checkout** (or the pixel/embedded SDK).
 - **Webhook** (`POST /api/sales/payments/paymob/webhook/{tenant}` through the
-  gateway, anonymous): verify the **HMAC** with the café's HMAC secret,
+  gateway, anonymous): verify the **HMAC** with the business's HMAC secret,
   idempotent by transaction id, then mark Paid/Failed. Never trust the
   redirect alone; the redirect page polls our API for the status.
 - Refunds: admin/till "refund online payment" calls Paymob refund API and

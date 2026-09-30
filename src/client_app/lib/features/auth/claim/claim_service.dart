@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
 
-/// The token in whatever the customer has: the link the café shared
-/// (https://{café}/claim?token=…), scanned from its QR or pasted, or the
+/// The token in whatever the customer has: the link the business shared
+/// (https://{business}/claim?token=…), scanned from its QR or pasted, or the
 /// bare token. Null when it is neither.
 String? claimTokenFrom(String? input) {
   final text = input?.trim() ?? '';
@@ -39,7 +39,7 @@ class ClaimPreview {
 
 /// Why a claim did not go through, in the words the screen shows
 enum ClaimFailure {
-  /// Not a link the café made, or one a newer link replaced
+  /// Not a link the business made, or one a newer link replaced
   invalid,
   expired,
   used,

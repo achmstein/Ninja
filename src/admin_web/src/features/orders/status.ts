@@ -72,7 +72,7 @@ export const defaultPlatformRejectReason = platformRejectReasons[0].value
 // Where an order was placed from, for grouping the live board
 export type OrderPlace = 'rooms' | 'tables' | 'counter'
 
-/** The board's lane: café tables, everything timed (rooms, stations), or
+/** The board's lane: plain tables, everything timed (rooms, stations), or
  *  the counter for an order with no place at all. */
 export function orderPlace(order: {
   placeId?: number | string | null
@@ -85,7 +85,7 @@ export function orderPlace(order: {
 
 // Localized currency suffix (EGP / ج.م). Callers all live inside components
 // that re-render on language change, so reading the store here stays fresh.
-/** A price in the café's currency: `12.50 EGP` / `12.50 ج.م`. */
+/** A price in the business's currency: `12.50 EGP` / `12.50 ج.م`. */
 export function formatEgp(value: number | string | undefined | null): string {
   return formatMoney(value, useCurrency.getState().code, useLanguage.getState().language)
 }

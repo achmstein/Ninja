@@ -30,14 +30,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
-  String get connectTitle => 'ما هو المقهى؟';
+  String get connectTitle => 'ما هو النشاط؟';
 
   @override
   String get connectHint =>
-      'اكتب عنوان المقهى، أو امسح الرمز من صفحة التطبيقات في تطبيق الإدارة.';
+      'اكتب عنوان النشاط، أو امسح الرمز من صفحة التطبيقات في تطبيق الإدارة.';
 
   @override
-  String get cafeAddress => 'عنوان المقهى';
+  String get businessAddress => 'عنوان النشاط';
 
   @override
   String get connect => 'اتصال';
@@ -53,11 +53,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد رد من هذا العنوان. تحقق منه ومن اتصال الجهاز اللوحي بالإنترنت.';
 
   @override
-  String get connectNotACafe => 'هذا العنوان ليس لمقهى على ninja.';
+  String get connectNotABusiness => 'هذا العنوان ليس لنشاط على ninja.';
 
   @override
   String get connectPaused =>
-      'هذا المقهى موقوف. يمكن لمالكه معرفة السبب في تطبيق الإدارة.';
+      'هذا النشاط موقوف. يمكن لمالكه معرفة السبب في تطبيق الإدارة.';
 
   @override
   String get cancel => 'إلغاء';
@@ -69,11 +69,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get connectedTo => 'متصل بـ';
 
   @override
-  String get changeCafe => 'تغيير المقهى';
+  String get changeBusiness => 'تغيير النشاط';
 
   @override
-  String get changeCafeConfirm =>
-      'سيتم تسجيل الخروج ونسيان هذا المقهى، ويعود الجهاز اللوحي إلى شاشة الاتصال.';
+  String get changeBusinessConfirm =>
+      'سيتم تسجيل الخروج ونسيان هذا النشاط، ويعود الجهاز اللوحي إلى شاشة الاتصال.';
 
   @override
   String get language => 'اللغة';

@@ -63,7 +63,7 @@
 }
 
 /* The island's colours are the app's on the dock: the same green, red and
-   amber as on the slab, and the café's own colour for what is only news */
+   amber as on the slab, and the business's own colour for what is only news */
 :root [data-sileo-viewport] {
   --sileo-state-success: oklch(0.765 0.177 163.223);
   --sileo-state-error: oklch(0.704 0.191 22.216);

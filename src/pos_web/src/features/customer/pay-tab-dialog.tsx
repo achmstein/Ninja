@@ -40,7 +40,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
   const [tender, setTender] = useState(BASE_TENDERS[0])
   const [amountStr, setAmountStr] = useState('')
   const [slip, setSlip] = useState<TabPaymentSlip | null>(null)
-  // One request id per open: a retry on café Wi-Fi must not take the money twice
+  // One request id per open: a retry on shaky Wi-Fi must not take the money twice
   const requestId = useRef(crypto.randomUUID())
 
   useEffect(() => {

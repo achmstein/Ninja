@@ -9,10 +9,10 @@ using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.API.Apis;
 
-/// <param name="ChainCode">The café's chain at Talabat; null while it is not on Talabat.</param>
+/// <param name="ChainCode">The business's chain at Talabat; null while it is not on Talabat.</param>
 /// <param name="GlobalEntityId">Talabat's market for it, as the relay will use it.</param>
 /// <param name="RemoteIdPattern">What each branch is registered as at Talabat: the slug, a dash and the branch number.</param>
-/// <param name="PluginUrl">The one address Talabat sends every café's orders to.</param>
+/// <param name="PluginUrl">The one address Talabat sends every business's orders to.</param>
 /// <param name="PlatformConfigured">Whether the platform has Ninja's Talabat account at all.</param>
 public record TenantTalabatDto(string? ChainCode, string GlobalEntityId, string RemoteIdPattern, string PluginUrl, bool PlatformConfigured)
 {
@@ -24,7 +24,7 @@ public record TenantTalabatDto(string? ChainCode, string GlobalEntityId, string 
         p.Talabat.Configured);
 }
 
-/// <param name="ChainCode">Empty takes the café off Talabat.</param>
+/// <param name="ChainCode">Empty takes the business off Talabat.</param>
 /// <param name="GlobalEntityId">Null or empty reads it from the country.</param>
 public record TenantTalabatRequest(string? ChainCode, string? GlobalEntityId);
 
@@ -34,7 +34,7 @@ public static partial class ControlApi
     {
         api.MapPut("/tenants/{slug}/talabat", UpdateTalabat)
             .WithName("UpdateTenantTalabat")
-            .WithSummary("The café's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there")
+            .WithSummary("The business's chain at Talabat, from Talabat's onboarding; the relay sends its menu and availability only there")
             .RequireAuthorization("Platform");
     }
 
@@ -51,7 +51,7 @@ public static partial class ControlApi
         if (entity is not null && !TalabatCode().IsMatch(entity))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The global entity is letters, digits and underscores, like TB_EG." });
         if (chain is not null && await context.Tenants.AnyAsync(t => t.Id != tenant.Id && t.TalabatChainCode == chain && t.Status != TenantStatus.Destroyed, ct))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{chain} already belongs to another café." });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{chain} already belongs to another business." });
 
         tenant.TalabatChainCode = chain;
         tenant.TalabatGlobalEntityId = entity;

@@ -19,7 +19,7 @@ import { Slab } from '@/components/ninja/page/parts'
 import { DemoCheckout } from '@/components/pay/demo-checkout'
 
 export const Route = createFileRoute('/pay/$key')({
-  // simulate: a demo café's pretend checkout, which is this page itself
+  // simulate: a demo business's pretend checkout, which is this page itself
   validateSearch: (search: Record<string, unknown>): { simulate?: boolean } =>
     search.simulate === 1 || search.simulate === '1' || search.simulate === true ? { simulate: true } : {},
   component: PayReturnPage,
@@ -74,7 +74,7 @@ function PayReturnPage() {
     )
   }
 
-  // A demo café takes pretend payments: the guest says how the payment went
+  // A demo business takes pretend payments: the guest says how the payment went
   if (simulate && payment && status === 'Pending') {
     return <DemoCheckout payment={payment} />
   }
@@ -141,7 +141,7 @@ const MARK: Record<State, { icon: ComponentType<{ className?: string }> | null; 
  * changes: the spinner while the provider's word is awaited becomes the
  * drawn tick (or the warning) in place, and the title sharpens in with it.
  * What was charged rolls in under a paid one (with the online fee in it,
- * where there was one), under the café's own mark.
+ * where there was one), under the business's own mark.
  */
 function Outcome({
   state,
@@ -168,9 +168,9 @@ function Outcome({
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
       <div className='mx-auto -mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] w-full max-w-lg flex-col justify-center px-4 py-8'>
         <Rise className='flex flex-col gap-4'>
-          {/* Whose payment it was: the café's own mark over it */}
+          {/* Whose payment it was: the business's own mark over it */}
           <RiseItem className='flex justify-center pb-2'>
-            <CafeMark />
+            <BusinessMark />
           </RiseItem>
           <RiseItem>
             <Slab layout transition={springSoft} className='flex flex-col items-center gap-4 px-6 py-9 text-center'>
@@ -203,8 +203,8 @@ function Outcome({
   )
 }
 
-/** The café's logo, or its mark and name where it has no wordmark */
-function CafeMark() {
+/** The business's logo, or its mark and name where it has no wordmark */
+function BusinessMark() {
   const wordmark = useBrandWordmark()
   const name = useBrandName()
   return wordmark ? (

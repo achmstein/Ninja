@@ -3,9 +3,9 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 
 /**
- * Whether the café's customers may sign in with Google and Apple: the
+ * Whether the business's customers may sign in with Google and Apple: the
  * platform's own apps (the consent screen says Ninja), through the hub
- * realm, so nothing is set up per café. Off leaves email and phone.
+ * realm, so nothing is set up per business. Off leaves email and phone.
  */
 export function SocialField({ id, checked, onChange }: { id: string; checked: boolean; onChange: (checked: boolean) => void }) {
   const t = useT()

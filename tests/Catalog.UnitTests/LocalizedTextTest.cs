@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Catalog.UnitTests;
 
-/// <summary>The café's own text: either language may be the only one, each side means what it says.</summary>
+/// <summary>The business's own text: either language may be the only one, each side means what it says.</summary>
 [TestClass]
 public class LocalizedTextTest
 {

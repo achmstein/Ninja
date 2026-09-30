@@ -107,8 +107,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    // Only the providers the café has on; a brand that does not say keeps both
+    // Only the providers the business has on; a brand that does not say keeps both
     final social = ref.watch(brandProvider).socialProviders;
+    final businessName = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
     final google = social == null || social.contains('google');
     final apple = social == null || social.contains('apple');
 
@@ -319,7 +320,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: GestureDetector(
                     onTap: () => context.push('/claim'),
                     child: AppText(
-                      l10n.haveCafeCode,
+                      l10n.haveBusinessCode(businessName),
                       style: TextStyle(
                         color: colors.primary,
                         fontWeight: FontWeight.w600,

@@ -17,8 +17,8 @@ import '../../features/shifts/screens/shift_history_screen.dart';
 import '../../features/shifts/screens/shift_screen.dart';
 import '../../features/ticket/screens/ticket_screen.dart';
 
-/// What shows while the till reads its session and café: Ninja's own
-/// chrome, as control_web's splash draws it (the café's mark takes over once
+/// What shows while the till reads its session and business: Ninja's own
+/// chrome, as control_web's splash draws it (the business's mark takes over once
 /// it is known). Dark whatever the device's theme, in the connect screen's
 /// colours, so a tablet not yet connected goes from one to the other
 /// without a flash; the native launch splash before it is drawn to match

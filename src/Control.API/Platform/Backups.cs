@@ -371,7 +371,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         if (bad.Count > 0) throw new InvalidOperationException($"Backup {slug}/{info.Id} is corrupt: {string.Join(", ", bad)} does not match the manifest");
     }
 
-    /// <summary>The floor on the tenants drive: a dump that fills the disk takes the shared Postgres down for every café.</summary>
+    /// <summary>The floor on the tenants drive: a dump that fills the disk takes the shared Postgres down for every business.</summary>
     private void EnsureRoomOnDisk()
     {
         try

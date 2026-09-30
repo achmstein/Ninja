@@ -79,7 +79,7 @@ function ProfileGateDialog({
   const [first, setFirst] = useState(initialName[0])
   const [last, setLast] = useState(initialName[1])
   const phonePattern = usePhoneRule((s) => s.pattern)
-  // The café's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
+  // The business's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)
 
   const [phone, setPhone] = useState(initialPhone)

@@ -8,14 +8,14 @@ using Ninja.Control.API.Platform;
 namespace Ninja.Control.UnitTests;
 
 /// <summary>
-/// A month of a café's life, put into a stack through its own APIs: the
+/// A month of a business's life, put into a stack through its own APIs: the
 /// parts link the way real data does, sales are replayed within what the
 /// till allows, and a module outside the plan is left out, not failed on.
 /// </summary>
 [TestClass]
 public sealed class DemoDataTests
 {
-    /// <summary>A stack as far as the filler talks to it: the café menu, four tables, ids for whatever is created.</summary>
+    /// <summary>A stack as far as the filler talks to it: the business menu, four tables, ids for whatever is created.</summary>
     private sealed class FakeStack(params string[] modulesOff) : IStackProxy
     {
         private int _id = 100;
@@ -103,7 +103,7 @@ public sealed class DemoDataTests
         Assert.IsTrue(orders.All(o => o.Body!["replay"]!.GetValue<bool>() && o.RequestId is not null));
         var placed = orders.Select(o => o.Body!["placedAt"]!.GetValue<DateTimeOffset>()).ToList();
         Assert.IsTrue(placed.All(p => p > DateTimeOffset.UtcNow.AddDays(-31) && p < DateTimeOffset.UtcNow), "the till takes a replay up to 31 days old");
-        Assert.IsTrue(orders.All(o => o.Body!["placeId"]?.GetValue<int>() is >= 41 and <= 44), "at the café's own tables");
+        Assert.IsTrue(orders.All(o => o.Body!["placeId"]?.GetValue<int>() is >= 41 and <= 44), "at the business's own tables");
         var settles = stack.Calls.Where(c => c.Path.EndsWith("/settle", StringComparison.Ordinal)).ToList();
         Assert.AreEqual(orders.Count, settles.Count, "every bill is closed");
         Assert.IsTrue(settles.All(s => s.Body!["payments"]![0]!["amount"]!.GetValue<decimal>() == 120.5m), "for what the till says the bill comes to");

@@ -72,7 +72,7 @@ public static class FinanceApi
             .RequireAuthorization("Owner");
 
         owners.MapGet("/partners", GetPartners).WithName("GetPartners")
-            .WithSummary("The branch's partners with what the café holds of theirs");
+            .WithSummary("The branch's partners with what the business holds of theirs");
         owners.MapPost("/partners", SavePartner).WithName("SavePartner")
             .WithSummary("Add a partner, or edit one when the body carries its id");
         owners.MapGet("/partners/{id:int}/ledger", GetPartnerLedger).WithName("GetPartnerLedger");

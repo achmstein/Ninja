@@ -2,7 +2,7 @@ namespace Ninja.Ordering.UnitTests.Domain;
 
 /// <summary>
 /// Unit tests for Buyer aggregate.
-/// Simplified for cafe - no payment methods.
+/// Simplified for business - no payment methods.
 /// </summary>
 [TestClass]
 public class BuyerAggregateTest

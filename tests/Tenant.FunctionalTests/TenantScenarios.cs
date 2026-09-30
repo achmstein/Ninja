@@ -37,7 +37,7 @@ public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bo
 
 /// <summary>
 /// The brand every surface reads at boot, and the two things that decide
-/// what a café may run: the plan, pushed by the control plane, and the
+/// what a business may run: the plan, pushed by the control plane, and the
 /// owner's own switches within it.
 /// </summary>
 [TestClass]
@@ -48,7 +48,7 @@ public sealed class TenantScenarios
     private static Caller Owner => Suite.TenantApi.As(Persona.Owner());
     private static Caller Control => Suite.TenantApi.As(Persona.ControlPlane());
 
-    /// <summary>The café as it is now, with everything allowed again, so scenarios do not inherit each other's plan.</summary>
+    /// <summary>The business as it is now, with everything allowed again, so scenarios do not inherit each other's plan.</summary>
     private static async Task<TenantView> ResetAsync()
     {
         await Control.PutAsync<TenantView>($"{Tenant}/entitlements", FeaturesView.All);
@@ -137,14 +137,14 @@ public sealed class TenantScenarios
         var anyone = Suite.TenantApi.AsAnonymous();
 
         var classic = await anyone.GetAsync<StyledView>(Tenant);
-        Assert.IsNull(classic.Theme.Style, "a café that never chose is classic, as every café looked before styles");
+        Assert.IsNull(classic.Theme.Style, "a business that never chose is classic, as every business looked before styles");
         Assert.IsNull(classic.Theme.Layout);
 
         await Owner.PutAsync<StyledView>(Tenant, Styled(new { radius = "lg", style = " Bold ", layout = new { menuItem = "row", density = "AIRY" } }));
         var saved = await anyone.GetAsync<StyledView>(Tenant);
         Assert.AreEqual("bold", saved.Theme.Style, "trimmed and lower-cased like every other seed");
         Assert.AreEqual(new LayoutView("row", null, null, null, null, "airy"), saved.Theme.Layout, "only the parts chosen are kept; the rest are the style's");
-        Assert.AreEqual("lg", saved.Theme.Radius, "the café's own seeds stand beside the style");
+        Assert.AreEqual("lg", saved.Theme.Radius, "the business's own seeds stand beside the style");
 
         // A layout that chooses nothing is no layout
         var cleared = await Owner.PutAsync<StyledView>(Tenant, Styled(new { style = "cozy", layout = new { menuItem = "" } }));
@@ -264,7 +264,7 @@ public sealed class TenantScenarios
     }
 
     [TestMethod]
-    public async Task The_manifest_names_the_cafe_so_installing_the_app_puts_its_name_on_the_phone()
+    public async Task The_manifest_names_the_business_so_installing_the_app_puts_its_name_on_the_phone()
     {
         await ResetAsync();
         await Owner.PutAsync<TenantView>(Tenant, Update(FeaturesView.All, name: "Chillax Zamalek"));

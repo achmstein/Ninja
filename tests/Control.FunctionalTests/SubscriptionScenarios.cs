@@ -5,7 +5,7 @@ using Ninja.Control.API.Platform;
 namespace Ninja.Control.FunctionalTests;
 
 /// <summary>
-/// What a café pays for, through the API: a demo has everything; converting
+/// What a business pays for, through the API: a demo has everything; converting
 /// it puts it on a plan, and the stack follows the plan up, down, while
 /// stopped, and add-on by add-on.
 /// </summary>

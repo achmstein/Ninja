@@ -17,7 +17,7 @@ public static partial class OrdersApi
         // limited because an open create endpoint is a queue-spam vector.
         api.MapPost("/", CreateOrderAsync)
             .WithName("CreateOrder")
-            .WithSummary("Create a new cafe order")
+            .WithSummary("Create a new order")
             .WithDescription("Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.")
             .AllowAnonymous()
             .RequireRateLimiting(OrderRateLimiting.GuestCreatePolicy);
@@ -202,7 +202,7 @@ public static partial class OrdersApi
                 return TypedResults.BadRequest("A name is required to order as a guest.");
             }
 
-            // The same rule the realm and the apps use, for this café's country
+            // The same rule the realm and the apps use, for this business's country
             if (!PhoneRules.IsValid(request.GuestPhone, services.Country.Code))
             {
                 return TypedResults.BadRequest("A valid phone number is required to order as a guest.");
@@ -215,7 +215,7 @@ public static partial class OrdersApi
 
             // Ordering without saying where to bring it is ordering ahead, and
             // that is for account holders — there is nobody to hand a guest's
-            // order to and nothing tying it to a visit. Unless the café takes
+            // order to and nothing tying it to a visit. Unless the business takes
             // guests' orders from anywhere: then it is theirs to collect, and
             // the phone they left is how the counter reaches them.
             if (request.PlaceId is null)
@@ -905,7 +905,7 @@ public static partial class OrdersApi
 }
 
 /// <summary>
-/// Request model for creating a cafe order.
+/// Request model for creating a business order.
 /// </summary>
 /// <param name="UserId">
 /// Ignored. The customer is identified by their access token, or as a guest by

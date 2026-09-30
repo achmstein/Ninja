@@ -6,7 +6,7 @@ namespace Ninja.Finance.Domain.AggregatesModel.PartnerAggregate;
 /// <summary>
 /// An owner. Two at one branch, one at another: the branches they hold
 /// are listed on them with their share of each, and their account is per
-/// branch. Money they take or put in is theirs, never the café's cost or
+/// branch. Money they take or put in is theirs, never the business's cost or
 /// income; their share only says how a month's profit is theirs to read.
 /// </summary>
 public class Partner : Entity, IAggregateRoot
@@ -141,7 +141,7 @@ public class PartnerEntry : Entity, IAggregateRoot
         RecordedAt = DateTime.UtcNow;
     }
 
-    /// <summary>The line's effect on what the café holds of theirs: a contribution raises it, a drawing lowers it.</summary>
+    /// <summary>The line's effect on what the business holds of theirs: a contribution raises it, a drawing lowers it.</summary>
     public decimal Signed => Type == PartnerEntryType.Contribution ? Amount : -Amount;
 }
 

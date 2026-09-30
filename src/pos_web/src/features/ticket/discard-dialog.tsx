@@ -57,7 +57,7 @@ export function DiscardTicketDialog({
 
   const doDiscard = () =>
     discard.mutate({
-      // A retry on café Wi-Fi must not become a second command
+      // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
       query: { 'api-version': API_VERSION },

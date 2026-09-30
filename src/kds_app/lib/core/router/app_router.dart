@@ -10,8 +10,8 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/kitchen/screens/board_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
-/// What shows while the kitchen display reads its session and café: Ninja's
-/// own chrome, as control_web's splash draws it (the café's mark takes over
+/// What shows while the kitchen display reads its session and business: Ninja's
+/// own chrome, as control_web's splash draws it (the business's mark takes over
 /// once it is known), on black as a kitchen screen is. The native launch
 /// splash before it is drawn to match (src/scripts/generate-app-icons.mjs).
 class SplashScreen extends StatelessWidget {

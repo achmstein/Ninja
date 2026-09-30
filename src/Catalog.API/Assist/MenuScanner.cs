@@ -151,7 +151,7 @@ public sealed class MenuScanner(INinjaAgentFactory factory, ILogger<MenuScanner>
           in the list.
         - For a business that writes both languages, every category and item has nameEn and nameAr: what is printed, and
           its counterpart in the other language.
-          English is Title Case ("Turkish Coffee"); Arabic is Egyptian café Arabic ("قهوة تركي", "مشروبات مثلجة");
+          English is Title Case ("Turkish Coffee"); Arabic is Egyptian menu Arabic ("قهوة تركي", "مشروبات مثلجة");
           brands and drink names are transliterated (Latte → لاتيه, Nescafe → نسكافيه, Red Bull → ريد بول).
         - rawText is the item's line exactly as printed. price is the printed price in EGP with Western digits
           (convert Arabic-Indic ٠-٩); 0 when no price is printed.

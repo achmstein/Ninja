@@ -26,7 +26,7 @@ admin_web, client_web, kds_web; eslint clean on every touched file (the one
 error in `client_web/src/lib/use-keyboard-inset.ts` is pre-existing).
 
 **Nothing is committed.** The working tree also carries the earlier
-uncommitted work of the same day (Keycloak theme `chillax` → `ninja`, café
+uncommitted work of the same day (Keycloak theme `chillax` → `ninja`, business
 name on the staff sign-in/header, workflow and compose edits) and the
 untracked `tenants/` folder. Suggested PR slices are at the end of the plan.
 
@@ -81,7 +81,7 @@ untracked `tenants/` folder. Suggested PR slices are at the end of the plan.
 
 The control plane (`src/Control.API`, `src/control_web`) can stamp, run, back up, brand and destroy a tenant, but several things a paid service needs are missing or unsafe — all verified in code:
 
-- Every stamped stack connects to Postgres as the shared superuser and to RabbitMQ as the shared `guest` user (`Templates.Compose`, `Infra.cs`): one compromised café stack can read every other café's data. The tenant's `.env` even holds the platform superuser password.
+- Every stamped stack connects to Postgres as the shared superuser and to RabbitMQ as the shared `guest` user (`Templates.Compose`, `Infra.cs`): one compromised business's stack can read every other business's data. The tenant's `.env` even holds the platform superuser password.
 - Stamped compose files set no memory/CPU/pids/log limits; one runaway service can take the box — and every tenant on it — down.
 - Backups are local to the box (`{TenantsRoot}/{slug}/backups`) and never include `controldb` or `keycloak`, the databases holding every tenant's secrets, realms and users. `Destroy` deletes the tenant folder including its backups.
 - No outbound email: the owner's temporary password sits on the record for a human to copy; demos are stopped and destroyed silently.

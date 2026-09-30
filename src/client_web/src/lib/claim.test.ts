@@ -2,7 +2,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, it } from 'vitest'
 import { checkClaimForm, claimProblem, isLinkProblem, readClaimToken } from './claim'
 
-// A customer the café added at the counter opens the link the cashier
+// A customer the business added at the counter opens the link the cashier
 // showed them: what the page makes of the token, and of each refusal.
 
 function refused(status: number, data?: unknown) {

@@ -98,7 +98,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     public const string PlatformSettledBy = "talabat";
 
     /// <summary>
-    /// The platform pays the café for this order, so nobody at the till
+    /// The platform pays the business for this order, so nobody at the till
     /// collects anything: its bill settles now, to the platform, in this same
     /// transaction. If the ticket cannot settle (it should always be able to),
     /// it stays open for the till rather than losing the order.

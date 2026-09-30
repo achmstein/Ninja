@@ -9,7 +9,7 @@ using Ninja.ServiceDefaults;
 
 namespace Ninja.Control.API.Apis;
 
-/// <summary>What a café pays for: its plan and add-ons, the payments recorded against it, and the suspension that follows a period nobody renewed.</summary>
+/// <summary>What a business pays for: its plan and add-ons, the payments recorded against it, and the suspension that follows a period nobody renewed.</summary>
 public static partial class ControlApi
 {
     private static void MapSubscriptionApi(RouteGroupBuilder api)

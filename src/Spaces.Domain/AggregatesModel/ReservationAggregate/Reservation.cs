@@ -138,7 +138,7 @@ public class Reservation : Entity, IAggregateRoot
 
     // ---- its life
 
-    /// <summary>The café acknowledged it. Idempotent.</summary>
+    /// <summary>The business acknowledged it. Idempotent.</summary>
     public void Confirm()
     {
         if (!IsOpen)

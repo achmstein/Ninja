@@ -1,5 +1,5 @@
 /**
- * The brand fonts a café can choose, per script, in the pickers' order.
+ * The brand fonts a business can choose, per script, in the pickers' order.
  *
  * Each entry says where the family comes from and which of the weights the
  * apps use (400–700) it really has, so a stylesheet asks only for faces that
@@ -19,7 +19,7 @@ export type BrandFont = {
   weights: readonly number[]
   /** Google Fonts, or served from the app's own public/fonts */
   source: 'google' | 'self'
-  /** A display face: best for headings and the café's name */
+  /** A display face: best for headings and the business's name */
   display?: boolean
 }
 

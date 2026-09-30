@@ -28,7 +28,7 @@ export function toLocalizedValue(
 }
 
 /**
- * Back to the API's shape: trimmed, an empty side becomes null. A café
+ * Back to the API's shape: trimmed, an empty side becomes null. A business
  * may write in one language only, so either side may be the one missing.
  */
 export function fromLocalizedValue(value: LocalizedValue): {

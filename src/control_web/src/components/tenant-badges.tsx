@@ -47,7 +47,7 @@ export function StatusBadge({
   )
 }
 
-// Where the café stands with its money: quiet while it is fine, amber when a period ran out, rose when the stack is stopped for it
+// Where the business stands with its money: quiet while it is fine, amber when a period ran out, rose when the stack is stopped for it
 const subscriptionClass: Record<SubscriptionStatusName, string> = {
   Trialing: 'border-transparent bg-muted text-muted-foreground',
   Active: 'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',

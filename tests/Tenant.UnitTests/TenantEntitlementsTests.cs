@@ -14,7 +14,7 @@ public sealed class TenantEntitlementsTests
     {
         var tenant = new API.Model.Tenant();
         Assert.AreEqual(AllOn, tenant.Entitlements, "the dev host and a stack stamped before plans keep every switch usable");
-        Assert.AreEqual(AllOn with { OnlinePayments = false }, tenant.Features, "online payments waits for the owner (and the cafe's payment keys)");
+        Assert.AreEqual(AllOn with { OnlinePayments = false }, tenant.Features, "online payments waits for the owner (and the business's payment keys)");
     }
 
     [TestMethod]

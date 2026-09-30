@@ -26,7 +26,7 @@ import { categoriesQueryOptions } from '../queries'
 import { useFinanceActions } from '../use-finance-actions'
 
 /**
- * The category list: rename, switch off what the café never uses, add
+ * The category list: rename, switch off what the business never uses, add
  * one. A retired category keeps its old expenses and just leaves the
  * pickers.
  */

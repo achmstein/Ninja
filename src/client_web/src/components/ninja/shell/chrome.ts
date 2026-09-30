@@ -11,7 +11,7 @@ const SHORT_BELOW = 740
 export const SHORT = typeof window !== 'undefined' && window.innerHeight < SHORT_BELOW
 
 /**
- * The top bar's height is the café's (--bar-h in styles/theme.css: its header
+ * The top bar's height is the business's (--bar-h in styles/theme.css: its header
  * size, never shorter than the island in it needs), so it is CSS, not a
  * number here. Room at the top of the menu for the bar over it: the bar,
  * then the gap every page has under it (--page-top)

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Ninja.Catalog.API.Model;
 
 /// <summary>
-/// Represents a category in the cafe catalog (e.g., Drinks, Food, Snacks, Desserts)
+/// Represents a category in the business catalog (e.g., Drinks, Food, Snacks, Desserts)
 /// </summary>
 public class CatalogType
 {

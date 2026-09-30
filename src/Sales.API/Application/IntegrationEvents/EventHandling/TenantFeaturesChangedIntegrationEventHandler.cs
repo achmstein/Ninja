@@ -7,7 +7,7 @@ using Ninja.Sales.Infrastructure.Projections;
 namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// Keeps Sales' projection of the café's switches: an upsert of the one
+/// Keeps Sales' projection of the business's switches: an upsert of the one
 /// row, guarded against out-of-order delivery — an event older than what
 /// the row already holds is dropped rather than letting a stale "on" undo
 /// a newer "off".

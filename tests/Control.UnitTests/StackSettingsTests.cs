@@ -13,7 +13,7 @@ namespace Ninja.Control.UnitTests;
 
 /// <summary>
 /// What the wizard chose stays editable: the record takes the locale, the
-/// Arabic, the starting theme and the kind of place, and a running café's
+/// Arabic, the starting theme and the kind of place, and a running business's
 /// apps see them at once, through the same tenant endpoint the brand goes by.
 /// </summary>
 [TestClass]
@@ -75,9 +75,9 @@ public sealed class StackSettingsTests
     private Task<Microsoft.AspNetCore.Http.HttpResults.Results<Ok<TenantDetail>, NotFound, BadRequest<Microsoft.AspNetCore.Mvc.ProblemDetails>, ProblemHttpResult>> SaveAsync(UpdateTenantRequest request)
         => ControlApi.UpdateTenant(_context, null!, new NoAudit(), _provisioner, null!, _stack, Options.Create(_platform), "blue", request, CancellationToken.None);
 
-    /// <summary>A running café speaks, prices and tells time the way the record now says, without waiting for an upgrade.</summary>
+    /// <summary>A running business speaks, prices and tells time the way the record now says, without waiting for an upgrade.</summary>
     [TestMethod]
-    public async Task The_record_puts_the_locale_and_the_arabic_on_the_running_cafe()
+    public async Task The_record_puts_the_locale_and_the_arabic_on_the_running_business()
     {
         var result = await SaveAsync(Record(country: "SA", currency: "SAR", timeZone: "Asia/Riyadh", language: "en", arabicStyle: "standard"));
 
@@ -91,9 +91,9 @@ public sealed class StackSettingsTests
         Assert.AreEqual("standard", _tenant.ArabicStyle);
     }
 
-    /// <summary>The light or dark a new person starts in moves on the café; "device" goes back to following the phone.</summary>
+    /// <summary>The light or dark a new person starts in moves on the business; "device" goes back to following the phone.</summary>
     [TestMethod]
-    public async Task The_record_puts_the_starting_theme_on_the_running_cafe()
+    public async Task The_record_puts_the_starting_theme_on_the_running_business()
     {
         await SaveAsync(Record(defaultTheme: "dark"));
         Assert.AreEqual("dark", _stack.BrandOf(_tenant)["theme"]!["mode"]!.GetValue<string>());
@@ -105,12 +105,12 @@ public sealed class StackSettingsTests
     }
 
     /// <summary>
-    /// The kind of place is a label on a running café: its apps learn it (a
+    /// The kind of place is a label on a running business: its apps learn it (a
     /// cloud kitchen hides its tables), but the switches the owner set and
     /// whether guests order from anywhere stay exactly as they were.
     /// </summary>
     [TestMethod]
-    public async Task A_new_kind_of_place_changes_the_label_and_nothing_the_cafe_set()
+    public async Task A_new_kind_of_place_changes_the_label_and_nothing_the_business_set()
     {
         var brand = _stack.BrandOf(_tenant);
         brand["features"]!["reservations"] = true;
@@ -148,7 +148,7 @@ public sealed class StackSettingsTests
 
     /// <summary>A stack that is not running is not called; the record keeps the change.</summary>
     [TestMethod]
-    public async Task A_stopped_cafe_keeps_the_change_on_the_record()
+    public async Task A_stopped_business_keeps_the_change_on_the_record()
     {
         _tenant.Status = TenantStatus.Stopped;
         await _context.SaveChangesAsync();
@@ -160,9 +160,9 @@ public sealed class StackSettingsTests
         Assert.IsFalse(_stack.Brands.ContainsKey("blue"), "nothing was sent to a stopped stack");
     }
 
-    /// <summary>The brand is sent back whole: the theme, the switches and the customer URL the café had go with it.</summary>
+    /// <summary>The brand is sent back whole: the theme, the switches and the customer URL the business had go with it.</summary>
     [TestMethod]
-    public void The_rest_of_the_brand_goes_back_as_the_cafe_had_it()
+    public void The_rest_of_the_brand_goes_back_as_the_business_had_it()
     {
         var current = new JsonObject
         {

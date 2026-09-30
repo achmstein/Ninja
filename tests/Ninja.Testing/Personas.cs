@@ -12,7 +12,7 @@ public sealed record Persona(string UserId, string Name, string[] Roles, int[] B
     public static Persona Owner(int branch = 1) => new("11111111-1111-4111-8111-111111111111", "Owner", ["Owner", "Admin"], [branch]);
     public static Persona Admin(int branch = 1) => new("22222222-2222-4222-8222-222222222222", "Admin", ["Admin"], [branch]);
     public static Persona Cashier(int branch = 1) => new("33333333-3333-4333-8333-333333333333", "Cashier", ["Cashier"], [branch]);
-    /// <summary>A café's customer: no staff role at all.</summary>
+    /// <summary>A business's customer: no staff role at all.</summary>
     public static Persona Customer(string? userId = null) => new(userId ?? "44444444-4444-4444-8444-444444444444", "Customer", [], []);
     /// <summary>Someone signed in with a role the policy does not take.</summary>
     public static Persona Nobody() => new("55555555-5555-4555-8555-555555555555", "Nobody", [], []);

@@ -68,7 +68,7 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You read supplier receipts and delivery notes for a café in Egypt. The user message has a JSON object
+        You read supplier receipts and delivery notes for a café, restaurant, kitchen or game station in Egypt. The user message has a JSON object
         (the branch, today's date, and the "candidates": the stock items already on the shelf with their id,
         English and Arabic names, base unit, and pack size / pack name, and "languages") followed by a photo of the
         receipt.

@@ -22,7 +22,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
     public static readonly AgentDefinition Definition = new(
         AgentKey,
         "Customization suggester",
-        "Proposes the size, sugar, milk and extras groups a café menu item is ordered with",
+        "Proposes the size, sugar, milk and extras groups a menu item is ordered with",
         Instructions,
         Temperature: 0.4f,
         MaxOutputTokens: 2048,
@@ -88,7 +88,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You propose the customization groups a customer picks from when ordering one item from the menu of a café in
+        You propose the customization groups a customer picks from when ordering one item from the menu of a café, restaurant or kitchen in
         Egypt: size, sugar level, roast, milk, type, flavor, extras. The user message is a JSON object with the item
         (name, description, category, price in Egyptian pounds), the names of the groups the item already has,
         examples of groups from other items on the same menu, and "languages".
@@ -97,7 +97,7 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
         - Propose only what makes sense for this item: a Turkish coffee gets roast, sugar and cup; a juice gets size
           and ice; a bottled drink or a slice of cake may need nothing — then answer with an empty groups list.
         - Follow the examples: their voice, their wording, their prices. Reuse an example group as it is when it fits
-          the item instead of inventing a new wording. Arabic is Egyptian café Arabic ("سنجل", "دبل", "مضبوط",
+          the item instead of inventing a new wording. Arabic is Egyptian menu Arabic ("سنجل", "دبل", "مضبوط",
           "على الريحة", "زيادة", "من غير سكر"); English names are short Title Case ("Single", "Oat Milk").
         - Do not propose a group the item already has. At most 5 groups. A single-choice group has 2 to 6 options;
           an extras group (allowMultiple true) has 1 to 8.

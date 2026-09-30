@@ -30,7 +30,7 @@ import { ledgerQueryOptions } from '../queries'
 import { usePayrollActions } from '../use-payroll-actions'
 
 /**
- * What the café owes this person, line by line, newest first, and a form
+ * What the business owes this person, line by line, newest first, and a form
  * to key in an advance, a payment, a bonus or a deduction. Earnings only
  * ever come from a payslip.
  */

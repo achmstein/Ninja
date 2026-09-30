@@ -1,6 +1,6 @@
 # Spaces — Reservations apart from stays
 
-**Goal:** a café can take a booking on any place — a PlayStation room with a clock, or a plain table with none — and the thing that is booked is not the thing that is billed.
+**Goal:** a business can take a booking on any place — a PlayStation room with a clock, or a plain table with none — and the thing that is booked is not the thing that is billed.
 
 **Status:** decided and built 2026-09-21; the module split and the owner's reservation history the same day.
 
@@ -10,7 +10,7 @@
 
 A *hold* was a `Stay` that had not started: born `Held` with a ten-minute expiry, then `Running`, then `Ended`. Every stay carried a `Tariff` snapshot, so only a timed place could be reserved (`Place.CanReserve => IsTimed && IsActive`), and only for *now* — there was no way to book for later, and no way to book a table that only takes orders.
 
-The control plane sold this as the **Spaces** module, but every café has places (tables, QR codes) whatever its plan: `PlanCatalog.Routes` had to carve `/api/places` out of the module and block seven routes by hand.
+The control plane sold this as the **Spaces** module, but every business has places (tables, QR codes) whatever its plan: `PlanCatalog.Routes` had to carve `/api/places` out of the module and block seven routes by hand.
 
 ## 2. Decisions
 
@@ -29,11 +29,11 @@ The control plane sold this as the **Spaces** module, but every café has places
 
 **Seated means the party is here** *(2026-09-21)*, and **Complete** is the party leaving. At a timed place the stay's end completes the reservation on its own; at a plain table the till or the admin clear it ("Party left", `POST /api/reservations/{id}/complete`), and a settled bill on the table does the same — the rule the customer's phone already applied to a scanned table. `PlaceViewModel.SeatedReservation` is the party at a plain table (the panels show who and since when); its place reads Occupied; a party still seated is not history. On the customer's phone a seated reservation at a plain table is the table, as surely as if they had scanned it: it becomes the order destination and the chip in the header, and is dropped when the staff clear it (`ReservationSeated`/`ReservationCompleted` reach it through Notification's `RoomStatusChanged`). Rows seated before this change were parties long gone and are migrated to Completed.
 
-**D2 — `Place.Reservable` is the owner's switch.** Booking is a property of the place, not of its tariff: a plain table can take reservations without a clock, a timed place can stop taking them. Giving a place a tariff opts it in, since timed places always booked; the owner may switch it off afterwards. Default off for a plain table, so a café that only seats people sees nothing change.
+**D2 — `Place.Reservable` is the owner's switch.** Booking is a property of the place, not of its tariff: a plain table can take reservations without a clock, a timed place can stop taking them. Giving a place a tariff opts it in, since timed places always booked; the owner may switch it off afterwards. Default off for a plain table, so a business that only seats people sees nothing change.
 
-**D3 — Two modules: Reservations and Time billing.** What a café buys is one or both: a restaurant books tables and never runs a clock; a walk-in PlayStation café runs clocks and takes no bookings; Chillax does both. `Module.Reservations` gates `/api/reservations/*`, `/api/places/available`, `/{id}/reservable` and `/{id}/reservations`; `Module.TimeBilling` gates `/api/stays/*`, `/{id}/tariff`, `/{id}/walk-in`, `/{id}/join` and `/{id}/stays`; `/api/places` itself is every plan's. Starter includes both. A tenant who had bought Spaces as an add-on has both add-ons now (Control.API migration `ReservationsAndTimeBilling`); a stack's `SpacesEnabled/Entitled` became `TimeBilling*` with `Reservations*` copied from it (Branch.API migration of the same name), and the next entitlements push settles each on its own. The features object the surfaces read is `{ reservations, timeBilling, loyalty, … }`.
+**D3 — Two modules: Reservations and Time billing.** What a business buys is one or both: a restaurant books tables and never runs a clock; a walk-in PlayStation café runs clocks and takes no bookings; Chillax does both. `Module.Reservations` gates `/api/reservations/*`, `/api/places/available`, `/{id}/reservable` and `/{id}/reservations`; `Module.TimeBilling` gates `/api/stays/*`, `/{id}/tariff`, `/{id}/walk-in`, `/{id}/join` and `/{id}/stays`; `/api/places` itself is every plan's. Starter includes both. A tenant who had bought Spaces as an add-on has both add-ons now (Control.API migration `ReservationsAndTimeBilling`); a stack's `SpacesEnabled/Entitled` became `TimeBilling*` with `Reservations*` copied from it (Branch.API migration of the same name), and the next entitlements push settles each on its own. The features object the surfaces read is `{ reservations, timeBilling, loyalty, … }`.
 
-What each switch gates on the surfaces: **reservations** — the till's reserved strip, the customer's book tab; **timeBilling** — the Room filter, the stays list, the time-by-place chart, "places in use"; the Rooms & Tables page, service requests, "tables in use" and the live floor are every café's (a plain table has a bill, a QR and a waiter to call whatever the plan).
+What each switch gates on the surfaces: **reservations** — the till's reserved strip, the customer's book tab; **timeBilling** — the Room filter, the stays list, the time-by-place chart, "places in use"; the Rooms & Tables page, service requests, "tables in use" and the live floor are every business's (a plain table has a bill, a QR and a waiter to call whatever the plan).
 
 ## 3. What changed
 
@@ -48,4 +48,4 @@ What each switch gates on the surfaces: **reservations** — the till's reserved
 ## 4. Left for later
 
 - A duration or slot length per branch, once overlapping bookings on one place are wanted.
-- A push to the customer when the café confirms a booking for later (no integration event on Confirm yet).
+- A push to the customer when the business confirms a booking for later (no integration event on Confirm yet).

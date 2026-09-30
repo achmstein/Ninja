@@ -12,7 +12,7 @@ import '../../../core/widgets/settings_list.dart';
 import '../../kitchen/printing/kitchen_printing.dart';
 import '../../../l10n/app_localizations.dart';
 
-/// Per-tablet settings, laid out like the till's: this device (the café,
+/// Per-tablet settings, laid out like the till's: this device (the business,
 /// kiosk mode, the app's version). Language and theme live in the header
 /// menu.
 class SettingsScreen extends ConsumerStatefulWidget {

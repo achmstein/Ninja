@@ -9,7 +9,7 @@ import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
 import '../../../core/brand/brand_provider.dart';
-import '../../tables/models/cafe_table.dart';
+import '../../tables/models/dining_table.dart';
 import '../../tables/services/tables_service.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/move_lines.dart';
@@ -175,8 +175,8 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
     final tickets = ref.watch(openTicketsProvider).value ?? const [];
     // A cloud kitchen seats nobody: a bill never moves to a table
     final tables = ref.watch(isCloudKitchenProvider)
-        ? const <CafeTable>[]
-        : ref.watch(tablesProvider).value ?? const <CafeTable>[];
+        ? const <DiningTable>[]
+        : ref.watch(tablesProvider).value ?? const <DiningTable>[];
     final freeTables = [
       for (final table in tables)
         if (table.isActive && !tickets.any((t) => t.type == TicketType.table && t.placeId == table.id)) table,

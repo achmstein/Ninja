@@ -80,7 +80,7 @@ public sealed class PlatformOptions
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
 
-    /// <summary>Ninja's Talabat integration: one account for every café, used through the relay; empty leaves it off.</summary>
+    /// <summary>Ninja's Talabat integration: one account for every business, used through the relay; empty leaves it off.</summary>
     public TalabatOptions Talabat { get; set; } = new();
 
     /// <summary>How long a demo lives before it is stopped, and how long a stopped demo waits before it is destroyed.</summary>
@@ -105,7 +105,7 @@ public sealed class PlatformOptions
     /// What each container of a stack may take at most, stamped into its
     /// compose file: memory per service (the ones that run the assistant get
     /// more), the gateway's, CPUs, processes, and how much log docker keeps
-    /// per container. One café's runaway service ends at its own cap, not at
+    /// per container. One business's runaway service ends at its own cap, not at
     /// the box.
     /// </summary>
     public int ServiceMemoryMb { get; set; } = 256;
@@ -132,7 +132,7 @@ public sealed class PlatformOptions
     /// <summary>How often the box is read for the capacity view.</summary>
     public int CapacityRefreshSeconds { get; set; } = 30;
 
-    /// <summary>The floor on the tenants drive: below it no backup is taken and no stack is stamped, and ops hears. Backups grow it; a full disk takes the shared Postgres down for every café.</summary>
+    /// <summary>The floor on the tenants drive: below it no backup is taken and no stack is stamped, and ops hears. Backups grow it; a full disk takes the shared Postgres down for every business.</summary>
     public int MinFreeDiskMb { get; set; } = 5120;
 
     /// <summary>A job running longer than this is reported to ops (nothing is killed: a big restore is slow).</summary>
@@ -274,7 +274,7 @@ public sealed class MailOptions
 
 /// <summary>
 /// The provider apps the whole platform signs customers in with. They belong
-/// to Ninja, not to a café: a café would need its own paid Apple account and
+/// to Ninja, not to a business: a business would need its own paid Apple account and
 /// a walk through the Google console before it could sell a coffee. One app
 /// each, shared by every realm. Empty leaves a realm with no providers at
 /// all, which is better than broken ones.

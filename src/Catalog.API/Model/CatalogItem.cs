@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Ninja.Catalog.API.Model;
 
 /// <summary>
-/// Represents a menu item in the cafe catalog (drinks, food, snacks, desserts)
+/// Represents a menu item in the business catalog (drinks, food, snacks, desserts)
 /// </summary>
 public class CatalogItem
 {

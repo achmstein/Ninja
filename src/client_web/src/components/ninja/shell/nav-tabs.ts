@@ -1,7 +1,7 @@
 import { Coffee, Gamepad2, User } from 'lucide-react'
 
 // Three tabs: Menu / Places / You. The places tab is where the customer is
-// in the cafe, so its label and icon follow the visit (docs/visit-tab.html).
+// in the business, so its label and icon follow the visit (docs/visit-tab.html).
 // The bill running now lives on the menu's dock; all of them are under You
 // (Your bills). The dock draws these. `under` lists the pages pushed from a
 // tab, which keep that tab lit.

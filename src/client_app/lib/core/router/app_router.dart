@@ -151,8 +151,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // A counter customer's claim link opened as an App Link
-      // (https://{café}/claim?token=…), or the sign-in page's "Have a code
-      // from the café?" with no token yet
+      // (https://{business}/claim?token=…), or the sign-in page's "Have a code
+      // from the business?" with no token yet
       GoRoute(
         path: '/claim',
         builder: (context, state) => ClaimScreen(token: state.uri.queryParameters['token']),

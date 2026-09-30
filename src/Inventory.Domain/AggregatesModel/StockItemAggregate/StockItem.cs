@@ -18,7 +18,7 @@ public class StockItem : Entity, IAggregateRoot
     /// <summary>How many base units one purchase pack holds, when it is bought by the pack.</summary>
     public decimal? PackSize { get; private set; }
 
-    /// <summary>What the pack is called, in the café's languages: "bag" / "كيس", "bottle" / "عبوة"; null when it is not bought by the pack.</summary>
+    /// <summary>What the pack is called, in the business's languages: "bag" / "كيس", "bottle" / "عبوة"; null when it is not bought by the pack.</summary>
     public LocalizedText? PackName { get; private set; }
 
     /// <summary>

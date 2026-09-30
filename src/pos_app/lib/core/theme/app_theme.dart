@@ -100,20 +100,20 @@ class ThemeState {
 class ThemeNotifier extends Notifier<ThemeState> {
   static const _themeKey = 'pos_app_theme_mode';
 
-  /// The person picked light or dark themselves; the café's default no longer applies
+  /// The person picked light or dark themselves; the business's default no longer applies
   bool _chosen = false;
 
   @override
   ThemeState build() {
-    // Until someone chooses, the app follows the café's starting theme
+    // Until someone chooses, the app follows the business's starting theme
     ref.listen(brandProvider.select((b) => b.defaultThemeMode), (_, mode) {
-      if (!_chosen) state = state.copyWith(themeMode: _cafeDefault(mode));
+      if (!_chosen) state = state.copyWith(themeMode: _businessDefault(mode));
     });
     _loadTheme();
     return const ThemeState();
   }
 
-  AppThemeMode _cafeDefault(String? mode) => switch (mode) {
+  AppThemeMode _businessDefault(String? mode) => switch (mode) {
         'light' => AppThemeMode.light,
         'dark' => AppThemeMode.dark,
         _ => AppThemeMode.system,
@@ -125,7 +125,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
       final savedTheme = prefs.getString(_themeKey);
 
       _chosen = savedTheme != null;
-      AppThemeMode mode = _cafeDefault(ref.read(brandProvider).defaultThemeMode);
+      AppThemeMode mode = _businessDefault(ref.read(brandProvider).defaultThemeMode);
       if (savedTheme != null) {
         mode = AppThemeMode.values.firstWhere(
           (e) => e.name == savedTheme,

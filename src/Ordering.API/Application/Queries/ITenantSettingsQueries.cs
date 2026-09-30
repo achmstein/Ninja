@@ -2,7 +2,7 @@
 namespace Ninja.Ordering.API.Application.Queries;
 
 /// <summary>
-/// Reads Ordering's projection of the café's own settings (see
+/// Reads Ordering's projection of the business's own settings (see
 /// Ninja.Ordering.Infrastructure.Projections.TenantSettings).
 /// </summary>
 public interface ITenantSettingsQueries

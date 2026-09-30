@@ -1,4 +1,4 @@
-import { useCafeTheme } from '@/context/theme-provider'
+import { useBusinessTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
 import { create } from 'zustand'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -68,12 +68,12 @@ function writeCachedBrand(brand: Brand) {
  * cache we wait for the network, briefly, so the first paint is not unbranded.
  */
 /**
- * Whether the edge said the café is paused: its stack is off and every API
+ * Whether the edge said the business is paused: its stack is off and every API
  * call answers 503 { code: "paused" }. Set from the boot fetch, whenever it
  * lands; the app then shows a notice instead of a menu that cannot load.
  */
 /**
- * What a phone number looks like where this café is. The tenant sends the
+ * What a phone number looks like where this business is. The tenant sends the
  * rule with the rest of its locale, so the apps never carry one market's
  * shape of their own; until it lands, anything a phone could be.
  */
@@ -140,9 +140,9 @@ export async function bootBrand(queryClient: QueryClient) {
 export function applyBrand(brand: Brand) {
   // The language the business's setting allows: its only one, else its default until the customer picks
   const language = useLanguage.getState().followBusiness(brand.locale)
-  // Which Arabic the café speaks, and the light or dark a person who never chose starts in
+  // Which Arabic the business speaks, and the light or dark a person who never chose starts in
   useArabicStyle.getState().set(brand.locale?.arabicStyle)
-  useCafeTheme.getState().set(brand.theme?.mode)
+  useBusinessTheme.getState().set(brand.theme?.mode)
   setLink('icon', brand.icons.favicon, 'image/png')
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
@@ -244,7 +244,7 @@ export function useFeatures(): TenantFeatures {
 
 /**
  * A cloud kitchen has no tables: nothing to scan, every order is
- * collected. Said by the kind of place the café was created as.
+ * collected. Said by the kind of place the business was created as.
  */
 export function useIsCloudKitchen(): boolean {
   return useBrand()?.businessType === 'cloud_kitchen'

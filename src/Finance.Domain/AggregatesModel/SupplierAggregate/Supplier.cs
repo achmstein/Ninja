@@ -2,7 +2,7 @@
 namespace Ninja.Finance.Domain.AggregatesModel.SupplierAggregate;
 
 /// <summary>
-/// Someone the café buys from. Inventory keeps only the id on a receipt;
+/// Someone the business buys from. Inventory keeps only the id on a receipt;
 /// the account of what is owed to them lives here, per branch.
 /// </summary>
 public class Supplier : Entity, IAggregateRoot
@@ -37,7 +37,7 @@ public class Supplier : Entity, IAggregateRoot
 /// <summary>
 /// A line on a supplier's account. An invoice is a delivery received (from
 /// Inventory's receipt, or keyed in); a payment is money handed to them;
-/// a credit is a return or a discount. Balance = what the café owes.
+/// a credit is a return or a discount. Balance = what the business owes.
 /// </summary>
 public enum SupplierEntryType
 {
@@ -96,7 +96,7 @@ public class SupplierEntry : Entity, IAggregateRoot
         RecordedAt = DateTime.UtcNow;
     }
 
-    /// <summary>The line's effect on what the café owes: an invoice raises it, the rest lower it.</summary>
+    /// <summary>The line's effect on what the business owes: an invoice raises it, the rest lower it.</summary>
     public decimal Signed => Type == SupplierEntryType.Invoice ? Amount : -Amount;
 }
 

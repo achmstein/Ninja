@@ -971,16 +971,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ratedThanks => 'Thanks for rating!';
 
   @override
-  String get haveCafeCode => 'Have a code from the café?';
-
-  @override
-  String claimTitle(String cafe) {
-    return 'Your account at $cafe';
+  String haveBusinessCode(String name) {
+    return 'Have a code from $name?';
   }
 
   @override
-  String get claimIntro =>
-      'The café added you at the counter. Add an email and a password to sign in and see your points and orders.';
+  String claimTitle(String name) {
+    return 'Your account at $name';
+  }
+
+  @override
+  String claimIntro(String name) {
+    return '$name added you at the counter. Add an email and a password to sign in and see your points and orders.';
+  }
 
   @override
   String get claimSubmit => 'Create my account';
@@ -989,8 +992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get claimDone => 'Your account is ready';
 
   @override
-  String get claimExpired =>
-      'This link has expired. Ask the café for a new one.';
+  String claimExpired(String name) {
+    return 'This link has expired. Ask $name for a new one.';
+  }
 
   @override
   String get claimUsed => 'This link was already used. Sign in instead.';
@@ -1002,19 +1006,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get claimEmailTaken => 'That email already has an account';
 
   @override
-  String get claimScanOrPaste => 'Scan the café\'s QR code or paste the link';
+  String claimScanOrPaste(String name) {
+    return 'Scan the QR code from $name or paste the link';
+  }
 
   @override
   String get claimScan => 'Scan the QR code';
 
   @override
-  String get claimPointCamera => 'Point the camera at the café\'s QR code';
+  String get claimPointCamera => 'Point the camera at the QR code';
 
   @override
   String get claimPasteLabel => 'Link or code';
 
   @override
-  String get claimPasteHint => 'Paste what the café sent you';
+  String claimPasteHint(String name) {
+    return 'Paste what $name sent you';
+  }
 
   @override
   String get claimContinue => 'Continue';

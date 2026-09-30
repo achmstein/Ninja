@@ -18,7 +18,7 @@ public sealed class SalesUnderTest() : ServiceUnderTest<Program>("salesdb", new(
     ["Payments:CallbackBaseUrl"] = "https://api.cafe.test",
     ["Payments:ReturnBaseUrl"] = "https://cafe.test",
     ["Payments:Paymob:BaseUrl"] = "https://paymob.test",
-    // A demo stack: pretend payments until the café enters a Paymob account
+    // A demo stack: pretend payments until the business enters a Paymob account
     ["Payments:Simulated"] = "true",
 })
 {
@@ -65,7 +65,7 @@ public record PaymentStatus(Guid Key, string Status, decimal Amount, bool BillCl
 public record SettingsView(bool SecretKeySet, string? SecretKeyHint, bool HmacSecretSet, bool Ready, bool CanKeepSecrets, string CallbackUrl, bool Simulated);
 
 /// <summary>
-/// A table paying its bill from its phones through the café's own Paymob
+/// A table paying its bill from its phones through the business's own Paymob
 /// account: the owner sets the account up, two guests split the bill, the
 /// signed callbacks mark their shares paid, and the bill closes itself.
 /// </summary>
@@ -88,7 +88,7 @@ public sealed class PaymentScenarios
         return caller;
     }
 
-    private static async Task SetUpCafeAsync()
+    private static async Task SetUpBusinessAsync()
     {
         await Owner.PutAsync<SettingsView>($"/api/sales/payments/settings?{Version}", new
         {
@@ -104,7 +104,7 @@ public sealed class PaymentScenarios
             allowEqual = true,
             allowCustom = true,
         });
-        // The café bought the module and switched it on: what Tenant.API's event would have said
+        // The business bought the module and switched it on: what Tenant.API's event would have said
         using var scope = Suite.Sales.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SalesContext>();
         var row = await db.TenantFeatures.FindAsync(Infrastructure.Projections.TenantFeatures.SingletonId);
@@ -175,7 +175,7 @@ public sealed class PaymentScenarios
     [TestMethod]
     public async Task The_owners_provider_secrets_are_kept_sealed_and_never_read_back()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
 
         var response = await Owner.RawAsync(HttpMethod.Get, $"/api/sales/payments/settings?{Version}");
         var text = await response.Content.ReadAsStringAsync();
@@ -201,7 +201,7 @@ public sealed class PaymentScenarios
     [TestMethod]
     public async Task Two_guests_split_a_bill_and_it_settles_itself_when_the_last_share_lands()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
         var (ticketId, table) = await ATableBillAsync(200m);
         var sara = Guest("guest-sara-" + table);
         var omar = Guest("guest-omar-" + table);
@@ -214,10 +214,10 @@ public sealed class PaymentScenarios
         // Sara pays her half
         var half = await sara.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 2, parts = 1, of = 2, payerName = "Sara" });
         Assert.AreEqual(100m, half.Amount);
-        Assert.AreEqual(100m, half.Charged, "her share, the café carrying the fee");
+        Assert.AreEqual(100m, half.Charged, "her share, the business carrying the fee");
         StringAssert.StartsWith(half.CheckoutUrl, "https://paymob.test/unifiedcheckout/?publicKey=egy_pk_test&clientSecret=cs_test_secret");
         var intention = SalesUnderTest.Paymob.Requests.Last(r => r.Path == "/v1/intention/");
-        Assert.AreEqual($"Token {SecretKey}", intention.Authorization, "the café's own account, opened only for the call");
+        Assert.AreEqual($"Token {SecretKey}", intention.Authorization, "the business's own account, opened only for the call");
         Assert.AreEqual(10000, intention.Body!["amount"]!.GetValue<long>(), "in piasters");
 
         // While her checkout is open, Omar cannot take her half too
@@ -258,7 +258,7 @@ public sealed class PaymentScenarios
     [TestMethod]
     public async Task A_declined_card_lets_the_share_go_and_the_till_settles_the_rest_with_the_online_part()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
         var (ticketId, table) = await ATableBillAsync(90m);
         var guest = Guest("guest-lina-" + table);
         var bill = await AtTableAsync(guest, table);
@@ -286,7 +286,7 @@ public sealed class PaymentScenarios
     [TestMethod]
     public async Task A_demo_without_a_paymob_account_pays_with_pretend_money_and_nothing_else_can()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
         // The demo has no Paymob account yet
         var settings = await Owner.PutAsync<SettingsView>($"/api/sales/payments/settings?{Version}", new
         {
@@ -323,7 +323,7 @@ public sealed class PaymentScenarios
         }
         finally
         {
-            await SetUpCafeAsync();
+            await SetUpBusinessAsync();
         }
 
         // With the account back, payments go to Paymob and cannot be simulated
@@ -337,7 +337,7 @@ public sealed class PaymentScenarios
     [TestMethod]
     public async Task A_checkout_left_unfinished_is_let_go_by_its_payer_or_the_till_not_by_anyone_else()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
         var (ticketId, table) = await ATableBillAsync(60m);
         var nour = Guest("guest-nour-" + table);
         var other = Guest("guest-other-" + table);
@@ -367,9 +367,9 @@ public sealed class PaymentScenarios
     }
 
     [TestMethod]
-    public async Task A_bill_is_not_paid_online_where_the_cafe_has_it_off()
+    public async Task A_bill_is_not_paid_online_where_the_business_has_it_off()
     {
-        await SetUpCafeAsync();
+        await SetUpBusinessAsync();
         var (ticketId, table) = await ATableBillAsync(30m);
         using (var scope = Suite.Sales.Services.CreateScope())
         {
@@ -389,7 +389,7 @@ public sealed class PaymentScenarios
         }
         finally
         {
-            await SetUpCafeAsync();
+            await SetUpBusinessAsync();
         }
     }
 }

@@ -75,7 +75,7 @@ export function BusinessPicker({
 export type ArabicStyle = 'standard' | 'egyptian'
 export type DefaultTheme = 'device' | 'light' | 'dark'
 
-/** Which Arabic the café's apps speak, and the light or dark a new person starts in. */
+/** Which Arabic the business's apps speak, and the light or dark a new person starts in. */
 export function LookFields({
   arabicStyle,
   onArabicStyle,

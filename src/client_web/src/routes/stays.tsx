@@ -27,7 +27,7 @@ function startOf(stay: StayViewModel): Date | null {
   return raw ? new Date(raw) : null
 }
 
-/** The customer's time at the café's rooms and stations, all of it in one
+/** The customer's time at the business's rooms and stations, all of it in one
  *  list by shift day (Today, Yesterday, a date), newest first, each a card
  *  (a running one the slab). */
 function StaysPage() {

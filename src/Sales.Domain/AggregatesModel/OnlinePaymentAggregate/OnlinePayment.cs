@@ -31,7 +31,7 @@ public enum OnlinePaymentStatus
 
 /// <summary>
 /// A guest paying part or all of a table's bill from their phone, through the
-/// café's own payment provider account (Ninja never holds the money). While
+/// business's own payment provider account (Ninja never holds the money). While
 /// the provider's checkout is open the share is held, so two guests cannot
 /// pay the same items or more than the bill; the provider's signed callback
 /// marks it paid or failed. Paid shares become Online payments on the ticket
@@ -52,7 +52,7 @@ public class OnlinePayment : Entity, IAggregateRoot
     /// <summary>The guest's share of the bill: what the ticket is paid.</summary>
     public decimal Amount { get; private set; }
 
-    /// <summary>The provider's fee when the café passes it on to the guest; 0 when the café absorbs it.</summary>
+    /// <summary>The provider's fee when the business passes it on to the guest; 0 when the business absorbs it.</summary>
     public decimal Fee { get; private set; }
 
     public string Currency { get; private set; } = string.Empty;

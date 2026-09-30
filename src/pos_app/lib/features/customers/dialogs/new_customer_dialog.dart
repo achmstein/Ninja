@@ -23,7 +23,7 @@ SaleCustomer _saleCustomer(IdentityUser user) =>
 
 /// A customer by name and phone, added at the counter so their points
 /// start with this sale. While the cashier types, the number is checked
-/// against everyone the café already has (normalized the way the server
+/// against everyone the business already has (normalized the way the server
 /// keeps it: Arabic digits, spaces, +20), and names that look alike are
 /// offered — so the regular who never gave their number twice is not added
 /// twice. Resolves to the customer to attach, or null when cancelled.

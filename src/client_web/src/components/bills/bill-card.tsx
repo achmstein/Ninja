@@ -290,7 +290,7 @@ export function BillCard({
         </AnimatePresence>
       </Surface>
 
-      {/* Paying from the phone, where the café takes it: tucked under the slab, as the order sheet tucks under the dock */}
+      {/* Paying from the phone, where the business takes it: tucked under the slab, as the order sheet tucks under the dock */}
       {open && !forming && (
         <div className='-mt-6 empty:hidden [&>*]:bg-muted [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9'>
           <BillPayBar bill={bill} />

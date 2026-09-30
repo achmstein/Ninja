@@ -15,7 +15,7 @@ export type StoredPlace = {
   name: { en?: string | null; ar?: string | null }
   branchId: number
   /** When the code was read: the table view says "since 8:40 pm", and the
-   *  cafe's business day decides whether that was this sitting or a past one */
+   *  business's business day decides whether that was this sitting or a past one */
   scannedAt: number
 }
 
@@ -53,7 +53,7 @@ export const useSessionPlaceStore = create<SessionPlaceState>()(
 
 /**
  * A scanned table stays the customer's until something real ends it: they
- * leave it, the bill is paid or voided, they scan another, or the cafe's
+ * leave it, the bill is paid or voided, they scan another, or the business's
  * business day rolls over. No clock — a sitting can run all evening, and a
  * timer that guesses when it ended would send a late round to nowhere.
  */
@@ -75,7 +75,7 @@ export const usePlaceStore = create<PlaceState>()(
 )
 
 /** A stored place counts while the customer is browsing its branch and the
- *  cafe has not closed since they scanned it. */
+ *  business has not closed since they scanned it. */
 function isUsable(
   place: StoredPlace | null,
   branchId: number,

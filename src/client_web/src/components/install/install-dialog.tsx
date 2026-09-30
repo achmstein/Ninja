@@ -39,7 +39,7 @@ export function InstallDialog({
  * Safari's three steps, each with a small drawing of what to look for: the
  * bar with its Share button (at the bottom on an iPhone, the top on an
  * iPad), the share sheet's "Add to Home Screen", and the Add that confirms
- * it, beside the café's own icon. Drawn, not pictured, so they follow the
+ * it, beside the business's own icon. Drawn, not pictured, so they follow the
  * scheme; Safari's own words stay in English, as the phone shows them.
  */
 export function IosInstallSteps() {
@@ -154,7 +154,7 @@ function ShareSheet() {
   )
 }
 
-/** The screen that confirms it: Cancel and Add over the café's icon and name */
+/** The screen that confirms it: Cancel and Add over the business's icon and name */
 function AddScreen() {
   const brand = useBrand()
   const name = useBrandName()

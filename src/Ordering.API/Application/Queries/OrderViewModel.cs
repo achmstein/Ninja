@@ -23,7 +23,7 @@ public record OrderRatingDto
 /// <summary>
 /// What a delivery platform said about its order, as staff read it: the code
 /// the rider asks for, how it leaves, when the rider comes, and — only when
-/// the café's own rider takes it — where to. The platform's addresses stay
+/// the business's own rider takes it — where to. The platform's addresses stay
 /// out.
 /// </summary>
 public record PlatformOrderView
@@ -63,7 +63,7 @@ public record PlatformOrderView
 }
 
 /// <summary>
-/// Simplified order view model for cafe orders.
+/// Simplified order view model for business orders.
 /// No address or payment information needed.
 /// </summary>
 public record Order

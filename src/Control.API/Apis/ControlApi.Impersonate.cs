@@ -11,13 +11,13 @@ namespace Ninja.Control.API.Apis;
 /// "Sign in as the owner": the master admin may open a session as any user
 /// in any realm. The session's cookies belong to the auth host, so the
 /// control app gets a one-time link on that host; opening it sets the
-/// cookies and lands on the café's admin app, signed in as the owner.
+/// cookies and lands on the business's admin app, signed in as the owner.
 /// </summary>
 public static partial class ControlApi
 {
     private static void MapImpersonationApi(RouteGroupBuilder api)
     {
-        api.MapPost("/tenants/{slug}/impersonate", Impersonate).WithName("ImpersonateOwner").WithSummary("A one-time link that opens the café's admin app signed in as its owner").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/impersonate", Impersonate).WithName("ImpersonateOwner").WithSummary("A one-time link that opens the business's admin app signed in as its owner").RequireAuthorization("Platform");
         api.MapGet("/impersonate/{ticket}", RedeemImpersonation).WithName("RedeemImpersonation").WithSummary("Opened on the auth host: sets the owner's session and goes to the admin app").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
     }
 

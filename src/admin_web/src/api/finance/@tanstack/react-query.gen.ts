@@ -297,7 +297,7 @@ export const postSupplierEntryMutation = (options?: Partial<Options<PostSupplier
 export const getPartnersQueryKey = (options: Options<GetPartnersData>) => createQueryKey('getPartners', options);
 
 /**
- * The branch's partners with what the café holds of theirs
+ * The branch's partners with what the business holds of theirs
  */
 export const getPartnersOptions = (options: Options<GetPartnersData>) => queryOptions<GetPartnersResponse, AxiosError<DefaultError>, GetPartnersResponse, ReturnType<typeof getPartnersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

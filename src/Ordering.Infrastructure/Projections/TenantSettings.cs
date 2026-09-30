@@ -2,7 +2,7 @@
 namespace Ninja.Ordering.Infrastructure.Projections;
 
 /// <summary>
-/// Ordering's own copy of the café's settings — the ones that are the café's
+/// Ordering's own copy of the business's settings — the ones that are the business's
 /// and not any one branch's — kept up to date from Tenant.API's
 /// TenantSettingsChangedIntegrationEvent. One row for the stack. No row means
 /// the stack has never said, and every setting reads as off, as it always has.
@@ -15,7 +15,7 @@ public class TenantSettings
 
     /// <summary>
     /// A guest may order without a table — from anywhere, to collect. Every
-    /// branch of the café, including one opened after it was switched on.
+    /// branch of the business, including one opened after it was switched on.
     /// </summary>
     public bool GuestOrdersAnywhere { get; set; }
 

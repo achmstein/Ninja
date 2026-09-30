@@ -141,7 +141,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
 
   const submit = () =>
     refund.mutate({
-      // A retry on café Wi-Fi must not become a second command
+      // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(ticket.id) },
       query: { 'api-version': API_VERSION },

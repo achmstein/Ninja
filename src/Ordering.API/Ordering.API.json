@@ -11,7 +11,7 @@
         "tags": [
           "Orders"
         ],
-        "summary": "Create a new cafe order",
+        "summary": "Create a new order",
         "description": "Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.",
         "operationId": "CreateOrder",
         "parameters": [

@@ -235,7 +235,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final locale = ref.watch(localeProvider);
     final brand = ref.watch(brandProvider);
     final brandName = ref.watch(brandNameProvider);
-    // The style's defaults fill whatever seed the café left unset
+    // The style's defaults fill whatever seed the business left unset
     final brandFont = brandFontFor(withStyleDefaults(brand.theme), locale);
     final themeMode = themeState.effectiveMode(brand);
 

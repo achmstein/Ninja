@@ -57,7 +57,7 @@ class ThemeState {
     );
   }
 
-  /// The mode the app is in for [brand]: the customer's (or the café's
+  /// The mode the app is in for [brand]: the customer's (or the business's
   /// default), unless the brand's style keeps the page dark
   AppThemeMode effectiveMode(TenantBrand brand) => brand.theme.preset.forceDark ? AppThemeMode.dark : themeMode;
 
@@ -86,7 +86,7 @@ class ThemeState {
 
     // Typography in the locale's bundled family, then the tenant's family
     // for that script when it chose one google_fonts knows
-    // The style's defaults fill whatever seed the café left unset
+    // The style's defaults fill whatever seed the business left unset
     final theme = withStyleDefaults(brand.theme);
     final brandFont = brandFontFor(theme, locale ?? const Locale('en'));
     var typography = FTypography.inherit(
@@ -126,20 +126,20 @@ class ThemeState {
 class ThemeNotifier extends Notifier<ThemeState> {
   static const _themeKey = 'app_theme_mode';
 
-  /// The person picked light or dark themselves; the café's default no longer applies
+  /// The person picked light or dark themselves; the business's default no longer applies
   bool _chosen = false;
 
   @override
   ThemeState build() {
-    // Until someone chooses, the app follows the café's starting theme
+    // Until someone chooses, the app follows the business's starting theme
     ref.listen(brandProvider.select((b) => b.defaultThemeMode), (_, mode) {
-      if (!_chosen) state = state.copyWith(themeMode: _cafeDefault(mode));
+      if (!_chosen) state = state.copyWith(themeMode: _businessDefault(mode));
     });
     _loadTheme();
     return const ThemeState();
   }
 
-  AppThemeMode _cafeDefault(String? mode) => switch (mode) {
+  AppThemeMode _businessDefault(String? mode) => switch (mode) {
         'light' => AppThemeMode.light,
         'dark' => AppThemeMode.dark,
         _ => AppThemeMode.system,
@@ -151,7 +151,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
       final savedTheme = prefs.getString(_themeKey);
 
       _chosen = savedTheme != null;
-      AppThemeMode mode = _cafeDefault(ref.read(brandProvider).defaultThemeMode);
+      AppThemeMode mode = _businessDefault(ref.read(brandProvider).defaultThemeMode);
       if (savedTheme != null) {
         mode = AppThemeMode.values.firstWhere(
           (e) => e.name == savedTheme,

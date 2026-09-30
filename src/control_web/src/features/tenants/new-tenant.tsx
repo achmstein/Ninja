@@ -134,7 +134,7 @@ const FIRST_COUNTRY: Country = COUNTRIES[0]
 const SEED_ORDER: TenantSeedName[] = ['Sample', 'None']
 
 /**
- * One form, one call. The slug follows the English name until it is edited (a café named in Arabic only types its own)
+ * One form, one call. The slug follows the English name until it is edited (a business named in Arabic only types its own)
  * by hand; the seed follows the kind and the money, clock and first
  * language follow the country, each until touched. The images picked here
  * are uploaded right after the 201: provisioning is queued, so they land
@@ -250,7 +250,7 @@ export function NewTenantPage() {
 
   const pickCountry = (country: Country) => {
     setCountryCode(country.code)
-    // An Egyptian café speaks Egyptian; anywhere else, Standard — until chosen
+    // An Egyptian business speaks Egyptian; anywhere else, Standard — until chosen
     if (!arabicTouched) setArabicStyle(country.code === 'EG' ? 'egyptian' : 'standard')
     if (!currencyTouched) setCurrency(country.currency)
     if (!timeZoneTouched) setTimeZone(country.timeZones[0])

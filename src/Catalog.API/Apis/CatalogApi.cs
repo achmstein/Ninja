@@ -514,7 +514,7 @@ public static class CatalogApi
         return TypedResults.Ok(category.ToDto());
     }
 
-    /// <summary>Every name on the menu is written in at least one of the café's languages.</summary>
+    /// <summary>Every name on the menu is written in at least one of the business's languages.</summary>
     private static bool Unnamed(LocalizedText? name) => name is null || name.IsEmpty;
 
     private static BadRequest<ProblemDetails> NameRequired(string what) =>

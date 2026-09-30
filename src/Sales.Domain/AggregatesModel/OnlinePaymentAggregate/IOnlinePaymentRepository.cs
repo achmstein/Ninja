@@ -23,6 +23,6 @@ public interface IOnlinePaymentRepository : IRepository<OnlinePayment>
     /// </summary>
     Task LockTicketAsync(int ticketId);
 
-    /// <summary>The café's payment settings, created with the defaults the first time they are asked for.</summary>
+    /// <summary>The business's payment settings, created with the defaults the first time they are asked for.</summary>
     Task<PaymentSettings> GetSettingsAsync();
 }

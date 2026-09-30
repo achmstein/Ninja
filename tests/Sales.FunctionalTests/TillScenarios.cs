@@ -270,7 +270,7 @@ public sealed class TillScenarios
 
         var pricing = new { vatRate = 0.14m, pricesIncludeVat = true, serviceChargeRate = 0.12m };
         var (byTill, _) = await Till.RefusedAsync(HttpMethod.Put, $"{Tickets}/pricing/{Suite.Branch}?{Version}", pricing);
-        Assert.AreEqual(HttpStatusCode.Forbidden, byTill, "what a café charges is the owner's to set");
+        Assert.AreEqual(HttpStatusCode.Forbidden, byTill, "what a business charges is the owner's to set");
 
         var (byOwner, detail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Tickets}/pricing/{Suite.Branch}?{Version}", pricing);
         Assert.AreEqual(HttpStatusCode.OK, byOwner, detail);

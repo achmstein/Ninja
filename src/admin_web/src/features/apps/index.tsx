@@ -13,7 +13,7 @@ import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
 /**
  * The native till and kitchen display, and how a tablet gets them: one
  * generic build of each from the platform's download page, then the
- * connect code below, which is nothing more than this café's API host. The
+ * connect code below, which is nothing more than this business's API host. The
  * web versions stay a link away for iPads and for a browser on anything.
  */
 /** A camera opens only a full URL; the platform's download page may be given relative to this host. */

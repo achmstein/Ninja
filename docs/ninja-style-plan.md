@@ -75,10 +75,10 @@ Decided by the owner on 2026-09-27:
 
 - **Released to main, not deployed:** commit `2b196935`, tag `v2026.09.26.6`. The images are built, but the owner said to hold the deploy. They still use the old "counter" name.
 - **Uncommitted since `.6`:** these need checking on the local stack, then a commit and a new tag (`v2026.09.26.7`) before deploying.
-  - The rename Counter → Ninja, run by an agent: the style key is `ninja`. It is selectable in admin and control, listed first as recommended, and is the default for new cafés. The Flutter customer app falls back to a classic look.
+  - The rename Counter → Ninja, run by an agent: the style key is `ninja`. It is selectable in admin and control, listed first as recommended, and is the default for new businesses. The Flutter customer app falls back to a classic look.
   - The tab pill is re-measured when the tab set changes.
   - The Menu/Bills/You pill slides across page changes.
-  - The café mark and name have a gap between them.
+  - The business mark and name have a gap between them.
   - Tray initials are in the right language.
   - The category pill is now one piece, because the old three-piece one could come apart.
   - The dock lines up with the cards: 16px side margin, and content starts at the card's text inset.
@@ -88,7 +88,7 @@ Decided by the owner on 2026-09-27:
 
 ## Ninja is the only style (2026-09-26)
 
-The owner chose to build Ninja out first and bring other styles back later. The other looks (classic, minimal, bold, cozy, night), the four templates (Showcase, Paper, Tiles, Poster) and the per-part layout overrides are gone from client_web, admin_web and control_web. The pickers are gone too, and the brand forms save `style: 'ninja'`. Every café gets Ninja whatever it has stored, and Ninja's seeds fill anything the café left unset. Tenant.API still accepts the old keys, and the Flutter app still has its own table. Git history (`934a0b9d` and before) has the removed code.
+The owner chose to build Ninja out first and bring other styles back later. The other looks (classic, minimal, bold, cozy, night), the four templates (Showcase, Paper, Tiles, Poster) and the per-part layout overrides are gone from client_web, admin_web and control_web. The pickers are gone too, and the brand forms save `style: 'ninja'`. Every business gets Ninja whatever it has stored, and Ninja's seeds fill anything the business left unset. Tenant.API still accepts the old keys, and the Flutter app still has its own table. Git history (`934a0b9d` and before) has the removed code.
 
 ## Next, in order
 

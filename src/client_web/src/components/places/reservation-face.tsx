@@ -5,6 +5,7 @@ import { Footprints, TimerReset, X } from 'lucide-react'
 import { type ReservationViewModel } from '@/api/spaces'
 import { cancelMyReservationMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { useSecondTick } from '@/lib/clock'
+import { useBrandName } from '@/lib/brand'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { springOpen } from '@/lib/motion'
 import { PlaceIcon, placeNameId } from '@/lib/places'
@@ -35,6 +36,7 @@ const HURRY = 120
  */
 export function ReservationFace({ reservation, clock }: { reservation: ReservationViewModel; clock?: MotionValue<number> }) {
   const t = useT()
+  const businessName = useBrandName()
   const localized = useLocalized()
   const language = useLanguage((s) => s.language)
   const { left, total } = useHoldTime(reservation)
@@ -80,7 +82,7 @@ export function ReservationFace({ reservation, clock }: { reservation: Reservati
       <Beat clock={clock} at={0.45} className='flex flex-col items-center gap-2'>
         <span className='flex items-center gap-2 text-body font-semibold'>
           <Footprints className='size-4 shrink-0' />
-          {left === 0 ? t('ninjaHoldRanOut') : t('ninjaHoldWalkOver')}
+          {left === 0 ? t('ninjaHoldRanOut', { name: businessName }) : t('ninjaHoldWalkOver')}
         </span>
         {reservation.startOnConfirm && (
           <span className='text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-caption'>

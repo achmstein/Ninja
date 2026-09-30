@@ -583,7 +583,7 @@ function SwipeLine({ line }: { line: CartLine }) {
   // Slid out: the red it leaves behind folds shut, and only then is the dish taken off
   const [folding, setFolding] = useState(false)
   const key = lineKey(line)
-  // A café may write its menu in one language only: each name falls back to the other
+  // A business may write its menu in one language only: each name falls back to the other
   const name = (language === 'ar' ? line.nameAr : line.nameEn) || line.nameEn || line.nameAr
   const options = line.customizations
     .map((c) => (language === 'ar' ? c.optionNameAr : c.optionNameEn) || c.optionNameEn || c.optionNameAr || '')

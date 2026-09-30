@@ -4,7 +4,7 @@ import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
-import { useCafeTheme } from '@/context/theme-provider'
+import { useBusinessTheme } from '@/context/theme-provider'
 import { applyBrandTheme } from './brand-theme'
 
 /**
@@ -17,7 +17,7 @@ export type Brand = TenantResponse
 export type FeatureKey = keyof TenantFeatures
 
 const CACHE_KEY = 'ninja-brand'
-/** A staff surface carries the café's name, mark and icons and keeps the neutral theme; the café's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
+/** A staff surface carries the business's name, mark and icons and keeps the neutral theme; the business's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
 const STAFF = true
 export const PLATFORM_NAME = 'ninja'
 const APP = 'admin'
@@ -91,10 +91,10 @@ export async function bootBrand(queryClient: QueryClient) {
   }
 }
 
-/** Head tags and theme tokens: the café's icons everywhere; its theme only on the customer's surface. */
+/** Head tags and theme tokens: the business's icons everywhere; its theme only on the customer's surface. */
 export function applyBrand(brand: Brand, language: Language) {
-  useCafeTheme.getState().set(brand.theme?.mode)
-  // Prices are the café's whatever the surface wears
+  useBusinessTheme.getState().set(brand.theme?.mode)
+  // Prices are the business's whatever the surface wears
   useCurrency.getState().set(brand.locale.currency)
   if (STAFF) {
     setLink('icon', brand.icons.favicon, 'image/png')
@@ -172,7 +172,7 @@ export function useFeatures(): TenantFeatures {
 /**
  * A cloud kitchen cooks for pickup only: it has no tables, so nothing about
  * places (the floor, QR codes, a waiter call) is offered. The kind of place
- * is the café's, chosen when it was created; false until the brand is known.
+ * is the business's, chosen when it was created; false until the brand is known.
  */
 export function useIsCloudKitchen(): boolean {
   return useBrand()?.businessType === 'cloud_kitchen'
@@ -187,7 +187,7 @@ export function useCustomerOrigin(): string {
  * Where the customer app lives when the brand does not say. A build may be
  * told (VITE_CUSTOMER_URL: the dev AppHost points it at client-web); otherwise
  * it is this host without its `admin.` label, which is the platform's rule —
- * the café's admin is always admin.{customer host}, and the customer app
+ * the business's admin is always admin.{customer host}, and the customer app
  * lets exactly that host frame it.
  */
 export function defaultCustomerOrigin(): string {
@@ -197,13 +197,13 @@ export function defaultCustomerOrigin(): string {
   return `${protocol}//${host.replace(/^admin\./, '')}`
 }
 
-/** The café's API host: the brand's apiUrl, else the platform's default for this host. */
+/** The business's API host: the brand's apiUrl, else the platform's default for this host. */
 export function useApiOrigin(): string {
   return (useBrand()?.apiUrl ?? defaultApiOrigin()).replace(/\/+$/, '')
 }
 
 /**
- * The API host when the brand does not say: on the platform the café's API
+ * The API host when the brand does not say: on the platform the business's API
  * is this host with `api.` for its `admin.` label. A dev server has no such
  * host; the AppHost's BFF stands in.
  */

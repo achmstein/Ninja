@@ -1,7 +1,7 @@
 import type { Language } from '@/lib/language'
 
 /**
- * The countries a café can be in, with what each one implies: its money,
+ * The countries a business can be in, with what each one implies: its money,
  * its clock, how a phone number starts, and which language customers
  * expect first. Picking the country fills the rest; every field can still
  * be changed by hand.
@@ -67,7 +67,7 @@ export const CURRENCY_LABELS: Record<string, { en: string; ar: string }> = {
 
 export const CURRENCIES = Object.keys(CURRENCY_LABELS)
 
-/** Every zone the browser knows, for a café outside the list. */
+/** Every zone the browser knows, for a business outside the list. */
 export function allTimeZones(): string[] {
   try {
     return (Intl as unknown as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') ?? []

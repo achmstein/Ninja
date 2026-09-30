@@ -61,15 +61,15 @@ function RootLayout() {
  * it (sileo opens on hover, which a tap is on a phone), and something new
  * opens it on its own for a moment (autopilot) before it collapses again.
  * A toast is 40 px tall, set down the top bar to sit on its middle line. It is the
- * dock's slab on either scheme, in the café's colour, and its kinds wear
+ * dock's slab on either scheme, in the business's colour, and its kinds wear
  * the app's colours (styles/index.css).
  */
 function AppToaster() {
   const { resolvedTheme } = useTheme()
   const language = useLanguage((s) => s.language)
-  // Re-read when the scheme or the café's colours change, so the pill follows them
+  // Re-read when the scheme or the business's colours change, so the pill follows them
   useBrand()
-  // The slab's colour as it resolves now (the café's deep shade, raised on a dark page): sileo takes a
+  // The slab's colour as it resolves now (the business's deep shade, raised on a dark page): sileo takes a
   // colour, not a variable, for the pill it draws
   const slab = typeof document === 'undefined' ? undefined : getComputedStyle(document.documentElement).getPropertyValue('--slab').trim() || undefined
   return (
@@ -79,7 +79,7 @@ function AppToaster() {
       // Sileo's "light" is its dark pill with light text: the dock's, on either scheme
       theme='light'
       // In the column's corner, which on a wide screen is not the window's; on the top bar's middle
-      // line (the island is 40 px tall), however tall the café's header makes the bar
+      // line (the island is 40 px tall), however tall the business's header makes the bar
       offset={{ top: 'calc(env(safe-area-inset-top) + (var(--bar-h) - 40px) / 2)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
       options={{ autopilot: true, fill: slab }}
     />

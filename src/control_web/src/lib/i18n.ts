@@ -3,7 +3,7 @@ type PluralForms = Record<string, string>
 type Message = string | { plural: string; forms: PluralForms }
 
 // The whole control-panel dictionary. The console is Ninja's own, not a
-// tenant surface, so it speaks English only: a café's Arabic lives in the
+// tenant surface, so it speaks English only: a business's Arabic lives in the
 // tenant data this edits, never in the chrome around it.
 const dictionary = {
   // Brand / chrome
@@ -16,7 +16,7 @@ const dictionary = {
   themeDark: "Dark",
   themeDevice: "Follow the device",
   businessType: "What kind of place is it?",
-  businessTypeHint: "Picks the modules the café starts with and the add-ons ticked below. The owner can change any of them later in admin.",
+  businessTypeHint: "Picks the modules the business starts with and the add-ons ticked below. The owner can change any of them later in admin.",
   businessCoffeeShop: "Coffee shop",
   businessCoffeeShopAbout: "Counter service, loyalty, a bar screen",
   businessRestaurant: "Restaurant",
@@ -30,10 +30,10 @@ const dictionary = {
   arabicStyle: "Arabic",
   arabicStandard: "Standard",
   arabicEgyptian: "Egyptian",
-  arabicStyleHint: "Which Arabic the café's apps speak to staff and customers.",
+  arabicStyleHint: "Which Arabic the business's apps speak to staff and customers.",
   defaultTheme: "Starting theme",
   defaultThemeHint: "What a new customer or device starts in, until they choose their own.",
-  businessTypeRecordHint: "Changing it tells the café's apps (a cloud kitchen hides its tables); it doesn't change the menu, the module switches or guest ordering.",
+  businessTypeRecordHint: "Changing it tells the business's apps (a cloud kitchen hides its tables); it doesn't change the menu, the module switches or guest ordering.",
 
   // Auth
   signInFailed: "Sign-in failed",
@@ -169,7 +169,7 @@ const dictionary = {
   ownerEmail: "Owner email",
   brandColor: "Brand color",
   socialSignIn: "Google & Apple sign-in",
-  socialSignInHint: "Customers sign in with Google or Apple through Ninja's own apps; nothing to set up for the café. Off leaves email and phone.",
+  socialSignInHint: "Customers sign in with Google or Apple through Ninja's own apps; nothing to set up for the business. Off leaves email and phone.",
   dockColour: "Dock",
   dockBrand: "Brand colour",
   dockBlack: "Black",
@@ -207,14 +207,14 @@ const dictionary = {
   noSteps: "No run yet",
   // Talabat, from its onboarding
   talabat: "Talabat",
-  talabatHint: "From Talabat's onboarding: the café's chain there. Give Talabat the plugin URL and each branch's remote id.",
+  talabatHint: "From Talabat's onboarding: the business's chain there. Give Talabat the plugin URL and each branch's remote id.",
   talabatNoAccount: "The platform has no Talabat account yet (TALABAT_* in the platform .env): nothing is sent or taken until it has.",
   talabatChainCode: "Chain code",
   talabatChainCodePlaceholder: "Not on Talabat",
   talabatGlobalEntity: "Global entity",
   talabatPluginUrl: "Plugin URL",
   talabatRemoteId: "Remote id",
-  talabatRemoteIdHint: "One per branch, ending in the branch's number in the café's admin",
+  talabatRemoteIdHint: "One per branch, ending in the branch's number in the business's admin",
   talabatSaved: "Talabat saved",
   talabatSaveFailed: "Couldn't save Talabat",
   output: "Output",

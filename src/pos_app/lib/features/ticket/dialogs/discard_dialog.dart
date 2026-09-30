@@ -39,7 +39,7 @@ class _DiscardDialog extends ConsumerStatefulWidget {
 
 class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
   bool _pending = false;
-  // A retry on café Wi-Fi must not become a second command
+  // A retry on business Wi-Fi must not become a second command
   final String _requestId = const Uuid().v4();
 
   Future<void> _discard() async {

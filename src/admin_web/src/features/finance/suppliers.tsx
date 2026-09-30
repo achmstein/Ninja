@@ -50,7 +50,7 @@ import { useFinanceActions } from './use-finance-actions'
 const route = getRouteApi('/_authenticated/finance/suppliers')
 
 /**
- * Who the café buys from and what it owes each of them at this branch.
+ * Who the business buys from and what it owes each of them at this branch.
  * Deliveries land on an account from Inventory's receipts, payments from
  * the till; the sheet shows the account and takes a payment, credit or
  * invoice keyed in by hand.

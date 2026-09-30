@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using DomainOrder = Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
 
 /// <summary>
-/// Simplified order queries for cafe ordering system.
+/// Simplified order queries for business ordering system.
 /// </summary>
 public class OrderQueries(OrderingContext context) : IOrderQueries
 {

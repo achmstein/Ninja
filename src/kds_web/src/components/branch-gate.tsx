@@ -26,7 +26,7 @@ export function BranchGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <Spinner />
   if (allowedIds.length === 0) {
-    // An owner of a café with no active branches just sees an empty board
+    // An owner of a business with no active branches just sees an empty board
     return isOwner ? <>{children}</> : <NoBranch />
   }
   if (branchId === null || !allowedIds.includes(branchId)) return <Spinner />

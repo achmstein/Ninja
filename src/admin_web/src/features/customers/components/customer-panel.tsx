@@ -76,7 +76,7 @@ type CustomerPanelProps = {
 
 /**
  * The end side of the customers split: who this person is, then the three
- * things the café keeps about them and the actions on each — points,
+ * things the business keeps about them and the actions on each — points,
  * tab, orders. Loads its own customer so a row from the owing or members
  * lists (which only carry an id and a name) opens the same panel.
  */

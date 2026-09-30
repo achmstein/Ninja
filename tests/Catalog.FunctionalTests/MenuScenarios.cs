@@ -15,7 +15,7 @@ public static class Suite
     public static async Task StartAsync(TestContext context)
     {
         await SharedServices.StartAsync();
-        // The seed a café starts from, so the menu is a menu and not an empty table
+        // The seed a business starts from, so the menu is a menu and not an empty table
         Catalog = new ServiceUnderTest<Program>("catalogdb", new Dictionary<string, string?> { ["Seed:Profile"] = "chillax" });
         _ = Catalog.CreateClient();
     }
@@ -38,7 +38,7 @@ public record OptionView(int Id, LocalizedView Name, decimal PriceAdjustment, bo
 public record GroupView(int Id, LocalizedView Name, bool IsRequired, bool AllowMultiple, List<OptionView> Options);
 
 /// <summary>
-/// The café's menu: what a customer reads, what the back office changes on
+/// The business's menu: what a customer reads, what the back office changes on
 /// it, and what the till may take off during a service.
 /// </summary>
 [TestClass]
@@ -74,7 +74,7 @@ public sealed class MenuScenarios
     {
         var menu = await Customer.GetAsync<List<ItemView>>(Items());
 
-        Assert.IsTrue(menu.Count > 0, "a café starts with a menu, not an empty table");
+        Assert.IsTrue(menu.Count > 0, "a business starts with a menu, not an empty table");
         var item = menu.First();
         Assert.IsTrue(item.Name.En.Length > 0);
         Assert.IsTrue(item.Price > 0);
@@ -123,7 +123,7 @@ public sealed class MenuScenarios
         var after = await Customer.GetAsync<ItemView>(Items($"/{created.Id}"));
         Assert.AreEqual("Turkish coffee (double)", after.Name.En);
         Assert.AreEqual(45m, after.Price);
-        Assert.AreEqual("قهوة تركي دبل", after.Name.Ar, "a café's menu is in both languages");
+        Assert.AreEqual("قهوة تركي دبل", after.Name.Ar, "a business's menu is in both languages");
 
         var (deleted, _) = await Admin.RefusedAsync(HttpMethod.Delete, Items($"/{created.Id}"));
         Assert.AreEqual(HttpStatusCode.NoContent, deleted);

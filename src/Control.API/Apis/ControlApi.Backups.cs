@@ -82,7 +82,7 @@ public static partial class ControlApi
         if (!request.Force && !capacity.HasRoom)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
 
-        // A restored café is the same café under a new slug: its name, look, locale and record come along; the realm and the owner are new
+        // A restored business is the same business under a new slug: its name, look, locale and record come along; the realm and the owner are new
         var tenant = new Tenant
         {
             Slug = into,

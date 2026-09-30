@@ -306,7 +306,7 @@
         "tags": [
           "Tenant"
         ],
-        "summary": "How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it",
+        "summary": "How the owner's AI assistant speaks: its tone, manner, language and the business's notes for it",
         "operationId": "SetTenantAssistant",
         "requestBody": {
           "content": {
@@ -356,7 +356,7 @@
         "tags": [
           "Tenant"
         ],
-        "summary": "The modules the café's plan allows; a switch outside them goes off. The control plane only",
+        "summary": "The modules the business's plan allows; a switch outside them goes off. The control plane only",
         "operationId": "SetTenantEntitlements",
         "requestBody": {
           "content": {
@@ -579,7 +579,7 @@
         "tags": [
           "Tenant"
         ],
-        "summary": "The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet",
+        "summary": "The business's colours for its sign-in pages; the login theme loads it beside its own stylesheet",
         "operationId": "GetTenantLoginCss",
         "responses": {
           "200": {

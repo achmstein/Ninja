@@ -1,4 +1,4 @@
-import { useCafeTheme } from '@/context/theme-provider'
+import { useBusinessTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
@@ -16,7 +16,7 @@ export type Brand = TenantResponse
 export type FeatureKey = keyof TenantFeatures
 
 const CACHE_KEY = 'ninja-brand'
-/** A staff surface carries the café's name, mark and icons and keeps the neutral theme; the café's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
+/** A staff surface carries the business's name, mark and icons and keeps the neutral theme; the business's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
 const STAFF = true
 export const PLATFORM_NAME = 'ninja'
 const APP = 'kds'
@@ -90,9 +90,9 @@ export async function bootBrand(queryClient: QueryClient) {
   }
 }
 
-/** Head tags and theme tokens: the café's icons everywhere; its theme only on the customer's surface. */
+/** Head tags and theme tokens: the business's icons everywhere; its theme only on the customer's surface. */
 export function applyBrand(brand: Brand, language: Language) {
-  useCafeTheme.getState().set(brand.theme?.mode)
+  useBusinessTheme.getState().set(brand.theme?.mode)
   if (STAFF) {
     setLink('icon', brand.icons.favicon, 'image/png')
     setLink('apple-touch-icon', brand.icons.appleTouch)

@@ -107,7 +107,7 @@ export const markAttendance = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * What the café owes someone, line by line, with the balance
+ * What the business owes someone, line by line, with the balance
  */
 export const getEmployeeLedger = <ThrowOnError extends boolean = false>(options: Options<GetEmployeeLedgerData, ThrowOnError>): RequestResult<GetEmployeeLedgerResponses, GetEmployeeLedgerErrors, ThrowOnError> => (options.client ?? client).get<GetEmployeeLedgerResponses, GetEmployeeLedgerErrors, ThrowOnError>({
     responseType: 'json',

@@ -79,7 +79,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // The rooms tab exists only for a tenant with something to book or a clock to watch
     final features = ref.watch(featuresProvider);
     final rooms = features.reservations || features.timeBilling;
-    // A café with rooms books rooms; a restaurant books tables — same tab, its own icon
+    // A business with rooms books rooms; a restaurant books tables — same tab, its own icon
     final branchId = ref.watch(selectedBranchIdProvider);
     final hasRooms = branchId != null &&
         (ref.watch(placesProvider(branchId)).value?.any((p) => p.kind == PlaceKind.room) ?? true);

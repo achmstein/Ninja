@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Ninja.PrintConnector;
 
 /// <summary>
-/// What pairing left behind: the café's API, who this connector is, and the
+/// What pairing left behind: the business's API, who this connector is, and the
 /// key it signs with — the key encrypted for this machine, so a copied file
 /// is useless on another PC.
 /// </summary>

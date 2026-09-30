@@ -56,7 +56,7 @@ function BillsRoute() {
 /**
  * Your bills (docs/visit-tab.html), reached from You: the bill running now
  * lives on the menu's dock, and this is where all of them are kept. What
- * the café charges (the rounds, a room's time, a discount, service and VAT)
+ * the business charges (the rounds, a room's time, a discount, service and VAT)
  * lands on a Sales ticket, and the till's own arithmetic is what the
  * customer sees. The bills open now come first, standing open; then the
  * history, month by month.
@@ -122,7 +122,7 @@ function RetryPay() {
 }
 
 /**
- * What the customer owes the cafe, as the till decided it: the balance of
+ * What the customer owes the business, as the till decided it: the balance of
  * their tab in Accounts, where a settled share lands when the cashier puts
  * it on account. No sum of the open bills: the app cannot know their part
  * of an unsettled room's time, so it does not guess one. Only for an

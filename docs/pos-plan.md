@@ -5,7 +5,7 @@
 **Status:** proposed 2026-08-29; revised 2026-09-02 — D5 decided (POS is a separate app). Remaining open questions at the bottom.
 
 > **Naming note (2026-09-01):** `Rooms.API` / `Rooms.Domain` / `Rooms.Infrastructure` are now
-> `Spaces.API` / `Spaces.Domain` / `Spaces.Infrastructure`, since the service owns café tables
+> `Spaces.API` / `Spaces.Domain` / `Spaces.Infrastructure`, since the service owns business tables
 > alongside rooms. The database is `spacesdb` and the schema is `spaces`. Public routes are
 > unchanged (`/api/rooms`, `/api/sessions`, plus the new `/api/tables`). Paths below predate the
 > rename.
@@ -18,7 +18,7 @@
 
 ## 1. Where we are today
 
-The painful part of the current setup is **double entry**. Staff already run the whole café inside Chillax admin — sessions, orders, requests — and then re-key everything into Loyverse:
+The painful part of the current setup is **double entry**. Staff already run the whole business inside Chillax admin — sessions, orders, requests — and then re-key everything into Loyverse:
 
 - The rooms screen deliberately shows **hours only, no money** (`admin_web/src/features/rooms/components/room-detail-panel.tsx` — "Billed hours in POS quarter-hour steps — no money"). Staff read `End Session · 2.5h` and type it into a Loyverse open ticket.
 - Confirming an order logs *"Order confirmed and sent to POS"* (`ConfirmOrderCommandHandler`) — but there is no integration; a human keys the items into Loyverse.
@@ -34,7 +34,7 @@ The painful part of the current setup is **double entry**. Staff already run the
 | Catalog with modifiers | `Catalog.API` | Done. Customization groups, options with price adjustments, per-branch price overrides. (Bundle deals were removed 2026-09-18: nothing could order or bill one, and an item with a recipe covers a combo.) |
 | Cart implementation | `client_web/src/lib/cart.ts` + `routes/cart.tsx` | Done — reusable as the POS cart (same stack, same generated SDK, idempotent submit). |
 | Realtime plumbing | `Notification.API` hub + `admin_web/src/hooks/use-admin-notifications.ts` | Done. Admin group, reconnect/backoff, poll fallback. Hub now also serves anonymous guests via `JoinGuestGroup` (2026-09-01). |
-| **Café tables + QR flow** | `Spaces.API` `/api/tables`, `admin_web/src/features/tables/`, `client_web/src/routes/table/$tableId.tsx` | Done (2026-09-01). Table aggregate (label-only, no time billing), admin CRUD + printable QR cards (rooms too), scan → order to table in web and app (App Links). |
+| **Business tables + QR flow** | `Spaces.API` `/api/tables`, `admin_web/src/features/tables/`, `client_web/src/routes/table/$tableId.tsx` | Done (2026-09-01). Table aggregate (label-only, no time billing), admin CRUD + printable QR cards (rooms too), scan → order to table in web and app (App Links). |
 | **Guest checkout** | `OrdersApi` + `GuestHeaderExtensions` + `OrderRateLimiting`; `client_web` guest store/gate | Done (2026-09-01). Anonymous orders identified by `X-Guest-Id` + name/phone, must target a table or room, rate-limited per guest/IP, live status over the anonymous hub group. |
 | Business-day window | `Branch.API` (`DayStartTime` 17:00 → `DayEndTime` 05:00) | Exists but **unused by any query** — perfect for day reports. |
 | Analytics | `/api/orders/stats`, `/api/rooms/sessions/stats` + dashboard | Partial. Revenue is gross; no tender split, no discounts/voids, no Z-report. |
@@ -228,7 +228,7 @@ Built:
 
 - **Receipt header per branch (2026-09-16)** - `Branch.TaxNumber` and `Branch.ReceiptFooter` (LocalizedText) on Branch.API (`PUT /api/branches/{id}`, migration `BranchReceiptHeader`), edited in the admin branch dialog. Both tills print the active branch's name, address, phone and tax number under the wordmark, and its footer line instead of the till's thank-you when set. The Branch is read off the branch list the switcher already holds - no new request. Also brought the pos_app receipt up to parity: the discount row.
 
-- **Scheduled offers (2026-09-16)** - the item offer gained a window: `CatalogItem.OfferWeekdays` (a bit per DayOfWeek, none = every day) and `OfferFrom`/`OfferTo` (local time, both null = all day, ending before starting runs past midnight and belongs to the day it started). `IsOfferActive` decides against the cafe's clock (`LocalClock`, Cairo, the same choice as Finance's BusinessDay); `EffectivePrice` and the DTO's `IsOnOffer` follow it, so every menu and till badge is right without a client change; the admin edits the configured switch from `Base`. A branch still overrides only the switch and the price; the window is the item's. Set on `PUT /items/{id}` and `PATCH /items/{id}/offer`; migration `ItemOfferSchedule`; `OfferWindowTest`. Admin item form: weekday chips + from/to under the offer switch (its hint paragraph is gone).
+- **Scheduled offers (2026-09-16)** - the item offer gained a window: `CatalogItem.OfferWeekdays` (a bit per DayOfWeek, none = every day) and `OfferFrom`/`OfferTo` (local time, both null = all day, ending before starting runs past midnight and belongs to the day it started). `IsOfferActive` decides against the business's clock (`LocalClock`, Cairo, the same choice as Finance's BusinessDay); `EffectivePrice` and the DTO's `IsOnOffer` follow it, so every menu and till badge is right without a client change; the admin edits the configured switch from `Base`. A branch still overrides only the switch and the price; the window is the item's. Set on `PUT /items/{id}` and `PATCH /items/{id}/offer`; migration `ItemOfferSchedule`; `OfferWindowTest`. Admin item form: weekday chips + from/to under the offer switch (its hint paragraph is gone).
 
 Deliberately deferred, each for a stated reason:
 - **Refunds of settled tickets** — real money back plus loyalty/account reversal; needs an owner policy decision first.
@@ -236,7 +236,7 @@ Deliberately deferred, each for a stated reason:
 - **Kitchen ready state** — **decided 2026-09-05: kitchen-only, customers never see it. Simplified 2026-09-09:** the Start / In-progress step and the 30-minute recall window are gone. Ordering keeps one kitchen field beside the order status (`Order.ReadyAt`, null while the order is on the board, plus `ConfirmedAt` for the clock); `GET /api/orders/kitchen` returns the last day's confirmed orders ready or not, and `PUT /api/orders/{id}/ready` `{ready}` marks one done or brings it back, both behind the Pos policy. `OrderReadyChanged` fans out to the admin hub group as `OrderStatusChanged{type:"order_ready"}`. Shown on `kds_web` at `kds.chillax.site` and the native `kds_app`: one grid of open orders, a Ready button per card, and a History dialog (today's finished orders, newest first) with Bring back.
 - **Offline queue** — deliberately out per D6.
 
-*UI done 2026-09-02: pos_web's role gate accepts Cashier; Owner-only Void action on the ticket screen with reason dialog and a voided tombstone view. A Discard action replaces Void while a ticket is still empty. The typed-in "Add item" line is gone from the till — the owner's call, the café sells from the menu only; the manual-line endpoint stays in the API.*
+*UI done 2026-09-02: pos_web's role gate accepts Cashier; Owner-only Void action on the ticket screen with reason dialog and a voided tombstone view. A Discard action replaces Void while a ticket is still empty. The typed-in "Add item" line is gone from the till — the owner's call, the business sells from the menu only; the manual-line endpoint stays in the API.*
 
 ---
 

@@ -12,7 +12,7 @@ namespace Ninja.Control.API.Platform;
 /// The tenants' secrets (database and broker passwords, the realm's client
 /// secrets, the owner's first password) at rest: AES-256-GCM under one key
 /// from the platform's .env, so a dump of controldb is not a dump of every
-/// café's credentials. A value without the prefix is one written before
+/// business's credentials. A value without the prefix is one written before
 /// there was a key and reads as itself; the first start with a key rewrites
 /// every row. No key (a dry run) means nothing is touched either way.
 /// </summary>

@@ -273,7 +273,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       final landedOn = await ref.read(ticketsRepositoryProvider).moveLines(
             ticket.id,
             MoveLinesRequest(lineIds: _selected.toList(), target: target),
-            // A retry on café Wi-Fi must not become a second command
+            // A retry on business Wi-Fi must not become a second command
             requestId: const Uuid().v4(),
           );
       ref.invalidate(ticketProvider(ticket.id));

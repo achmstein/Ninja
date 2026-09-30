@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;
 
 /// <summary>
-/// Buyer aggregate for cafe customers.
+/// Buyer aggregate for customers.
 /// Simplified - no payment methods (payment is done at POS).
 /// </summary>
 public class Buyer

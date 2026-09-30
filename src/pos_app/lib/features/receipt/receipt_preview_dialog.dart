@@ -68,7 +68,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
     final locale = Localizations.localeOf(context);
     final ticket = ref.watch(ticketProvider(widget.ticketId));
     final number = ticket.value?.receiptNumber;
-    // The café's brand, as the printer lays it down
+    // The business's brand, as the printer lays it down
     final brand = ref.watch(brandProvider);
 
     return Padding(

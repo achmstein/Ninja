@@ -23,7 +23,7 @@ export function checkoutBlock({
   requireSignInForTableOrders: boolean
 }): CheckoutBlock {
   if (!isGuest) return null
-  // A guest orders against the table they sit at, unless the café takes guests' orders from anywhere, to collect
+  // A guest orders against the table they sit at, unless the business takes guests' orders from anywhere, to collect
   if (!destination && !guestOrdersAnywhere) return 'table'
   // The branch wants a name it can hold to on a table order
   if (destination?.kind === 'place' && requireSignInForTableOrders) return 'account'

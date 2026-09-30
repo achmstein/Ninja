@@ -5,7 +5,7 @@ using Ninja.E2E.Support;
 namespace Ninja.E2E.Scenarios;
 
 /// <summary>
-/// A café on a smaller plan. The switches a plan does not include go off in
+/// A business on a smaller plan. The switches a plan does not include go off in
 /// Tenant.API, the change rides the bus, and the services that own a module
 /// stop taking what is not in it — Spaces keeps its own copy of the
 /// switches and never calls Branch to ask.
@@ -14,7 +14,7 @@ namespace Ninja.E2E.Scenarios;
 /// plan are not here: the AppHost has no per-tenant gateway and no
 /// control-plane client in its realm. Tenant.FunctionalTests drives the
 /// entitlements push and the module-off page; Control.AcceptanceTests
-/// stamps a real Starter café. What this scenario proves is the half in
+/// stamps a real Starter business. What this scenario proves is the half in
 /// between: the switch, the event, and the service that obeys it.
 /// </summary>
 public sealed class SmallerPlanScenario(NinjaApp app, DaySetup day) : ScenarioBase(app, day)
@@ -30,24 +30,24 @@ public sealed class SmallerPlanScenario(NinjaApp app, DaySetup day) : ScenarioBa
     {
         var before = await Owner.TenantAsync(Ct);
         Assert.True(before.Entitlements is { TimeBilling: true, Reservations: true },
-            "the dev café is entitled to everything; this scenario turns the café's own switches off, not its plan");
+            "the dev business is entitled to everything; this scenario turns the business's own switches off, not its plan");
 
         var placeId = 0;
 
         try
         {
-            // 1. The café's switches go off, the way a smaller plan leaves them.
+            // 1. The business's switches go off, the way a smaller plan leaves them.
             var off = Step("Turn the clock and the bookings off");
             var smaller = await Owner.SetFeaturesAsync(before.Features.With(timeBilling: false, reservations: false), Ct);
             Assert.False(smaller.Features.TimeBilling);
             Assert.False(smaller.Features.Reservations);
-            Assert.True(smaller.Entitlements.TimeBilling, "what the plan allows has not changed - the café's own switch has");
+            Assert.True(smaller.Entitlements.TimeBilling, "what the plan allows has not changed - the business's own switch has");
             Assert.Equal(before.Features.Loyalty, smaller.Features.Loyalty);
 
             var told = await ExpectEventAsync(off, "TenantFeaturesChanged", e => !e.Bool("TimeBilling"));
             Assert.False(told.Bool("Reservations"), "the one event carries every switch, so a service reads them together");
 
-            // 2. A plain table is still a table: what a café keeps whatever it pays for.
+            // 2. A plain table is still a table: what a business keeps whatever it pays for.
             placeId = await Owner.CreatePlaceAsync($"Plan table {DateTime.UtcNow:HHmmss}", Ct);
             var plain = await ExpectValueAsync("the new table on the floor", async () =>
                 (await Cashier.PlacesAsync(Ct)).FirstOrDefault(p => p.Id == placeId));

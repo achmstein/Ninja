@@ -178,12 +178,12 @@ void main() {
       PayShare(amount: 30, status: 'Pending', isMine: true, key: mine),
       PayShare(payerName: 'Sara', amount: 20, status: 'Pending'),
     ]));
-    await tester.pumpWidget(_app(pay, customerUrl: 'https://cafe.example'));
+    await tester.pumpWidget(_app(pay, customerUrl: 'https://business.example'));
     await tester.pump();
 
     expect(find.byKey(const ValueKey('share-cancel-$mine')), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
-    // A café that takes real payments has no pretend checkout to go back to
+    // A business that takes real payments has no pretend checkout to go back to
     expect(find.text('Continue'), findsNothing);
 
     pay.view = _view();
@@ -195,7 +195,7 @@ void main() {
     await _close(tester);
   });
 
-  testWidgets("a demo café's own pending share continues on the pretend checkout, and can be cancelled there",
+  testWidgets("a demo business's own pending share continues on the pretend checkout, and can be cancelled there",
       (tester) async {
     const mine = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
     final opened = <Uri>[];
@@ -203,12 +203,12 @@ void main() {
       options: const PayOptions(ready: true, allowItems: true, simulated: true),
       shares: const [PayShare(amount: 30, status: 'Pending', isMine: true, key: mine)],
     ));
-    await tester.pumpWidget(_app(pay, customerUrl: 'https://cafe.example/', opened: opened));
+    await tester.pumpWidget(_app(pay, customerUrl: 'https://business.example/', opened: opened));
     await tester.pump();
 
     await tester.tap(find.byKey(const ValueKey('share-continue-$mine')));
     await tester.pump();
-    expect(opened.single.toString(), 'https://cafe.example/pay/aaaaaaaabbbbccccddddeeeeeeeeeeee?simulate=1');
+    expect(opened.single.toString(), 'https://business.example/pay/aaaaaaaabbbbccccddddeeeeeeeeeeee?simulate=1');
     expect(find.text('Cancel payment'), findsOneWidget);
 
     // Refused: the guest is told, and the sheet keeps following it

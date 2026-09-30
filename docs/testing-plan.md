@@ -11,7 +11,7 @@ of where that stands and the order to close the gaps.
 | **Unit** | A rule, a calculation, a template | Plain classes, doubles for the box (`RecordingShell`, `DryRun*`), in-memory EF | every PR, seconds (`Ninja.Web.slnf`) |
 | **Functional** | A service through its front door: endpoint + auth + pipeline + persistence | `WebApplicationFactory<Program>` in-process, a Testcontainers Postgres with the real migrations, a test auth scheme | every PR, its own docker job |
 | **Integration** | An adapter against the real thing | Testcontainers Postgres / RabbitMQ / Keycloak, the adapter as it runs in production | every PR, its own docker job |
-| **E2E** | A day in a café across every service | `tests/Ninja.E2E`: the AppHost booted, the BFF driven, events and hub recorded | nightly / on demand |
+| **E2E** | A day in a business across every service | `tests/Ninja.E2E`: the AppHost booted, the BFF driven, events and hub recorded | nightly / on demand |
 | **Acceptance** | The platform on a real docker host | Against `deploy/platform/local`: the real API, `docker ps`, `rabbitmqctl`, a probe through the gateway | on demand, opt-in |
 | **UI** | A screen does what it says | vitest for logic and components, Playwright for flows, Flutter widget tests | every PR |
 
@@ -82,15 +82,15 @@ the apps are written against.
    route table matches the AppHost's. What is not covered: the JSON a
    running service actually puts on the wire.
 3. **A smaller plan end to end.** One E2E scenario where the stack runs a
-   Starter café: the gateway answers 402 for inventory, the admin app hides
+   Starter business: the gateway answers 402 for inventory, the admin app hides
    it, Spaces refuses a tariff.
 4. **UI.** The pure logic each app carries is covered (the floor's clock
-   and its money, the visit tab, the customer's bill, the café's day, the
+   and its money, the visit tab, the customer's bill, the business's day, the
    filter clamp; the KDS lock, the POS floor list, the customer's room
    row). What is not: component tests for `FeatureGate` / `RequireFeature`
    themselves, which need a DOM and a testing library neither web app has
    yet, and a Playwright flow for the plan gating in admin — it would have
-   to switch a module off on the café the dev stack runs, and put it back.
+   to switch a module off on the business the dev stack runs, and put it back.
    `SmallerPlanScenario` does that at the API level instead.
 5. **The control plane's remaining corners**: the brand proxy and its image
    slots, the seed images, metrics, containers, and the demo-expiry sweep.
@@ -102,7 +102,7 @@ the apps are written against.
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
 | 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** — 68 scenarios and the contract tests |
-| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | **done** — `SmallerPlanScenario` (59 s, boot included), the control app's plan spec, and the app tests above |
+| 4 | Starter-business E2E scenario; UI: vitest + Playwright + Flutter widget tests | **done** — `SmallerPlanScenario` (59 s, boot included), the control app's plan spec, and the app tests above |
 
 Each phase lands as its own commits and its own CI job where docker is
 needed: `control-integration`, `control-functional` and

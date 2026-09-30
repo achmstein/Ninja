@@ -3,7 +3,7 @@ namespace Ninja.PrintConnector;
 /// <summary>
 /// The service's life: every few seconds, take what is waiting for this
 /// connector's printers, print it, say how it went; every minute, tell the
-/// café which printers Windows has. A claim held by a till or a tablet is
+/// business which printers Windows has. A claim held by a till or a tablet is
 /// left to it — the server decides who prints, so nothing prints twice.
 /// </summary>
 public sealed class PrintWorker(ConnectorConfig config, ILogger<PrintWorker> logger) : BackgroundService
@@ -65,7 +65,7 @@ public sealed class PrintWorker(ConnectorConfig config, ILogger<PrintWorker> log
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
-                // The café's Wi-Fi dropped, or the API is restarting: try again shortly
+                // The business's Wi-Fi dropped, or the API is restarting: try again shortly
                 logger.LogWarning("Queue unreachable: {Message}", e.Message);
             }
 

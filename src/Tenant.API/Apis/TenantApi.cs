@@ -14,7 +14,7 @@ namespace Ninja.Tenant.API.Apis;
 /// The brand every surface reads at boot (anonymous: the customer menu shows
 /// it before anyone signs in) and the owner's endpoints to change it. The
 /// manifest is served from here too, so installing the customer web app puts
-/// the café's own name and icon on the phone without a build.
+/// the business's own name and icon on the phone without a build.
 /// </summary>
 public static partial class TenantApi
 {
@@ -35,12 +35,12 @@ public static partial class TenantApi
 
         api.MapPut("/assistant", SetAssistant)
             .WithName("SetTenantAssistant")
-            .WithSummary("How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it")
+            .WithSummary("How the owner's AI assistant speaks: its tone, manner, language and the business's notes for it")
             .RequireAuthorization("Owner");
 
         api.MapPut("/entitlements", SetEntitlements)
             .WithName("SetTenantEntitlements")
-            .WithSummary("The modules the café's plan allows; a switch outside them goes off. The control plane only")
+            .WithSummary("The modules the business's plan allows; a switch outside them goes off. The control plane only")
             .RequireAuthorization("Control");
 
         // Where the gateway sends a request for a module that is not in the plan
@@ -69,7 +69,7 @@ public static partial class TenantApi
 
         api.MapGet("/login.css", GetLoginCss)
             .WithName("GetTenantLoginCss")
-            .WithSummary("The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet");
+            .WithSummary("The business's colours for its sign-in pages; the login theme loads it beside its own stylesheet");
 
         api.MapGet("/manifest", GetManifest)
             .WithName("GetTenantManifest")
@@ -99,7 +99,7 @@ public static partial class TenantApi
         UpdateTenantRequest request)
     {
         if (request.Name is null || request.Name.IsEmpty)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The café's name is required." });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The business's name is required." });
 
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(color) && !HexColor().IsMatch(color))
@@ -143,7 +143,7 @@ public static partial class TenantApi
         await context.SaveChangesAsync();
         // The services that own a module keep their own copy of the switches
         await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
-        // The café's own settings travel on their own; Ordering keeps its copy
+        // The business's own settings travel on their own; Ordering keeps its copy
         if (guestsChanged) await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
@@ -189,7 +189,7 @@ public static partial class TenantApi
     public static ProblemHttpResult ModuleOff(HttpContext http)
         => TypedResults.Problem(
             title: "Module not in plan",
-            detail: "This module is not part of the café's subscription.",
+            detail: "This module is not part of the business's subscription.",
             type: "module-off",
             statusCode: StatusCodes.Status402PaymentRequired,
             extensions: new Dictionary<string, object?> { ["module"] = http.Request.Query["module"].ToString() });
@@ -299,9 +299,9 @@ public static partial class TenantApi
             new($"/api/tenant/icons/maskable-512.png?v={v}", "512x512", "image/png", "maskable"),
         ];
 
-        // Every app is the café's on the home screen: its name and icon, with
+        // Every app is the business's on the home screen: its name and icon, with
         // the staff apps named for their job and kept on the neutral theme
-        // (only what customers see wears the café's colour; ninja-plan.md)
+        // (only what customers see wears the business's colour; ninja-plan.md)
         if (app != "client")
         {
             var job = app switch
@@ -477,7 +477,7 @@ public static partial class TenantApi
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language ("ar" or "en").</summary>
-/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's customers read. Null on a request leaves it as it is.</param>
+/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the business's customers read. Null on a request leaves it as it is.</param>
 /// <param name="PhonePattern">The regex a phone number must match here, so the apps ask for what this country writes. Read-only: it follows the country.</param>
 /// <param name="PhonePlaceholder">The shape to show in a phone field, e.g. "01xxxxxxxxx". Read-only.</param>
 /// <param name="ContentLanguages">"both", "ar" or "en": which languages the business writes its menu, places and stock in. A one-language business's apps open in that language. Null on a request leaves it as it is.</param>
@@ -571,7 +571,7 @@ public record AssistantDto(string? Tone, string? Manner, string? Language, strin
 }
 
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
-/// <param name="Social">The providers customers may sign in with (Google, Apple), each with the hint the browser app sends for it; empty when the café has them off.</param>
+/// <param name="Social">The providers customers may sign in with (Google, Apple), each with the hint the browser app sends for it; empty when the business has them off.</param>
 public record TenantAuth(string Authority, IReadOnlyList<TenantSocialProvider>? Social = null)
 {
     /// <summary>

@@ -6,7 +6,7 @@ namespace Ninja.Catalog.API.Infrastructure;
 /// The menu a sample stack starts with, one per kind of place: a coffee shop
 /// pours coffee, a restaurant grills, a game station sells snacks between
 /// rounds, a cloud kitchen sends out burgers and combos. Prices are in EGP,
-/// what the demo café's currency is; the owner replaces all of it from the
+/// what the demo business's currency is; the owner replaces all of it from the
 /// admin app. Every item has a picture the image ships.
 /// </summary>
 internal static class SampleMenus

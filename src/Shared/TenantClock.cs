@@ -1,9 +1,9 @@
 namespace Ninja;
 
 /// <summary>
-/// The café's wall clock. Offers are set in local time ("2 to 5 pm on
+/// The business's wall clock. Offers are set in local time ("2 to 5 pm on
 /// weekdays"), a shift that pays a wage at 02:00 is still yesterday's, and
-/// the business day rolls over in the café's own zone, not UTC. The zone
+/// the business day rolls over in the business's own zone, not UTC. The zone
 /// is the tenant's (<c>Tenant:TimeZone</c>, an IANA id), set once at boot
 /// by <see cref="Configure"/>; Cairo until someone says otherwise.
 /// </summary>

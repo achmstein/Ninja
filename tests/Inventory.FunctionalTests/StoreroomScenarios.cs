@@ -36,7 +36,7 @@ public record CreatedView(int Id);
 public record LocalizedView(string En, string? Ar);
 
 /// <summary>
-/// The storeroom: what a café keeps, what a delivery and a count do to what
+/// The storeroom: what a business keeps, what a delivery and a count do to what
 /// is on hand, what it is worth, and when it is time to order more.
 /// </summary>
 [TestClass]
@@ -76,7 +76,7 @@ public sealed class StoreroomScenarios
     }
 
     [TestMethod]
-    public async Task What_the_cafe_keeps_is_listed_with_nothing_on_hand_until_something_arrives()
+    public async Task What_the_business_keeps_is_listed_with_nothing_on_hand_until_something_arrives()
     {
         var id = await AnItemAsync("Beans", "kg");
 

@@ -5,10 +5,10 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Sales.API.Payments;
 
 /// <summary>
-/// A pretend provider for demo cafés: the whole online-payments flow runs, but
+/// A pretend provider for demo businesses: the whole online-payments flow runs, but
 /// the "checkout" is the customer app's own page with Pay and Decline
 /// buttons, and no money moves. Offered only where the stack was stamped
-/// with Payments__Simulated (demos, and local runs), and only until the café
+/// with Payments__Simulated (demos, and local runs), and only until the business
 /// enters a real Paymob account, which then takes over.
 /// </summary>
 public sealed class SimulatedPaymentProvider(IOptions<PaymentsOptions> options) : IPaymentProvider
@@ -30,12 +30,12 @@ public sealed class SimulatedPaymentProvider(IOptions<PaymentsOptions> options) 
     public Task RefundAsync(ProviderAccount account, string transactionId, decimal amount, CancellationToken ct) => Task.CompletedTask;
 }
 
-/// <summary>Which provider a café's payments go through: its Paymob account once set up, else the simulation where the stack allows one.</summary>
+/// <summary>Which provider a business's payments go through: its Paymob account once set up, else the simulation where the stack allows one.</summary>
 public sealed class PaymentProviders(PaymobProvider paymob, SimulatedPaymentProvider simulated, IOptions<PaymentsOptions> options)
 {
     public bool SimulationAllowed => options.Value.Simulated;
 
-    /// <summary>The provider new payments use; null when the café can take none.</summary>
+    /// <summary>The provider new payments use; null when the business can take none.</summary>
     public IPaymentProvider? For(Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings settings)
         => settings.IsReady ? paymob : SimulationAllowed ? simulated : null;
 

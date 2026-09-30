@@ -1,10 +1,10 @@
 namespace Ninja.Control.API.Platform;
 
-/// <summary>A made-up supplier a demo café buys from.</summary>
+/// <summary>A made-up supplier a demo business buys from.</summary>
 public sealed record DemoSupplier(string Key, string Name, string Phone);
 
 /// <summary>
-/// One stock item: its unit ("g", "ml" or "pcs"), what the café takes in on
+/// One stock item: its unit ("g", "ml" or "pcs"), what the business takes in on
 /// the first delivery (enough for a month of the demo's sales, and some),
 /// the cost of one unit, the level that should prompt a reorder, and who
 /// supplies it.

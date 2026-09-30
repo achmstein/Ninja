@@ -18,7 +18,7 @@ describe('the slab', () => {
     expect(tokens.dark['--slab-ink']).toBeDefined()
   })
 
-  it('stays near-black when the café wants its dock neutral, the buttons keeping the colour', () => {
+  it('stays near-black when the business wants its dock neutral, the buttons keeping the colour', () => {
     const tokens = brandTokens({ primaryColor: '#b4452c', theme: { slab: 'neutral' } })
     expect(tokens.light['--slab']).toBeUndefined()
     expect(tokens.light['--primary']).toBeDefined()

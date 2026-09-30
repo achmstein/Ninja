@@ -20,12 +20,12 @@ public class PlatformTicketTest
     }
 
     [TestMethod]
-    public void The_platforms_price_holds_the_vat_even_where_the_cafe_adds_it_on_top()
+    public void The_platforms_price_holds_the_vat_even_where_the_business_adds_it_on_top()
     {
         var ticket = Ticket.OpenForPlatform(1, "Talabat", "42");
         ticket.AppendOrder(7, [Line("Latte", 2, 57)], loyaltyDiscount: 0);
 
-        // The café adds 14% VAT and 12% service to its own bills
+        // The business adds 14% VAT and 12% service to its own bills
         var bill = ticket.GetBill(new PricingRules(0.14m, pricesIncludeVat: false, serviceChargeRate: 0.12m));
 
         Assert.AreEqual(114m, bill.Total, "exactly what Talabat charged");
@@ -35,7 +35,7 @@ public class PlatformTicketTest
     }
 
     [TestMethod]
-    public void The_cafes_own_counter_bill_still_has_vat_added()
+    public void The_business_own_counter_bill_still_has_vat_added()
     {
         var ticket = Ticket.OpenForCounter(1, "Walk-in");
         ticket.AppendOrder(7, [Line("Latte", 2, 57)], loyaltyDiscount: 0);

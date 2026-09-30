@@ -26,7 +26,7 @@ const view: PaymentSettingsView = {
   allowCustom: false,
   ready: true,
   canKeepSecrets: true,
-  callbackUrl: 'https://cafe.example/api/sales/payments/paymob/callback',
+  callbackUrl: 'https://business.example/api/sales/payments/paymob/callback',
 }
 
 const form = (patch: Partial<PaymentsForm> = {}): PaymentsForm => ({

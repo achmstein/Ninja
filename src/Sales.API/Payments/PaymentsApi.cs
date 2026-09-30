@@ -33,8 +33,8 @@ public sealed record PaymentSettingsRequest(
 
 /// <summary>
 /// Online payments (docs/online-payments-plan.md): a guest pays or splits their
-/// bill from their phone through the café's own payment provider account.
-/// The gateway answers 402 for all of it when the café has not bought the
+/// bill from their phone through the business's own payment provider account.
+/// The gateway answers 402 for all of it when the business has not bought the
 /// module, except the provider's callback, which always lands.
 /// </summary>
 public static class PaymentsApi
@@ -52,7 +52,7 @@ public static class PaymentsApi
             .AllowAnonymous()
             .WithName("GetPlaceBillToPay")
             .WithSummary("The open bill at a table, as a guest pays it")
-            .WithDescription("For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the café lets guests split. 404 when nothing is open there.");
+            .WithDescription("For whoever is at the table: its lines with each one's share of the total and whether someone has paid for it, what is paid, held and left, and how the business lets guests split. 404 when nothing is open there.");
 
         api.MapGet("/tickets/{ticketId:int}", GetTicketBill)
             .AllowAnonymous()
@@ -81,7 +81,7 @@ public static class PaymentsApi
         api.MapPost("/{key:guid}/simulate", Simulate)
             .AllowAnonymous()
             .WithName("SimulateOnlinePayment")
-            .WithSummary("A demo café's pretend payment: paid or declined, as the guest picks")
+            .WithSummary("A demo business's pretend payment: paid or declined, as the guest picks")
             .WithDescription("Only on a stack that takes simulated payments, and only for a payment made through the simulation; nothing else can be marked paid this way.");
 
         // A checkout left unfinished: its payer takes it back, or the till lets it go
@@ -99,18 +99,18 @@ public static class PaymentsApi
         api.MapGet("/settings", GetSettings)
             .RequireAuthorization("Owner")
             .WithName("GetPaymentSettings")
-            .WithSummary("How the café takes payments at the table; secrets only as whether they are set");
+            .WithSummary("How the business takes payments at the table; secrets only as whether they are set");
 
         api.MapPut("/settings", SaveSettings)
             .RequireAuthorization("Owner")
             .WithName("SavePaymentSettings")
-            .WithSummary("Change the café's payment account, fee and split options");
+            .WithSummary("Change the business's payment account, fee and split options");
 
         // The provider calls without an api-version, and signs what it sends
         app.MapPost(CallbackPath, Callback)
             .AllowAnonymous()
             .WithName("PaymobCallback")
-            .WithSummary("Paymob's transaction callback, checked against the café's HMAC secret")
+            .WithSummary("Paymob's transaction callback, checked against the business's HMAC secret")
             .ExcludeFromDescription();
 
         return app;
@@ -293,7 +293,7 @@ public static class PaymentsApi
     }
 
     /// <summary>
-    /// Paymob's transaction callback. Verified with the café's HMAC secret or
+    /// Paymob's transaction callback. Verified with the business's HMAC secret or
     /// ignored; a verified one marks the payment, and a bill it completes
     /// settles itself. Always 200 once verified, so the provider stops
     /// retrying; a bad signature is 401 and changes nothing.
@@ -364,7 +364,7 @@ public static class PaymentsApi
     }
 }
 
-/// <summary>Reads a bill for paying: its pricing, its online payments, the café's settings and switch.</summary>
+/// <summary>Reads a bill for paying: its pricing, its online payments, the business's settings and switch.</summary>
 public sealed class PayReader(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,

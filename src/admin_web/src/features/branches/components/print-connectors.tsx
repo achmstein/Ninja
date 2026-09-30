@@ -14,7 +14,7 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
-/** The installer every café downloads; pairing is what makes it theirs. */
+/** The installer every business downloads; pairing is what makes it theirs. */
 export const CONNECTOR_FILE = 'ninja-print-connector.exe'
 
 const refusal = (error: unknown) =>

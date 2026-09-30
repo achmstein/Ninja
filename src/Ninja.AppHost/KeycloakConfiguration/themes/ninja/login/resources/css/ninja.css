@@ -2,8 +2,8 @@
  * Ninja login theme, one for every realm, in the Ninja style of the customer
  * app: a lifted card at the sheets' corners, filled fields, bold pill buttons,
  * so the Keycloak page reads as one more screen of the app that sent the user
- * here. The café shows in its header (its mark and name from the realm) and in
- * its colour: the café's API serves a small sheet (/api/tenant/login.css) the
+ * here. The business shows in its header (its mark and name from the realm) and in
+ * its colour: the business's API serves a small sheet (/api/tenant/login.css) the
  * frame loads after this one, setting --primary and the ring. The page frame is
  * template.ftl; the form markup is Keycloak's, mapped to these classes in
  * theme.properties. Light and dark are both first-class: the frame stamps
@@ -126,7 +126,7 @@ body.nj-body {
   gap: 2rem;
 }
 
-/* ---- Brand: the café's mark above its name ---- */
+/* ---- Brand: the business's mark above its name ---- */
 
 .nj-brand {
   display: flex;
@@ -136,7 +136,7 @@ body.nj-body {
 }
 
 /* The mark is the realm's HTML display name (the tenant's icon, a square
-   PNG on the café's color); without one, the café's initial on a tile */
+   PNG on the business's color); without one, the business's initial on a tile */
 .nj-mark {
   width: 4rem;
   height: 4rem;
@@ -657,7 +657,7 @@ textarea.nj-input {
   -webkit-mask: var(--icon) center / contain no-repeat;
 }
 
-/* A café signs in through the platform's hub as ninja-google / ninja-apple; the dev realm by the providers' own names */
+/* A business signs in through the platform's hub as ninja-google / ninja-apple; the dev realm by the providers' own names */
 #social-google::before,
 #social-ninja-google::before {
   background: none;
@@ -800,9 +800,9 @@ textarea.nj-input {
 }
 
 /* ---- The customer's pages, drawn as the app (template.ftl's appLook) ----
-   A full screen in the app's column, not a card on a page: the café's own
+   A full screen in the app's column, not a card on a page: the business's own
    logo at its head, the page's large title at its start, the
-   app's fonts (the café's own when it chose them, /api/tenant/login.css), its
+   app's fonts (the business's own when it chose them, /api/tenant/login.css), its
    type scale (title 28, body 15, labels 14), and the action kept in reach of
    the thumb as a long form scrolls. The staff's pages keep the card above. */
 
@@ -826,9 +826,9 @@ body.nj-app {
   padding-top: env(safe-area-inset-top);
 }
 
-/* The café's own drawing, alone and centred at the head of the page: its
-   wordmark (sized by height, its own shape) or its logo, as the café's sign-in
-   sheet picks it for the language and scheme (--nj-logo); else the café's
+/* The business's own drawing, alone and centred at the head of the page: its
+   wordmark (sized by height, its own shape) or its logo, as the business's sign-in
+   sheet picks it for the language and scheme (--nj-logo); else the business's
    icon, rounded as the app's icon is. No bar, no name beside it. */
 .nj-app .nj-brand {
   padding: 2.5rem 1rem 0.5rem;

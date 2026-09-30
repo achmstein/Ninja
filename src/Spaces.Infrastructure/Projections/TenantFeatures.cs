@@ -2,7 +2,7 @@
 namespace Ninja.Spaces.Infrastructure.Projections;
 
 /// <summary>
-/// Spaces' own copy of the café's switches it owns a part of, kept up to
+/// Spaces' own copy of the business's switches it owns a part of, kept up to
 /// date from Tenant.API's TenantFeaturesChangedIntegrationEvent — Spaces
 /// never calls Tenant.API. One row for the stack. No row means the stack has
 /// never said, and is treated as having everything (fail-open), so a fresh

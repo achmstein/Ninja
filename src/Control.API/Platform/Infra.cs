@@ -68,7 +68,7 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureSocialProvidersAsync(string realm, CancellationToken ct);
     /// <summary>
-    /// The hub realm every café's browser sign-in with Google and Apple goes through: made when
+    /// The hub realm every business's browser sign-in with Google and Apple goes through: made when
     /// missing, the platform's apps in it (a rotated secret lands too), a hub record never stopped
     /// to review a profile, and a browser flow per provider that goes straight to it. Idempotent, and
     /// a no-op while the platform holds no social app.
@@ -81,11 +81,11 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureNameFieldsAsync(string realm, CancellationToken ct);
     /// <summary>
-    /// A café signing in through the hub: its client in the hub per provider, and the café realm's
+    /// A business signing in through the hub: its client in the hub per provider, and the business realm's
     /// "ninja-google" / "ninja-apple" pointing at it with the same secret. Idempotent.
     /// </summary>
     Task EnsureTenantBrokersAsync(string slug, CancellationToken ct);
-    /// <summary>The café's hub clients and its realm's providers for them gone (turned off, or the café destroyed); nothing there is fine.</summary>
+    /// <summary>The business's hub clients and its realm's providers for them gone (turned off, or the business destroyed); nothing there is fine.</summary>
     Task RemoveTenantBrokersAsync(string slug, CancellationToken ct);
     /// <summary>
     /// Keycloak's own account pages (password, authenticator, signed-in
@@ -674,8 +674,8 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
 
     /// <summary>
     /// The hub's browser flow for one provider: the identity-provider redirector alone, set to it, so a
-    /// café's client bound to it goes straight to Google or Apple. No cookie step: a person signed in
-    /// at the hub with Google who taps Apple for a café must reach Apple, not be handed back as Google.
+    /// business's client bound to it goes straight to Google or Apple. No cookie step: a person signed in
+    /// at the hub with Google who taps Apple for a business must reach Apple, not be handed back as Google.
     /// </summary>
     private async Task<string> EnsureHubFlowAsync(HttpClient client, string kind, CancellationToken ct)
     {
@@ -688,7 +688,7 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/flows", new JsonObject
         {
             ["alias"] = alias,
-            ["description"] = $"Straight to {kind}, for the cafés' clients",
+            ["description"] = $"Straight to {kind}, for the businesses' clients",
             ["providerId"] = "basic-flow",
             ["topLevel"] = true,
             ["builtIn"] = false,
@@ -728,7 +728,7 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             }
             else
             {
-                // Kept as it was made, the redirect and the flow put right: the café realm has the same secret
+                // Kept as it was made, the redirect and the flow put right: the business realm has the same secret
                 var id = found["id"]!.GetValue<string>();
                 secret = (await client.GetFromJsonAsync<JsonObject>($"{hub}/clients/{id}/client-secret", ct))?["value"]?.GetValue<string>()
                     ?? throw new InvalidOperationException($"The hub client {clientId} has no secret.");

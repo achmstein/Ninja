@@ -3,7 +3,7 @@ import { type PayLineView, type PayOptionsView } from '@/api/sales'
 /**
  * Online payments (docs/online-payments-plan.md), the arithmetic the guest's
  * phone shows before it asks the server: what a share comes to and the
- * fee when the café passes the provider's on. Each one mirrors
+ * fee when the business passes the provider's on. Each one mirrors
  * Sales' OnlineShares, so the summary the guest confirms is the amount the
  * server charges; the server decides in the end all the same.
  */
@@ -25,9 +25,9 @@ export function money(value: number): number {
 const num = (value: number | string | null | undefined) => Number(value ?? 0) || 0
 
 /**
- * The guest's fee on a share when the café passes the provider's fee on:
+ * The guest's fee on a share when the business passes the provider's fee on:
  * solved so that what the provider keeps (a percentage of the charge plus
- * a fixed part) is what the fee covers. Zero when the café absorbs it.
+ * a fixed part) is what the fee covers. Zero when the business absorbs it.
  */
 export function guestFee(share: number, percent: number, fixedFee: number): number {
   if (share <= 0 || (percent <= 0 && fixedFee <= 0)) return 0
@@ -66,7 +66,7 @@ export function customShare(text: string): number {
 
 export type PaySummary = {
   share: number
-  /** The provider's fee the guest pays; 0 when the café absorbs it */
+  /** The provider's fee the guest pays; 0 when the business absorbs it */
   fee: number
   /** What the card is charged */
   total: number
@@ -82,7 +82,7 @@ export function paySummary(share: number, options: PayOptionsView): PaySummary {
 }
 
 /** Why a bill cannot be paid now, as the server says it; each has a line
- *  of its own. "off" and "not-set-up" mean the café does not take payments
+ *  of its own. "off" and "not-set-up" mean the business does not take payments
  *  at the table, which the guest is not told about. */
 export const PAY_WHY = [
   'off',

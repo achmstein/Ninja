@@ -26,8 +26,8 @@ public sealed class Provisioner(
 {
     private const string Source = "provisioner";
 
-    /// <summary>The style a fresh stack is branded with: Ninja, the platform's signature style. Cafés created before keep theirs.</summary>
-    public const string NewCafeStyle = "ninja";
+    /// <summary>The style a fresh stack is branded with: Ninja, the platform's signature style. Businesses created before keep theirs.</summary>
+    public const string NewBusinessStyle = "ninja";
 
     private PlatformOptions Platform => options.Value;
 
@@ -116,8 +116,8 @@ public sealed class Provisioner(
                     // The business picks which of the plan's modules are on the first day
                     ["features"] = kept?["features"]?.DeepClone()
                         ?? PlanCatalog.ToFeatures(BusinessProfiles.Starting(tenant.BusinessType, PlanCatalog.Entitlements(tenant))),
-                    // A new café starts in Ninja, the platform's signature style
-                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme, ["style"] = NewCafeStyle, ["slab"] = tenant.Slab },
+                    // A new business starts in Ninja, the platform's signature style
+                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme, ["style"] = NewBusinessStyle, ["slab"] = tenant.Slab },
                     ["locale"] = new JsonObject
                     {
                         ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
@@ -143,7 +143,7 @@ public sealed class Provisioner(
 
             await BrokerLockdownStepAsync(tenant, runId, ct);
 
-            // A new demo gets a month of a café's life; a restore brings its own
+            // A new demo gets a month of a business's life; a restore brings its own
             if (restore is null && tenant.Kind == TenantKind.Demo && tenant.Seed == TenantSeed.Sample)
                 await DemoDataStepAsync(tenant, runId, ct);
 
@@ -390,7 +390,7 @@ public sealed class Provisioner(
         }, ct);
 
     /// <summary>
-    /// A month of a café's life in a demo (<see cref="DemoData"/>), once: a
+    /// A month of a business's life in a demo (<see cref="DemoData"/>), once: a
     /// marker in the tenant's folder keeps a re-provision from filling it
     /// twice. Never fails the run it is part of; what did not land is said.
     /// </summary>
@@ -800,7 +800,7 @@ public sealed class Provisioner(
 
     /// <summary>Rewrite the edge's custom-domain sites after a domain changed on the record.</summary>
     /// <summary>
-    /// The browser's Google and Apple sign-in for the café, through the hub realm (on), or none (off).
+    /// The browser's Google and Apple sign-in for the business, through the hub realm (on), or none (off).
     /// The native apps' hidden providers stay either way: the apps are told by the brand whether to offer them.
     /// </summary>
     private async Task SocialBrokersAsync(Tenant tenant, CancellationToken ct)
@@ -817,7 +817,7 @@ public sealed class Provisioner(
     }
 
     /// <summary>
-    /// Google and Apple sign-in turned on or off: the café's realm and its hub clients follow, then the
+    /// Google and Apple sign-in turned on or off: the business's realm and its hub clients follow, then the
     /// stack is re-stamped so Tenant.API tells the apps (only Tenant.API is recreated). A stack that is
     /// not running gets its files now and the rest on start.
     /// </summary>
@@ -876,7 +876,7 @@ public sealed class Provisioner(
             ? ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--pull", "always", "--remove-orphans"]
             : ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"];
 
-    /// <summary>The custom-domain sites of every live tenant, then a Caddy reload; nothing when no café has its own domain yet.</summary>
+    /// <summary>The custom-domain sites of every live tenant, then a Caddy reload; nothing when no business has its own domain yet.</summary>
     private async Task<string> WriteEdgeAsync(CancellationToken ct)
     {
         var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying && t.CustomerDomain != null).ToListAsync(ct);

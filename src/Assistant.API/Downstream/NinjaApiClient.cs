@@ -69,7 +69,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         }
         catch (HttpRequestException ex)
         {
-            return ApiResult<T>.Fail($"{Pretty(service)} is not reachable ({ex.Message}). It may not be part of this cafe's plan.", null);
+            return ApiResult<T>.Fail($"{Pretty(service)} is not reachable ({ex.Message}). It may not be part of this business's plan.", null);
         }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -97,7 +97,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
                 403 => branchId is { } fb
                     ? $"Your account may not {Verb(method)} {Pretty(service)} data for branch {fb}. Owner accounts need the Admin role as well."
                     : $"Your account may not {Verb(method)} {Pretty(service)} data. Owner accounts need the Admin role as well.",
-                402 => $"{Pretty(service)} is not included in this cafe's plan.",
+                402 => $"{Pretty(service)} is not included in this business's plan.",
                 404 => "Nothing was found for that request.",
                 400 => $"{Pretty(service)} refused the request: {Reason(text)}",
                 _ => $"{Pretty(service)} failed with HTTP {(int)response.StatusCode}.",

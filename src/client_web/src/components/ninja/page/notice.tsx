@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils'
 /**
  * A word to the customer about the page they are on, one look wherever it
  * shows: an icon in a soft round, a short title and a line under it, and a
- * way on when there is one. `paused` is the café not taking orders or
+ * way on when there is one. `paused` is the business not taking orders or
  * bookings for now: a warm amber, not an error's red, since nothing went
  * wrong and it comes back on its own. `invite` asks something of them (a
- * sign-in to book) in the café's colour.
+ * sign-in to book) in the business's colour.
  */
 export function Notice({
   tone,
@@ -52,6 +52,6 @@ export function Notice({
   )
 }
 
-/** The notice's way on: a full-width pill in the café's colour */
+/** The notice's way on: a full-width pill in the business's colour */
 export const noticeAction =
   'bg-primary text-primary-foreground flex h-11 w-full items-center justify-center gap-2 rounded-full text-body font-bold transition-transform active:scale-[0.98] motion-reduce:transform-none'

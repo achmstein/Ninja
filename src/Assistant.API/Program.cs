@@ -81,13 +81,13 @@ builder.Services.AddSingleton<AuditLog>();
 builder.Services.AddMcpServer(o =>
     {
         o.ServerInfo = new() { Name = "ninja", Version = "1.0" };
-        // The brief as the platform writes it; each connecting chat gets the café's own (Persona)
+        // The brief as the platform writes it; each connecting chat gets the business's own (Persona)
         o.ServerInstructions = Ninja.Assistant.API.Context.Persona.Write(null, null);
     })
     .WithHttpTransport(o =>
     {
         o.Stateless = true;
-        // The café's name and the owner's settings for their assistant, as each chat connects
+        // The business's name and the owner's settings for their assistant, as each chat connects
         o.ConfigureSessionOptions = async (http, options, ct) =>
             options.ServerInstructions = await http.RequestServices.GetRequiredService<Ninja.Assistant.API.Context.Persona>().InstructionsAsync(ct);
     })
@@ -119,5 +119,5 @@ static ProtectedResourceMetadata ProtectedResource(AssistantOptions assistant) =
     AuthorizationServers = { new Uri(assistant.Issuer, UriKind.Absolute).ToString().TrimEnd('/') },
     ScopesSupported = [.. assistant.ScopesSupported],
     BearerMethodsSupported = ["header"],
-    ResourceName = "Ninja cafe back office",
+    ResourceName = "Ninja back office",
 };

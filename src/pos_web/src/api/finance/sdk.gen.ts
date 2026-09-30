@@ -171,7 +171,7 @@ export const postSupplierEntry = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
- * The branch's partners with what the café holds of theirs
+ * The branch's partners with what the business holds of theirs
  */
 export const getPartners = <ThrowOnError extends boolean = false>(options: Options<GetPartnersData, ThrowOnError>): RequestResult<GetPartnersResponses, GetPartnersErrors, ThrowOnError> => (options.client ?? client).get<GetPartnersResponses, GetPartnersErrors, ThrowOnError>({
     responseType: 'json',

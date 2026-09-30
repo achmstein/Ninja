@@ -47,7 +47,7 @@ public sealed class TemplatesTests
         var realm = JsonNode.Parse(json)!.AsObject();
         Assert.AreEqual("blue", realm["realm"]!.GetValue<string>());
         Assert.AreEqual("Blue \"Bottle\"", realm["displayName"]!.GetValue<string>());
-        // The login page: the platform's theme, the café's mark from its own API
+        // The login page: the platform's theme, the business's mark from its own API
         Assert.AreEqual("ninja", realm["loginTheme"]!.GetValue<string>());
         Assert.AreEqual("<img src=\"https://api.blue.ninja.app/api/tenant/icons/icon-192.png\" alt=\"\">", realm["displayNameHtml"]!.GetValue<string>());
         Assert.IsFalse(json.Contains("{{"), "an unfilled slot survived");
@@ -135,7 +135,7 @@ public sealed class TemplatesTests
         Assert.AreEqual(0, Templates.SocialProviders(halfGoogle).Count);
     }
 
-    // The browser half: the platform's apps in the hub realm, shown there, and each café's realm
+    // The browser half: the platform's apps in the hub realm, shown there, and each business's realm
     // signing in through its own client in the hub (docs/social-auth-multi-tenant.md)
     [TestMethod]
     public void The_hub_shows_the_platform_apps_and_never_stops_a_person_to_review_a_profile()
@@ -152,7 +152,7 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void A_cafes_hub_client_hands_back_only_to_its_own_realm_and_goes_straight_to_its_provider()
+    public void A_business_hub_client_hands_back_only_to_its_own_realm_and_goes_straight_to_its_provider()
     {
         var client = Templates.HubClient("blue", "google", "s3cret", "flow-1", WithSocial());
         Assert.AreEqual("blue-google", client["clientId"]!.GetValue<string>());
@@ -164,7 +164,7 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void A_cafes_broker_sends_the_browser_to_the_hub_and_keycloak_to_it_on_the_network()
+    public void A_business_broker_sends_the_browser_to_the_hub_and_keycloak_to_it_on_the_network()
     {
         var broker = Templates.TenantBroker("blue", "apple", "s3cret", WithSocial());
         var config = broker["config"]!.AsObject();
@@ -179,7 +179,7 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void The_stack_tells_the_apps_which_providers_a_cafe_has_and_nothing_when_off()
+    public void The_stack_tells_the_apps_which_providers_a_business_has_and_nothing_when_off()
     {
         var tenant = Blue();
         StringAssert.Contains(Templates.Compose(tenant, TenantHosts.For(tenant, WithSocial()), WithSocial()), "Tenant__SocialSignIn: \"google=ninja-google,apple=ninja-apple\"");
@@ -188,7 +188,7 @@ public sealed class TemplatesTests
         tenant.SocialSignIn = false;
         Assert.IsNull(Templates.SocialSignIn(tenant, WithSocial()));
         Assert.IsFalse(Templates.Compose(tenant, TenantHosts.For(tenant, WithSocial()), WithSocial()).Contains("Tenant__SocialSignIn"));
-        // No app on the platform: nothing to offer, whatever the café chose
+        // No app on the platform: nothing to offer, whatever the business chose
         Assert.IsNull(Templates.SocialSignIn(Blue(), Platform));
     }
 
@@ -219,7 +219,7 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void No_cafe_can_take_the_hubs_name()
+    public void No_business_can_take_the_hubs_name()
     {
         Assert.IsFalse(TenantNaming.IsValidSlug(TenantNaming.HubRealm));
         Assert.IsFalse(TenantNaming.IsValidSlug("hub"));
@@ -259,7 +259,7 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Username=blue_app;Password=${DB_PASSWORD};Database=blue_catalogdb");
         StringAssert.Contains(yaml, "amqp://blue_app:${BROKER_PASSWORD}@eventbus:5672/blue");
 
-        // The key to the café's payment provider secrets reaches Sales alone
+        // The key to the business's payment provider secrets reaches Sales alone
         Assert.AreEqual(1, Regex.Matches(yaml, @"\$\{PAYMENTS_KEY\}").Count);
         StringAssert.Contains(yaml, "Payments__Key: \"${PAYMENTS_KEY}\"");
         Assert.IsFalse(yaml.Contains("Username=postgres"));
@@ -289,7 +289,7 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Tenant__Currency: \"SAR\"");
         StringAssert.Contains(yaml, "Tenant__Country: \"SA\"");
         StringAssert.Contains(yaml, "Tenant__DefaultLanguage: \"en\"");
-        // Which Arabic the cafe speaks travels with the rest of its locale, so
+        // Which Arabic the business speaks travels with the rest of its locale, so
         // a push notification reads the same as the screens it follows
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__ArabicStyle: \"standard\"").Count);
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
@@ -297,7 +297,7 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "AI__FallbackModel: \"gemini-3.5-flash-lite\"");
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__tenant__DESTINATIONS__d1__ADDRESS: \"http://blue-tenant-api:8080\"");
-        // The café's own service is Tenant.API, on its own database; the assistant calls it by its Aspire name
+        // The business's own service is Tenant.API, on its own database; the assistant calls it by its Aspire name
         StringAssert.Contains(yaml, "image: \"ghcr.io/achmstein/ninja-tenant:");
         StringAssert.Contains(yaml, "ConnectionStrings__tenantdb: \"Host=");
         StringAssert.Contains(yaml, "Database=blue_tenantdb;");
@@ -343,7 +343,7 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void Custom_domain_sites_proxy_to_the_cafes_gateway_and_nothing_else()
+    public void Custom_domain_sites_proxy_to_the_business_gateway_and_nothing_else()
     {
         var own = new Tenant { Slug = "blue", CustomerDomain = "menu.bluebottle.com" };
         var platformHosted = new Tenant { Slug = "red" };
@@ -352,8 +352,8 @@ public sealed class TemplatesTests
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
         StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app https://admin.blue.ninja.app");
-        Assert.IsFalse(snippet.Contains("red"), "a platform-hosted café needs no site of its own");
-        // tenant_api proxies; the paused answer is a snippet of its own, and a café on its
+        Assert.IsFalse(snippet.Contains("red"), "a platform-hosted business needs no site of its own");
+        // tenant_api proxies; the paused answer is a snippet of its own, and a business on its
         // own domain needs it as much as one on {slug}.{domain} -- without it a suspended
         // stack shows a bare 502 instead of the app's paused page
         StringAssert.Contains(snippet, "import paused_api");
@@ -368,7 +368,7 @@ public sealed class TemplatesTests
 
         var customer = Blue();
         customer.Kind = TenantKind.Customer;
-        Assert.DoesNotContain("Payments__Simulated", Templates.Compose(customer, TenantHosts.For(customer, Platform), Platform), "a café with real guests takes real money or none");
+        Assert.DoesNotContain("Payments__Simulated", Templates.Compose(customer, TenantHosts.For(customer, Platform), Platform), "a business with real guests takes real money or none");
     }
 
     [TestMethod]
