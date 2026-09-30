@@ -113,6 +113,9 @@ export function Tray({
   const y = useMotionValue(0)
   const sheetRef = useRef<HTMLDivElement>(null)
   const height = useRef(0)
+  // The sheet's height as a value the handle follows: the order grows and shrinks while it is open
+  // (a dish added from its suggestion, one swiped away), and the handle must stay on its edge
+  const sheetHeight = useMotionValue(0)
   const dragging = useRef(false)
   useMotionValueEvent(y, 'change', (v) =>
     openness.set(height.current > 0 ? Math.max(0, Math.min(1, 1 - v / height.current)) : 0)
@@ -192,7 +195,7 @@ export function Tray({
   const seatShown = useTransform(openness, (v): number => (reduced || v >= 0.999 ? 1 : 0))
   // The one grab handle rides the order's top edge: it stays on the dock until the rising sheet reaches
   // it, then goes up with the sheet (under a finger too) and comes back down with it as it closes
-  const handleY = useTransform(y, (v) => Math.min(0, TUCK - height.current + v))
+  const handleY = useTransform([y, sheetHeight], ([v, h]: number[]) => Math.min(0, TUCK - h + v))
 
   const settle = (to: 'open' | 'shut') => {
     const target = to === 'open' ? 0 : height.current
@@ -204,13 +207,29 @@ export function Tray({
 
   // A freshly mounted sheet starts tucked in the dock: measure it and put it there
   useLayoutEffect(() => {
-    if (!sheetOn || !sheetRef.current) return
-    height.current = sheetRef.current.offsetHeight
+    const sheet = sheetRef.current
+    if (!sheetOn || !sheet) return
+    height.current = sheet.offsetHeight
+    sheetHeight.set(height.current)
     y.jump(height.current)
     // Where each circle will sit, once the sheet has laid out its rows
     const frame = requestAnimationFrame(() => measureSeats())
-    return () => cancelAnimationFrame(frame)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- measures once per mount
+    // And again whenever its rows change the sheet's height: a shut sheet stays tucked at its new height,
+    // an open one stays open, and the handle rides its edge either way
+    const observer = new ResizeObserver(() => {
+      const next = sheet.offsetHeight
+      if (!next || next === height.current) return
+      const shut = y.get() >= height.current - 0.5
+      height.current = next
+      sheetHeight.set(next)
+      if (shut && !dragging.current) y.jump(next)
+    })
+    observer.observe(sheet)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- measures once per mount, then follows the sheet
   }, [sheetOn, y])
 
   // Then it goes where it is meant to be, unless a finger or the peek has it
@@ -234,7 +253,10 @@ export function Tray({
       if (empty) return
       dragging.current = true
       if (!sheetOn) setSheetOn(true)
-      else if (!expanded) height.current = sheetRef.current?.offsetHeight ?? height.current
+      else if (!expanded) {
+        height.current = sheetRef.current?.offsetHeight ?? height.current
+        sheetHeight.set(height.current)
+      }
     },
     move: (from: 'dock' | 'sheet', info: PanInfo) => {
       if (!dragging.current || !height.current) return
@@ -317,7 +339,7 @@ export function Tray({
               onPanEnd={(info) => pan.end('sheet', info)}
             />
             <SeatShown.Provider value={seatShown}>
-              <OrderSheet order={order} extras={extras} cloudKitchen={cloudKitchen} />
+              <OrderSheet order={order} extras={extras} cloudKitchen={cloudKitchen} canOrder={canOrder} />
             </SeatShown.Provider>
           </motion.div>
         </div>
@@ -511,7 +533,7 @@ function SheetHandle({
   )
 }
 
-function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras: CheckoutExtras; cloudKitchen: boolean }) {
+function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrder; extras: CheckoutExtras; cloudKitchen: boolean; canOrder: boolean }) {
   const t = useT()
   const localized = useLocalized()
   const lines = useCart((s) => s.lines)
@@ -527,7 +549,7 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
           <SwipeLine key={lineKey(line)} line={line} />
         ))}
         {/* What goes well with what is in it: one suggestion, waved away or added in a tap */}
-        <TrayNudge />
+        {canOrder && <TrayNudge />}
         {/* The note, a code, points: small pills under the dishes, each opening only when wanted */}
         <div className='mt-3 px-2'>
           <TrayExtras extras={extras} />
