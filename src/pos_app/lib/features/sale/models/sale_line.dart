@@ -82,6 +82,11 @@ class SaleLine {
 
   double get total => price * quantity;
 
+  /// The unit price before the options: Ordering adds them back on, so this
+  /// is what an order sends, never [price]
+  double get basePrice =>
+      price - customizations.fold(0.0, (sum, c) => sum + c.priceAdjustment);
+
   /// The item's name as the business writes it: English, Arabic or both
   LocalizedText get name => LocalizedText(en: nameEn, ar: nameAr);
 

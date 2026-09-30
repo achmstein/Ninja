@@ -36,7 +36,7 @@ class PosOrderRequest {
               'id': _uuid.v4(),
               'productId': line.productId,
               'productName': line.name.toJson(),
-              'unitPrice': line.price,
+              'unitPrice': line.basePrice,
               'quantity': line.quantity,
               'pictureUrl': line.pictureUrl,
               'specialInstructions': line.specialInstructions,

@@ -39,6 +39,7 @@ import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import {
+  basePrice,
   lineKey,
   saleCount,
   saleTotal,
@@ -536,7 +537,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           id: crypto.randomUUID(),
           productId: line.productId,
           productName: { en: line.nameEn || null, ar: line.nameAr || null },
-          unitPrice: line.price,
+          // Before the options: Ordering adds them back on
+          unitPrice: basePrice(line),
           quantity: line.quantity,
           pictureUrl: line.pictureUrl ?? null,
           specialInstructions: line.specialInstructions ?? null,

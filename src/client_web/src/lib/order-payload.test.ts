@@ -67,7 +67,8 @@ describe('orderBody', () => {
     expect(body.items[0]).toMatchObject({
       id: 'id',
       productId: 1,
-      unitPrice: 70,
+      // The cart's 70 is the latte and its +15 double; Ordering adds the option back
+      unitPrice: 55,
       quantity: 2,
       productName: { en: 'Latte', ar: 'لاتيه' },
       selectedCustomizations: [{ optionId: 9, priceAdjustment: 15, optionName: { en: 'Double', ar: null } }],

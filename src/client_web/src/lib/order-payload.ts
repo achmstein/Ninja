@@ -60,6 +60,11 @@ export function orderSignature(lines: CartLine[], extras: OrderExtras, guestId: 
   })
 }
 
+/** A line's unit price before its options: what Ordering expects, as the Flutter app sends it. */
+export function basePrice(line: Pick<CartLine, 'price' | 'customizations'>): number {
+  return line.price - line.customizations.reduce((sum, c) => sum + c.priceAdjustment, 0)
+}
+
 export function orderBody({
   lines,
   extras,
@@ -98,7 +103,9 @@ export function orderBody({
       id: newId(),
       productId: line.productId,
       productName: { en: line.nameEn || null, ar: line.nameAr || null },
-      unitPrice: line.price,
+      // The cart's price has the options in it; Ordering adds them itself,
+      // so the line goes out at the price before them
+      unitPrice: basePrice(line),
       quantity: line.quantity,
       pictureUrl: line.pictureUrl ?? null,
       specialInstructions: line.specialInstructions ?? null,

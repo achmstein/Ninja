@@ -42,6 +42,19 @@ export type SaleCustomer = {
   phone?: string | null
 }
 
+/**
+ * A line's unit price before its options. The line's `price` has them in it
+ * (what the pad shows); Ordering adds them itself, so this is what it is sent.
+ */
+export function basePrice(
+  line: Pick<SaleLine, 'price' | 'customizations'>
+): number {
+  return (
+    line.price -
+    line.customizations.reduce((sum, c) => sum + c.priceAdjustment, 0)
+  )
+}
+
 export function lineKey(
   line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions'>
 ): string {
