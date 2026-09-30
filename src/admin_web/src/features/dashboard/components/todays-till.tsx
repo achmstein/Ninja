@@ -19,7 +19,8 @@ type TodaysTillProps = {
 /**
  * The business day's till at a glance: net as the one big number, the
  * tender split as a bar, and the lines that explain the rest (discounts,
- * refunds, tab payments). Every line links to the till page behind it.
+ * refunds, tab payments, what the "goes well with" suggestions sold).
+ * Every line links to the till page behind it.
  */
 export function TodaysTill({
   report,
@@ -89,7 +90,17 @@ export function TodaysTill({
       search: { view: 'payments', tender: '3' },
     },
   ]
-  // Tab payments are a tabs figure
+  // Tab payments are a tabs figure; what suggestions sold shows once they sold something
+  const suggestedLines = Number(report?.suggestedLines ?? 0)
+  if (suggestedLines > 0) {
+    allLines.push({
+      key: 'suggestions',
+      label: t('fromSuggestions'),
+      value: formatEgp(report?.suggestedSales),
+      hint: t('suggestedLinesCount', { count: suggestedLines }),
+      to: '/till',
+    })
+  }
   const lines = allLines.filter(
     (line) => line.key !== 'tabPayments' || features.tabs
   )

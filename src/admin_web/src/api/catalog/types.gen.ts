@@ -42,6 +42,7 @@ export type CatalogItem = {
     isPopular?: boolean;
     displayOrder?: number | string;
     customizations?: Array<ItemCustomization>;
+    pairings?: Array<CatalogItemPairing>;
 };
 
 export type CatalogItemBaseDto = {
@@ -74,7 +75,17 @@ export type CatalogItemDto = {
     preparationTimeMinutes?: null | number | string;
     displayOrder?: number | string;
     customizations?: Array<ItemCustomizationDto>;
+    pairedItemIds?: Array<number | string>;
     base?: null | CatalogItemBaseDto;
+};
+
+export type CatalogItemPairing = {
+    id?: number | string;
+    catalogItemId?: number | string;
+    catalogItem?: CatalogItem;
+    pairedItemId?: number | string;
+    pairedItem?: CatalogItem;
+    displayOrder?: number | string;
 };
 
 export type CatalogType = {
@@ -1682,6 +1693,97 @@ export type CreateCustomizationResponses = {
 };
 
 export type CreateCustomizationResponse = CreateCustomizationResponses[keyof CreateCustomizationResponses];
+
+export type GetItemPairingsData = {
+    body?: never;
+    path: {
+        /**
+         * The id of the menu item
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/items/{id}/pairings';
+};
+
+export type GetItemPairingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetItemPairingsResponses = {
+    /**
+     * OK
+     */
+    200: Array<number | string>;
+};
+
+export type GetItemPairingsResponse = GetItemPairingsResponses[keyof GetItemPairingsResponses];
+
+export type SetItemPairingsData = {
+    /**
+     * The items to suggest with it, in order
+     */
+    body: Array<number | string>;
+    path: {
+        /**
+         * The id of the menu item
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/items/{id}/pairings';
+};
+
+export type SetItemPairingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetItemPairingsError = SetItemPairingsErrors[keyof SetItemPairingsErrors];
+
+export type SetItemPairingsResponses = {
+    /**
+     * OK
+     */
+    200: Array<number | string>;
+};
+
+export type SetItemPairingsResponse = SetItemPairingsResponses[keyof SetItemPairingsResponses];
 
 export type DeleteCustomizationData = {
     body?: never;

@@ -367,6 +367,15 @@ const webExtras = {
   clearOverride: { en: "Use menu price", ar: "العودة إلى سعر القائمة" },
   branchPriceSaved: { en: "Branch price saved", ar: "تم حفظ سعر الفرع" },
   branchPriceCleared: { en: "Back to the menu price", ar: "تمت العودة إلى سعر القائمة" },
+  // What an item suggests alongside it
+  goesWellWith: { en: "Goes well with", ar: "يُطلب معه" },
+  pairingsHint: { en: "Customers see these on this item and in their cart, and the till offers them after it is rung up. Up to {max}, in this order.", ar: "يراها العملاء في صفحة هذا الصنف وفي السلة، ويعرضها الكاشير بعد إضافته. حتى {max}، بهذا الترتيب." },
+  addPairing: { en: "Add an item", ar: "أضف صنفًا" },
+  noPairings: { en: "Nothing suggested with this item yet", ar: "لا يوجد ما يُقترح مع هذا الصنف بعد" },
+  pairingsFull: { en: "That is as many as an item suggests", ar: "هذا أقصى عدد يُقترح مع الصنف" },
+  pairingsSaved: { en: "Suggestions saved", ar: "تم حفظ الاقتراحات" },
+  fromSuggestions: { en: "From suggestions", ar: "من الاقتراحات" },
+  suggestedLinesCount: { plural: "count", en: {"=1":"1 item","other":"{count} items"}, ar: {"zero":"{count} أصناف","one":"صنف واحد","two":"صنفان","few":"{count} أصناف","other":"{count} صنف"} },
   // Menu grouped by category
   dragToReorder: { en: "Drag to reorder", ar: "اسحب لإعادة الترتيب" },
   uncategorized: { en: "No category", ar: "بدون قسم" },

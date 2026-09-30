@@ -20,6 +20,7 @@ import {
 import { BranchOverrideSection } from './branch-override-section'
 import { CustomizationsSection } from './customizations-section'
 import { ItemDetailsForm } from './item-details-form'
+import { PairingsSection } from './pairings-section'
 import { StockRuleSection } from './stock-rule-section'
 
 export type ItemSheetState =
@@ -38,7 +39,8 @@ type ItemSheetProps = {
 
 /**
  * Everything about one menu item, a tab per question: its details and photo,
- * the customizations customers pick from, what a sale takes out of stock,
+ * the customizations customers pick from, what it suggests alongside it,
+ * what a sale takes out of stock,
  * and this branch's own price. Only the tab being read is built, so opening
  * the sheet to change a price does not raise the recipe editor. A new item
  * has only details to give until it is saved, so the rest wait, disabled.
@@ -59,6 +61,7 @@ export function ItemSheet({
       : undefined
   const open = state?.mode === 'create' || !!item
   const customizations = item?.customizations?.length ?? 0
+  const pairings = item?.pairedItemIds?.length ?? 0
 
   return (
     <Sheet
@@ -89,6 +92,17 @@ export function ItemSheet({
                     className='h-5 min-w-5 rounded-full px-1.5 text-[11px] tabular-nums'
                   >
                     {customizations}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value='pairings' disabled={!item}>
+                {t('goesWellWith')}
+                {pairings > 0 && (
+                  <Badge
+                    variant='secondary'
+                    className='h-5 min-w-5 rounded-full px-1.5 text-[11px] tabular-nums'
+                  >
+                    {pairings}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -134,6 +148,12 @@ export function ItemSheet({
                 className='min-h-0 overflow-y-auto p-4'
               >
                 <CustomizationsSection item={item} />
+              </TabsContent>
+              <TabsContent
+                value='pairings'
+                className='min-h-0 overflow-y-auto p-4'
+              >
+                <PairingsSection item={item} items={items} />
               </TabsContent>
               {features.inventory && (
                 <TabsContent
