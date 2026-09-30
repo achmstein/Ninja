@@ -6,6 +6,7 @@ import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { toast } from '@/lib/toast'
 import { blurSwap, ease } from '@/lib/motion'
+import { usePullDown } from '@/lib/use-pull-down'
 import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
@@ -247,6 +248,13 @@ export function Tray({
       settle(open ? 'open' : 'shut')
     },
   }
+
+  // Or from anywhere on the order while its list is at the top, as the handle does (lib/use-pull-down.ts)
+  usePullDown(sheetRef, sheetOn && expanded && !empty, {
+    onStart: () => pan.start(),
+    onMove: (offsetY) => pan.move('sheet', { offset: { x: 0, y: offsetY } } as PanInfo),
+    onEnd: (offsetY, velocityY) => pan.end('sheet', { offset: { x: 0, y: offsetY }, velocity: { x: 0, y: velocityY } } as PanInfo),
+  })
 
   const action = (() => {
     if (!canOrder || empty) return null
@@ -496,6 +504,7 @@ function SheetHandle({
       onPanStart={onPanStart}
       onPan={(_, info) => onPan(info)}
       onPanEnd={(_, info) => onPanEnd(info)}
+      data-pull-handle
       className='h-8 w-full shrink-0 touch-none'
     />
   )

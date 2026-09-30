@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'moti
 import { ease, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
+import { usePullDown } from '@/lib/use-pull-down'
 import { DOCK_EDGES } from '@/components/ninja/shell/chrome'
 
 /**
@@ -10,7 +11,8 @@ import { DOCK_EDGES } from '@/components/ninja/shell/chrome'
  * menu dock's dark slab, floating off the screen's edges at the dock's own
  * margins. It rises out of the dock on a spring, where the thumb already
  * is, and goes back down into it; one opened from the top bar drops from
- * the bar instead. A grab handle drags it away. Everything in it is set in
+ * the bar instead. It is pulled away by its handle, or from anywhere on it
+ * while what is in it is scrolled to the top. Everything in it is set in
  * the dark scheme (the `dark` class), so any part used inside reads on it.
  *
  * Radix keeps the focus trap, the escape key and the labels; this only
@@ -65,6 +67,9 @@ export function SheetFrame({
   const { open, setOpen } = React.useContext(SheetOpen)
   const reduced = useReducedMotion()
   const drag = useDragControls()
+  const body = React.useRef<HTMLDivElement>(null)
+  // From anywhere on its body too, while that is scrolled to its top (lib/use-pull-down.ts)
+  usePullDown(body, open && from === 'bottom' && !reduced, { onStart: (e) => drag.start(e) })
   // iOS never resizes the layout viewport for the keyboard, so a sheet held
   // to the bottom would sit behind it; lift it by however much is covered
   const keyboardInset = useKeyboardInset(open && from === 'bottom')
@@ -114,6 +119,7 @@ export function SheetFrame({
                 </div>
               )}
               <div
+                ref={body}
                 className={cn('flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5', from === 'top' && 'pt-5', className)}
                 style={style}
               >

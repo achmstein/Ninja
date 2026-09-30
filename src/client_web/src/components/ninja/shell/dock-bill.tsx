@@ -16,6 +16,7 @@ import { formatClock, useSecondTick } from '@/lib/clock'
 import { useDockSheet } from '@/lib/dock-sheet'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
+import { trayOpensAfterDrag } from '@/components/tray/tray-model'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Odometer } from '../odometer'
 import { DOCK_H } from './chrome'
@@ -95,11 +96,14 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             key='bill'
             type='button'
             onClick={() => setOpen(true)}
+            // Pulled up by its handle, as the tray's row is, it opens too: it had only the tap, so a pull on
+            // the handle it draws did nothing while an order was waiting
+            onPanEnd={(_, info) => trayOpensAfterDrag(false, info.offset.y, info.velocity.y) && setOpen(true)}
             aria-label={label}
             {...swap}
             // Over the tray's own row, in the dock's colour, so the empty tray does not show under it
             className={cn(
-              'slab absolute inset-x-0 top-0 z-10 flex items-center gap-3 rounded-t-[1.75rem] ps-6 pe-3 text-start',
+              'slab absolute inset-x-0 top-0 z-10 flex touch-none items-center gap-3 rounded-t-[1.75rem] ps-6 pe-3 text-start',
               className
             )}
             style={{ height: DOCK_H }}
