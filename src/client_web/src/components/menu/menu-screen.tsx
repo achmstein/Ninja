@@ -34,7 +34,7 @@ import { itemPictureUrl } from './item-picture'
 import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
 import { useMenuStyle } from './menu-style'
-import { menuById, pairedFor } from './paired-items'
+import { MAX_ON_SHEET, menuById, pairedFor } from './paired-items'
 import { OrderingPausedNote } from './paused-note'
 import { cornerOf } from './photo-corner'
 import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
@@ -583,7 +583,8 @@ function TuneLayer({
           onClose={() => store.setState({ tuning: null })}
           leaving={tuning.leaving}
           onAdd={(result, photo) => onAdd(tuning, result, photo)}
-          suggestions={pairedFor(tuning.item, menu, lines)}
+          // None on a dish that was itself a suggestion: taking one never brings on the next
+          suggestions={tuning.suggestion ? [] : pairedFor(tuning.item, menu, lines).slice(0, MAX_ON_SHEET)}
           onSuggest={onSuggest}
         />
       )}

@@ -1685,4 +1685,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rejectPrank => 'طلب وهمي';
+
+  @override
+  String get goesWellWith => 'يُطلب معه';
 }

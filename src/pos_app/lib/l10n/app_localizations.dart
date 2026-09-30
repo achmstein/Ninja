@@ -3073,6 +3073,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prank order'**
   String get rejectPrank;
+
+  /// No description provided for @goesWellWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes well with'**
+  String get goesWellWith;
 }
 
 class _AppLocalizationsDelegate

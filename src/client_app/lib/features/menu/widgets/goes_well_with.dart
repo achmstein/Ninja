@@ -23,7 +23,7 @@ class GoesWellWith extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final suggestions = pairedFor(item, ref.watch(menuByIdProvider), ref.watch(cartProvider).items);
+    final suggestions = pairedFor(item, ref.watch(menuByIdProvider), ref.watch(cartProvider).items).take(maxOnSheet).toList();
     if (suggestions.isEmpty) return const SizedBox.shrink();
 
     final colors = context.theme.colors;

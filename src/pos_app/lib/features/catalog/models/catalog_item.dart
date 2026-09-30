@@ -17,6 +17,9 @@ class CatalogItem {
   final int displayOrder;
   final List<ItemCustomization> customizations;
 
+  /// What the business suggests with this item ("goes well with"), in its order
+  final List<int> pairedItemIds;
+
   const CatalogItem({
     required this.id,
     required this.name,
@@ -28,6 +31,7 @@ class CatalogItem {
     this.isAvailable = true,
     this.displayOrder = 0,
     this.customizations = const [],
+    this.pairedItemIds = const [],
   });
 
   /// What the customer pays per unit before customizations
@@ -51,6 +55,7 @@ class CatalogItem {
         customizations: ((json['customizations'] as List<dynamic>?) ?? [])
             .map((e) => ItemCustomization.fromJson(e as Map<String, dynamic>))
             .toList(),
+        pairedItemIds: ((json['pairedItemIds'] as List<dynamic>?) ?? []).map(toInt).toList(),
       );
 }
 

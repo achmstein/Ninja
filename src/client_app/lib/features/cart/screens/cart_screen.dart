@@ -213,7 +213,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 Column(
                                   children: [
                                     // What goes well with what is in it
-                                    const CartNudge(),
+                                    if (isOrderingEnabled) const CartNudge(),
                                     const SizedBox(height: 24),
 
                                     // Where this order is going

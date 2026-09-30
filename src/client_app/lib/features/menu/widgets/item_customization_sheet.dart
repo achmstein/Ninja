@@ -335,8 +335,9 @@ class _ItemCustomizationSheetState
                   ...widget.item.customizations.map((customization) =>
                     _buildCustomizationSection(context, customization, locale)),
 
-                  // What goes well with it
-                  GoesWellWith(item: widget.item),
+                  // What goes well with it; none on an item that was itself a suggestion,
+                  // so taking one never brings on the next
+                  if (widget.suggestion == null) GoesWellWith(item: widget.item),
 
                   // Special instructions
                   AppText(

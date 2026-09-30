@@ -1674,4 +1674,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rejectPrank => 'Prank order';
+
+  @override
+  String get goesWellWith => 'Goes well with';
 }

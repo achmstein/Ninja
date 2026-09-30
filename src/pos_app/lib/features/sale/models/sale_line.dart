@@ -63,6 +63,10 @@ class SaleLine {
   final String? specialInstructions;
   final List<SaleCustomization> customizations;
 
+  /// Rung up from what the last dish goes well with ('Till'). Not part of
+  /// the key: added again by hand it is the same line, and keeps saying so.
+  final String? suggestion;
+
   const SaleLine({
     required this.productId,
     required this.nameEn,
@@ -72,6 +76,7 @@ class SaleLine {
     this.quantity = 1,
     this.specialInstructions,
     this.customizations = const [],
+    this.suggestion,
   });
 
   /// Same product, same options, same note: the line it merges into
@@ -120,6 +125,20 @@ class SaleLine {
         quantity: quantity,
         specialInstructions: specialInstructions,
         customizations: customizations,
+        suggestion: suggestion,
+      );
+
+  /// The same line, rung up from a suggestion
+  SaleLine suggested() => SaleLine(
+        productId: productId,
+        nameEn: nameEn,
+        nameAr: nameAr,
+        price: price,
+        pictureUrl: pictureUrl,
+        quantity: quantity,
+        specialInstructions: specialInstructions,
+        customizations: customizations,
+        suggestion: 'Till',
       );
 
   Map<String, dynamic> toJson() => {
@@ -131,6 +150,7 @@ class SaleLine {
         'quantity': quantity,
         'specialInstructions': specialInstructions,
         'customizations': customizations.map((c) => c.toJson()).toList(),
+        'suggestion': suggestion,
       };
 
   factory SaleLine.fromJson(Map<String, dynamic> json) => SaleLine(
@@ -144,6 +164,7 @@ class SaleLine {
         customizations: ((json['customizations'] as List<dynamic>?) ?? [])
             .map((e) => SaleCustomization.fromJson(e as Map<String, dynamic>))
             .toList(),
+        suggestion: json['suggestion'] as String?,
       );
 }
 

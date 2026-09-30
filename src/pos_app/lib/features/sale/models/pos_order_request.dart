@@ -40,6 +40,7 @@ class PosOrderRequest {
               'quantity': line.quantity,
               'pictureUrl': line.pictureUrl,
               'specialInstructions': line.specialInstructions,
+              'suggestion': line.suggestion ?? 'None',
               'selectedCustomizations': [
                 for (final c in line.customizations)
                   {

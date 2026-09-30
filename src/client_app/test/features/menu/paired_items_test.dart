@@ -53,18 +53,22 @@ void main() {
 
   group('cartNudge', () {
     test('offers a pairing of the item added last', () {
-      expect(cartNudge([line(1)], menu, {})?.id, 2);
+      expect(cartNudge([line(1)], menu)?.id, 2);
     });
 
-    test('skips what needs a choice first, and what was waved away', () {
-      expect(cartNudge([line(1), line(2)], menu, {})?.id, 3);
-      expect(cartNudge([line(1)], menu, {2})?.id, 3);
+    test('skips what needs a choice first', () {
+      // The waffle's milkshake needs its size, so the cappuccino's ice cream is offered
+      expect(cartNudge([line(1), line(2)], menu)?.id, 3);
     });
 
-    test('offers nothing once the pairings are in the cart or waved away', () {
-      expect(cartNudge([line(1), line(2), line(3)], menu, {}), isNull);
-      expect(cartNudge([line(1)], menu, {2, 3}), isNull);
-      expect(cartNudge([], menu, {}), isNull);
+    test('offers nothing more once the cart holds something a suggestion added', () {
+      expect(cartNudge([line(1), line(2).copyWith(suggestion: 'CartNudge')], menu), isNull);
+      expect(cartNudge([line(1), line(3).copyWith(suggestion: 'Pairing')], menu), isNull);
+    });
+
+    test('offers nothing once the pairings are in the cart, or before there is one', () {
+      expect(cartNudge([line(1), line(2), line(3)], menu), isNull);
+      expect(cartNudge([], menu), isNull);
     });
   });
 

@@ -791,5 +791,6 @@
   "rejectClosed": "مغلق",
   "rejectNoCourier": "لا يوجد مندوب",
   "rejectOutsideArea": "خارج منطقة التوصيل",
-  "rejectPrank": "طلب وهمي"
+  "rejectPrank": "طلب وهمي",
+  "goesWellWith": "يُطلب معه"
 }

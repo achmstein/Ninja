@@ -33,14 +33,20 @@ List<MenuItem> pairedFor(MenuItem item, Map<int, MenuItem> menu, List<CartItem> 
 /// Whether an item can go in with one tap: it is on and nothing needs choosing.
 bool canQuickAdd(MenuItem item) => item.isAvailable && !item.customizations.any((c) => c.isRequired);
 
-/// The one suggestion the cart shows: the first pairing of the items in it,
-/// the last added first, that goes in with one tap and was not waved away.
-MenuItem? cartNudge(List<CartItem> cart, Map<int, MenuItem> menu, Set<int> dismissed) {
+/// At most this many suggestions on an item's sheet: a few to glance at, never a second menu.
+const maxOnSheet = 3;
+
+/// The one suggestion the cart offers, once: the first pairing of the items
+/// in it, the last added first, that goes in with one tap. None once the
+/// cart holds anything a suggestion added, so taking one never brings on
+/// the next; the customer saying "not now" is kept by the caller.
+MenuItem? cartNudge(List<CartItem> cart, Map<int, MenuItem> menu) {
+  if (cart.any((line) => line.suggestion != null)) return null;
   for (final line in cart.reversed) {
     final item = menu[line.productId];
     if (item == null) continue;
     for (final paired in pairedFor(item, menu, cart)) {
-      if (canQuickAdd(paired) && !dismissed.contains(paired.id)) return paired;
+      if (canQuickAdd(paired)) return paired;
     }
   }
   return null;

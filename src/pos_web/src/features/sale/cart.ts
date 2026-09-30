@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { CatalogItemDto } from '@/api/catalog/types.gen'
 
 // The counter-sale cart, ported from client_web/src/lib/cart.ts.
 
@@ -27,6 +28,11 @@ export type SaleLine = {
   quantity: number
   specialInstructions?: string
   customizations: SaleCustomization[]
+  /**
+   * Rung up from what the last dish goes well with. Not part of the line's
+   * key: added again by hand it is the same line, and keeps saying so.
+   */
+  suggestion?: 'Till'
 }
 
 /**
@@ -53,6 +59,30 @@ export function basePrice(
     line.price -
     line.customizations.reduce((sum, c) => sum + c.priceAdjustment, 0)
   )
+}
+
+/**
+ * What the till offers after a dish is rung up: what it goes well with, in
+ * the business's order, only what this branch sells right now and nothing
+ * already on the sale.
+ */
+export function tillSuggestions(
+  last: CatalogItemDto | null,
+  items: readonly CatalogItemDto[],
+  lines: readonly Pick<SaleLine, 'productId'>[],
+): CatalogItemDto[] {
+  if (!last) return []
+  const byId = new Map(items.map((item) => [String(item.id), item]))
+  const onSale = new Set(lines.map((line) => line.productId))
+  return (last.pairedItemIds ?? [])
+    .map((id) => byId.get(String(id)))
+    .filter(
+      (item): item is CatalogItemDto =>
+        !!item &&
+        item.isAvailable !== false &&
+        String(item.id) !== String(last.id) &&
+        !onSale.has(Number(item.id)),
+    )
 }
 
 export function lineKey(

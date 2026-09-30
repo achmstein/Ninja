@@ -32,18 +32,21 @@ describe('pairedFor', () => {
 
 describe('cartNudge', () => {
   it('offers a pairing of the dish added last', () => {
-    expect(cartNudge([line(1)], menu, new Set())?.id).toBe(2)
+    expect(cartNudge([line(1)], menu)?.id).toBe(2)
   })
 
-  it('skips what needs a choice first, and what was waved away', () => {
-    // The waffle's milkshake needs its size, so the cappuccino's waffle is offered
-    expect(cartNudge([line(1), line(3)], menu, new Set())?.id).toBe(2)
-    expect(cartNudge([line(1)], menu, new Set([2]))?.id).toBe(3)
+  it('skips what needs a choice first', () => {
+    // The waffle's milkshake needs its size, so the cappuccino's ice cream is offered
+    expect(cartNudge([line(1), line(2)], menu)?.id).toBe(3)
   })
 
-  it('offers nothing once the pairings are in the order or waved away', () => {
-    expect(cartNudge([line(1), line(2), line(3)], menu, new Set())).toBeNull()
-    expect(cartNudge([line(1)], menu, new Set([2, 3]))).toBeNull()
-    expect(cartNudge([], menu, new Set())).toBeNull()
+  it('offers nothing more once the order holds something a suggestion added', () => {
+    expect(cartNudge([line(1), { ...line(2), suggestion: 'CartNudge' }], menu)).toBeNull()
+    expect(cartNudge([line(1), { ...line(3), suggestion: 'Pairing' }], menu)).toBeNull()
+  })
+
+  it('offers nothing once the pairings are in the order, or before there is one', () => {
+    expect(cartNudge([line(1), line(2), line(3)], menu)).toBeNull()
+    expect(cartNudge([], menu)).toBeNull()
   })
 })

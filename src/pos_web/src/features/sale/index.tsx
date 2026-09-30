@@ -42,6 +42,7 @@ import {
   basePrice,
   lineKey,
   saleCount,
+  tillSuggestions,
   saleTotal,
   useSale,
   type SaleCustomer,
@@ -226,6 +227,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(
     null,
   )
+  // Opened from a suggestion: what it adds says so
+  const [customizeSuggested, setCustomizeSuggested] = useState(false)
+  // The dish rung up last: what it goes well with is offered under the sale
+  const [lastAdded, setLastAdded] = useState<CatalogItemDto | null>(null)
   const [customerOpen, setCustomerOpen] = useState(false)
   // On a phone the running order lives in a sheet under the menu, opened
   // from the bar along the bottom; a tablet keeps it beside the menu
@@ -413,8 +418,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const total = saleTotal(lines)
   const count = saleCount(lines)
 
-  const tapItem = (item: CatalogItemDto) => {
+  const tapItem = (item: CatalogItemDto, suggested = false) => {
     if (item.customizations?.length) {
+      setCustomizeSuggested(suggested)
       setCustomizeItem(item)
       return
     }
@@ -426,8 +432,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       pictureUrl: item.pictureUri ? itemPictureUrl(item.id) : undefined,
       quantity: 1,
       customizations: [],
+      suggestion: suggested ? 'Till' : undefined,
     })
+    // A suggestion taken leaves the offer as it was: it never brings on its own
+    if (!suggested) setLastAdded(item)
   }
+
+  // Nothing on the sale, nothing to go with
+  const suggestions = lines.length === 0 ? [] : tillSuggestions(lastAdded, items, lines)
 
   // Idempotency mirror of client_web/cart: the request id must survive
   // retries of the SAME sale, so a resubmit after a timeout (where the
@@ -542,6 +554,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           quantity: line.quantity,
           pictureUrl: line.pictureUrl ?? null,
           specialInstructions: line.specialInstructions ?? null,
+          suggestion: line.suggestion ?? ('None' as const),
           selectedCustomizations: line.customizations.map((c) => ({
             customizationId: c.customizationId,
             customizationName: {
@@ -724,6 +737,31 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           </div>
         )}
       </div>
+
+      {/* What the dish rung up last goes well with: one tap to offer it */}
+      {suggestions.length > 0 && (
+        <div className='border-t px-3 pt-2 pb-1'>
+          <div className='text-muted-foreground mb-1.5 text-xs font-medium'>
+            {t('goesWellWith')}
+          </div>
+          <div className='no-scrollbar flex gap-2 overflow-x-auto pb-1'>
+            {suggestions.map((item) => (
+              <Button
+                key={String(item.id)}
+                variant='outline'
+                className='h-10 shrink-0 gap-1.5 px-3'
+                onClick={() => tapItem(item, true)}
+              >
+                <Plus className='size-4' />
+                {localized(item.name)}
+                <span className='text-muted-foreground tabular-nums'>
+                  {money(toNumber(item.effectivePrice ?? item.price))}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className='flex flex-col gap-3 border-t p-3'>
         <Input
@@ -914,7 +952,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         customerId={customer?.id ?? null}
         onOpenChange={(open) => !open && setCustomizeItem(null)}
         onAdd={(line) => {
-          add(line)
+          add(customizeSuggested ? { ...line, suggestion: 'Till' } : line)
+          if (!customizeSuggested) setLastAdded(customizeItem)
           setCustomizeItem(null)
         }}
       />

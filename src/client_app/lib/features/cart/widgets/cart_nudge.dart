@@ -10,31 +10,32 @@ import '../../../l10n/app_localizations.dart';
 import '../../menu/paired_items.dart';
 import '../services/cart_service.dart';
 
-/// The suggestions waved away in the cart, until the cart is emptied.
-class WavedAwayNotifier extends Notifier<Set<int>> {
+/// The customer said "not now": nothing more is suggested until the cart is emptied.
+class NotNowNotifier extends Notifier<bool> {
   @override
-  Set<int> build() {
-    // A new order starts with nothing waved away
+  bool build() {
+    // A new order may be offered one again
     ref.listen(cartProvider, (_, cart) {
-      if (cart.isEmpty && state.isNotEmpty) state = const {};
+      if (cart.isEmpty && state) state = false;
     });
-    return const {};
+    return false;
   }
 
-  void wave(int id) => state = {...state, id};
+  void say() => state = true;
 }
 
-final wavedAwayProvider = NotifierProvider<WavedAwayNotifier, Set<int>>(WavedAwayNotifier.new);
+final notNowProvider = NotifierProvider<NotNowNotifier, bool>(NotNowNotifier.new);
 
 /// The one thing the cart suggests, under its items: what goes well with the
 /// item added last ("Add a waffle?"), in with one tap and its defaults, or
-/// waved away. Only items with nothing to choose are offered here.
+/// "not now". Asked once an order: either answer ends it, and nothing takes
+/// its place. Only items with nothing to choose are offered here.
 class CartNudge extends ConsumerWidget {
   const CartNudge({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final offer = cartNudge(ref.watch(cartProvider).items, ref.watch(menuByIdProvider), ref.watch(wavedAwayProvider));
+    final offer = ref.watch(notNowProvider) ? null : cartNudge(ref.watch(cartProvider).items, ref.watch(menuByIdProvider));
     if (offer == null) return const SizedBox.shrink();
 
     final colors = context.theme.colors;
@@ -86,7 +87,7 @@ class CartNudge extends ConsumerWidget {
           ),
           IconButton(
             tooltip: l10n.notNow,
-            onPressed: () => ref.read(wavedAwayProvider.notifier).wave(offer.id),
+            onPressed: () => ref.read(notNowProvider.notifier).say(),
             icon: Icon(FIcons.x, size: 18, color: colors.mutedForeground),
           ),
           IconButton.filled(

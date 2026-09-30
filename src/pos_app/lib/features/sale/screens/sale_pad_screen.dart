@@ -34,6 +34,7 @@ import '../../tickets/services/tickets_service.dart';
 import '../models/pos_order_request.dart';
 import '../models/sale_line.dart';
 import '../providers/sale_provider.dart';
+import '../till_suggestions.dart';
 import '../pending_ticket_customer.dart';
 import '../widgets/cart_line_row.dart';
 import '../widgets/customer_dialog.dart';
@@ -93,6 +94,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   // ringing the customer up twice. A new id is only issued when the sale
   // content changes.
   String? _requestSignature;
+
+  /// The dish rung up last: what it goes well with is offered under the sale
+  CatalogItem? _lastAdded;
   String? _requestId;
 
   bool get _addingToTicket => widget.ticketId != null;
@@ -164,12 +168,15 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     unawaited(ref.read(catalogRepositoryProvider).saveCustomerPreferences(customerId, items));
   }
 
-  Future<void> _tapItem(CatalogItem item) async {
+  Future<void> _tapItem(CatalogItem item, {bool suggested = false}) async {
     if (item.customizations.isNotEmpty) {
       // Pre-fill from the attached customer's saved choices, if any.
       final customerId = ref.read(saleProvider).customer?.id;
       final line = await showCustomizeDialog(context, item, customerId: customerId);
-      if (line != null) ref.read(saleProvider.notifier).add(line);
+      if (line != null) {
+        ref.read(saleProvider.notifier).add(suggested ? line.suggested() : line);
+        if (!suggested) setState(() => _lastAdded = item);
+      }
       return;
     }
     ref.read(saleProvider.notifier).add(SaleLine(
@@ -178,7 +185,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
           nameAr: item.name.ar,
           price: item.unitPrice,
           pictureUrl: item.pictureUrl,
+          suggestion: suggested ? 'Till' : null,
         ));
+    // A suggestion taken leaves the offer as it was: it never brings on its own
+    if (!suggested) setState(() => _lastAdded = item);
   }
 
   Future<void> _charge() async {
@@ -712,6 +722,42 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             ),
                           ),
                   ),
+                  // What the dish rung up last goes well with: one tap to offer it
+                  if (tillSuggestions(_lastAdded, itemsAsync.value ?? const <CatalogItem>[], lines) case final suggestions
+                      when suggestions.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.goesWellWith, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                          const SizedBox(height: 6),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                for (final item in suggestions)
+                                  Padding(
+                                    padding: const EdgeInsetsDirectional.only(end: 8, bottom: 4),
+                                    child: SizedBox(
+                                      height: 40,
+                                      child: FButton(
+                                        variant: FButtonVariant.outline,
+                                        mainAxisSize: MainAxisSize.min,
+                                        onPress: () => _tapItem(item, suggested: true),
+                                        prefix: const Icon(FIcons.plus, size: 16),
+                                        child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
+                                            style: theme.typography.base.forButton),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),

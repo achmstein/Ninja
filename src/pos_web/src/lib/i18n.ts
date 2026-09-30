@@ -330,6 +330,7 @@ const dictionary = {
   inTheRoom: { en: "In the room", ar: "الموجودون في الغرفة" },
   whoseRound: { en: "Whose round?", ar: "لمن هذا الطلب؟" },
   usuals: { en: "Usuals", ar: "المعتاد" },
+  goesWellWith: { en: "Goes well with", ar: "يُطلب معه" },
   preferenceLoaded: { en: "Usual", ar: "المعتاد" },
   someoneElse: { en: "Someone else", ar: "شخص آخر" },
   onCustomerTab: { en: "On the customer's tab", ar: "أُضيف إلى حساب العميل" },

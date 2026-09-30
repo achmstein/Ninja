@@ -12,17 +12,18 @@ import { itemPictureUrl } from '../menu/item-picture'
 import { effectiveBasePrice } from '../menu/item-form'
 import { cartNudge, menuById } from '../menu/paired-items'
 
-/** The suggestions waved away, until the order is sent or emptied; kept while the tray opens and shuts */
-const useWavedAway = create<{ ids: ReadonlySet<number>; wave: (id: number) => void; reset: () => void }>((set) => ({
-  ids: new Set(),
-  wave: (id) => set((s) => ({ ids: new Set([...s.ids, id]) })),
-  reset: () => set({ ids: new Set() }),
+/** The customer said "not now": nothing more is suggested until the order is sent or emptied; kept while the tray opens and shuts */
+const useNotNow = create<{ said: boolean; say: () => void; reset: () => void }>((set) => ({
+  said: false,
+  say: () => set({ said: true }),
+  reset: () => set({ said: false }),
 }))
 
 /**
  * The one thing the order suggests, under its dishes: what goes well with
  * the dish added last ("Add a waffle?"), one tap to add with its defaults,
- * or waved away. Only dishes with nothing to choose are offered here.
+ * or "not now". Asked once an order: either answer ends it, and nothing
+ * takes its place. Only dishes with nothing to choose are offered here.
  */
 export function TrayNudge() {
   const t = useT()
@@ -32,15 +33,15 @@ export function TrayNudge() {
   const add = useCart((s) => s.add)
   const { data: items = [] } = useQuery(listItemsOptions())
   const menu = useMemo(() => menuById(items), [items])
-  const { ids: dismissed, wave, reset } = useWavedAway()
+  const { said: notNow, say, reset } = useNotNow()
 
-  // A new order starts with nothing waved away
+  // A new order may be offered one again
   const empty = lines.length === 0
   useEffect(() => {
     if (empty) reset()
   }, [empty, reset])
 
-  const offer = cartNudge(lines, menu, dismissed)
+  const offer = notNow ? null : cartNudge(lines, menu)
 
   return (
     <AnimatePresence initial={false}>
@@ -63,7 +64,7 @@ export function TrayNudge() {
             <button
               type='button'
               aria-label={t('notNow')}
-              onClick={() => wave(Number(offer.id))}
+              onClick={say}
               className='bg-background/10 grid size-8 place-items-center rounded-full'
             >
               <X className='size-3.5' />

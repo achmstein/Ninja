@@ -834,5 +834,6 @@
   "rejectClosed": "Closed",
   "rejectNoCourier": "No rider available",
   "rejectOutsideArea": "Outside delivery area",
-  "rejectPrank": "Prank order"
+  "rejectPrank": "Prank order",
+  "goesWellWith": "Goes well with"
 }
