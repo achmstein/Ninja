@@ -2,8 +2,11 @@ import { createStore, type StoreApi } from 'zustand'
 import type { CatalogItemDto } from '@/api/catalog'
 import type { Flight } from './flights'
 
-/** The dish open in place; `leaving` once it was added and its photo has taken off */
-export type Tuning = { item: CatalogItemDto; leaving?: boolean }
+/**
+ * The dish open in place; `from`, the photo it was opened from (the sheet's photo grows out of it and
+ * goes back into it); `leaving` once it was added and its photo has taken off
+ */
+export type Tuning = { item: CatalogItemDto; from?: HTMLElement | null; leaving?: boolean }
 
 /**
  * What changes on the menu while the customer uses it: the dish open, the
@@ -14,8 +17,6 @@ export type Tuning = { item: CatalogItemDto; leaving?: boolean }
  */
 export type MenuScreenState = {
   tuning: Tuning | null
-  /** The dish added from its open card: that card sits out while its photo flies, and comes back as it lands */
-  landing: number | null
   flights: Flight[]
   /** Counts the dishes that reached the tray, which answers each with a bounce */
   bump: number
@@ -35,7 +36,6 @@ export type MenuScreenStore = StoreApi<MenuScreenState>
 export const createMenuScreenStore = (): MenuScreenStore =>
   createStore<MenuScreenState>(() => ({
     tuning: null,
-    landing: null,
     flights: [],
     bump: 0,
     expanded: false,

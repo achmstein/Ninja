@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode, type RefObject } from 'react'
-import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import { useStore } from 'zustand'
 import type { CatalogItemDto } from '@/api/catalog'
@@ -35,6 +35,8 @@ import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
 import { useMenuStyle } from './menu-style'
 import { OrderingPausedNote } from './paused-note'
+import { cornerOf } from './photo-corner'
+import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
 import { Tune, type TuneResult } from './tune'
 
 /**
@@ -87,7 +89,29 @@ export function MenuScreen({ menu }: HomeProps) {
   const classic = style.kind !== 'deck'
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
-  const [gridFocus, setGridFocus] = useState<{ id: number | null; shared: Set<number> }>({ id: null, shared: new Set() })
+  // The dish the deck was on, which the whole menu opens scrolled to
+  const [gridFocus, setGridFocus] = useState<number | null>(null)
+
+  // Between the deck and the whole menu, both are on screen for the move: the one left fades out as
+  // the one arrived fades in, and the photos of the cards on screen fly to their tiles (or back from
+  // them), all on the one spring. The one left goes once it settles. `zooming` is the view being
+  // left, until its flights are planned (after the render that brings the other in)
+  const stage = useRef<HTMLDivElement>(null)
+  const [leaving, setLeaving] = useState<'deck' | 'grid' | null>(null)
+  const [zoomFlights, setZoomFlights] = useState<PhotoFlight[]>([])
+  const zooming = useRef<'deck' | 'grid' | null>(null)
+  const zoomProgress = useMotionValue(1)
+  const arriving = useTransform(zoomProgress, [0, 0.5], [0, 1])
+  const going = useTransform(zoomProgress, [0, 0.4], [1, 0])
+  /** Starts a move away from `from`; false while one is still under way (they go one at a time) */
+  const beginZoom = (from: 'deck' | 'grid') => {
+    if (leaving) return false
+    if (!reduced) {
+      zooming.current = from
+      setLeaving(from)
+    }
+    return true
+  }
 
   // The whole menu scrolls like a page: the top bar goes up with it, and scrolling down tucks the
   // dock's tabs (the tray staying), scrolling back up brings them back. The dock follows that
@@ -96,7 +120,8 @@ export function MenuScreen({ menu }: HomeProps) {
   // The deck goes compact past its first card: the top bar goes up, the tabs fold and the cards grow
   // into both. By where the customer is rather than which way they last swiped, so going back a
   // card to compare two dishes keeps the room; the first card brings the chrome back
-  const compact = mode === 'deck' && pastFirst && columns.length > 0
+  // Held as it was while the deck is being left, so its cards do not change size under their flying photos
+  const compact = (mode === 'deck' || leaving === 'deck') && pastFirst && columns.length > 0
   // Asked back on the compact deck, the tabs come up over the next card's peek rather than taking
   // the cards' room: the categories and the dock rise over the deck's bottom, the cards unmoved
   const tabsOver = compact && tabsAsked
@@ -184,18 +209,17 @@ export function MenuScreen({ menu }: HomeProps) {
   })
 
   const zoomOut = useHandler(() => {
+    if (!beginZoom('deck')) return
     const col = columns[column]
     const row = rows.current[column] ?? 0
-    setGridFocus({
-      id: col?.items[row] ? Number(col.items[row].id) : null,
-      shared: new Set((col?.items ?? []).map((i) => Number(i.id))),
-    })
+    setGridFocus(col?.items[row] ? Number(col.items[row].id) : null)
     store.setState({ tuning: null })
     setMode('grid')
     if (zoomHint.pending) zoomHint.done()
   })
 
   const zoomIn = useHandler((item?: CatalogItemDto) => {
+    if (!beginZoom('grid')) return
     const position = item ? positionOf(columns, item.id) : { column, row: rows.current[column] ?? 0 }
     if (position) {
       setTouched(true)
@@ -208,6 +232,36 @@ export function MenuScreen({ menu }: HomeProps) {
     }
     setMode('deck')
   })
+
+  // The move planned once the view arrived is on screen, before it is painted: the photos of the deck's
+  // cards in view, each with its tile, measured where both are now
+  useLayoutEffect(() => {
+    const from = zooming.current
+    const room = stage.current
+    if (!from || !room) return
+    zooming.current = null
+    const deckView = room.querySelector('[data-view=deck]')
+    const gridView = room.querySelector('[data-view=grid]')
+    const box = room.getBoundingClientRect()
+    const flights = Array.from(deckView?.querySelectorAll<HTMLElement>('[data-photo]') ?? [])
+      .filter((card) => {
+        const r = card.getBoundingClientRect()
+        return r.bottom > box.top && r.top < box.bottom && r.right > box.left && r.left < box.right
+      })
+      .flatMap((card) => {
+        const tile = gridView?.querySelector<HTMLElement>(`[data-photo='${card.dataset.photo}']`) ?? null
+        const flight = from === 'deck' ? planFlight(card, tile, room) : planFlight(tile, card, room)
+        return flight ? [flight] : []
+      })
+    setZoomFlights(flights)
+    zoomProgress.set(0)
+    const run = animate(zoomProgress, 1, FLIGHT_SPRING)
+    run.finished.then(() => {
+      setLeaving(null)
+      setZoomFlights([])
+    })
+    return () => run.stop()
+  }, [mode, zoomProgress])
 
   const onZoom = useHandler((direction: 'out' | 'in') => (direction === 'out' ? zoomOut() : zoomIn()))
   const zoomInFromGrid = useHandler(() => (classic ? undefined : zoomIn()))
@@ -253,10 +307,7 @@ export function MenuScreen({ menu }: HomeProps) {
     })
   )
 
-  const openDish = useHandler((item: CatalogItemDto) => store.setState({ tuning: { item } }))
-  // A list's dish takes its layout id a frame before its sheet opens, and asks for the sheet from
-  // that frame's callback: the sheet waits for the frame to be painted, as it did as React state
-  const openFromList = useHandler((item: CatalogItemDto) => afterThisFrame(() => openDish(item)))
+  const openDish = useHandler((item: CatalogItemDto, from: HTMLElement | null) => store.setState({ tuning: { item, from } }))
 
   const onQuickAdd = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!canOrder) {
@@ -269,7 +320,7 @@ export function MenuScreen({ menu }: HomeProps) {
     }
     // Something to choose first: open it instead
     if (!canQuickAdd(item)) {
-      store.setState({ tuning: { item } })
+      store.setState({ tuning: { item, from: photo } })
       return
     }
     navigator.vibrate?.(8)
@@ -282,11 +333,7 @@ export function MenuScreen({ menu }: HomeProps) {
     // The photo itself goes to the tray: the open card lets go of it and fades,
     // rather than folding back into its card while a copy flies
     const item = tuning.item
-    store.setState({ landing: Number(item.id) })
-    fly(item, photo, () => {
-      addLine(item, result)
-      store.setState({ landing: null })
-    })
+    fly(item, photo, () => addLine(item, result))
     store.setState({ tuning: { ...tuning, leaving: true } })
     requestAnimationFrame(() => afterThisFrame(() => store.setState({ tuning: null })))
   })
@@ -302,146 +349,164 @@ export function MenuScreen({ menu }: HomeProps) {
         onWheelCapture={noteInput}
         onKeyDownCapture={noteInput}
       >
-        {/* The shared layouts (a dish and its open sheet, a card and its tile) are all up here: the dock is a
-            group of its own, so the tray's own layouts moving do not re-measure every card on the menu */}
-        <LayoutGroup>
-          <div className='relative flex min-h-0 flex-1 flex-col'>
-            {/* The first-visit demonstrations move the whole deck: a nudge up, then a breath out to the whole menu */}
-            <motion.div
-              className='deck-top min-h-0 flex-1'
-              style={{ '--deck-top': compact ? `${DECK_COMPACT_TOP}px` : DECK_TOP } as CSSProperties}
-              animate={
-                swipeHint.showing
-                  ? { y: [0, -56, 0, -28, 0], scale: 1 }
-                  : zoomHint.showing
-                    ? { scale: [1, 0.9, 0.9, 1], y: 0 }
-                    : { scale: 1, y: 0 }
-              }
-              // Twice, in step with the fingertip acting the gesture out over it
-              transition={
-                swipeHint.showing || zoomHint.showing
-                  ? {
-                      duration: GESTURE_S[swipeHint.showing ? 'swipe' : 'pinch'],
-                      times: swipeHint.showing ? [0, 0.3, 0.55, 0.75, 1] : [0, 0.3, 0.7, 1],
-                      ease: 'easeInOut',
-                      delay: GESTURE_DELAY_S,
-                      repeat: 1,
-                      repeatDelay: GESTURE_GAP_S,
-                    }
-                  : { duration: 0.3 }
-              }
-            >
-              {loading ? (
-                <div className='h-full px-4 pb-14' style={{ paddingTop: DECK_TOP }}>
-                  <div className='bg-muted h-full animate-pulse rounded-[28px] motion-reduce:animate-none' />
-                </div>
-              ) : columns.length === 0 ? (
-                <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
-              ) : mode === 'grid' ? (
-                <GridStage
-                  store={store}
-                  columns={columns}
-                  focusId={gridFocus.id}
-                  sharedIds={gridFocus.shared}
-                  onOpen={openFromList}
-                  onQuickAdd={onQuickAdd}
-                  onZoomIn={zoomInFromGrid}
-                  list={list}
-                  // The café's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
-                  title={classic ? t('menu') : undefined}
-                  onScroller={setGridScroller}
-                  notice={notice}
-                />
-              ) : (
-                <DeckStage
-                  key={deckKey}
-                  store={store}
-                  columns={columns}
-                  column={column}
-                  onColumnChange={selectColumn}
-                  onRowChange={onRowChange}
-                  start={start}
-                  usualId={usual ? Number(usual.id) : null}
-                  holdHintId={holdHintId}
-                  onOpen={openDish}
-                  onQuickAdd={onQuickAdd}
-                  onZoom={onZoom}
-                />
-              )}
-            </motion.div>
-
-            {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
-            <NinjaTopBar
-              ref={bar}
-              className='absolute inset-x-0 top-0'
-              style={{ y: barY }}
-              start={
-                mode === 'grid' && !classic ? (
-                  <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
-                    <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
-                    <span className='heading truncate text-headline'>{t('ninjaWholeMenu')}</span>
-                  </button>
-                ) : undefined
-              }
-            />
-            {/* On the cards, over the first one as the top bar is, and gone with it past there (the whole menu has it at its top) */}
-            {!canOrder && mode === 'deck' && (
-              <motion.div
-                className='bg-background absolute inset-x-4 z-20 rounded-[1.5rem] shadow-(--slab-shadow)'
-                style={{ top: DECK_TOP }}
-                initial={false}
-                animate={{ opacity: compact ? 0 : 1, y: compact ? -24 : 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                inert={compact || undefined}
-              >
-                <OrderingPausedNote />
-              </motion.div>
-            )}
-
-            {/* The categories, in the thumb's reach: on the cards they turn the deck, on the whole menu they jump to their heading */}
-            {columns.length > 0 && (
-              <nav
-                aria-label={t('menu')}
-                // A soft shadow along its top edge sets it apart from the cards or the tiles running up to it
-                className='bg-background relative z-10 shrink-0 pb-1 shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)] transition-[margin] duration-300 ease-out motion-reduce:transition-none'
-                style={{ marginTop: tabsOver ? -TABS_H : 0 }}
-              >
-                {mode === 'deck' ? (
-                  <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
-                ) : (
-                  // A classic menu has no cards to go back to
-                  <GridTabs store={store} labels={gridLabels} onZoomOut={classic ? undefined : backToCards} />
+        <div className='relative flex min-h-0 flex-1 flex-col'>
+          {/* The first-visit demonstrations move the whole deck: a nudge up, then a breath out to the whole menu */}
+          <motion.div
+            className='deck-top min-h-0 flex-1'
+            // Its room at the top eases as the bar comes and goes, except in a move to or from the whole
+            // menu, where the cards must be the size their photos fly to
+            style={{ '--deck-top': compact ? `${DECK_COMPACT_TOP}px` : DECK_TOP, transition: leaving ? 'none' : undefined } as CSSProperties}
+            animate={
+              swipeHint.showing
+                ? { y: [0, -56, 0, -28, 0], scale: 1 }
+                : zoomHint.showing
+                  ? { scale: [1, 0.9, 0.9, 1], y: 0 }
+                  : { scale: 1, y: 0 }
+            }
+            // Twice, in step with the fingertip acting the gesture out over it
+            transition={
+              swipeHint.showing || zoomHint.showing
+                ? {
+                    duration: GESTURE_S[swipeHint.showing ? 'swipe' : 'pinch'],
+                    times: swipeHint.showing ? [0, 0.3, 0.55, 0.75, 1] : [0, 0.3, 0.7, 1],
+                    ease: 'easeInOut',
+                    delay: GESTURE_DELAY_S,
+                    repeat: 1,
+                    repeatDelay: GESTURE_GAP_S,
+                  }
+                : { duration: 0.3 }
+            }
+          >
+            {loading ? (
+              <div className='h-full px-4 pb-14' style={{ paddingTop: DECK_TOP }}>
+                <div className='bg-muted h-full animate-pulse rounded-[28px] motion-reduce:animate-none' />
+              </div>
+            ) : columns.length === 0 ? (
+              <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
+            ) : (
+              <div ref={stage} className='relative h-full overflow-hidden'>
+                {(mode === 'grid' || leaving === 'grid') && (
+                  <motion.div
+                    key='grid'
+                    data-view='grid'
+                    style={{ opacity: leaving === 'grid' ? going : arriving }}
+                    className={cn('absolute inset-0', leaving === 'grid' && 'pointer-events-none')}
+                  >
+                    <GridStage
+                      store={store}
+                      columns={columns}
+                      focusId={gridFocus}
+                      onOpen={openDish}
+                      onQuickAdd={onQuickAdd}
+                      onZoomIn={zoomInFromGrid}
+                      list={list}
+                      // The café's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
+                      title={classic ? t('menu') : undefined}
+                      onScroller={setGridScroller}
+                      notice={notice}
+                    />
+                  </motion.div>
                 )}
-              </nav>
+                {(mode === 'deck' || leaving === 'deck') && (
+                  <motion.div
+                    key='deck'
+                    data-view='deck'
+                    style={{ opacity: leaving === 'deck' ? going : arriving }}
+                    className={cn('absolute inset-0', leaving === 'deck' && 'pointer-events-none')}
+                  >
+                    <Deck
+                      key={deckKey}
+                      columns={columns}
+                      column={column}
+                      onColumnChange={selectColumn}
+                      onRowChange={onRowChange}
+                      start={start}
+                      usualId={usual ? Number(usual.id) : null}
+                      holdHintId={holdHintId}
+                      onOpen={openDish}
+                      onQuickAdd={onQuickAdd}
+                      onZoom={onZoom}
+                    />
+                  </motion.div>
+                )}
+                {zoomFlights.map((flight, i) => (
+                  <FlyingPhoto key={i} flight={flight} progress={zoomProgress} />
+                ))}
+              </div>
             )}
+          </motion.div>
 
-            <AnimatePresence>
-              {swipeHint.showing && <GestureHint key='swipe-tip' kind='swipe' />}
-              {zoomHint.showing && <GestureHint key='pinch-tip' kind='pinch' />}
-              {holdHintId != null && <GestureHint key='hold-tip' kind='hold' />}
-            </AnimatePresence>
-            <AnimatePresence>
-              {swipeHint.showing && (
-                <div key='swipe' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
-                  <HintBubble>
-                    <MoveVertical className='size-3.5' />
-                    {t('ninjaHintSwipe')}
-                  </HintBubble>
-                </div>
-              )}
-              {zoomHint.showing && (
-                <div key='zoom' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
-                  <HintBubble>
-                    <LayoutGrid className='size-3.5' />
-                    {t('ninjaHintZoom')}
-                  </HintBubble>
-                </div>
-              )}
-            </AnimatePresence>
+          {/* The bar over the cards: the café, where you are; on the whole menu, the way back */}
+          <NinjaTopBar
+            ref={bar}
+            className='absolute inset-x-0 top-0'
+            style={{ y: barY }}
+            start={
+              mode === 'grid' && !classic ? (
+                <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
+                  <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
+                  <span className='heading truncate text-headline'>{t('ninjaWholeMenu')}</span>
+                </button>
+              ) : undefined
+            }
+          />
+          {/* On the cards, over the first one as the top bar is, and gone with it past there (the whole menu has it at its top) */}
+          {!canOrder && mode === 'deck' && (
+            <motion.div
+              className='bg-background absolute inset-x-4 z-20 rounded-[1.5rem] shadow-(--slab-shadow)'
+              style={{ top: DECK_TOP }}
+              initial={false}
+              animate={{ opacity: compact ? 0 : 1, y: compact ? -24 : 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              inert={compact || undefined}
+            >
+              <OrderingPausedNote />
+            </motion.div>
+          )}
 
-            <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} />
-          </div>
-        </LayoutGroup>
+          {/* The categories, in the thumb's reach: on the cards they turn the deck, on the whole menu they jump to their heading */}
+          {columns.length > 0 && (
+            <nav
+              aria-label={t('menu')}
+              // A soft shadow along its top edge sets it apart from the cards or the tiles running up to it
+              className='bg-background relative z-10 shrink-0 pb-1 shadow-[0_-10px_18px_-14px_rgb(0_0_0/0.35)] transition-[margin] duration-300 ease-out motion-reduce:transition-none'
+              style={{ marginTop: tabsOver ? -TABS_H : 0 }}
+            >
+              {mode === 'deck' ? (
+                <LiquidTabs labels={labels} active={column} onSelect={selectColumn} onZoomOut={zoomOut} />
+              ) : (
+                // A classic menu has no cards to go back to
+                <GridTabs store={store} labels={gridLabels} onZoomOut={classic ? undefined : backToCards} />
+              )}
+            </nav>
+          )}
+
+          <AnimatePresence>
+            {swipeHint.showing && <GestureHint key='swipe-tip' kind='swipe' />}
+            {zoomHint.showing && <GestureHint key='pinch-tip' kind='pinch' />}
+            {holdHintId != null && <GestureHint key='hold-tip' kind='hold' />}
+          </AnimatePresence>
+          <AnimatePresence>
+            {swipeHint.showing && (
+              <div key='swipe' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
+                <HintBubble>
+                  <MoveVertical className='size-3.5' />
+                  {t('ninjaHintSwipe')}
+                </HintBubble>
+              </div>
+            )}
+            {zoomHint.showing && (
+              <div key='zoom' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
+                <HintBubble>
+                  <LayoutGrid className='size-3.5' />
+                  {t('ninjaHintZoom')}
+                </HintBubble>
+              </div>
+            )}
+          </AnimatePresence>
+
+          <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} />
+        </div>
 
         <LayoutGroup>
           <MenuDock store={store} target={target} canOrder={canOrder} scroller={gridScroller} deckTucked={compact && !tabsAsked} />
@@ -454,19 +519,11 @@ export function MenuScreen({ menu }: HomeProps) {
   )
 }
 
-/** The whole menu, with what it follows from the store: the dish landing, the category asked for */
-function GridStage({ store, ...props }: Omit<ComponentProps<typeof MenuGrid>, 'landingId' | 'jump' | 'onSection'> & { store: MenuScreenStore }) {
-  const landingId = useStore(store, (s) => s.landing)
+/** The whole menu, with what it follows from the store: the category asked for, and the one in view */
+function GridStage({ store, ...props }: Omit<ComponentProps<typeof MenuGrid>, 'jump' | 'onSection'> & { store: MenuScreenStore }) {
   const jump = useStore(store, (s) => s.jump)
   const onSection = useCallback((index: number) => store.setState({ section: index }), [store])
-  return <MenuGrid {...props} landingId={landingId} jump={jump} onSection={onSection} />
-}
-
-/** The deck, with what it follows from the store: the dish landing, the one open */
-function DeckStage({ store, ...props }: Omit<ComponentProps<typeof Deck>, 'landingId' | 'openId'> & { store: MenuScreenStore }) {
-  const landingId = useStore(store, (s) => s.landing)
-  const openId = useStore(store, (s) => (s.tuning ? Number(s.tuning.item.id) : null))
-  return <Deck {...props} landingId={landingId} openId={openId} />
+  return <MenuGrid {...props} jump={jump} onSection={onSection} />
 }
 
 /** On the whole menu the categories are a jump bar: the pill follows the one in view, a tap scrolls to one */
@@ -501,6 +558,7 @@ function TuneLayer({
           key={String(tuning.item.id)}
           item={tuning.item}
           canOrder={canOrder}
+          from={tuning.from ?? null}
           onClose={() => store.setState({ tuning: null })}
           leaving={tuning.leaving}
           onAdd={(result, photo) => onAdd(tuning, result, photo)}
@@ -657,22 +715,10 @@ function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDiv
 /**
  * Runs `fn` once the frame in progress has been painted. The store's updates render at once, so one
  * made in a frame callback would render before that frame's paint, where React state set there
- * rendered just after it; the two places that wait a frame on purpose hand their update on to this,
- * which keeps the frame between their two renders and keeps both from landing in one long frame
+ * rendered just after it; the one place that waits a frame on purpose (an added dish's sheet letting go)
+ * hands its update on to this, which keeps the frame between its two renders
  */
 function afterThisFrame(fn: () => void) {
   window.setTimeout(fn, 0)
 }
 
-/**
- * The corner a photo is seen with: its own, or that of the card clipping it
- * (a deck card rounds its photo; an open card's photo is square), so a
- * flight starts with exactly the corners that were on screen
- */
-function cornerOf(el: HTMLElement | null): number {
-  for (let node = el, depth = 0; node && depth < 3; node = node.parentElement, depth++) {
-    const radius = parseFloat(getComputedStyle(node).borderTopLeftRadius)
-    if (radius > 0) return radius
-  }
-  return 0
-}

@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { motion, useScroll } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useHandler } from '@/lib/use-handler'
@@ -18,7 +18,7 @@ const SPY_SLACK = 24
  * Two menus use it. The café's own list (`list`: rows, a photo grid,
  * compact rows or magazine cards) opens under the page's large title, as
  * every tab does. The deck zoomed out shows its cards as small tiles, the
- * ones that were on screen morphing into theirs; a pinch open, or the way
+ * photos of the ones that were on screen flying into theirs; a pinch open, or the way
  * back in the bar, returns to the cards. Either way a tap opens a dish's
  * options grown out of it, and a held press puts one straight in the tray.
  * The usuals are not repeated here: each of them is a dish in its category.
@@ -28,11 +28,9 @@ const SPY_SLACK = 24
 export const MenuGrid = memo(function MenuGrid({
   columns,
   focusId,
-  sharedIds,
   onOpen,
   onQuickAdd,
   onZoomIn,
-  landingId,
   jump,
   onSection,
   list,
@@ -43,13 +41,9 @@ export const MenuGrid = memo(function MenuGrid({
   columns: DeckColumn[]
   /** The item the deck was on, scrolled into view on arrival */
   focusId: number | null
-  /** The items whose card was on screen and so morph rather than appear */
-  sharedIds: ReadonlySet<number>
-  onOpen: (item: CatalogItemDto) => void
+  onOpen: (item: CatalogItemDto, from: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onZoomIn: () => void
-  /** The dish whose photo is flying to the tray from its open card: its tile waits for it to land */
-  landingId: number | null
   /** A category to scroll to (its index among the categories), asked for by the jump bar; `n` tells two asks apart */
   jump: { index: number; n: number } | null
   /** The category in view changed, as the jump bar lights it */
@@ -72,19 +66,9 @@ export const MenuGrid = memo(function MenuGrid({
     return () => hand?.(null)
   }, [])
   const categories = columns.filter((c) => c.kind === 'category')
-  // The tile being opened takes its layout id a frame before its card opens, so the card grows
-  // out of it; every other tile outside the deck's column has none, which keeps the zoom's first
-  // frame cheap (each id is a box to measure)
-  const [openingId, setOpeningId] = useState<number | null>(null)
-  // Added from its options, the dish is done opening: its photo flew off to the tray, so it does not take
-  // its layout ids back as the photo lands (a remount mid-list, which blinked its photo out for a frame)
-  if (landingId != null && landingId === openingId) setOpeningId(null)
-  // The dishes keep the same two handlers from render to render, so a render of the list (a dish
-  // opening, a category asked for) passes every dish by but the one it is about
-  const open = useHandler((item: CatalogItemDto) => {
-    setOpeningId(Number(item.id))
-    requestAnimationFrame(() => onOpen(item))
-  })
+  // The dishes keep the same two handlers from render to render, so a render of the list (a category
+  // asked for) passes every dish by
+  const open = useHandler(onOpen)
   const quickAdd = useHandler(onQuickAdd)
   const focusColumn = categories.find((c) => c.items.some((i) => Number(i.id) === focusId))?.id
 
@@ -143,7 +127,7 @@ export const MenuGrid = memo(function MenuGrid({
     }
   }, [jump])
 
-  // Arrive with the dish we were on in view, before the morph measures it
+  // Arrive with the dish we were on in view, before its photo's flight measures it
   useLayoutEffect(() => {
     const el = scroller.current
     if (!el || focusId == null) return
@@ -180,7 +164,6 @@ export const MenuGrid = memo(function MenuGrid({
   return (
     <motion.div
       ref={scroller}
-      layoutScroll
       onScroll={spy}
       // The room under the top bar is every page's: the bar, then the same gap to what comes first
       className='no-scrollbar h-full overflow-y-auto overscroll-y-contain px-4 pt-[calc(var(--bar-h)+var(--page-top))] pb-6 [touch-action:pan-y]'
@@ -214,8 +197,6 @@ export const MenuGrid = memo(function MenuGrid({
                   key={String(item.id)}
                   scroller={scroller}
                   item={item}
-                  opening={Number(item.id) === openingId}
-                  landing={Number(item.id) === landingId}
                   onOpen={open}
                   onQuickAdd={quickAdd}
                 />
@@ -227,9 +208,6 @@ export const MenuGrid = memo(function MenuGrid({
                 <ZoomTile
                   key={String(item.id)}
                   item={item}
-                  shared={sharedIds.has(Number(item.id))}
-                  opening={Number(item.id) === openingId}
-                  landing={Number(item.id) === landingId}
                   onOpen={open}
                   onQuickAdd={quickAdd}
                 />

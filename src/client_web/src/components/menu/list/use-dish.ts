@@ -9,22 +9,18 @@ export type MenuList = 'row' | 'card' | 'compact' | 'hero'
 
 /**
  * What every dish of a list is given. The dish opens its options grown out
- * of its photo; its button puts a dish that needs no choosing straight in
- * the tray (and opens one that does), and a held press does the same.
- * Every dish is memoised, as the deck's cards are, and the list hands it
- * the same two handlers from render to render: a dish that renders
- * re-measures every shared layout on the page, so only the one whose
- * `opening` or `landing` changes should.
+ * of its photo (it hands the photo over; the sheet does the rest); its
+ * button puts a dish that needs no choosing straight in the tray (and opens
+ * one that does), and a held press does the same. Every dish is memoised
+ * and the list hands it the same two handlers from render to render, so a
+ * render of the list passes every dish by.
  */
 export type DishProps = {
   /** The list's scroller: a dish rises in as it scrolls into it */
   scroller: RefObject<HTMLDivElement | null>
   item: CatalogItemDto
-  /** Tapped: its options open out of it and close back into it */
-  opening: boolean
-  /** Its photo is flying to the tray from its open options */
-  landing: boolean
-  onOpen: (item: CatalogItemDto) => void
+  /** `from`: the photo its options grow out of, or null for one without (they rise in on their own) */
+  onOpen: (item: CatalogItemDto, from: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }
 
@@ -37,18 +33,22 @@ export const rise = (scroller: DishProps['scroller']) =>
     transition: springSoft,
   }) as const
 
-/** What every dish of a list needs: its photo (or the plate), the press, the morph into its options */
+/**
+ * What every dish of a list needs: its photo (or the plate), the press, opening its options. `grows`
+ * off: its options do not grow out of `photo` (a dish shown without one, whose `photo` is only what
+ * it flies to the tray from)
+ */
 export function useDish({
   item,
-  opening,
-  landing = false,
   onOpen,
   onQuickAdd,
   photo,
-}: Pick<DishProps, 'item' | 'opening' | 'onOpen' | 'onQuickAdd'> & { landing?: boolean; photo: RefObject<HTMLElement | null> }) {
+  grows = true,
+}: Pick<DishProps, 'item' | 'onOpen' | 'onQuickAdd'> & { photo: RefObject<HTMLElement | null>; grows?: boolean }) {
   const [failed, setFailed] = useState(false)
+  const open = () => onOpen(item, grows ? photo.current : null)
   const { pressing, handlers } = usePress({
-    onTap: () => onOpen(item),
+    onTap: open,
     onLongPress: () => onQuickAdd(item, photo.current),
   })
   return {
@@ -59,8 +59,7 @@ export function useDish({
     soldOut: item.isAvailable === false,
     onOffer: !!item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0),
     quick: canQuickAdd(item),
-    // Only the one being opened carries the layout ids its options grow out of; one whose photo is flying sits out
-    morph: opening && !landing,
+    open,
   }
 }
 

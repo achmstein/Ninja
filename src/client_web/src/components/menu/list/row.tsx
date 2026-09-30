@@ -13,10 +13,10 @@ import { DISH_NAME, DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
  * flies to the tray: the flight leaves from the options sheet as often as
  * from here, and a row is small enough that a copy lifting off reads fine.
  */
-export const Row = memo(function Row({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const Row = memo(function Row({ scroller, item, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const photo = useRef<HTMLDivElement>(null)
-  const dish = useDish({ item, opening, landing, onOpen, onQuickAdd, photo })
+  const dish = useDish({ item, onOpen, onQuickAdd, photo })
 
   return (
     <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3', dish.soldOut && 'opacity-50')}>
@@ -29,7 +29,7 @@ export const Row = memo(function Row({ scroller, item, opening, landing, onOpen,
           <DishPrice item={item} onOffer={dish.onOffer} className='mt-1.5' />
         </span>
       </button>
-      {!dish.soldOut && <RowAction small item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />}
+      {!dish.soldOut && <RowAction small item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={dish.open} />}
     </motion.div>
   )
 })

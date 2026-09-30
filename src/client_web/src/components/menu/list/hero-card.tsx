@@ -6,11 +6,11 @@ import { DishPhotoBox, RowAction } from './dish-parts'
 import { DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
 
 /** Magazine: one wide photo a dish, the name and price set on it under a shade, the button on its corner */
-export const HeroCard = memo(function HeroCard({ scroller, item, opening, landing, onOpen, onQuickAdd }: DishProps) {
+export const HeroCard = memo(function HeroCard({ scroller, item, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
   const price = usePrice()
   const photo = useRef<HTMLDivElement>(null)
-  const dish = useDish({ item, opening, landing, onOpen, onQuickAdd, photo })
+  const dish = useDish({ item, onOpen, onQuickAdd, photo })
   return (
     <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('relative', dish.soldOut && 'opacity-50')}>
       <button type='button' {...dish.handlers} className='block w-full text-start select-none [-webkit-touch-callout:none]'>
@@ -27,7 +27,7 @@ export const HeroCard = memo(function HeroCard({ scroller, item, opening, landin
       </button>
       {!dish.soldOut && (
         <span className='absolute end-4 bottom-4'>
-          <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={() => onOpen(item)} />
+          <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={dish.open} />
         </span>
       )}
     </motion.div>

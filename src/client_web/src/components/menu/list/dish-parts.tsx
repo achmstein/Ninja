@@ -11,7 +11,7 @@ import { Odometer } from '@/components/ninja/odometer'
 import { TONE_CLASS } from '../deck/deck-model'
 import type { useDish } from './use-dish'
 
-/** The photo box of a list's dish: the photo, or the plate on the café's colour, morphing into the options when opened */
+/** The photo box of a list's dish: the photo, or the plate on the café's colour; its options grow out of it when opened */
 export function DishPhotoBox({
   item,
   dish,
@@ -28,13 +28,8 @@ export function DishPhotoBox({
   children?: ReactNode
 }) {
   return (
-    <motion.div
-      // Mounted afresh as it takes its layout ids: motion only lays claim to a layout id as the box
-      // mounts, so ids handed to one already on screen were never matched and the options appeared
-      // with no morph at all
-      key={dish.morph ? 'morph' : 'still'}
+    <div
       ref={photoRef}
-      layoutId={dish.morph ? `card-${item.id}` : undefined}
       style={{ borderRadius: radius }}
       className={cn(
         'relative shrink-0 overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
@@ -45,16 +40,16 @@ export function DishPhotoBox({
       )}
     >
       {dish.hasPhoto ? (
-        <motion.div layoutId={dish.morph ? `photo-${item.id}` : undefined} className='bg-muted absolute inset-0'>
+        <div className='bg-muted absolute inset-0'>
           <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={dish.fail} className='size-full object-cover' />
-        </motion.div>
+        </div>
       ) : (
-        <motion.div layoutId={dish.morph ? `photo-${item.id}` : undefined} className='absolute inset-0 grid place-items-center'>
+        <div className='absolute inset-0 grid place-items-center'>
           <UtensilsCrossed className='size-1/3 max-w-12 opacity-40' />
-        </motion.div>
+        </div>
       )}
       {children}
-    </motion.div>
+    </div>
   )
 }
 

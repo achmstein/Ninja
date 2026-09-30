@@ -1,5 +1,4 @@
 import { memo, useRef, useState } from 'react'
-import { motion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -8,31 +7,22 @@ import { usePress } from '@/components/ninja/gestures/use-press'
 import { PressRing } from '../deck/deck'
 import { canQuickAdd, TONE_CLASS } from '../deck/deck-model'
 
-/** A tile's corner; the card it came from is rounder, and the morph carries it across */
+/** A tile's corner; the card it came from is rounder, and the photo's flight carries it across */
 const TILE_RADIUS = 18
 
 /**
  * A dish on the whole menu (the deck zoomed out): a small photo tile, the
- * name and price under it. The cards that were on screen morph into their
- * tiles; a tap opens the dish's options grown out of it, a held press puts
- * one straight in the tray.
+ * name and price under it. The photos of the cards that were on screen fly
+ * into their tiles (found by `data-photo`); a tap opens the dish's options
+ * grown out of its photo, a held press puts one straight in the tray.
  */
 export const ZoomTile = memo(function ZoomTile({
   item,
-  shared,
-  opening,
-  landing,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
-  /** Its card was on screen in the deck: it morphs from it rather than appearing */
-  shared: boolean
-  /** Tapped: its card opens out of it and closes back into it */
-  opening: boolean
-  /** A copy of its photo is in the air: the tile keeps its own photo in place, only without the layout ids its options grew out of */
-  landing: boolean
-  onOpen: (item: CatalogItemDto) => void
+  onOpen: (item: CatalogItemDto, from: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
   const localized = useLocalized()
@@ -43,10 +33,8 @@ export const ZoomTile = memo(function ZoomTile({
   const onOffer = item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
   const photo = useRef<HTMLDivElement>(null)
   const quick = canQuickAdd(item)
-  // Only a tile that morphs has layout ids; one whose photo is flying to the tray sits out
-  const morph = (shared || opening) && !landing
   const { pressing, handlers } = usePress({
-    onTap: () => onOpen(item),
+    onTap: () => onOpen(item, photo.current),
     onLongPress: () => onQuickAdd(item, photo.current),
   })
 
@@ -57,12 +45,9 @@ export const ZoomTile = memo(function ZoomTile({
       {...handlers}
       className='flex min-w-0 flex-col text-start select-none [-webkit-touch-callout:none]'
     >
-      <motion.div
+      <div
         ref={photo}
-        layoutId={morph ? `card-${item.id}` : undefined}
-        initial={shared ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.28 }}
+        data-photo={String(item.id)}
         style={{ borderRadius: TILE_RADIUS }}
         className={cn(
           'relative aspect-[4/5] w-full overflow-hidden transition-transform duration-200 ease-out motion-reduce:transition-none',
@@ -78,7 +63,7 @@ export const ZoomTile = memo(function ZoomTile({
           </span>
         )}
         {hasPhoto ? (
-          <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='bg-muted absolute inset-0'>
+          <div className='bg-muted absolute inset-0'>
             <img
               src={itemPictureUrl(item.id)}
               alt=''
@@ -88,13 +73,13 @@ export const ZoomTile = memo(function ZoomTile({
               onError={() => setFailed(true)}
               className='size-full object-cover'
             />
-          </motion.div>
+          </div>
         ) : (
-          <motion.div layoutId={morph ? `photo-${item.id}` : undefined} className='absolute inset-0 flex items-end p-2.5'>
+          <div className='absolute inset-0 flex items-end p-2.5'>
             <span className='heading line-clamp-3 text-name leading-[1.05] break-words'>{localized(item.name)}</span>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
       <span className='mt-1.5 truncate text-caption font-semibold'>{localized(item.name)}</span>
       <span className='text-muted-foreground text-caption tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
     </button>

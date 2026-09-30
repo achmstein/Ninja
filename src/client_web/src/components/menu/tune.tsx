@@ -1,10 +1,19 @@
-import { forwardRef, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  usePresence,
+  useReducedMotion,
+  useTransform,
+  type AnimationPlaybackControls,
+} from 'motion/react'
 import { Minus, Plus, UtensilsCrossed, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { blurSwap, ease, springOpen } from '@/lib/motion'
+import { blurSwap, ease, fade } from '@/lib/motion'
 import { revealField } from '@/lib/reveal'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from './item-picture'
@@ -17,9 +26,8 @@ import {
   type Selections,
 } from './item-form'
 import { sortedOptions, TONE_CLASS } from './deck/deck-model'
+import { FLIGHT_SPRING, flightAt, planFlight, type Flight } from './photo-flight'
 import { Odometer } from '../ninja/odometer'
-
-const CLEAR_OUT = { opacity: 0, transition: { duration: 0.16, ease: ease.exit } }
 
 export type TuneResult = {
   customizations: CartCustomization[]
@@ -29,32 +37,41 @@ export type TuneResult = {
 }
 
 /**
- * A card opened in place: the card itself grows to fill the Ninja menu (it
- * shares its layout id with the card in the deck, so the photo never leaves
- * the screen) and its options come in under the photo, all on the one
- * scroll: the ones that must be answered first, the extras last, every one
- * the same pills, which show what is picked themselves. The choices are the classic item
- * sheet's: the customer's saved picks or the café's defaults, nothing sold
- * out, a required question must be answered; until they are, the button
- * names the one left and goes to it.
+ * A dish opened in place: its photo leaves the dish and becomes the
+ * sheet's banner, the sheet coming up round it, and closing takes the photo
+ * back to the dish. Only a copy of the photo travels, clipped to a frame
+ * that goes from the dish's to the banner's, so it changes its crop rather
+ * than stretching; the sheet under it only fades and slides. All of it
+ * follows the one spring (`progress`), so it moves as one thing, and none
+ * of it renders while it moves. The options come in under the photo, all on
+ * the one scroll: the ones that must be answered first, the extras last,
+ * every one the same pills, which show what is picked themselves. The
+ * choices are the classic item sheet's: the customer's saved picks or the
+ * café's defaults, nothing sold out, a required question must be answered;
+ * until they are, the button names the one left and goes to it.
  */
 export function Tune({
   item,
+  from = null,
   canOrder,
   onClose,
   onAdd,
   leaving = false,
 }: {
   item: CatalogItemDto
+  /** The dish's photo it was opened from: the banner grows out of it and goes back into it; none, the sheet rises in on its own */
+  from?: HTMLElement | null
   canOrder: boolean
   onClose: () => void
   onAdd: (result: TuneResult, photo: HTMLElement | null) => void
-  /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of folding back into the card */
+  /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of going back into the dish */
   leaving?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
+  const reduced = useReducedMotion()
+  const sheet = useRef<HTMLDivElement>(null)
   const photo = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
   const hasPhoto = !!item.pictureUri && !failed
@@ -98,60 +115,134 @@ export function Tune({
     setOverrides({ ...selections, [key]: next })
   }
 
-  // The photo keeps its place on screen through the morph: a short banner across the top, every dish alike,
-  // low enough that the options start on the first screen rather than under a photo to scroll past
-  const photoBox = (
-    <motion.div
-      ref={photo}
-      layoutId={leaving ? undefined : `photo-${item.id}`}
-      transition={springOpen}
-      style={{ opacity: leaving ? 0 : undefined }}
-      className={cn('relative aspect-[16/7] max-h-[180px] w-full overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
-    >
-      {hasPhoto ? (
-        <motion.img
-          src={itemPictureUrl(item.id)}
-          alt=''
-          draggable={false}
-          onError={() => setFailed(true)}
-          exit={CLEAR_OUT}
-          className={cn('size-full object-cover', soldOut && 'grayscale')}
-        />
-      ) : (
-        // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
-        <div className='grid size-full place-items-center'>
-          <UtensilsCrossed className='size-12 opacity-50' />
-        </div>
-      )}
-    </motion.div>
-  )
+  // The motion. `progress` is the whole of it, 0 at the dish and 1 open; `planned` changes whenever the
+  // flight is measured again (on opening, on closing), so what follows from it is worked out afresh.
+  // Each value below reads both every time: motion follows the values read as it renders, and one
+  // read only once there was a flight would never be followed
+  const progress = useMotionValue(0)
+  const planned = useMotionValue(0)
+  const flight = useRef<Flight | null>(null)
+  const flying = useMotionValue<'visible' | 'hidden'>('hidden')
+  const at = () => {
+    const p = progress.get()
+    planned.get()
+    return flight.current ? flightAt(flight.current, p) : null
+  }
+  const clip = useTransform(() => at()?.clip ?? 'none')
+  const photoX = useTransform(() => at()?.x ?? 0)
+  const photoY = useTransform(() => at()?.y ?? 0)
+  const photoScale = useTransform(() => at()?.scale ?? 1)
+  const photoW = useTransform(() => (planned.get(), flight.current?.nw ?? 0))
+  const photoH = useTransform(() => (planned.get(), flight.current?.nh ?? 0))
+  // The plate's icon rides the middle of the frame (it is 48 px)
+  const iconX = useTransform(() => (at()?.cx ?? 0) - 24)
+  const iconY = useTransform(() => (at()?.cy ?? 0) - 24)
+  // The banner itself shows only once the copy has landed on it; with nothing to grow out of, it fades in with the sheet
+  const bannerVisibility = useTransform(() => (flying.get() === 'visible' ? 'hidden' : 'visible'))
+  const bannerOpacity = useTransform(() => {
+    const p = progress.get()
+    planned.get()
+    return flight.current ? 1 : Math.min(1, p * 2)
+  })
+  // The page comes up early, so the photo travels over it; the words and the button after, from a little below
+  const veil = useTransform(progress, [0, 0.3], [0, 1])
+  const bodyOpacity = useTransform(progress, [0.4, 1], [0, 1])
+  const bodyY = useTransform(progress, [0, 1], [reduced ? 0 : 28, 0])
+  const footOpacity = useTransform(progress, [0.2, 0.7], [0, 1])
+  const footY = useTransform(progress, [0, 1], [reduced ? 0 : 72, 0])
+  const closeOpacity = useTransform(progress, [0.6, 1], [0, 1])
+
+  // The dish's own photo is hidden while its copy is out, so there are never two
+  const hidden = useRef<HTMLElement | null>(null)
+  const hideSource = (el: HTMLElement) => {
+    el.style.visibility = 'hidden'
+    hidden.current = el
+  }
+  const showSource = () => {
+    if (hidden.current) hidden.current.style.visibility = ''
+    hidden.current = null
+  }
+
+  const run = useRef<AnimationPlaybackControls | null>(null)
+  const closing = useRef(false)
+  const [isPresent, safeToRemove] = usePresence()
+
+  // Opening: measured before the first paint, so the copy is over the dish from the first frame
+  useLayoutEffect(() => {
+    const planned0 = reduced ? null : planFlight(from, photo.current, sheet.current)
+    flight.current = planned0
+    planned.set(planned.get() + 1)
+    if (planned0 && from) {
+      flying.set('visible')
+      hideSource(from)
+    }
+    run.current = animate(progress, 1, reduced ? fade : FLIGHT_SPRING)
+    run.current.finished.then(() => {
+      if (!closing.current) flying.set('hidden')
+    })
+    return showSource
+    // Once, as it opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Closing: measured again (the sheet may have scrolled, the dish may have moved), then the same spring back
+  useEffect(() => {
+    if (isPresent) return
+    closing.current = true
+    run.current?.stop()
+    const el = sheet.current
+    if (!el) {
+      showSource()
+      safeToRemove()
+      return
+    }
+    el.style.pointerEvents = 'none'
+    if (leaving) {
+      // Its photo is on its way to the tray: the dish is back at once, the sheet fades off it
+      showSource()
+      run.current = animate(el, { opacity: 0, scale: 0.97 }, { duration: 0.18, ease: ease.exit })
+    } else {
+      const back = reduced ? null : planFlight(from, photo.current, el)
+      flight.current = back
+      planned.set(planned.get() + 1)
+      if (back) flying.set('visible')
+      else showSource()
+      run.current = animate(progress, 0, reduced ? fade : FLIGHT_SPRING)
+    }
+    run.current.finished.then(() => {
+      showSource()
+      safeToRemove()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPresent])
 
   return (
-    // Added, it lets go of its card as well: sharing a layout id with no card left to fold into, it
-    // vanished on the spot instead of fading, leaving its photo's copy alone over an empty screen
-    <motion.div
-      layoutId={leaving ? undefined : `card-${item.id}`}
-      style={{ borderRadius: 0 }}
-      transition={springOpen}
-      exit={leaving ? { opacity: 0, scale: 0.97, transition: { duration: 0.18, ease: ease.exit } } : undefined}
-      role='dialog'
-      aria-modal='true'
-      aria-label={localized(item.name)}
-      className='absolute inset-0 z-30 flex flex-col overflow-hidden'
-    >
-      {/* Its page, and its banner's photo, clear at once as it closes, so the dish it folds back into shows
-          through: on the page alone, the sheet stayed a white slab for half the fold, the card only then showing */}
-      <motion.div aria-hidden exit={CLEAR_OUT} className='bg-background absolute inset-0' />
+    <div ref={sheet} role='dialog' aria-modal='true' aria-label={localized(item.name)} className='absolute inset-0 z-30 flex flex-col overflow-hidden'>
+      <motion.div aria-hidden style={{ opacity: veil }} className='bg-background absolute inset-0' />
       <div className='no-scrollbar relative flex-1 overflow-y-auto overscroll-contain'>
-        {photoBox}
-
+        {/* The banner: a short strip across the top, every dish alike, low enough that the options start on the first screen */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
-          transition={{ ...springOpen, delay: 0.06 }}
-          className='flex flex-col gap-5 px-5 pt-4 pb-6'
+          ref={photo}
+          style={{ visibility: leaving ? 'hidden' : bannerVisibility, opacity: bannerOpacity }}
+          className={cn('relative aspect-[16/7] max-h-[180px] w-full overflow-hidden', !hasPhoto && TONE_CLASS.primary)}
         >
+          {hasPhoto ? (
+            <img
+              src={itemPictureUrl(item.id)}
+              alt=''
+              draggable={false}
+              onError={() => setFailed(true)}
+              className={cn('size-full object-cover', soldOut && 'grayscale')}
+            />
+          ) : (
+            // No photo: the plate on the café's colour, as everywhere a dish has none (its name is just below)
+            <div className='grid size-full place-items-center'>
+              <UtensilsCrossed className='size-12 opacity-50' />
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div style={{ opacity: bodyOpacity, y: bodyY }} className='flex flex-col gap-5 px-5 pt-4 pb-6'>
           <div>
             <h2 className='heading text-headline'>{localized(item.name)}</h2>
             {item.description && <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>}
@@ -166,14 +257,13 @@ export function Tune({
                     sections.current[i] = el
                   }}
                   customization={customization}
-                  index={i}
                   flash={flash?.index === i ? flash.n : 0}
                   selected={picked(customization)}
                   onPick={(id) => pick(customization, id)}
                 />
               ))}
 
-          <motion.div layout='position' transition={springOpen}>
+          <div>
             {noteOpen ? (
               <input
                 autoFocus
@@ -188,18 +278,12 @@ export function Tune({
                 {t('ninjaAddNote')}
               </button>
             )}
-          </motion.div>
+          </div>
         </motion.div>
       </div>
 
       {/* The one action: how many, and add at a price that rolls as the choices change; until the answers are in, the one left */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, transition: { duration: 0.1 } }}
-        transition={{ ...springOpen, delay: 0.08 }}
-        className='bg-background relative flex items-center gap-3 border-t px-4 py-3'
-      >
+      <motion.div style={{ opacity: footOpacity, y: footY }} className='bg-background relative flex items-center gap-3 border-t px-4 py-3'>
         <div className='flex items-center gap-1'>
           <button
             type='button'
@@ -223,16 +307,37 @@ export function Tune({
         />
       </motion.div>
 
+      {/* The photo on its way: a copy, clipped to the frame it is passing through, over everything until it lands */}
+      <motion.div
+        aria-hidden
+        style={{ clipPath: clip, visibility: flying }}
+        className={cn('pointer-events-none absolute inset-0 z-10', !hasPhoto && TONE_CLASS.primary)}
+      >
+        {hasPhoto ? (
+          <motion.img
+            src={itemPictureUrl(item.id)}
+            alt=''
+            draggable={false}
+            style={{ x: photoX, y: photoY, scale: photoScale, width: photoW, height: photoH, originX: 0, originY: 0 }}
+            className={cn('absolute top-0 left-0 max-w-none', soldOut && 'grayscale')}
+          />
+        ) : (
+          <motion.span style={{ x: iconX, y: iconY }} className='absolute top-0 left-0'>
+            <UtensilsCrossed className='size-12 opacity-50' />
+          </motion.span>
+        )}
+      </motion.div>
+
       <motion.button
         type='button'
         onClick={onClose}
-        exit={CLEAR_OUT}
+        style={{ opacity: closeOpacity }}
         aria-label={t('close')}
-        className='absolute end-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'
+        className='absolute end-3 top-3 z-20 grid size-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm'
       >
         <X className='size-5' />
       </motion.button>
-    </motion.div>
+    </div>
   )
 }
 
@@ -258,22 +363,19 @@ function AddButton({ disabled, label, total, onClick }: { disabled: boolean; lab
 
 /**
  * One question, on the scroll with the others: its name (and whether it
- * must be answered) over its control, rising in a little after the one
- * above it. Sent to by the button, it glows a moment.
+ * must be answered) over its control. It comes in with the sheet, not on a
+ * timing of its own. Sent to by the button, it glows a moment.
  */
 const QuestionBlock = forwardRef<
   HTMLFieldSetElement,
-  { customization: ItemCustomizationDto; index: number; flash: number; selected: number[]; onPick: (optionId: number) => void }
->(function QuestionBlock({ customization, index, flash, selected, onPick }, ref) {
+  { customization: ItemCustomizationDto; flash: number; selected: number[]; onPick: (optionId: number) => void }
+>(function QuestionBlock({ customization, flash, selected, onPick }, ref) {
   const t = useT()
   const localized = useLocalized()
   const unanswered = customization.isRequired && selected.length === 0
   return (
-    <motion.fieldset
+    <fieldset
       ref={ref}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...springOpen, delay: 0.1 + index * 0.05 }}
       className='relative flex scroll-mt-24 flex-col'
     >
       {/* The glow: a ring that lights and fades, keyed so each send lights it again */}
@@ -294,7 +396,7 @@ const QuestionBlock = forwardRef<
         </span>
       </legend>
       <Control customization={customization} selected={selected} onPick={onPick} />
-    </motion.fieldset>
+    </fieldset>
   )
 })
 
