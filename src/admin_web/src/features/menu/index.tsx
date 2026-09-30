@@ -43,7 +43,7 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
-import { SCAN_ACCEPT } from '@/lib/image'
+import { MENU_SCAN_ACCEPT } from '@/lib/image'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -116,8 +116,8 @@ export function MenuManagement() {
     null
   )
 
-  // A photo of a menu becomes a proposal the review sheet turns into
-  // categories and items; hidden when the assistant is not set up
+  // The menu's pages (photos or a PDF) become a proposal the review sheet
+  // saves as categories and items; hidden when the assistant is not set up
   const scan = useMenuScan()
   const scanInputRef = useRef<HTMLInputElement>(null)
 
@@ -306,7 +306,8 @@ export function MenuManagement() {
 
   return (
     <>
-      <MenuPage actions={
+      <MenuPage
+        actions={
           <>
             {scan.available && (
               <>
@@ -327,12 +328,13 @@ export function MenuManagement() {
                 <input
                   ref={scanInputRef}
                   type='file'
-                  accept={SCAN_ACCEPT}
+                  accept={MENU_SCAN_ACCEPT}
+                  multiple
                   className='hidden'
                   onChange={(e) => {
-                    const file = e.target.files?.[0]
+                    const files = [...(e.target.files ?? [])]
                     e.target.value = ''
-                    if (file) void scan.scanFile(file)
+                    void scan.scanFiles(files)
                   }}
                 />
               </>
@@ -397,6 +399,41 @@ export function MenuManagement() {
               </div>
             ))}
           </div>
+        ) : items.length === 0 && !query ? (
+          // A new menu: the fastest way in is the menu the café already has
+          <EmptyState
+            icon={ScanLine}
+            title={t('setUpMenuTitle')}
+            description={scan.available ? t('setUpMenuBody') : undefined}
+            action={
+              <div className='flex flex-wrap justify-center gap-2'>
+                {scan.available && (
+                  <Button
+                    disabled={scan.isScanning}
+                    onClick={() => scanInputRef.current?.click()}
+                  >
+                    {scan.isScanning ? (
+                      <Spinner className='me-2' />
+                    ) : (
+                      <ScanLine className='me-2 h-4 w-4' />
+                    )}
+                    {scan.isScanning ? t('readingMenu') : t('scanMenuPages')}
+                  </Button>
+                )}
+                <Button
+                  variant='outline'
+                  onClick={() =>
+                    categories.length > 0
+                      ? newItem()
+                      : setCategoryDialog({ category: null })
+                  }
+                >
+                  <Plus className='me-2 h-4 w-4' />
+                  {scan.available ? t('orBuildByHand') : t('addItem')}
+                </Button>
+              </div>
+            }
+          />
         ) : sections.length === 0 ? (
           <EmptyState
             icon={Coffee}

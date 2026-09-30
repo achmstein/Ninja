@@ -110,6 +110,8 @@ export type CustomizationOptionDto = {
 
 export type IFormFile = Blob | File;
 
+export type IFormFileCollection = Array<IFormFile>;
+
 export type ItemCustomization = {
     id?: number | string;
     catalogItemId?: number | string;
@@ -159,6 +161,41 @@ export type LocalizeResponse = {
     suggestedCatalogTypeId: null | number | string;
     filled: Array<string>;
     warnings: Array<string>;
+};
+
+export type MenuImportCategory = {
+    /**
+     * An existing category the items join; null makes a new one
+     */
+    catalogTypeId: null | number | string;
+    name: null | LocalizedText;
+    items: Array<MenuImportItem>;
+};
+
+export type MenuImportChoice = {
+    name: LocalizedText;
+    options: Array<MenuImportChoiceOption>;
+};
+
+export type MenuImportChoiceOption = {
+    name: LocalizedText;
+    price: number | string;
+};
+
+export type MenuImportItem = {
+    name: LocalizedText;
+    description: null | LocalizedText;
+    price: number | string;
+    choice?: null | MenuImportChoice;
+};
+
+export type MenuImportRequest = {
+    categories: Array<MenuImportCategory>;
+};
+
+export type MenuImportResult = {
+    categoriesCreated: number | string;
+    itemIds: Array<number | string>;
 };
 
 export type MenuProposal = {
@@ -223,6 +260,16 @@ export type ProposedCategory = {
     items: Array<ProposedItem>;
 };
 
+export type ProposedChoice = {
+    name: LocalizedText;
+    options: Array<ProposedChoiceOption>;
+};
+
+export type ProposedChoiceOption = {
+    name: LocalizedText;
+    price: number | string;
+};
+
 export type ProposedCustomization = {
     name: LocalizedText;
     isRequired: boolean;
@@ -236,6 +283,7 @@ export type ProposedItem = {
     description: LocalizedText;
     price: number | string;
     existingItemId: null | number | string;
+    choice?: null | ProposedChoice;
 };
 
 export type ProposedOption = {
@@ -420,7 +468,7 @@ export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyo
 
 export type ScanMenuData = {
     body: {
-        file: IFormFile;
+        files: IFormFileCollection;
     };
     path?: never;
     query?: {
@@ -694,6 +742,44 @@ export type SetPromoActiveResponses = {
 };
 
 export type SetPromoActiveResponse = SetPromoActiveResponses[keyof SetPromoActiveResponses];
+
+export type ImportMenuData = {
+    body: MenuImportRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/menu/import';
+};
+
+export type ImportMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ImportMenuError = ImportMenuErrors[keyof ImportMenuErrors];
+
+export type ImportMenuResponses = {
+    /**
+     * OK
+     */
+    200: MenuImportResult;
+};
+
+export type ImportMenuResponse = ImportMenuResponses[keyof ImportMenuResponses];
 
 export type ListItemsData = {
     body?: never;

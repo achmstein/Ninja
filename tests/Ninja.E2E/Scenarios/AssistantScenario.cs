@@ -139,8 +139,9 @@ public sealed class AssistantScenario(NinjaApp app, DaySetup day) : ScenarioBase
         Assert.Equal(HttpStatusCode.BadRequest, tooMany.Status);
 
         // 3d. A photo of a menu: a section matched to an existing category (its Turkish Coffee flagged as
-        //     already there) and a section nothing matches. The review sheet creates the category, then
-        //     the ticked items under it; the flagged one stays unticked.
+        //     already there) and a section nothing matches, with an item printed in two sizes. The review
+        //     sheet saves the new section in one import; the sizes become a required group priced by the
+        //     difference, and the flagged item stays unticked.
         Step("Scan a menu photo into proposed categories and items");
         var read = await Owner.ScanMenuAsync(Images.TinyPng, Ct);
         Assert.Equal(2, read.Categories.Count);
@@ -155,11 +156,18 @@ public sealed class AssistantScenario(NinjaApp app, DaySetup day) : ScenarioBase
         var special = Assert.Single(newSection.Items);
         Assert.Equal(30m, special.Price);
         Assert.Equal("Fresh lemon with mint, blended with ice", special.Description.En);
+        Assert.NotNull(special.Choice);
+        Assert.Equal([30m, 40m], special.Choice.Options.Select(o => o.Price));
 
-        var category = await Owner.CreateMenuCategoryAsync(new LocalizedText($"{newSection.Name.En} {Day.RunId}", newSection.Name.Ar), 99, Ct);
-        var created = await Owner.CreateMenuItemAsync(special with { Name = new LocalizedText($"{special.Name.En} {Day.RunId}", special.Name.Ar) }, category.Id, Ct);
-        Assert.Equal(category.Id, created.CatalogTypeId);
-        Assert.Equal(30m, created.Price);
+        var imported = await Owner.ImportMenuAsync(
+            new LocalizedText($"{newSection.Name.En} {Day.RunId}", newSection.Name.Ar),
+            [special with { Name = new LocalizedText($"{special.Name.En} {Day.RunId}", special.Name.Ar) }], Ct);
+        Assert.Equal(1, imported.CategoriesCreated);
+        var createdId = Assert.Single(imported.ItemIds);
+        var sizes = Assert.Single(await Owner.CustomizationsAsync(createdId, Ct));
+        Assert.True(sizes.IsRequired);
+        Assert.Equal([0m, 10m], sizes.Options.OrderBy(o => o.DisplayOrder).Select(o => o.PriceAdjustment));
+        Assert.True(sizes.Options.Single(o => o.PriceAdjustment == 0m).IsDefault);
 
         // 4. A receipt photo becomes a proposal: two lines matched to what is on the shelf, one new item.
         var scan = Step("Scan a receipt");

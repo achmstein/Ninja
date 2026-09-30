@@ -216,29 +216,33 @@ public sealed class OwnerActor(ApiClient api)
     public Task<List<ItemCustomizationView>> CustomizationsAsync(int itemId, CancellationToken ct)
         => Api.GetAsync<List<ItemCustomizationView>>($"/api/catalog/items/{itemId}/customizations", ct);
 
-    /// <summary>menu "Scan a menu": a photo of a menu becomes proposed sections and items.</summary>
+    /// <summary>menu "Scan a menu": the menu's pages (one here) become proposed sections and items.</summary>
     public Task<MenuProposal> ScanMenuAsync(byte[] image, CancellationToken ct)
-        => Api.PostFileAsync<MenuProposal>("/api/catalog/assist/menu/scan", image, "menu.png", "image/png", ct);
+        => Api.PostFileAsync<MenuProposal>("/api/catalog/assist/menu/scan", image, "menu.png", "image/png", ct, field: "files");
 
-    /// <summary>menu-review-sheet.tsx: a proposed section that matched nothing becomes a category.</summary>
-    public Task<CatalogTypeView> CreateMenuCategoryAsync(LocalizedText name, int displayOrder, CancellationToken ct)
-        => Api.PostAsync<CatalogTypeView>("/api/catalog/categories", new { name = new { en = name.En, ar = name.Ar }, displayOrder }, ct);
-
-    /// <summary>menu-review-sheet.tsx: a ticked proposed item goes up as it came back, under the chosen category.</summary>
-    public Task<CatalogItem> CreateMenuItemAsync(ProposedItem item, int catalogTypeId, CancellationToken ct)
-        => Api.PostAsync<CatalogItem>("/api/catalog/items", new
+    /// <summary>menu-review-sheet.tsx: the ticked items go up in one import, a section that matched nothing as a new category.</summary>
+    public Task<MenuImportResult> ImportMenuAsync(LocalizedText newCategory, IEnumerable<ProposedItem> items, CancellationToken ct)
+        => Api.PostAsync<MenuImportResult>("/api/catalog/menu/import", new
         {
-            name = new { en = item.Name.En, ar = item.Name.Ar },
-            description = new { en = item.Description.En, ar = item.Description.Ar },
-            price = item.Price,
-            catalogTypeId,
-            isAvailable = true,
-            isOnOffer = false,
-            offerPrice = (decimal?)null,
-            isPopular = false,
-            preparationTimeMinutes = (int?)null,
-            displayOrder = 0,
-            pictureFileName = (string?)null,
+            categories = new[]
+            {
+                new
+                {
+                    catalogTypeId = (int?)null,
+                    name = new { en = newCategory.En, ar = newCategory.Ar },
+                    items = items.Select(item => new
+                    {
+                        name = new { en = item.Name.En, ar = item.Name.Ar },
+                        description = new { en = item.Description.En, ar = item.Description.Ar },
+                        price = item.Price,
+                        choice = item.Choice is null ? null : new
+                        {
+                            name = new { en = item.Choice.Name.En, ar = item.Choice.Name.Ar },
+                            options = item.Choice.Options.Select(o => new { name = new { en = o.Name.En, ar = o.Name.Ar }, price = o.Price }).ToList(),
+                        },
+                    }).ToList(),
+                },
+            },
         }, ct);
 
     public async Task SetReorderLevelAsync(int stockItemId, decimal? reorderLevel, CancellationToken ct)

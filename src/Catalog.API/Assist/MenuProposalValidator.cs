@@ -17,6 +17,7 @@ public static partial class MenuProposalValidator
     public const int MaxNameLength = 120;
     public const int MaxDescriptionLength = 600;
     public const decimal MaxPrice = 10_000m;
+    public const int MaxChoices = 8;
 
     public static MenuProposal Validate(MenuExtraction extraction, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items)
     {
@@ -77,7 +78,9 @@ public static partial class MenuProposalValidator
                 if (itemName.En.Length == 0)
                     warnings.Add($"{where}: no English name was read; fill it in.");
 
-                var price = Math.Round(item.Price, 2, MidpointRounding.AwayFromZero);
+                var choice = Choice(item, where, warnings);
+                // The item costs its cheapest choice; the others cost more by the difference
+                var price = choice?.Options[0].Price ?? Math.Round(item.Price, 2, MidpointRounding.AwayFromZero);
                 if (price <= 0)
                 {
                     price = 0;
@@ -94,7 +97,8 @@ public static partial class MenuProposalValidator
                     itemName,
                     Name(item.DescriptionEn, item.DescriptionAr, MaxDescriptionLength),
                     price,
-                    existing));
+                    existing,
+                    choice));
                 total++;
             }
 
@@ -112,6 +116,56 @@ public static partial class MenuProposalValidator
 
         var notes = AIJson.Clean(extraction.Notes, 200);
         return new MenuProposal(proposed, warnings, notes.Length == 0 ? null : notes);
+    }
+
+    /// <summary>
+    /// The printed choices, cleaned: named, priced, no two alike, cheapest
+    /// first. Fewer than two left is no choice at all (one price is just the
+    /// item's price).
+    /// </summary>
+    private static ProposedChoice? Choice(ExtractedItem item, string where, List<string> warnings)
+    {
+        var printed = item.Choices ?? [];
+        if (printed.Count == 0)
+            return null;
+
+        var options = new List<ProposedChoiceOption>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var raw in printed)
+        {
+            var name = Name(raw.NameEn, raw.NameAr);
+            var price = Math.Round(raw.Price, 2, MidpointRounding.AwayFromZero);
+            if (name.En.Length == 0 && string.IsNullOrEmpty(name.Ar))
+                continue;
+            if (price <= 0 || price > MaxPrice)
+            {
+                warnings.Add($"{where}: no price was read for \"{(name.En.Length > 0 ? name.En : name.Ar)}\"; that choice is left out.");
+                continue;
+            }
+            if (IsDuplicate(seen, name))
+                continue;
+            Remember(seen, name);
+            options.Add(new ProposedChoiceOption(name, price));
+        }
+
+        if (options.Count < 2)
+        {
+            if (printed.Count >= 2)
+                warnings.Add($"{where}: its choices could not be read; only one price is kept.");
+            return null;
+        }
+
+        if (options.Count > MaxChoices)
+        {
+            warnings.Add($"{where}: more than {MaxChoices} choices; only the first {MaxChoices} are kept.");
+            options = options.Take(MaxChoices).ToList();
+        }
+
+        var group = Name(item.ChoiceEn, item.ChoiceAr);
+        if (group.En.Length == 0)
+            group = new LocalizedText("Size", string.IsNullOrEmpty(group.Ar) ? "الحجم" : group.Ar);
+
+        return new ProposedChoice(group, options.OrderBy(o => o.Price).ToList());
     }
 
     private static LocalizedText Name(string? en, string? ar, int maxLength = MaxNameLength)

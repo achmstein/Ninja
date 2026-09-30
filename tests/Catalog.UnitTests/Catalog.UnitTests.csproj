@@ -21,6 +21,7 @@
   <ItemGroup>
     <!-- A rendered bilingual menu for the opt-in live test of the scanner -->
     <None Include="Assist\menu-sample.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assist\menu-sizes-*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

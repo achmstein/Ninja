@@ -28,13 +28,14 @@ public static class MenuScannerFake
             [
                 new ExtractedCategory(first?.En ?? "Hot Drinks", first?.Ar ?? "مشروبات سخنة", first?.Id ?? 0,
                 [
-                    new ExtractedItem($"{ExistingItemEn} ........ 25", ExistingItemEn, "قهوة تركي", "", "", 25m),
-                    new ExtractedItem($"{NewDrinkEn} ........ 20", NewDrinkEn, "كركديه تجريبي", "", "", 20m),
+                    new ExtractedItem($"{ExistingItemEn} ........ 25", ExistingItemEn, "قهوة تركي", "", "", 25m, "", "", []),
+                    new ExtractedItem($"{NewDrinkEn} ........ 20", NewDrinkEn, "كركديه تجريبي", "", "", 20m, "", "", []),
                 ]),
                 new ExtractedCategory(NewCategoryEn, "أصناف تجريبية", 0,
                 [
                     new ExtractedItem($"{NewSpecialEn} ........ 30", NewSpecialEn, "ليمون بالنعناع تجريبي",
-                        "Fresh lemon with mint, blended with ice", "ليمون طازة بالنعناع، مخلوط بالتلج", 30m),
+                        "Fresh lemon with mint, blended with ice", "ليمون طازة بالنعناع، مخلوط بالتلج", 30m,
+                        "Size", "الحجم", [new("Small", "صغير", 30m), new("Large", "كبير", 40m)]),
                 ]),
             ],
             string.Empty);

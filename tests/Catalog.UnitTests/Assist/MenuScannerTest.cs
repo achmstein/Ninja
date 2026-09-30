@@ -33,13 +33,13 @@ public class MenuScannerTest
         var services = new ServiceCollection().BuildServiceProvider();
         var client = new FakeChatClient([new FakeAgentScriptRegistration(MenuScanner.AgentKey, MenuScannerFake.Respond)]);
         var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
-        return new MenuScanner(factory);
+        return new MenuScanner(factory, NullLogger<MenuScanner>.Instance);
     }
 
     [TestMethod]
     public async Task A_photo_becomes_a_matched_section_and_a_new_one()
     {
-        var proposal = await Scanner().ScanAsync(new DataContent(TinyPng, "image/png"), Categories, Items, CancellationToken.None);
+        var proposal = await Scanner().ScanAsync([new DataContent(TinyPng, "image/png")], Categories, Items, CancellationToken.None);
 
         Assert.HasCount(2, proposal.Categories);
         Assert.IsEmpty(proposal.Warnings, string.Join("; ", proposal.Warnings));
@@ -58,7 +58,21 @@ public class MenuScannerTest
         Assert.AreEqual(MenuScannerFake.NewSpecialEn, lemonade.Name.En);
         Assert.AreEqual("ليمون بالنعناع تجريبي", lemonade.Name.Ar);
         Assert.AreEqual("Fresh lemon with mint, blended with ice", lemonade.Description.En);
-        Assert.AreEqual(30m, lemonade.Price);
+        Assert.AreEqual(30m, lemonade.Price, "the smallest size");
+        Assert.AreEqual("Size", lemonade.Choice!.Name.En);
+        CollectionAssert.AreEqual(new[] { 30m, 40m }, lemonade.Choice.Options.Select(o => o.Price).ToList());
+    }
+
+    [TestMethod]
+    public async Task The_same_menu_on_two_pages_is_one_menu()
+    {
+        var page = new DataContent(TinyPng, "image/png");
+
+        var proposal = await Scanner().ScanAsync([page, page], Categories, Items, CancellationToken.None);
+
+        Assert.HasCount(2, proposal.Categories, "a section named again on the next page is the same section");
+        Assert.HasCount(2, proposal.Categories[0].Items, "and what it repeats is dropped as a duplicate");
+        Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("appears twice")), string.Join("; ", proposal.Warnings));
     }
 
     [TestMethod]
@@ -67,7 +81,7 @@ public class MenuScannerTest
         var services = new ServiceCollection().BuildServiceProvider();
         var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services);
 
-        Assert.IsFalse(new MenuScanner(factory).IsEnabled);
+        Assert.IsFalse(new MenuScanner(factory, NullLogger<MenuScanner>.Instance).IsEnabled);
         Assert.IsTrue(Scanner().IsEnabled);
     }
 }

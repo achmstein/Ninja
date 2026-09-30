@@ -19,7 +19,7 @@ public class MenuProposalValidatorTest
     ];
 
     private static ExtractedItem Item(string en, string ar, decimal price, string descEn = "", string descAr = "")
-        => new($"{en} .... {price}", en, ar, descEn, descAr, price);
+        => new($"{en} .... {price}", en, ar, descEn, descAr, price, "", "", []);
 
     [TestMethod]
     public void Sections_match_categories_by_id_or_by_name_and_items_already_on_the_menu_are_flagged()
@@ -99,5 +99,36 @@ public class MenuProposalValidatorTest
         Assert.AreEqual("turkish coffee", MenuProposalValidator.Key("  Turkish   COFFEE "));
         Assert.AreEqual("قهوة تركي", MenuProposalValidator.Key("قَهْوَة تُرْكِي"));
         Assert.AreEqual("شاي", MenuProposalValidator.Key("شـــاي"));
+    }
+
+    [TestMethod]
+    public void Printed_sizes_become_a_choice_cheapest_first_and_the_item_costs_the_cheapest()
+    {
+        var latte = new ExtractedItem("Latte S 40 M 45 L 50", "Latte", "لاتيه", "", "", 45, "", "",
+            [new("Large", "كبير", 50), new("Small", "صغير", 40), new("Medium", "وسط", 45), new("medium", "", 45)]);
+        var extraction = new MenuExtraction([new ExtractedCategory("Coffee", "", 0, [latte])], "");
+
+        var item = MenuProposalValidator.Validate(extraction, Categories, Items).Categories[0].Items[0];
+
+        Assert.AreEqual(40m, item.Price);
+        Assert.AreEqual("Size", item.Choice!.Name.En, "an unnamed choice is a size");
+        Assert.AreEqual("الحجم", item.Choice.Name.Ar);
+        CollectionAssert.AreEqual(new[] { "Small", "Medium", "Large" }, item.Choice.Options.Select(o => o.Name.En).ToList(), "the repeated Medium is dropped");
+    }
+
+    [TestMethod]
+    public void One_readable_choice_is_no_choice()
+    {
+        var shot = new ExtractedItem("Espresso 30 / ?", "Espresso", "", "", "", 30, "Shot", "الشوت",
+            [new("Single", "سنجل", 30), new("Double", "دبل", 0)]);
+        var extraction = new MenuExtraction([new ExtractedCategory("Coffee", "", 0, [shot])], "");
+
+        var proposal = MenuProposalValidator.Validate(extraction, Categories, Items);
+
+        var item = proposal.Categories[0].Items[0];
+        Assert.IsNull(item.Choice);
+        Assert.AreEqual(30m, item.Price);
+        Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("\"Double\"")), string.Join("; ", proposal.Warnings));
+        Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("only one price is kept")), string.Join("; ", proposal.Warnings));
     }
 }

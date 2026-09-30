@@ -183,7 +183,14 @@ public sealed record MenuProposal(List<ProposedCategory> Categories, List<string
 
 public sealed record ProposedCategory(LocalizedText Name, int? CatalogTypeId, List<ProposedItem> Items);
 
-public sealed record ProposedItem(string RawText, LocalizedText Name, LocalizedText Description, decimal Price, int? ExistingItemId);
+public sealed record ProposedItem(string RawText, LocalizedText Name, LocalizedText Description, decimal Price, int? ExistingItemId, ProposedChoice? Choice = null);
+
+public sealed record ProposedChoice(LocalizedText Name, List<ProposedChoiceOption> Options);
+
+public sealed record ProposedChoiceOption(LocalizedText Name, decimal Price);
+
+// The menu saved in one go (Catalog.API Apis/MenuImportApi.cs)
+public sealed record MenuImportResult(int CategoriesCreated, List<int> ItemIds);
 
 public sealed record CatalogTypeView(int Id, LocalizedText Name, int DisplayOrder);
 

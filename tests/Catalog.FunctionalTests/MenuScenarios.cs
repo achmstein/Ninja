@@ -33,6 +33,9 @@ public record ItemView(int Id, LocalizedView Name, LocalizedView Description, de
 public record CategoryView(int Id, LocalizedView Name, int DisplayOrder);
 public record PageView<T>(int PageIndex, int PageSize, long Count, List<T> Data);
 public record LocalizedView(string En, string? Ar);
+public record ImportView(int CategoriesCreated, List<int> ItemIds);
+public record OptionView(int Id, LocalizedView Name, decimal PriceAdjustment, bool IsDefault, int DisplayOrder);
+public record GroupView(int Id, LocalizedView Name, bool IsRequired, bool AllowMultiple, List<OptionView> Options);
 
 /// <summary>
 /// The café's menu: what a customer reads, what the back office changes on
@@ -212,5 +215,97 @@ public sealed class MenuScenarios
 
         var (anonymous, _) = await Suite.Catalog.AsAnonymous().RefusedAsync(HttpMethod.Post, Items(), NewItem("Nobody's", 1m, categoryId));
         Assert.AreEqual(HttpStatusCode.Unauthorized, anonymous);
+    }
+
+    private static string Import => $"/api/catalog/menu/import?{Version}";
+
+    private static object Sizes(params (string Name, decimal Price)[] options) => new
+    {
+        name = new { en = "Size", ar = "الحجم" },
+        options = options.Select(o => new { name = new { en = o.Name, ar = (string?)null }, price = o.Price }).ToArray(),
+    };
+
+    [TestMethod]
+    public async Task A_scanned_menu_is_saved_in_one_go_with_its_sizes()
+    {
+        var existing = await ACategoryAsync();
+        var run = Guid.NewGuid().ToString("N")[..8];
+
+        var result = await Admin.PostAsync<ImportView>(Import, new
+        {
+            categories = new object[]
+            {
+                new
+                {
+                    catalogTypeId = existing,
+                    name = (object?)null,
+                    items = new object[]
+                    {
+                        new { name = new { en = $"Latte {run}", ar = "لاتيه" }, description = new { en = "Espresso and milk", ar = (string?)null }, price = 0m, choice = Sizes(("Large", 65m), ("Small", 45m), ("Medium", 55m)) },
+                        new { name = new { en = $"Espresso {run}", ar = (string?)null }, description = (object?)null, price = 30m, choice = (object?)null },
+                    },
+                },
+                new
+                {
+                    catalogTypeId = (int?)null,
+                    name = new { en = $"Desserts {run}", ar = "حلويات" },
+                    items = new object[] { new { name = new { en = $"Cheesecake {run}", ar = "تشيز كيك" }, description = (object?)null, price = 70m, choice = (object?)null } },
+                },
+            },
+        });
+
+        Assert.AreEqual(1, result.CategoriesCreated);
+        Assert.HasCount(3, result.ItemIds);
+
+        var latte = await Customer.GetAsync<ItemView>(Items($"/{result.ItemIds[0]}"));
+        Assert.AreEqual(45m, latte.Price, "the item costs its cheapest size");
+        Assert.AreEqual(existing, latte.CatalogTypeId);
+        var size = (await Customer.GetAsync<List<GroupView>>(Items($"/{latte.Id}/customizations"))).Single();
+        Assert.IsTrue(size.IsRequired);
+        Assert.IsFalse(size.AllowMultiple);
+        CollectionAssert.AreEqual(new[] { "Small", "Medium", "Large" }, size.Options.OrderBy(o => o.DisplayOrder).Select(o => o.Name.En).ToList());
+        CollectionAssert.AreEqual(new[] { 0m, 10m, 20m }, size.Options.OrderBy(o => o.DisplayOrder).Select(o => o.PriceAdjustment).ToList());
+        Assert.IsTrue(size.Options.Single(o => o.IsDefault).Name.En == "Small");
+
+        var espresso = await Customer.GetAsync<ItemView>(Items($"/{result.ItemIds[1]}"));
+        Assert.AreEqual(30m, espresso.Price);
+        Assert.IsTrue(espresso.DisplayOrder > latte.DisplayOrder, "in the order sent");
+
+        var cheesecake = await Customer.GetAsync<ItemView>(Items($"/{result.ItemIds[2]}"));
+        var desserts = await Customer.GetAsync<CategoryView>(Categories($"/{cheesecake.CatalogTypeId}"));
+        Assert.AreEqual($"Desserts {run}", desserts.Name.En);
+        var all = await Customer.GetAsync<List<CategoryView>>(Categories());
+        Assert.AreEqual(all.Max(c => c.DisplayOrder), desserts.DisplayOrder, "a new category goes after the others");
+    }
+
+    [TestMethod]
+    public async Task A_menu_with_a_problem_saves_nothing()
+    {
+        var run = Guid.NewGuid().ToString("N")[..8];
+        var before = (await Customer.GetAsync<List<CategoryView>>(Categories())).Count;
+
+        var (status, body) = await Admin.RefusedAsync(HttpMethod.Post, Import, new
+        {
+            categories = new object[]
+            {
+                new { catalogTypeId = (int?)null, name = new { en = $"Fine {run}" }, items = new object[] { new { name = new { en = $"Fine {run}" }, price = 10m } } },
+                new { catalogTypeId = 999_999, name = (object?)null, items = new object[] { new { name = new { en = $"Lost {run}" }, price = 10m } } },
+            },
+        });
+
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("999999", body);
+        Assert.HasCount(before, await Customer.GetAsync<List<CategoryView>>(Categories()), "the first category was not made either");
+    }
+
+    [TestMethod]
+    public async Task Importing_a_menu_is_the_back_offices()
+    {
+        var body = new { categories = new object[] { new { catalogTypeId = (int?)null, name = new { en = "Not mine" }, items = new object[] { new { name = new { en = "Not mine" }, price = 1m } } } } };
+        foreach (var who in new[] { Customer, Till })
+        {
+            var (status, _) = await who.RefusedAsync(HttpMethod.Post, Import, body);
+            Assert.AreEqual(HttpStatusCode.Forbidden, status);
+        }
     }
 }

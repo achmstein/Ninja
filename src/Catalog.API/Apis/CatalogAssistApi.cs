@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Ninja.AI;
 using Ninja.AI.Agents;
 using Ninja.AI.Http;
@@ -5,6 +6,7 @@ using Ninja.AI.Images;
 using Ninja.Catalog.API.Assist;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 
 namespace Ninja.Catalog.API;
@@ -32,8 +34,8 @@ public static class CatalogAssistApi
 
         api.MapPost("/assist/menu/scan", ScanMenu)
             .WithName("ScanMenu")
-            .WithSummary("Read a menu photo into proposed categories and items")
-            .WithDescription("The assistant transcribes a photo of a menu — sections, items, prices, both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then create what you keep (Admin only).")
+            .WithSummary("Read a menu's photos into proposed categories and items")
+            .WithDescription("The assistant transcribes the photos of a menu, one per page (up to 8) — sections, items, prices, the choices printed beside them (sizes), both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then save what you keep through the menu import (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .DisableAntiforgery()
@@ -107,7 +109,7 @@ public static class CatalogAssistApi
     }
 
     public static async Task<Results<Ok<MenuProposal>, BadRequest<ProblemDetails>, ProblemHttpResult>> ScanMenu(
-        IFormFile file,
+        [Description("The menu's pages, in order: one photo each")] IFormFileCollection files,
         [FromServices] MenuScanner scanner,
         [FromServices] IOptions<AIOptions> aiOptions,
         CatalogContext context,
@@ -117,16 +119,29 @@ public static class CatalogAssistApi
         if (!scanner.IsEnabled)
             return AIProblems.NotConfigured();
 
-        var (image, error) = await ImageValidation.ReadAsync(file, aiOptions.Value.MaxImageBytes, ct);
-        if (image is null)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error ?? "The menu photo could not be read." });
+        if (files.Count == 0)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Add a photo of the menu." });
+        if (files.Count > MenuScanner.MaxPages)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"At most {MenuScanner.MaxPages} pages at a time." });
+
+        var pages = new List<DataContent>(files.Count);
+        foreach (var (file, n) in files.Select((f, i) => (f, i + 1)))
+        {
+            var (image, error) = await ImageValidation.ReadAsync(file, aiOptions.Value.MaxImageBytes, ct);
+            if (image is null)
+            {
+                var detail = error ?? "The menu photo could not be read.";
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = files.Count > 1 ? $"Page {n}: {detail}" : detail });
+            }
+            pages.Add(image);
+        }
 
         var categories = await context.CatalogTypes.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync(ct);
         var items = await context.CatalogItems.AsNoTracking().ToListAsync(ct);
 
         try
         {
-            return TypedResults.Ok(await scanner.ScanAsync(image, categories, items, ct));
+            return TypedResults.Ok(await scanner.ScanAsync(pages, categories, items, ct));
         }
         catch (AIException ex)
         {

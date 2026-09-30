@@ -5,11 +5,14 @@
 // Anything that fails (an old browser, an odd format) falls back to the
 // original file, which the server still accepts up to its own cap.
 
-const MAX_PIXELS = 4_000_000
+export const MAX_PIXELS = 4_000_000
 const JPEG_QUALITY = 0.85
 
 /** What the assistant's scan endpoints take, and the server's cap on it */
 export const SCAN_ACCEPT = 'image/jpeg,image/png,image/webp'
+
+/** A menu's pages arrive as photos or as a PDF */
+export const MENU_SCAN_ACCEPT = SCAN_ACCEPT + ',application/pdf'
 export const SCAN_MAX_BYTES = 5 * 1024 * 1024
 
 export async function downscaleImage(file: File): Promise<File> {

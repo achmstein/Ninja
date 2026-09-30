@@ -59,12 +59,12 @@ public sealed class ApiClient : IDisposable
         => SendAsync(HttpMethod.Post, path, body, ct, requestId, ensureSuccess);
 
     /// <summary>A file upload the way the SPAs send one: one multipart field named "file".</summary>
-    public async Task<T> PostFileAsync<T>(string path, byte[] bytes, string fileName, string contentType, CancellationToken ct)
+    public async Task<T> PostFileAsync<T>(string path, byte[] bytes, string fileName, string contentType, CancellationToken ct, string field = "file")
     {
         using var content = new MultipartFormDataContent();
         var file = new ByteArrayContent(bytes);
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        content.Add(file, "file", fileName);
+        content.Add(file, field, fileName);
         using var response = await SendAsync(HttpMethod.Post, path, content, ct);
         return await ReadAsync<T>(response, ct);
     }

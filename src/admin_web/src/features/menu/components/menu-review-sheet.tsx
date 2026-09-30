@@ -1,14 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Sparkles } from 'lucide-react'
+import { AlertTriangle, Sparkles, X } from 'lucide-react'
 import { type CatalogTypeDto, type MenuProposal } from '@/api/catalog'
-import {
-  createCategoryMutation,
-  createItemMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { importMenuMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -31,18 +27,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  fromLocalizedValue,
-  LocalizedFields,
-  LocalizedInput,
-} from '@/components/localized-input'
+import { LocalizedFields, LocalizedInput } from '@/components/localized-input'
 import { hasText } from '@/features/assist/helpers'
 import {
   isReviewCategoryReady,
   isReviewItemReady,
   NEW_CATEGORY,
   type ReviewCategory,
+  type ReviewChoiceOption,
   type ReviewItem,
+  reviewItemPrice,
+  toImportRequest,
   toReviewCategories,
 } from '../menu-scan'
 
@@ -53,13 +48,12 @@ type MenuReviewSheetProps = {
 }
 
 /**
- * What the assistant read off the menu photo, section by section, for
- * checking before anything is created: fix a name or a price, send a
- * section to an existing category or let it become a new one, untick what
- * is not wanted (what is already on the menu starts unticked). Confirming
- * creates the new categories, then the items, one by one; a failure leaves
- * the sheet open with what was created remembered, so a retry never makes
- * the same thing twice.
+ * What the assistant read off the menu's pages, section by section, for
+ * checking before anything is created: fix a name or a price (or a size's),
+ * send a section to an existing category or let it become a new one, untick
+ * what is not wanted (what is already on the menu starts unticked).
+ * Confirming saves it all in one import: all of it or none of it, so a
+ * failure leaves the sheet open and a retry never makes anything twice.
  */
 export function MenuReviewSheet({
   proposal,
@@ -69,22 +63,42 @@ export function MenuReviewSheet({
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
-  const createCategory = useMutation(createCategoryMutation())
-  const createItem = useMutation(createItemMutation())
+  const importMenu = useMutation(importMenuMutation())
 
   const [sections, setSections] = useState<ReviewCategory[]>(() =>
     toReviewCategories(proposal)
   )
-  const [creating, setCreating] = useState<{
-    done: number
-    total: number
-  } | null>(null)
+  const creating = importMenu.isPending
 
   const updateSection = (key: number, patch: Partial<ReviewCategory>) =>
     setSections((prev) =>
       prev.map((section) =>
         section.key === key ? { ...section, ...patch } : section
       )
+    )
+
+  const updateOption = (
+    itemKey: number,
+    optionKey: number,
+    patch: Partial<ReviewChoiceOption>
+  ) =>
+    setSections((prev) =>
+      prev.map((section) => ({
+        ...section,
+        items: section.items.map((item) =>
+          item.key === itemKey && item.choice
+            ? {
+                ...item,
+                choice: {
+                  ...item.choice,
+                  options: item.choice.options.map((option) =>
+                    option.key === optionKey ? { ...option, ...patch } : option
+                  ),
+                },
+              }
+            : item
+        ),
+      }))
     )
 
   const updateItem = (key: number, patch: Partial<ReviewItem>) =>
@@ -119,61 +133,16 @@ export function MenuReviewSheet({
       return
     }
 
-    let done = included.reduce(
-      (sum, { items }) => sum + items.filter((i) => i.createdId != null).length,
-      0
-    )
-    setCreating({ done, total: count })
-    let newCategories = 0
     try {
-      for (const { section, items } of included) {
-        let catalogTypeId: number
-        if (section.catalogTypeId !== NEW_CATEGORY) {
-          catalogTypeId = Number(section.catalogTypeId)
-        } else if (section.createdId != null) {
-          catalogTypeId = section.createdId
-        } else {
-          const created = await createCategory.mutateAsync({
-            body: {
-              name: fromLocalizedValue(section.name),
-              displayOrder: categories.length + newCategories++,
-            },
-            query: { 'api-version': API_VERSION },
-          })
-          catalogTypeId = toNumber(created.id)
-          updateSection(section.key, { createdId: catalogTypeId })
-        }
-
-        for (const [index, item] of items.entries()) {
-          if (item.createdId != null) continue
-          const created = await createItem.mutateAsync({
-            body: {
-              name: fromLocalizedValue(item.name),
-              description: fromLocalizedValue(item.description),
-              price: parseFloat(item.price),
-              catalogTypeId,
-              isAvailable: true,
-              isOnOffer: false,
-              offerPrice: null,
-              isPopular: false,
-              preparationTimeMinutes: null,
-              displayOrder: index,
-            },
-            query: { 'api-version': API_VERSION },
-          })
-          updateItem(item.key, { createdId: toNumber(created.id) })
-          setCreating({ done: ++done, total: count })
-        }
-      }
+      await importMenu.mutateAsync({
+        body: toImportRequest(sections),
+        query: { 'api-version': API_VERSION },
+      })
     } catch {
       toast.error(t('failedToSaveItem'))
-      setCreating(null)
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
       return
     }
 
-    setCreating(null)
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
     toast.success(t('menuScanCreated', { count }))
@@ -309,20 +278,85 @@ export function MenuReviewSheet({
                                 {t('alreadyOnMenu')}
                               </Badge>
                             )}
-                            {item.createdId != null && (
-                              <Badge variant='secondary' className='shrink-0'>
-                                {t('created')}
-                              </Badge>
-                            )}
                           </div>
+                          {item.choice && (
+                            <div className='space-y-1.5 rounded-md border p-2'>
+                              <div className='flex items-center gap-2'>
+                                <LocalizedInput
+                                  ariaLabel={t('menuChoice')}
+                                  value={item.choice.name}
+                                  onChange={(name) =>
+                                    updateItem(item.key, {
+                                      choice: { ...item.choice!, name },
+                                    })
+                                  }
+                                  compact
+                                  className='flex-1'
+                                />
+                                <Button
+                                  type='button'
+                                  variant='ghost'
+                                  size='sm'
+                                  className='h-8 shrink-0'
+                                  onClick={() =>
+                                    updateItem(item.key, {
+                                      choice: null,
+                                      price: String(
+                                        reviewItemPrice(item) ?? ''
+                                      ),
+                                    })
+                                  }
+                                >
+                                  <X className='me-1 h-3.5 w-3.5' />
+                                  {t('removeChoice')}
+                                </Button>
+                              </div>
+                              {item.choice.options.map((option) => (
+                                <div
+                                  key={option.key}
+                                  className='grid grid-cols-[1fr_6rem] gap-2'
+                                >
+                                  <LocalizedInput
+                                    ariaLabel={t('name')}
+                                    value={option.name}
+                                    onChange={(name) =>
+                                      updateOption(item.key, option.key, {
+                                        name,
+                                      })
+                                    }
+                                    compact
+                                  />
+                                  <Input
+                                    type='number'
+                                    step='0.5'
+                                    min='0'
+                                    aria-label={t('price')}
+                                    className='h-8 tabular-nums'
+                                    value={option.price}
+                                    onChange={(e) =>
+                                      updateOption(item.key, option.key, {
+                                        price: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
+                        {/* With sizes, the item costs the cheapest one */}
                         <Input
                           type='number'
                           step='0.5'
                           min='0'
                           aria-label={t('price')}
                           className='h-8 tabular-nums'
-                          value={item.price}
+                          disabled={!!item.choice}
+                          value={
+                            item.choice
+                              ? String(reviewItemPrice(item) ?? '')
+                              : item.price
+                          }
                           onChange={(e) =>
                             updateItem(item.key, { price: e.target.value })
                           }
@@ -338,12 +372,7 @@ export function MenuReviewSheet({
 
         <SheetFooter className='flex-row items-center'>
           <span className='text-muted-foreground me-auto text-sm'>
-            {creating
-              ? t('creatingItems', {
-                  done: creating.done,
-                  total: creating.total,
-                })
-              : t('itemsSelected', { count })}
+            {creating ? t('savingMenu') : t('itemsSelected', { count })}
           </span>
           <Button
             type='button'
