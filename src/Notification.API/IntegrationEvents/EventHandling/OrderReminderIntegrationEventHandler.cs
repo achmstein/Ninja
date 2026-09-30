@@ -29,7 +29,8 @@ public class OrderReminderIntegrationEventHandler(
             buyerName = @event.BuyerName,
             reminderCount = @event.ReminderCount,
             minutesPending = @event.MinutesPending,
-            branchId = @event.BranchId
+            branchId = @event.BranchId,
+            stage = @event.Stage
         });
 
         // Get admin order notification subscriptions for this branch
@@ -53,8 +54,13 @@ public class OrderReminderIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var title = NotificationMessages.OrderReminderTitle(@event.ReminderCount).Get(lang);
-            var body = NotificationMessages.OrderReminderBody(@event.OrderId, buyerName, @event.MinutesPending).Get(lang);
+            var validating = @event.Stage == OrderReminderIntegrationEvent.Validating;
+            var title = (validating
+                ? NotificationMessages.OrderValidatingTitle
+                : NotificationMessages.OrderReminderTitle(@event.ReminderCount)).Get(lang);
+            var body = (validating
+                ? NotificationMessages.OrderValidatingBody(@event.OrderId, buyerName, @event.MinutesPending)
+                : NotificationMessages.OrderReminderBody(@event.OrderId, buyerName, @event.MinutesPending)).Get(lang);
 
             var data = new Dictionary<string, string>
             {
@@ -63,6 +69,7 @@ public class OrderReminderIntegrationEventHandler(
                 { "buyerName", @event.BuyerName ?? "" },
                 { "reminderCount", @event.ReminderCount.ToString() },
                 { "minutesPending", @event.MinutesPending.ToString() },
+                { "stage", @event.Stage },
                 { "title", title },
                 { "body", body }
             };

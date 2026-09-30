@@ -4,7 +4,7 @@ namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 /// The till paid a bill: every order on it learns its receipt number and
 /// tender, which is what the customer's order list shows as "Paid". Runs
 /// through a command so the write has a transaction (see
-/// OrderStockConfirmedIntegrationEventHandler). Idempotent: the aggregate
+/// OrderValidatedIntegrationEventHandler). Idempotent: the aggregate
 /// ignores a receipt it already carries, so a redelivered event is harmless.
 /// </summary>
 public class TicketSettledIntegrationEventHandler(

@@ -34,7 +34,7 @@ public sealed class KitchenStationsScenario(NinjaApp app, DaySetup day) : Scenar
         // 2. A counter sale of both confirms itself; Catalog names each line's category.
         var sale = Step("Cashier rings up a cappuccino and two teas");
         var rung = await Cashier.RingUpAsync(Menu, Lines((MenuLookup.Cappuccino, 1), (MenuLookup.Tea, 2)), Ct);
-        await ExpectEventAsync(sale, "OrderStockConfirmed", e => e.Int("OrderId") == rung.OrderId);
+        await ExpectEventAsync(sale, "OrderValidated", e => e.Int("OrderId") == rung.OrderId);
         await ExpectEventAsync(sale, "OrderStatusChangedToConfirmed", e => e.Int("OrderId") == rung.OrderId);
         await ExpectEventAsync(sale, "KitchenTicketQueued", e => e.Int("BranchId") == 1);
         await ExpectHubAsync(sale, "OrderStatusChanged", m => m.Str("type") == "kitchen_ticket" && m.Int("branchId") == 1);

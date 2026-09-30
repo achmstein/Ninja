@@ -39,7 +39,7 @@ public sealed class CounterSaleScenario(NinjaApp app, DaySetup day) : ScenarioBa
         await ExpectEventAsync(ring, "OrderStarted");
         var validation = await ExpectEventAsync(ring, "OrderStatusChangedToAwaitingValidation", e => e.Int("OrderId") == sale.OrderId);
         Assert.Equal(2, validation.Array("OrderStockItems").Length);
-        await ExpectEventAsync(ring, "OrderStockConfirmed", e => e.Int("OrderId") == sale.OrderId);
+        await ExpectEventAsync(ring, "OrderValidated", e => e.Int("OrderId") == sale.OrderId);
         await ExpectEventAsync(ring, "OrderStatusChangedToSubmitted", e => e.Int("OrderId") == sale.OrderId);
         var confirmed = await ExpectEventAsync(ring, "OrderStatusChangedToConfirmed", e => e.Int("OrderId") == sale.OrderId);
         Assert.Equal("Pos", confirmed.Str("Source"));

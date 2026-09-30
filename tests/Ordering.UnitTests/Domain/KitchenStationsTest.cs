@@ -43,7 +43,7 @@ public class KitchenStationsTest
         {
             order.AddOrderItem(product, new LocalizedText($"Product {product}", null), 10, 0, null);
         }
-        order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [Burger] = Food, [Lemonade] = Drinks, [Mint] = Shisha });
+        order.SetValidatedStatus(categories: new Dictionary<int, int> { [Burger] = Food, [Lemonade] = Drinks, [Mint] = Shisha });
         order.SetConfirmedStatus(Routing());
         return order;
     }
@@ -64,7 +64,7 @@ public class KitchenStationsTest
     {
         var order = new Order("userId", "userName", 1);
         order.AddOrderItem(99, new LocalizedText("Unlisted", null), 10, 0, null);
-        order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [99] = 777 });
+        order.SetValidatedStatus(categories: new Dictionary<int, int> { [99] = 777 });
         order.SetConfirmedStatus(Routing());
 
         Assert.AreEqual(100, order.OrderItems.Single().StationId);
@@ -76,7 +76,7 @@ public class KitchenStationsTest
         // Catalog answered before it sent categories
         var order = new Order("userId", "userName", 1);
         order.AddOrderItem(Lemonade, new LocalizedText("Lemonade", null), 10, 0, null);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus(Routing());
 
         Assert.AreEqual(100, order.OrderItems.Single().StationId);
@@ -175,7 +175,7 @@ public class KitchenStationsTest
         var routing = new KitchenRouting([Station(100, "Kitchen", [], true, false, isDefault: true), bar]);
         var order = new Order("userId", "userName", 1);
         order.AddOrderItem(Lemonade, new LocalizedText("Lemonade", null), 10, 0, null);
-        order.SetStockConfirmedStatus(categories: new Dictionary<int, int> { [Lemonade] = Drinks });
+        order.SetValidatedStatus(categories: new Dictionary<int, int> { [Lemonade] = Drinks });
         order.SetConfirmedStatus(routing);
 
         bar.Update(new LocalizedText("Juice bar", null), [Drinks], showsOnScreen: false, printsTickets: true, "10.0.0.9", null, 0);

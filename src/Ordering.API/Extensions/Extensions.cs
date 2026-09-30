@@ -1,5 +1,6 @@
 ﻿using Ninja.ServiceDefaults;
 using FluentValidation;
+using Ninja.IntegrationEventLogEF;
 
 internal static class Extensions
 {
@@ -26,6 +27,8 @@ internal static class Extensions
 
         // Add the integration services that consume the DbContext
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<OrderingContext>>();
+        // An order whose check was saved but never sent would wait forever
+        services.AddOutboxRelay();
 
         services.AddTransient<IOrderingIntegrationEventService, OrderingIntegrationEventService>();
 
@@ -78,7 +81,11 @@ internal static class Extensions
 
     private static void AddEventBusSubscriptions(this IEventBusBuilder eventBus)
     {
-        // Subscribe to stock validation events from Catalog API
+        // Catalog's answer to the order check: every line priced, or why not
+        eventBus.AddSubscription<OrderValidatedIntegrationEvent, OrderValidatedIntegrationEventHandler>();
+        eventBus.AddSubscription<OrderValidationFailedIntegrationEvent, OrderValidationFailedIntegrationEventHandler>();
+        // The same answers under their names from before prices, kept one
+        // release for those queued when the stack was upgraded
         eventBus.AddSubscription<OrderStockConfirmedIntegrationEvent, OrderStockConfirmedIntegrationEventHandler>();
         eventBus.AddSubscription<OrderStockRejectedIntegrationEvent, OrderStockRejectedIntegrationEventHandler>();
 

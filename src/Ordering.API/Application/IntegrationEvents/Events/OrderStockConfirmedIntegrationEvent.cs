@@ -2,9 +2,8 @@
 namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
-/// Catalog's answer: every item is available, and the promo code — if the
-/// order carried one — is worth this much (zero with a reason when it did
-/// not apply). Older publishers send the order id alone.
+/// What Catalog answered before it priced lines (now <see cref="OrderValidatedIntegrationEvent"/>).
+/// Still read for one release, for answers queued when the stack was upgraded.
 /// </summary>
 public record OrderStockConfirmedIntegrationEvent(
     int OrderId,

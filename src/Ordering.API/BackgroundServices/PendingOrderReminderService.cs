@@ -2,7 +2,8 @@
 
 /// <summary>
 /// Background service that periodically checks for pending (Submitted) orders
-/// that haven't been confirmed by admins and sends escalating reminder notifications.
+/// that haven't been confirmed by admins and sends escalating reminder notifications,
+/// and once for an order the menu check has not answered in two minutes.
 ///
 /// Escalation timeline:
 ///   - 1 min pending → 1st reminder
@@ -50,6 +51,8 @@ public class PendingOrderReminderService(
         var context = scope.ServiceProvider.GetRequiredService<OrderingContext>();
 
         var now = DateTime.UtcNow;
+
+        await RemindValidatingAsync(context, now, ct);
 
         // Get all submitted orders that are old enough for at least the first reminder
         // and haven't exceeded max reminders
@@ -103,4 +106,39 @@ public class PendingOrderReminderService(
         // Save all reminder count updates
         await context.SaveChangesAsync(ct);
     }
+
+    /// <summary>
+    /// An order the menu check has not answered for <see cref="ValidatingThreshold"/>:
+    /// the till cannot see it yet, so staff hear once that it is stuck (the
+    /// menu service down, most likely). Once the check answers, the reminders
+    /// start over for staff to confirm it.
+    /// </summary>
+    private async Task RemindValidatingAsync(OrderingContext context, DateTime now, CancellationToken ct)
+    {
+        var waiting = await context.Orders
+            .Include(o => o.Buyer)
+            .Where(o => o.OrderStatus == OrderStatus.AwaitingValidation
+                && o.ReminderCount == 0
+                && o.OrderDate <= now - ValidatingThreshold)
+            .ToListAsync(ct);
+
+        foreach (var order in waiting)
+        {
+            var minutesWaiting = (int)(now - order.OrderDate).TotalMinutes;
+            logger.LogWarning("Order {OrderId} has waited {Minutes} min for the menu check", order.Id, minutesWaiting);
+
+            order.RecordReminderSent();
+            await eventBus.PublishAsync(new OrderReminderIntegrationEvent(
+                order.Id, order.Buyer?.Name ?? order.GuestName ?? "Customer", order.BranchId,
+                order.ReminderCount, minutesWaiting)
+            {
+                Stage = OrderReminderIntegrationEvent.Validating,
+            });
+        }
+
+        if (waiting.Count > 0)
+            await context.SaveChangesAsync(ct);
+    }
+
+    private static readonly TimeSpan ValidatingThreshold = TimeSpan.FromMinutes(2);
 }

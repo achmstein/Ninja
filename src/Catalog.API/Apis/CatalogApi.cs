@@ -1659,7 +1659,7 @@ public static class CatalogApi
     /// Helper to load the ids of every customization option Inventory has
     /// marked sold out at a branch (one small query per request).
     /// </summary>
-    private static async Task<IReadOnlySet<int>> GetBranchOptionStockOuts(CatalogContext context, int branchId)
+    internal static async Task<IReadOnlySet<int>> GetBranchOptionStockOuts(CatalogContext context, int branchId)
     {
         var ids = await context.BranchOptionStockOuts
             .Where(s => s.BranchId == branchId)

@@ -19,5 +19,9 @@ public static class Allowlist
     [
         "OrderStatusChangedToPaidIntegrationEvent",
         "OrderConfirmedWithPreferencesIntegrationEvent",
+        // Catalog's answers under their names from before prices (now OrderValidated /
+        // OrderValidationFailed): Ordering reads them one release, for those queued at upgrade
+        "OrderStockConfirmedIntegrationEvent",
+        "OrderStockRejectedIntegrationEvent",
     ];
 }

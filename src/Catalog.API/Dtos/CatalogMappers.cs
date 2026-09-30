@@ -50,12 +50,7 @@ public static class CatalogMappers
             };
 
         // A branch overrides the switch and the price; the window is the item's
-        var price = branchOverride.PriceOverride ?? item.Price;
-        var offerPrice = branchOverride.OfferPriceOverride ?? item.OfferPrice;
-        var isOnOffer = (branchOverride.IsOnOfferOverride ?? item.IsOnOffer)
-            && offerPrice.HasValue
-            && OfferWindow.Covers(item.OfferWeekdays, item.OfferFrom, item.OfferTo, TenantClock.Now);
-        var effectivePrice = isOnOffer ? offerPrice!.Value : price;
+        var (price, offerPrice, isOnOffer, effectivePrice) = item.PriceAt(branchOverride, TenantClock.Now);
 
         return new CatalogItemDto
         {

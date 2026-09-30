@@ -56,13 +56,28 @@ public class CatalogItem
     public TimeOnly? OfferTo { get; set; }
 
     /// <summary>The offer is switched on, priced, and its window covers now.</summary>
-    public bool IsOfferActive
-        => IsOnOffer && OfferPrice.HasValue && OfferWindow.Covers(OfferWeekdays, OfferFrom, OfferTo, TenantClock.Now);
+    public bool IsOfferActive => PriceAt(null, TenantClock.Now).IsOnOffer;
 
     /// <summary>
     /// Returns the effective price: OfferPrice while the offer is active, otherwise regular Price
     /// </summary>
-    public decimal EffectivePrice => IsOfferActive ? OfferPrice!.Value : Price;
+    public decimal EffectivePrice => PriceAt(null, TenantClock.Now).Effective;
+
+    /// <summary>
+    /// What the item costs at a branch at a local moment: the branch's price
+    /// and offer where it set them, the item's otherwise, and the offer only
+    /// while its window (always the item's) covers that moment. The one rule
+    /// the menu shows and an order is checked against.
+    /// </summary>
+    public ItemPrice PriceAt(BranchItemOverride? branch, DateTime local)
+    {
+        var price = branch?.PriceOverride ?? Price;
+        var offerPrice = branch?.OfferPriceOverride ?? OfferPrice;
+        var isOnOffer = (branch?.IsOnOfferOverride ?? IsOnOffer)
+            && offerPrice.HasValue
+            && OfferWindow.Covers(OfferWeekdays, OfferFrom, OfferTo, local);
+        return new ItemPrice(price, offerPrice, isOnOffer, isOnOffer ? offerPrice!.Value : price);
+    }
 
     /// <summary>
     /// Whether this item should appear in the "Most Popular" section
@@ -97,3 +112,6 @@ public class CatalogItem
         Description = description ?? new LocalizedText();
     }
 }
+
+/// <summary>An item's price at a branch at a moment (<see cref="CatalogItem.PriceAt"/>): what it costs is <see cref="Effective"/>.</summary>
+public readonly record struct ItemPrice(decimal Price, decimal? OfferPrice, bool IsOnOffer, decimal Effective);

@@ -33,7 +33,7 @@ public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : 
 
         await ExpectEventAsync(place, "OrderStarted");
         await ExpectEventAsync(place, "OrderStatusChangedToAwaitingValidation", e => e.Int("OrderId") == orderId);
-        await ExpectEventAsync(place, "OrderStockConfirmed", e => e.Int("OrderId") == orderId);
+        await ExpectEventAsync(place, "OrderValidated", e => e.Int("OrderId") == orderId);
         var submitted = await ExpectEventAsync(place, "OrderStatusChangedToSubmitted", e => e.Int("OrderId") == orderId);
         Assert.Equal(Customer.UserId, submitted.Str("BuyerIdentityGuid"));
         Assert.Equal(1, submitted.Int("BranchId"));

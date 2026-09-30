@@ -43,7 +43,7 @@ public class PlatformOrderTest
     public void Staff_turning_it_down_says_why_too_busy_unless_told()
     {
         var order = NewOrder();
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
 
         order.SetCancelledStatus();
 
@@ -56,7 +56,7 @@ public class PlatformOrderTest
     {
         var order = NewOrder();
 
-        order.SetStockRejectedStatus([12]);
+        order.SetValidationFailedStatus([new ValidationFailure(12, ValidationFailure.Unavailable)]);
 
         Assert.AreEqual(PlatformRejectReasons.ItemUnavailable, order.Platform!.RejectReason);
     }
@@ -65,7 +65,7 @@ public class PlatformOrderTest
     public void The_platform_cancelling_a_waiting_order_cancels_it_once()
     {
         var order = NewOrder();
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.ClearDomainEvents();
 
         order.CancelByPlatform(DateTime.UtcNow);
@@ -81,7 +81,7 @@ public class PlatformOrderTest
     public void The_platform_cancelling_an_accepted_order_leaves_it_in_the_kitchen_recorded()
     {
         var order = NewOrder();
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus();
 
         order.CancelByPlatform(DateTime.UtcNow);

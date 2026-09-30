@@ -116,10 +116,10 @@ public sealed class InventoryFlowScenario(NinjaApp app, DaySetup day) : Scenario
         // 5. One more is refused by Catalog: the order is cancelled before it reaches a ticket.
         var refused = Step("Try to ring up one more lemonade");
         var (rejectedOrder, rejectedTicket) = await Cashier.TryRingUpAsync(Menu, Lines((lemonadeName, 1)), Ct);
-        var rejected = await ExpectEventAsync(refused, "OrderStockRejected", e => e.Int("OrderId") == rejectedOrder);
-        var item = Assert.Single(rejected.Array("OrderStockItems"));
+        var rejected = await ExpectEventAsync(refused, "OrderValidationFailed", e => e.Int("OrderId") == rejectedOrder);
+        var item = Assert.Single(rejected.Array("Lines"));
         Assert.Equal(lemonade.Id, item.GetProperty("ProductId").GetInt32());
-        Assert.False(item.GetProperty("HasStock").GetBoolean());
+        Assert.Equal("Unavailable", item.GetProperty("Reason").GetString());
         await ExpectEventAsync(refused, "OrderStatusChangedToCancelled", e => e.Int("OrderId") == rejectedOrder);
         Assert.Null(rejectedTicket);
         await ExpectOrderStatusAsync(refused, "order_cancelled", rejectedOrder);

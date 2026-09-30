@@ -33,8 +33,10 @@ public static class KnownEvents
         new("OrderStatusChangedToConfirmed", "Ordering", ["Sales", "Inventory", "Loyalty", "Catalog", "Notification"]),
         new("OrderStatusChangedToPaid", "", ["Catalog"]),               // dead consumer
         new("OrderStatusChangedToSubmitted", "Ordering", ["Notification"]),
-        new("OrderStockConfirmed", "Catalog", ["Ordering"]),
-        new("OrderStockRejected", "Catalog", ["Ordering"]),
+        new("OrderStockConfirmed", "", ["Ordering"]),               // dead consumer: read one release for answers queued at upgrade
+        new("OrderStockRejected", "", ["Ordering"]),                // dead consumer: as above
+        new("OrderValidated", "Catalog", ["Ordering"]),
+        new("OrderValidationFailed", "Catalog", ["Ordering"]),
         new("PlaceUpdated", "Spaces", ["Ordering", "Notification"]),
         new("PlaceBecameAvailable", "Spaces", ["Notification"]),
         new("PlaceReserved", "Spaces", ["Notification"]),
@@ -76,7 +78,7 @@ public static class KnownEvents
         "BranchSettingsChanged", "CashMoved", "CashPaidOut", "CatalogItemAvailabilityChanged", "CatalogItemStockChanged",
         "EmployeeEarningsChanged", "OrderCustomerAssigned", "OrderReadyChanged", "OrderStarted",
         "OrderStatusChangedToAwaitingValidation", "OrderStatusChangedToCancelled", "OrderStatusChangedToConfirmed",
-        "OrderStatusChangedToSubmitted", "OrderStockConfirmed", "OrderStockRejected", "PlaceBecameAvailable", "PurchaseReceived",
+        "OrderStatusChangedToSubmitted", "OrderValidated", "OrderValidationFailed", "PlaceBecameAvailable", "PurchaseReceived",
         "ReservationCancelled", "ServiceRequestCreated", "SessionCompleted", "SessionEnded",
         "SessionMemberJoined", "SessionStarted", "ShiftClosed", "ShiftOpened", "StockConsumed", "StockLow",
         "TabPaymentRecorded", "TicketRefunded", "TicketSettled", "TicketUpdated", "TicketVoided",

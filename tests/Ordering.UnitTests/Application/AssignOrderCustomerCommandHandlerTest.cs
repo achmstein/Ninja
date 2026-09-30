@@ -157,7 +157,7 @@ public class AssignOrderCustomerCommandHandlerTest
     {
         var order = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
         order.AddOrderItem(1, new LocalizedText("Latte", null), 50, 0, null);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus();
         return order;
     }

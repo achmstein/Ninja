@@ -72,24 +72,34 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             // the kitchen to decide. The order lands confirmed at once — the
             // same transition a POS order takes after Catalog says yes — and
             // the confirmed event opens its ticket in Sales like any other.
-            order.SetStockConfirmedStatus();
+            order.SetValidatedStatus();
             order.SetConfirmedStatus();
         }
         else
         {
-            // Add event to validate item availability in Catalog (will be published by TransactionBehavior)
+            // Ask Catalog whether each line can be sold and what it costs (published by TransactionBehavior)
             var orderStockItems = message.OrderItems
                 .Select(i => new OrderStockItem(i.ProductId, i.Units));
 
-            // The promo code travels with the stock check so Catalog can redeem
-            // it against who is ordering: the account, or the guest device
+            // The promo code travels with the check so Catalog can redeem it
+            // against who is ordering: the account, or the guest device. The
+            // lines are the order's own, merged and numbered (HiLo gave them
+            // ids at Add), so Catalog's prices come back to the right line.
             var awaitingValidationEvent = new OrderStatusChangedToAwaitingValidationIntegrationEvent(
                 order.Id,
                 orderStockItems,
                 message.BranchId,
                 order.PromoCode,
                 string.IsNullOrEmpty(message.UserId) ? order.GuestId : message.UserId,
-                itemsTotal);
+                itemsTotal)
+            {
+                Lines = order.OrderItems
+                    .Select(i => new OrderValidationLine(i.Id, i.ProductId, i.Units, i.UnitPrice, i.OptionIds))
+                    .ToList(),
+                PlacedAt = order.OrderDate,
+                // Talabat charged the customer its own prices; the menu does not judge them
+                PriceCheck = order.Source != OrderSource.Talabat,
+            };
 
             await _orderingIntegrationEventService.AddAndSaveEventAsync(awaitingValidationEvent);
         }

@@ -82,6 +82,13 @@ public static class NotificationMessages
         new($"Order #{orderId} from {buyerName} has been waiting {minutesPending} min",
             $"الطلب #{orderId} من {buyerName} في الانتظار منذ {minutesPending} دقيقة");
 
+    // An order the menu has not checked yet: the till cannot see it, so staff hear it is stuck
+    public static readonly LocalizedText OrderValidatingTitle = new("Order waiting on the menu check", "طلب في انتظار مراجعة القائمة");
+
+    public static LocalizedText OrderValidatingBody(int orderId, string buyerName, int minutesPending) =>
+        new($"Order #{orderId} from {buyerName} has not been checked against the menu for {minutesPending} min. It reaches the till once the menu service is back.",
+            $"الطلب #{orderId} من {buyerName} لم تتم مراجعته مع القائمة منذ {minutesPending} دقيقة. سيظهر على الكاشير عند عودة خدمة القائمة.");
+
     // The day's digest, pushed when the till closes its shift
     public static readonly LocalizedText ShiftClosedTitle = new("Shift closed", "أُغلقت الوردية");
 

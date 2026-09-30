@@ -95,6 +95,20 @@ public class OrderItem
         Discount = discount;
     }
 
+    /// <summary>
+    /// The price Catalog priced the line at, which stands over what the app
+    /// sent. Never below the line's own discount.
+    /// </summary>
+    public void SetUnitPrice(decimal unitPrice)
+    {
+        if (unitPrice < 0 || unitPrice * Units < Discount)
+        {
+            throw new OrderingDomainException("The total of order item is lower than applied discount");
+        }
+
+        UnitPrice = unitPrice;
+    }
+
     public void SetCategory(int? categoryId) => CategoryId = categoryId;
 
     public void RouteTo(int stationId) => StationId = stationId;

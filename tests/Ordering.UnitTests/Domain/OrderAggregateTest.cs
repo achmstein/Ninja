@@ -168,7 +168,7 @@ public class OrderAggregateTest
         Assert.AreEqual(OrderStatus.AwaitingValidation, order.OrderStatus);
 
         // Act - Move to submitted then confirm
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus();
 
         // Assert confirmed status
@@ -180,7 +180,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
 
         // Act
         order.SetCancelledStatus();
@@ -194,7 +194,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus();
 
         // Act - Assert
@@ -204,7 +204,7 @@ public class OrderAggregateTest
     private static Order ConfirmedOrder()
     {
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetConfirmedStatus();
         return order;
     }
@@ -214,7 +214,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         Assert.IsNull(order.ConfirmedAt);
 
         // Act
@@ -279,7 +279,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
 
         // Act - Assert
         Assert.ThrowsExactly<OrderingDomainException>(() => order.SetReady(true));
@@ -290,7 +290,7 @@ public class OrderAggregateTest
     {
         // Arrange
         var order = new Order("userId", "userName", 1);
-        order.SetStockConfirmedStatus();
+        order.SetValidatedStatus();
         order.SetCancelledStatus();
 
         // Act - Assert

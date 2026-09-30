@@ -40,6 +40,8 @@ public static class Extensions
 
         // Add the integration services that consume the DbContext
         builder.Services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<CatalogContext>>();
+        // An answer to an order check that was saved but never sent would leave the order waiting
+        builder.Services.AddOutboxRelay();
 
         builder.Services.AddTransient<ICatalogIntegrationEventService, CatalogIntegrationEventService>();
 

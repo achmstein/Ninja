@@ -382,20 +382,41 @@ public class Order
     }
 
     /// <summary>
-    /// Set order to submitted after stock validation passes. Catalog answers
-    /// the promo code in the same breath: the code as redeemed and its worth,
-    /// or nothing when it did not apply — and each product's menu category,
-    /// which is what later sends a line to its kitchen station.
+    /// Catalog checked the order and every line can be sold: submitted for
+    /// staff. Catalog answers the rest in the same breath — each line's price
+    /// by line id (the menu's word, not the app's; null leaves the lines as
+    /// they came, for a Talabat order or an answer without prices), the promo
+    /// code as redeemed and its worth or nothing when it did not apply, and
+    /// each product's menu category, which later sends a line to its station.
+    /// The loyalty discount is worked out again on the prices that stand.
     /// </summary>
-    public void SetStockConfirmedStatus(string? promoCode = null, decimal promoDiscount = 0, IReadOnlyDictionary<int, int>? categories = null)
+    public void SetValidatedStatus(
+        IReadOnlyDictionary<int, decimal>? prices = null,
+        string? promoCode = null,
+        decimal promoDiscount = 0,
+        IReadOnlyDictionary<int, int>? categories = null)
     {
         if (OrderStatus != OrderStatus.AwaitingValidation)
         {
-            throw new OrderingDomainException($"Cannot confirm stock from status {OrderStatus}. Order must be in AwaitingValidation status.");
+            throw new OrderingDomainException($"Cannot validate the order from status {OrderStatus}. Order must be in AwaitingValidation status.");
+        }
+
+        if (prices is not null)
+        {
+            foreach (var item in _orderItems)
+            {
+                if (prices.TryGetValue(item.Id, out var price))
+                    item.SetUnitPrice(price);
+            }
+
+            LoyaltyDiscount = GetLoyaltyDiscountFor(PointsToRedeem, GetItemsTotal());
         }
 
         OrderStatus = OrderStatus.Submitted;
         Description = "Items validated. Order ready for confirmation.";
+        // A reminder that it was stuck on the check does not count against staff
+        ReminderCount = 0;
+        LastReminderSentAt = null;
         PromoCode = promoDiscount > 0 ? promoCode : null;
         PromoDiscount = Math.Clamp(promoDiscount, 0, Math.Max(0, GetItemsTotal()));
 
@@ -411,17 +432,25 @@ public class Order
     }
 
     /// <summary>
-    /// Set order to cancelled when stock validation fails
+    /// Catalog turned lines down: the order is cancelled, saying why — the
+    /// menu asks more than the app showed (<see cref="ValidationFailure.PriceChanged"/>),
+    /// or items or options cannot be had. A Talabat order is refused to
+    /// Talabat as unavailable either way; its prices are never the menu's.
     /// </summary>
-    public void SetStockRejectedStatus(IEnumerable<int> unavailableProductIds)
+    public void SetValidationFailedStatus(IReadOnlyCollection<ValidationFailure> failures)
     {
         if (OrderStatus != OrderStatus.AwaitingValidation)
         {
-            throw new OrderingDomainException($"Cannot reject stock from status {OrderStatus}. Order must be in AwaitingValidation status.");
+            throw new OrderingDomainException($"Cannot fail validation from status {OrderStatus}. Order must be in AwaitingValidation status.");
         }
 
+        var repriced = failures.Where(f => f.Reason == ValidationFailure.PriceChanged).Select(f => f.ProductId).Distinct().ToList();
+        var unavailable = failures.Where(f => f.Reason != ValidationFailure.PriceChanged).Select(f => f.ProductId).Distinct().ToList();
+
         OrderStatus = OrderStatus.Cancelled;
-        Description = $"Order cancelled - some items are not available: {string.Join(", ", unavailableProductIds)}";
+        Description = unavailable.Count > 0
+            ? $"Order cancelled - some items are not available: {string.Join(", ", unavailable)}"
+            : $"Order cancelled - prices changed since the order was made: {string.Join(", ", repriced)}";
         Platform?.Reject(PlatformRejectReasons.ItemUnavailable);
         AddDomainEvent(new OrderCancelledDomainEvent(this));
     }
