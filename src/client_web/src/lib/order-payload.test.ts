@@ -85,4 +85,28 @@ describe('orderBody', () => {
     })
     expect(body).toMatchObject({ userId: 'u1', userName: 'Ali', pointsToRedeem: 100, loyaltyDiscount: 5, placeId: null })
   })
+
+  it('sends a name the café wrote in one language as that language only', () => {
+    const arabicOnly: CartLine = {
+      productId: 2,
+      nameEn: '',
+      nameAr: 'شاي',
+      price: 20,
+      quantity: 1,
+      customizations: [{ customizationId: 4, customizationNameEn: '', customizationNameAr: 'السكر', optionId: 11, optionNameEn: '', optionNameAr: 'زيادة', priceAdjustment: 0 }],
+    }
+    const body = orderBody({
+      lines: [arabicOnly],
+      extras: NO_EXTRAS,
+      isGuest: true,
+      profile: undefined,
+      guestContact: null,
+      destination: { ...table, name: { ar: 'ترابيزة ٧' } },
+    })
+    expect(body.placeName).toEqual({ en: null, ar: 'ترابيزة ٧' })
+    expect(body.items[0]).toMatchObject({
+      productName: { en: null, ar: 'شاي' },
+      selectedCustomizations: [{ customizationName: { en: null, ar: 'السكر' }, optionName: { en: null, ar: 'زيادة' } }],
+    })
+  })
 })

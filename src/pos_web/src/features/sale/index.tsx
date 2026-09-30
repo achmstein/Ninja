@@ -107,10 +107,18 @@ function CartLineRow({
   const money = useMoney()
 
   const key = lineKey(line)
-  const name = language === 'ar' && line.nameAr ? line.nameAr : line.nameEn
+  // A café may write its menu in one language only: each name falls back to the other
+  const name =
+    (language === 'ar' ? line.nameAr : line.nameEn) ||
+    line.nameEn ||
+    line.nameAr
   const optionsLabel = line.customizations
-    .map((c) =>
-      language === 'ar' && c.optionNameAr ? c.optionNameAr : c.optionNameEn,
+    .map(
+      (c) =>
+        (language === 'ar' ? c.optionNameAr : c.optionNameEn) ||
+        c.optionNameEn ||
+        c.optionNameAr ||
+        '',
     )
     .join(' · ')
 
@@ -527,7 +535,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         items: lines.map((line) => ({
           id: crypto.randomUUID(),
           productId: line.productId,
-          productName: { en: line.nameEn, ar: line.nameAr || null },
+          productName: { en: line.nameEn || null, ar: line.nameAr || null },
           unitPrice: line.price,
           quantity: line.quantity,
           pictureUrl: line.pictureUrl ?? null,
@@ -535,11 +543,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           selectedCustomizations: line.customizations.map((c) => ({
             customizationId: c.customizationId,
             customizationName: {
-              en: c.customizationNameEn,
-              ar: c.customizationNameAr ?? null,
+              en: c.customizationNameEn || null,
+              ar: c.customizationNameAr || null,
             },
             optionId: c.optionId,
-            optionName: { en: c.optionNameEn, ar: c.optionNameAr ?? null },
+            optionName: {
+              en: c.optionNameEn || null,
+              ar: c.optionNameAr || null,
+            },
             priceAdjustment: c.priceAdjustment,
           })),
         })),

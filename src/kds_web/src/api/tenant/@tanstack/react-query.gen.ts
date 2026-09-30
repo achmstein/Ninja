@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantManifest, type Options, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -61,8 +61,8 @@ export const getBranchesOptions = (options?: Options<GetBranchesData>) => queryO
 /**
  * Create a branch
  */
-export const createBranchMutation = (options?: Partial<Options<CreateBranchData>>): UseMutationOptions<CreateBranchResponse, AxiosError<DefaultError>, Options<CreateBranchData>> => {
-    const mutationOptions: UseMutationOptions<CreateBranchResponse, AxiosError<DefaultError>, Options<CreateBranchData>> = {
+export const createBranchMutation = (options?: Partial<Options<CreateBranchData>>): UseMutationOptions<CreateBranchResponse, AxiosError<CreateBranchError>, Options<CreateBranchData>> => {
+    const mutationOptions: UseMutationOptions<CreateBranchResponse, AxiosError<CreateBranchError>, Options<CreateBranchData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createBranch({
                 ...options,
@@ -96,8 +96,8 @@ export const getAllBranchesOptions = (options?: Options<GetAllBranchesData>) => 
 /**
  * Update a branch
  */
-export const updateBranchMutation = (options?: Partial<Options<UpdateBranchData>>): UseMutationOptions<UpdateBranchResponse, AxiosError<DefaultError>, Options<UpdateBranchData>> => {
-    const mutationOptions: UseMutationOptions<UpdateBranchResponse, AxiosError<DefaultError>, Options<UpdateBranchData>> = {
+export const updateBranchMutation = (options?: Partial<Options<UpdateBranchData>>): UseMutationOptions<UpdateBranchResponse, AxiosError<UpdateBranchError>, Options<UpdateBranchData>> => {
+    const mutationOptions: UseMutationOptions<UpdateBranchResponse, AxiosError<UpdateBranchError>, Options<UpdateBranchData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateBranch({
                 ...options,
@@ -152,6 +152,23 @@ export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>
     const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
+ */
+export const setTenantAssistantMutation = (options?: Partial<Options<SetTenantAssistantData>>): UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> => {
+    const mutationOptions: UseMutationOptions<SetTenantAssistantResponse, AxiosError<SetTenantAssistantError>, Options<SetTenantAssistantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setTenantAssistant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -247,6 +264,24 @@ export const getTenantIconOptions = (options: Options<GetTenantIconData>) => que
         return data;
     },
     queryKey: getTenantIconQueryKey(options)
+});
+
+export const getTenantLoginCssQueryKey = (options?: Options<GetTenantLoginCssData>) => createQueryKey('getTenantLoginCss', options);
+
+/**
+ * The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet
+ */
+export const getTenantLoginCssOptions = (options?: Options<GetTenantLoginCssData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantLoginCssQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantLoginCss({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantLoginCssQueryKey(options)
 });
 
 export const getTenantManifestQueryKey = (options?: Options<GetTenantManifestData>) => createQueryKey('getTenantManifest', options);

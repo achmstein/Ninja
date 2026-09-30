@@ -82,7 +82,7 @@ function PlaceLinkPage() {
         setPlace({
           id: Number(place.id),
           kind: Number(place.kind),
-          name: { en: place.name?.en ?? '', ar: place.name?.ar },
+          name: { en: place.name?.en, ar: place.name?.ar },
           branchId: Number(place.branchId),
         })
       }

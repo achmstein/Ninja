@@ -514,7 +514,7 @@ const webExtras = {
   failedToDeleteItem: { en: "Failed to delete item", ar: "تعذّر حذف الصنف" },
 
   // Menu component dialogs/sheets
-  englishNameRequired: { en: "English name is required", ar: "الاسم الإنجليزي مطلوب" },
+  nameIsRequired: { en: "A name is required", ar: "الاسم مطلوب" },
   clickToAddPhoto: { en: "Click to add a photo.", ar: "انقر لإضافة صورة." },
   clickToReplacePhoto: { en: "Click to replace the photo.", ar: "انقر لتغيير الصورة." },
   photoHint: { en: "JPG or PNG, square works best.", ar: "JPG أو PNG، ويُفضَّل أن تكون مربعة." },
@@ -1286,7 +1286,7 @@ const webExtras = {
   sellAsUnitExplained: { en: "Stocked as its own item.", ar: "سيُخزَّن كصنف مستقل." },
   back: { en: "Back", ar: "رجوع" },
   recipeNeedsLines: { en: "A ticked recipe has no lines", ar: "توجد وصفة محددة بدون سطور" },
-  ingredientNeedsName: { en: "Every new ingredient needs an English name", ar: "تحتاج كل خامة جديدة إلى اسم بالإنجليزية" },
+  ingredientNeedsName: { en: "Every new ingredient needs a name", ar: "تحتاج كل خامة جديدة إلى اسم" },
   itemsTracked: { plural: "count", en: {"=1":"1 item is now tracked","other":"{count} items are now tracked"}, ar: {"one":"صنف واحد أصبح مُتتبَّعًا","two":"صنفان أصبحا مُتتبَّعين","few":"{count} أصناف أصبحت مُتتبَّعة","many":"{count} صنفًا أصبحت مُتتبَّعة","other":"{count} صنف أصبحت مُتتبَّعة"} },
   trackCount: { plural: "count", en: {"=0":"Track","=1":"Track 1 item","other":"Track {count} items"}, ar: {"zero":"تتبّع","one":"تتبّع صنفًا واحدًا","two":"تتبّع صنفين","few":"تتبّع {count} أصناف","many":"تتبّع {count} صنفًا","other":"تتبّع {count} صنف"} },
   // Menu list: which items the storeroom tracks
@@ -1347,8 +1347,8 @@ const webExtras = {
   created: { en: "Created", ar: "تم الإنشاء" },
   newCategoryFromScan: { en: "New category", ar: "قسم جديد" },
   noItemsSelected: { en: "Tick at least one item", ar: "حدّد صنفًا واحدًا على الأقل" },
-  itemNeedsNameAndPrice: { en: "Every ticked item needs an English name and a price", ar: "يحتاج كل صنف محدد إلى اسم بالإنجليزية وسعر" },
-  sectionNeedsCategory: { en: "A new category needs an English name", ar: "يحتاج القسم الجديد إلى اسم بالإنجليزية" },
+  itemNeedsNameAndPrice: { en: "Every ticked item needs a name and a price", ar: "يحتاج كل صنف محدد إلى اسم وسعر" },
+  sectionNeedsCategory: { en: "A new category needs a name", ar: "يحتاج القسم الجديد إلى اسم" },
   itemsSelected: { plural: "count", en: {"=0":"Nothing ticked","=1":"1 item ticked","other":"{count} items ticked"}, ar: {"zero":"لم يُحدَّد شيء","one":"صنف واحد محدد","two":"صنفان محددان","few":"{count} أصناف محددة","many":"{count} صنفًا محددًا","other":"{count} صنف محدد"} },
   createScannedItems: { plural: "count", en: {"=1":"Create 1 item","other":"Create {count} items"}, ar: {"one":"أنشئ صنفًا واحدًا","two":"أنشئ صنفين","few":"أنشئ {count} أصناف","many":"أنشئ {count} صنفًا","other":"أنشئ {count} صنف"} },
   menuScanCreated: { plural: "count", en: {"=1":"1 item added to the menu","other":"{count} items added to the menu"}, ar: {"one":"أُضيف صنف واحد إلى القائمة","two":"أُضيف صنفان إلى القائمة","few":"أُضيفت {count} أصناف إلى القائمة","many":"أُضيف {count} صنفًا إلى القائمة","other":"أُضيف {count} صنف إلى القائمة"} },

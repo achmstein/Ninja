@@ -204,8 +204,8 @@ class _DemoTicketsRepository implements TicketsRepository {
         TicketLineView(
           id: _nextLine++,
           orderId: orderId,
-          description: _lt(line.nameEn, line.nameAr),
-          details: _details(line),
+          description: line.name,
+          details: line.details,
           qty: line.quantity.toDouble(),
           unitPrice: line.price,
           total: line.total,
@@ -1044,16 +1044,6 @@ class _DemoCatalogRepository implements CatalogRepository {
 }
 
 LocalizedText _lt(String en, String ar) => LocalizedText.parse({'en': en, 'ar': ar});
-
-/// The chosen options in both languages, the note as typed — what Sales
-/// stores on a line from a real POS order
-LocalizedText? _details(SaleLine line) {
-  String join(Iterable<String> parts) => parts.where((s) => s.isNotEmpty).join(', ');
-  final note = line.specialInstructions ?? '';
-  final en = join([for (final c in line.customizations) c.optionNameEn, note]);
-  final ar = join([for (final c in line.customizations) c.optionNameAr ?? c.optionNameEn, note]);
-  return en.isEmpty && ar.isEmpty ? null : LocalizedText(en: en, ar: ar);
-}
 
 TicketLineView _line(int id, String en, String ar, double qty, double unitPrice,
         {String? details, String? customerId, String? customerName}) =>

@@ -141,7 +141,7 @@ export type ItemTotal = {
 };
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 

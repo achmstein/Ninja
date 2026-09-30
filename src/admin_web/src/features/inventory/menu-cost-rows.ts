@@ -1,6 +1,7 @@
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeCostView } from '@/api/inventory'
 import { toNumber } from '@/lib/money'
+import { primaryText } from '@/components/localized-input'
 import { standardCost } from './recipe-cost'
 
 /** Food cost above this share of the price is flagged unless the page says otherwise */
@@ -73,7 +74,7 @@ export function toMenuCostRows(
   return rows.sort(
     (a, b) =>
       (b.foodCost ?? -1) - (a.foodCost ?? -1) ||
-      (a.name?.en ?? '').localeCompare(b.name?.en ?? '')
+      primaryText(a.name).localeCompare(primaryText(b.name))
   )
 }
 

@@ -216,7 +216,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
               disabled={isPending}
               onClick={() =>
                 trackByUnit(catalogItemId, {
-                  en: item.name?.en ?? '',
+                  en: item.name?.en ?? null,
                   ar: item.name?.ar ?? null,
                 }).catch(() => {
                   // toasted by useInventoryActions

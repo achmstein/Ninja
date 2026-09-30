@@ -30,6 +30,7 @@ import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
@@ -96,8 +97,9 @@ function toTariff(
   options: OptionDraft[],
   rounding: number
 ): TariffRequest | null {
-  const list = options.map((o) => ({
-    code: o.code || codeFor(o.name.en),
+  // A rate named in Arabic only spells no code, so it takes its position
+  const list = options.map((o, index) => ({
+    code: o.code || codeFor(o.name.en) || `rate-${index + 1}`,
     name: fromLocalizedValue(o.name),
     hourlyRate: Number(o.rate),
   }))
@@ -108,7 +110,7 @@ function toTariff(
     list.every(
       (o) =>
         o.code.length > 0 &&
-        o.name.en.length > 0 &&
+        (o.name.en !== null || o.name.ar !== null) &&
         Number.isFinite(o.hourlyRate) &&
         o.hourlyRate > 0
     ) &&
@@ -206,7 +208,7 @@ export function PlaceDialog({
     setReservableFlag.isPending
 
   const tariff = timed ? toTariff(options, rounding) : null
-  const canSave = name.en.trim().length > 0 && (!timed || tariff !== null)
+  const canSave = !isBlank(name) && (!timed || tariff !== null)
 
   const originalTariff = tariffKey(
     place?.tariff
@@ -252,7 +254,7 @@ export function PlaceDialog({
     : [...ROUNDING_CHOICES, rounding].sort((a, b) => a - b)
 
   const handleSave = async () => {
-    const hasDescription = description.en.trim().length > 0
+    const hasDescription = !isBlank(description)
     const details = {
       name: fromLocalizedValue(name),
       description: hasDescription ? fromLocalizedValue(description) : null,

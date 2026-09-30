@@ -87,7 +87,7 @@ export function orderBody({
     // Where the order goes, and the customer's running clock there if any
     placeId: destination?.placeId ?? null,
     placeKind: destination ? placeKindName(destination.placeKind) : null,
-    placeName: destination ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null } : null,
+    placeName: destination ? { en: destination.name.en || null, ar: destination.name.ar || null } : null,
     sessionId: destination?.sessionId ?? null,
     customerNote: extras.note.trim() || null,
     promoCode: extras.promo,
@@ -97,16 +97,16 @@ export function orderBody({
     items: lines.map((line) => ({
       id: newId(),
       productId: line.productId,
-      productName: { en: line.nameEn, ar: line.nameAr || null },
+      productName: { en: line.nameEn || null, ar: line.nameAr || null },
       unitPrice: line.price,
       quantity: line.quantity,
       pictureUrl: line.pictureUrl ?? null,
       specialInstructions: line.specialInstructions ?? null,
       selectedCustomizations: line.customizations.map((c) => ({
         customizationId: c.customizationId,
-        customizationName: { en: c.customizationNameEn, ar: c.customizationNameAr ?? null },
+        customizationName: { en: c.customizationNameEn || null, ar: c.customizationNameAr || null },
         optionId: c.optionId,
-        optionName: { en: c.optionNameEn, ar: c.optionNameAr ?? null },
+        optionName: { en: c.optionNameEn || null, ar: c.optionNameAr || null },
         priceAdjustment: c.priceAdjustment,
       })),
     })),

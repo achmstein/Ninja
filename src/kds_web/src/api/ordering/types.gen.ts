@@ -189,7 +189,7 @@ export type KitchenTicket = {
 };
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 

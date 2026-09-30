@@ -224,7 +224,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         );
 
     return MaterialApp.router(
-      title: ref.watch(brandProvider).name.en.isEmpty ? 'POS' : '${ref.watch(brandProvider).name.en} POS',
+      title: ref.watch(brandProvider).name.isEmpty ? 'POS' : '${ref.watch(brandProvider).name.primary} POS',
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

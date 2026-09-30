@@ -35,7 +35,7 @@ class PosOrderRequest {
             {
               'id': _uuid.v4(),
               'productId': line.productId,
-              'productName': {'en': line.nameEn, 'ar': line.nameAr.isEmpty ? null : line.nameAr},
+              'productName': line.name.toJson(),
               'unitPrice': line.price,
               'quantity': line.quantity,
               'pictureUrl': line.pictureUrl,
@@ -44,9 +44,9 @@ class PosOrderRequest {
                 for (final c in line.customizations)
                   {
                     'customizationId': c.customizationId,
-                    'customizationName': {'en': c.customizationNameEn, 'ar': c.customizationNameAr},
+                    'customizationName': c.customizationName.toJson(),
                     'optionId': c.optionId,
-                    'optionName': {'en': c.optionNameEn, 'ar': c.optionNameAr},
+                    'optionName': c.optionName.toJson(),
                     'priceAdjustment': c.priceAdjustment,
                   },
               ],

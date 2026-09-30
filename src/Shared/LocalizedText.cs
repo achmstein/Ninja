@@ -91,8 +91,8 @@ public sealed record LocalizedText
     {
         foreach (var c in text ?? string.Empty)
         {
-            if (c is >= '؀' and <= 'ۿ' or >= 'ݐ' and <= 'ݿ' or >= 'ࢠ' and <= 'ࣿ'
-                or >= 'ﭐ' and <= '﷿' or >= 'ﹰ' and <= '﻿')
+            if (c is >= '\u0600' and <= '\u06FF' or >= '\u0750' and <= '\u077F' or >= '\u08A0' and <= '\u08FF'
+                or >= '\uFB50' and <= '\uFDFF' or >= '\uFE70' and <= '\uFEFF')
                 return true;
         }
         return false;

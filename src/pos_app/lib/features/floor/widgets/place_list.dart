@@ -100,10 +100,7 @@ class _PlaceListState extends State<PlaceList> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final needle = _term.text.trim().toLowerCase();
-    bool matches(LocalizedText name) =>
-        needle.isEmpty ||
-        name.en.toLowerCase().contains(needle) ||
-        (name.ar ?? '').toLowerCase().contains(needle);
+    bool matches(LocalizedText name) => needle.isEmpty || name.contains(needle);
 
     // A place with a bill is among the bills already; one without is here,
     // in whatever state it is in. Bills opened before the remodel name a

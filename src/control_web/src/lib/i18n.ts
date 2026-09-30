@@ -56,6 +56,7 @@ const dictionary = {
   noTenants: "No tenants yet",
   name: "Name",
   slug: "Slug",
+  slugFromArabicHint: "An Arabic name spells no slug: type one in lower-case Latin letters",
   kind: "Kind",
   status: "Status",
   customerUrl: "Customer URL",

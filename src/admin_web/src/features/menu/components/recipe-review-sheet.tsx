@@ -10,7 +10,7 @@ import {
   trackByUnitMutation,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
+import { bilingual, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -39,6 +39,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { InfoTip } from '@/components/info-tip'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
 } from '@/components/localized-input'
@@ -129,7 +130,7 @@ export function RecipeReviewSheet({
       })),
       ...review.ingredients.map((i) => ({
         value: NEW_PREFIX + i.key,
-        label: `${t('newIngredient')}: ${i.name.en || i.name.ar || i.key}`,
+        label: `${t('newIngredient')}: ${localized(fromLocalizedValue(i.name)) || i.key}`,
         unit: i.unit,
         names: [i.name.en, i.name.ar].filter((n) => n.trim() !== ''),
       })),
@@ -151,7 +152,7 @@ export function RecipeReviewSheet({
       toast.error(t('recipeNeedsLines'))
       return
     }
-    if (needed.some((i) => !i.name.en.trim())) {
+    if (needed.some((i) => isBlank(i.name))) {
       toast.error(t('ingredientNeedsName'))
       return
     }
@@ -175,7 +176,9 @@ export function RecipeReviewSheet({
               parseFloat(ingredient.packSize) > 0
                 ? parseFloat(ingredient.packSize)
                 : null,
-            packName: ingredient.packName.trim() || null,
+            packName: isBlank(ingredient.packName)
+              ? null
+              : fromLocalizedValue(ingredient.packName),
             autoSoldOut: ingredient.autoSoldOut,
           },
           headers: { 'x-requestid': uuidv4() },
@@ -193,7 +196,7 @@ export function RecipeReviewSheet({
           await trackByUnit.mutateAsync({
             body: {
               catalogItemId: recipe.catalogItemId,
-              name: { en: item?.name?.en ?? '', ar: item?.name?.ar ?? null },
+              name: { en: item?.name?.en ?? null, ar: item?.name?.ar ?? null },
             },
             headers: { 'x-requestid': uuidv4() },
             query: { 'api-version': API_VERSION },
@@ -303,16 +306,14 @@ export function RecipeReviewSheet({
                             })
                           }
                         />
-                        <Input
-                          className='h-8'
-                          placeholder={t('packName')}
-                          aria-label={t('packName')}
+                        <LocalizedInput
+                          ariaLabel={t('packName')}
+                          placeholder={bilingual('packNameHint')}
                           value={ingredient.packName}
-                          onChange={(e) =>
-                            updateIngredient(ingredient.key, {
-                              packName: e.target.value,
-                            })
+                          onChange={(packName) =>
+                            updateIngredient(ingredient.key, { packName })
                           }
+                          compact
                         />
                         <div className='flex items-center gap-2'>
                           {ingredient.createdId != null ? (

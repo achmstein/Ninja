@@ -24,6 +24,7 @@ import {
 import {
   LocalizedInput,
   fromLocalizedValue,
+  isBlank,
   type LocalizedValue,
 } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
@@ -129,7 +130,7 @@ const FIRST_COUNTRY: Country = COUNTRIES[0]
 const SEED_ORDER: TenantSeedName[] = ['Sample', 'None']
 
 /**
- * One form, one call. The slug follows the English name until it is edited
+ * One form, one call. The slug follows the English name until it is edited (a café named in Arabic only types its own)
  * by hand; the seed follows the kind and the money, clock and first
  * language follow the country, each until touched. The images picked here
  * are uploaded right after the 201: provisioning is queued, so they land
@@ -224,7 +225,7 @@ export function NewTenantPage() {
   })
 
   const canSubmit =
-    name.en.trim().length > 0 &&
+    !isBlank(name) &&
     ownerEmail.includes('@') &&
     isValidSlug(effectiveSlug) &&
     (color === '' || isHexColor(color)) &&
@@ -364,6 +365,9 @@ export function NewTenantPage() {
                     className='font-mono'
                     required
                   />
+                  {!slugTouched && name.en.trim() === '' && name.ar.trim() !== '' && (
+                    <p className='text-muted-foreground text-xs'>{t('slugFromArabicHint')}</p>
+                  )}
                 </div>
                 <div className='grid gap-2'>
                   <Label>{t('seed')}</Label>

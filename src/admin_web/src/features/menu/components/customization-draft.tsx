@@ -7,6 +7,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   fromLocalizedValue,
+  isBlank,
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
@@ -47,7 +48,7 @@ export function fromProposal(group: ProposedCustomization): DraftGroup {
   }
 }
 
-/** The create/update body from a draft; options without an English name are left out. */
+/** The create/update body from a draft; options with no name in either language are left out. */
 export function bodyFromDraft(
   itemId: number,
   draft: DraftGroup,
@@ -60,7 +61,7 @@ export function bodyFromDraft(
     allowMultiple: draft.allowMultiple,
     displayOrder,
     options: draft.options
-      .filter((option) => option.name.en.trim())
+      .filter((option) => !isBlank(option.name))
       .map((option, index) => ({
         ...(option.id ? { id: option.id } : {}),
         name: fromLocalizedValue(option.name),

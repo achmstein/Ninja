@@ -374,10 +374,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       if (entry.key.id == -1) continue;
       final matchingItems = entry.value
           .where((item) =>
-              normalizeSearch(item.name.getText(locale)).contains(query) ||
-              normalizeSearch(item.description.getText(locale)).contains(query) ||
-              normalizeSearch(item.name.en).contains(query) ||
-              normalizeSearch(item.description.en).contains(query))
+              // Either language finds it, whichever the café writes in
+              [item.name.en, item.name.ar, item.description.en, item.description.ar]
+                  .any((text) => text != null && normalizeSearch(text).contains(query)))
           .toList();
       if (matchingItems.isNotEmpty) {
         filtered[entry.key] = matchingItems;

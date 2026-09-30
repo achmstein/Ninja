@@ -47,6 +47,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
@@ -384,8 +385,8 @@ function StationForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.en.trim() && !name.ar.trim()) {
-      setError(t('englishNameRequired'))
+    if (isBlank(name)) {
+      setError(t('nameIsRequired'))
       return
     }
     if (!showsOnScreen && !printsTickets) {

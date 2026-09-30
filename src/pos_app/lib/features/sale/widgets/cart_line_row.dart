@@ -16,12 +16,10 @@ class CartLineRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final isArabic = ref.watch(localeProvider).languageCode == 'ar';
+    final locale = ref.watch(localeProvider);
 
-    final name = isArabic && line.nameAr.isNotEmpty ? line.nameAr : line.nameEn;
-    final options = line.customizations
-        .map((c) => isArabic && (c.optionNameAr?.isNotEmpty ?? false) ? c.optionNameAr! : c.optionNameEn)
-        .join(' · ');
+    final name = line.name.getText(locale);
+    final options = line.customizations.map((c) => c.optionName.getText(locale)).join(' · ');
 
     Widget stepButton(IconData icon, VoidCallback onPress, {Color? color}) => SizedBox.square(
           dimension: 36,

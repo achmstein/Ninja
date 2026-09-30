@@ -34,12 +34,13 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
-  useDefaultLang,
   type Lang,
   type LocalizedValue,
+  useDefaultLang,
 } from '@/components/localized-input'
 import { halfFilled, hasText } from '@/features/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
@@ -287,7 +288,7 @@ export function ItemDetailsForm({
     const next: Record<string, string> = {}
     const price = parseFloat(form.price)
     const offer = parseFloat(form.offerPrice)
-    if (!form.name.en.trim()) next.name = t('englishNameRequired')
+    if (isBlank(form.name)) next.name = t('nameIsRequired')
     if (!(price >= 0)) next.price = t('priceMustBePositive')
     if (form.isOnOffer) {
       if (!(offer > 0)) next.offerPrice = t('offerPriceRequired')

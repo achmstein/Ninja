@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantLoginCssData, GetTenantLoginCssResponses, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -98,6 +98,19 @@ export const updateTenant = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
+ * How the owner's AI assistant speaks: its tone, manner, language and the café's notes for it
+ */
+export const setTenantAssistant = <ThrowOnError extends boolean = false>(options: Options<SetTenantAssistantData, ThrowOnError>): RequestResult<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError> => (options.client ?? client).put<SetTenantAssistantResponses, SetTenantAssistantErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/assistant',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * The modules the café's plan allows; a switch outside them goes off. The control plane only
  */
 export const setTenantEntitlements = <ThrowOnError extends boolean = false>(options: Options<SetTenantEntitlementsData, ThrowOnError>): RequestResult<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError> => (options.client ?? client).put<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError>({
@@ -142,6 +155,11 @@ export const uploadTenantImage = <ThrowOnError extends boolean = false>(options:
  * One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png
  */
 export const getTenantIcon = <ThrowOnError extends boolean = false>(options: Options<GetTenantIconData, ThrowOnError>): RequestResult<unknown, GetTenantIconErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantIconErrors, ThrowOnError>({ url: '/api/tenant/icons/{name}', ...options });
+
+/**
+ * The café's colours for its sign-in pages; the login theme loads it beside its own stylesheet
+ */
+export const getTenantLoginCss = <ThrowOnError extends boolean = false>(options?: Options<GetTenantLoginCssData, ThrowOnError>): RequestResult<GetTenantLoginCssResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetTenantLoginCssResponses, unknown, ThrowOnError>({ url: '/api/tenant/login.css', ...options });
 
 /**
  * The web app manifest for one surface, in the tenant's name

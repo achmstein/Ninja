@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { type StockItemView } from '@/api/inventory'
-import { useT } from '@/lib/i18n'
+import { bilingual, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch'
 import { InfoTip } from '@/components/info-tip'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
@@ -72,7 +73,7 @@ type FormState = {
   unitChoice: string
   customUnit: string
   packSize: string
-  packName: string
+  packName: LocalizedValue
   autoSoldOut: boolean
 }
 
@@ -92,7 +93,7 @@ function StockItemForm({
     unitChoice: item ? (knownUnit ? item.unit : CUSTOM_UNIT) : 'pcs',
     customUnit: item && !knownUnit ? item.unit : '',
     packSize: item?.packSize != null ? String(toNumber(item.packSize)) : '',
-    packName: item?.packName ?? '',
+    packName: toLocalizedValue(item?.packName),
     autoSoldOut: item?.autoSoldOut ?? false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -106,7 +107,7 @@ function StockItemForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const nextErrors: Record<string, string> = {}
-    if (!form.name.en.trim()) nextErrors.name = t('englishNameRequired')
+    if (isBlank(form.name)) nextErrors.name = t('nameIsRequired')
     if (!unit) nextErrors.unit = t('unitRequired')
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
@@ -117,7 +118,9 @@ function StockItemForm({
       unit,
       packSize: packSize > 0 ? packSize : null,
       packName:
-        packSize > 0 && form.packName.trim() ? form.packName.trim() : null,
+        packSize > 0 && !isBlank(form.packName)
+          ? fromLocalizedValue(form.packName)
+          : null,
       autoSoldOut: form.autoSoldOut,
       // Retire/restore are actions on the panel, not a field here
       isActive: item?.isActive,
@@ -200,16 +203,14 @@ function StockItemForm({
                 onChange={(e) => setForm({ ...form, packSize: e.target.value })}
               />
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='packName'>{t('packName')}</Label>
-              <Input
-                id='packName'
-                placeholder={t('packNameHint')}
-                value={form.packName}
-                disabled={!form.packSize}
-                onChange={(e) => setForm({ ...form, packName: e.target.value })}
-              />
-            </div>
+            <LocalizedInput
+              id='packName'
+              label={t('packName')}
+              placeholder={bilingual('packNameHint')}
+              value={form.packName}
+              disabled={!form.packSize}
+              onChange={(packName) => setForm({ ...form, packName })}
+            />
           </div>
         </div>
 

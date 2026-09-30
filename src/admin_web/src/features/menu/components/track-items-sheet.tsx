@@ -121,7 +121,7 @@ export function TrackItemsSheet({
         await trackByUnit.mutateAsync({
           body: {
             catalogItemId: toNumber(item.id),
-            name: { en: item.name?.en ?? '', ar: item.name?.ar ?? null },
+            name: { en: item.name?.en ?? null, ar: item.name?.ar ?? null },
           },
           headers: { 'x-requestid': uuidv4() },
           query: { 'api-version': API_VERSION },

@@ -22,6 +22,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedInput,
   toLocalizedValue,
 } from '@/components/localized-input'
@@ -110,8 +111,8 @@ function BranchForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.name.en.trim()) {
-      setError(t('englishNameRequired'))
+    if (isBlank(form.name)) {
+      setError(t('nameIsRequired'))
       return
     }
     setError('')

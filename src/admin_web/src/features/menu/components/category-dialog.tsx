@@ -19,6 +19,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
@@ -102,8 +103,8 @@ function CategoryForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.en.trim()) {
-      setError(t('englishNameRequired'))
+    if (isBlank(name)) {
+      setError(t('nameIsRequired'))
       return
     }
     setError('')

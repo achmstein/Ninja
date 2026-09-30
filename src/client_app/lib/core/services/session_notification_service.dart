@@ -104,10 +104,7 @@ class SessionNotificationService {
     // Save session info in parallel, don't block notification display
     _saveSessionInfo(session);
 
-    final isArabic = locale == 'ar';
-    final placeName = isArabic
-        ? (session.placeName.ar ?? session.placeName.en)
-        : session.placeName.en;
+    final placeName = session.placeName.inLanguage(locale);
 
     // Session context for iOS Live Activity intents (background actions):
     // the place the stay runs at, as a service request names it
@@ -120,8 +117,9 @@ class SessionNotificationService {
       'placeId': session.placeId,
       'placeKind': session.placeKind.wireName,
       'branchId': ?branchId,
-      'placeNameEn': session.placeName.en,
-      if (session.placeName.ar != null) 'placeNameAr': session.placeName.ar,
+      // Display names for the native side, each falling back to the other language
+      'placeNameEn': session.placeName.inLanguage('en'),
+      'placeNameAr': session.placeName.inLanguage('ar'),
     };
 
     // Show Live Activity immediately with basic info (place + timer + waiter/controller)
@@ -208,7 +206,7 @@ class SessionNotificationService {
         final item =
             items.where((i) => i.id == itemId && i.isAvailable).firstOrNull;
         if (item == null) continue;
-        final name = isArabic ? (item.name.ar ?? item.name.en) : item.name.en;
+        final name = item.name.inLanguage(isArabic ? 'ar' : 'en');
         drinks.add(_DrinkInfo(id: item.id, name: name, item: item));
       }
 
@@ -220,8 +218,7 @@ class SessionNotificationService {
             .toList();
         for (final item in popularItems) {
           if (drinks.length >= 2) break;
-          final name =
-              isArabic ? (item.name.ar ?? item.name.en) : item.name.en;
+          final name = item.name.inLanguage(isArabic ? 'ar' : 'en');
           drinks.add(_DrinkInfo(id: item.id, name: name, item: item));
         }
       }
@@ -333,10 +330,9 @@ class SessionNotificationService {
     await prefs.setInt('active_session_id', session.id);
     await prefs.setInt('active_session_place_id', session.placeId);
     await prefs.setString('active_session_place_kind', session.placeKind.wireName);
-    await prefs.setString('active_session_place_name_en', session.placeName.en);
-    if (session.placeName.ar != null) {
-      await prefs.setString('active_session_place_name_ar', session.placeName.ar!);
-    }
+    // Display names, each falling back to the other language
+    await prefs.setString('active_session_place_name_en', session.placeName.inLanguage('en'));
+    await prefs.setString('active_session_place_name_ar', session.placeName.inLanguage('ar'));
     if (accessToken != null) {
       await prefs.setString('active_session_access_token', accessToken);
     }

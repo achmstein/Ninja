@@ -162,7 +162,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                   final visible = [
                     for (final item in items)
                       if (search.isNotEmpty
-                          ? '${item.name.en} ${item.name.ar ?? ''}'.toLowerCase().contains(search)
+                          ? item.name.contains(search)
                           : item.catalogTypeId == activeCategoryId)
                         item,
                   ]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));

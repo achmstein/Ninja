@@ -128,7 +128,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
                   {t('packOf', {
                     packSize: String(toNumber(level.packSize)),
                     unit: unitLabel(level.unit, t),
-                    packName: level.packName || t('pack'),
+                    packName: localized(level.packName) || t('pack'),
                   })}
                 </>
               )}
@@ -199,7 +199,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
                 <span className='tabular-nums'>
                   {t('approxPacks', {
                     packs,
-                    packName: level.packName || t('pack'),
+                    packName: localized(level.packName) || t('pack'),
                   })}
                 </span>
                 <span>·</span>

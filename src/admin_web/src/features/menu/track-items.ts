@@ -6,7 +6,11 @@ import {
   type RecipesProposal,
 } from '@/api/inventory'
 import { toNumber } from '@/lib/money'
-import { type LocalizedValue } from '@/components/localized-input'
+import {
+  primaryText,
+  toLocalizedValue,
+  type LocalizedValue,
+} from '@/components/localized-input'
 import {
   draftKey,
   validateDraft,
@@ -25,17 +29,17 @@ export const PROPOSE_BATCH = 10
 export function toMenuItemToTrack(item: CatalogItemDto): MenuItemToTrack {
   return {
     catalogItemId: toNumber(item.id),
-    name: { en: item.name?.en ?? '', ar: item.name?.ar ?? null },
+    name: { en: item.name?.en ?? null, ar: item.name?.ar ?? null },
     description: item.description
-      ? { en: item.description.en ?? '', ar: item.description.ar ?? null }
+      ? { en: item.description.en ?? null, ar: item.description.ar ?? null }
       : null,
-    category: item.catalogTypeName?.en ?? null,
+    category: primaryText(item.catalogTypeName) || null,
     price: toNumber(item.price),
     options: (item.customizations ?? []).flatMap((group) =>
       (group.options ?? []).map((option) => ({
         id: toNumber(option.id),
-        group: group.name?.en ?? '',
-        name: { en: option.name?.en ?? '', ar: option.name?.ar ?? null },
+        group: primaryText(group.name),
+        name: { en: option.name?.en ?? null, ar: option.name?.ar ?? null },
       }))
     ),
   }
@@ -47,7 +51,7 @@ export type ReviewIngredient = {
   name: LocalizedValue
   unit: string
   packSize: string
-  packName: string
+  packName: LocalizedValue
   autoSoldOut: boolean
   /** Filled once created, so a retry after a failure never creates it twice */
   createdId: number | null
@@ -78,7 +82,7 @@ function draftOf(
   recipe: ProposedRecipe,
   item: CatalogItemDto | undefined
 ): RecipeDraft {
-  const menu = item ? menuOptionsOf(item, (text) => text?.en ?? '') : null
+  const menu = item ? menuOptionsOf(item, primaryText) : null
   const groupOf = (optionId: string) => {
     const option = menu?.byId.get(optionId)
     return option ? menu?.groups[option.groupIndex]?.id : undefined
@@ -190,10 +194,10 @@ export function toReview(
       }
       ingredients.set(item.key, {
         key: item.key,
-        name: { en: item.name.en ?? '', ar: item.name.ar ?? '' },
+        name: toLocalizedValue(item.name),
         unit: item.unit,
         packSize: item.packSize != null ? String(toNumber(item.packSize)) : '',
-        packName: item.packName ?? '',
+        packName: toLocalizedValue(item.packName),
         autoSoldOut: item.autoSoldOut,
         createdId: null,
       })

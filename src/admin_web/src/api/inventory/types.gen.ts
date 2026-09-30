@@ -27,7 +27,7 @@ export type CreatedResponse = {
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -87,7 +87,7 @@ export type ProposedIngredient = {
     name: LocalizedText;
     unit: string;
     packSize: null | number | string;
-    packName: null | string;
+    packName: null | LocalizedText;
     autoSoldOut: boolean;
 };
 
@@ -108,7 +108,7 @@ export type ProposedNewItem = {
     name: LocalizedText;
     unit: string;
     packSize: null | number | string;
-    packName: null | string;
+    packName: null | LocalizedText;
 };
 
 export type ProposedRecipe = {
@@ -272,7 +272,7 @@ export type StockItemRequest = {
     name: LocalizedText;
     unit: string;
     packSize: null | number | string;
-    packName: null | string;
+    packName: null | LocalizedText;
     autoSoldOut: boolean;
     isActive?: null | boolean;
 };
@@ -282,7 +282,7 @@ export type StockItemView = {
     name: LocalizedText;
     unit: string;
     packSize: null | number | string;
-    packName: null | string;
+    packName: null | LocalizedText;
     autoSoldOut: boolean;
     isActive: boolean;
 };
@@ -292,7 +292,7 @@ export type StockLevelView = {
     name: LocalizedText;
     unit: string;
     packSize: null | number | string;
-    packName: null | string;
+    packName: null | LocalizedText;
     autoSoldOut: boolean;
     isActive: boolean;
     onHand: number | string;

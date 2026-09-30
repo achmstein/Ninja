@@ -1,5 +1,6 @@
-/// Text the API sends in both languages, `{en, ar}`; [pick] reads the one a
-/// ticket prints in, falling back to English.
+/// Text the API sends as `{en, ar}`, either side possibly missing (a café may
+/// write its menu in one language); [pick] reads the one a ticket prints in,
+/// falling back to the other. An empty side counts as missing.
 class TicketText {
   final String en;
   final String? ar;
@@ -14,7 +15,11 @@ class TicketText {
     return TicketText(en, ar == null || ar.isEmpty ? null : ar);
   }
 
-  String pick(String languageCode) => languageCode == 'ar' && ar != null ? ar! : (en.isNotEmpty ? en : ar ?? '');
+  String pick(String languageCode) {
+    final english = en.trim().isEmpty ? null : en;
+    final arabic = ar == null || ar!.trim().isEmpty ? null : ar;
+    return (languageCode == 'ar' ? arabic ?? english : english ?? arabic) ?? '';
+  }
 }
 
 /// One line of a kitchen ticket: how many of what, and how to make it.

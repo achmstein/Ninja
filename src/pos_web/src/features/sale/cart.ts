@@ -15,7 +15,8 @@ export type SaleCustomization = {
 }
 
 // A snapshot of the item at add time; the backend re-validates everything
-// when the order is created.
+// when the order is created. Names are as the café wrote them: '' for a
+// language it does not write in, never a copy of the other one.
 export type SaleLine = {
   productId: number
   nameEn: string

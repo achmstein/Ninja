@@ -125,7 +125,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
     Navigator.of(context, rootNavigator: true).pop(SaleLine(
       productId: item.id,
       nameEn: item.name.en,
-      nameAr: item.name.ar ?? '',
+      nameAr: item.name.ar,
       price: _unitPrice,
       pictureUrl: item.pictureUrl,
       quantity: _quantity,

@@ -12,7 +12,7 @@ export type StoredPlace = {
   /** PlaceKind: 1 room, 2 place, 3 station */
   kind: number
   /** Same shape as the API's LocalizedText, so it renders through useLocalized */
-  name: { en?: string; ar?: string | null }
+  name: { en?: string | null; ar?: string | null }
   branchId: number
   /** When the code was read: the table view says "since 8:40 pm", and the
    *  cafe's business day decides whether that was this sitting or a past one */

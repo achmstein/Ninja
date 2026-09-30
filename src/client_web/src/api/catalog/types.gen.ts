@@ -110,6 +110,8 @@ export type CustomizationOptionDto = {
 
 export type IFormFile = Blob | File;
 
+export type IFormFileCollection = Array<IFormFile>;
+
 export type ItemCustomization = {
     id?: number | string;
     catalogItemId?: number | string;
@@ -130,8 +132,12 @@ export type ItemCustomizationDto = {
     options?: Array<CustomizationOptionDto>;
 };
 
+export type JsonObject = {
+    [key: string]: unknown;
+};
+
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -155,6 +161,41 @@ export type LocalizeResponse = {
     suggestedCatalogTypeId: null | number | string;
     filled: Array<string>;
     warnings: Array<string>;
+};
+
+export type MenuImportCategory = {
+    /**
+     * An existing category the items join; null makes a new one
+     */
+    catalogTypeId: null | number | string;
+    name: null | LocalizedText;
+    items: Array<MenuImportItem>;
+};
+
+export type MenuImportChoice = {
+    name: LocalizedText;
+    options: Array<MenuImportChoiceOption>;
+};
+
+export type MenuImportChoiceOption = {
+    name: LocalizedText;
+    price: number | string;
+};
+
+export type MenuImportItem = {
+    name: LocalizedText;
+    description: null | LocalizedText;
+    price: number | string;
+    choice?: null | MenuImportChoice;
+};
+
+export type MenuImportRequest = {
+    categories: Array<MenuImportCategory>;
+};
+
+export type MenuImportResult = {
+    categoriesCreated: number | string;
+    itemIds: Array<number | string>;
 };
 
 export type MenuProposal = {
@@ -219,6 +260,16 @@ export type ProposedCategory = {
     items: Array<ProposedItem>;
 };
 
+export type ProposedChoice = {
+    name: LocalizedText;
+    options: Array<ProposedChoiceOption>;
+};
+
+export type ProposedChoiceOption = {
+    name: LocalizedText;
+    price: number | string;
+};
+
 export type ProposedCustomization = {
     name: LocalizedText;
     isRequired: boolean;
@@ -232,6 +283,7 @@ export type ProposedItem = {
     description: LocalizedText;
     price: number | string;
     existingItemId: null | number | string;
+    choice?: null | ProposedChoice;
 };
 
 export type ProposedOption = {
@@ -285,6 +337,31 @@ export type SuggestCustomizationsRequest = {
 export type SuggestCustomizationsResponse = {
     groups: Array<ProposedCustomization>;
     warnings: Array<string>;
+};
+
+export type TalabatFailureView = {
+    kind: string;
+    branchId: number | string;
+    code: null | string;
+    error: null | string;
+    at: string;
+};
+
+export type TalabatSettingsRequest = {
+    branchIds: Array<number | string>;
+    syncOpenClose?: boolean;
+};
+
+export type TalabatStatusView = {
+    connected: boolean;
+    branchIds: Array<number | string>;
+    syncOpenClose: boolean;
+    menuChangedAt: null | string;
+    menuSentAt: null | string;
+    lastMenuResult: null | string;
+    lastMenuResultAt: null | string;
+    pending: number | string;
+    failed: Array<TalabatFailureView>;
 };
 
 export type UpdateCatalogItemRequest = {
@@ -391,7 +468,7 @@ export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyo
 
 export type ScanMenuData = {
     body: {
-        file: IFormFile;
+        files: IFormFileCollection;
     };
     path?: never;
     query?: {
@@ -666,6 +743,44 @@ export type SetPromoActiveResponses = {
 
 export type SetPromoActiveResponse = SetPromoActiveResponses[keyof SetPromoActiveResponses];
 
+export type ImportMenuData = {
+    body: MenuImportRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/menu/import';
+};
+
+export type ImportMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ImportMenuError = ImportMenuErrors[keyof ImportMenuErrors];
+
+export type ImportMenuResponses = {
+    /**
+     * OK
+     */
+    200: MenuImportResult;
+};
+
+export type ImportMenuResponse = ImportMenuResponses[keyof ImportMenuResponses];
+
 export type ListItemsData = {
     body?: never;
     path?: never;
@@ -871,6 +986,10 @@ export type UpdateItemData = {
 
 export type UpdateItemErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -986,6 +1105,10 @@ export type GetItemPictureData = {
         id: number;
     };
     query?: {
+        /**
+         * A narrower copy: 160, 320, 640 or 1280 px wide
+         */
+        w?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -1171,6 +1294,10 @@ export type CreateCategoryData = {
 
 export type CreateCategoryErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1179,6 +1306,8 @@ export type CreateCategoryErrors = {
      */
     403: unknown;
 };
+
+export type CreateCategoryError = CreateCategoryErrors[keyof CreateCategoryErrors];
 
 export type CreateCategoryResponses = {
     /**
@@ -1318,6 +1447,10 @@ export type UpdateCategoryData = {
 
 export type UpdateCategoryErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1330,6 +1463,8 @@ export type UpdateCategoryErrors = {
      */
     404: unknown;
 };
+
+export type UpdateCategoryError = UpdateCategoryErrors[keyof UpdateCategoryErrors];
 
 export type UpdateCategoryResponses = {
     /**
@@ -1516,6 +1651,10 @@ export type CreateCustomizationData = {
 
 export type CreateCustomizationErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1528,6 +1667,8 @@ export type CreateCustomizationErrors = {
      */
     404: unknown;
 };
+
+export type CreateCustomizationError = CreateCustomizationErrors[keyof CreateCustomizationErrors];
 
 export type CreateCustomizationResponses = {
     /**
@@ -1606,6 +1747,10 @@ export type UpdateCustomizationData = {
 
 export type UpdateCustomizationErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1618,6 +1763,8 @@ export type UpdateCustomizationErrors = {
      */
     404: unknown;
 };
+
+export type UpdateCustomizationError = UpdateCustomizationErrors[keyof UpdateCustomizationErrors];
 
 export type UpdateCustomizationResponses = {
     /**
@@ -2148,3 +2295,143 @@ export type GetBranchOverridesResponses = {
 };
 
 export type GetBranchOverridesResponse = GetBranchOverridesResponses[keyof GetBranchOverridesResponses];
+
+export type GetTalabatData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat';
+};
+
+export type GetTalabatErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetTalabatResponses = {
+    /**
+     * OK
+     */
+    200: TalabatStatusView;
+};
+
+export type GetTalabatResponse = GetTalabatResponses[keyof GetTalabatResponses];
+
+export type SaveTalabatData = {
+    body: TalabatSettingsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat';
+};
+
+export type SaveTalabatErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveTalabatError = SaveTalabatErrors[keyof SaveTalabatErrors];
+
+export type SaveTalabatResponses = {
+    /**
+     * OK
+     */
+    200: TalabatStatusView;
+};
+
+export type SaveTalabatResponse = SaveTalabatResponses[keyof SaveTalabatResponses];
+
+export type PushTalabatMenuData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat/push';
+};
+
+export type PushTalabatMenuErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: string;
+};
+
+export type PushTalabatMenuError = PushTalabatMenuErrors[keyof PushTalabatMenuErrors];
+
+export type PushTalabatMenuResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type PreviewTalabatMenuData = {
+    body?: never;
+    path: {
+        branchId: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/talabat/preview/{branchId}';
+};
+
+export type PreviewTalabatMenuErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type PreviewTalabatMenuResponses = {
+    /**
+     * OK
+     */
+    200: JsonObject;
+};
+
+export type PreviewTalabatMenuResponse = PreviewTalabatMenuResponses[keyof PreviewTalabatMenuResponses];

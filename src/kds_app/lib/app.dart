@@ -178,7 +178,7 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
         );
 
     return MaterialApp.router(
-      title: ref.watch(brandProvider).name.en.isEmpty ? 'Kitchen' : '${ref.watch(brandProvider).name.en} Kitchen',
+      title: ref.watch(brandProvider).name.isEmpty ? 'Kitchen' : '${ref.watch(brandProvider).name.primary} Kitchen',
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

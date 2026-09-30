@@ -239,7 +239,7 @@ export function SubscriptionTab({ tenant }: { tenant: TenantDetail }) {
         open={dialog === 'suspend'}
         onOpenChange={(v) => setDialog(v ? 'suspend' : null)}
         isPending={suspend.isPending}
-        name={tenant.nameEn}
+        name={tenant.nameEn || tenant.nameAr || tenant.slug}
         onConfirm={() => suspend.mutate({ path: { slug } })}
       />
     </div>

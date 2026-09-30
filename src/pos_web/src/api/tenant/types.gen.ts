@@ -43,7 +43,7 @@ export type CreateBranchRequest = {
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -57,6 +57,7 @@ export type ProblemDetails = {
 
 export type TenantAuth = {
     authority: string;
+    social?: null | Array<TenantSocialProvider>;
 };
 
 export type TenantFeatures = {
@@ -120,6 +121,11 @@ export type TenantResponse = {
     assistant?: null | AssistantDto;
 };
 
+export type TenantSocialProvider = {
+    provider: string;
+    hint: string;
+};
+
 export type TenantThemeDarkDto = {
     primary: null | string;
     accent: null | string;
@@ -137,6 +143,7 @@ export type TenantThemeDto = {
     mode?: null | string;
     style?: null | string;
     layout?: null | TenantLayoutDto;
+    slab?: null | string;
 };
 
 export type TenantWordmark = {
@@ -209,6 +216,10 @@ export type CreateBranchData = {
 
 export type CreateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -217,6 +228,8 @@ export type CreateBranchErrors = {
      */
     403: unknown;
 };
+
+export type CreateBranchError = CreateBranchErrors[keyof CreateBranchErrors];
 
 export type CreateBranchResponses = {
     /**
@@ -268,6 +281,10 @@ export type UpdateBranchData = {
 
 export type UpdateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -280,6 +297,8 @@ export type UpdateBranchErrors = {
      */
     404: unknown;
 };
+
+export type UpdateBranchError = UpdateBranchErrors[keyof UpdateBranchErrors];
 
 export type UpdateBranchResponses = {
     /**
@@ -553,6 +572,20 @@ export type GetTenantIconErrors = {
      * Not Found
      */
     404: unknown;
+};
+
+export type GetTenantLoginCssData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/login.css';
+};
+
+export type GetTenantLoginCssResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTenantManifestData = {

@@ -341,7 +341,8 @@ export function Stock() {
                                 <div className='text-muted-foreground text-xs tabular-nums'>
                                   {t('approxPacks', {
                                     packs,
-                                    packName: level.packName || t('pack'),
+                                    packName:
+                                      localized(level.packName) || t('pack'),
                                   })}
                                 </div>
                               )}

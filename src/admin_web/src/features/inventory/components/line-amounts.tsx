@@ -1,4 +1,5 @@
-import { useT } from '@/lib/i18n'
+import { type LocalizedText } from '@/api/inventory'
+import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -109,15 +110,16 @@ export function PackHint({
   line: Amounts
   unit: string
   packSize: number
-  packName: string | null | undefined
+  packName: LocalizedText | null | undefined
 }) {
   const t = useT()
+  const localized = useLocalized()
   if (!(packSize > 0)) return null
   return (
     <p className='text-muted-foreground text-xs'>
       ×{' '}
       {t('packOf', {
-        packName: packName || t('pack'),
+        packName: localized(packName) || t('pack'),
         packSize,
         unit: unitLabel(unit, t),
       })}

@@ -32,6 +32,7 @@ export type BasketItemCustomization = {
 
 export type CancelOrderCommand = {
     orderNumber: number | string;
+    platformReason?: null | string;
 };
 
 export type ClaimGuestOrdersRequest = {
@@ -111,6 +112,7 @@ export type KitchenOrder = {
     confirmedAt?: null | string;
     readyAt?: null | string;
     source?: string;
+    platform?: null | PlatformOrderView;
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
@@ -187,7 +189,7 @@ export type KitchenTicket = {
 };
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -201,6 +203,7 @@ export type Order = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    platform?: null | PlatformOrderView;
     customerNote?: null | string;
     guestName?: null | string;
     guestPhone?: null | string;
@@ -288,6 +291,7 @@ export type OrderSummary = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    platform?: null | PlatformOrderView;
     userName?: null | string;
     userId?: null | string;
     guestPhone?: null | string;
@@ -321,6 +325,21 @@ export type PaginatedResultOfOrderSummary = {
 export type PairConnectorRequest = {
     code: null | string;
     machineName: null | string;
+};
+
+export type PlatformOrderView = {
+    name?: string;
+    code?: string;
+    shortCode?: null | string;
+    expedition?: string;
+    riderPickupAt?: null | string;
+    dueAt?: null | string;
+    deliveryAddress?: null | string;
+    paidOnline?: boolean;
+    collectFromCustomer?: null | number | string;
+    rejectReason?: null | string;
+    cancelledAt?: null | string;
+    pickedUpAt?: null | string;
 };
 
 export type PosOrderRequest = {

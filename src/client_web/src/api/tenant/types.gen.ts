@@ -43,7 +43,7 @@ export type CreateBranchRequest = {
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -216,6 +216,10 @@ export type CreateBranchData = {
 
 export type CreateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -224,6 +228,8 @@ export type CreateBranchErrors = {
      */
     403: unknown;
 };
+
+export type CreateBranchError = CreateBranchErrors[keyof CreateBranchErrors];
 
 export type CreateBranchResponses = {
     /**
@@ -275,6 +281,10 @@ export type UpdateBranchData = {
 
 export type UpdateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -287,6 +297,8 @@ export type UpdateBranchErrors = {
      */
     404: unknown;
 };
+
+export type UpdateBranchError = UpdateBranchErrors[keyof UpdateBranchErrors];
 
 export type UpdateBranchResponses = {
     /**

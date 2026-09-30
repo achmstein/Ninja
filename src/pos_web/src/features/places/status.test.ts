@@ -91,7 +91,7 @@ describe('the tariff', () => {
 
   it('reads as one line: the rate alone, or every rate named', () => {
     const money = (value: number | string | undefined) => `${Number(value ?? 0)} EGP`
-    const localized = (text: { en?: string } | null | undefined) => text?.en ?? ''
+    const localized = (text: { en?: string | null } | null | undefined) => text?.en ?? ''
     expect(tariffLine(tariff, money, localized)).toBe('Single 40 EGP · Multi 60 EGP')
     expect(tariffLine({ roundingMinutes: 15, options: [tariff.options![0]] }, money, localized)).toBe('40 EGP')
     expect(tariffLine(null, money, localized)).toBe('')

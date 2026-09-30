@@ -233,7 +233,7 @@ export const deleteItemPicture = <ThrowOnError extends boolean = false>(options:
 /**
  * Get menu item picture
  *
- * Get the picture for a menu item
+ * Get the picture for a menu item; with w (160, 320, 640 or 1280) a copy that wide, for lists and cards
  */
 export const getItemPicture = <ThrowOnError extends boolean = false>(options: Options<GetItemPictureData, ThrowOnError>): RequestResult<GetItemPictureResponses, GetItemPictureErrors, ThrowOnError> => (options.client ?? client).get<GetItemPictureResponses, GetItemPictureErrors, ThrowOnError>({
     responseType: 'blob',

@@ -4,6 +4,13 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AssistantDto = {
+    tone: null | string;
+    manner: null | string;
+    language: null | string;
+    notes: null | string;
+};
+
 export type BranchResponse = {
     id: number | string;
     name: LocalizedText;
@@ -36,7 +43,7 @@ export type CreateBranchRequest = {
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -50,6 +57,7 @@ export type ProblemDetails = {
 
 export type TenantAuth = {
     authority: string;
+    social?: null | Array<TenantSocialProvider>;
 };
 
 export type TenantFeatures = {
@@ -110,6 +118,12 @@ export type TenantResponse = {
     businessType?: null | string;
     guestOrdersAnywhere?: boolean;
     cover?: null | TenantWordmark;
+    assistant?: null | AssistantDto;
+};
+
+export type TenantSocialProvider = {
+    provider: string;
+    hint: string;
 };
 
 export type TenantThemeDarkDto = {
@@ -129,6 +143,7 @@ export type TenantThemeDto = {
     mode?: null | string;
     style?: null | string;
     layout?: null | TenantLayoutDto;
+    slab?: null | string;
 };
 
 export type TenantWordmark = {
@@ -201,6 +216,10 @@ export type CreateBranchData = {
 
 export type CreateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -209,6 +228,8 @@ export type CreateBranchErrors = {
      */
     403: unknown;
 };
+
+export type CreateBranchError = CreateBranchErrors[keyof CreateBranchErrors];
 
 export type CreateBranchResponses = {
     /**
@@ -260,6 +281,10 @@ export type UpdateBranchData = {
 
 export type UpdateBranchErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -272,6 +297,8 @@ export type UpdateBranchErrors = {
      */
     404: unknown;
 };
+
+export type UpdateBranchError = UpdateBranchErrors[keyof UpdateBranchErrors];
 
 export type UpdateBranchResponses = {
     /**
@@ -366,6 +393,39 @@ export type UpdateTenantResponses = {
 };
 
 export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
+
+export type SetTenantAssistantData = {
+    body: AssistantDto;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/assistant';
+};
+
+export type SetTenantAssistantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetTenantAssistantError = SetTenantAssistantErrors[keyof SetTenantAssistantErrors];
+
+export type SetTenantAssistantResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type SetTenantAssistantResponse = SetTenantAssistantResponses[keyof SetTenantAssistantResponses];
 
 export type SetTenantEntitlementsData = {
     body: TenantFeatures;
@@ -512,6 +572,20 @@ export type GetTenantIconErrors = {
      * Not Found
      */
     404: unknown;
+};
+
+export type GetTenantLoginCssData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/login.css';
+};
+
+export type GetTenantLoginCssResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type GetTenantManifestData = {

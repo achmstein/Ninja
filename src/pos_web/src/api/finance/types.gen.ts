@@ -83,7 +83,7 @@ export type FinanceSource = number;
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 

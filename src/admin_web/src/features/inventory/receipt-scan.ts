@@ -4,6 +4,11 @@ import {
   type StockItemView,
 } from '@/api/inventory'
 import { toNumber } from '@/lib/money'
+import {
+  isBlank,
+  toLocalizedValue,
+  type LocalizedValue,
+} from '@/components/localized-input'
 import { type Line, money, newLine, perUnit } from './lines'
 
 /**
@@ -18,11 +23,10 @@ export type ReviewLine = {
   stockItemId: string | null
   /** When set the line creates this item on confirm instead of matching one */
   newItem: {
-    nameEn: string
-    nameAr: string
+    name: LocalizedValue
     unit: string
     packSize: string
-    packName: string
+    packName: LocalizedValue
   } | null
   quantity: string
   packs: string
@@ -47,14 +51,13 @@ export function toReviewLines(proposal: ReceiptProposal): ReviewLine[] {
       newItem:
         line.stockItemId == null && line.newItem
           ? {
-              nameEn: line.newItem.name.en ?? '',
-              nameAr: line.newItem.name.ar ?? '',
+              name: toLocalizedValue(line.newItem.name),
               unit: line.newItem.unit,
               packSize:
                 line.newItem.packSize != null
                   ? String(toNumber(line.newItem.packSize))
                   : '',
-              packName: line.newItem.packName ?? '',
+              packName: toLocalizedValue(line.newItem.packName),
             }
           : null,
       quantity: quantity > 0 ? String(quantity) : '',
@@ -81,7 +84,8 @@ export function confidenceLevel(
 
 /** A review line is ready when it has (or will have) an item and a quantity */
 export function isReviewLineReady(line: ReviewLine): boolean {
-  const hasItem = !!line.stockItemId || !!line.newItem?.nameEn.trim()
+  const hasItem =
+    !!line.stockItemId || (!!line.newItem && !isBlank(line.newItem.name))
   return hasItem && parseFloat(line.quantity) > 0 && line.unitCost !== ''
 }
 

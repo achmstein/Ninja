@@ -83,7 +83,7 @@ export type BrandLocale = {
 };
 
 export type BrandText = {
-    en: string;
+    en: null | string;
     ar: null | string;
 };
 
@@ -159,7 +159,7 @@ export type ConvertRequest = {
 };
 
 export type CreateTenantRequest = {
-    nameEn: string;
+    nameEn: null | string;
     nameAr: null | string;
     ownerEmail: string;
     kind?: TenantKind;
@@ -413,7 +413,7 @@ export type SubscriptionStatus = 'Trialing' | 'Active' | 'PastDue' | 'Suspended'
 
 export type TenantDetail = {
     slug: string;
-    nameEn: string;
+    nameEn: null | string;
     nameAr: null | string;
     kind: TenantKind;
     status: TenantStatus;
@@ -518,7 +518,7 @@ export type TenantSubscriptionDto = {
 
 export type TenantSummary = {
     slug: string;
-    nameEn: string;
+    nameEn: null | string;
     nameAr: null | string;
     kind: TenantKind;
     status: TenantStatus;
@@ -594,7 +594,7 @@ export type UpdateSubscriptionRequest = {
 };
 
 export type UpdateTenantRequest = {
-    nameEn: string;
+    nameEn: null | string;
     nameAr: null | string;
     primaryColor: null | string;
     customerDomain: null | string;

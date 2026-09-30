@@ -137,7 +137,7 @@ export type JsonObject = {
 };
 
 export type LocalizedText = {
-    en?: string;
+    en?: null | string;
     ar?: null | string;
 };
 
@@ -986,6 +986,10 @@ export type UpdateItemData = {
 
 export type UpdateItemErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1101,6 +1105,10 @@ export type GetItemPictureData = {
         id: number;
     };
     query?: {
+        /**
+         * A narrower copy: 160, 320, 640 or 1280 px wide
+         */
+        w?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -1286,6 +1294,10 @@ export type CreateCategoryData = {
 
 export type CreateCategoryErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1294,6 +1306,8 @@ export type CreateCategoryErrors = {
      */
     403: unknown;
 };
+
+export type CreateCategoryError = CreateCategoryErrors[keyof CreateCategoryErrors];
 
 export type CreateCategoryResponses = {
     /**
@@ -1433,6 +1447,10 @@ export type UpdateCategoryData = {
 
 export type UpdateCategoryErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1445,6 +1463,8 @@ export type UpdateCategoryErrors = {
      */
     404: unknown;
 };
+
+export type UpdateCategoryError = UpdateCategoryErrors[keyof UpdateCategoryErrors];
 
 export type UpdateCategoryResponses = {
     /**
@@ -1631,6 +1651,10 @@ export type CreateCustomizationData = {
 
 export type CreateCustomizationErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1643,6 +1667,8 @@ export type CreateCustomizationErrors = {
      */
     404: unknown;
 };
+
+export type CreateCustomizationError = CreateCustomizationErrors[keyof CreateCustomizationErrors];
 
 export type CreateCustomizationResponses = {
     /**
@@ -1721,6 +1747,10 @@ export type UpdateCustomizationData = {
 
 export type UpdateCustomizationErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1733,6 +1763,8 @@ export type UpdateCustomizationErrors = {
      */
     404: unknown;
 };
+
+export type UpdateCustomizationError = UpdateCustomizationErrors[keyof UpdateCustomizationErrors];
 
 export type UpdateCustomizationResponses = {
     /**

@@ -86,6 +86,17 @@ describe('menu review', () => {
     expect(isReviewItemReady(latte)).toBe(false)
   })
 
+  it('an item named in Arabic only is ready; one named in neither is not', () => {
+    const [latte] = toReviewCategories(proposal)[0].items
+    latte.name = { en: '', ar: 'لاتيه' }
+    latte.choice = null
+    latte.price = '45'
+    expect(isReviewItemReady(latte)).toBe(true)
+
+    latte.name = { en: ' ', ar: '' }
+    expect(isReviewItemReady(latte)).toBe(false)
+  })
+
   it('a section the assistant could not match starts as a new category', () => {
     expect(toReviewCategories(proposal)[1].catalogTypeId).toBe(NEW_CATEGORY)
   })

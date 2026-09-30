@@ -5,7 +5,7 @@ import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
 import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, createPromo, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
 
 /**
  * Fill in what a menu text is missing
@@ -383,7 +383,7 @@ export const getItemPictureQueryKey = (options: Options<GetItemPictureData>) => 
 /**
  * Get menu item picture
  *
- * Get the picture for a menu item
+ * Get the picture for a menu item; with w (160, 320, 640 or 1280) a copy that wide, for lists and cards
  */
 export const getItemPictureOptions = (options: Options<GetItemPictureData>) => queryOptions<GetItemPictureResponse, AxiosError<DefaultError>, GetItemPictureResponse, ReturnType<typeof getItemPictureQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -482,8 +482,8 @@ export const listCategoriesOptions = (options?: Options<ListCategoriesData>) => 
  *
  * Create a new menu category (Admin only)
  */
-export const createCategoryMutation = (options?: Partial<Options<CreateCategoryData>>): UseMutationOptions<CreateCategoryResponse, AxiosError<DefaultError>, Options<CreateCategoryData>> => {
-    const mutationOptions: UseMutationOptions<CreateCategoryResponse, AxiosError<DefaultError>, Options<CreateCategoryData>> = {
+export const createCategoryMutation = (options?: Partial<Options<CreateCategoryData>>): UseMutationOptions<CreateCategoryResponse, AxiosError<CreateCategoryError>, Options<CreateCategoryData>> => {
+    const mutationOptions: UseMutationOptions<CreateCategoryResponse, AxiosError<CreateCategoryError>, Options<CreateCategoryData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createCategory({
                 ...options,
@@ -559,8 +559,8 @@ export const getCategoryOptions = (options: Options<GetCategoryData>) => queryOp
  *
  * Update an existing menu category (Admin only)
  */
-export const updateCategoryMutation = (options?: Partial<Options<UpdateCategoryData>>): UseMutationOptions<UpdateCategoryResponse, AxiosError<DefaultError>, Options<UpdateCategoryData>> => {
-    const mutationOptions: UseMutationOptions<UpdateCategoryResponse, AxiosError<DefaultError>, Options<UpdateCategoryData>> = {
+export const updateCategoryMutation = (options?: Partial<Options<UpdateCategoryData>>): UseMutationOptions<UpdateCategoryResponse, AxiosError<UpdateCategoryError>, Options<UpdateCategoryData>> => {
+    const mutationOptions: UseMutationOptions<UpdateCategoryResponse, AxiosError<UpdateCategoryError>, Options<UpdateCategoryData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateCategory({
                 ...options,
@@ -655,8 +655,8 @@ export const getItemCustomizationsOptions = (options: Options<GetItemCustomizati
  *
  * Create a new customization group for a menu item (Admin only)
  */
-export const createCustomizationMutation = (options?: Partial<Options<CreateCustomizationData>>): UseMutationOptions<CreateCustomizationResponse, AxiosError<DefaultError>, Options<CreateCustomizationData>> => {
-    const mutationOptions: UseMutationOptions<CreateCustomizationResponse, AxiosError<DefaultError>, Options<CreateCustomizationData>> = {
+export const createCustomizationMutation = (options?: Partial<Options<CreateCustomizationData>>): UseMutationOptions<CreateCustomizationResponse, AxiosError<CreateCustomizationError>, Options<CreateCustomizationData>> => {
+    const mutationOptions: UseMutationOptions<CreateCustomizationResponse, AxiosError<CreateCustomizationError>, Options<CreateCustomizationData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createCustomization({
                 ...options,
@@ -693,8 +693,8 @@ export const deleteCustomizationMutation = (options?: Partial<Options<DeleteCust
  *
  * Update a customization group (Admin only)
  */
-export const updateCustomizationMutation = (options?: Partial<Options<UpdateCustomizationData>>): UseMutationOptions<UpdateCustomizationResponse, AxiosError<DefaultError>, Options<UpdateCustomizationData>> => {
-    const mutationOptions: UseMutationOptions<UpdateCustomizationResponse, AxiosError<DefaultError>, Options<UpdateCustomizationData>> = {
+export const updateCustomizationMutation = (options?: Partial<Options<UpdateCustomizationData>>): UseMutationOptions<UpdateCustomizationResponse, AxiosError<UpdateCustomizationError>, Options<UpdateCustomizationData>> => {
+    const mutationOptions: UseMutationOptions<UpdateCustomizationResponse, AxiosError<UpdateCustomizationError>, Options<UpdateCustomizationData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateCustomization({
                 ...options,

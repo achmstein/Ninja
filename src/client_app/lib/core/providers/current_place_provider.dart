@@ -72,7 +72,7 @@ CurrentPlace? _decode(String? raw) {
       id: json['id'] as int,
       kind: PlaceKind.fromValue(json['kind'] as int?),
       name: LocalizedText(
-        en: json['nameEn'] as String? ?? '',
+        en: json['nameEn'] as String?,
         ar: json['nameAr'] as String?,
       ),
       branchId: json['branchId'] as int? ?? 1,

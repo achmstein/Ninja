@@ -34,6 +34,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
+  isBlank,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
@@ -661,11 +662,11 @@ function GroupEditor({
   }
 
   const handleSubmit = async () => {
-    if (!name.en.trim()) {
-      setError(t('englishNameRequired'))
+    if (isBlank(name)) {
+      setError(t('nameIsRequired'))
       return
     }
-    if (!options.some((option) => option.name.en.trim())) {
+    if (!options.some((option) => !isBlank(option.name))) {
       setError(t('optionRequired'))
       return
     }

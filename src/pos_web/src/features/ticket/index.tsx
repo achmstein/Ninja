@@ -94,6 +94,7 @@ function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
       line.description?.en ?? '',
       line.description?.ar ?? '',
       line.details?.en ?? '',
+      line.details?.ar ?? '',
       line.unitPrice,
       line.discount,
     ])

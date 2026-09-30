@@ -15,7 +15,7 @@ export type Lang = 'en' | 'ar'
 /** Both languages as plain strings, the shape a form keeps in state */
 export type LocalizedValue = { en: string; ar: string }
 
-type LocalizedText = { en: string; ar?: string | null }
+type LocalizedText = { en?: string | null; ar?: string | null }
 
 /** From the API's nullable pair to form state */
 export function toLocalizedValue(
@@ -24,12 +24,17 @@ export function toLocalizedValue(
   return { en: text?.en ?? '', ar: text?.ar ?? '' }
 }
 
-/** Back to the API's shape: trimmed, an empty Arabic becomes null */
+/** Back to the API's shape: trimmed, an empty side becomes null; a café may go by one language */
 export function fromLocalizedValue(value: LocalizedValue): {
-  en: string
+  en: string | null
   ar: string | null
 } {
-  return { en: value.en.trim(), ar: value.ar.trim() || null }
+  return { en: value.en.trim() || null, ar: value.ar.trim() || null }
+}
+
+/** Neither language is written: what a required name refuses */
+export function isBlank(value: LocalizedValue): boolean {
+  return value.en.trim() === '' && value.ar.trim() === ''
 }
 
 const LangContext = createContext<{

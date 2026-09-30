@@ -1,27 +1,28 @@
 import 'package:flutter/widgets.dart';
 
-/// Value object for text that supports multiple languages.
-/// Used for content that needs to be displayed in both English and Arabic.
+/// Text the café writes in its own languages: English, Arabic or both.
+/// A café that works in one language fills only that side and the other is
+/// null, so each side means what its name says. Reading answers in the asked
+/// language and falls back to the other one; an empty side counts as missing.
 class LocalizedText {
-  /// English text (default)
-  final String en;
+  /// English text; null when the café writes this in Arabic only
+  final String? en;
 
-  /// Arabic text
+  /// Arabic text; null when the café writes this in English only
   final String? ar;
 
-  const LocalizedText({required this.en, this.ar});
+  const LocalizedText({this.en, this.ar});
 
-  /// Create from JSON map
+  /// Create from JSON map; a blank side is null
   factory LocalizedText.fromJson(Map<String, dynamic> json) {
-    return LocalizedText(
-      en: json['en'] as String? ?? '',
-      ar: json['ar'] as String?,
-    );
+    return LocalizedText(en: _clean(json['en']), ar: _clean(json['ar']));
   }
 
-  /// Create from a simple string (English only)
+  /// A text whose language nobody said (a raw name, a till account): Arabic
+  /// script goes to [ar], anything else to [en]
   factory LocalizedText.fromString(String text) {
-    return LocalizedText(en: text);
+    final clean = _clean(text);
+    return _hasArabic(clean) ? LocalizedText(ar: clean) : LocalizedText(en: clean);
   }
 
   /// Parse from dynamic value - handles both string and object formats
@@ -31,7 +32,7 @@ class LocalizedText {
     } else if (value is Map<String, dynamic>) {
       return LocalizedText.fromJson(value);
     }
-    return LocalizedText(en: value?.toString() ?? '');
+    return LocalizedText.fromString(value?.toString() ?? '');
   }
 
   /// Parse nullable value
@@ -40,21 +41,30 @@ class LocalizedText {
     return parse(value);
   }
 
-  /// Convert to JSON map
+  /// Convert to JSON map; a missing side is left out
   Map<String, dynamic> toJson() {
     return {
-      'en': en,
-      if (ar != null) 'ar': ar,
+      if (_clean(en) != null) 'en': _clean(en),
+      if (_clean(ar) != null) 'ar': _clean(ar),
     };
   }
 
-  /// Get the text for the specified locale.
-  /// Falls back to English if the requested language is not available.
-  String getText(Locale locale) {
-    if (locale.languageCode == 'ar' && ar != null) {
-      return ar!;
-    }
-    return en;
+  /// Neither language is written
+  bool get isEmpty => _clean(en) == null && _clean(ar) == null;
+
+  /// English when there is English, else the Arabic; '' when empty. For keys,
+  /// logs and ordering.
+  String get primary => _clean(en) ?? _clean(ar) ?? '';
+
+  /// The text in the locale's language, else in the other one; '' when empty.
+  String getText(Locale locale) => inLanguage(locale.languageCode);
+
+  /// The text in [languageCode] ('ar', 'en'), else in the other one; '' when empty.
+  String inLanguage(String languageCode) {
+    final english = _clean(en);
+    final arabic = _clean(ar);
+    if (languageCode == 'ar') return arabic ?? english ?? '';
+    return english ?? arabic ?? '';
   }
 
   /// Get text based on the current locale from context
@@ -63,8 +73,23 @@ class LocalizedText {
     return getText(locale);
   }
 
+  /// True when either language contains [query], ignoring case.
+  bool contains(String query) {
+    final q = query.toLowerCase();
+    return (en?.toLowerCase().contains(q) ?? false) || (ar?.toLowerCase().contains(q) ?? false);
+  }
+
+  static String? _clean(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static bool _hasArabic(String? text) =>
+      text != null && RegExp(r'[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]').hasMatch(text);
+
   @override
-  String toString() => en;
+  String toString() => primary;
 
   @override
   bool operator ==(Object other) {
@@ -73,7 +98,7 @@ class LocalizedText {
   }
 
   @override
-  int get hashCode => en.hashCode ^ (ar?.hashCode ?? 0);
+  int get hashCode => (en?.hashCode ?? 0) ^ (ar?.hashCode ?? 0);
 }
 
 /// Extension to easily get localized text from context

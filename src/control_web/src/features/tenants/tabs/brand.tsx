@@ -18,6 +18,7 @@ import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from
 import { FontOptions } from '@/components/brand/font-options'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedInput,
   toLocalizedValue,
 } from '@/components/localized-input'
@@ -129,7 +130,7 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
           />
           <PhonePreview
             draft={{
-              name: { en: tenant.nameEn, ar: tenant.nameAr ?? '' },
+              name: { en: tenant.nameEn ?? '', ar: tenant.nameAr ?? '' },
               primaryColor: tenant.primaryColor,
               theme: null,
               images: imagesFromUrls({}),
@@ -275,7 +276,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
 
   const colorOk = (v: string) => v === '' || isHexColor(v)
   const canSubmit =
-    name.en.trim().length > 0 &&
+    !isBlank(name) &&
     [primary, accent, surface, darkPrimary, darkAccent, darkSurface].every(colorOk) &&
     !save.isPending
 

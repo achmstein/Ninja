@@ -3,7 +3,7 @@ import { AlertTriangle, Sparkles } from 'lucide-react'
 import { type SupplierView } from '@/api/finance'
 import { type ReceiptProposal, type StockItemView } from '@/api/inventory'
 import { bestMatch } from '@/lib/fuzzy'
-import { useLocalized, useT } from '@/lib/i18n'
+import { bilingual, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -30,7 +30,14 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
-import { LocalizedInput } from '@/components/localized-input'
+import {
+  fromLocalizedValue,
+  inScriptOf,
+  isBlank,
+  LocalizedFields,
+  LocalizedInput,
+  toLocalizedValue,
+} from '@/components/localized-input'
 import { UNITS, unitLabel } from '../format'
 import { type Amounts, type Line, reprice } from '../lines'
 import { toStockItemOptions } from '../queries'
@@ -76,6 +83,7 @@ export function ReceiptReviewSheet({
   onConfirm,
 }: ReceiptReviewSheetProps) {
   const t = useT()
+  const localized = useLocalized()
   const { createItem } = useInventoryActions()
   const itemById = new Map(items.map((item) => [String(item.id), item]))
   const lastCosts = useLastCosts()
@@ -143,12 +151,12 @@ export function ReceiptReviewSheet({
         const draft = line.newItem!
         const packSize = parseFloat(draft.packSize)
         const created = await createItem({
-          name: { en: draft.nameEn.trim(), ar: draft.nameAr.trim() || null },
+          name: fromLocalizedValue(draft.name),
           unit: draft.unit,
           packSize: packSize > 0 ? packSize : null,
           packName:
-            packSize > 0 && draft.packName.trim()
-              ? draft.packName.trim()
+            packSize > 0 && !isBlank(draft.packName)
+              ? fromLocalizedValue(draft.packName)
               : null,
           autoSoldOut: false,
         })
@@ -161,7 +169,9 @@ export function ReceiptReviewSheet({
         })
         setCreating({ done: index + 1, total: toCreate.length })
         toast.success(
-          t('itemCreatedFromReceipt', { name: draft.nameEn.trim() })
+          t('itemCreatedFromReceipt', {
+            name: localized(fromLocalizedValue(draft.name)),
+          })
         )
       }
     } catch {
@@ -411,10 +421,10 @@ function ReviewLineCard({
                       : {
                           stockItemId: null,
                           newItem: {
-                            nameEn:
-                              line.proposal.newItem?.name.en ??
-                              line.proposal.rawText,
-                            nameAr: line.proposal.newItem?.name.ar ?? '',
+                            // Nothing read: the line's own text, on the side of its script
+                            name: line.proposal.newItem
+                              ? toLocalizedValue(line.proposal.newItem.name)
+                              : inScriptOf(line.proposal.rawText),
                             unit: line.proposal.newItem?.unit ?? 'pcs',
                             packSize:
                               line.proposal.newItem?.packSize != null
@@ -422,7 +432,9 @@ function ReviewLineCard({
                                     toNumber(line.proposal.newItem.packSize)
                                   )
                                 : '',
-                            packName: line.proposal.newItem?.packName ?? '',
+                            packName: toLocalizedValue(
+                              line.proposal.newItem?.packName
+                            ),
                           },
                         }
                   )
@@ -485,7 +497,10 @@ function ReviewLineCard({
                 line={line}
                 unit={unit}
                 packSize={packSize}
-                packName={item?.packName ?? line.newItem?.packName}
+                packName={
+                  item?.packName ??
+                  (line.newItem && fromLocalizedValue(line.newItem.packName))
+                }
               />
               <CostHint line={line} unit={unit} lastCost={lastCost} />
             </>
@@ -508,44 +523,47 @@ function NewItemFields({
   const set = (patch: Partial<typeof draft>) => onChange({ ...draft, ...patch })
 
   return (
-    <div className='bg-muted/40 space-y-2 rounded-lg border p-2'>
-      <p className='text-muted-foreground text-xs'>{t('newItemName')}</p>
-      <LocalizedInput
-        ariaLabel={t('newItemName')}
-        value={{ en: draft.nameEn, ar: draft.nameAr }}
-        onChange={(value) => set({ nameEn: value.en, nameAr: value.ar })}
-        compact
-      />
-      <div className='grid grid-cols-3 gap-2'>
-        <Select value={draft.unit} onValueChange={(unit) => set({ unit })}>
-          <SelectTrigger aria-label={t('unit')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {UNITS.map((value) => (
-              <SelectItem key={value} value={value}>
-                {unitLabel(value, t)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type='number'
-          min='0'
-          step='any'
-          aria-label={t('packSize')}
-          placeholder={t('packSize')}
-          value={draft.packSize}
-          onChange={(e) => set({ packSize: e.target.value })}
+    <LocalizedFields>
+      <div className='bg-muted/40 space-y-2 rounded-lg border p-2'>
+        <p className='text-muted-foreground text-xs'>{t('newItemName')}</p>
+        <LocalizedInput
+          ariaLabel={t('newItemName')}
+          value={draft.name}
+          onChange={(name) => set({ name })}
+          compact
         />
-        <Input
-          aria-label={t('packName')}
-          placeholder={t('packName')}
+        <div className='grid grid-cols-2 gap-2'>
+          <Select value={draft.unit} onValueChange={(unit) => set({ unit })}>
+            <SelectTrigger aria-label={t('unit')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {UNITS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {unitLabel(value, t)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type='number'
+            min='0'
+            step='any'
+            aria-label={t('packSize')}
+            placeholder={t('packSize')}
+            value={draft.packSize}
+            onChange={(e) => set({ packSize: e.target.value })}
+          />
+        </div>
+        <LocalizedInput
+          ariaLabel={t('packName')}
+          placeholder={bilingual('packNameHint')}
           value={draft.packName}
           disabled={!draft.packSize}
-          onChange={(e) => set({ packName: e.target.value })}
+          onChange={(packName) => set({ packName })}
+          compact
         />
       </div>
-    </div>
+    </LocalizedFields>
   )
 }

@@ -6,6 +6,7 @@ import {
 import { toNumber } from '@/lib/money'
 import {
   fromLocalizedValue,
+  isBlank,
   type LocalizedValue,
   toLocalizedValue,
 } from '@/components/localized-input'
@@ -103,22 +104,20 @@ export function reviewItemPrice(item: ReviewItem): number | null {
   return isPrice(item.price) ? Number(item.price) : null
 }
 
-/** An English name and a price, and, with choices, each one named and priced */
+/** A name (in either language) and a price, and, with choices, each one named and priced */
 export function isReviewItemReady(item: ReviewItem): boolean {
-  if (item.name.en.trim() === '' || reviewItemPrice(item) == null) return false
+  if (isBlank(item.name) || reviewItemPrice(item) == null) return false
   if (!item.choice) return true
   return (
-    item.choice.name.en.trim() !== '' &&
+    !isBlank(item.choice.name) &&
     item.choice.options.length >= 2 &&
-    item.choice.options.every((o) => o.name.en.trim() !== '')
+    item.choice.options.every((o) => !isBlank(o.name))
   )
 }
 
-/** A ticked item is going somewhere: an existing category, or a new one with an English name */
+/** A ticked item is going somewhere: an existing category, or a new one with a name */
 export function isReviewCategoryReady(category: ReviewCategory): boolean {
-  return (
-    category.catalogTypeId !== NEW_CATEGORY || category.name.en.trim() !== ''
-  )
+  return category.catalogTypeId !== NEW_CATEGORY || !isBlank(category.name)
 }
 
 /** The ticked items as one import: every section that keeps an item, in order */

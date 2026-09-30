@@ -39,6 +39,7 @@ import { Main } from '@/components/layout/main'
 import {
   LocalizedInput,
   fromLocalizedValue,
+  isBlank,
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
@@ -222,7 +223,7 @@ function BrandForm({ brand }: { brand: Brand }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.en.trim()) {
+    if (isBlank(name)) {
       setError(t('nameRequired'))
       return
     }

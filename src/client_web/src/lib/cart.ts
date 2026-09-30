@@ -13,7 +13,8 @@ export type CartCustomization = {
 }
 
 // A snapshot of the item at add-to-cart time; the backend re-validates
-// everything when the order is created.
+// everything when the order is created. Names are as the café wrote them:
+// '' for a language it does not write in, never a copy of the other one.
 export type CartLine = {
   productId: number
   nameEn: string

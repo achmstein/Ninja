@@ -1,12 +1,15 @@
+import 'package:flutter/widgets.dart';
+
+import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 
 /// A snapshot of a chosen customization option at add-to-cart time
 class SaleCustomization {
   final int customizationId;
-  final String customizationNameEn;
+  final String? customizationNameEn;
   final String? customizationNameAr;
   final int optionId;
-  final String optionNameEn;
+  final String? optionNameEn;
   final String? optionNameAr;
   final double priceAdjustment;
 
@@ -20,6 +23,11 @@ class SaleCustomization {
     this.priceAdjustment = 0,
   });
 
+  /// Either language may be the only one the café writes
+  LocalizedText get customizationName => LocalizedText(en: customizationNameEn, ar: customizationNameAr);
+
+  LocalizedText get optionName => LocalizedText(en: optionNameEn, ar: optionNameAr);
+
   Map<String, dynamic> toJson() => {
         'customizationId': customizationId,
         'customizationNameEn': customizationNameEn,
@@ -32,11 +40,11 @@ class SaleCustomization {
 
   factory SaleCustomization.fromJson(Map<String, dynamic> json) => SaleCustomization(
         customizationId: toInt(json['customizationId']),
-        customizationNameEn: json['customizationNameEn'] as String? ?? '',
-        customizationNameAr: json['customizationNameAr'] as String?,
+        customizationNameEn: _text(json['customizationNameEn']),
+        customizationNameAr: _text(json['customizationNameAr']),
         optionId: toInt(json['optionId']),
-        optionNameEn: json['optionNameEn'] as String? ?? '',
-        optionNameAr: json['optionNameAr'] as String?,
+        optionNameEn: _text(json['optionNameEn']),
+        optionNameAr: _text(json['optionNameAr']),
         priceAdjustment: toNumber(json['priceAdjustment']),
       );
 }
@@ -45,8 +53,8 @@ class SaleCustomization {
 /// when the order is created. Ported from pos_web's `cart.ts`.
 class SaleLine {
   final int productId;
-  final String nameEn;
-  final String nameAr;
+  final String? nameEn;
+  final String? nameAr;
 
   /// Unit price including customization adjustments
   final double price;
@@ -74,6 +82,30 @@ class SaleLine {
 
   double get total => price * quantity;
 
+  /// The item's name as the café writes it: English, Arabic or both
+  LocalizedText get name => LocalizedText(en: nameEn, ar: nameAr);
+
+  /// The chosen options and the note, as Sales stores a line's details: a
+  /// language any option is written in gets the whole list (an option not
+  /// written in it read in the other); the note goes to both as typed
+  LocalizedText? get details {
+    String? join(Iterable<String?> parts) {
+      final text = parts.whereType<String>().where((s) => s.trim().isNotEmpty).join(', ');
+      return text.isEmpty ? null : text;
+    }
+
+    final options = [for (final c in customizations) c.optionName];
+    final note = specialInstructions;
+    final en = options.any((o) => o.en != null) || options.isEmpty
+        ? join([for (final o in options) o.getText(const Locale('en')), note])
+        : null;
+    final ar = options.any((o) => o.ar != null) || options.isEmpty
+        ? join([for (final o in options) o.getText(const Locale('ar')), note])
+        : null;
+    final text = LocalizedText(en: en, ar: ar);
+    return text.isEmpty ? null : text;
+  }
+
   SaleLine withQuantity(int quantity) => SaleLine(
         productId: productId,
         nameEn: nameEn,
@@ -98,8 +130,8 @@ class SaleLine {
 
   factory SaleLine.fromJson(Map<String, dynamic> json) => SaleLine(
         productId: toInt(json['productId']),
-        nameEn: json['nameEn'] as String? ?? '',
-        nameAr: json['nameAr'] as String? ?? '',
+        nameEn: _text(json['nameEn']),
+        nameAr: _text(json['nameAr']),
         price: toNumber(json['price']),
         pictureUrl: json['pictureUrl'] as String?,
         quantity: toInt(json['quantity']),
@@ -134,6 +166,9 @@ class SaleCustomer {
         addedAtCounter: json['addedAtCounter'] as bool? ?? false,
       );
 }
+
+/// A stored name: a blank side is no side
+String? _text(Object? value) => value is String && value.trim().isNotEmpty ? value : null;
 
 double saleTotal(List<SaleLine> lines) => lines.fold(0, (sum, l) => sum + l.total);
 

@@ -11,6 +11,7 @@ import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
 import { SocialField } from '@/components/brand/social-field'
 import {
   fromLocalizedValue,
+  isBlank,
   LocalizedInput,
   toLocalizedValue,
 } from '@/components/localized-input'
@@ -138,7 +139,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   })
 
   const colorOk = primaryColor === '' || isHexColor(primaryColor)
-  const canSubmit = name.en.trim().length > 0 && colorOk && !save.isPending
+  const canSubmit = !isBlank(name) && colorOk && !save.isPending
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()

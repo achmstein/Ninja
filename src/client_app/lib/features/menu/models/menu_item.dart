@@ -60,14 +60,8 @@ class MenuItem {
   }
 
   /// Parse LocalizedText from JSON - handles both object and separate fields
-  static LocalizedText _parseLocalizedText(dynamic value, [String? arValue]) {
-    if (value is Map<String, dynamic>) {
-      return LocalizedText.fromJson(value);
-    } else if (value is String) {
-      return LocalizedText(en: value, ar: arValue);
-    }
-    return LocalizedText(en: value?.toString() ?? '', ar: arValue);
-  }
+  static LocalizedText _parseLocalizedText(dynamic value, [String? arValue]) =>
+      LocalizedText.parse(value, arValue);
 }
 
 /// Customization group (e.g., "Roasting", "Sugar Level")

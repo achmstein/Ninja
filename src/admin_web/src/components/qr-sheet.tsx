@@ -114,8 +114,11 @@ export function QrSheet({
 
                 {/* Both languages on the card - staff and customers read either */}
                 <div className='leading-tight'>
-                  <div className='text-2xl font-bold'>{card.name?.en}</div>
-                  {card.name?.ar && (
+                  {/* A place named in one language shows that name once */}
+                  <div className='text-2xl font-bold'>
+                    {card.name?.en || card.name?.ar}
+                  </div>
+                  {card.name?.en && card.name?.ar && (
                     <div className='text-xl font-semibold' dir='rtl'>
                       {card.name.ar}
                     </div>
