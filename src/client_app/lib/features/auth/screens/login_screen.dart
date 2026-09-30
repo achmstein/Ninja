@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_mark.dart';
@@ -140,17 +140,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: FAlert(
-                      variant: FAlertVariant.destructive,
-                      icon: Icon(FIcons.circleAlert),
+                    child: NinjaAlert(
+                      variant: NinjaAlertVariant.destructive,
+                      icon: Icon(LucideIcons.circleAlert),
                       title: AppText(l10n.error),
                       subtitle: AppText(_error!),
                     ),
                   ),
 
                 // Email field
-                FTextField.email(
-                  control: FTextFieldControl.managed(controller: _emailController),
+                NinjaField.email(
+                  controller: _emailController,
                   label: AppText(l10n.email),
                   hint: l10n.enterEmail,
                   textInputAction: TextInputAction.next,
@@ -158,8 +158,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 // Password field
-                FTextField.password(
-                  control: FTextFieldControl.managed(controller: _passwordController),
+                NinjaField.password(
+                  controller: _passwordController,
                   label: AppText(l10n.password),
                   hint: l10n.enterPassword,
                   textInputAction: TextInputAction.done,
@@ -168,7 +168,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24),
 
                 // Sign in button
-                FButton(
+                NinjaButton(
                   onPress: _isLoading || _loadingProvider != null ? null : _handleSignIn,
                   child: _isLoading
                       ? const SizedBox(
@@ -216,8 +216,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     // Google button
                     if (google) Expanded(
-                      child: FButton(
-                        variant: FButtonVariant.outline,
+                      child: NinjaButton(
+                        variant: NinjaButtonVariant.outline,
                         onPress: _isLoading || _loadingProvider != null
                             ? null
                             : () => _handleSocialSignIn(SocialProvider.google),
@@ -254,8 +254,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (google && apple) const SizedBox(width: 12),
                     // Apple button
                     if (apple) Expanded(
-                      child: FButton(
-                        variant: FButtonVariant.outline,
+                      child: NinjaButton(
+                        variant: NinjaButtonVariant.outline,
                         onPress: _isLoading || _loadingProvider != null
                             ? null
                             : () => _handleSocialSignIn(SocialProvider.apple),

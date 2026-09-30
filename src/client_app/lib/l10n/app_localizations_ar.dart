@@ -1219,6 +1219,106 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notNow => 'مش دلوقتي';
+
+  @override
+  String get ninjaYourOrder => 'طلبك';
+
+  @override
+  String get ninjaOrder => 'اطلب';
+
+  @override
+  String get ninjaSending => 'بيتبعت';
+
+  @override
+  String get ninjaEmptyTray => 'طلبك فاضي. دوس على صنف تضيفه.';
+
+  @override
+  String ninjaRemoved(String name) {
+    return 'اتشال $name';
+  }
+
+  @override
+  String get ninjaUndo => 'رجّعه';
+
+  @override
+  String get ninjaRemove => 'شيله';
+
+  @override
+  String get ninjaLess => 'واحد أقل';
+
+  @override
+  String get ninjaMore => 'واحد كمان';
+
+  @override
+  String get ninjaAddNote => 'ضيف ملاحظة';
+
+  @override
+  String get ninjaUseAllPoints => 'استخدمهم كلهم';
+
+  @override
+  String ninjaPointsOf(String balance) {
+    return 'من $balance';
+  }
+
+  @override
+  String get ninjaBillOpen => 'حسابك';
+
+  @override
+  String get ninjaTableOpen => 'ترابيزتك';
+
+  @override
+  String get ninjaRoomOpen => 'أوضتك';
+
+  @override
+  String get orderStageSent => 'اتبعت';
+
+  @override
+  String get orderStageConfirmed => 'اتأكد';
+
+  @override
+  String get orderStageCancelled => 'اتلغى';
+
+  @override
+  String trayItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أصناف',
+      two: 'صنفين',
+      one: 'صنف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaSoldOut(String name) {
+    return '$name خلص دلوقتي';
+  }
+
+  @override
+  String ninjaAdded(String name) {
+    return 'اتضاف $name';
+  }
+
+  @override
+  String get ninjaWholeMenu => 'المنيو كله';
+
+  @override
+  String get ninjaBackToCards => 'ارجع للكروت';
+
+  @override
+  String get ninjaUpNext => 'اللي بعده';
+
+  @override
+  String get ninjaOptional => 'اختياري';
+
+  @override
+  String ninjaChoose(String name) {
+    return 'اختار $name';
+  }
+
+  @override
+  String get unavailable => 'غير متاح';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2106,4 +2206,84 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get notNow => 'ليس الآن';
+
+  @override
+  String get ninjaSending => 'جارٍ الإرسال';
+
+  @override
+  String get ninjaEmptyTray => 'طلبك فارغ. اضغط على صنف لإضافته.';
+
+  @override
+  String ninjaRemoved(String name) {
+    return 'تمت إزالة $name';
+  }
+
+  @override
+  String get ninjaUndo => 'تراجع';
+
+  @override
+  String get ninjaRemove => 'إزالة';
+
+  @override
+  String get ninjaMore => 'واحد إضافي';
+
+  @override
+  String get ninjaAddNote => 'أضف ملاحظة';
+
+  @override
+  String get ninjaUseAllPoints => 'استخدم الكل';
+
+  @override
+  String get ninjaBillOpen => 'فاتورتك';
+
+  @override
+  String get ninjaTableOpen => 'طاولتك';
+
+  @override
+  String get ninjaRoomOpen => 'غرفتك';
+
+  @override
+  String get orderStageSent => 'أُرسل';
+
+  @override
+  String get orderStageConfirmed => 'تم التأكيد';
+
+  @override
+  String get orderStageCancelled => 'أُلغي';
+
+  @override
+  String trayItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أصناف',
+      two: 'صنفان',
+      one: 'صنف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaSoldOut(String name) {
+    return 'نفد $name حاليًا';
+  }
+
+  @override
+  String ninjaAdded(String name) {
+    return 'تمت إضافة $name';
+  }
+
+  @override
+  String get ninjaWholeMenu => 'القائمة كاملة';
+
+  @override
+  String get ninjaBackToCards => 'العودة إلى البطاقات';
+
+  @override
+  String get ninjaUpNext => 'التالي';
+
+  @override
+  String ninjaChoose(String name) {
+    return 'اختر $name';
+  }
 }

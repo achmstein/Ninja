@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -52,7 +52,7 @@ class BalanceCard extends ConsumerWidget {
             Row(
               children: [
                 Icon(
-                  account.owesAmount ? FIcons.circleAlert : FIcons.check,
+                  account.owesAmount ? LucideIcons.circleAlert : LucideIcons.check,
                   color: Colors.white,
                   size: 20,
                 ),
@@ -67,7 +67,7 @@ class BalanceCard extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Icon(
-                  FIcons.chevronRight,
+                  LucideIcons.chevronRight,
                   color: Colors.white70,
                   size: 20,
                 ),

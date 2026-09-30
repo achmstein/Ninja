@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_mark.dart';
@@ -160,8 +160,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 if (_success != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: FAlert(
-                      icon: Icon(FIcons.check),
+                    child: NinjaAlert(
+                      icon: Icon(LucideIcons.check),
                       title: AppText(l10n.success),
                       subtitle: AppText(_success!),
                     ),
@@ -171,9 +171,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: FAlert(
-                      variant: FAlertVariant.destructive,
-                      icon: Icon(FIcons.circleAlert),
+                    child: NinjaAlert(
+                      variant: NinjaAlertVariant.destructive,
+                      icon: Icon(LucideIcons.circleAlert),
                       title: AppText(l10n.error),
                       subtitle: AppText(_error!),
                     ),
@@ -184,8 +184,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: FTextField(
-                        control: FTextFieldControl.managed(controller: _firstNameController),
+                      child: NinjaField(
+                        controller: _firstNameController,
                         label: AppText(l10n.firstName),
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
@@ -193,8 +193,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: FTextField(
-                        control: FTextFieldControl.managed(controller: _lastNameController),
+                      child: NinjaField(
+                        controller: _lastNameController,
                         label: AppText(l10n.lastName),
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
@@ -205,8 +205,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Email field
-                FTextField.email(
-                  control: FTextFieldControl.managed(controller: _emailController),
+                NinjaField.email(
+                  controller: _emailController,
                   label: AppText(l10n.email),
                   hint: l10n.enterEmail,
                   textInputAction: TextInputAction.next,
@@ -214,8 +214,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Phone field
-                FTextField(
-                  control: FTextFieldControl.managed(controller: _phoneController),
+                NinjaField(
+                  controller: _phoneController,
                   label: AppText(l10n.phoneNumber),
                   hint: l10n.enterPhoneNumber,
                   textInputAction: TextInputAction.next,
@@ -224,8 +224,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Password field
-                FTextField.password(
-                  control: FTextFieldControl.managed(controller: _passwordController),
+                NinjaField.password(
+                  controller: _passwordController,
                   label: AppText(l10n.password),
                   hint: l10n.createPassword,
                   textInputAction: TextInputAction.next,
@@ -233,8 +233,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Confirm password field
-                FTextField.password(
-                  control: FTextFieldControl.managed(controller: _confirmPasswordController),
+                NinjaField.password(
+                  controller: _confirmPasswordController,
                   label: AppText(l10n.confirmPassword),
                   hint: l10n.confirmYourPassword,
                   textInputAction: TextInputAction.done,
@@ -243,7 +243,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 24),
 
                 // Register button
-                FButton(
+                NinjaButton(
                   onPress: _isLoading ? null : _handleRegister,
                   child: _isLoading
                       ? const SizedBox(

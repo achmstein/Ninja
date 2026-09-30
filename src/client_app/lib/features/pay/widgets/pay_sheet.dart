@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
@@ -231,7 +231,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       opened = false;
     }
     if (!opened && mounted) {
-      showFToast(context: context, title: Text(l10n.payCouldNotOpen));
+      showIsland(context: context, title: Text(l10n.payCouldNotOpen));
     }
   }
 
@@ -299,7 +299,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       ref.invalidate(payViewProvider);
     } catch (e) {
       if (mounted) {
-        showFToast(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
+        showIsland(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
       }
     } finally {
       if (mounted) setState(() => _cancelling.remove(key));
@@ -349,7 +349,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       await _load();
     } catch (e) {
       if (!mounted) return;
-      showFToast(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
+      showIsland(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
       // It may have gone through meanwhile: say how it stands
       _pollStatus();
     } finally {
@@ -415,7 +415,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
           children: [
             _Title(title: l10n.payTheBill),
             const SizedBox(height: 32),
-            Icon(_nothingOpen ? FIcons.receipt : FIcons.circleAlert, size: 48, color: colors.mutedForeground),
+            Icon(_nothingOpen ? LucideIcons.receipt : LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
             const SizedBox(height: 12),
             AppText(
               _nothingOpen ? l10n.payNothingOpen : l10n.payFailedToLoad,
@@ -425,8 +425,8 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
             if (_loadFailed) ...[
               const SizedBox(height: 12),
               Center(
-                child: FButton(
-                  variant: FButtonVariant.outline,
+                child: NinjaButton(
+                  variant: NinjaButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: () {
                     setState(() => _loadFailed = false);
@@ -482,17 +482,17 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
         if (!view.canPay)
           _WhyNot(why: view.why)
         else ...[
-          FButton(
+          NinjaButton(
             onPress: () => setState(() => _openPay(SplitKind.full)),
-            prefix: const Icon(FIcons.creditCard),
+            prefix: const Icon(LucideIcons.creditCard),
             child: Text(l10n.payFully),
           ),
           if (_splitModes(view.options).isNotEmpty) ...[
             const SizedBox(height: 8),
-            FButton(
-              variant: FButtonVariant.outline,
+            NinjaButton(
+              variant: NinjaButtonVariant.outline,
               onPress: () => setState(() => _openPay(_splitModes(view.options).first)),
-              prefix: const Icon(FIcons.split),
+              prefix: const Icon(LucideIcons.split),
               child: Text(l10n.paySplitBill),
             ),
           ],
@@ -544,9 +544,9 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
             runSpacing: 8,
             children: [
               for (final mode in modes)
-                FButton(
+                NinjaButton(
                   key: ValueKey('mode-${mode.name}'),
-                  variant: mode == _mode ? null : FButtonVariant.outline,
+                  variant: mode == _mode ? NinjaButtonVariant.primary : NinjaButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => setState(() => _chooseMode(mode)),
                   child: Text(_modeLabel(l10n, mode)),
@@ -582,7 +582,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
           AppText(_startError!, style: TextStyle(fontSize: 14, color: colors.destructive)),
         ],
         const SizedBox(height: 16),
-        FButton(
+        NinjaButton(
           key: const ValueKey('pay-confirm'),
           onPress: canConfirm ? () => _start(view) : null,
           prefix: _starting
@@ -590,7 +590,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
                   dimension: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: colors.primaryForeground),
                 )
-              : const Icon(FIcons.creditCard),
+              : const Icon(LucideIcons.creditCard),
           child: Text(l10n.payConfirm(money(summary.total))),
         ),
       ],
@@ -663,9 +663,9 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FTextField(
+        NinjaField(
           key: const ValueKey('custom-amount'),
-          control: FTextFieldControl.managed(controller: _amount),
+          controller: _amount,
           label: Text(l10n.payAmountHint),
           hint: money(view.remaining),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -686,21 +686,21 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     final status = _status;
     final started = _started;
 
-    Widget done() => FButton(onPress: () => Navigator.of(context).pop(), child: Text(l10n.done));
+    Widget done() => NinjaButton(onPress: () => Navigator.of(context).pop(), child: Text(l10n.done));
 
     final List<Widget> children;
     if (status == null || status.isPending) {
       children = _timedOut
           ? [
-              Icon(FIcons.hourglass, size: 48, color: colors.mutedForeground),
+              Icon(LucideIcons.hourglass, size: 48, color: colors.mutedForeground),
               const SizedBox(height: 12),
               _Centered(l10n.payStillConfirming, strong: true),
               const SizedBox(height: 4),
               _Centered(l10n.payStillConfirmingHint),
               const SizedBox(height: 20),
-              FButton(onPress: _checkAgain, child: Text(l10n.payCheckAgain)),
+              NinjaButton(onPress: _checkAgain, child: Text(l10n.payCheckAgain)),
               const SizedBox(height: 8),
-              FButton(variant: FButtonVariant.outline, onPress: () => Navigator.of(context).pop(), child: Text(l10n.done)),
+              NinjaButton(variant: NinjaButtonVariant.outline, onPress: () => Navigator.of(context).pop(), child: Text(l10n.done)),
             ]
           : [
               const Center(child: SizedBox.square(dimension: 40, child: CircularProgressIndicator())),
@@ -710,10 +710,10 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
               _Centered(l10n.payWaitingHint),
               if (started != null) ...[
                 const SizedBox(height: 20),
-                FButton(
-                  variant: FButtonVariant.outline,
+                NinjaButton(
+                  variant: NinjaButtonVariant.outline,
                   onPress: () => _openCheckout(started),
-                  prefix: const Icon(FIcons.externalLink),
+                  prefix: const Icon(LucideIcons.externalLink),
                   child: Text(l10n.payOpenAgain),
                 ),
               ],
@@ -721,18 +721,18 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       if (started != null) {
         children.addAll([
           const SizedBox(height: 8),
-          FButton(
+          NinjaButton(
             key: const ValueKey('pay-cancel'),
-            variant: FButtonVariant.ghost,
+            variant: NinjaButtonVariant.ghost,
             onPress: _cancelling.contains(started.key) ? null : _cancelStarted,
-            prefix: Icon(FIcons.x, color: colors.destructive),
+            prefix: Icon(LucideIcons.x, color: colors.destructive),
             child: Text(l10n.payCancelPayment, style: TextStyle(color: colors.destructive)),
           ),
         ]);
       }
     } else if (status.isPaid) {
       children = [
-        Icon(FIcons.circleCheck, size: 56, color: AppTheme.successColor),
+        Icon(LucideIcons.circleCheck, size: 56, color: AppTheme.successColor),
         const SizedBox(height: 12),
         _Centered(l10n.payPaidTitle, strong: true),
         const SizedBox(height: 4),
@@ -746,7 +746,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       ];
     } else if (status.status == 'Refunded') {
       children = [
-        Icon(FIcons.circleCheck, size: 48, color: colors.mutedForeground),
+        Icon(LucideIcons.circleCheck, size: 48, color: colors.mutedForeground),
         const SizedBox(height: 12),
         _Centered(l10n.payRefunded, strong: true),
         const SizedBox(height: 20),
@@ -755,7 +755,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     } else {
       final expired = status.status == 'Expired';
       children = [
-        Icon(FIcons.circleX, size: 56, color: colors.destructive),
+        Icon(LucideIcons.circleX, size: 56, color: colors.destructive),
         const SizedBox(height: 12),
         _Centered(expired ? l10n.payExpired : l10n.payFailed, strong: true),
         if (!expired && (status.failureReason ?? '').isNotEmpty) ...[
@@ -763,9 +763,9 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
           _Centered(status.failureReason!),
         ],
         const SizedBox(height: 20),
-        FButton(onPress: _tryAgain, child: Text(l10n.payTryAgain)),
+        NinjaButton(onPress: _tryAgain, child: Text(l10n.payTryAgain)),
         const SizedBox(height: 8),
-        FButton(variant: FButtonVariant.outline, onPress: () => Navigator.of(context).pop(), child: Text(l10n.done)),
+        NinjaButton(variant: NinjaButtonVariant.outline, onPress: () => Navigator.of(context).pop(), child: Text(l10n.done)),
       ];
     }
     return Column(
@@ -795,7 +795,7 @@ class _Title extends StatelessWidget {
             onTap: onBack,
             child: Padding(
               padding: const EdgeInsetsDirectional.only(end: 8),
-              child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24, color: colors.foreground),
+              child: Icon(rtl ? LucideIcons.arrowRight : LucideIcons.arrowLeft, size: 24, color: colors.foreground),
             ),
           ),
         ],
@@ -812,7 +812,7 @@ class _Title extends StatelessWidget {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).pop(),
-          child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+          child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
         ),
       ],
     );
@@ -875,7 +875,7 @@ class _BillLineRow extends StatelessWidget {
           Expanded(child: AppText(line.description.localized(context), style: TextStyle(fontSize: 14, color: ink))),
           if (line.claimed) ...[
             const SizedBox(width: 6),
-            FBadge(variant: FBadgeVariant.secondary, child: Text(l10n.payItemTaken)),
+            NinjaBadge(variant: NinjaBadgeVariant.secondary, child: Text(l10n.payItemTaken)),
           ],
           const SizedBox(width: 8),
           AppText(money(line.total),
@@ -912,7 +912,7 @@ class _ShareRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Icon(share.isPaid ? FIcons.circleCheck : FIcons.clock,
+          Icon(share.isPaid ? LucideIcons.circleCheck : LucideIcons.clock,
               size: 16, color: share.isPaid ? AppTheme.successColor : colors.mutedForeground),
           const SizedBox(width: 8),
           Expanded(child: AppText(name, style: TextStyle(fontSize: 14, color: colors.foreground))),
@@ -938,22 +938,22 @@ class _ShareRow extends StatelessWidget {
             runSpacing: 4,
             children: [
               if (showContinue)
-                FButton(
+                NinjaButton(
                   key: ValueKey('share-continue-$key'),
-                  variant: FButtonVariant.outline,
-                  size: FButtonSizeVariant.sm,
+                  variant: NinjaButtonVariant.outline,
+                  size: NinjaButtonSize.sm,
                   mainAxisSize: MainAxisSize.min,
                   onPress: onContinue,
-                  prefix: const Icon(FIcons.externalLink),
+                  prefix: const Icon(LucideIcons.externalLink),
                   child: Text(l10n.payContinueShare),
                 ),
-              FButton(
+              NinjaButton(
                 key: ValueKey('share-cancel-$key'),
-                variant: FButtonVariant.ghost,
-                size: FButtonSizeVariant.sm,
+                variant: NinjaButtonVariant.ghost,
+                size: NinjaButtonSize.sm,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onCancel,
-                prefix: Icon(FIcons.x, color: colors.destructive),
+                prefix: Icon(LucideIcons.x, color: colors.destructive),
                 child: Text(l10n.payCancelShare, style: TextStyle(color: colors.destructive)),
               ),
             ],
@@ -994,7 +994,7 @@ class _ItemCheck extends StatelessWidget {
                 border: Border.all(color: checked && !disabled ? colors.primary : colors.border, width: 1.5),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: checked && !disabled ? Icon(FIcons.check, size: 16, color: colors.primaryForeground) : null,
+              child: checked && !disabled ? Icon(LucideIcons.check, size: 16, color: colors.primaryForeground) : null,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1010,7 +1010,7 @@ class _ItemCheck extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (line.claimed)
-              FBadge(variant: FBadgeVariant.secondary, child: Text(l10n.payItemTaken))
+              NinjaBadge(variant: NinjaBadgeVariant.secondary, child: Text(l10n.payItemTaken))
             else
               AppText(money(line.share),
                   style: TextStyle(fontSize: 15, color: ink, fontFeatures: const [FontFeature.tabularFigures()])),
@@ -1037,7 +1037,7 @@ class _Stepper extends StatelessWidget {
         Expanded(child: AppText(label, style: TextStyle(fontSize: 15, color: colors.foreground))),
         SizedBox.square(
           dimension: 40,
-          child: FButton.icon(variant: FButtonVariant.outline, onPress: onMinus, child: const Icon(FIcons.minus)),
+          child: NinjaButton.icon(variant: NinjaButtonVariant.outline, onPress: onMinus, child: const Icon(LucideIcons.minus)),
         ),
         SizedBox(
           width: 96,
@@ -1051,7 +1051,7 @@ class _Stepper extends StatelessWidget {
         ),
         SizedBox.square(
           dimension: 40,
-          child: FButton.icon(variant: FButtonVariant.outline, onPress: onPlus, child: const Icon(FIcons.plus)),
+          child: NinjaButton.icon(variant: NinjaButtonVariant.outline, onPress: onPlus, child: const Icon(LucideIcons.plus)),
         ),
       ],
     );

@@ -1226,4 +1226,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notNow => 'Not now';
+
+  @override
+  String get ninjaYourOrder => 'Your order';
+
+  @override
+  String get ninjaOrder => 'Order';
+
+  @override
+  String get ninjaSending => 'Sending';
+
+  @override
+  String get ninjaEmptyTray => 'Your order is empty. Tap a dish to add it.';
+
+  @override
+  String ninjaRemoved(String name) {
+    return '$name removed';
+  }
+
+  @override
+  String get ninjaUndo => 'Undo';
+
+  @override
+  String get ninjaRemove => 'Remove';
+
+  @override
+  String get ninjaLess => 'One less';
+
+  @override
+  String get ninjaMore => 'One more';
+
+  @override
+  String get ninjaAddNote => 'Add a note';
+
+  @override
+  String get ninjaUseAllPoints => 'Use all';
+
+  @override
+  String ninjaPointsOf(String balance) {
+    return 'of $balance';
+  }
+
+  @override
+  String get ninjaBillOpen => 'Your bill';
+
+  @override
+  String get ninjaTableOpen => 'Your table';
+
+  @override
+  String get ninjaRoomOpen => 'Your room';
+
+  @override
+  String get orderStageSent => 'Sent';
+
+  @override
+  String get orderStageConfirmed => 'Confirmed';
+
+  @override
+  String get orderStageCancelled => 'Cancelled';
+
+  @override
+  String trayItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaSoldOut(String name) {
+    return '$name is sold out right now';
+  }
+
+  @override
+  String ninjaAdded(String name) {
+    return '$name added';
+  }
+
+  @override
+  String get ninjaWholeMenu => 'Whole menu';
+
+  @override
+  String get ninjaBackToCards => 'Back to the cards';
+
+  @override
+  String get ninjaUpNext => 'Up next';
+
+  @override
+  String get ninjaOptional => 'Optional';
+
+  @override
+  String ninjaChoose(String name) {
+    return 'Choose $name';
+  }
+
+  @override
+  String get unavailable => 'Unavailable';
 }

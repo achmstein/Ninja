@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -36,29 +36,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final accountState = ref.watch(accountProvider);
     final colors = context.theme.colors;
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             // Header with back button
-            Container(
-              padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      AppLocalizations.of(context)!.transactions,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: AppLocalizations.of(context)!.transactions, back: true),
 
             // Content
             Expanded(
@@ -172,7 +155,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           Row(
             children: [
               Icon(
-                isOwed ? FIcons.circleAlert : hasCredit ? FIcons.check : FIcons.wallet,
+                isOwed ? LucideIcons.circleAlert : hasCredit ? LucideIcons.check : LucideIcons.wallet,
                 color: Colors.white,
                 size: 20,
               ),
@@ -211,7 +194,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            FIcons.circleAlert,
+            LucideIcons.circleAlert,
             size: 48,
             color: colors.mutedForeground,
           ),
@@ -221,7 +204,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             style: TextStyle(color: colors.mutedForeground),
           ),
           const SizedBox(height: 16),
-          FButton(
+          NinjaButton(
             onPress: () {
               setState(() {
                 _loadTransactions();
@@ -240,7 +223,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       child: Column(
         children: [
           Icon(
-            FIcons.receipt,
+            LucideIcons.receipt,
             size: 40,
             color: colors.mutedForeground,
           ),

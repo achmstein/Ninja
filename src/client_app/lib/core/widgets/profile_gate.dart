@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../brand/brand_style.dart';
+import '../ui/ui.dart';
 import '../auth/auth_service.dart';
 import '../../features/settings/providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
@@ -20,13 +21,10 @@ Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
 
   if (!context.mounted) return false;
 
-  final result = await showModalBottomSheet<bool>(
+  // Asked on the slab, like every question; it stays until answered
+  final result = await showNinjaSheet<bool>(
     context: context,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    backgroundColor: Colors.transparent,
+    dismissible: false,
     builder: (context) => PopScope(
       canPop: false,
       child: _ProfilePromptSheet(
@@ -131,53 +129,22 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final viewPadding = MediaQuery.of(context).viewPadding.bottom;
-    // When keyboard is open, viewInsets covers the bottom area already
-    final bottomPadding = viewInsets > 0 ? viewInsets : viewPadding;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottomPadding),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colors.mutedForeground,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
             // Title
-            AppText(
+            BrandHeading(
               l10n.completeYourInfo,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: colors.foreground,
-              ),
+              style: context.theme.typography.headline.copyWith(color: colors.foreground),
             ),
             const SizedBox(height: 16),
 
             // Error
             if (_error != null) ...[
-              FAlert(
-                variant: FAlertVariant.destructive,
-                icon: Icon(FIcons.circleAlert),
+              NinjaAlert(
+                variant: NinjaAlertVariant.destructive,
+                icon: Icon(LucideIcons.circleAlert),
                 title: AppText(l10n.error),
                 subtitle: AppText(_error!),
               ),
@@ -190,8 +157,8 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: FTextField(
-                      control: FTextFieldControl.managed(controller: _firstNameController),
+                    child: NinjaField(
+                      controller: _firstNameController,
                       label: AppText(l10n.firstName),
                       enabled: !_isSaving,
                       textInputAction: TextInputAction.next,
@@ -200,8 +167,8 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: FTextField(
-                      control: FTextFieldControl.managed(controller: _lastNameController),
+                    child: NinjaField(
+                      controller: _lastNameController,
                       label: AppText(l10n.lastName),
                       enabled: !_isSaving,
                       textInputAction: TextInputAction.next,
@@ -215,9 +182,8 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
 
             // Phone field (only show if missing)
             if (!widget.hasPhone) ...[
-              FTextField(
-                control:
-                    FTextFieldControl.managed(controller: _phoneController),
+              NinjaField(
+                controller: _phoneController,
                 label: AppText(l10n.phoneNumber),
                 hint: l10n.enterPhoneNumber,
                 enabled: !_isSaving,
@@ -231,23 +197,13 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
             // Save button
             SizedBox(
               width: double.infinity,
-              child: FButton(
+              child: NinjaButton(
                 onPress: _isSaving ? null : _handleSave,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : AppText(l10n.done),
+                busy: _isSaving,
+                child: AppText(l10n.done),
               ),
             ),
           ],
-        ),
-      ),
-    );
+        );
   }
 }

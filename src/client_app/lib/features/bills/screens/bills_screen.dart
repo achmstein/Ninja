@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/brand/brand_provider.dart';
@@ -49,19 +49,24 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      children: [
-        FHeader(title: AppText(l10n.bills, style: const TextStyle(fontSize: 18))),
-        Expanded(
-          child: FTabs(
-            control: FTabControl.managed(initial: 0),
-            children: [
-              FTabEntry(label: Text(l10n.today), child: const Expanded(child: _TodayTab())),
-              FTabEntry(label: Text(l10n.earlier), child: const Expanded(child: _EarlierTab())),
-            ],
-          ),
+    // A page of its own under You (the bill running now is on the dock)
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            PageHeader(title: l10n.bills, back: true),
+            Expanded(
+              child: NinjaTabs(
+                tabs: [
+                  (label: Text(l10n.today), child: const _TodayTab()),
+                  (label: Text(l10n.earlier), child: const _EarlierTab()),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -88,7 +93,7 @@ class _TodayTab extends ConsumerWidget {
     }
     if (bills.hasError && orders.error != null) {
       return _Message(
-        icon: FIcons.circleAlert,
+        icon: LucideIcons.circleAlert,
         text: l10n.failedToLoadBills,
         action: l10n.retry,
         onAction: () => ref.read(myBillsProvider.notifier).reload(),
@@ -109,7 +114,7 @@ class _TodayTab extends ConsumerWidget {
     final ordersById = {for (final order in orders.orders) order.id: order};
 
     if (todayBills.isEmpty && waiting.isEmpty && cancelled.isEmpty) {
-      return _Message(icon: FIcons.receipt, text: l10n.nothingOnYouToday, onRefresh: () => _refreshAll(ref));
+      return _Message(icon: LucideIcons.receipt, text: l10n.nothingOnYouToday, onRefresh: () => _refreshAll(ref));
     }
 
     return RefreshIndicator(
@@ -150,7 +155,7 @@ class _EarlierTab extends ConsumerWidget {
     }
     if (bills.hasError) {
       return _Message(
-        icon: FIcons.circleAlert,
+        icon: LucideIcons.circleAlert,
         text: l10n.failedToLoadBills,
         action: l10n.retry,
         onAction: () => ref.read(myBillsProvider.notifier).reload(),
@@ -164,7 +169,7 @@ class _EarlierTab extends ConsumerWidget {
     }).toList();
     if (past.isEmpty) {
       return _Message(
-          icon: FIcons.receipt, text: l10n.noBillsYet, onRefresh: () => ref.read(myBillsProvider.notifier).refresh());
+          icon: LucideIcons.receipt, text: l10n.noBillsYet, onRefresh: () => ref.read(myBillsProvider.notifier).refresh());
     }
 
     // One heading per shift day: Today, Yesterday, then the date
@@ -307,7 +312,7 @@ class _Message extends StatelessWidget {
                   AppText(text, style: TextStyle(fontSize: 18, color: colors.foreground)),
                   if (action != null) ...[
                     const SizedBox(height: 12),
-                    FButton(variant: FButtonVariant.outline, onPress: onAction, child: Text(action!)),
+                    NinjaButton(variant: NinjaButtonVariant.outline, onPress: onAction, child: Text(action!)),
                   ],
                 ],
               ),

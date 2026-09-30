@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
+import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
-import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/features/pay/models/pay_view.dart';
 import 'package:ninja_client/features/pay/pay_math.dart';
 import 'package:ninja_client/features/pay/services/pay_service.dart';
@@ -122,10 +121,8 @@ Widget _app(_FakePay pay,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        builder: (context, child) => FTheme(
-          data: const ThemeState(themeMode: AppThemeMode.dark).getForuiTheme(context, locale: locale),
-          child: FToaster(child: child!),
-        ),
+        theme: materialThemeFor(NinjaTheme.neutral(Brightness.dark)),
+        builder: (context, child) => IslandHost(child: child!),
         home: Scaffold(
           body: PaySheet(
             source: const PaySource.ticket(9),

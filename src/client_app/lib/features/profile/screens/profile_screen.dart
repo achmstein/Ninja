@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/auth/auth_service.dart';
@@ -67,9 +67,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Column(
       children: [
         // Header
-        FHeader(
-          title: AppText(l10n.youTab, style: TextStyle(fontSize: 18)),
-        ),
+        PageHeader(title: l10n.youTab),
 
         // Body
         Expanded(
@@ -79,11 +77,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onRefresh: _loadData,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
               child: Column(
                 children: [
                   // User avatar and info
-                  FAvatar.raw(
+                  NinjaAvatar(
                     size: 80,
                     child: AppText(
                       authState.name?.isNotEmpty == true
@@ -135,26 +133,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                // Menu items using FTile
-                FTileGroup(
+                // Where to go from here
+                TileGroup(
                   children: [
-                    FTile(
-                      prefix: const Icon(FIcons.receipt),
+                    NinjaTile(
+                      icon: LucideIcons.receipt,
                       title: AppText(l10n.bills),
-                      suffix: const Icon(FIcons.chevronRight),
-                      onPress: () => context.go('/bills'),
+                      onPress: () => context.push('/bills'),
                     ),
                     if (features.timeBilling)
-                      FTile(
-                        prefix: const Icon(FIcons.timer),
+                      NinjaTile(
+                        icon: LucideIcons.timer,
                         title: AppText(l10n.sessions),
-                        suffix: const Icon(FIcons.chevronRight),
                         onPress: () => context.push('/stays'),
                       ),
-                    FTile(
-                      prefix: const Icon(FIcons.heart),
+                    NinjaTile(
+                      icon: LucideIcons.heart,
                       title: AppText(l10n.favorites),
-                      suffix: const Icon(FIcons.chevronRight),
                       onPress: () => context.push('/favorites'),
                     ),
                   ],
@@ -162,25 +157,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
-                FTileGroup(
+                TileGroup(
                   children: [
-                    FTile(
-                      prefix: const Icon(FIcons.settings),
+                    NinjaTile(
+                      icon: LucideIcons.settings,
                       title: AppText(l10n.settings),
-                      suffix: const Icon(FIcons.chevronRight),
                       onPress: () => context.push('/settings'),
                     ),
                     if (ref.watch(branchProvider).selectedBranch?.phone != null)
-                      FTile(
-                        prefix: const Icon(FIcons.phone),
+                      NinjaTile(
+                        icon: LucideIcons.phone,
                         title: AppText(l10n.callUs),
-                        suffix: const Icon(FIcons.chevronRight),
                         onPress: () => launchUrl(Uri.parse('tel:${ref.read(branchProvider).selectedBranch!.phone}')),
                       ),
-                    FTile(
-                      prefix: const Icon(FIcons.info),
+                    NinjaTile(
+                      icon: LucideIcons.info,
                       title: AppText(l10n.about),
-                      suffix: const Icon(FIcons.chevronRight),
                       onPress: () => _showAboutSheet(context),
                     ),
                   ],
@@ -192,24 +184,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: authState.isAuthenticated
-                      ? FButton(
-                          variant: FButtonVariant.destructive,
+                      ? NinjaButton(
+                          variant: NinjaButtonVariant.destructive,
                           onPress: () => _handleSignOut(context),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(FIcons.logOut),
+                              const Icon(LucideIcons.logOut),
                               const SizedBox(width: 8),
                               AppText(l10n.signOut),
                             ],
                           ),
                         )
-                      : FButton(
+                      : NinjaButton(
                           onPress: () => _handleSignIn(context),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(FIcons.logIn),
+                              const Icon(LucideIcons.logIn),
                               const SizedBox(width: 8),
                               AppText(l10n.signIn),
                             ],
@@ -238,19 +230,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _handleSignOut(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    showAdaptiveDialog(
+    showNinjaSheet(
       context: context,
-      builder: (context) => FDialog(
+      builder: (context) => NinjaDialog(
         title: AppText(l10n.signOutQuestion, style: TextStyle(fontWeight: FontWeight.bold)),
-        direction: Axis.horizontal,
         actions: [
-          FButton(
-            variant: FButtonVariant.outline,
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
             onPress: () => Navigator.pop(context),
             child: AppText(l10n.cancel),
           ),
-          FButton(
-            variant: FButtonVariant.destructive,
+          NinjaButton(
+            variant: NinjaButtonVariant.destructive,
             onPress: () async {
               Navigator.pop(context);
               await ref.read(authServiceProvider.notifier).signOut();
@@ -267,12 +258,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showAboutSheet(BuildContext context) {
-    showModalBottomSheet(
+    showNinjaSheet(
       context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      padding: EdgeInsets.zero,
       builder: (context) => const _AboutSheet(),
     );
   }
@@ -289,23 +277,15 @@ class _AboutSheet extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        // On the slab sheet, which draws the page and the corners
+        color: Colors.transparent,
       ),
       child: SafeArea(
+        top: false,
+        bottom: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.mutedForeground,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
 
             // Header
             Padding(
@@ -324,7 +304,7 @@ class _AboutSheet extends ConsumerWidget {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+                    child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
                   ),
                 ],
               ),

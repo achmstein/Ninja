@@ -2306,6 +2306,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get notNow;
+
+  /// No description provided for @ninjaYourOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order'**
+  String get ninjaYourOrder;
+
+  /// No description provided for @ninjaOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get ninjaOrder;
+
+  /// No description provided for @ninjaSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get ninjaSending;
+
+  /// No description provided for @ninjaEmptyTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order is empty. Tap a dish to add it.'**
+  String get ninjaEmptyTray;
+
+  /// No description provided for @ninjaRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed'**
+  String ninjaRemoved(String name);
+
+  /// No description provided for @ninjaUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get ninjaUndo;
+
+  /// No description provided for @ninjaRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get ninjaRemove;
+
+  /// No description provided for @ninjaLess.
+  ///
+  /// In en, this message translates to:
+  /// **'One less'**
+  String get ninjaLess;
+
+  /// No description provided for @ninjaMore.
+  ///
+  /// In en, this message translates to:
+  /// **'One more'**
+  String get ninjaMore;
+
+  /// No description provided for @ninjaAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get ninjaAddNote;
+
+  /// No description provided for @ninjaUseAllPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Use all'**
+  String get ninjaUseAllPoints;
+
+  /// No description provided for @ninjaPointsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {balance}'**
+  String ninjaPointsOf(String balance);
+
+  /// No description provided for @ninjaBillOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bill'**
+  String get ninjaBillOpen;
+
+  /// No description provided for @ninjaTableOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your table'**
+  String get ninjaTableOpen;
+
+  /// No description provided for @ninjaRoomOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your room'**
+  String get ninjaRoomOpen;
+
+  /// No description provided for @orderStageSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get orderStageSent;
+
+  /// No description provided for @orderStageConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get orderStageConfirmed;
+
+  /// No description provided for @orderStageCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderStageCancelled;
+
+  /// No description provided for @trayItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String trayItemCount(int count);
+
+  /// No description provided for @ninjaSoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is sold out right now'**
+  String ninjaSoldOut(String name);
+
+  /// No description provided for @ninjaAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added'**
+  String ninjaAdded(String name);
+
+  /// No description provided for @ninjaWholeMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole menu'**
+  String get ninjaWholeMenu;
+
+  /// No description provided for @ninjaBackToCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the cards'**
+  String get ninjaBackToCards;
+
+  /// No description provided for @ninjaUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get ninjaUpNext;
+
+  /// No description provided for @ninjaOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get ninjaOptional;
+
+  /// No description provided for @ninjaChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose {name}'**
+  String ninjaChoose(String name);
+
+  /// No description provided for @unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get unavailable;
 }
 
 class _AppLocalizationsDelegate

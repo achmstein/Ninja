@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -31,29 +31,12 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
     final loyaltyState = ref.watch(loyaltyProvider);
     final colors = context.theme.colors;
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             // Header with back button
-            Container(
-              padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      AppLocalizations.of(context)!.loyaltyRewards,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: AppLocalizations.of(context)!.loyaltyRewards, back: true),
 
             // Content
             Expanded(
@@ -114,7 +97,7 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            FIcons.gift,
+            LucideIcons.gift,
             size: 48,
             color: colors.mutedForeground,
           ),
@@ -157,7 +140,7 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
             child: Row(
               children: [
                 Icon(
-                  FIcons.gift,
+                  LucideIcons.gift,
                   color: tierColor,
                   size: 20,
                 ),
@@ -268,7 +251,7 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
       child: Column(
         children: [
           Icon(
-            FIcons.history,
+            LucideIcons.history,
             size: 40,
             color: colors.mutedForeground,
           ),

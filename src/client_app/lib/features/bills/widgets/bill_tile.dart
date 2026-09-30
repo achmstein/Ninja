@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
@@ -185,11 +185,11 @@ class _BillPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (bill.isVoided) return FBadge(variant: FBadgeVariant.outline, child: Text(l10n.voided));
-    if (!bill.isSettled) return FBadge(variant: FBadgeVariant.outline, child: Text(l10n.unpaid));
+    if (bill.isVoided) return NinjaBadge(variant: NinjaBadgeVariant.outline, child: Text(l10n.voided));
+    if (!bill.isSettled) return NinjaBadge(variant: NinjaBadgeVariant.outline, child: Text(l10n.unpaid));
     final label = bill.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
     final receipt = bill.receiptNumber != null ? ' ${l10n.receiptShort(bill.receiptNumber!)}' : '';
-    return FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt'));
+    return NinjaBadge(variant: NinjaBadgeVariant.secondary, child: Text('$label$receipt'));
   }
 }
 
@@ -218,7 +218,7 @@ class _BillLine extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               if (line.isTime)
-                Icon(FIcons.timer, size: 14, color: colors.mutedForeground)
+                Icon(LucideIcons.timer, size: 14, color: colors.mutedForeground)
               else
                 AppText('${hoursOf(line.qty)}x', style: TextStyle(fontSize: 14, color: colors.mutedForeground)),
               const SizedBox(width: 4),

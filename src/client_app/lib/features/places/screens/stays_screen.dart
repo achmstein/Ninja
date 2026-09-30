@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/auth/auth_service.dart';
@@ -52,55 +52,33 @@ class _StaysScreenState extends ConsumerState<StaysScreen> {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             // Header
-            Container(
-              padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      l10n.sessions,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: l10n.sessions, back: true),
 
             // Tabs
             Expanded(
-              child: FTabs(
-                control: FTabControl.managed(initial: 0),
-                children: [
-                  FTabEntry(
+              child: NinjaTabs(
+                tabs: [
+                  (
                     label: Text(l10n.todaysSessions),
-                    child: Expanded(
-                      child: _TodaySessionsList(
-                        sessionsAsync: sessionsAsync,
-                        currentUserId: currentUserId,
-                        colors: colors,
-                        sessionStart: _getSessionStart(),
-                        onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
-                      ),
+                    child: _TodaySessionsList(
+                      sessionsAsync: sessionsAsync,
+                      currentUserId: currentUserId,
+                      colors: colors,
+                      sessionStart: _getSessionStart(),
+                      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
                     ),
                   ),
-                  FTabEntry(
+                  (
                     label: Text(l10n.previousSessions),
-                    child: Expanded(
-                      child: _HistorySessionsList(
-                        sessionsAsync: sessionsAsync,
-                        currentUserId: currentUserId,
-                        onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
-                      ),
+                    child: _HistorySessionsList(
+                      sessionsAsync: sessionsAsync,
+                      currentUserId: currentUserId,
+                      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
                     ),
                   ),
                 ],
@@ -173,11 +151,11 @@ class _TodaySessionsList extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(FIcons.circleAlert, size: 48, color: colors.mutedForeground),
+          Icon(LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
           const SizedBox(height: 16),
           AppText(l10n.failedToLoadSessions, style: TextStyle(color: colors.foreground)),
           const SizedBox(height: 16),
-          FButton(onPress: onRefresh, child: AppText(l10n.retry)),
+          NinjaButton(onPress: onRefresh, child: AppText(l10n.retry)),
         ],
       ),
     );
@@ -188,7 +166,7 @@ class _TodaySessionsList extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(FIcons.gamepad2, size: 80, color: colors.mutedForeground),
+          Icon(LucideIcons.gamepad2, size: 80, color: colors.mutedForeground),
           const SizedBox(height: 16),
           AppText(message, style: TextStyle(fontSize: 18, color: colors.foreground)),
         ],
@@ -224,11 +202,11 @@ class _HistorySessionsList extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FIcons.circleAlert, size: 48, color: colors.mutedForeground),
+            Icon(LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
             const SizedBox(height: 16),
             AppText(l10n.failedToLoadSessions, style: TextStyle(color: colors.foreground)),
             const SizedBox(height: 16),
-            FButton(onPress: onRefresh, child: AppText(l10n.retry)),
+            NinjaButton(onPress: onRefresh, child: AppText(l10n.retry)),
           ],
         ),
       ),
@@ -238,7 +216,7 @@ class _HistorySessionsList extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(FIcons.gamepad2, size: 80, color: colors.mutedForeground),
+                Icon(LucideIcons.gamepad2, size: 80, color: colors.mutedForeground),
                 const SizedBox(height: 16),
                 AppText(l10n.noSessionsYet, style: TextStyle(fontSize: 18, color: colors.foreground)),
               ],
@@ -441,7 +419,7 @@ class _SessionTileState extends ConsumerState<SessionTile> {
           // Time + duration row
           Row(
             children: [
-              Icon(FIcons.clock, size: 14, color: colors.mutedForeground),
+              Icon(LucideIcons.clock, size: 14, color: colors.mutedForeground),
               const SizedBox(width: 4),
               AppText(
                 timeFormat.format(session.reservationTime.toLocal()),
@@ -449,7 +427,7 @@ class _SessionTileState extends ConsumerState<SessionTile> {
               ),
               if (session.duration != null) ...[
                 const SizedBox(width: 12),
-                Icon(FIcons.timer, size: 14, color: colors.mutedForeground),
+                Icon(LucideIcons.timer, size: 14, color: colors.mutedForeground),
                 const SizedBox(width: 4),
                 AppText(
                   session.formattedDuration,
@@ -562,7 +540,7 @@ class _SessionTileState extends ConsumerState<SessionTile> {
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(FIcons.users, size: 14, color: colors.mutedForeground),
+                Icon(LucideIcons.users, size: 14, color: colors.mutedForeground),
                 const SizedBox(width: 4),
                 Expanded(
                   child: AppText(
@@ -586,7 +564,7 @@ class _SessionTileState extends ConsumerState<SessionTile> {
     final label = session.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
     return GestureDetector(
       onTap: session.ticketId != null ? () => context.push('/receipts/${session.ticketId}') : null,
-      child: FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt')),
+      child: NinjaBadge(variant: NinjaBadgeVariant.secondary, child: Text('$label$receipt')),
     );
   }
 
@@ -596,13 +574,13 @@ class _SessionTileState extends ConsumerState<SessionTile> {
     switch (status) {
       case StayStatus.active:
         label = l10n.statusActive;
-        return FBadge(child: Text(label));
+        return NinjaBadge(child: Text(label));
       case StayStatus.completed:
         label = l10n.statusCompleted;
-        return FBadge(variant: FBadgeVariant.outline, child: Text(label));
+        return NinjaBadge(variant: NinjaBadgeVariant.outline, child: Text(label));
       case StayStatus.cancelled:
         label = l10n.statusCancelled;
-        return FBadge(variant: FBadgeVariant.destructive, child: Text(label));
+        return NinjaBadge(variant: NinjaBadgeVariant.destructive, child: Text(label));
     }
   }
 }

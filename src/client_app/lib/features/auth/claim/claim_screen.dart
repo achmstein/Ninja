@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -145,10 +145,10 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
     try {
       final signInEmail = await ref.read(claimRepositoryProvider).claim(_token!, email, password);
       if (!mounted) return;
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.claimDone),
-        icon: Icon(FIcons.check, color: context.theme.colors.primary),
+        icon: Icon(LucideIcons.check, color: context.theme.colors.primary),
       );
       // Signed straight in with what they just chose; if that fails the
       // account is still theirs, and the sign-in page is one step away
@@ -268,14 +268,14 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        FButton(
+        NinjaButton(
           onPress: _scan,
-          prefix: Icon(FIcons.scanLine),
+          prefix: Icon(LucideIcons.scanLine),
           child: AppText(l10n.claimScan),
         ),
         const SizedBox(height: 16),
-        FTextField(
-          control: FTextFieldControl.managed(controller: _codeController),
+        NinjaField(
+          controller: _codeController,
           label: AppText(l10n.claimPasteLabel),
           hint: l10n.claimPasteHint(_businessName),
           textInputAction: TextInputAction.go,
@@ -283,8 +283,8 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         ),
         if (_codeError != null) _fieldError(_codeError!),
         const SizedBox(height: 16),
-        FButton(
-          variant: FButtonVariant.outline,
+        NinjaButton(
+          variant: NinjaButtonVariant.outline,
           onPress: () => _useCode(_codeController.text),
           child: AppText(l10n.claimContinue),
         ),
@@ -296,18 +296,18 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FAlert(
-          variant: FAlertVariant.destructive,
-          icon: Icon(FIcons.circleAlert),
+        NinjaAlert(
+          variant: NinjaAlertVariant.destructive,
+          icon: Icon(LucideIcons.circleAlert),
           title: AppText(l10n.error),
           subtitle: AppText(_linkMessage(l10n, failure)),
         ),
         const SizedBox(height: 16),
         if (failure == ClaimFailure.used)
-          FButton(onPress: () => context.go('/login'), child: AppText(l10n.signIn))
+          NinjaButton(onPress: () => context.go('/login'), child: AppText(l10n.signIn))
         else
-          FButton(
-            variant: FButtonVariant.outline,
+          NinjaButton(
+            variant: NinjaButtonVariant.outline,
             onPress: _startOver,
             child: AppText(l10n.claimTryAnother),
           ),
@@ -329,9 +329,9 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         if (_formError != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: FAlert(
-              variant: FAlertVariant.destructive,
-              icon: Icon(FIcons.circleAlert),
+            child: NinjaAlert(
+              variant: NinjaAlertVariant.destructive,
+              icon: Icon(LucideIcons.circleAlert),
               title: AppText(l10n.error),
               subtitle: AppText(_formError!),
             ),
@@ -343,30 +343,30 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
           _readOnly(l10n.phoneNumber, preview.phoneNumber!, ltr: true),
         ],
         const SizedBox(height: 16),
-        FTextField.email(
-          control: FTextFieldControl.managed(controller: _emailController),
+        NinjaField.email(
+          controller: _emailController,
           label: AppText(l10n.email),
           hint: l10n.enterEmail,
           textInputAction: TextInputAction.next,
         ),
         if (_emailError != null) _fieldError(_emailError!),
         const SizedBox(height: 16),
-        FTextField.password(
-          control: FTextFieldControl.managed(controller: _passwordController),
+        NinjaField.password(
+          controller: _passwordController,
           label: AppText(l10n.password),
           hint: l10n.createPassword,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
-        FTextField.password(
-          control: FTextFieldControl.managed(controller: _confirmController),
+        NinjaField.password(
+          controller: _confirmController,
           label: AppText(l10n.confirmPassword),
           hint: l10n.confirmYourPassword,
           textInputAction: TextInputAction.done,
           onSubmit: (_) => _submit(),
         ),
         const SizedBox(height: 24),
-        FButton(
+        NinjaButton(
           onPress: _loading ? null : _submit,
           child: _loading
               ? const SizedBox(

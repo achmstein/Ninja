@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../ui/ui.dart';
 import '../models/localized_text.dart';
 import '../providers/current_place_provider.dart';
 import 'app_text.dart';
@@ -62,7 +62,7 @@ class DestinationChip extends ConsumerWidget {
               child: AppText(
                 destination.name.localized(context),
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.xs.copyWith(
+                style: theme.typography.caption.copyWith(
                   color: theme.colors.mutedForeground,
                   fontWeight: FontWeight.w600,
                 ),
@@ -75,7 +75,7 @@ class DestinationChip extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Icon(
-                    FIcons.x,
+                    LucideIcons.x,
                     size: 12,
                     color: theme.colors.mutedForeground,
                   ),
@@ -92,11 +92,9 @@ class DestinationChip extends ConsumerWidget {
 /// Waiter or the bill, from a table — the room's quick actions, for the
 /// customer who scanned a table sticker. One minute between taps of a kind.
 Future<void> showPlaceRequests(BuildContext context, OrderDestination destination) {
-  return showFDialog<void>(
+  return showNinjaSheet<void>(
     context: context,
-    builder: (context, style, animation) => FDialog(
-      style: style,
-      animation: animation,
+    builder: (context) => NinjaDialog(
       title: Text(destination.name.localized(context)),
       body: _TableRequestButtons(destination: destination),
       actions: const [],
@@ -122,7 +120,7 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
     final l10n = AppLocalizations.of(context)!;
     final until = _tableCooldowns[type];
     if (until != null && until.isAfter(DateTime.now())) {
-      showFToast(context: context, title: Text(l10n.pleaseWaitBeforeRequest));
+      showIsland(context: context, title: Text(l10n.pleaseWaitBeforeRequest));
       return;
     }
     setState(() => _busy = true);
@@ -139,9 +137,9 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
     if (ok) {
       _tableCooldowns[type] = DateTime.now().add(const Duration(minutes: 1));
       Navigator.of(context).pop();
-      showFToast(context: context, title: Text(success), icon: Icon(FIcons.check, color: AppTheme.successColor));
+      showIsland(context: context, title: Text(success), icon: Icon(LucideIcons.check, color: AppTheme.successColor));
     } else {
-      showFToast(context: context, title: Text(l10n.failedToSendRequest));
+      showIsland(context: context, title: Text(l10n.failedToSendRequest));
     }
   }
 
@@ -154,23 +152,23 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        FButton(
-          variant: FButtonVariant.outline,
+        NinjaButton(
+          variant: NinjaButtonVariant.secondary,
           onPress: _busy ? null : () => _send(ServiceRequestType.callWaiter, l10n.waiterNotified),
-          prefix: const Icon(FIcons.bell),
+          prefix: const Icon(LucideIcons.bell),
           child: Text(l10n.callWaiter),
         ),
         const SizedBox(height: 8),
-        FButton(
-          variant: FButtonVariant.outline,
+        NinjaButton(
+          variant: NinjaButtonVariant.secondary,
           onPress: _busy ? null : () => _send(ServiceRequestType.receiptToPay, l10n.billRequestSent),
-          prefix: const Icon(FIcons.receipt),
+          prefix: const Icon(LucideIcons.receipt),
           child: Text(l10n.getBill),
         ),
         // Online payments: the table's open bill, paid or split from the phone
         if (ref.watch(featuresProvider).onlinePayments && branchId != null) ...[
           const SizedBox(height: 8),
-          FButton(
+          NinjaButton(
             onPress: _busy
                 ? null
                 : () {
@@ -179,7 +177,7 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
                     navigator.pop();
                     showPaySheet(sheetContext, PaySource.place(widget.destination.placeId, branchId));
                   },
-            prefix: const Icon(FIcons.creditCard),
+            prefix: const Icon(LucideIcons.creditCard),
             child: Text(l10n.payTheBill),
           ),
         ],

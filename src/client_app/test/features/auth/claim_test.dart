@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
+import 'package:ninja_client/core/ui/ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ninja_client/core/brand/brand_service.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
-import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/features/auth/claim/claim_screen.dart';
 import 'package:ninja_client/features/auth/claim/claim_service.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
@@ -55,10 +54,8 @@ Widget _app(ClaimRepository claims, {String? token}) => ProviderScope(
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => FTheme(
-          data: const ThemeState(themeMode: AppThemeMode.light).getForuiTheme(context, locale: const Locale('en')),
-          child: child!,
-        ),
+        theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
+        builder: (context, child) => IslandHost(child: child!),
         home: ClaimScreen(token: token),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import '../../../l10n/app_localizations.dart';
 
 import '../../../core/models/localized_text.dart';
@@ -7,9 +7,9 @@ import '../../../core/models/localized_text.dart';
 /// What a place is, for icons and words. What it *does* comes from its
 /// tariff (a timed place has one), not from its kind.
 enum PlaceKind {
-  room(1, 'Room', FIcons.gamepad2),
-  table(2, 'Table', FIcons.armchair),
-  station(3, 'Station', FIcons.trophy);
+  room(1, 'Room', LucideIcons.gamepad2),
+  table(2, 'Table', LucideIcons.armchair),
+  station(3, 'Station', LucideIcons.trophy);
 
   final int value;
 

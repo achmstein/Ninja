@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import '../brand/brand_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../brand/brand_provider.dart';
 import '../brand/brand_theme.dart';
-import '../brand/styles.dart';
+import '../brand/brand_style.dart';
+import 'ninja_theme.dart';
 import '../brand/tenant_brand.dart';
 
 enum AppThemeMode { light, dark, system }
@@ -57,57 +57,16 @@ class ThemeState {
     );
   }
 
-  /// The mode the app is in for [brand]: the customer's (or the business's
-  /// default), unless the brand's style keeps the page dark
-  AppThemeMode effectiveMode(TenantBrand brand) => brand.theme.preset.forceDark ? AppThemeMode.dark : themeMode;
-
-  /// The zinc theme with the tenant's seeds on top: its colours derived for
-  /// this brightness, its corner radius and its font for the locale's script.
-  /// Whatever [brand] leaves unset stays zinc.
-  FThemeData getForuiTheme(BuildContext context, {Locale? locale, TenantBrand brand = TenantBrand.neutral}) {
-    final Brightness brightness;
-    switch (effectiveMode(brand)) {
-      case AppThemeMode.light:
-        brightness = Brightness.light;
-        break;
-      case AppThemeMode.dark:
-        brightness = Brightness.dark;
-        break;
-      case AppThemeMode.system:
-        brightness = MediaQuery.platformBrightnessOf(context);
-        break;
-    }
-
-    // Base colors from the zinc theme, the brand's on top
-    final colors = brandedColors(
-      brightness == Brightness.dark ? FThemes.zinc.dark.colors : FThemes.zinc.light.colors,
-      brand,
-    );
-
-    // Typography in the locale's bundled family, then the tenant's family
-    // for that script when it chose one google_fonts knows
-    // The style's defaults fill whatever seed the business left unset
-    final theme = withStyleDefaults(brand.theme);
-    final brandFont = brandFontFor(theme, locale ?? const Locale('en'));
-    var typography = FTypography.inherit(
+  /// The neutral slate theme with the tenant's seeds on top: its colours
+  /// derived for [brightness] and its corner radius. Whatever [brand] leaves
+  /// unset stays neutral.
+  static NinjaTheme themeFor(Brightness brightness, TenantBrand brand) {
+    final colors = brandedColors(NinjaColors.of(brightness), brand);
+    final style = BrandStyle.fromTheme(brand.theme);
+    return NinjaTheme(
       colors: colors,
-      defaultFontFamily: locale != null ? getFontFamily(locale) : 'Inter',
-    );
-    if (brandFont != null) {
-      typography = brandedTypography(typography, brandFont);
-    }
-
-    // Style inherits from colors and typography; the tenant's corners on top
-    final style = brandedStyle(
-      FStyle.inherit(colors: colors, typography: typography),
-      theme.radius,
-    );
-
-    // Build complete theme - widget styles will inherit from typography
-    return FThemeData(
-      colors: colors,
-      typography: typography,
-      style: style,
+      typography: NinjaTypography.scaled(style.headings.scale),
+      radius: style.radius,
     );
   }
 

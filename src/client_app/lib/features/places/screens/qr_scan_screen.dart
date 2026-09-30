@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/brand/brand_provider.dart';
@@ -74,10 +74,10 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     if (!mounted) return;
 
     if (!place.isActive) {
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.tableUnavailable),
-        icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
       );
       _resumeScanning();
       return;
@@ -92,12 +92,12 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       // Someone scanning a table code wants the menu, so close the scanner and
       // confirm with a toast rather than making them tap through a sheet.
       Navigator.of(context).pop();
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.youAreAtTable(place.name.localized(context))),
         // Where they are sitting, not an operation that succeeded — a seat
         // reads better here than a green tick.
-        icon: Icon(FIcons.armchair, color: context.theme.colors.primary),
+        icon: Icon(LucideIcons.armchair, color: context.theme.colors.primary),
       );
       return;
     }
@@ -112,10 +112,10 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     }
 
     if (result.isAlreadyMember) {
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.alreadyInSession),
-        icon: Icon(FIcons.info, color: context.theme.colors.primary),
+        icon: Icon(LucideIcons.info, color: context.theme.colors.primary),
       );
       Navigator.of(context).pop();
       return;
@@ -147,10 +147,10 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
 
   void _showInvalidQr() {
     final l10n = AppLocalizations.of(context)!;
-    showFToast(
+    showIsland(
       context: context,
       title: Text(l10n.invalidQrCode),
-      icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+      icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
     );
   }
 
@@ -172,17 +172,17 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       if (branchId != null) ref.invalidate(placesProvider(branchId));
 
       Navigator.of(context).pop();
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.joinedSession),
-        icon: Icon(FIcons.check, color: AppTheme.successColor),
+        icon: Icon(LucideIcons.check, color: AppTheme.successColor),
       );
     } catch (e) {
       if (mounted) {
-        showFToast(
+        showIsland(
           context: context,
           title: Text(l10n.failedToJoinSession),
-          icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+          icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
         );
         _resumeScanning();
       }
@@ -193,10 +193,10 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (!result.canReserve || !ref.read(featuresProvider).reservations || result.displayStatus != PlaceStatus.available) {
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.roomNotAvailable),
-        icon: Icon(FIcons.info, color: context.theme.colors.primary),
+        icon: Icon(LucideIcons.info, color: context.theme.colors.primary),
       );
       _resumeScanning();
       return;

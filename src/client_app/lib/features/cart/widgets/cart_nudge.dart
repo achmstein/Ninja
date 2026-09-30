@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
@@ -43,17 +43,18 @@ class CartNudge extends ConsumerWidget {
     final money = ref.watch(moneyProvider);
     final name = offer.name.getText(ref.watch(localeProvider));
 
+    // In the open order, on the slab: a soft fill of its ink
     return Container(
-      margin: const EdgeInsets.only(top: 16),
+      margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: colors.secondary,
-        borderRadius: BorderRadius.circular(12),
+        color: colors.foreground.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(Ninja.tileRadius),
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               width: 44,
               height: 44,
@@ -64,7 +65,7 @@ class CartNudge extends ConsumerWidget {
                       placeholder: (context, url) => Container(color: colors.muted),
                       errorWidget: (context, url, error) => Container(color: colors.muted),
                     )
-                  : Container(color: colors.muted, child: Icon(FIcons.utensilsCrossed, size: 18, color: colors.mutedForeground)),
+                  : Container(color: colors.muted, child: Icon(LucideIcons.utensilsCrossed, size: 18, color: colors.mutedForeground)),
             ),
           ),
           const SizedBox(width: 12),
@@ -80,23 +81,27 @@ class CartNudge extends ConsumerWidget {
                 ),
                 AppText(
                   money(offer.effectivePrice),
-                  style: TextStyle(fontSize: 12, color: colors.mutedForeground),
+                  style: TextStyle(fontSize: 12, color: colors.foreground.withValues(alpha: 0.6)),
                 ),
               ],
             ),
           ),
-          IconButton(
-            tooltip: l10n.notNow,
-            onPressed: () => ref.read(notNowProvider.notifier).say(),
-            icon: Icon(FIcons.x, size: 18, color: colors.mutedForeground),
+          NinjaIconButton(
+            size: 36,
+            variant: NinjaButtonVariant.ghost,
+            semanticLabel: l10n.notNow,
+            onPress: () => ref.read(notNowProvider.notifier).say(),
+            child: const Icon(LucideIcons.x),
           ),
-          IconButton.filled(
-            tooltip: l10n.addSuggestion(name),
-            onPressed: () {
+          const SizedBox(width: 4),
+          NinjaIconButton(
+            variant: NinjaButtonVariant.primary,
+            semanticLabel: l10n.addSuggestion(name),
+            onPress: () {
               HapticFeedback.selectionClick();
               ref.read(cartProvider.notifier).addItem(suggestedLine(offer, 'CartNudge'));
             },
-            icon: const Icon(FIcons.plus, size: 18),
+            child: const Icon(LucideIcons.plus),
           ),
         ],
       ),

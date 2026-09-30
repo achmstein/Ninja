@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
@@ -71,7 +71,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       }
 
       if (place.options.isEmpty) {
-        _leave('/menu', l10n.youAreAtTable(place.name.localized(context)), icon: FIcons.armchair);
+        _leave('/menu', l10n.youAreAtTable(place.name.localized(context)), icon: LucideIcons.armchair);
         return;
       }
 
@@ -93,7 +93,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
 
       // Already in the party here — nothing to decide
       if (result.isAlreadyMember) {
-        _leave('/places', l10n.alreadyInSession, icon: FIcons.info);
+        _leave('/places', l10n.alreadyInSession, icon: LucideIcons.info);
         return;
       }
 
@@ -121,7 +121,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       if (!mounted) return;
 
       _refreshRooms();
-      _leave('/places', l10n.joinedSession, icon: FIcons.check, success: true);
+      _leave('/places', l10n.joinedSession, icon: LucideIcons.check, success: true);
     } catch (_) {
       if (mounted) {
         setState(() => _busy = false);
@@ -155,16 +155,16 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
   void _leave(
     String to,
     String message, {
-    IconData icon = FIcons.info,
+    IconData icon = LucideIcons.info,
     bool isError = false,
     bool success = false,
   }) {
     context.go(to);
-    showFToast(
+    showIsland(
       context: context,
       title: Text(message),
       icon: Icon(
-        isError ? FIcons.circleX : icon,
+        isError ? LucideIcons.circleX : icon,
         color: isError
             ? context.theme.colors.destructive
             : success
@@ -192,7 +192,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(FIcons.x),
+          icon: const Icon(LucideIcons.x),
           onPressed: () => context.go('/places'),
         ),
       ),
@@ -230,7 +230,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
             if (available)
               SizedBox(
                 width: double.infinity,
-                child: FButton(
+                child: NinjaButton(
                   onPress: _busy ? null : _reserve,
                   child: Text(l10n.reserveThisRoom),
                 ),
@@ -244,8 +244,8 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
             // A table takes orders whatever the clock does
             if (scan.kind == PlaceKind.table) ...[
               const SizedBox(height: 12),
-              FButton(
-                variant: FButtonVariant.ghost,
+              NinjaButton(
+                variant: NinjaButtonVariant.ghost,
                 onPress: () => context.go('/menu'),
                 child: Text(l10n.orderHere),
               ),

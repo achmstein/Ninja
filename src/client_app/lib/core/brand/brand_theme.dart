@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import '../theme/ninja_theme.dart';
 import 'brand_fonts.dart';
 import 'tenant_brand.dart';
 
@@ -33,18 +33,40 @@ class Oklch {
     return Oklch(L, c, h);
   }
 
-  /// Linear sRGB, clipped to the gamut
-  List<double> get _linearRgb {
+  /// Linear sRGB, unclipped
+  static List<double> _toLinear(double l, double c, double h) {
     final a = c * math.cos(h * math.pi / 180);
     final b = c * math.sin(h * math.pi / 180);
     final l_ = math.pow(l + 0.3963377774 * a + 0.2158037573 * b, 3).toDouble();
     final m_ = math.pow(l - 0.1055613458 * a - 0.0638541728 * b, 3).toDouble();
     final s_ = math.pow(l - 0.0894841775 * a - 1.291485548 * b, 3).toDouble();
     return [
-      (4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_).clamp(0.0, 1.0),
-      (-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_).clamp(0.0, 1.0),
-      (-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_).clamp(0.0, 1.0),
+      4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_,
+      -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
+      -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_,
     ];
+  }
+
+  static bool _inGamut(List<double> rgb) => rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+
+  /// Linear sRGB, brought into the gamut as a browser brings an oklch() it
+  /// cannot show (CSS Color 4): the chroma lowered until it fits, so the
+  /// lightness and the hue stay what was asked for, then clipped by a hair
+  List<double> get _linearRgb {
+    var rgb = _toLinear(l, c, h);
+    if (!_inGamut(rgb)) {
+      var lo = 0.0, hi = c;
+      for (var i = 0; i < 24; i++) {
+        final mid = (lo + hi) / 2;
+        if (_inGamut(_toLinear(l, mid, h))) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      rgb = _toLinear(l, lo, h);
+    }
+    return [for (final v in rgb) v.clamp(0.0, 1.0)];
   }
 
   Color toColor() {
@@ -79,39 +101,50 @@ Oklch textOn(Oklch fill) {
 /// Text and icons on a fill of [color]: white on a dark brand, near-black on a light one
 Color onBrandColor(Color color) => textOn(Oklch.fromColor(color)).toColor();
 
-/// The tenant's seeds on top of a Forui palette, for its brightness; whatever
-/// the tenant left unset stays the neutral theme's. Same rules as the web
-/// apps' brand-theme:
+/// The tenant's seeds on top of the neutral palette, for its brightness;
+/// whatever the tenant left unset stays neutral. Same rules as client_web's
+/// lib/brand-theme.ts `brandColors`:
 ///
-/// * primary — light: as given, kept off the extremes; dark: lifted and calmed
-///   unless the brand gave its own; text on it by contrast
-/// * accent → secondary — light: as given; dark: pulled down to a deep tint
-///   unless given
 /// * surface → the neutrals of both schemes, tinted by its hue: the light page
 ///   is the colour given, the dark page its hue at night unless given
-FColors brandedColors(FColors colors, TenantBrand brand) {
+/// * primary — light: as given, kept off the extremes; dark: lifted and calmed
+///   unless the brand gave its own; text on it by contrast. The slab (the
+///   dock, the tray, the dark cards) is a deep shade of it, unless the
+///   business keeps the neutral one
+/// * accent → secondary — light: as given; dark: pulled down to a deep tint
+///   unless given; the accent tint from it
+NinjaColors brandedColors(NinjaColors colors, TenantBrand brand) {
   final dark = colors.brightness == Brightness.dark;
   final theme = brand.theme;
-  Color? background, foreground, muted, mutedForeground, border, primary, primaryForeground, secondary, secondaryForeground;
+  Color? background, foreground, card, popover, muted, mutedForeground, border, input;
+  Color? primary, primaryForeground, ring, slab, slabInk;
+  Color? secondary, secondaryForeground, accent, accentForeground;
 
   final surface = theme.surface == null ? null : Oklch.fromColor(theme.surface!);
   final darkSurface = theme.dark?.surface == null ? null : Oklch.fromColor(theme.dark!.surface!);
   if (!dark && surface != null) {
     final h = surface.h;
     final c = math.min(surface.c, 0.03);
+    // The page is the colour given, kept light enough to be a page
     background = Oklch(surface.l.clamp(0.9, 1.0), c, h).toColor();
+    card = background;
+    popover = background;
     foreground = Oklch(0.17, math.min(c, 0.02), h).toColor();
     muted = Oklch(0.955, c * 0.7, h).toColor();
     mutedForeground = Oklch(0.52, math.min(c, 0.02), h).toColor();
     border = Oklch(0.9, c * 0.7, h).toColor();
+    input = border;
   }
   final darkSeed = darkSurface ?? surface;
   if (dark && darkSeed != null) {
     final h = darkSeed.h;
     final c = math.min(darkSeed.c, 0.02);
+    // Given a dark page, it is used as such; derived, it is the light page's hue at night
     final page = darkSurface != null ? Oklch(darkSurface.l.clamp(0.1, 0.3), c, h) : Oklch(0.16, c, h);
     background = page.toColor();
     foreground = Oklch(0.985, c * 0.3, h).toColor();
+    card = Oklch(page.l + 0.05, c, h).toColor();
+    popover = card;
     muted = Oklch(page.l + 0.12, c, h).toColor();
     mutedForeground = Oklch(0.72, math.min(c, 0.015), h).toColor();
   }
@@ -129,6 +162,15 @@ FColors brandedColors(FColors colors, TenantBrand brand) {
     }
     primary = fill.toColor();
     primaryForeground = textOn(fill).toColor();
+    ring = primary;
+    // Near-black with the brand's hue on a light page, a raised surface of it on a dark one
+    if (theme.slab != 'neutral') {
+      final deep = dark
+          ? Oklch(0.28, math.min(primarySeed.c, 0.07), primarySeed.h)
+          : Oklch(0.23, math.min(primarySeed.c, 0.09), primarySeed.h);
+      slab = deep.toColor();
+      slabInk = textOn(deep).toColor();
+    }
   }
 
   final accentSeed = theme.accent == null ? null : Oklch.fromColor(theme.accent!);
@@ -137,8 +179,12 @@ FColors brandedColors(FColors colors, TenantBrand brand) {
     if (dark) {
       final given = theme.dark?.accent;
       fill = given != null ? Oklch.fromColor(given) : Oklch(0.32, math.min(accentSeed.c, 0.09), accentSeed.h);
+      accent = Oklch(0.26, math.min(accentSeed.c, 0.05), accentSeed.h).toColor();
+      accentForeground = const Oklch(0.985, 0, 0).toColor();
     } else {
       fill = accentSeed.copyWith(l: accentSeed.l.clamp(0.3, 0.9));
+      accent = Oklch(0.95, math.min(accentSeed.c, 0.05), accentSeed.h).toColor();
+      accentForeground = Oklch(0.2, 0.03, accentSeed.h).toColor();
     }
     secondary = fill.toColor();
     secondaryForeground = textOn(fill).toColor();
@@ -147,18 +193,26 @@ FColors brandedColors(FColors colors, TenantBrand brand) {
   return colors.copyWith(
     background: background,
     foreground: foreground,
+    card: card,
+    popover: popover,
     muted: muted,
     mutedForeground: mutedForeground,
     border: border,
+    input: input,
     primary: primary,
     primaryForeground: primaryForeground,
+    ring: ring,
+    slab: slab,
+    slabInk: slabInk,
     secondary: secondary,
     secondaryForeground: secondaryForeground,
+    accent: accent,
+    accentForeground: accentForeground,
   );
 }
 
 /// The corner radius a tenant's `radius` token asks for, in logical pixels;
-/// null keeps Forui's own
+/// null keeps the style's
 double? brandRadius(String? radius) => switch (radius) {
       'none' => 0,
       'sm' => 6,
@@ -168,17 +222,6 @@ double? brandRadius(String? radius) => switch (radius) {
       _ => null,
     };
 
-/// [style] with the tenant's corners: the same lerping radius Forui uses, so
-/// small controls do not turn into circles, and a focus ring to match
-FStyle brandedStyle(FStyle style, String? radius) {
-  final r = brandRadius(radius);
-  if (r == null) return style;
-  return style.copyWith(
-    borderRadius: FLerpBorderRadius.all(Radius.circular(r), min: r * 3),
-    focusedOutlineStyle: style.focusedOutlineStyle.copyWith(borderRadius: BorderRadius.all(Radius.circular(r))),
-  );
-}
-
 /// A family when the app can set text in it (bundled, or one google_fonts
 /// knows), else null: an unknown family silently keeps the app's own
 String? brandFontFamily(String? font) => font != null && isLoadableFont(font) ? font : null;
@@ -187,26 +230,6 @@ String? brandFontFamily(String? font) => font != null && isLoadableFont(font) ? 
 /// Latin one otherwise; null keeps the bundled face
 String? brandFontFor(TenantTheme theme, Locale locale) =>
     brandFontFamily(locale.languageCode == 'ar' ? theme.fontArabic : theme.fontLatin);
-
-/// [typography] set in [font] (a family [brandFontFamily] accepted), weight
-/// by weight, so bold is the family's bold and not a synthesized one
-FTypography brandedTypography(FTypography typography, String font) {
-  TextStyle f(TextStyle style) => brandFontStyle(font, style);
-  return typography.copyWith(
-    xs: f(typography.xs),
-    sm: f(typography.sm),
-    base: f(typography.base),
-    lg: f(typography.lg),
-    xl: f(typography.xl),
-    xl2: f(typography.xl2),
-    xl3: f(typography.xl3),
-    xl4: f(typography.xl4),
-    xl5: f(typography.xl5),
-    xl6: f(typography.xl6),
-    xl7: f(typography.xl7),
-    xl8: f(typography.xl8),
-  );
-}
 
 /// The tenant's font family for the widgets below it, already chosen for
 /// the app's language, so [Text] built outside Forui's typography (AppText)

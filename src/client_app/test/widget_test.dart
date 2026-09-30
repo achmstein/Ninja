@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
+import 'package:ninja_client/core/ui/ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ninja_client/core/brand/brand_fonts.dart';
 import 'package:ninja_client/core/brand/brand_mark.dart';
 import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/brand/brand_service.dart';
+import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/core/brand/brand_theme.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
@@ -130,7 +131,7 @@ void main() {
     Color rgb(Color c) => Color.fromARGB(255, (c.r * 255).round(), (c.g * 255).round(), (c.b * 255).round());
 
     test('light: the seeds as given with text by contrast; dark: derived from the same seeds', () {
-      final light = brandedColors(FThemes.zinc.light.colors, brand);
+      final light = brandedColors(NinjaColors.light, brand);
       expect(rgb(light.primary), const Color(0xFF0EA5E9));
       expect(rgb(light.secondary), const Color(0xFFF59E0B));
       expect(rgb(light.background), const Color(0xFFFFFBF5));
@@ -138,7 +139,7 @@ void main() {
       expect(Oklch.fromColor(light.secondaryForeground).l, lessThan(0.3));
       expect(contrastRatio(Oklch.fromColor(light.background), Oklch.fromColor(light.foreground)), greaterThan(10));
 
-      final dark = brandedColors(FThemes.zinc.dark.colors, brand);
+      final dark = brandedColors(NinjaColors.dark, brand);
       // The dark page carries the surface's warm hue at night
       final page = Oklch.fromColor(dark.background);
       expect(page.l, closeTo(0.16, 0.01));
@@ -149,17 +150,34 @@ void main() {
       expect(Oklch.fromColor(dark.secondary).l, closeTo(0.32, 0.01));
     });
 
+    test("the slab is a deep shade of the brand's colour, unless the business keeps it neutral", () {
+      final light = brandedColors(NinjaColors.light, brand);
+      // Read back from sRGB, so a hair off the 0.23 it was derived at
+      final slab = Oklch.fromColor(light.slab);
+      expect(slab.l, closeTo(0.23, 0.02));
+      expect(slab.h, closeTo(Oklch.fromColor(const Color(0xFF0EA5E9)).h, 3));
+      expect(rgb(light.slabInk), rgb(const Oklch(0.985, 0, 0).toColor()));
+      expect(Oklch.fromColor(brandedColors(NinjaColors.dark, brand).slab).l, closeTo(0.28, 0.02));
+
+      const neutral = TenantBrand(
+        name: LocalizedText(en: 'Chillax'),
+        primaryColorHex: '#0ea5e9',
+        theme: TenantTheme(slab: 'neutral'),
+      );
+      expect(brandedColors(NinjaColors.light, neutral).slab, NinjaColors.light.slab);
+    });
+
     test('the dark seeds replace what would be derived', () {
       const given = TenantBrand(
         name: LocalizedText(en: 'Chillax'),
         primaryColorHex: '#0ea5e9',
         theme: TenantTheme(dark: TenantThemeDark(primaryHex: '#7dd3fc', surfaceHex: '#1a1412')),
       );
-      final dark = brandedColors(FThemes.zinc.dark.colors, given);
+      final dark = brandedColors(NinjaColors.dark, given);
       expect(rgb(dark.primary), const Color(0xFF7DD3FC));
       expect(Oklch.fromColor(dark.background).l, closeTo(Oklch.fromColor(const Color(0xFF1A1412)).l, 0.01));
       // And the light scheme is untouched by them
-      expect(brandedColors(FThemes.zinc.light.colors, given).background, FThemes.zinc.light.colors.background);
+      expect(brandedColors(NinjaColors.light, given).background, NinjaColors.light.background);
     });
 
     test('a colour survives the trip through OKLCH', () {
@@ -168,9 +186,9 @@ void main() {
       }
     });
 
-    test('nothing set leaves zinc untouched', () {
-      expect(brandedColors(FThemes.zinc.light.colors, TenantBrand.neutral), FThemes.zinc.light.colors);
-      expect(brandedStyle(FThemes.zinc.light.style, null), FThemes.zinc.light.style);
+    test('nothing set leaves the neutral slate untouched', () {
+      expect(brandedColors(NinjaColors.light, TenantBrand.neutral), NinjaColors.light);
+      expect(brandedColors(NinjaColors.dark, TenantBrand.neutral), NinjaColors.dark);
     });
 
     test('the radius token sets the style\'s corners', () {
@@ -178,8 +196,10 @@ void main() {
       expect(brandRadius('md'), 10);
       expect(brandRadius('xl'), 24);
       expect(brandRadius('round'), isNull);
-      final style = brandedStyle(FThemes.zinc.light.style, 'lg');
-      expect(style.borderRadius.topLeft, const Radius.circular(16));
+      // Ninja's corners when the business chose none
+      expect(ThemeState.themeFor(Brightness.light, TenantBrand.neutral).radius, 24);
+      const lg = TenantBrand(name: LocalizedText(en: 'Chillax'), theme: TenantTheme(radius: 'lg'));
+      expect(ThemeState.themeFor(Brightness.light, lg).radius, 16);
     });
 
     test('a font the app cannot load falls back silently, and each script gets its own', () {

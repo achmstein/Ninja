@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../ui/ui.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
@@ -41,28 +41,30 @@ class BranchSwitcher extends ConsumerWidget {
     final selectedBranch = branchState.selectedBranch;
     if (selectedBranch == null) return const SizedBox.shrink();
 
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(start: 12, end: 12, top: 8),
-        child: GestureDetector(
-          onTap: () => _showBranchPicker(context, ref, branchState.branches, selectedBranch),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(FIcons.mapPin, size: 14, color: theme.colors.foreground),
-              const SizedBox(width: 4),
-              AppText(
+    // A chip in the top bar's end corner: where the customer is ordering from
+    return Pressable(
+      onTap: () => _showBranchPicker(context, ref, branchState.branches, selectedBranch),
+      child: Container(
+        height: 36,
+        padding: const EdgeInsetsDirectional.only(start: 10, end: 8),
+        decoration: ShapeDecoration(color: theme.colors.muted, shape: const StadiumBorder()),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.mapPin, size: 14, color: theme.colors.foreground),
+            const SizedBox(width: 4),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: AppText(
                 selectedBranch.name.localized(context),
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.foreground,
-                  fontWeight: FontWeight.w600,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.caption.copyWith(color: theme.colors.foreground, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 2),
-              Icon(FIcons.chevronDown, size: 18, color: theme.colors.mutedForeground),
-            ],
-          ),
+            ),
+            const SizedBox(width: 2),
+            Icon(LucideIcons.chevronDown, size: 16, color: theme.colors.mutedForeground),
+          ],
         ),
       ),
     );
@@ -75,69 +77,30 @@ class BranchSwitcher extends ConsumerWidget {
 
     if (hasActiveSession) {
       final l10n = AppLocalizations.of(context)!;
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.cannotSwitchBranchDuringSession),
-        icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
       );
       return;
     }
 
-    final theme = context.theme;
-
-    showModalBottomSheet(
+    showNinjaSheet(
       context: context,
-      useRootNavigator: true,
-      backgroundColor: theme.colors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+      builder: (ctx) => TileGroup(
+        children: [
+          for (final branch in branches)
+            NinjaTile(
+              icon: LucideIcons.mapPin,
+              title: AppText(branch.name.localized(context)),
+              trailing: branch.id == current.id ? Icon(LucideIcons.check, size: 18, color: ctx.theme.colors.foreground) : const SizedBox.shrink(),
+              onPress: () {
+                Navigator.pop(ctx);
+                if (branch.id != current.id) ref.read(branchProvider.notifier).selectBranch(branch.id);
+              },
             ),
-            const SizedBox(height: 8),
-            ...branches.map((branch) {
-              final isSelected = branch.id == current.id;
-              return ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                leading: Icon(
-                  FIcons.mapPin,
-                  size: 20,
-                  color: isSelected ? theme.colors.primary : theme.colors.foreground,
-                ),
-                title: AppText(
-                  branch.name.localized(context),
-                  style: theme.typography.sm.copyWith(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: isSelected ? theme.colors.primary : theme.colors.foreground,
-                  ),
-                ),
-                trailing: isSelected
-                    ? Icon(FIcons.check, size: 16, color: theme.colors.primary)
-                    : null,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  if (!isSelected) {
-                    ref.read(branchProvider.notifier).selectBranch(branch.id);
-                  }
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -53,25 +53,11 @@ class ReceiptScreen extends ConsumerWidget {
       body = Center(child: AppText(l10n.receiptUnavailable, style: TextStyle(color: colors.mutedForeground)));
     }
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: title, back: true),
             Expanded(child: body),
           ],
         ),

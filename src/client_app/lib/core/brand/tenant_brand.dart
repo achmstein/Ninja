@@ -335,15 +335,16 @@ class TenantTheme {
   /// The dark scheme's own seeds, when derived ones do not suit the brand
   final TenantThemeDark? dark;
 
-  /// The style the customer app wears (see styles.dart): `classic`,
-  /// `minimal`, `bold`, `cozy` or `night`; null (or one this build does not
-  /// know) is classic
+  /// The style the business chose. The customer app wears one style now,
+  /// Ninja (see styles.dart), whatever this says; kept for the cached document
   final String? style;
 
-  /// The parts the business dressed its own way over its style (`menuItem`,
-  /// `categories`, `header`, `buttons`, `surface`, `density`), as sent;
-  /// null leaves every part to the style. Resolved by `resolveLayout`.
+  /// The parts the business dressed its own way, as sent; the app reads
+  /// `menuItem` (how the menu shows its dishes). Resolved by `resolveLayout`.
   final Map<String, String>? layout;
+
+  /// The dock's colour: null a deep shade of the brand colour, "neutral" near-black
+  final String? slab;
 
   const TenantTheme({
     this.accentHex,
@@ -355,6 +356,7 @@ class TenantTheme {
     this.dark,
     this.style,
     this.layout,
+    this.slab,
   });
 
   TenantTheme copyWith({String? radius, String? headerSize, String? fontLatin, String? fontArabic}) => TenantTheme(
@@ -367,6 +369,7 @@ class TenantTheme {
         dark: dark,
         style: style,
         layout: layout,
+        slab: slab,
       );
 
   static const headerSizes = ['sm', 'md', 'lg'];
@@ -391,6 +394,7 @@ class TenantTheme {
       dark: TenantThemeDark.parse(json['dark']),
       style: font('style')?.toLowerCase(),
       layout: _layout(json['layout']),
+      slab: font('slab')?.toLowerCase(),
     );
   }
 
@@ -417,6 +421,7 @@ class TenantTheme {
         'dark': dark?.toJson(),
         'style': style,
         'layout': layout,
+        'slab': slab,
       };
 
   Color? get accent => _color(accentHex);
@@ -434,11 +439,12 @@ class TenantTheme {
           other.headerSize == headerSize &&
           other.dark == dark &&
           other.style == style &&
+          other.slab == slab &&
           mapEquals(other.layout, layout);
 
   @override
   int get hashCode => Object.hash(
-      accentHex, surfaceHex, radius, fontLatin, fontArabic, headerSize, dark, style, Object.hashAllUnordered(layout?.entries.map((e) => '${e.key}=${e.value}') ?? const []));
+      accentHex, surfaceHex, radius, fontLatin, fontArabic, headerSize, dark, style, slab, Object.hashAllUnordered(layout?.entries.map((e) => '${e.key}=${e.value}') ?? const []));
 }
 
 /// The tenant this build runs for: name, brand color, logo, wordmark, theme

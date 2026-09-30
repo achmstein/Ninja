@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Chillax app theme colors - aligned with Forui's zinc theme
-/// Forui theming is handled via FTheme in main.dart
+/// Fixed colours a few screens still name directly. The theme itself is
+/// NinjaTheme (ninja_theme.dart), read as `context.theme`
 class AppTheme {
   // Forui zinc-based colors
   static const Color primaryColor = Color(0xFF18181B); // zinc-900

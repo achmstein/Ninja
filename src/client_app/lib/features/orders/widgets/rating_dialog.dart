@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/order_service.dart';
@@ -135,7 +135,7 @@ class _RatingDialogState extends State<RatingDialog> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+                    child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
                   ),
                 ],
               ),
@@ -210,7 +210,7 @@ class _RatingDialogState extends State<RatingDialog> {
                   child: Row(
                     children: [
                       Icon(
-                        FIcons.circleAlert,
+                        LucideIcons.circleAlert,
                         size: 18,
                         color: colors.destructive,
                       ),

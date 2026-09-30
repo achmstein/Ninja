@@ -1,54 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'brand_fonts.dart';
+import '../theme/ninja_theme.dart';
 import '../theme/theme_provider.dart';
 import 'brand_theme.dart';
 import 'styles.dart';
 import 'tenant_brand.dart';
 
 /// The style the customer app wears (styles.dart), as the widgets read it:
-/// the resolved layout, the headings, and the few measures each part moves
-/// (the web's data-attribute tokens in client_web's index.css). It rides on
-/// the Material theme as an extension; a context without one is classic,
-/// which is the app exactly as it was before styles.
+/// the resolved layout, the headings, and the few measures each part moves.
+/// It rides on the Material theme as an extension; a context without one
+/// wears Ninja as it comes.
 class BrandStyle extends ThemeExtension<BrandStyle> {
-  final StyleKey style;
   final Layout layout;
   final Headings headings;
-  final bool forceDark;
 
   /// The corners the brand's radius seed (or its style's default) asks
   /// for, in logical pixels; the web's --radius
   final double radius;
 
   const BrandStyle({
-    required this.style,
     required this.layout,
     required this.headings,
-    required this.forceDark,
-    this.radius = 10,
+    this.radius = 24,
   });
 
-  static final classic = BrandStyle(
-    style: StyleKey.classic,
-    layout: styles[StyleKey.classic]!.layout,
-    headings: styles[StyleKey.classic]!.headings,
-    forceDark: false,
-  );
+  static final plain = BrandStyle(layout: ninja.layout, headings: ninja.headings);
 
-  /// The style [theme] names, its layout with the business's own parts over it
-  factory BrandStyle.fromTheme(TenantTheme theme) {
-    final preset = theme.preset;
-    return BrandStyle(
-      style: theme.styleKey,
-      layout: theme.resolvedLayout,
-      headings: preset.headings,
-      forceDark: preset.forceDark,
-      radius: brandRadius(withStyleDefaults(theme).radius) ?? 10,
-    );
-  }
+  /// Ninja, with how the business shows its menu and its corners
+  factory BrandStyle.fromTheme(TenantTheme theme) => BrandStyle(
+        layout: theme.resolvedLayout,
+        headings: ninja.headings,
+        radius: brandRadius(withStyleDefaults(theme).radius) ?? 24,
+      );
 
-  static BrandStyle of(BuildContext context) => Theme.of(context).extension<BrandStyle>() ?? classic;
+  static BrandStyle of(BuildContext context) => Theme.of(context).extension<BrandStyle>() ?? plain;
 
   /// Every spacing a style can move scales by this: the web's --space
   double get space => switch (layout.density) {
@@ -68,7 +53,7 @@ class BrandStyle extends ThemeExtension<BrandStyle> {
   /// A card, a tile, a panel: a tonal fill with no edges (flat), the page
   /// with a hairline (outlined), or lifted with no border (shadow; a
   /// hairline on dark, where shadows vanish)
-  BoxDecoration surface(FColors colors, {required double radius}) {
+  BoxDecoration surface(NinjaColors colors, {required double radius}) {
     final corners = BorderRadius.circular(radius);
     switch (layout.surface) {
       case SurfaceLayout.flat:
@@ -91,9 +76,8 @@ class BrandStyle extends ThemeExtension<BrandStyle> {
   }
 
   /// [base] set as the style sets headings: its weight, its size scaled,
-  /// its tracking, and its own family when it has one (Playfair for cozy,
-  /// over the app's family for the script it lacks). Classic returns the
-  /// bold [base] untouched.
+  /// its tracking, and its own family when it has one (over the app's
+  /// family for the script it lacks).
   TextStyle heading(BuildContext context, TextStyle base) {
     final size = (base.fontSize ?? 16) * headings.scale;
     final style = base.copyWith(
@@ -115,11 +99,9 @@ class BrandStyle extends ThemeExtension<BrandStyle> {
       FontWeight.values.firstWhere((w) => w.value == weight, orElse: () => FontWeight.bold);
 
   @override
-  BrandStyle copyWith({StyleKey? style, Layout? layout, Headings? headings, bool? forceDark, double? radius}) => BrandStyle(
-        style: style ?? this.style,
+  BrandStyle copyWith({Layout? layout, Headings? headings, double? radius}) => BrandStyle(
         layout: layout ?? this.layout,
         headings: headings ?? this.headings,
-        forceDark: forceDark ?? this.forceDark,
         radius: radius ?? this.radius,
       );
 

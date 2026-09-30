@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -9,7 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../menu/models/menu_item.dart';
 import '../../menu/services/menu_service.dart';
 import '../../menu/providers/favorites_provider.dart';
-import '../../menu/widgets/item_customization_sheet.dart';
+import '../../menu/widgets/dish_view.dart';
 import '../../cart/models/cart_item.dart';
 import '../../cart/services/cart_service.dart';
 
@@ -37,29 +37,12 @@ class FavoritesScreen extends ConsumerWidget {
     final favoriteItemsAsync = ref.watch(favoriteMenuItemsProvider);
     final colors = context.theme.colors;
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             // Custom header with back button
-            Container(
-              padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      AppLocalizations.of(context)!.favorites,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: AppLocalizations.of(context)!.favorites, back: true),
 
             // Content
             Expanded(
@@ -71,11 +54,11 @@ class FavoritesScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(FIcons.circleAlert, size: 48, color: colors.mutedForeground),
+                      Icon(LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
                       const SizedBox(height: 16),
                       AppText(AppLocalizations.of(context)!.failedToLoadFavorites(error.toString()), style: TextStyle(color: colors.foreground)),
                       const SizedBox(height: 16),
-                      FButton(
+                      NinjaButton(
                         onPress: () => ref.refresh(favoriteMenuItemsProvider),
                         child: AppText(AppLocalizations.of(context)!.retry),
                       ),
@@ -139,7 +122,7 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          FButton(
+          NinjaButton(
             onPress: () => context.go('/menu'),
             child: AppText(l10n.browseMenu),
           ),
@@ -195,12 +178,12 @@ class _FavoriteItemTile extends ConsumerWidget {
                             ),
                             errorWidget: (context, url, error) => Container(
                               color: context.theme.colors.background,
-                              child: const Icon(FIcons.utensils, size: 24),
+                              child: const Icon(LucideIcons.utensils, size: 24),
                             ),
                           )
                         : Container(
                             color: colors.background,
-                            child: const Icon(FIcons.utensils, size: 24),
+                            child: const Icon(LucideIcons.utensils, size: 24),
                           ),
                   ),
                 ),
@@ -278,7 +261,7 @@ class _FavoriteItemTile extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Icon(
-                        FIcons.plus,
+                        LucideIcons.plus,
                         color: colors.primaryForeground,
                         size: 18,
                       ),
@@ -343,14 +326,7 @@ class _FavoriteItemTile extends ConsumerWidget {
     if (item.customizations.isEmpty) {
       _addToCart(ref);
     } else {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        useRootNavigator: true,
-        backgroundColor: Colors.transparent,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
-        builder: (context) => ItemCustomizationSheet(item: item),
-      );
+      showDishView(context, item);
     }
   }
 }
@@ -384,7 +360,7 @@ class _QuantityStepper extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               child: Icon(
-                quantity == 1 ? FIcons.trash2 : FIcons.minus,
+                quantity == 1 ? LucideIcons.trash2 : LucideIcons.minus,
                 color: quantity == 1 ? colors.destructive : colors.primary,
                 size: 18,
               ),
@@ -407,7 +383,7 @@ class _QuantityStepper extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               child: Icon(
-                FIcons.plus,
+                LucideIcons.plus,
                 color: colors.primary,
                 size: 18,
               ),

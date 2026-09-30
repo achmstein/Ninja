@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
-import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -10,7 +9,6 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../providers/settings_provider.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/brand/styles.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -24,37 +22,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsState = ref.watch(settingsProvider);
     final themeState = ref.watch(themeProvider);
-    // A style that keeps the page dark leaves nothing to choose
-    final forcedDark = ref.watch(brandProvider.select((b) => b.theme.preset.forceDark));
     // A business that writes one language speaks it, with nothing to switch
     final oneLanguage = ref.watch(brandProvider.select((b) => b.locale.writesOneLanguage));
     final authState = ref.watch(authServiceProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    return FScaffold(
-      child: SafeArea(
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             // Custom header with back button
-            Container(
-              padding: const EdgeInsetsDirectional.only(start: 8, end: 16, top: 8, bottom: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: const Icon(FIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AppText(
-                      l10n.settings,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PageHeader(title: l10n.settings, back: true),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -64,11 +43,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     // Notifications Section
                     _buildSectionHeader(l10n.notifications),
                     const SizedBox(height: 8),
-                    FTileGroup(
+                    TileGroup(
                       children: [
-                        FTile(
+                        NinjaTile(
                           title: AppText(l10n.orderStatusUpdates),
-                          suffix: FSwitch(
+                          trailing: NinjaSwitch(
                             value: settingsState.preferences.orderStatusUpdates,
                             onChange: (value) {
                               ref.read(settingsProvider.notifier).updateNotificationPreference(
@@ -77,9 +56,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             },
                           ),
                         ),
-                        FTile(
+                        NinjaTile(
                           title: AppText(l10n.promotionsAndOffers),
-                          suffix: FSwitch(
+                          trailing: NinjaSwitch(
                             value: settingsState.preferences.promotionsAndOffers,
                             onChange: (value) {
                               ref.read(settingsProvider.notifier).updateNotificationPreference(
@@ -96,15 +75,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     // Appearance Section
                     _buildSectionHeader(l10n.appearance),
                     const SizedBox(height: 8),
-                    FTileGroup(
+                    TileGroup(
                       children: [
                         // The web's ThemeSwitch, inline: three icons, the
                         // current one filled, no sheet to open
-                        if (!forcedDark)
-                        FTile(
-                          prefix: const Icon(FIcons.palette),
+                        NinjaTile(
+                          icon: LucideIcons.palette,
                           title: AppText(l10n.theme),
-                          suffix: _ThemeSegments(
+                          trailing: _ThemeSegments(
                             mode: themeState.themeMode,
                             onChanged: (mode) => ref.read(themeProvider.notifier).setThemeMode(mode),
                           ),
@@ -112,11 +90,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         // Two languages: the row states where it stands and
                         // flips on tap
                         if (!oneLanguage)
-                        FTile(
-                          prefix: const Icon(FIcons.globe),
+                        NinjaTile(
+                          icon: LucideIcons.globe,
                           title: AppText(l10n.language),
-                          suffix: AppText(locale.languageCode == 'ar' ? l10n.arabic : l10n.english,
-                              style: TextStyle(color: context.theme.colors.mutedForeground)),
+                          value: AppText(locale.languageCode == 'ar' ? l10n.arabic : l10n.english),
                           onPress: () => ref
                               .read(localeProvider.notifier)
                               .setLocale(Locale(locale.languageCode == 'ar' ? 'en' : 'ar')),
@@ -130,25 +107,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       // Account Section
                       _buildSectionHeader(l10n.account),
                       const SizedBox(height: 8),
-                      FTileGroup(
+                      TileGroup(
                         children: [
-                          FTile(
-                            prefix: const Icon(FIcons.user),
+                          NinjaTile(
+                            icon: LucideIcons.user,
                             title: AppText(l10n.updateProfile),
-                            suffix: const Icon(FIcons.chevronRight),
                             onPress: () => _showUpdateProfileSheet(context, ref),
                           ),
                           if (!authState.isSocialLogin)
-                            FTile(
-                              prefix: const Icon(FIcons.lock),
+                            NinjaTile(
+                              icon: LucideIcons.lock,
                               title: AppText(l10n.changePassword),
-                              suffix: const Icon(FIcons.chevronRight),
                               onPress: () => _showChangePasswordSheet(context, ref),
                             ),
-                          FTile(
-                            prefix: Icon(FIcons.trash2, color: context.theme.colors.destructive),
-                            title: AppText(l10n.deleteAccount, style: TextStyle(color: context.theme.colors.destructive)),
-                            suffix: Icon(FIcons.chevronRight, color: context.theme.colors.destructive),
+                          NinjaTile(
+                            icon: LucideIcons.trash2,
+                            destructive: true,
+                            title: AppText(l10n.deleteAccount),
                             onPress: () => _showDeleteAccountDialog(context, ref),
                           ),
                         ],
@@ -179,22 +154,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.read(authServiceProvider);
 
-    showModalBottomSheet(
+    showNinjaSheet(
       context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      padding: EdgeInsets.zero,
       builder: (sheetContext) => _UpdateProfileSheet(
         ref: ref,
         l10n: l10n,
         currentName: authState.nameParts,
         onSuccess: () {
           Navigator.pop(sheetContext);
-          showFToast(
+          showIsland(
             context: context,
             title: AppText(l10n.profileUpdatedSuccessfully),
-            icon: Icon(FIcons.circleCheck, color: Colors.green.shade600),
+            icon: Icon(LucideIcons.circleCheck, color: Colors.green.shade600),
           );
         },
       ),
@@ -204,21 +176,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showChangePasswordSheet(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    showModalBottomSheet(
+    showNinjaSheet(
       context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
+      padding: EdgeInsets.zero,
       builder: (sheetContext) => _ChangePasswordSheet(
         ref: ref,
         l10n: l10n,
         onSuccess: () {
           Navigator.pop(sheetContext);
-          showFToast(
+          showIsland(
             context: context,
             title: AppText(l10n.passwordChangedSuccessfully),
-            icon: Icon(FIcons.circleCheck, color: Colors.green.shade600),
+            icon: Icon(LucideIcons.circleCheck, color: Colors.green.shade600),
           );
         },
       ),
@@ -227,21 +196,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    showFDialog(
+    showNinjaSheet(
       context: context,
-      builder: (dialogContext, style, animation) => FDialog(
-        style: style,
-        animation: animation,
+      builder: (dialogContext) => NinjaDialog(
         title: AppText(l10n.deleteAccountQuestion, style: TextStyle(fontWeight: FontWeight.bold)),
         body: AppText(l10n.cannotBeUndone),
         actions: [
-          FButton(
-            variant: FButtonVariant.outline,
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
             onPress: () => Navigator.pop(dialogContext),
             child: AppText(l10n.cancel),
           ),
-          FButton(
-            variant: FButtonVariant.destructive,
+          NinjaButton(
+            variant: NinjaButtonVariant.destructive,
             onPress: () async {
               Navigator.pop(dialogContext);
 
@@ -251,17 +218,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 // Sign out after account deletion
                 await ref.read(authServiceProvider.notifier).signOut();
                 if (context.mounted) {
-                  showFToast(
+                  showIsland(
                     context: context,
                     title: AppText(l10n.accountDeletedSuccessfully),
-                    icon: Icon(FIcons.check, color: AppTheme.successColor),
+                    icon: Icon(LucideIcons.check, color: AppTheme.successColor),
                   );
                 }
               } else if (context.mounted) {
-                showFToast(
+                showIsland(
                   context: context,
                   title: AppText(l10n.failedToDeleteAccount),
-                  icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+                  icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
                 );
               }
             },
@@ -371,26 +338,18 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
     final colors = theme.colors;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.zero,
       child: Container(
         decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          // On the slab sheet, which draws the page and the corners
+          color: Colors.transparent,
         ),
         child: SafeArea(
+          top: false,
+          bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.mutedForeground,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
 
               // Header
               Padding(
@@ -409,7 +368,7 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                     ),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+                      child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
                     ),
                   ],
                 ),
@@ -424,9 +383,9 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_error != null) ...[
-                      FAlert(
-                        variant: FAlertVariant.destructive,
-                        icon: const Icon(FIcons.circleAlert),
+                      NinjaAlert(
+                        variant: NinjaAlertVariant.destructive,
+                        icon: const Icon(LucideIcons.circleAlert),
                         title: AppText(widget.l10n.error),
                         subtitle: AppText(_error!),
                       ),
@@ -437,8 +396,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: FTextField(
-                            control: FTextFieldControl.managed(controller: _firstNameController),
+                          child: NinjaField(
+                            controller: _firstNameController,
                             label: AppText(widget.l10n.firstName),
                             enabled: !_isLoading,
                             textCapitalization: TextCapitalization.words,
@@ -446,8 +405,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: FTextField(
-                            control: FTextFieldControl.managed(controller: _lastNameController),
+                          child: NinjaField(
+                            controller: _lastNameController,
                             label: AppText(widget.l10n.lastName),
                             enabled: !_isLoading,
                             textCapitalization: TextCapitalization.words,
@@ -457,8 +416,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                     ),
                     const SizedBox(height: 16),
 
-                    FTextField(
-                      control: FTextFieldControl.managed(controller: _phoneController),
+                    NinjaField(
+                      controller: _phoneController,
                       label: AppText(widget.l10n.phoneNumber),
                       hint: widget.l10n.enterPhoneNumber,
                       enabled: !_isLoading,
@@ -468,7 +427,7 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
 
                     SizedBox(
                       width: double.infinity,
-                      child: FButton(
+                      child: NinjaButton(
                         onPress: _isLoading ? null : _handleUpdate,
                         child: _isLoading
                             ? const SizedBox(
@@ -576,26 +535,18 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     final colors = theme.colors;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.zero,
       child: Container(
         decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          // On the slab sheet, which draws the page and the corners
+          color: Colors.transparent,
         ),
         child: SafeArea(
+          top: false,
+          bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.mutedForeground,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
 
               // Header
               Padding(
@@ -614,7 +565,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                     ),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+                      child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
                     ),
                   ],
                 ),
@@ -630,25 +581,25 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_error != null) ...[
-                      FAlert(
-                        variant: FAlertVariant.destructive,
-                        icon: const Icon(FIcons.circleAlert),
+                      NinjaAlert(
+                        variant: NinjaAlertVariant.destructive,
+                        icon: const Icon(LucideIcons.circleAlert),
                         title: AppText(widget.l10n.error),
                         subtitle: AppText(_error!),
                       ),
                       const SizedBox(height: 16),
                     ],
 
-                    FTextField.password(
-                      control: FTextFieldControl.managed(controller: _newPasswordController),
+                    NinjaField.password(
+                      controller: _newPasswordController,
                       label: AppText(widget.l10n.newPassword),
                       hint: widget.l10n.enterNewPassword,
                       enabled: !_isLoading,
                     ),
                     const SizedBox(height: 16),
 
-                    FTextField.password(
-                      control: FTextFieldControl.managed(controller: _confirmPasswordController),
+                    NinjaField.password(
+                      controller: _confirmPasswordController,
                       label: AppText(widget.l10n.confirmPassword),
                       hint: widget.l10n.pleaseConfirmPassword,
                       enabled: !_isLoading,
@@ -658,7 +609,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
 
                     SizedBox(
                       width: double.infinity,
-                      child: FButton(
+                      child: NinjaButton(
                         onPress: _isLoading ? null : _handleChangePassword,
                         child: _isLoading
                             ? const SizedBox(
@@ -693,31 +644,17 @@ class _ThemeSegments extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    const options = [
-      (AppThemeMode.light, FIcons.sun),
-      (AppThemeMode.dark, FIcons.moon),
-      (AppThemeMode.system, FIcons.monitor),
-    ];
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final (option, icon) in options)
-            GestureDetector(
-              onTap: () => onChanged(option),
-              child: Container(
-                width: 36,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: mode == option ? colors.background : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(icon, size: 16, color: mode == option ? colors.foreground : colors.mutedForeground),
-              ),
-            ),
+    // The small segment that sits at the end of a tile, the chosen one on the liquid pill
+    return SizedBox(
+      width: 132,
+      child: Segment<AppThemeMode>(
+        compact: true,
+        value: mode,
+        onChange: onChanged,
+        options: const [
+          (value: AppThemeMode.light, label: Icon(LucideIcons.sun)),
+          (value: AppThemeMode.dark, label: Icon(LucideIcons.moon)),
+          (value: AppThemeMode.system, label: Icon(LucideIcons.monitor)),
         ],
       ),
     );

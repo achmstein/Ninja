@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -43,7 +43,7 @@ class LoyaltyCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    FIcons.gift,
+                    LucideIcons.gift,
                     color: _tierColor,
                     size: 20,
                   ),
@@ -121,7 +121,7 @@ class LoyaltyCard extends StatelessWidget {
                         ),
                         if (onTap != null)
                           Icon(
-                            FIcons.chevronRight,
+                            LucideIcons.chevronRight,
                             size: 18,
                             color: colors.mutedForeground,
                           ),
@@ -141,7 +141,7 @@ class LoyaltyCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Icon(
-                          FIcons.chevronRight,
+                          LucideIcons.chevronRight,
                           size: 18,
                           color: colors.mutedForeground,
                         ),
@@ -243,7 +243,7 @@ class LoyaltyEmptyCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            FIcons.gift,
+            LucideIcons.gift,
             size: 40,
             color: colors.mutedForeground,
           ),
@@ -260,7 +260,7 @@ class LoyaltyEmptyCard extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: FButton(
+              child: NinjaButton(
                 onPress: isLoading ? null : onJoin,
                 child: isLoading
                     ? SizedBox(

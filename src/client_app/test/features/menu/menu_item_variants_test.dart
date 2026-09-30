@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
+import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/brand/brand_style.dart';
 import 'package:ninja_client/core/brand/styles.dart';
@@ -10,16 +10,16 @@ import 'package:ninja_client/core/brand/tenant_brand.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/branch_provider.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
-import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/menu/models/menu_item.dart';
 import 'package:ninja_client/features/menu/providers/favorites_provider.dart';
-import 'package:ninja_client/features/menu/screens/menu_screen.dart';
+import 'package:ninja_client/features/menu/widgets/deck.dart';
+import 'package:ninja_client/features/menu/widgets/dish.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
 
-/// Every way a style shows an item, and every header, in both directions
-/// and both schemes: each one lays out without overflowing and still says
-/// what the item is and what it costs.
+/// Every way the menu shows a dish, in both directions and both schemes:
+/// each lays out without overflowing and still says what the dish is and
+/// what it costs; and the button at its end does what the web's does.
 
 class _NoFavorites extends FavoritesNotifier {
   @override
@@ -61,9 +61,9 @@ final _latte = MenuItem(
 );
 
 BrandStyle _style({MenuItemLayout? menuItem, HeaderLayout? header, ButtonsLayout? buttons, SurfaceLayout? surface}) {
-  final classic = BrandStyle.classic;
-  return classic.copyWith(
-    layout: classic.layout.copyWith(menuItem: menuItem, header: header, buttons: buttons, surface: surface),
+  final plain = BrandStyle.plain;
+  return plain.copyWith(
+    layout: plain.layout.copyWith(menuItem: menuItem, header: header, buttons: buttons, surface: surface),
   );
 }
 
@@ -85,64 +85,102 @@ Widget _host(Widget child, {required BrandStyle style, Locale locale = const Loc
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        theme: ThemeData(extensions: [style]),
-        builder: (context, child) => FTheme(
-          data: ThemeState(themeMode: dark ? AppThemeMode.dark : AppThemeMode.light)
-              .getForuiTheme(context, locale: locale),
-          child: child!,
-        ),
+        theme: materialThemeFor(NinjaTheme.neutral(dark ? Brightness.dark : Brightness.light), extensions: [style]),
         home: Scaffold(body: SingleChildScrollView(child: child)),
       ),
+    );
+
+MenuItem _with({bool required = false, bool available = true}) => MenuItem(
+      id: _latte.id,
+      name: _latte.name,
+      description: _latte.description,
+      price: _latte.price,
+      offerPrice: _latte.offerPrice,
+      isOnOffer: _latte.isOnOffer,
+      isAvailable: available,
+      catalogTypeId: 1,
+      catalogTypeName: _latte.catalogTypeName,
+      customizations: [
+        if (required)
+          ItemCustomization(id: 1, name: const LocalizedText(en: 'Milk'), isRequired: true, options: [
+            CustomizationOption(id: 1, name: const LocalizedText(en: 'Oat')),
+          ]),
+      ],
     );
 
 void main() {
   for (final variant in MenuItemLayout.values) {
     for (final (locale, dark) in [(const Locale('en'), false), (const Locale('ar'), true)]) {
-      testWidgets('a ${variant.name} item lays out (${locale.languageCode}, ${dark ? 'dark' : 'light'})', (tester) async {
-        final width = variant == MenuItemLayout.card ? 180.0 : 400.0;
+      testWidgets('a ${variant.name} dish lays out (${locale.languageCode}, ${dark ? 'dark' : 'light'})', (tester) async {
+        final small = variant == MenuItemLayout.card || variant == MenuItemLayout.deck || variant == MenuItemLayout.tiles;
+        final width = small ? 180.0 : 400.0;
         await tester.pumpWidget(_host(
-          SizedBox(width: width, child: MenuItemTile(item: _latte, locale: locale, variant: variant)),
+          SizedBox(width: width, child: dishFor(variant, _latte)),
           style: _style(menuItem: variant),
           locale: locale,
           dark: dark,
         ));
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
 
         expect(tester.takeException(), isNull);
-        expect(find.text(_latte.name.getText(locale)), findsOneWidget);
-        // The offer's price, whatever the layout
+        // A tile with no photo carries its name on it as well as under it
+        expect(find.text(_latte.name.getText(locale)), findsWidgets);
+        // The offer's price, whatever the layout, and the one it replaces where there is room
         expect(find.textContaining('80'), findsWidgets);
-        // Laid out in the language's direction
-        final directionality = tester.widget<Directionality>(
-          find.ancestor(of: find.byType(MenuItemTile), matching: find.byType(Directionality)).first,
-        );
-        expect(directionality.textDirection, locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr);
+        if (!small || variant == MenuItemLayout.card) expect(find.textContaining('95'), findsWidgets);
       });
     }
   }
 
-  testWidgets('square buttons square the add button; the rest keep it round', (tester) async {
-    Future<BorderRadiusGeometry?> addRadius(ButtonsLayout buttons) async {
+  for (final (locale, dark) in [(const Locale('en'), false), (const Locale('ar'), true)]) {
+    testWidgets("the deck's card lays out, the usual marked (${locale.languageCode}, ${dark ? 'dark' : 'light'})", (tester) async {
       await tester.pumpWidget(_host(
-        SizedBox(width: 400, child: MenuItemTile(item: _latte, locale: const Locale('en'))),
-        style: _style(buttons: buttons),
+        SizedBox(width: 360, height: 560, child: DeckCard(item: _latte, usual: true)),
+        style: _style(menuItem: MenuItemLayout.deck),
+        locale: locale,
+        dark: dark,
       ));
-      // Past the theme's cross-fade from the last pump's
-      await tester.pumpAndSettle();
-      final add = tester.widget<Container>(
-        find.ancestor(of: find.byIcon(FIcons.plus), matching: find.byType(Container)).first,
-      );
-      return (add.decoration as BoxDecoration).borderRadius;
-    }
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+      expect(find.text(_latte.name.getText(locale)), findsOneWidget);
+      expect(find.byIcon(LucideIcons.repeat2), findsOneWidget);
+    });
+  }
 
-    expect(await addRadius(ButtonsLayout.rounded), BorderRadius.circular(20));
-    expect(await addRadius(ButtonsLayout.pill), BorderRadius.circular(20));
-    expect(await addRadius(ButtonsLayout.square), BorderRadius.circular(4));
+  testWidgets("a dish with nothing to choose goes in with its plus, which becomes a stepper", (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _latte)), style: _style()));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byIcon(LucideIcons.minus), findsNothing);
+
+    await tester.tap(find.byIcon(LucideIcons.plus));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byIcon(LucideIcons.minus), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
+
+    // Less takes it back out, and the plus returns
+    await tester.tap(find.byIcon(LucideIcons.minus));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(LucideIcons.minus), findsNothing);
+    expect(find.byIcon(LucideIcons.plus), findsOneWidget);
+  });
+
+  testWidgets('a dish with something to choose shows a way to its options, not a plus', (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _with(required: true))), style: _style()));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byIcon(LucideIcons.plus), findsNothing);
+    expect(find.byIcon(LucideIcons.chevronRight), findsOneWidget);
+  });
+
+  testWidgets('a sold-out dish has no button', (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _with(available: false))), style: _style()));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byIcon(LucideIcons.plus), findsNothing);
+    expect(find.byIcon(LucideIcons.chevronRight), findsNothing);
   });
 
   test('surfaces: flat has no edge, outlined a hairline, shadow a lift that becomes a hairline in the dark', () {
-    final light = FThemes.zinc.light.colors;
-    final dark = FThemes.zinc.dark.colors;
+    final light = NinjaColors.light;
+    final dark = NinjaColors.dark;
 
     final flat = _style(surface: SurfaceLayout.flat).surface(light, radius: 12);
     expect(flat.color, light.muted);
@@ -161,45 +199,9 @@ void main() {
   });
 
   test('density scales the spacing', () {
-    final classic = BrandStyle.classic;
-    expect(classic.space, 1);
-    expect(classic.copyWith(layout: classic.layout.copyWith(density: DensityLayout.airy)).space, 1.35);
-    expect(classic.copyWith(layout: classic.layout.copyWith(density: DensityLayout.compact)).space, 0.7);
+    final plain = BrandStyle.plain;
+    expect(plain.space, 1);
+    expect(plain.copyWith(layout: plain.layout.copyWith(density: DensityLayout.airy)).space, 1.35);
+    expect(plain.copyWith(layout: plain.layout.copyWith(density: DensityLayout.compact)).space, 0.7);
   });
-
-  for (final header in HeaderLayout.values) {
-    for (final (locale, dark) in [(const Locale('en'), false), (const Locale('ar'), true)]) {
-      testWidgets('the ${header.name} header lays out (${locale.languageCode}, ${dark ? 'dark' : 'light'})',
-          (tester) async {
-        var searched = 0;
-        await tester.pumpWidget(_host(
-          SizedBox(
-            width: 400,
-            child: MenuHeader(
-              variant: header,
-              title: 'Menu',
-              searchOpen: false,
-              onScan: () {},
-              onSearch: () => searched++,
-            ),
-          ),
-          style: _style(header: header),
-          locale: locale,
-          dark: dark,
-        ));
-        await tester.pump();
-
-        expect(tester.takeException(), isNull);
-        if (header == HeaderLayout.left) {
-          expect(find.text('Menu'), findsOneWidget);
-        } else {
-          // No wordmark uploaded: the brand's name stands in
-          expect(find.text(locale.languageCode == 'ar' ? 'تشيلاكس' : 'Chillax'), findsOneWidget);
-        }
-        await tester.tap(find.byIcon(FIcons.search));
-        await tester.pump(const Duration(seconds: 1));
-        expect(searched, 1);
-      });
-    }
-  }
 }

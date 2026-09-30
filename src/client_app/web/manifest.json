@@ -1,11 +1,11 @@
 {
-    "name": "ninja_client",
-    "short_name": "ninja_client",
+    "name": "Ninja",
+    "short_name": "Ninja",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#ffffff",
+    "theme_color": "#020617",
+    "description": "Order from the menu, book a place, and pay the bill.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

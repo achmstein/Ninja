@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -129,15 +129,11 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       body: Column(
         children: [
           // Header
-          FHeader(
-            title: AppText(placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []), style: TextStyle(fontSize: 18)),
-            suffixes: [
-              // Scanning moved to the Menu header: a scanned code may be a
-              // room or a table, so it does not belong under Rooms.
-              FHeaderAction(
-                icon: const Icon(FIcons.history, size: 20),
-                onPress: () => context.push('/stays'),
-              ),
+          PageHeader(
+            title: placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
+            actions: [
+              // Scanning is the top bar's: a scanned code may be a room or a table
+              HeaderAction(icon: const Icon(LucideIcons.history), onPress: () => context.push('/stays')),
             ],
           ),
 
@@ -192,11 +188,11 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FIcons.circleAlert, size: 48, color: context.theme.colors.mutedForeground),
+              Icon(LucideIcons.circleAlert, size: 48, color: context.theme.colors.mutedForeground),
               const SizedBox(height: 16),
               AppText(AppLocalizations.of(context)!.failedToLoadRooms),
               const SizedBox(height: 16),
-              FButton(
+              NinjaButton(
                 onPress: () => ref.refresh(placesProvider(branchId)),
                 child: Text(AppLocalizations.of(context)!.retry),
               ),
@@ -230,7 +226,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       },
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.only(top: 8, bottom: 8 + MediaQuery.paddingOf(context).bottom),
         itemCount: _getItemCount(rooms, reservedSession, showNotifyBanner),
         itemBuilder: (context, index) {
           int currentIndex = index;
@@ -342,7 +338,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
         child: Column(
           children: [
             // Main session card
@@ -448,13 +444,13 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: FButton(
-                  variant: FButtonVariant.outline,
+                child: NinjaButton(
+                  variant: NinjaButtonVariant.outline,
                   onPress: () => _confirmLeaveSession(session.id),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(FIcons.logOut, size: 16),
+                      Icon(LucideIcons.logOut, size: 16),
                       const SizedBox(width: 8),
                       Text(AppLocalizations.of(context)!.leaveSession),
                     ],
@@ -473,20 +469,20 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
     final branchId = ref.watch(selectedBranchIdProvider);
     return [
       _QuickAction(
-        icon: FIcons.bellRing,
+        icon: LucideIcons.bellRing,
         label: l10n.callWaiter,
         cooldownSeconds: _getCooldownRemaining(ServiceRequestType.callWaiter),
         onTap: () => _submitRequest(ServiceRequestType.callWaiter),
       ),
       if (session.takesControllerRequests)
         _QuickAction(
-          icon: FIcons.gamepad2,
+          icon: LucideIcons.gamepad2,
           label: l10n.controller,
           cooldownSeconds: _getCooldownRemaining(ServiceRequestType.controllerChange),
           onTap: () => _submitRequest(ServiceRequestType.controllerChange),
         ),
       _QuickAction(
-        icon: FIcons.receipt,
+        icon: LucideIcons.receipt,
         label: l10n.getBill,
         cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
         onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
@@ -494,7 +490,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       // Online payments: the room's open bill, paid or split from here
       if (ref.watch(featuresProvider).onlinePayments && branchId != null)
         _QuickAction(
-          icon: FIcons.creditCard,
+          icon: LucideIcons.creditCard,
           label: l10n.payTheBill,
           cooldownSeconds: 0,
           onTap: () => showPaySheet(context, PaySource.place(session.placeId, branchId)),
@@ -502,7 +498,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       if (session.hasOptions)
         for (final option in session.options.where((o) => o.code != session.currentOptionCode))
           _QuickAction(
-            icon: FIcons.refreshCw,
+            icon: LucideIcons.refreshCw,
             label: l10n.switchToOption(option.name.localized(context)),
             cooldownSeconds: _getCooldownRemaining(ServiceRequestType.changeOption),
             onTap: () => _submitRequest(ServiceRequestType.changeOption, optionCode: option.code),
@@ -530,10 +526,10 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       if (success) {
         // Start cooldown on success
         _startCooldown(type);
-        showFToast(
+        showIsland(
           context: context,
           title: Text(_getSuccessMessage(type)),
-          icon: Icon(FIcons.check, color: AppTheme.successColor),
+          icon: Icon(LucideIcons.check, color: AppTheme.successColor),
         );
       } else {
         final l10n = AppLocalizations.of(context)!;
@@ -541,10 +537,10 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
         final errorMessage = error == 'cooldown'
             ? l10n.pleaseWaitBeforeRequest
             : l10n.failedToSendRequest;
-        showFToast(
+        showIsland(
           context: context,
           title: Text(errorMessage),
-          icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+          icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
         );
       }
     }
@@ -571,20 +567,18 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
   void _confirmLeaveSession(int sessionId) {
     final l10n = AppLocalizations.of(context)!;
 
-    showFDialog(
+    showNinjaSheet(
       context: context,
-      builder: (dialogContext, style, animation) => FDialog(
-        style: style,
-        animation: animation,
+      builder: (dialogContext) => NinjaDialog(
         title: AppText(l10n.leaveRoomQuestion),
         actions: [
-          FButton(
-            variant: FButtonVariant.outline,
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
             onPress: () => Navigator.pop(dialogContext),
             child: AppText(l10n.cancel),
           ),
-          FButton(
-            variant: FButtonVariant.destructive,
+          NinjaButton(
+            variant: NinjaButtonVariant.destructive,
             onPress: () async {
               Navigator.pop(dialogContext);
               try {
@@ -595,17 +589,17 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                 final branchId = ref.read(selectedBranchIdProvider);
                 if (branchId != null) ref.invalidate(placesProvider(branchId));
 
-                showFToast(
+                showIsland(
                   context: context,
                   title: Text(l10n.leftSession),
-                  icon: Icon(FIcons.check, color: AppTheme.successColor),
+                  icon: Icon(LucideIcons.check, color: AppTheme.successColor),
                 );
               } catch (e) {
                 if (mounted) {
-                  showFToast(
+                  showIsland(
                     context: context,
                     title: Text(l10n.failedToLeaveSession),
-                    icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+                    icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
                   );
                 }
               }
@@ -847,7 +841,7 @@ class _HeldStayBanner extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(FIcons.timerReset, color: Colors.white.withValues(alpha: 0.9), size: 14),
+                Icon(LucideIcons.timerReset, color: Colors.white.withValues(alpha: 0.9), size: 14),
                 const SizedBox(width: 6),
                 AppText(
                   AppLocalizations.of(context)!.timeStartsOnConfirm,
@@ -891,19 +885,18 @@ class _HeldStayBanner extends ConsumerWidget {
 
   Future<void> _cancelReservation(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showAdaptiveDialog<bool>(
+    final confirmed = await showNinjaSheet<bool>(
       context: context,
-      builder: (context) => FDialog(
-        direction: Axis.horizontal,
+      builder: (context) => NinjaDialog(
         title: Text(l10n.cancelReservationQuestion),
         actions: [
-          FButton(
-            variant: FButtonVariant.outline,
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
             onPress: () => Navigator.pop(context, false),
             child: Text(l10n.cancel),
           ),
-          FButton(
-            variant: FButtonVariant.destructive,
+          NinjaButton(
+            variant: NinjaButtonVariant.destructive,
             onPress: () => Navigator.pop(context, true),
             child: Text(l10n.cancelReservation),
           ),
@@ -919,18 +912,18 @@ class _HeldStayBanner extends ConsumerWidget {
         final branchId = ref.read(selectedBranchIdProvider);
         if (branchId != null) ref.invalidate(placesProvider(branchId));
         if (context.mounted) {
-          showFToast(
+          showIsland(
             context: context,
             title: Text(l10n.reservationCancelled),
-            icon: Icon(FIcons.check, color: AppTheme.successColor),
+            icon: Icon(LucideIcons.check, color: AppTheme.successColor),
           );
         }
       } catch (e) {
         if (context.mounted) {
-          showFToast(
+          showIsland(
             context: context,
             title: Text(l10n.failedToCancelReservation),
-            icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+            icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
           );
         }
       }
@@ -957,7 +950,7 @@ class NotifyMeBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(FIcons.bell, size: 24, color: context.theme.colors.foreground),
+          Icon(LucideIcons.bell, size: 24, color: context.theme.colors.foreground),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -982,9 +975,9 @@ class NotifyMeBanner extends ConsumerWidget {
             ),
             error: (_, st) => IconButton(
               onPressed: () => ref.invalidate(roomAvailabilitySubscriptionProvider),
-              icon: Icon(FIcons.refreshCw, color: context.theme.colors.destructive),
+              icon: Icon(LucideIcons.refreshCw, color: context.theme.colors.destructive),
             ),
-            data: (isSubscribed) => FSwitch(
+            data: (isSubscribed) => NinjaSwitch(
               value: isSubscribed,
               onChange: (value) async {
                 final repo = ref.read(notificationRepositoryProvider);
@@ -994,11 +987,11 @@ class NotifyMeBanner extends ConsumerWidget {
                   );
                   ref.invalidate(roomAvailabilitySubscriptionProvider);
                   if (context.mounted) {
-                    showFToast(
+                    showIsland(
                       context: context,
                       title: Text(success ? l10n.youWillBeNotified : l10n.failedToSubscribe),
                       icon: Icon(
-                        success ? FIcons.bell : FIcons.circleX,
+                        success ? LucideIcons.bell : LucideIcons.circleX,
                         color: success ? AppTheme.successColor : context.theme.colors.destructive,
                       ),
                     );
@@ -1007,10 +1000,10 @@ class NotifyMeBanner extends ConsumerWidget {
                   await repo.unsubscribeFromRoomAvailability();
                   ref.invalidate(roomAvailabilitySubscriptionProvider);
                   if (context.mounted) {
-                    showFToast(
+                    showIsland(
                       context: context,
                       title: Text(l10n.unsubscribedFromNotifications),
-                      icon: Icon(FIcons.check, color: context.theme.colors.mutedForeground),
+                      icon: Icon(LucideIcons.check, color: context.theme.colors.mutedForeground),
                     );
                   }
                 }
@@ -1133,7 +1126,7 @@ class PlaceListItem extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
-                  FIcons.calendarPlus,
+                  LucideIcons.calendarPlus,
                   color: colors.primaryForeground,
                   size: 18,
                 ),
@@ -1248,7 +1241,7 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
+                    child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
                   ),
                 ],
               ),
@@ -1284,7 +1277,7 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
                 ),
                 child: Row(
                   children: [
-                    Icon(FIcons.clock, size: 24, color: colors.primary),
+                    Icon(LucideIcons.clock, size: 24, color: colors.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1326,7 +1319,7 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
                           ),
                         ),
                       ),
-                      FSwitch(
+                      NinjaSwitch(
                         value: _startOnConfirm,
                         onChange: (value) => setState(() => _startOnConfirm = value),
                       ),
@@ -1414,16 +1407,16 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
       if (branchId != null) ref.invalidate(placesProvider(branchId));
       ref.read(myStaysProvider.notifier).refresh();
       SoundService.instance.playSuccess();
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.roomReservedSuccess),
-        icon: Icon(FIcons.check, color: AppTheme.successColor),
+        icon: Icon(LucideIcons.check, color: AppTheme.successColor),
       );
     } else if (mounted) {
-      showFToast(
+      showIsland(
         context: context,
         title: Text(l10n.failedToReserveRoom),
-        icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
       );
     }
   }

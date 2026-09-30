@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
@@ -206,7 +206,7 @@ class RunningTimeLine extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               if (!slip) ...[
-                Icon(FIcons.timer, size: 14, color: colors.mutedForeground),
+                Icon(LucideIcons.timer, size: 14, color: colors.mutedForeground),
                 const SizedBox(width: 4),
               ],
               Expanded(

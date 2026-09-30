@@ -7,7 +7,6 @@ import '../brand/brand_mark.dart';
 import '../brand/brand_provider.dart';
 import '../../features/receipts/screens/receipt_screen.dart';
 import '../../features/menu/screens/menu_screen.dart';
-import '../../features/cart/screens/cart_screen.dart';
 import '../../features/bills/screens/bills_screen.dart';
 import '../../features/places/screens/places_screen.dart';
 import '../../features/places/screens/stays_screen.dart';
@@ -26,7 +25,8 @@ import '../widgets/main_scaffold.dart';
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
-  static const _bgColor = Color(0xFF09090B);
+  /// The neutral slab: the web's dark page (slate-950)
+  static const _bgColor = Color(0xFF020617);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -166,11 +166,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Cart route (separate from shell for push navigation)
+      // The bills, under You (the bill running now is on the dock)
       GoRoute(
-        path: '/cart',
+        path: '/bills',
         pageBuilder: (context, state) => CustomTransitionPage(
-          child: const CartScreen(),
+          child: const BillsScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -306,7 +306,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
 
-      // Main shell with bottom navigation
+      // The tabs, in the frame with the top bar and the dock
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
@@ -314,12 +314,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/menu',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: MenuScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/bills',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: BillsScreen(),
             ),
           ),
           GoRoute(

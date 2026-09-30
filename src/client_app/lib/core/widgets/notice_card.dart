@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import '../ui/ui.dart';
 import 'app_text.dart';
 
 /// The business not taking orders or bookings for now, one look on the Menu and
@@ -9,7 +9,10 @@ import 'app_text.dart';
 class PausedNotice extends StatelessWidget {
   final String title;
 
-  const PausedNotice({super.key, required this.title});
+  /// Its room on the page; a page that pads its content already passes less
+  final EdgeInsetsGeometry margin;
+
+  const PausedNotice({super.key, required this.title, this.margin = const EdgeInsets.fromLTRB(16, 8, 16, 8)});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +24,7 @@ class PausedNotice extends StatelessWidget {
     final mark = dark ? const Color(0xFFFCD34D) : const Color(0xFFB45309);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: margin,
       child: Semantics(
         liveRegion: true,
         child: Container(
@@ -37,7 +40,7 @@ class PausedNotice extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(color: amber.withValues(alpha: 0.2), shape: BoxShape.circle),
-                child: Icon(FIcons.circlePause, size: 20, color: mark),
+                child: Icon(LucideIcons.circlePause, size: 20, color: mark),
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -1,6 +1,5 @@
 import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/utils/money.dart';
-import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/features/places/models/place.dart';
 import 'package:ninja_client/features/places/screens/places_screen.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
@@ -8,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
+import 'package:ninja_client/core/ui/ui.dart';
 
 /// A room on the customer's list. The business's plan decides whether it can be
 /// booked at all: with bookings off, the row still shows the room and its
@@ -39,10 +38,7 @@ Widget _list(Place room, {required bool canReserve}) => ProviderScope(
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        builder: (context, child) => FTheme(
-          data: const ThemeState(themeMode: AppThemeMode.light).getForuiTheme(context, locale: const Locale('en')),
-          child: child!,
-        ),
+        theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
         home: Scaffold(body: PlaceListItem(room: room, canReserve: canReserve)),
       ),
     );
@@ -53,7 +49,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 1'), findsOneWidget);
-    expect(find.byIcon(FIcons.calendarPlus), findsOneWidget);
+    expect(find.byIcon(LucideIcons.calendarPlus), findsOneWidget);
   });
 
   testWidgets('with bookings out of the plan the same room is still listed, with nothing to book it by', (tester) async {
@@ -61,7 +57,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 1'), findsOneWidget);
-    expect(find.byIcon(FIcons.calendarPlus), findsNothing);
+    expect(find.byIcon(LucideIcons.calendarPlus), findsNothing);
   });
 
   testWidgets('a room somebody else is in has nothing to book either', (tester) async {
@@ -79,6 +75,6 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 2'), findsOneWidget);
-    expect(find.byIcon(FIcons.calendarPlus), findsNothing);
+    expect(find.byIcon(LucideIcons.calendarPlus), findsNothing);
   });
 }

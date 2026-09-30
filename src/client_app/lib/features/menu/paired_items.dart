@@ -54,7 +54,11 @@ MenuItem? cartNudge(List<CartItem> cart, Map<int, MenuItem> menu) {
 
 /// A suggested item as a cart line: the business's defaults, nothing sold
 /// out, one of it, saying where it was suggested.
-CartItem suggestedLine(MenuItem item, String suggestion) {
+CartItem suggestedLine(MenuItem item, String suggestion) => quickAddLine(item).copyWith(suggestion: suggestion);
+
+/// The line a tap on a dish's plus (or a held press) adds: the business's
+/// defaults, nothing sold out, one of it (client_web's quickAddChoice)
+CartItem quickAddLine(MenuItem item) {
   final choices = <SelectedCustomization>[
     for (final customization in item.customizations)
       for (final option in customization.options)
@@ -67,5 +71,5 @@ CartItem suggestedLine(MenuItem item, String suggestion) {
             priceAdjustment: option.priceAdjustment,
           ),
   ];
-  return CartItem.fromMenuItem(item, customizations: choices).copyWith(suggestion: suggestion);
+  return CartItem.fromMenuItem(item, customizations: choices);
 }

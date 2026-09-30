@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 
 import '../../../core/models/localized_text.dart';
 import '../../places/models/place.dart';
 
 /// Types of service requests users can make
 enum ServiceRequestType {
-  callWaiter(1, 'Call Waiter', FIcons.user),
-  controllerChange(2, 'Controller', FIcons.gamepad2),
-  receiptToPay(3, 'Pay Bill', FIcons.receipt),
-  switchToMulti(4, 'Switch to Multi', FIcons.users),
-  switchToSingle(5, 'Switch to Single', FIcons.user),
+  callWaiter(1, 'Call Waiter', LucideIcons.user),
+  controllerChange(2, 'Controller', LucideIcons.gamepad2),
+  receiptToPay(3, 'Pay Bill', LucideIcons.receipt),
+  switchToMulti(4, 'Switch to Multi', LucideIcons.users),
+  switchToSingle(5, 'Switch to Single', LucideIcons.user),
 
   /// Switch the stay to another rate option; the option travels in optionCode
-  changeOption(6, 'Change rate', FIcons.refreshCw);
+  changeOption(6, 'Change rate', LucideIcons.refreshCw);
 
   final int value;
   final String label;

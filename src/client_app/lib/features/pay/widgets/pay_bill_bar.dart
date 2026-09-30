@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -71,19 +71,19 @@ class PayBillBar extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: FButton(
+                  child: NinjaButton(
                     onPress: () => _open(context, ref, split: false),
-                    prefix: const Icon(FIcons.creditCard),
+                    prefix: const Icon(LucideIcons.creditCard),
                     child: Text(l10n.payFully),
                   ),
                 ),
                 if (view.options.canSplit) ...[
                   const SizedBox(width: 8),
                   Expanded(
-                    child: FButton(
-                      variant: FButtonVariant.outline,
+                    child: NinjaButton(
+                      variant: NinjaButtonVariant.outline,
                       onPress: () => _open(context, ref, split: true),
-                      prefix: const Icon(FIcons.split),
+                      prefix: const Icon(LucideIcons.split),
                       child: Text(l10n.paySplitBill),
                     ),
                   ),

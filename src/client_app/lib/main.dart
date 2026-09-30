@@ -7,7 +7,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'core/brand/brand_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
@@ -24,7 +23,9 @@ import 'core/services/firebase_service.dart';
 import 'core/services/session_notification_service.dart';
 import 'core/services/signalr_service.dart';
 import 'core/theme/theme_provider.dart';
-import 'core/theme/app_theme.dart';
+import 'core/theme/ninja_theme.dart';
+import 'core/ui/island.dart';
+import 'features/cart/widgets/tray_flights.dart';
 import 'features/menu/providers/favorites_provider.dart';
 import 'features/menu/services/menu_service.dart';
 import 'features/notifications/services/notification_service.dart';
@@ -237,7 +238,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final brandName = ref.watch(brandNameProvider);
     // The style's defaults fill whatever seed the business left unset
     final brandFont = brandFontFor(withStyleDefaults(brand.theme), locale);
-    final themeMode = themeState.effectiveMode(brand);
+    final themeMode = themeState.themeMode;
 
     if (authState.isAuthenticated && !_wasAuthenticated) {
       _wasAuthenticated = true;
@@ -258,6 +259,9 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       ref.invalidate(favoritesProvider);
     }
 
+    final light = _materialTheme(Brightness.light, locale, brand, brandFont);
+    final dark = _materialTheme(Brightness.dark, locale, brand, brandFont);
+
     return MaterialApp.router(
       title: brandName,
       debugShowCheckedModeBanner: false,
@@ -266,8 +270,8 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       locale: locale.languageCode == 'ar' && brand.locale.speaksStandardArabic ? const Locale('ar', '001') : locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: _materialTheme(Brightness.light, locale, brand, brandFont),
-      darkTheme: _materialTheme(Brightness.dark, locale, brand, brandFont),
+      theme: light,
+      darkTheme: dark,
       themeMode: themeMode == AppThemeMode.light
           ? ThemeMode.light
           : themeMode == AppThemeMode.dark
@@ -276,32 +280,23 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       builder: (context, child) {
         return BrandFont(
           family: brandFont,
-          child: FTheme(
-            data: themeState.getForuiTheme(context, locale: locale, brand: brand),
-            child: FToaster(
-              child: child ?? const SizedBox.shrink(),
-            ),
+          child: NinjaSchemes(
+            light: light,
+            dark: dark,
+            child: IslandHost(child: TrayFlightLayer(child: child ?? const SizedBox.shrink())),
           ),
         );
       },
     );
   }
 
-  /// Material's theme for the few Material widgets in use: seeded from the
-  /// brand color, set in the locale's family or the tenant's font for it
+  /// The app's theme for [brightness]: the brand's colours on the neutral
+  /// palette (NinjaTheme, read as `context.theme`) with Material's around it,
+  /// set in the locale's family or the tenant's font for it
   static ThemeData _materialTheme(Brightness brightness, Locale locale, TenantBrand brand, String? brandFont) {
-    final theme = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: brand.primaryColor ?? AppTheme.primaryColor,
-        brightness: brightness,
-      ),
-      useMaterial3: true,
+    final theme = materialThemeFor(
+      ThemeState.themeFor(brightness, brand),
       fontFamily: getFontFamily(locale),
-      splashFactory: NoSplash.splashFactory,
-      highlightColor: Colors.transparent,
-      tabBarTheme: const TabBarThemeData(
-        overlayColor: WidgetStatePropertyAll(Colors.transparent),
-      ),
       // The brand's style: its layout, headings and the measures they move
       extensions: [BrandStyle.fromTheme(brand.theme)],
     );
