@@ -33,6 +33,27 @@ public partial class CatalogContextSeed(
         }
     }
 
+    /// <summary>
+    /// What each item suggests alongside it ("goes well with"), by English
+    /// name, in order; written once the items are in, since it names them by id.
+    /// </summary>
+    private async Task SeedPairingsAsync(CatalogContext context, IReadOnlyList<(string Item, string[] Paired)> pairings)
+    {
+        var byName = (await context.CatalogItems.ToListAsync()).ToDictionary(i => i.Name.Primary);
+        var rows = pairings
+            .SelectMany(p => p.Paired.Select((paired, i) => new CatalogItemPairing
+            {
+                CatalogItemId = byName[p.Item].Id,
+                PairedItemId = byName[paired].Id,
+                DisplayOrder = i + 1
+            }))
+            .ToList();
+
+        await context.CatalogItemPairings.AddRangeAsync(rows);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Seeded {NumPairings} pairings", rows.Count);
+    }
+
     /// <summary>Explicit category ids leave the identity sequence at 1; the next category created through the API must not collide.</summary>
     private static Task ResetCategorySequenceAsync(CatalogContext context)
         => context.Database.ExecuteSqlRawAsync(

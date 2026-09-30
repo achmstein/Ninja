@@ -1231,5 +1231,25 @@ public partial class CatalogContextSeed
 
         await context.SaveChangesAsync();
         logger.LogInformation("Seeded customizations for menu items");
+
+        await SeedPairingsAsync(context, ChillaxPairings);
     }
+
+    /// <summary>What tenant one's dishes go well with: something sweet with the coffee, something to nibble with a can.</summary>
+    internal static readonly (string Item, string[] Paired)[] ChillaxPairings =
+    [
+        ("Turkish Coffee", ["Waffle", "Ice Cream Scoop"]),
+        ("Cappuccino", ["Waffle", "Ice Cream Scoop"]),
+        ("Latte", ["Waffle"]),
+        ("Espresso", ["Waffle"]),
+        ("Hot Chocolate", ["Waffle"]),
+        ("Tea", ["Waffle"]),
+        ("Iced Coffee", ["Ice Cream Scoop"]),
+        ("Milkshake", ["Waffle"]),
+        ("Pepsi", ["Chips", "Peanuts"]),
+        ("Red Bull", ["Chips", "Peanuts"]),
+        ("Waffle", ["Cappuccino", "Hot Chocolate", "Ice Cream Scoop"]),
+        ("Chips", ["Pepsi"]),
+        ("Peanuts", ["Pepsi"]),
+    ];
 }

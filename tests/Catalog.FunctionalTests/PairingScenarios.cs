@@ -43,6 +43,18 @@ public sealed class PairingScenarios
         => (await Customer.GetAsync<List<PairedItemView>>(Items())).Single(i => i.Id == id);
 
     [TestMethod]
+    public async Task The_seeded_menu_already_suggests_something_with_its_coffee()
+    {
+        var menu = await Customer.GetAsync<List<ItemView>>(Items());
+        var paired = await Customer.GetAsync<List<PairedItemView>>(Items());
+        int IdOf(string name) => menu.Single(i => i.Name.En == name).Id;
+
+        CollectionAssert.AreEqual(
+            new[] { IdOf("Waffle"), IdOf("Ice Cream Scoop") },
+            paired.Single(i => i.Id == IdOf("Turkish Coffee")).PairedItemIds);
+    }
+
+    [TestMethod]
     public async Task The_back_office_pairs_items_and_the_customer_sees_them_in_order()
     {
         var (coffee, cake, cookie) = await ItemsAsync(3) is [var a, var b, var c] ? (a, b, c) : default;

@@ -31,16 +31,6 @@ public partial class CatalogContextSeed
         await context.SaveChangesAsync();
         logger.LogInformation("Seeded {NumCustomizations} sample customizations", menu.Customizations.Count);
 
-        var pairings = menu.Pairings
-            .SelectMany(p => p.Paired.Select((paired, i) => new CatalogItemPairing
-            {
-                CatalogItemId = byName[p.Item].Id,
-                PairedItemId = byName[paired].Id,
-                DisplayOrder = i + 1
-            }))
-            .ToList();
-        await context.CatalogItemPairings.AddRangeAsync(pairings);
-        await context.SaveChangesAsync();
-        logger.LogInformation("Seeded {NumPairings} sample pairings", pairings.Count);
+        await SeedPairingsAsync(context, menu.Pairings);
     }
 }
