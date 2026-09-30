@@ -20,7 +20,7 @@ Try one: `curl -i https://api.chillax.site/health/sales`.
 
 ## Between deploys
 
-`uptime.yml` probes the same URLs every 15 minutes from GitHub's runners. A failed run is the alert: GitHub e-mails the repository owner on the first failure of a workflow, and again when it recovers. Nothing to sign up for.
+The old single-server site (chillax.site) is no longer probed. The platform is: `platform-uptime.yml` probes it every 15 minutes from GitHub's runners (the auth host's realm, the control app, the control plane, and any tenant hosts in the `PLATFORM_PROBE_HOSTS` variable). A failed run is the alert: GitHub e-mails the repository owner on the first failure of a workflow, and again when it recovers. Nothing to sign up for.
 
 The nightly backup is checked the same way by `backup.yml` (see `restore.md`).
 
