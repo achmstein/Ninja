@@ -153,6 +153,21 @@ public static class CatalogApi
             .WithDescription("Get all customization options for a menu item")
             .WithTags("Customizations");
 
+        // Pairings ("goes well with")
+        api.MapGet("/items/{id:int}/pairings", GetItemPairings)
+            .WithName("GetItemPairings")
+            .WithSummary("Get item pairings")
+            .WithDescription("The items suggested alongside a menu item, in order (Admin only)")
+            .WithTags("Pairings")
+            .RequireAuthorization("Admin");
+
+        api.MapPut("/items/{id:int}/pairings", SetItemPairings)
+            .WithName("SetItemPairings")
+            .WithSummary("Set item pairings")
+            .WithDescription($"Replace the items suggested alongside a menu item with these, in this order: at most {CatalogItemPairing.MaxPerItem}, other items of the menu, each once (Admin only)")
+            .WithTags("Pairings")
+            .RequireAuthorization("Admin");
+
         // Upload item picture
         api.MapPost("/items/{id:int}/pic", UploadItemPicture)
             .WithName("UploadItemPicture")
@@ -309,6 +324,8 @@ public static class CatalogApi
             .Include(c => c.CatalogType)
             .Include(c => c.Customizations)
                 .ThenInclude(c => c.Options)
+            .Include(c => c.Pairings)
+            .AsSplitQuery()
             .AsQueryable();
 
         if (categoryId.HasValue)
@@ -339,6 +356,8 @@ public static class CatalogApi
             .Include(c => c.CatalogType)
             .Include(c => c.Customizations)
                 .ThenInclude(c => c.Options)
+            .Include(c => c.Pairings)
+            .AsSplitQuery()
             .Where(c => c.IsAvailable);
 
         if (categoryId.HasValue)
@@ -924,6 +943,61 @@ public static class CatalogApi
         var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId.Value);
         return TypedResults.Ok(customizations.ToDtoList(optionStockOuts));
     }
+
+    public static async Task<Results<Ok<List<int>>, NotFound>> GetItemPairings(
+        [AsParameters] CatalogServices services,
+        [Description("The id of the menu item")] int id)
+    {
+        if (!await services.Context.CatalogItems.AnyAsync(i => i.Id == id))
+        {
+            return TypedResults.NotFound();
+        }
+
+        var paired = await services.Context.CatalogItemPairings
+            .Where(p => p.CatalogItemId == id)
+            .OrderBy(p => p.DisplayOrder)
+            .Select(p => p.PairedItemId)
+            .ToListAsync();
+        return TypedResults.Ok(paired);
+    }
+
+    public static async Task<Results<Ok<List<int>>, NotFound, BadRequest<ProblemDetails>>> SetItemPairings(
+        [AsParameters] CatalogServices services,
+        [Description("The id of the menu item")] int id,
+        [FromBody, Description("The items to suggest with it, in order")] int[] pairedItemIds)
+    {
+        if (!await services.Context.CatalogItems.AnyAsync(i => i.Id == id))
+        {
+            return TypedResults.NotFound();
+        }
+
+        if (pairedItemIds.Length > CatalogItemPairing.MaxPerItem)
+            return PairingRefused($"An item suggests at most {CatalogItemPairing.MaxPerItem} others.");
+        if (pairedItemIds.Contains(id))
+            return PairingRefused("An item cannot be suggested with itself.");
+        if (pairedItemIds.Distinct().Count() != pairedItemIds.Length)
+            return PairingRefused("Each item is suggested once.");
+
+        var known = await services.Context.CatalogItems.CountAsync(i => pairedItemIds.Contains(i.Id));
+        if (known != pairedItemIds.Length)
+            return PairingRefused("Only items on the menu can be suggested.");
+
+        // Replaced whole: nothing points at a pairing row, so its id means nothing
+        var existing = await services.Context.CatalogItemPairings.Where(p => p.CatalogItemId == id).ToListAsync();
+        services.Context.CatalogItemPairings.RemoveRange(existing);
+        services.Context.CatalogItemPairings.AddRange(pairedItemIds.Select((paired, i) => new CatalogItemPairing
+        {
+            CatalogItemId = id,
+            PairedItemId = paired,
+            DisplayOrder = i + 1
+        }));
+        await services.Context.SaveChangesAsync();
+
+        return TypedResults.Ok(pairedItemIds.ToList());
+    }
+
+    private static BadRequest<ProblemDetails> PairingRefused(string detail)
+        => TypedResults.BadRequest<ProblemDetails>(new() { Detail = detail });
 
     // Upload picture handler
     public static async Task<Results<Ok<string>, NotFound, BadRequest<ProblemDetails>>> UploadItemPicture(

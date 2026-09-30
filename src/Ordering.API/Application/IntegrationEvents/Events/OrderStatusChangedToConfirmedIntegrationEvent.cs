@@ -144,4 +144,6 @@ public record OrderConfirmedItem(
     decimal Discount,
     LocalizedText? CustomizationsDescription,
     /// <summary>The chosen customization options by id, so Inventory can charge option ingredients.</summary>
-    List<int>? OptionIds = null);
+    List<int>? OptionIds = null,
+    /// <summary>Whether the line was added from a suggestion, so Sales can say what suggestions sold.</summary>
+    SuggestionSource Suggestion = SuggestionSource.None);

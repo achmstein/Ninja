@@ -35,6 +35,12 @@ public record CatalogItemDto
     public int DisplayOrder { get; init; }
     public List<ItemCustomizationDto> Customizations { get; init; } = new();
     /// <summary>
+    /// The items the business suggests with this one ("goes well with"), in
+    /// its order. Ids only: the list they come in already says which of them
+    /// this branch sells right now. Filled by the menu lists, empty elsewhere.
+    /// </summary>
+    public List<int> PairedItemIds { get; init; } = new();
+    /// <summary>
     /// The chain-wide values when a branch override changed what this DTO
     /// shows (price, offer, availability); null when nothing is overridden.
     /// The admin edits the item from these, not from the branch-effective ones.

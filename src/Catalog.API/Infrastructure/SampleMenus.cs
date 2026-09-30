@@ -11,11 +11,15 @@ namespace Ninja.Catalog.API.Infrastructure;
 /// </summary>
 internal static class SampleMenus
 {
-    /// <summary>The categories (ids 1..n, in order), the items, and each customization with the item it belongs to.</summary>
+    /// <summary>
+    /// The categories (ids 1..n, in order), the items, each customization with
+    /// the item it belongs to, and what each item suggests alongside it, by name.
+    /// </summary>
     internal sealed record Menu(
         IReadOnlyList<CatalogType> Types,
         IReadOnlyList<CatalogItem> Items,
-        IReadOnlyList<(string Item, ItemCustomization Customization)> Customizations);
+        IReadOnlyList<(string Item, ItemCustomization Customization)> Customizations,
+        IReadOnlyList<(string Item, string[] Paired)> Pairings);
 
     public static Menu For(string business) => business switch
     {
@@ -58,7 +62,16 @@ internal static class SampleMenus
         customizations.AddRange(For(["Cappuccino", "Latte", "Iced Coffee", "Milkshake"], Size));
         customizations.AddRange(For(["Espresso", "Tea", "Green Tea"], Sugar));
         customizations.AddRange(For(["Cappuccino", "Latte", "Flat White"], Milk));
-        return new(types, items, customizations);
+        (string, string[])[] pairings =
+        [
+            ("Cappuccino", ["Waffle", "Ice Cream"]),
+            ("Latte", ["Waffle"]),
+            ("Espresso", ["Waffle"]),
+            ("Hot Chocolate", ["Waffle"]),
+            ("Iced Coffee", ["Ice Cream"]),
+            ("Waffle", ["Cappuccino", "Hot Chocolate"]),
+        ];
+        return new(types, items, customizations, pairings);
     }
 
     private static Menu Restaurant()
@@ -110,7 +123,17 @@ internal static class SampleMenus
         customizations.AddRange(For(["Chicken Wings"], WingSauce));
         customizations.AddRange(For(["Soft Drink"], SoftDrink));
         customizations.AddRange(For(["Tea", "Turkish Coffee"], Sugar));
-        return new(types, Pictured(items, "restaurant"), customizations);
+        (string, string[])[] pairings =
+        [
+            ("Mixed Grill", ["Rice", "Green Salad", "Soft Drink"]),
+            ("Kofta", ["Rice", "Hummus", "Soft Drink"]),
+            ("Grilled Half Chicken", ["Rice", "Green Salad"]),
+            ("Beef Steak", ["French Fries", "Green Salad"]),
+            ("Classic Burger", ["French Fries", "Coleslaw", "Soft Drink"]),
+            ("Cheeseburger", ["French Fries", "Soft Drink"]),
+            ("Chicken Burger", ["French Fries", "Soft Drink"]),
+        ];
+        return new(types, Pictured(items, "restaurant"), customizations, pairings);
     }
 
     private static Menu GameStation()
@@ -149,7 +172,16 @@ internal static class SampleMenus
         customizations.AddRange(For(["Tea", "Turkish Coffee", "Nescafe"], Sugar));
         customizations.AddRange(For(["Iced Coffee", "Milkshake"], Size));
         customizations.AddRange(For(["Soft Drink"], SoftDrink));
-        return new(types, Pictured(items, "game-station"), customizations);
+        (string, string[])[] pairings =
+        [
+            ("Nachos", ["Soft Drink"]),
+            ("Popcorn", ["Soft Drink"]),
+            ("Chicken Sandwich", ["French Fries", "Soft Drink"]),
+            ("Hot Dog", ["French Fries", "Soft Drink"]),
+            ("Mini Pizza", ["Soft Drink"]),
+            ("Waffle", ["Ice Cream"]),
+        ];
+        return new(types, Pictured(items, "game-station"), customizations, pairings);
     }
 
     private static Menu CloudKitchen()
@@ -190,7 +222,16 @@ internal static class SampleMenus
         customizations.AddRange(For(["Chicken Shawarma", "Beef Shawarma"], Bread));
         customizations.AddRange(For(["French Fries"], FriesSize));
         customizations.AddRange(For(["Burger Combo", "Shawarma Combo", "Soft Drink"], SoftDrink));
-        return new(types, Pictured(items, "cloud-kitchen"), customizations);
+        (string, string[])[] pairings =
+        [
+            ("Classic Smash Burger", ["French Fries", "Onion Rings", "Soft Drink"]),
+            ("Double Smash Burger", ["Cheese Fries", "Soft Drink"]),
+            ("Crispy Chicken Burger", ["French Fries", "Coleslaw", "Soft Drink"]),
+            ("BBQ Burger", ["Onion Rings", "Soft Drink"]),
+            ("Chicken Shawarma", ["French Fries", "Lemonade"]),
+            ("Beef Shawarma", ["French Fries", "Soft Drink"]),
+        ];
+        return new(types, Pictured(items, "cloud-kitchen"), customizations, pairings);
     }
 
     private static List<CatalogType> Types(params (string En, string Ar)[] names)

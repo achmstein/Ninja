@@ -33,6 +33,7 @@ public static class CatalogMappers
             PreparationTimeMinutes = item.PreparationTimeMinutes,
             DisplayOrder = item.DisplayOrder,
             Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto()).ToList(),
+            PairedItemIds = PairedIds(item),
             Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable, item.OfferWeekdays, Clock(item.OfferFrom), Clock(item.OfferTo))
         };
     }
@@ -81,9 +82,13 @@ public static class CatalogMappers
             PreparationTimeMinutes = item.PreparationTimeMinutes,
             DisplayOrder = item.DisplayOrder,
             Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto(outOfStockOptionIds)).ToList(),
+            PairedItemIds = PairedIds(item),
             Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable, item.OfferWeekdays, Clock(item.OfferFrom), Clock(item.OfferTo))
         };
     }
+
+    private static List<int> PairedIds(CatalogItem item)
+        => item.Pairings.OrderBy(p => p.DisplayOrder).Select(p => p.PairedItemId).ToList();
 
     private static string? Clock(TimeOnly? time) => time?.ToString("HH:mm");
 

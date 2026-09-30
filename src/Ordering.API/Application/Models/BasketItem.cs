@@ -28,6 +28,12 @@ public class BasketItem
     public List<BasketItemCustomization> SelectedCustomizations { get; init; } = new();
 
     /// <summary>
+    /// Whether the line was added from a suggestion ("goes well with"), and
+    /// where; left out, it was picked from the menu
+    /// </summary>
+    public SuggestionSource Suggestion { get; init; }
+
+    /// <summary>
     /// Total price including customization adjustments
     /// </summary>
     public decimal TotalPrice => UnitPrice + SelectedCustomizations.Sum(c => c.PriceAdjustment);

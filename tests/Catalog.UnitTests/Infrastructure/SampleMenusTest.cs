@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Ninja.Catalog.API.Infrastructure;
+using Ninja.Catalog.API.Model;
 
 namespace Catalog.UnitTests.Infrastructure;
 
@@ -115,6 +116,18 @@ public class SampleMenusTest
             Assert.IsFalse(string.IsNullOrWhiteSpace(customization.Name.Ar));
             Assert.IsTrue(customization.Options.All(o => !string.IsNullOrWhiteSpace(o.Name.Ar)));
             if (customization.IsRequired) Assert.AreEqual(1, customization.Options.Count(o => o.IsDefault), $"{item}: {customization.Name.En}");
+        }
+
+        // Pairings name items on this menu, never the item itself, each once, and no more than an item may suggest
+        Assert.IsNotEmpty(menu.Pairings);
+        Assert.AreEqual(menu.Pairings.Count, menu.Pairings.Select(p => p.Item).Distinct().Count());
+        foreach (var (item, paired) in menu.Pairings)
+        {
+            Assert.Contains(item, names);
+            Assert.IsTrue(paired.All(names.Contains), $"{item} suggests only what {business} sells");
+            Assert.IsFalse(paired.Contains(item), $"{item} does not suggest itself");
+            Assert.AreEqual(paired.Length, paired.Distinct().Count(), $"{item} suggests each once");
+            Assert.IsLessThanOrEqualTo(CatalogItemPairing.MaxPerItem, paired.Length, $"{item} suggests a handful");
         }
     }
 }

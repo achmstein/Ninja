@@ -4979,6 +4979,22 @@
             "items": {
               "$ref": "#/components/schemas/TenderTotal"
             }
+          },
+          "suggestedSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "suggestedLines": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

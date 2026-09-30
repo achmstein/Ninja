@@ -53,4 +53,6 @@ public record OrderConfirmedItem(
     int Units,
     decimal UnitPrice,
     decimal Discount,
-    LocalizedText? CustomizationsDescription);
+    LocalizedText? CustomizationsDescription,
+    /// <summary>Whether the line was added from a suggestion; None from an Ordering that did not say.</summary>
+    SuggestionSource Suggestion = SuggestionSource.None);

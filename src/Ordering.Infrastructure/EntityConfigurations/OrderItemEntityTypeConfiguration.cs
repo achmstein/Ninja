@@ -19,5 +19,11 @@ class OrderItemEntityTypeConfiguration
 
         // Configure CustomizationsDescription as JSON column
         orderItemConfiguration.OwnsOne(oi => oi.CustomizationsDescription, b => b.ToJson());
+
+        orderItemConfiguration
+            .Property(oi => oi.Suggestion)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(SuggestionSource.None);
     }
 }

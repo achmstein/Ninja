@@ -295,11 +295,13 @@ public class Order
     /// <summary>
     /// Add item to the order
     /// </summary>
-    public void AddOrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null)
+    public void AddOrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null, SuggestionSource suggestion = SuggestionSource.None)
     {
-        // When items have customizations, treat them as unique items (don't combine)
+        // When items have customizations, treat them as unique items (don't
+        // combine); nor is a suggested line folded into one picked by hand, or
+        // what the suggestion sold would be lost
         var existingOrderForProduct = customizationsDescription == null
-            ? _orderItems.SingleOrDefault(o => o.ProductId == productId && o.CustomizationsDescription == null)
+            ? _orderItems.SingleOrDefault(o => o.ProductId == productId && o.CustomizationsDescription == null && o.Suggestion == suggestion)
             : null;
 
         if (existingOrderForProduct != null)
@@ -315,7 +317,7 @@ public class Order
         else
         {
             // Add validated new order item
-            var orderItem = new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units, customizationsDescription, specialInstructions, optionIds);
+            var orderItem = new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units, customizationsDescription, specialInstructions, optionIds, suggestion);
             _orderItems.Add(orderItem);
         }
     }

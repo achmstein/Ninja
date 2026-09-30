@@ -53,9 +53,12 @@ public class OrderItem
     /// </summary>
     public int? StationId { get; private set; }
 
+    /// <summary>Whether the line was added from a suggestion, and which.</summary>
+    public SuggestionSource Suggestion { get; private set; }
+
     protected OrderItem() { }
 
-    public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null)
+    public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null, SuggestionSource suggestion = SuggestionSource.None)
     {
         if (units <= 0)
         {
@@ -79,6 +82,7 @@ public class OrderItem
 
         var options = optionIds?.Where(id => id > 0).Distinct().ToList();
         OptionIds = options is { Count: > 0 } ? options : null;
+        Suggestion = suggestion;
     }
     
     public void SetNewDiscount(decimal discount)

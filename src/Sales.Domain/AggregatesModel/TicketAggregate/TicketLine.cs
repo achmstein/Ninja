@@ -61,6 +61,9 @@ public class TicketLine : Entity
     /// </summary>
     public string? GuestId { get; private set; }
 
+    /// <summary>Whether the order line was added from a suggestion, and which.</summary>
+    public SuggestionSource Suggestion { get; private set; }
+
     public decimal Total => Qty * UnitPrice - Discount;
 
     protected TicketLine() { }
@@ -77,7 +80,8 @@ public class TicketLine : Entity
         string? customerName = null,
         string? customerId = null,
         string? guestId = null,
-        int? catalogItemId = null)
+        int? catalogItemId = null,
+        SuggestionSource suggestion = SuggestionSource.None)
     {
         if (description is null || description.IsEmpty)
             throw new SalesDomainException("A ticket line needs a description");
@@ -100,6 +104,7 @@ public class TicketLine : Entity
         OrderId = orderId;
         AddedBy = addedBy;
         CatalogItemId = catalogItemId;
+        Suggestion = suggestion;
     }
 
     /// <summary>

@@ -73,4 +73,7 @@ public record OrderItemDTO
     /// The chosen customization options by id, for Inventory's recipes
     /// </summary>
     public List<int>? OptionIds { get; init; }
+
+    /// <summary>Whether the line was added from a suggestion, and which</summary>
+    public SuggestionSource Suggestion { get; init; }
 }

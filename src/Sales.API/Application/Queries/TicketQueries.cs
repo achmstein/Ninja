@@ -184,6 +184,11 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .Where(p => p.BranchId == branchId && p.RecordedAt >= from && p.RecordedAt < to)
             .ToListAsync();
 
+        var suggested = tickets
+            .SelectMany(t => t.Lines)
+            .Where(l => l.Suggestion != SuggestionSource.None)
+            .ToList();
+
         return new RangeReport
         {
             From = from,
@@ -200,6 +205,8 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             TabPaymentTenderTotals = ShiftQueries.TenderTotals(tabPayments),
             Discounts = DiscountsOf(tickets),
             ChangeGiven = tickets.Sum(t => t.ChangeGiven),
+            SuggestedSales = suggested.Sum(l => l.Total),
+            SuggestedLines = suggested.Count,
             TenderTotals = tickets
                 .SelectMany(t => t.Payments)
                 .GroupBy(p => p.Tender)

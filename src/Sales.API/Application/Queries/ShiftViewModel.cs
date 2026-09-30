@@ -93,6 +93,14 @@ public record RangeReport
     public decimal TabPayments { get; init; }
     public int TabPaymentCount { get; init; }
     public List<TenderTotal> TabPaymentTenderTotals { get; init; } = [];
+    /// <summary>
+    /// Menu money of the settled tickets' lines added from a suggestion ("goes
+    /// well with"), line discounts off, before service charge and VAT — part
+    /// of <see cref="Subtotal"/>, not beside it.
+    /// </summary>
+    public decimal SuggestedSales { get; init; }
+    /// <summary>How many settled lines a suggestion added.</summary>
+    public int SuggestedLines { get; init; }
 }
 
 public record TypeTotal(string Type, int Count, decimal Net);

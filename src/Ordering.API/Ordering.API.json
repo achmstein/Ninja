@@ -2687,6 +2687,9 @@
               "$ref": "#/components/schemas/BasketItemCustomization"
             }
           },
+          "suggestion": {
+            "$ref": "#/components/schemas/SuggestionSource"
+          },
           "totalPrice": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
@@ -3866,6 +3869,9 @@
               ],
               "format": "int32"
             }
+          },
+          "suggestion": {
+            "$ref": "#/components/schemas/SuggestionSource"
           }
         }
       },
@@ -4539,6 +4545,14 @@
             "type": "boolean"
           }
         }
+      },
+      "SuggestionSource": {
+        "enum": [
+          "None",
+          "Pairing",
+          "CartNudge",
+          "Till"
+        ]
       }
     }
   },

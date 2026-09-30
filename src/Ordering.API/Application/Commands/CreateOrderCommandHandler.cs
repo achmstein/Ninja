@@ -58,7 +58,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
 
         foreach (var item in message.OrderItems)
         {
-            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units, item.CustomizationsDescription, item.SpecialInstructions, item.OptionIds);
+            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units, item.CustomizationsDescription, item.SpecialInstructions, item.OptionIds, item.Suggestion);
         }
 
         _logger.LogInformation("Creating order - Order: {@Order}", order);

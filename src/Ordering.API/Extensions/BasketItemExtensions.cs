@@ -36,7 +36,8 @@ public static class BasketItemExtensions
             // option's ingredients by id, never by parsing the text
             OptionIds = item.SelectedCustomizations.Count > 0
                 ? item.SelectedCustomizations.Select(c => c.OptionId).Where(id => id > 0).Distinct().ToList()
-                : null
+                : null,
+            Suggestion = item.Suggestion
         };
     }
 

@@ -18,6 +18,11 @@ class TicketLineEntityTypeConfiguration : IEntityTypeConfiguration<TicketLine>
             .HasMaxLength(20)
             .IsRequired();
 
+        builder.Property(l => l.Suggestion)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(SuggestionSource.None);
+
         builder.OwnsOne(l => l.Description, b => b.ToJson());
         builder.OwnsOne(l => l.Details, b => b.ToJson());
 

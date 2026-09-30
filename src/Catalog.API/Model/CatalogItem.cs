@@ -80,6 +80,12 @@ public class CatalogItem
     public ICollection<ItemCustomization> Customizations { get; set; } = new List<ItemCustomization>();
 
     /// <summary>
+    /// The items suggested alongside this one ("goes well with"), in
+    /// <see cref="CatalogItemPairing.DisplayOrder"/>; loaded by the menu lists.
+    /// </summary>
+    public ICollection<CatalogItemPairing> Pairings { get; set; } = new List<CatalogItemPairing>();
+
+    /// <summary>
     /// Required for EF Core
     /// </summary>
     private CatalogItem() { }
