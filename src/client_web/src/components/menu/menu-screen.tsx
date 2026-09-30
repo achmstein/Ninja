@@ -4,7 +4,7 @@ import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import { useStore } from 'zustand'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
-import { useCart } from '@/lib/cart'
+import { useCart, type CartLine } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useLiveBills } from '@/lib/live-bills'
 import { useOrderPill } from '@/lib/order-pill'
@@ -34,6 +34,7 @@ import { itemPictureUrl } from './item-picture'
 import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
 import { useMenuStyle } from './menu-style'
+import { menuById, pairedFor } from './paired-items'
 import { OrderingPausedNote } from './paused-note'
 import { cornerOf } from './photo-corner'
 import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
@@ -294,7 +295,7 @@ export function MenuScreen({ menu }: HomeProps) {
     store.setState((s) => ({ flights: [...s.flights, flight] }))
   })
 
-  const addLine = useHandler((item: CatalogItemDto, result: TuneResult) =>
+  const addLine = useHandler((item: CatalogItemDto, result: TuneResult, suggestion?: CartLine['suggestion']) =>
     add({
       productId: Number(item.id),
       nameEn: item.name?.en ?? '',
@@ -304,8 +305,23 @@ export function MenuScreen({ menu }: HomeProps) {
       quantity: result.quantity,
       specialInstructions: result.instructions || undefined,
       customizations: result.customizations,
+      suggestion,
     })
   )
+
+  // Every dish by id, for what a dish goes well with
+  const byId = useMemo(() => menuById(menu.sections.flatMap((s) => s.items)), [menu.sections])
+
+  // A dish the open one goes well with: in with its defaults when nothing needs choosing, else open it in its place
+  const onSuggest = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
+    if (!canQuickAdd(item)) {
+      store.setState({ tuning: { item, from: photo, suggestion: 'Pairing' } })
+      return
+    }
+    navigator.vibrate?.(8)
+    const { customizations, unitPrice } = quickAddChoice(item)
+    fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }, 'Pairing'))
+  })
 
   const openDish = useHandler((item: CatalogItemDto, from: HTMLElement | null) => store.setState({ tuning: { item, from } }))
 
@@ -333,7 +349,7 @@ export function MenuScreen({ menu }: HomeProps) {
     // The photo itself goes to the tray: the open card lets go of it and fades,
     // rather than folding back into its card while a copy flies
     const item = tuning.item
-    fly(item, photo, () => addLine(item, result))
+    fly(item, photo, () => addLine(item, result, tuning.suggestion))
     store.setState({ tuning: { ...tuning, leaving: true } })
     requestAnimationFrame(() => afterThisFrame(() => store.setState({ tuning: null })))
   })
@@ -505,7 +521,7 @@ export function MenuScreen({ menu }: HomeProps) {
             )}
           </AnimatePresence>
 
-          <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} />
+          <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} menu={byId} onSuggest={onSuggest} />
         </div>
 
         <LayoutGroup>
@@ -545,12 +561,17 @@ function TuneLayer({
   store,
   canOrder,
   onAdd,
+  menu,
+  onSuggest,
 }: {
   store: MenuScreenStore
   canOrder: boolean
   onAdd: (tuning: Tuning, result: TuneResult, photo: HTMLElement | null) => void
+  menu: ReadonlyMap<string, CatalogItemDto>
+  onSuggest: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
   const tuning = useStore(store, (s) => s.tuning)
+  const lines = useCart((s) => s.lines)
   return (
     <AnimatePresence>
       {tuning && (
@@ -562,6 +583,8 @@ function TuneLayer({
           onClose={() => store.setState({ tuning: null })}
           leaving={tuning.leaving}
           onAdd={(result, photo) => onAdd(tuning, result, photo)}
+          suggestions={pairedFor(tuning.item, menu, lines)}
+          onSuggest={onSuggest}
         />
       )}
     </AnimatePresence>

@@ -1215,4 +1215,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payWhyBeingPaid => 'Someone is paying the rest right now';
+
+  @override
+  String get goesWellWith => 'Goes well with';
+
+  @override
+  String addSuggestion(String name) {
+    return 'Add $name?';
+  }
+
+  @override
+  String get notNow => 'Not now';
 }

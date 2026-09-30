@@ -15,6 +15,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
+import '../widgets/cart_nudge.dart';
 import '../services/promo_service.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
@@ -211,6 +212,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 // Checkout section (bottom)
                                 Column(
                                   children: [
+                                    // What goes well with what is in it
+                                    const CartNudge(),
                                     const SizedBox(height: 24),
 
                                     // Where this order is going

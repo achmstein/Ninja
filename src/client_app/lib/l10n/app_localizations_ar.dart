@@ -1208,6 +1208,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payWhyBeingPaid => 'في حد بيدفع الباقي دلوقتي';
+
+  @override
+  String get goesWellWith => 'بيتطلب معاه';
+
+  @override
+  String addSuggestion(String name) {
+    return 'تضيف $name؟';
+  }
+
+  @override
+  String get notNow => 'مش دلوقتي';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2084,4 +2095,15 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get payWhyBeingPaid => 'هناك من يدفع المتبقي الآن';
+
+  @override
+  String get goesWellWith => 'يُطلب معه';
+
+  @override
+  String addSuggestion(String name) {
+    return 'هل تضيف $name؟';
+  }
+
+  @override
+  String get notNow => 'ليس الآن';
 }

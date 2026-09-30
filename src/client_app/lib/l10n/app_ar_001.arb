@@ -265,5 +265,8 @@
   "payWhyClockRunning": "يمكنك الدفع بعد إيقاف الوقت",
   "payWhyEmpty": "لا شيء على الفاتورة بعد",
   "payWhyPaid": "تم دفع هذه الفاتورة بالكامل",
-  "payWhyBeingPaid": "هناك من يدفع المتبقي الآن"
+  "payWhyBeingPaid": "هناك من يدفع المتبقي الآن",
+  "goesWellWith": "يُطلب معه",
+  "addSuggestion": "هل تضيف {name}؟",
+  "notNow": "ليس الآن"
 }

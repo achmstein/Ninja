@@ -390,6 +390,8 @@ export type RangeReport = {
     tabPayments?: number | string;
     tabPaymentCount?: number | string;
     tabPaymentTenderTotals?: Array<TenderTotal>;
+    suggestedSales?: number | string;
+    suggestedLines?: number | string;
 };
 
 export type ReceiptLineView = {

@@ -12,6 +12,7 @@ import type { CheckoutBlock } from '@/lib/order-payload'
 import type { OrderDestination } from '@/lib/order-destination'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { TrayExtras } from './tray-extras'
+import { TrayNudge } from './tray-nudge'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { StillHereCard } from '@/components/places/still-here'
@@ -525,6 +526,8 @@ function OrderSheet({ order, extras, cloudKitchen }: { order: TrayOrder; extras:
         {lines.map((line) => (
           <SwipeLine key={lineKey(line)} line={line} />
         ))}
+        {/* What goes well with what is in it: one suggestion, waved away or added in a tap */}
+        <TrayNudge />
         {/* The note, a code, points: small pills under the dishes, each opening only when wanted */}
         <div className='mt-3 px-2'>
           <TrayExtras extras={extras} />

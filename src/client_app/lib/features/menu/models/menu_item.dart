@@ -17,6 +17,9 @@ class MenuItem {
   final int displayOrder;
   final List<ItemCustomization> customizations;
 
+  /// What the business suggests with this item ("goes well with"), in its order
+  final List<int> pairedItemIds;
+
   MenuItem({
     required this.id,
     required this.name,
@@ -32,6 +35,7 @@ class MenuItem {
     this.preparationTimeMinutes,
     this.displayOrder = 0,
     this.customizations = const [],
+    this.pairedItemIds = const [],
   });
 
   /// Returns the effective price: offerPrice when on offer, otherwise regular price
@@ -56,6 +60,10 @@ class MenuItem {
               ?.map((e) => ItemCustomization.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      pairedItemIds: (json['pairedItemIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
     );
   }
 

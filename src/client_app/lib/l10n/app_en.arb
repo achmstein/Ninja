@@ -692,5 +692,15 @@
   "payWhyClockRunning": "You can pay once the time is stopped",
   "payWhyEmpty": "Nothing on the bill yet",
   "payWhyPaid": "This bill is fully paid",
-  "payWhyBeingPaid": "Someone is paying the rest right now"
+  "payWhyBeingPaid": "Someone is paying the rest right now",
+  "goesWellWith": "Goes well with",
+  "addSuggestion": "Add {name}?",
+  "@addSuggestion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notNow": "Not now"
 }

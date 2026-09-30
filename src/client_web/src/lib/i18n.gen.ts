@@ -373,9 +373,12 @@ export const messages = {
   payWhyEmpty: { en: "Nothing on the bill yet", ar: "مفيش حاجة على الشيك لسه" },
   payWhyPaid: { en: "This bill is fully paid", ar: "الشيك ده اندفع كله" },
   payWhyBeingPaid: { en: "Someone is paying the rest right now", ar: "في حد بيدفع الباقي دلوقتي" },
+  goesWellWith: { en: "Goes well with", ar: "بيتطلب معاه" },
+  addSuggestion: { en: "Add {name}?", ar: "تضيف {name}؟" },
+  notNow: { en: "Not now", ar: "مش دلوقتي" },
 } as const satisfies Record<string, Message>
 
-/** Modern Standard Arabic, read instead of `ar` when the café speaks it. */
+/** Modern Standard Arabic, read instead of `ar` when the business speaks it. */
 export const messagesArStandard: Partial<Record<keyof typeof messages, string | PluralForms>> = {
   signIn: "تسجيل الدخول",
   register: "التسجيل",
@@ -643,4 +646,7 @@ export const messagesArStandard: Partial<Record<keyof typeof messages, string | 
   payWhyEmpty: "لا شيء على الفاتورة بعد",
   payWhyPaid: "تم دفع هذه الفاتورة بالكامل",
   payWhyBeingPaid: "هناك من يدفع المتبقي الآن",
+  goesWellWith: "يُطلب معه",
+  addSuggestion: "هل تضيف {name}؟",
+  notNow: "ليس الآن",
 }

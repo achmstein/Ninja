@@ -19,6 +19,7 @@ export type BasketItem = {
     pictureUrl?: null | string;
     specialInstructions?: null | string;
     selectedCustomizations?: Array<BasketItemCustomization>;
+    suggestion?: SuggestionSource;
     totalPrice?: number | string;
 };
 
@@ -246,6 +247,7 @@ export type OrderItemDto = {
     specialInstructions?: null | string;
     customizationsDescription?: null | LocalizedText;
     optionIds?: null | Array<number | string>;
+    suggestion?: SuggestionSource;
 };
 
 export type OrderRatingDto = {
@@ -378,6 +380,8 @@ export type RateOrderRequest = {
 export type SetOrderReadyRequest = {
     ready: boolean;
 };
+
+export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
 
 export type GetOrdersByUserData = {
     body?: never;

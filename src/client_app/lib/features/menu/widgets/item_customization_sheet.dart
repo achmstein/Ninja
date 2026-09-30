@@ -11,12 +11,16 @@ import '../models/user_preference.dart';
 import '../services/menu_service.dart';
 import '../../cart/models/cart_item.dart';
 import '../../cart/services/cart_service.dart';
+import 'goes_well_with.dart';
 
 /// Bottom sheet for customizing menu item
 class ItemCustomizationSheet extends ConsumerStatefulWidget {
   final MenuItem item;
 
-  const ItemCustomizationSheet({super.key, required this.item});
+  /// Opened from another item's suggestions: what it adds says so ('Pairing')
+  final String? suggestion;
+
+  const ItemCustomizationSheet({super.key, required this.item, this.suggestion});
 
   @override
   ConsumerState<ItemCustomizationSheet> createState() =>
@@ -253,7 +257,7 @@ class _ItemCustomizationSheetState
       instructions: _instructionsController.text.isNotEmpty
           ? _instructionsController.text
           : null,
-    ).copyWith(quantity: _quantity);
+    ).copyWith(quantity: _quantity, suggestion: widget.suggestion);
 
     ref.read(cartProvider.notifier).addItem(cartItem);
     Navigator.pop(context);
@@ -330,6 +334,9 @@ class _ItemCustomizationSheetState
                   // Customizations
                   ...widget.item.customizations.map((customization) =>
                     _buildCustomizationSection(context, customization, locale)),
+
+                  // What goes well with it
+                  GoesWellWith(item: widget.item),
 
                   // Special instructions
                   AppText(

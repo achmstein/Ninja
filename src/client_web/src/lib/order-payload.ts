@@ -109,6 +109,7 @@ export function orderBody({
       quantity: line.quantity,
       pictureUrl: line.pictureUrl ?? null,
       specialInstructions: line.specialInstructions ?? null,
+      suggestion: line.suggestion ?? ('None' as const),
       selectedCustomizations: line.customizations.map((c) => ({
         customizationId: c.customizationId,
         customizationName: { en: c.customizationNameEn || null, ar: c.customizationNameAr || null },

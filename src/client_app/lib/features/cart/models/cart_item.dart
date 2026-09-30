@@ -39,6 +39,11 @@ class CartItem {
   final String? specialInstructions;
   final List<SelectedCustomization> selectedCustomizations;
 
+  /// Added from a suggestion ("goes well with"): 'Pairing' on an item's
+  /// sheet, 'CartNudge' from the cart. Not part of how lines merge: added
+  /// again by hand it is the same line, and keeps saying how it first came.
+  final String? suggestion;
+
   const CartItem({
     required this.productId,
     required this.productName,
@@ -48,6 +53,7 @@ class CartItem {
     this.quantity = 1,
     this.specialInstructions,
     this.selectedCustomizations = const [],
+    this.suggestion,
   });
 
   bool get isOnOffer => originalUnitPrice != null && originalUnitPrice! > unitPrice;
@@ -56,6 +62,7 @@ class CartItem {
     int? quantity,
     String? specialInstructions,
     List<SelectedCustomization>? selectedCustomizations,
+    String? suggestion,
   }) {
     return CartItem(
       productId: productId,
@@ -66,6 +73,7 @@ class CartItem {
       quantity: quantity ?? this.quantity,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       selectedCustomizations: selectedCustomizations ?? this.selectedCustomizations,
+      suggestion: suggestion ?? this.suggestion,
     );
   }
 
@@ -110,6 +118,7 @@ class CartItem {
       'specialInstructions': specialInstructions,
       'selectedCustomizations':
           selectedCustomizations.map((c) => c.toJson()).toList(),
+      'suggestion': suggestion ?? 'None',
     };
   }
 }

@@ -420,5 +420,8 @@
   "payWhyClockRunning": "تقدر تدفع لما الوقت يقف",
   "payWhyEmpty": "مفيش حاجة على الشيك لسه",
   "payWhyPaid": "الشيك ده اندفع كله",
-  "payWhyBeingPaid": "في حد بيدفع الباقي دلوقتي"
+  "payWhyBeingPaid": "في حد بيدفع الباقي دلوقتي",
+  "goesWellWith": "بيتطلب معاه",
+  "addSuggestion": "تضيف {name}؟",
+  "notNow": "مش دلوقتي"
 }

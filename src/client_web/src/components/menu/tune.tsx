@@ -57,6 +57,8 @@ export function Tune({
   onClose,
   onAdd,
   leaving = false,
+  suggestions = [],
+  onSuggest,
 }: {
   item: CatalogItemDto
   /** The dish's photo it was opened from: the banner grows out of it and goes back into it; none, the sheet rises in on its own */
@@ -66,6 +68,10 @@ export function Tune({
   onAdd: (result: TuneResult, photo: HTMLElement | null) => void
   /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of going back into the dish */
   leaving?: boolean
+  /** What the business suggests with this dish ("goes well with"), already narrowed to what can be had and is not in the order */
+  suggestions?: CatalogItemDto[]
+  /** A suggestion tapped, from its photo */
+  onSuggest?: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -263,6 +269,8 @@ export function Tune({
                 />
               ))}
 
+          {canOrder && !soldOut && suggestions.length > 0 && onSuggest && <GoesWellWith items={suggestions} onPick={onSuggest} />}
+
           <div>
             {noteOpen ? (
               <input
@@ -452,3 +460,67 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
   )
 }
 
+
+/**
+ * What goes well with the dish: a small card each, in the business's order,
+ * sideways when there are more than fit. A tap adds one with nothing to
+ * choose straight to the order, or opens one that asks a question first.
+ */
+function GoesWellWith({ items, onPick }: { items: CatalogItemDto[]; onPick: (item: CatalogItemDto, photo: HTMLElement | null) => void }) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  return (
+    <section className='flex flex-col'>
+      <h3 className='heading text-name mb-2.5'>{t('goesWellWith')}</h3>
+      <div className='no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5'>
+        {items.map((item) => (
+          <SuggestionCard key={String(item.id)} item={item} name={localized(item.name)} price={price(effectiveBasePrice(item))} onPick={onPick} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function SuggestionCard({
+  item,
+  name,
+  price,
+  onPick,
+}: {
+  item: CatalogItemDto
+  name: string
+  price: string
+  onPick: (item: CatalogItemDto, photo: HTMLElement | null) => void
+}) {
+  const t = useT()
+  const photo = useRef<HTMLDivElement>(null)
+  const [failed, setFailed] = useState(false)
+  return (
+    <button
+      type='button'
+      onClick={() => onPick(item, photo.current)}
+      aria-label={t('addSuggestion', { name })}
+      className='bg-muted/60 flex w-36 shrink-0 flex-col overflow-hidden rounded-[1.25rem] text-start active:scale-[0.98] motion-safe:transition-transform'
+    >
+      <div ref={photo} className={cn('aspect-[4/3] w-full overflow-hidden', (!item.pictureUri || failed) && TONE_CLASS.primary)}>
+        {item.pictureUri && !failed ? (
+          <img src={itemPictureUrl(item.id)} alt='' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
+        ) : (
+          <div className='grid size-full place-items-center'>
+            <UtensilsCrossed className='size-6 opacity-50' />
+          </div>
+        )}
+      </div>
+      <div className='flex items-center gap-2 px-3 py-2'>
+        <div className='min-w-0 flex-1'>
+          <div className='truncate text-note font-medium'>{name}</div>
+          <div className='text-muted-foreground text-caption tabular-nums'>{price}</div>
+        </div>
+        <span className='bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-full'>
+          <Plus className='size-4' />
+        </span>
+      </div>
+    </button>
+  )
+}

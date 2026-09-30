@@ -1,12 +1,19 @@
 import { createStore, type StoreApi } from 'zustand'
 import type { CatalogItemDto } from '@/api/catalog'
+import type { CartLine } from '@/lib/cart'
 import type { Flight } from './flights'
 
 /**
  * The dish open in place; `from`, the photo it was opened from (the sheet's photo grows out of it and
  * goes back into it); `leaving` once it was added and its photo has taken off
  */
-export type Tuning = { item: CatalogItemDto; from?: HTMLElement | null; leaving?: boolean }
+export type Tuning = {
+  item: CatalogItemDto
+  from?: HTMLElement | null
+  leaving?: boolean
+  /** Opened from another dish's suggestions: what it adds says so */
+  suggestion?: CartLine['suggestion']
+}
 
 /**
  * What changes on the menu while the customer uses it: the dish open, the

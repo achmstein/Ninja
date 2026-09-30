@@ -2288,6 +2288,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone is paying the rest right now'**
   String get payWhyBeingPaid;
+
+  /// No description provided for @goesWellWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes well with'**
+  String get goesWellWith;
+
+  /// No description provided for @addSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name}?'**
+  String addSuggestion(String name);
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
 }
 
 class _AppLocalizationsDelegate
