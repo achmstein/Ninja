@@ -293,6 +293,8 @@ public sealed class TemplatesTests
         // a push notification reads the same as the screens it follows
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__ArabicStyle: \"standard\"").Count);
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
+        // When the usual model is busy the assistant asks the fallback
+        StringAssert.Contains(yaml, "AI__FallbackModel: \"gemini-3.5-flash-lite\"");
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__tenant__DESTINATIONS__d1__ADDRESS: \"http://blue-tenant-api:8080\"");
         // The café's own service is Tenant.API, on its own database; the assistant calls it by its Aspire name
@@ -311,12 +313,12 @@ public sealed class TemplatesTests
         // Identity has no database; the assistant is off without a key
         Assert.IsFalse(yaml.Contains("ConnectionStrings__identitydb"));
         var noAi = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), new PlatformOptions { Domain = "ninja.app" });
-        StringAssert.Contains(noAi, "AI__Enabled: \"false\"");
+        Assert.IsFalse(noAi.Contains("ConnectionStrings__chatModel"));
         // With a key, only the plans that include the assistant get it: a customer on Starter runs without, and its .env carries no key
         var starter = Blue();
         starter.Kind = TenantKind.Customer;
         starter.Plan = TenantPlan.Starter;
-        StringAssert.Contains(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform), "AI__Enabled: \"false\"");
+        Assert.IsFalse(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform).Contains("ConnectionStrings__chatModel"));
         StringAssert.Contains(Templates.Env(starter, Platform), "GEMINI_API_KEY=\n");
         starter.Plan = TenantPlan.Pro;
         StringAssert.Contains(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform), "ConnectionStrings__chatModel");

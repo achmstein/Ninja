@@ -43,6 +43,7 @@ public class AIJsonAndProblemsTest
         Assert.AreEqual(503, AIProblems.From(new AIUnavailableException(), http).StatusCode);
         Assert.AreEqual(504, AIProblems.From(new AITimeoutException("x", TimeSpan.FromSeconds(1)), http).StatusCode);
         Assert.AreEqual(502, AIProblems.From(new AIResponseException("x", "junk", null), http).StatusCode);
+        Assert.AreEqual(502, AIProblems.From(new AITruncatedException("x", 1024), http).StatusCode);
         Assert.AreEqual(502, AIProblems.From(new AIProviderException(401, "bad key", null, null), http).StatusCode);
         Assert.AreEqual(502, AIProblems.From(new AIProviderException(503, "overloaded", null, null), http).StatusCode);
 

@@ -49,8 +49,9 @@ public sealed class NinjaAgent
 
         try
         {
-            var (text, usage, modelId) = await AskAsync<T>(messages, ct);
-            var (result, error) = Parse<T>(text);
+            var answer = await AskAsync<T>(messages, model: null, ct);
+            var usage = answer.Usage;
+            var (result, error) = Parse<T>(answer.Text);
             var retried = false;
 
             if (result is null)
@@ -59,22 +60,23 @@ public sealed class NinjaAgent
                 retried = true;
                 var repair = new List<ChatMessage>(messages)
                 {
-                    new(ChatRole.Assistant, text ?? string.Empty),
+                    new(ChatRole.Assistant, answer.Text ?? string.Empty),
                     new(ChatRole.User, RepairPrompt),
                 };
-                (text, var usage2, modelId) = await AskAsync<T>(repair, ct);
-                usage = Add(usage, usage2);
-                (result, error) = Parse<T>(text);
+                // The model that answered repairs its own answer
+                answer = await AskAsync<T>(repair, answer.Fallback, ct);
+                usage = Add(usage, answer.Usage);
+                (result, error) = Parse<T>(answer.Text);
                 if (result is null)
-                    throw new AIResponseException(Definition.Key, text, error);
+                    throw new AIResponseException(Definition.Key, answer.Text, error);
             }
 
             var elapsed = Stopwatch.GetElapsedTime(started);
             _logger.LogInformation(
                 "AI {Agent} answered in {ElapsedMs} ms ({InputTokens} in / {OutputTokens} out, model {Model}, retried {Retried})",
-                Definition.Key, (long)elapsed.TotalMilliseconds, usage?.InputTokenCount, usage?.OutputTokenCount, modelId ?? "?", retried);
+                Definition.Key, (long)elapsed.TotalMilliseconds, usage?.InputTokenCount, usage?.OutputTokenCount, answer.ModelId ?? "?", retried);
 
-            return new AgentRun<T>(result, usage, elapsed, retried, modelId);
+            return new AgentRun<T>(result, usage, elapsed, retried, answer.ModelId);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -86,29 +88,73 @@ public sealed class NinjaAgent
         }
     }
 
-    private async Task<(string? Text, UsageDetails? Usage, string? ModelId)> AskAsync<T>(IReadOnlyList<ChatMessage> messages, CancellationToken ct)
+    /// <summary>What one call answered; <c>Fallback</c> names the fallback model when it was the one that answered.</summary>
+    private sealed record Answer(string? Text, UsageDetails? Usage, string? ModelId, string? Fallback);
+
+    /// <summary>
+    /// One call on the usual model, or on <paramref name="model"/>; when the
+    /// usual model is busy (429, or a 5xx past the SDK's own retry) the same
+    /// call goes once to <see cref="AIOptions.FallbackModel"/>.
+    /// </summary>
+    private async Task<Answer> AskAsync<T>(IReadOnlyList<ChatMessage> messages, string? model, CancellationToken ct)
     {
+        try
+        {
+            return await AskOnceAsync<T>(messages, model, ct);
+        }
+        catch (ClientResultException ex) when (model is null && IsBusy(ex.Status) && !string.IsNullOrWhiteSpace(_options.FallbackModel))
+        {
+            _logger.LogWarning("AI {Agent}: the model answered {Status}; asking {Fallback} instead", Definition.Key, ex.Status, _options.FallbackModel);
+            return await AskOnceAsync<T>(messages, _options.FallbackModel, ct);
+        }
+    }
+
+    /// <summary>
+    /// The chat response under the agent's answer: the typed run and the
+    /// telemetry wrapper each put their own response around it.
+    /// </summary>
+    private static ChatResponse? ChatResponseOf(AgentResponse response)
+    {
+        object? raw = response;
+        for (var depth = 0; depth < 8 && raw is not null; depth++)
+        {
+            if (raw is ChatResponse chat)
+                return chat;
+            raw = raw is AgentResponse agent ? agent.RawRepresentation : null;
+        }
+        return null;
+    }
+
+    private static bool IsBusy(int status) => status == 429 || status >= 500;
+
+    private async Task<Answer> AskOnceAsync<T>(IReadOnlyList<ChatMessage> messages, string? model, CancellationToken ct)
+    {
+        AgentResponse response;
         if (_options.StructuredOutput == StructuredOutputMode.JsonSchema)
         {
             // The framework sets ChatOptions.ResponseFormat to T's schema for this run.
-            var typed = await _agent.RunAsync<T>(messages, session: null, serializerOptions: AIJson.Options, cancellationToken: ct);
-            return (typed.Text, typed.Usage, ModelOf(typed));
+            var runOptions = model is null ? null : new ChatClientAgentRunOptions(new ChatOptions { ModelId = model });
+            response = await _agent.RunAsync<T>(messages, session: null, serializerOptions: AIJson.Options, options: runOptions, cancellationToken: ct);
+        }
+        else
+        {
+            // Fallback for a provider that rejects the schema: the schema goes in the prompt, only "JSON" is enforced.
+            var schema = AIJsonUtilities.CreateJsonSchema(typeof(T), serializerOptions: AIJson.Options);
+            var withSchema = new List<ChatMessage>(messages)
+            {
+                new(ChatRole.User, $"Answer with a single JSON object matching this JSON schema exactly:\n{schema}"),
+            };
+            var options = new ChatClientAgentRunOptions(new ChatOptions { ResponseFormat = ChatResponseFormat.Json, ModelId = model });
+            response = await _agent.RunAsync(withSchema, session: null, options, ct);
         }
 
-        // Fallback for a provider that rejects the schema: the schema goes in the prompt, only "JSON" is enforced.
-        var schema = AIJsonUtilities.CreateJsonSchema(typeof(T), serializerOptions: AIJson.Options);
-        var withSchema = new List<ChatMessage>(messages)
-        {
-            new(ChatRole.User, $"Answer with a single JSON object matching this JSON schema exactly:\n{schema}"),
-        };
-        var options = new ChatClientAgentRunOptions(new ChatOptions { ResponseFormat = ChatResponseFormat.Json });
-        var response = await _agent.RunAsync(withSchema, session: null, options, ct);
-        return (response.Text, response.Usage, ModelOf(response));
-    }
+        var raw = ChatResponseOf(response);
+        // Cut off at the ceiling: the JSON is incomplete, and a repair round would be cut off the same way
+        if (raw?.FinishReason == ChatFinishReason.Length)
+            throw new AITruncatedException(Definition.Key, Definition.MaxOutputTokens);
 
-    /// <summary>The model that answered, when the underlying chat response is available.</summary>
-    private static string? ModelOf(AgentResponse response)
-        => (response.RawRepresentation as ChatResponse)?.ModelId;
+        return new Answer(response.Text, response.Usage, raw?.ModelId, model);
+    }
 
     private static (T? Result, Exception? Error) Parse<T>(string? text)
     {

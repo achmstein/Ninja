@@ -71,6 +71,12 @@ public sealed class PlatformOptions
     /// <summary>Shared assistant key handed to every stack; empty leaves the assistant off.</summary>
     public string? GeminiApiKey { get; set; }
 
+    /// <summary>The model the stacks' assistant asks.</summary>
+    public string GeminiChatModel { get; set; } = "gemini-3.8-flash";
+
+    /// <summary>The model asked when <see cref="GeminiChatModel"/> is busy; empty for none.</summary>
+    public string? GeminiFallbackModel { get; set; } = "gemini-3.5-flash-lite";
+
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
 

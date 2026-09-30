@@ -47,6 +47,15 @@ internal static class Extensions
     /// </summary>
     public const string GeminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
+    /// <summary>The model the assistant asks: text and vision in one.</summary>
+    public const string GeminiChatModel = "gemini-3.8-flash";
+
+    /// <summary>
+    /// The model asked when <see cref="GeminiChatModel"/> is busy: its own
+    /// quota, and it reads a menu in a second or two.
+    /// </summary>
+    public const string GeminiFallbackModel = "gemini-3.5-flash-lite";
+
     /// <summary>
     /// The Aspire secret parameter the chat model's key travels as. Its value
     /// is never in the repo: user secrets (the dashboard's "remember" writes
@@ -104,16 +113,24 @@ internal static class Extensions
                 "or any OpenAI-compatible provider's key when AI:Endpoint in the AppHost settings points elsewhere.",
                 enableMarkdown: true);
 
+        var endpoint = builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint;
         var openai = builder.AddOpenAI("openai")
-            .WithEndpoint(builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint)
+            .WithEndpoint(endpoint)
             .WithApiKey(apiKey);
 
         // No WithHealthCheck(): it calls the provider on every check and spends the free tier's quota
-        var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? "gemini-3.8-flash");
+        var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? GeminiChatModel);
+
+        // The model asked when the usual one is busy; Gemini's only when the endpoint is Gemini's
+        var fallback = builder.Configuration["AI:FallbackModel"] ?? (endpoint == GeminiEndpoint ? GeminiFallbackModel : null);
 
         foreach (var project in projects)
         {
             project.WithReference(chat);
+            if (!string.IsNullOrWhiteSpace(fallback))
+            {
+                project.WithEnvironment("AI__FallbackModel", fallback);
+            }
         }
 
         return builder;

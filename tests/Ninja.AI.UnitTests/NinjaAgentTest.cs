@@ -113,6 +113,102 @@ public class NinjaAgentTest
     }
 
     [TestMethod]
+    public async Task A_busy_model_hands_the_call_to_the_fallback_model()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(503), """{"greeting":"hi","count":6}"""]);
+
+        var run = await Agent(client, new AIOptions { FallbackModel = "small-model" }).RunAsync<Answer>(Ask("hello"), CancellationToken.None);
+
+        Assert.AreEqual(6, run.Result.Count);
+        Assert.AreEqual("small-model", run.ModelId);
+        Assert.HasCount(2, client.Calls);
+        Assert.IsNull(client.Options[0]!.ModelId, "the usual model first");
+        Assert.AreEqual("small-model", client.Options[1]!.ModelId);
+        Assert.AreEqual(Definition.Instructions, client.Options[1]!.Instructions, "the fallback runs the same agent");
+    }
+
+    [TestMethod]
+    public async Task A_rate_limited_model_hands_the_call_to_the_fallback_model()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(429), """{"greeting":"hi","count":7}"""]);
+
+        var run = await Agent(client, new AIOptions { FallbackModel = "small-model" }).RunAsync<Answer>(Ask("hello"), CancellationToken.None);
+
+        Assert.AreEqual(7, run.Result.Count);
+    }
+
+    [TestMethod]
+    public async Task A_rejected_key_is_not_handed_to_the_fallback()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(401), """{"greeting":"hi","count":8}"""]);
+
+        var ex = await Assert.ThrowsExactlyAsync<AIProviderException>(() =>
+            Agent(client, new AIOptions { FallbackModel = "small-model" }).RunAsync<Answer>(Ask("hello"), CancellationToken.None));
+
+        Assert.AreEqual(401, ex.Status);
+        Assert.HasCount(1, client.Calls);
+    }
+
+    [TestMethod]
+    public async Task Without_a_fallback_a_busy_model_is_the_error()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(503)]);
+
+        var ex = await Assert.ThrowsExactlyAsync<AIProviderException>(() => Agent(client).RunAsync<Answer>(Ask("hello"), CancellationToken.None));
+
+        Assert.AreEqual(503, ex.Status);
+    }
+
+    [TestMethod]
+    public async Task A_busy_fallback_is_the_error()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(503), StatusResponse.Error(429)]);
+
+        var ex = await Assert.ThrowsExactlyAsync<AIProviderException>(() =>
+            Agent(client, new AIOptions { FallbackModel = "small-model" }).RunAsync<Answer>(Ask("hello"), CancellationToken.None));
+
+        Assert.AreEqual(429, ex.Status);
+        Assert.HasCount(2, client.Calls);
+    }
+
+    [TestMethod]
+    public async Task The_fallback_repairs_its_own_answer()
+    {
+        var client = new ScriptedChatClient([StatusResponse.Error(503), "not json", """{"greeting":"hi","count":9}"""]);
+
+        var run = await Agent(client, new AIOptions { FallbackModel = "small-model" }).RunAsync<Answer>(Ask("hello"), CancellationToken.None);
+
+        Assert.AreEqual(9, run.Result.Count);
+        Assert.AreEqual("small-model", client.Options[2]!.ModelId);
+    }
+
+    [TestMethod]
+    public async Task An_answer_cut_off_at_the_ceiling_fails_without_a_repair_round()
+    {
+        var cut = new ChatResponse(new ChatMessage(ChatRole.Assistant, """{"greeting":"h"""))
+        {
+            FinishReason = ChatFinishReason.Length,
+        };
+        var client = new ScriptedChatClient([cut, """{"greeting":"hi","count":1}"""]);
+
+        await Assert.ThrowsExactlyAsync<AITruncatedException>(() => Agent(client).RunAsync<Answer>(Ask("hello"), CancellationToken.None));
+
+        Assert.HasCount(1, client.Calls);
+    }
+
+    [TestMethod]
+    public async Task The_temperature_stays_the_models_own_unless_asked()
+    {
+        var client = new ScriptedChatClient(["""{"greeting":"hi","count":1}""", """{"greeting":"hi","count":1}"""]);
+
+        await Agent(client).RunAsync<Answer>(Ask("hello"), CancellationToken.None);
+        await Agent(client, new AIOptions { SendTemperature = true }).RunAsync<Answer>(Ask("hello"), CancellationToken.None);
+
+        Assert.IsNull(client.Options[0]!.Temperature);
+        Assert.AreEqual(0f, client.Options[1]!.Temperature);
+    }
+
+    [TestMethod]
     public void Factory_is_off_without_a_chat_client()
     {
         var services = new ServiceCollection().BuildServiceProvider();

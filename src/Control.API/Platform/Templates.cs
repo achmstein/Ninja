@@ -634,12 +634,12 @@ public static partial class Templates
 
     private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform)
     {
+        // No connection string, no assistant: the services report it off and answer 503
         if (!platform.AssistantFor(tenant))
-        {
-            sb.AppendLine("      AI__Enabled: \"false\"");
             return;
-        }
-        sb.AppendLine("      ConnectionStrings__chatModel: \"Endpoint=https://generativelanguage.googleapis.com/v1beta/openai/;Key=${GEMINI_API_KEY};Model=gemini-3.8-flash\"");
+        sb.AppendLine($"      ConnectionStrings__chatModel: \"Endpoint=https://generativelanguage.googleapis.com/v1beta/openai/;Key=${{GEMINI_API_KEY}};Model={platform.GeminiChatModel}\"");
+        if (!string.IsNullOrWhiteSpace(platform.GeminiFallbackModel))
+            sb.AppendLine($"      AI__FallbackModel: \"{platform.GeminiFallbackModel}\"");
     }
 
     /// <summary>The gateway's route table, the one ConfigureMobileBffRoutes declares; kept in step by tests/Ninja.Contracts.Tests.</summary>

@@ -29,6 +29,8 @@ internal static class LiveProvider
         {
             ["ConnectionStrings:chatModel"] = $"Endpoint={endpoint};Key={key};Model={model}",
             ["AI:StructuredOutput"] = Environment.GetEnvironmentVariable("AI_STRUCTURED_OUTPUT"),
+            // As the stacks run: a busy model hands the call to the small one
+            ["AI:FallbackModel"] = Environment.GetEnvironmentVariable("AI_FALLBACK_MODEL") ?? "gemini-3.5-flash-lite",
         });
         builder.Services.AddLogging();
         builder.AddAIServices();

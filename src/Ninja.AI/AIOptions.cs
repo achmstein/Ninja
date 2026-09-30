@@ -37,19 +37,39 @@ public sealed class AIOptions
     public StructuredOutputMode StructuredOutput { get; set; } = StructuredOutputMode.JsonSchema;
 
     /// <summary>
-    /// Assistant calls the whole service may make per minute. A free tier
-    /// allows about ten per key, shared by every service that uses it.
+    /// Assistant requests the whole service takes per minute. Sized for a
+    /// paid key; a free tier allows about ten calls a minute per model and
+    /// key, and the fallback model's quota comes on top.
     /// </summary>
-    public int RequestsPerMinute { get; set; } = 4;
+    public int RequestsPerMinute { get; set; } = 20;
 
-    /// <summary>Assistant calls one signed-in user may make per minute.</summary>
-    public int PerUserRequestsPerMinute { get; set; } = 3;
+    /// <summary>
+    /// Assistant requests one signed-in user may make per minute: enough for
+    /// the recipe proposals' batches to run back to back.
+    /// </summary>
+    public int PerUserRequestsPerMinute { get; set; } = 10;
 
     /// <summary>
     /// A separate model for image reading, when the provider's chat model
     /// cannot see. Null uses the connection string's model for both.
     /// </summary>
     public string? VisionModel { get; set; }
+
+    /// <summary>
+    /// The model asked when the usual one is busy: a 429, or a 5xx the SDK's
+    /// one retry did not get past ("This model is currently experiencing high
+    /// demand"). On Gemini a smaller model has its own quota and is rarely
+    /// busy at the same moment. Null gives up with the usual one's error.
+    /// </summary>
+    public string? FallbackModel { get; set; }
+
+    /// <summary>
+    /// Sends each agent's own temperature. Off by default: Gemini 3 models
+    /// are tuned for their default of 1.0, and Google advises against
+    /// lowering it (answers can loop or get worse). Turn on for a provider
+    /// whose models want a low temperature for extraction.
+    /// </summary>
+    public bool SendTemperature { get; set; }
 }
 
 public enum StructuredOutputMode

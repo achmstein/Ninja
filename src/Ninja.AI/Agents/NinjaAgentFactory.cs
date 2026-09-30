@@ -36,7 +36,7 @@ public sealed class NinjaAgentFactory(
         var chatOptions = new ChatOptions
         {
             Instructions = definition.Instructions,
-            Temperature = definition.Temperature,
+            Temperature = o.SendTemperature ? definition.Temperature : null,
             MaxOutputTokens = definition.MaxOutputTokens,
             // Null keeps the connection string's model; a vision model only when one is configured
             ModelId = definition.Vision ? o.VisionModel : null,

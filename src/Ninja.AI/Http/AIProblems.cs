@@ -34,6 +34,10 @@ public static class AIProblems
                 return TypedResults.Problem($"The AI provider answered {provider.Status}; try again shortly.",
                     statusCode: StatusCodes.Status502BadGateway, title: "AI provider error");
 
+            case AITruncatedException:
+                return TypedResults.Problem("The answer was too long for the assistant; send less at once (one page, fewer items).",
+                    statusCode: StatusCodes.Status502BadGateway, title: "AI answer too long");
+
             case AITimeoutException:
                 return TypedResults.Problem("The assistant took too long to answer; try again.",
                     statusCode: StatusCodes.Status504GatewayTimeout, title: "AI assistant timed out");

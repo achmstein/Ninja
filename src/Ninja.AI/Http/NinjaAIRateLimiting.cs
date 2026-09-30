@@ -62,7 +62,9 @@ public static class NinjaAIRateLimiting
 
             options.OnRejected = async (context, ct) =>
             {
-                context.HttpContext.Response.Headers.RetryAfter = "60";
+                // The window's own reset when the limiter says it, a whole window otherwise
+                var wait = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter) ? retryAfter : Window;
+                context.HttpContext.Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(wait.TotalSeconds)).ToString(System.Globalization.CultureInfo.InvariantCulture);
                 await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
                 {
                     Status = StatusCodes.Status429TooManyRequests,

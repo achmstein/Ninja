@@ -24,3 +24,11 @@ public sealed class AIResponseException(string agent, string? text, Exception? i
 {
     public string? Text { get; } = text;
 }
+
+/// <summary>
+/// The model stopped at the answer's length ceiling: the JSON is cut off,
+/// and asking again would be cut off the same way. The caller sends less
+/// (fewer items, one page) or the agent gets a higher ceiling.
+/// </summary>
+public sealed class AITruncatedException(string agent, int? maxOutputTokens)
+    : AIException($"The {agent} agent's answer was cut off at {maxOutputTokens?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "the length limit"} tokens");
