@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -103,7 +103,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         // On Android, add the remaining 1/3 so the system nav bar doesn't overlap.
         // On iOS, the home indicator area is handled by FBottomNavigationBar itself.
         padding: EdgeInsets.only(
-          bottom: Platform.isAndroid
+          bottom: defaultTargetPlatform == TargetPlatform.android
               ? MediaQuery.viewPaddingOf(context).bottom / 3
               : 0,
         ),
