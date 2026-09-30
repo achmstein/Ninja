@@ -47,7 +47,7 @@ public static class CatalogApi
         api.MapGet("/items/{id:int}/pic", GetItemPictureById)
             .WithName("GetItemPicture")
             .WithSummary("Get menu item picture")
-            .WithDescription("Get the picture for a menu item")
+            .WithDescription("Get the picture for a menu item; with w (160, 320, 640 or 1280) a copy that wide, for lists and cards")
             .WithTags("Items");
 
         api.MapGet("/items/type/{typeId}", GetItemsByType)
@@ -467,7 +467,8 @@ public static class CatalogApi
     public static async Task<Results<PhysicalFileHttpResult, NotFound>> GetItemPictureById(
         CatalogContext context,
         IWebHostEnvironment environment,
-        [Description("The menu item id")] int id)
+        [Description("The menu item id")] int id,
+        [Description("A narrower copy: 160, 320, 640 or 1280 px wide")] int? w = null)
     {
         var item = await context.CatalogItems.FindAsync(id);
 
@@ -483,7 +484,10 @@ public static class CatalogApi
             return TypedResults.NotFound();
         }
 
-        string imageFileExtension = Path.GetExtension(item.PictureFileName) ?? string.Empty;
+        if (w is { } width && ItemPictures.Widths.Contains(width))
+            path = ItemPictures.SizedPath(PicsRoot(environment.ContentRootPath), path, width);
+
+        string imageFileExtension = Path.GetExtension(path) ?? string.Empty;
         string mimetype = GetImageMimeTypeFromImageFileExtension(imageFileExtension);
         DateTime lastModified = File.GetLastWriteTimeUtc(path);
 
@@ -914,26 +918,29 @@ public static class CatalogApi
         var item = await services.Context.CatalogItems.FindAsync(id);
         if (item is null) return TypedResults.NotFound();
 
-        // Validate file type
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(extension))
+        if (file.Length == 0 || file.Length > ItemPictures.MaxUploadBytes)
         {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Invalid file type. Allowed types: jpg, jpeg, png, webp" });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"The picture must be a jpeg, png or webp image of at most {ItemPictures.MaxUploadBytes / (1024 * 1024)} MB." });
         }
 
-        // Delete old file if exists
-        if (!string.IsNullOrEmpty(item.PictureFileName))
+        // Upright, within 1600 px and WebP, whatever the phone sent: the menu loads it on every card
+        byte[] bytes;
+        using (var buffer = new MemoryStream((int)file.Length))
         {
-            var oldPath = GetFullPath(environment.ContentRootPath, item.PictureFileName);
-            if (File.Exists(oldPath)) File.Delete(oldPath);
+            await file.CopyToAsync(buffer);
+            bytes = buffer.ToArray();
         }
+        var (webp, error) = ItemPictures.Normalize(bytes);
+        if (webp is null)
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
+        }
+
+        DeletePicture(environment.ContentRootPath, item.PictureFileName);
 
         // Save file with timestamp to bust client caches
-        var fileName = $"{id}_{DateTimeOffset.UtcNow.Ticks}{extension}";
-        var path = GetFullPath(environment.ContentRootPath, fileName);
-        using var stream = new FileStream(path, FileMode.Create);
-        await file.CopyToAsync(stream);
+        var fileName = $"{id}_{DateTimeOffset.UtcNow.Ticks}.webp";
+        await File.WriteAllBytesAsync(GetFullPath(environment.ContentRootPath, fileName), webp);
 
         // Update item
         item.PictureFileName = fileName;
@@ -953,11 +960,7 @@ public static class CatalogApi
 
         if (!string.IsNullOrEmpty(item.PictureFileName))
         {
-            var path = GetFullPath(environment.ContentRootPath, item.PictureFileName);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
+            DeletePicture(environment.ContentRootPath, item.PictureFileName);
             item.PictureFileName = null;
             await services.Context.SaveChangesAsync();
         }
@@ -1088,7 +1091,20 @@ public static class CatalogApi
     };
 
     public static string GetFullPath(string contentRootPath, string pictureFileName) =>
-        Path.Combine(contentRootPath, "Pics", pictureFileName);
+        Path.Combine(PicsRoot(contentRootPath), pictureFileName);
+
+    private static string PicsRoot(string contentRootPath) => Path.Combine(contentRootPath, "Pics");
+
+    /// <summary>A picture and its smaller copies, when it is being replaced or removed.</summary>
+    private static void DeletePicture(string contentRootPath, string? pictureFileName)
+    {
+        if (string.IsNullOrEmpty(pictureFileName))
+            return;
+        var path = GetFullPath(contentRootPath, pictureFileName);
+        if (File.Exists(path))
+            File.Delete(path);
+        ItemPictures.DeleteSizes(PicsRoot(contentRootPath), pictureFileName);
+    }
 
     /// <summary>"HH:mm" and "HH:mm", or neither; anything else is a bad request.</summary>
     private static bool TryParseWindow(string? fromText, string? toText, out TimeOnly? from, out TimeOnly? to)

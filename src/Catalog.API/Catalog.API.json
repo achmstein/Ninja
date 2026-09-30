@@ -1054,7 +1054,7 @@
           "Items"
         ],
         "summary": "Get menu item picture",
-        "description": "Get the picture for a menu item",
+        "description": "Get the picture for a menu item; with w (160, 320, 640 or 1280) a copy that wide, for lists and cards",
         "operationId": "GetItemPicture",
         "parameters": [
           {
@@ -1065,6 +1065,19 @@
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "w",
+            "in": "query",
+            "description": "A narrower copy: 160, 320, 640 or 1280 px wide",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
               "format": "int32"
             }
           },

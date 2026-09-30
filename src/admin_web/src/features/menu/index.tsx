@@ -701,7 +701,7 @@ function MenuRow({
             <ImageWithFallback
               src={
                 item.pictureUri
-                  ? itemPictureUrl(item.id, item.pictureUri)
+                  ? itemPictureUrl(item.id, item.pictureUri, 160)
                   : null
               }
               className='h-10 w-10 shrink-0 rounded-md'

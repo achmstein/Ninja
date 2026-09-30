@@ -308,4 +308,39 @@ public sealed class MenuScenarios
             Assert.AreEqual(HttpStatusCode.Forbidden, status);
         }
     }
+
+    [TestMethod]
+    public async Task A_phone_photo_is_stored_small_and_served_at_the_width_asked()
+    {
+        var categoryId = await ACategoryAsync();
+        var item = await Admin.PostAsync<ItemView>(Items(), NewItem("Pictured", 10m, categoryId), HttpStatusCode.Created);
+
+        byte[] photo;
+        using (var bitmap = new SkiaSharp.SKBitmap(3000, 2000))
+        {
+            bitmap.Erase(SkiaSharp.SKColors.SaddleBrown);
+            using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+            photo = image.Encode(SkiaSharp.SKEncodedImageFormat.Jpeg, 95).ToArray();
+        }
+
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(photo);
+        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        form.Add(file, "file", "phone.jpg");
+        using var upload = await Admin.Http.PostAsync(Items($"/{item.Id}/pic"), form);
+        Assert.AreEqual(HttpStatusCode.OK, upload.StatusCode, await upload.Content.ReadAsStringAsync());
+        StringAssert.EndsWith((await upload.Content.ReadAsStringAsync()).Trim('"'), ".webp");
+
+        async Task<(string Type, int Width)> Picture(string query)
+        {
+            using var response = await Customer.Http.GetAsync(Items($"/{item.Id}/pic", query));
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            using var codec = SkiaSharp.SKCodec.Create(new SkiaSharp.SKMemoryStream(await response.Content.ReadAsByteArrayAsync()));
+            return (response.Content.Headers.ContentType!.MediaType!, codec.Info.Width);
+        }
+
+        Assert.AreEqual(("image/webp", 1600), await Picture(""));
+        Assert.AreEqual(("image/webp", 320), await Picture("&w=320"));
+        Assert.AreEqual(("image/webp", 1600), await Picture("&w=333"), "a width not on the list is the picture itself");
+    }
 }
