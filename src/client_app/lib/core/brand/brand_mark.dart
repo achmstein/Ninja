@@ -28,6 +28,9 @@ class BrandMark extends ConsumerWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        // On the web the browser draws it, as the web app does: shrunk by the canvas it comes out jagged
+        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+        filterQuality: FilterQuality.high,
         errorBuilder: (_, _, _) => _tile(context, ref),
       );
     }
@@ -95,6 +98,10 @@ class BrandWordmark extends ConsumerWidget {
         child: Image.network(
           wordmark.url,
           fit: BoxFit.contain,
+          // On the web the browser draws it, as the web app does: shrunk by the canvas from the uploaded
+          // size (often ten times bigger) its edges come out jagged and its thin strokes broken
+          webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+          filterQuality: FilterQuality.high,
           errorBuilder: (context, _, _) => _standIn(context, ref),
         ),
       ),
