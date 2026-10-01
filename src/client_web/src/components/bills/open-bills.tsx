@@ -70,7 +70,7 @@ function Swipe({ children }: { children: ReactNode }) {
     })
     setIndex(best)
   }
-  const go = (to: number) => cardsIn()[to]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  const go = (to: number) => cardsIn()[to]?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
 
   return (
     <div className='relative'>
@@ -79,11 +79,14 @@ function Swipe({ children }: { children: ReactNode }) {
       <div
         ref={track}
         onScroll={onScroll}
-        className='no-scrollbar -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto overflow-y-hidden px-4 transition-[height] duration-300 ease-out motion-reduce:transition-none'
+        className='no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto overflow-y-hidden px-4 transition-[height] duration-300 ease-out motion-reduce:transition-none'
         style={height != null ? { height } : undefined}
       >
         {cards.map((card, i) => (
-          <div key={i} className='w-[88%] shrink-0 snap-center'>
+          // The bill in view at the start with an 18px sliver of the next past a 12px gap: enough to say there is
+          // more and which way, not enough to read. On the last one the scroll ends there, so the sliver is the
+          // one before, at the start
+          <div key={i} className='w-[calc(100%-1.875rem)] shrink-0 snap-start'>
             {card}
           </div>
         ))}
