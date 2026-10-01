@@ -1,17 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/ui/ui.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
 import '../../places/services/place_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
+import '../widgets/order_island.dart';
 import 'cart_service.dart';
 import 'promo_service.dart';
 
@@ -123,10 +128,28 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     };
     if (stage == live.stage && order.id == live.orderId) return;
     state = LiveOrder(stage, orderId: order.id);
+    // Turned down is worth interrupting for: the island says so out loud, opened with the dishes
+    if (stage == OrderStage.cancelled && live.stage != OrderStage.cancelled) _announce(order);
     if (stage != OrderStage.sent) {
       _clear?.cancel();
       _clear = Timer(_linger, _done);
     }
+  }
+
+  /// The island opened out for a moment (client_web's order-pill.tsx): the
+  /// order turned down, its dishes and what it came to, and the way to the bill
+  void _announce(Order order) {
+    final money = ref.read(moneyProvider);
+    island.flash(
+      turnedDownFace(
+        order,
+        business: ref.read(brandNameProvider),
+        total: order.total > 0 ? money(order.total) : null,
+        onBills: () => ref.read(routerProvider).push('/bills'),
+      ),
+      duration: orderAnnounce,
+    );
+    HapticFeedback.mediumImpact();
   }
 
   void _done() {

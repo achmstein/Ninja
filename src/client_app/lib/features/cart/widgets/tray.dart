@@ -20,7 +20,9 @@ import '../services/promo_service.dart';
 import 'cart_nudge.dart';
 import 'tray_extras.dart';
 import 'tray_flights.dart';
+import 'tray_hint.dart';
 import 'tray_model.dart';
+import 'tray_seats.dart';
 
 /// How far the order is open, 0 shut to 1 open, and the way it moves: under
 /// a finger it follows the finger, let go it springs open or back down by
@@ -35,16 +37,20 @@ class TrayMotion extends ChangeNotifier {
   /// The order sheet's height, measured once it is laid out
   double sheetHeight = 0;
 
+  /// The order peeking out of the dock once, after the first dish
+  bool _peeking = false;
+
   TrayMotion(TickerProvider vsync) : _open = AnimationController.unbounded(vsync: vsync) {
     _open.addListener(notifyListeners);
+    traySeats.attach(this);
   }
 
   Animation<double> get openness => _open;
   double get value => _open.value.clamp(0.0, 1.0);
   bool get expanded => _expanded;
 
-  /// Mounted while open, opening, closing or under a finger
-  bool get sheetShown => _expanded || _dragging || _open.value > 0.001;
+  /// Mounted while open, opening, closing, peeking or under a finger
+  bool get sheetShown => _expanded || _dragging || _peeking || _open.value > 0.001;
 
   void setExpanded(bool expanded, {bool reduced = false}) {
     _expanded = expanded;
@@ -52,6 +58,19 @@ class TrayMotion extends ChangeNotifier {
   }
 
   void toggle() => setExpanded(!_expanded);
+
+  /// The first dish in: the order peeks out of the dock and tucks back, twice
+  /// and smaller the second time (client_web's tray.tsx peek). A tap or a
+  /// finger takes over from it at once.
+  void peek() {
+    if (_expanded || _dragging || _peeking) return;
+    _peeking = true;
+    notifyListeners();
+    _open.animateWith(_PeekSimulation(() => sheetHeight > 0 ? sheetHeight : 320)).whenCompleteOrCancel(() {
+      _peeking = false;
+      notifyListeners();
+    });
+  }
 
   void dragStart() {
     _dragging = true;
@@ -87,23 +106,94 @@ class TrayMotion extends ChangeNotifier {
 
   @override
   void dispose() {
+    traySeats.detach(this);
     _open.dispose();
     super.dispose();
   }
 }
 
+/// The peek as how far the order is open: up 56 px, back, up 28 px, back,
+/// over 1.1 s after a 150 ms pause, each step eased out (client_web's
+/// keyframes `[h, h - 56, h, h - 28, h]`). Pixels over the sheet's height,
+/// read as it goes, since the sheet is measured only once it is mounted.
+class _PeekSimulation extends Simulation {
+  final double Function() height;
+
+  _PeekSimulation(this.height);
+
+  static const _delay = 0.15, _length = 1.1;
+  static const _rises = [0.0, 56.0, 0.0, 28.0, 0.0];
+
+  @override
+  double x(double time) {
+    final u = ((time - _delay) / _length).clamp(0.0, 1.0);
+    final step = (u * 4).floor().clamp(0, 3);
+    final s = Curves.easeOut.transform((u * 4 - step).clamp(0.0, 1.0));
+    final px = _rises[step] + (_rises[step + 1] - _rises[step]) * s;
+    return px / height();
+  }
+
+  @override
+  double dx(double time) => 0;
+
+  @override
+  bool isDone(double time) => time >= _delay + _length;
+}
+
 /// The tray's row of the dock: the dishes' photos, how many, the total that
 /// rolls, and the way to the order where the thumb is. Dragged up or tapped
 /// it opens the order; the button beside it opens it too, and in the open
-/// order the same button places it.
-class TrayRow extends ConsumerWidget {
+/// order the same button places it. The first dish to land lets the order
+/// peek out once, with a word on dragging it up ([trayHint]).
+class TrayRow extends ConsumerStatefulWidget {
   final TrayMotion motion;
   final double height;
 
   const TrayRow({super.key, required this.motion, required this.height});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrayRow> createState() => _TrayRowState();
+}
+
+class _TrayRowState extends ConsumerState<TrayRow> {
+  TrayMotion get motion => widget.motion;
+
+  @override
+  void initState() {
+    super.initState();
+    trayHint.addListener(_hinted);
+    motion.addListener(_moved);
+  }
+
+  @override
+  void didUpdateWidget(TrayRow old) {
+    super.didUpdateWidget(old);
+    if (old.motion == motion) return;
+    old.motion.removeListener(_moved);
+    motion.addListener(_moved);
+  }
+
+  @override
+  void dispose() {
+    trayHint.removeListener(_hinted);
+    motion.removeListener(_moved);
+    super.dispose();
+  }
+
+  /// The cue came up: the order peeks out of the dock with it, unless it is open, empty, or motion is unwelcome
+  void _hinted() {
+    if (!trayHint.showing || !mounted) return;
+    if (reduceMotion(context) || motion.expanded || ref.read(cartProvider).isEmpty) return;
+    motion.peek();
+  }
+
+  /// Opening the order, shown the cue or not, is the end of it
+  void _moved() {
+    if (motion.expanded && trayHint.pending) trayHint.done();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = context.theme;
     final c = theme.colors;
@@ -114,8 +204,12 @@ class TrayRow extends ConsumerWidget {
     final total = (summary.total - saved).clamp(0.0, double.infinity);
     final canOrder = ref.watch(branchProvider).selectedBranch?.isOrderingEnabled ?? true;
     final reduced = reduceMotion(context);
+    // The photos fly to their rows as the order opens: they leave the dock at once, and come back as it shuts
+    final seats = !reduced && traySeats.flies;
+    final height = widget.height;
 
     return SizedBox(
+      key: trayHint.anchor,
       height: height,
       child: Padding(
         padding: const EdgeInsetsDirectional.only(start: 24, end: 12),
@@ -143,7 +237,7 @@ class TrayRow extends ConsumerWidget {
                               alignment: AlignmentDirectional.centerStart,
                               widthFactor: 1 - open,
                               child: Opacity(
-                                opacity: (1 - open * 2).clamp(0.0, 1.0),
+                                opacity: seats ? (open <= 0.001 ? 1 : 0) : (1 - open * 2).clamp(0.0, 1.0),
                                 child: Padding(
                                   padding: const EdgeInsetsDirectional.only(end: 12),
                                   // Where a dish's photo lands, nudged as each does; a first dish lands on its empty place
@@ -255,15 +349,20 @@ class _Thumbs extends StatelessWidget {
               start: i * (size - overlap),
               // The ring, then the photo clipped to the circle inside it: clipped to the
               // outer circle, the photo's square corners would cover the ring
-              child: Container(
-                width: size,
-                height: size,
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(shape: BoxShape.circle, color: c.background),
-                child: ClipOval(
-                  child: ColoredBox(
-                    color: c.foreground.withValues(alpha: 0.15),
-                    child: SizedBox.expand(child: DishPhoto(url: thumbs[i].pictureUri)),
+              child: TraySeat(
+                kind: SeatKind.dock,
+                item: thumbs[i],
+                index: i,
+                child: Container(
+                  width: size,
+                  height: size,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: c.background),
+                  child: ClipOval(
+                    child: ColoredBox(
+                      color: c.foreground.withValues(alpha: 0.15),
+                      child: SizedBox.expand(child: DishPhoto(url: thumbs[i].pictureUri)),
+                    ),
                   ),
                 ),
               ),
@@ -403,6 +502,8 @@ class TraySheet extends ConsumerWidget {
         Padding(padding: const EdgeInsets.fromLTRB(20, 0, 20, 8), child: BrandHeadingText(l10n.ninjaYourOrder)),
         Flexible(
           child: SingleChildScrollView(
+            // Its edges say which rows the open order shows, and so which circles fly to them
+            key: traySeats.list,
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -529,12 +630,18 @@ class _SwipeLine extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               child: Row(
                 children: [
-                  ClipOval(
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      color: c.foreground.withValues(alpha: 0.10),
-                      child: DishPhoto(url: item.pictureUri),
+                  // Where its circle from the dock lands as the order opens
+                  TraySeat(
+                    kind: SeatKind.row,
+                    item: item,
+                    index: index,
+                    child: ClipOval(
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        color: c.foreground.withValues(alpha: 0.10),
+                        child: DishPhoto(url: item.pictureUri),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

@@ -1443,6 +1443,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get ninjaHintTray => 'اسحب لفوق تشوف طلبك';
+
+  @override
+  String get orderSeeBills => 'شوف الحساب';
+
+  @override
+  String orderCancelledNote(String name) {
+    return '$name مقدرش ياخد الطلب ده.';
+  }
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2528,4 +2539,15 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get ninjaHintTray => 'اسحب للأعلى لعرض طلبك';
+
+  @override
+  String get orderSeeBills => 'اعرض الفاتورة';
+
+  @override
+  String orderCancelledNote(String name) {
+    return 'لم يتمكن $name من قبول هذا الطلب.';
+  }
 }

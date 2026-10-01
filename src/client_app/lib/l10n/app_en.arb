@@ -772,5 +772,9 @@
   "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}},
   "ninjaHideReceipt": "Hide the receipt",
   "ninjaOtherPlaces": "Other places",
-  "ninjaPlayedWith": "With"
+  "ninjaPlayedWith": "With",
+  "ninjaHintTray": "Drag up to see your order",
+  "orderSeeBills": "See your bill",
+  "orderCancelledNote": "{name} could not take this order.",
+  "@orderCancelledNote": {"placeholders": {"name": {"type": "String"}}}
 }

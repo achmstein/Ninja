@@ -478,5 +478,8 @@
   "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
   "ninjaHideReceipt": "اخفي الإيصال",
   "ninjaOtherPlaces": "أماكن تانية",
-  "ninjaPlayedWith": "مع"
+  "ninjaPlayedWith": "مع",
+  "ninjaHintTray": "اسحب لفوق تشوف طلبك",
+  "orderSeeBills": "شوف الحساب",
+  "orderCancelledNote": "{name} مقدرش ياخد الطلب ده."
 }

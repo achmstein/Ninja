@@ -315,5 +315,8 @@
   "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك.",
   "ninjaHideReceipt": "إخفاء الإيصال",
   "ninjaOtherPlaces": "أماكن أخرى",
-  "ninjaPlayedWith": "مع"
+  "ninjaPlayedWith": "مع",
+  "ninjaHintTray": "اسحب للأعلى لعرض طلبك",
+  "orderSeeBills": "اعرض الفاتورة",
+  "orderCancelledNote": "لم يتمكن {name} من قبول هذا الطلب."
 }
