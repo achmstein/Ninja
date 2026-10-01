@@ -142,6 +142,8 @@ class DockBill extends ConsumerWidget {
                         child: Icon(icon, key: ValueKey(icon), size: 20, color: ink),
                       ),
                     ),
+                    // One dot at a time on the place: amber while the waiter or the bill is asked for (the more
+                    // urgent), else green and live while the room's clock runs
                     if (asking)
                       PositionedDirectional(
                         end: 0,
@@ -155,7 +157,9 @@ class DockBill extends ConsumerWidget {
                             border: Border.all(color: c.background, width: 2),
                           ),
                         ),
-                      ),
+                      )
+                    else if (stay != null && stage == null)
+                      PositionedDirectional(end: 0, top: 0, child: LiveDot(size: 10, ring: c.background)),
                   ],
                 ),
                 const SizedBox(width: 12),

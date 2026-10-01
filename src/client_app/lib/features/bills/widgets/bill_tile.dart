@@ -235,16 +235,24 @@ class _BillTileState extends ConsumerState<BillTile> {
                   Icon(bill.placeKind!.icon, size: 16, color: c.mutedForeground),
                   const SizedBox(width: 6),
                 ],
-                Flexible(
-                  child: Text(
-                    place == null || place.isEmpty ? l10n.atTheCounter : place,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: small.copyWith(fontWeight: FontWeight.w600),
+                // The place and the time take the room, the badge stands at the end: a Flexible beside a
+                // Spacer split that room in two and left the badge in the middle
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          place == null || place.isEmpty ? l10n.atTheCounter : place,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: small.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Text(' · $opened', style: small.copyWith(fontWeight: FontWeight.w600)),
+                    ],
                   ),
                 ),
-                Text(' · $opened', style: small.copyWith(fontWeight: FontWeight.w600)),
-                const Spacer(),
+                const SizedBox(width: 8),
                 _StatusChip(bill: bill),
               ],
             ),

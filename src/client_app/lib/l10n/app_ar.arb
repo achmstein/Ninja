@@ -476,5 +476,6 @@
   "ninjaHoldWalkOver": "تعالى ووري ده للكاشير",
   "ninjaHoldFor": "الساعة {time}",
   "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
-  "ninjaHideReceipt": "اخفي الإيصال"
+  "ninjaHideReceipt": "اخفي الإيصال",
+  "ninjaOtherPlaces": "أماكن تانية"
 }

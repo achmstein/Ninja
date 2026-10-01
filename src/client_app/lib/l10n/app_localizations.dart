@@ -2624,6 +2624,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide the receipt'**
   String get ninjaHideReceipt;
+
+  /// No description provided for @ninjaOtherPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Other places'**
+  String get ninjaOtherPlaces;
 }
 
 class _AppLocalizationsDelegate

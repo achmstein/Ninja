@@ -313,5 +313,6 @@
   "ninjaHoldWalkOver": "تفضّل بالحضور وأظهر هذه الشاشة عند الكاشير",
   "ninjaHoldFor": "الساعة {time}",
   "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك.",
-  "ninjaHideReceipt": "إخفاء الإيصال"
+  "ninjaHideReceipt": "إخفاء الإيصال",
+  "ninjaOtherPlaces": "أماكن أخرى"
 }

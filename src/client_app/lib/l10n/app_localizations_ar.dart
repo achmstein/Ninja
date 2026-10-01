@@ -1437,6 +1437,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaHideReceipt => 'اخفي الإيصال';
+
+  @override
+  String get ninjaOtherPlaces => 'أماكن تانية';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2516,4 +2519,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaHideReceipt => 'إخفاء الإيصال';
+
+  @override
+  String get ninjaOtherPlaces => 'أماكن أخرى';
 }

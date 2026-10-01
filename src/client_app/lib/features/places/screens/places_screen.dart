@@ -140,7 +140,12 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
 
     return NinjaPage(
       title: l10n.rooms,
-      subtitle: reservedSession == null && stay == null && rooms.isNotEmpty && reservationsEnabled ? AppText(l10n.bookFreeNow(free)) : null,
+      // In a room the heading says where; otherwise how many places are free
+      subtitle: stay != null
+          ? AppText(l10n.ninjaYoureIn(stay.placeName.localized(context)))
+          : reservedSession == null && rooms.isNotEmpty && reservationsEnabled
+              ? AppText(l10n.bookFreeNow(free))
+              : null,
       action: HeaderAction(icon: const Icon(LucideIcons.history), onPress: () => context.push('/stays')),
       gap: 16,
       controller: _scrollController,
@@ -149,7 +154,8 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         await ref.read(myStaysProvider.notifier).refresh();
       },
       children: [
-        if (stay != null) StayBanner(stay: stay),
+        // In a room whose card is not on this list (another branch's): the slim card stands in for it
+        if (stay != null && !rooms.any((r) => r.id == stay.placeId)) StayBanner(stay: stay),
         // Not taking bookings for now: the same notice as the menu's
         if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
@@ -162,7 +168,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           ],
           // A stale socket after a resume: the places known stay up while the poll catches up
           error: (_, _) => roomsAsync.hasValue
-              ? [for (final room in rooms) _card(room, canReserve)]
+              ? _cards(rooms, stay, canReserve)
               : [
                   EmptyState(
                     icon: LucideIcons.circleAlert,
@@ -175,10 +181,25 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                     ),
                   ),
                 ],
-          data: (rooms) => [for (final room in rooms) _card(room, canReserve)],
+          data: (rooms) => _cards(rooms, stay, canReserve),
         ),
       ],
     );
+  }
+
+  /// The places; in a room, that room first as the hero and the others after it, quieter: while the
+  /// clock runs another place cannot be booked, so they are there to read rather than to tap
+  List<Widget> _cards(List<Place> rooms, Stay? stay, bool canReserve) {
+    final mine = stay == null ? null : rooms.where((r) => r.id == stay.placeId).firstOrNull;
+    if (stay == null || mine == null) return [for (final room in rooms) _card(room, canReserve)];
+    final others = rooms.where((r) => r.id != mine.id).toList();
+    return [
+      YourRoomCard(stay: stay, place: mine),
+      if (others.isNotEmpty) ...[
+        SectionLabel(AppLocalizations.of(context)!.ninjaOtherPlaces),
+        for (final room in others) Opacity(opacity: 0.6, child: _card(room, false)),
+      ],
+    ];
   }
 
   Widget _card(Place room, bool canReserve) => PlaceListItem(
@@ -190,6 +211,132 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         // Booked or turned down, the form goes; booked, the hold shows over the places
         onDone: (_) => setState(() => _openId = null),
       );
+}
+
+/// The room the customer is in, leading the Book tab: its own card made the
+/// hero, on the slab with its kind drawn big behind it, the clock running
+/// large under its name beside a live green dot, and the way into the room
+/// (the same sheet as the dock's row opens)
+class YourRoomCard extends StatefulWidget {
+  final Stay stay;
+  final Place place;
+
+  const YourRoomCard({super.key, required this.stay, required this.place});
+
+  @override
+  State<YourRoomCard> createState() => _YourRoomCardState();
+}
+
+class _YourRoomCardState extends State<YourRoomCard> {
+  late final Timer _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final stay = widget.stay;
+    return Pressable(
+      onTap: () => showRoomSheet(context, stay),
+      scale: 0.98,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: theme.colors.slab, borderRadius: BorderRadius.circular(Ninja.cardRadius), boxShadow: Ninja.slabShadow),
+        child: SlabInk(
+          child: Builder(builder: (context) {
+            final c = context.theme.colors;
+            final caption = context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w700, color: c.foreground));
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                PositionedDirectional(
+                  end: -24,
+                  bottom: -32,
+                  child: Transform.rotate(angle: -0.21, child: Icon(widget.place.kind.icon, size: 176, color: c.foreground.withValues(alpha: 0.12))),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Running now: the live dot and the words for it
+                        Container(
+                          padding: const EdgeInsetsDirectional.fromSTEB(10, 4, 10, 4),
+                          decoration: const ShapeDecoration(color: Color(0x3334D399), shape: StadiumBorder()),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const LiveDot(size: 6),
+                              const SizedBox(width: 6),
+                              Text(l10n.bookClockRunning, style: caption.copyWith(color: const Color(0xFF6EE7B7))),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        // The way in, worded as the dock's row is
+                        Container(
+                          height: 36,
+                          padding: const EdgeInsetsDirectional.only(start: 14, end: 10),
+                          decoration: ShapeDecoration(color: c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(l10n.ninjaRoomOpen, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground))),
+                              const SizedBox(width: 4),
+                              Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    BrandHeading(widget.place.name.localized(context), style: theme.typography.title.copyWith(color: c.foreground)),
+                    const SizedBox(height: 4),
+                    // A clock reads hours first in either language
+                    Text(
+                      stay.formattedDuration,
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(
+                        fontFamily: theme.typography.display.fontFamily,
+                        fontSize: 40,
+                        height: 1.1,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: c.foreground,
+                        fontFeatures: NinjaTypography.tabular,
+                      ),
+                    ),
+                    if (stay.hasOptions && stay.currentOptionName != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: ShapeDecoration(color: c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                        child: Text(stay.currentOptionName!.localized(context), style: caption.copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
 }
 
 /// The Book tab while the customer's clock runs (client_web's stay-banner.tsx):

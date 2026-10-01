@@ -1440,4 +1440,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ninjaHideReceipt => 'Hide the receipt';
+
+  @override
+  String get ninjaOtherPlaces => 'Other places';
 }
