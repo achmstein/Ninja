@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ui/ui.dart';
+import '../../../core/brand/brand_style.dart';
+import '../../../core/theme/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -193,214 +195,172 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         _ => l10n.claimInvalid,
       };
 
+  /// A claim is the web's page (client_web's routes/claim.tsx): whose
+  /// account it is on the slab, then the email and password on a panel
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
     final name = _businessName;
+    final theme = context.theme;
+    final c = theme.colors;
 
-    final Widget body;
+    final List<Widget> blocks;
     if (_linkFailure != null) {
-      body = _failed(l10n, _linkFailure!);
+      blocks = _failed(l10n, _linkFailure!);
     } else if (_token == null) {
-      body = _entry(l10n);
+      blocks = [_entry(l10n)];
     } else if (_preview == null) {
-      body = const Padding(
-        padding: EdgeInsets.symmetric(vertical: 48),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      blocks = [
+        Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+        Container(height: 256, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius))),
+      ];
     } else {
-      body = _form(l10n, _preview!);
+      blocks = _form(l10n, _preview!);
     }
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Center(child: BrandWordmark(height: 96)),
-                const SizedBox(height: 24),
-                AppText(
-                  _token == null && _linkFailure == null ? l10n.haveBusinessCode(name) : l10n.claimTitle(name),
-                  style: TextStyle(fontWeight: FontWeight.bold, color: colors.foreground, fontSize: 24),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                body,
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AppText(
-                      l10n.alreadyHaveAccount,
-                      style: TextStyle(color: colors.mutedForeground, fontSize: 14),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
-                      child: AppText(
-                        l10n.signIn,
-                        style: TextStyle(color: colors.primary, fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+    return NinjaPage(
+      title: _token == null && _linkFailure == null ? l10n.haveBusinessCode(name) : l10n.claimTitle(name),
+      back: true,
+      backTo: '/login',
+      gap: 16,
+      children: [
+        ...blocks,
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(l10n.alreadyHaveAccount, style: context.localeText(theme.typography.note.copyWith(color: c.mutedForeground))),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => context.go('/login'),
+              child: Text(l10n.signIn, style: context.localeText(theme.typography.note.copyWith(color: c.foreground, fontWeight: FontWeight.w700))),
             ),
-          ),
+          ],
         ),
-      ),
+      ],
     );
   }
 
   Widget _entry(AppLocalizations l10n) {
-    final colors = context.theme.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppText(
-          l10n.claimScanOrPaste(_businessName),
-          style: TextStyle(color: colors.mutedForeground, fontSize: 15),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        NinjaButton(
-          onPress: _scan,
-          prefix: Icon(LucideIcons.scanLine),
-          child: AppText(l10n.claimScan),
-        ),
-        const SizedBox(height: 16),
-        NinjaField(
-          controller: _codeController,
-          label: AppText(l10n.claimPasteLabel),
-          hint: l10n.claimPasteHint(_businessName),
-          textInputAction: TextInputAction.go,
-          onSubmit: _useCode,
-        ),
-        if (_codeError != null) _fieldError(_codeError!),
-        const SizedBox(height: 16),
-        NinjaButton(
-          variant: NinjaButtonVariant.outline,
-          onPress: () => _useCode(_codeController.text),
-          child: AppText(l10n.claimContinue),
-        ),
-      ],
-    );
-  }
-
-  Widget _failed(AppLocalizations l10n, ClaimFailure failure) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        NinjaAlert(
-          variant: NinjaAlertVariant.destructive,
-          icon: Icon(LucideIcons.circleAlert),
-          title: AppText(l10n.error),
-          subtitle: AppText(_linkMessage(l10n, failure)),
-        ),
-        const SizedBox(height: 16),
-        if (failure == ClaimFailure.used)
-          NinjaButton(onPress: () => context.go('/login'), child: AppText(l10n.signIn))
-        else
-          NinjaButton(
-            variant: NinjaButtonVariant.outline,
-            onPress: _startOver,
-            child: AppText(l10n.claimTryAnother),
-          ),
-      ],
-    );
-  }
-
-  Widget _form(AppLocalizations l10n, ClaimPreview preview) {
-    final colors = context.theme.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppText(
-          l10n.claimIntro(_businessName),
-          style: TextStyle(color: colors.mutedForeground, fontSize: 15),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        if (_formError != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: NinjaAlert(
-              variant: NinjaAlertVariant.destructive,
-              icon: Icon(LucideIcons.circleAlert),
-              title: AppText(l10n.error),
-              subtitle: AppText(_formError!),
-            ),
-          ),
-        // Who the business added: theirs to read, not to change here
-        _readOnly(l10n.name, preview.name),
-        if (preview.phoneNumber != null) ...[
-          const SizedBox(height: 12),
-          _readOnly(l10n.phoneNumber, preview.phoneNumber!, ltr: true),
-        ],
-        const SizedBox(height: 16),
-        NinjaField.email(
-          controller: _emailController,
-          label: AppText(l10n.email),
-          hint: l10n.enterEmail,
-          textInputAction: TextInputAction.next,
-        ),
-        if (_emailError != null) _fieldError(_emailError!),
-        const SizedBox(height: 16),
-        NinjaField.password(
-          controller: _passwordController,
-          label: AppText(l10n.password),
-          hint: l10n.createPassword,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 16),
-        NinjaField.password(
-          controller: _confirmController,
-          label: AppText(l10n.confirmPassword),
-          hint: l10n.confirmYourPassword,
-          textInputAction: TextInputAction.done,
-          onSubmit: (_) => _submit(),
-        ),
-        const SizedBox(height: 24),
-        NinjaButton(
-          onPress: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : AppText(l10n.claimSubmit),
-        ),
-      ],
-    );
-  }
-
-  Widget _readOnly(String label, String value, {bool ltr = false}) {
-    final colors = context.theme.colors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: colors.muted,
-        borderRadius: BorderRadius.circular(8),
-      ),
+    final theme = context.theme;
+    return Panel(
+      padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppText(label, style: TextStyle(color: colors.mutedForeground, fontSize: 12)),
-          const SizedBox(height: 2),
-          AppText(
-            value,
-            style: TextStyle(color: colors.foreground, fontSize: 16, fontWeight: FontWeight.w500),
-            textDirection: ltr ? TextDirection.ltr : null,
+          Text(
+            l10n.claimScanOrPaste(_businessName),
+            style: context.localeText(theme.typography.note.copyWith(color: theme.colors.mutedForeground)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          NinjaButton(onPress: _scan, prefix: const Icon(LucideIcons.scanLine), child: AppText(l10n.claimScan)),
+          const SizedBox(height: 16),
+          NinjaField(
+            controller: _codeController,
+            label: AppText(l10n.claimPasteLabel),
+            hint: l10n.claimPasteHint(_businessName),
+            textInputAction: TextInputAction.go,
+            onSubmit: _useCode,
+          ),
+          if (_codeError != null) _fieldError(_codeError!),
+          const SizedBox(height: 16),
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
+            onPress: () => _useCode(_codeController.text),
+            child: AppText(l10n.claimContinue),
           ),
         ],
       ),
     );
+  }
+
+  List<Widget> _failed(AppLocalizations l10n, ClaimFailure failure) => [
+        EmptyState(
+          icon: LucideIcons.link2Off,
+          title: _linkMessage(l10n, failure),
+          action: failure == ClaimFailure.used
+              ? NinjaButton(mainAxisSize: MainAxisSize.min, onPress: () => context.go('/login'), child: AppText(l10n.signIn))
+              : NinjaButton(
+                  variant: NinjaButtonVariant.outline,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: _startOver,
+                  child: AppText(l10n.claimTryAnother),
+                ),
+        ),
+      ];
+
+  List<Widget> _form(AppLocalizations l10n, ClaimPreview preview) {
+    final theme = context.theme;
+    return [
+      // Whose account it is: the business's mark, the name and phone the counter took
+      SlabCard(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+        child: Builder(
+          builder: (context) {
+            final ink = context.theme.colors.foreground;
+            final note = context.localeText(theme.typography.note.copyWith(color: ink.withValues(alpha: 0.6)));
+            return Column(
+              children: [
+                const BrandMark(size: 64),
+                const SizedBox(height: 12),
+                BrandHeading(preview.name, style: theme.typography.headline.copyWith(color: ink)),
+                if (preview.phoneNumber != null) Text(preview.phoneNumber!, textDirection: TextDirection.ltr, style: note),
+                const SizedBox(height: 12),
+                Text(l10n.claimIntro(_businessName), textAlign: TextAlign.center, style: note),
+              ],
+            );
+          },
+        ),
+      ),
+      Panel(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            NinjaField.email(
+              controller: _emailController,
+              label: AppText(l10n.email),
+              hint: l10n.enterEmail,
+              textInputAction: TextInputAction.next,
+            ),
+            if (_emailError != null) _fieldError(_emailError!),
+            const SizedBox(height: 16),
+            NinjaField.password(
+              controller: _passwordController,
+              label: AppText(l10n.password),
+              hint: l10n.createPassword,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+            NinjaField.password(
+              controller: _confirmController,
+              label: AppText(l10n.confirmPassword),
+              hint: l10n.confirmYourPassword,
+              textInputAction: TextInputAction.done,
+              onSubmit: (_) => _submit(),
+            ),
+            if (_formError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _formError!,
+                  textAlign: TextAlign.center,
+                  style: context.localeText(theme.typography.note.copyWith(color: theme.colors.destructive)),
+                ),
+              ),
+            const SizedBox(height: 20),
+            NinjaButton(
+              lifted: true,
+              onPress: _loading ? null : _submit,
+              child: _loading
+                  ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.primaryForeground))
+                  : AppText(l10n.claimSubmit),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   Widget _fieldError(String message) => Padding(

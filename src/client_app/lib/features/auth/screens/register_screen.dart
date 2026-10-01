@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ui/ui.dart';
+import '../../../core/theme/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
-import '../../../core/brand/brand_mark.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/brand/brand_provider.dart';
@@ -130,163 +130,105 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final colors = theme.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Brand
-                const Center(child: BrandWordmark(height: 96)),
-                const SizedBox(height: 24),
-
-                // Title
-                AppText(
-                  l10n.createAccount,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: colors.foreground,
-                    fontSize: 24,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-
-                // Success message
-                if (_success != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: NinjaAlert(
-                      icon: Icon(LucideIcons.check),
-                      title: AppText(l10n.success),
-                      subtitle: AppText(_success!),
+    return NinjaPage(
+      title: l10n.createAccount,
+      back: true,
+      backTo: '/login',
+      gap: 16,
+      children: [
+        if (_success != null) NinjaAlert(icon: const Icon(LucideIcons.check), title: AppText(l10n.success), subtitle: AppText(_success!)),
+        if (_error != null)
+          NinjaAlert(variant: NinjaAlertVariant.destructive, icon: const Icon(LucideIcons.circleAlert), title: AppText(l10n.error), subtitle: AppText(_error!)),
+        Panel(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // First and last name, side by side
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: NinjaField(
+                      controller: _firstNameController,
+                      label: AppText(l10n.firstName),
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.words,
                     ),
                   ),
-
-                // Error message
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: NinjaAlert(
-                      variant: NinjaAlertVariant.destructive,
-                      icon: Icon(LucideIcons.circleAlert),
-                      title: AppText(l10n.error),
-                      subtitle: AppText(_error!),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: NinjaField(
+                      controller: _lastNameController,
+                      label: AppText(l10n.lastName),
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.words,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
-                // First and last name, side by side
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: NinjaField(
-                        controller: _firstNameController,
-                        label: AppText(l10n.firstName),
-                        textInputAction: TextInputAction.next,
-                        textCapitalization: TextCapitalization.words,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: NinjaField(
-                        controller: _lastNameController,
-                        label: AppText(l10n.lastName),
-                        textInputAction: TextInputAction.next,
-                        textCapitalization: TextCapitalization.words,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+              // Email field
+              NinjaField.email(controller: _emailController, label: AppText(l10n.email), hint: l10n.enterEmail, textInputAction: TextInputAction.next),
+              const SizedBox(height: 16),
 
-                // Email field
-                NinjaField.email(
-                  controller: _emailController,
-                  label: AppText(l10n.email),
-                  hint: l10n.enterEmail,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
+              // Phone field
+              NinjaField(
+                controller: _phoneController,
+                label: AppText(l10n.phoneNumber),
+                hint: l10n.enterPhoneNumber,
+                textInputAction: TextInputAction.next,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
 
-                // Phone field
-                NinjaField(
-                  controller: _phoneController,
-                  label: AppText(l10n.phoneNumber),
-                  hint: l10n.enterPhoneNumber,
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 16),
+              // Password field
+              NinjaField.password(
+                controller: _passwordController,
+                label: AppText(l10n.password),
+                hint: l10n.createPassword,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
 
-                // Password field
-                NinjaField.password(
-                  controller: _passwordController,
-                  label: AppText(l10n.password),
-                  hint: l10n.createPassword,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
+              // Confirm password field
+              NinjaField.password(
+                controller: _confirmPasswordController,
+                label: AppText(l10n.confirmPassword),
+                hint: l10n.confirmYourPassword,
+                textInputAction: TextInputAction.done,
+                onSubmit: (_) => _handleRegister(),
+              ),
+              const SizedBox(height: 24),
 
-                // Confirm password field
-                NinjaField.password(
-                  controller: _confirmPasswordController,
-                  label: AppText(l10n.confirmPassword),
-                  hint: l10n.confirmYourPassword,
-                  textInputAction: TextInputAction.done,
-                  onSubmit: (_) => _handleRegister(),
-                ),
-                const SizedBox(height: 24),
-
-                // Register button
-                NinjaButton(
-                  onPress: _isLoading ? null : _handleRegister,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : AppText(l10n.register),
-                ),
-                const SizedBox(height: 16),
-
-                // Login link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AppText(
-                      l10n.alreadyHaveAccount,
-                      style: TextStyle(
-                        color: colors.mutedForeground,
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
-                      child: AppText(
-                        l10n.signIn,
-                        style: TextStyle(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              // Register button
+              NinjaButton(
+                lifted: true,
+                onPress: _isLoading ? null : _handleRegister,
+                child: _isLoading
+                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colors.primaryForeground))
+                    : AppText(l10n.register),
+              ),
+            ],
           ),
         ),
-      ),
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(l10n.alreadyHaveAccount, style: context.localeText(theme.typography.note.copyWith(color: colors.mutedForeground))),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => context.go('/login'),
+              child: Text(
+                l10n.signIn,
+                style: context.localeText(theme.typography.note.copyWith(color: colors.foreground, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

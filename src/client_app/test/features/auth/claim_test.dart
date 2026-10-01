@@ -40,6 +40,13 @@ class _Tenant implements TenantRepository {
   Future<TenantBrand> getBrand() async => const TenantBrand(name: LocalizedText(en: 'Chillax', ar: 'تشيلاكس'));
 }
 
+/// A phone's screen (390 × 1000), so the whole form is in view under the page's bar
+void _phone(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1170, 3000);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+}
+
 Widget _app(ClaimRepository claims, {String? token}) => ProviderScope(
       overrides: [
         claimRepositoryProvider.overrideWithValue(claims),
@@ -98,6 +105,7 @@ void main() {
 
   group('ClaimScreen', () {
     testWidgets('shows who the business added, read-only, above the form', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims(), token: _token));
       await tester.pumpAndSettle();
 
@@ -107,22 +115,25 @@ void main() {
     });
 
     testWidgets('an expired link asks for a new one', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims(previewFails: ClaimFailure.expired), token: _token));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('This link has expired. Ask Chillax for a new one.'), findsOneWidget);
       expect(find.text('Use another code'), findsOneWidget);
     });
 
     testWidgets('a used link sends them to sign in', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims(previewFails: ClaimFailure.used), token: _token));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('This link was already used. Sign in instead.'), findsOneWidget);
       expect(find.text('Use another code'), findsNothing);
     });
 
     testWidgets('a taken email is said under the email field', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims(claimFails: ClaimFailure.emailTaken), token: _token));
       await tester.pumpAndSettle();
 
@@ -138,6 +149,7 @@ void main() {
     });
 
     testWidgets('a short password never leaves the phone', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims(), token: _token));
       await tester.pumpAndSettle();
 
@@ -153,6 +165,7 @@ void main() {
     });
 
     testWidgets('from the sign-in page, a pasted link that is not one says so', (tester) async {
+      _phone(tester);
       await tester.pumpWidget(_app(_Claims()));
       await tester.pumpAndSettle();
 
