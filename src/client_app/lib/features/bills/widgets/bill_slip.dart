@@ -69,6 +69,7 @@ class BillSlip extends ConsumerWidget {
     final now = ref.watch(minuteClockProvider).value ?? DateTime.now();
     final running = runningTime(bill, activeStayOf(ref), now);
     final money = ref.watch(moneyProvider);
+    // The paper the till prints: black on white whatever the theme
     const ink = Colors.black;
     const base = TextStyle(fontSize: 12, color: ink, height: 1.3);
     const muted = TextStyle(fontSize: 11, color: ink, height: 1.3);

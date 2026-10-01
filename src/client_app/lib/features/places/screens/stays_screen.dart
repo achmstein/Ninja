@@ -168,7 +168,7 @@ class _StayCardState extends ConsumerState<StayCard> {
     }
 
     // The base rate wears the business's colour, which the slab is made of: on it, the slab's own ink instead
-    Color colorOf(String code) => stay.optionIndex(code) > 0 ? const Color(0xFFF97316) : (active ? c.foreground : c.primary);
+    Color colorOf(String code) => stay.optionIndex(code) > 0 ? NinjaColors.otherRate : (active ? c.foreground : c.primary);
     final start = stay.startedAt ?? stay.createdAt;
     // A stay cancelled before its clock started has no length to show
     final duration = stay.startedAt != null ? durationOf(stay.startedAt!, stay.endTime) : null;
@@ -419,17 +419,17 @@ class _StatusChip extends StatelessWidget {
             ],
           ),
         );
-    final green = c.brightness == Brightness.dark ? const Color(0xFF34D399) : const Color(0xFF059669);
+    final green = c.brightness == Brightness.dark ? NinjaColors.success : NinjaColors.successInk;
     if (stay.paidAt != null) {
       // Sales' receipt, projected onto the stay by Spaces
       final receipt = stay.receiptNumber != null ? ' ${l10n.receiptShort(stay.receiptNumber!)}' : '';
       return GestureDetector(
         onTap: stay.ticketId != null ? () => context.push('/receipts/${stay.ticketId}') : null,
-        child: chip('${stay.paidWith == 'Account' ? l10n.onYourTab : l10n.paid}$receipt', const Color(0xFF10B981).withValues(alpha: 0.12), green),
+        child: chip('${stay.paidWith == 'Account' ? l10n.onYourTab : l10n.paid}$receipt', NinjaColors.successSolid.withValues(alpha: 0.12), green),
       );
     }
     return switch (stay.status) {
-      StayStatus.active => chip(l10n.statusActive, const Color(0xFF10B981).withValues(alpha: 0.15), const Color(0xFF10B981), dot: true),
+      StayStatus.active => chip(l10n.statusActive, NinjaColors.successSolid.withValues(alpha: 0.15), NinjaColors.successSolid, dot: true),
       StayStatus.cancelled => chip(l10n.statusCancelled, c.destructive.withValues(alpha: 0.1), c.destructive),
       StayStatus.completed => chip(l10n.statusCompleted, c.muted, c.mutedForeground),
     };

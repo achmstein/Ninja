@@ -323,7 +323,7 @@ class _PointsRingState extends State<PointsRing> with SingleTickerProviderStateM
 }
 
 /// The amber of points: the ring, the tier chip
-const pointsAmber = Color(0xFFFBBF24);
+const pointsAmber = NinjaColors.warning;
 
 class _RingPainter extends CustomPainter {
   final double progress;

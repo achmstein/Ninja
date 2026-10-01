@@ -111,6 +111,23 @@ class NinjaColors {
   static const warning = Color(0xFFFBBF24);
   static const error = Color(0xFFF87171);
 
+  /// Their neighbours in the web's palette, where it reaches past the 400s:
+  /// the solid fill (500), the ink on a light page (600, 700, 950) and the
+  /// ink on the slab or a dark page (300, 100)
+  static const successSolid = Color(0xFF10B981); // emerald-500
+  static const successInk = Color(0xFF059669); // emerald-600
+  static const successOnSlab = Color(0xFF6EE7B7); // emerald-300
+  static const warningSolid = Color(0xFFF59E0B); // amber-500
+  static const warningInk = Color(0xFFB45309); // amber-700
+  static const warningInkDeep = Color(0xFF451A03); // amber-950
+  static const warningOnSlab = Color(0xFFFCD34D); // amber-300
+  static const warningOnSlabPale = Color(0xFFFEF3C7); // amber-100
+  static const errorSolid = Color(0xFFEF4444); // red-500
+  static const errorOnSlab = Color(0xFFFCA5A5); // red-300
+
+  /// A place's other rates, beside its base one in the business's colour (client_web's optionColor: orange-500)
+  static const otherRate = Color(0xFFF97316);
+
   NinjaColors copyWith({
     Color? background,
     Color? foreground,

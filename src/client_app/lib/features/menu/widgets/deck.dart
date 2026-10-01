@@ -476,6 +476,7 @@ class CardFace extends ConsumerWidget {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
+        // On the photo, so light and dark whatever the theme
         children: [
           if (usual) chip(l10n.yourUsuals, Colors.white.withValues(alpha: 0.9), Colors.black, icon: LucideIcons.repeat2),
           if (soldOut) chip(l10n.unavailable, Colors.black.withValues(alpha: 0.7), Colors.white),

@@ -99,8 +99,8 @@ class DockBill extends ConsumerWidget {
 
     final (IconData icon, Color fill, Color ink) = switch (stage) {
       OrderStage.sent => (LucideIcons.send, c.foreground.withValues(alpha: 0.12), c.foreground),
-      OrderStage.confirmed => (LucideIcons.check, const Color(0xFF10B981), Colors.white),
-      OrderStage.cancelled => (LucideIcons.x, const Color(0xFFEF4444), Colors.white),
+      OrderStage.confirmed => (LucideIcons.check, NinjaColors.successSolid, Colors.white),
+      OrderStage.cancelled => (LucideIcons.x, NinjaColors.errorSolid, Colors.white),
       null => (destination?.placeKind.icon ?? LucideIcons.receiptText, c.foreground.withValues(alpha: 0.12), c.foreground),
     };
 
@@ -152,7 +152,7 @@ class DockBill extends ConsumerWidget {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFBBF24),
+                            color: NinjaColors.warning,
                             shape: BoxShape.circle,
                             border: Border.all(color: c.background, width: 2),
                           ),

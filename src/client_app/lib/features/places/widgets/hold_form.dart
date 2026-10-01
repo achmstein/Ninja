@@ -215,7 +215,7 @@ class _HoldFormState extends ConsumerState<HoldForm> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: index == 0 ? c.primary : const Color(0xFFF59E0B), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: index == 0 ? c.primary : NinjaColors.warningSolid, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 6),
                 Flexible(
@@ -254,7 +254,7 @@ class _HoldFormState extends ConsumerState<HoldForm> {
             width: idle ? constraints.maxWidth : _tick,
             height: _tick,
             decoration: BoxDecoration(
-              color: _phase == _Phase.success ? const Color(0xFF10B981) : c.primary,
+              color: _phase == _Phase.success ? NinjaColors.successSolid : c.primary,
               borderRadius: BorderRadius.circular(_tick / 2),
               boxShadow: idle ? Ninja.ctaShadow : const [],
             ),

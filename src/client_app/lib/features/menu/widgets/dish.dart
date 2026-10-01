@@ -503,6 +503,7 @@ class DishHeroCard extends ConsumerWidget {
     final money = ref.watch(moneyProvider);
     final offer = _onOffer(item);
     final description = item.description.getText(locale);
+    // The words sit on the photo's shade: white whatever the theme
     final heading = BrandStyle.of(context).heading(context, theme.typography.title.copyWith(color: Colors.white, height: 1.15));
     return Opacity(
       opacity: item.isAvailable ? 1 : 0.5,

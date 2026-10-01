@@ -14,8 +14,8 @@ import '../services/account_service.dart';
 /// Amounts in the ledger always in western digits
 final _amount = NumberFormat('#,##0.00', 'en');
 
-const _red = Color(0xFFF87171);
-const _green = Color(0xFF34D399);
+const _red = NinjaColors.error;
+const _green = NinjaColors.success;
 
 /// The house tab (client_web's routes/account.tsx): the balance on the
 /// dock's slab, red when the customer owes and green in credit, and what

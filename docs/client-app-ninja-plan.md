@@ -6,7 +6,7 @@ Written 2026-09-30 to continue on another machine. The goal: `src/client_app` (t
 - **Forui (the Flutter shadcn port) is removed.** Own widgets in `lib/core/ui/`, Lucide icons (`lucide_icons_flutter`, same names as the web's `lucide-react`).
 - **The menu matches the web**: no search, no hearts on photos, no offers strip, no long-press ordering; holding a dish puts it in the tray.
 
-Phases 1 and 2 are committed (see below). Phase 3 and a list of smaller gaps remain.
+Phases 1, 2 and 3 are committed, and so are the gaps found along the way (see below, updated 2026-10-02). What is left is at the end of **Remaining**.
 
 ---
 
@@ -44,30 +44,40 @@ Tests: 114 passing (`flutter test` in `src/client_app`), incl. ported `tray-mode
 
 ## Remaining
 
-### Phase 3 — the pages (web: `client_web/src/components/ninja/page/`)
+### Phase 3 — the pages (web: `client_web/src/components/ninja/page/`) — done
 
-**Progress (2026-10-01):** the page kit is in `lib/core/ui/ninja_page.dart` (`NinjaPage` with the shrinking title and its own back bar when pushed, `PageTitle`, `RiseGroup`, `PointsRing`, `pointsAmber`). Done with it: **You** (slab hero, ring, tier chip, tiles), **Loyalty** (148 px ring on the slab, recent activity panel; `TierChip`/`tierName` live in `loyalty_screen.dart`), **Transactions** (balance slab red/green, ledger panel), **Bills** (one list: open bills, waiting/turned-down orders, on-your-tab tile, history by month with visits and paid, days as section labels; the bill card is a slab when open, a panel when closed, with a display-size total), **Stays** (one list by shift day, running one on the slab), **Settings**, **Favorites** (the menu's `DishRow`s), **Receipt**, **Places** cards (web `place-card.tsx` look: free on the slab with a pulsing chip, busy on a surface), the Apple sign-in pill (`NinjaButtonVariant.inverse`). `AppTheme`, `BalanceCard` and `LoyaltyCard` are gone. Since then: the **bill card is a stack of rounds** (newest in full, the rest as edges, a "N rounds" pill fans them open with the till's extras and the Receipt button; `test/features/bills/bill_tile_test.dart`), and **Places** is on `NinjaPage` (title "Book", "N free now", history action) always listing the places, with a running clock as a slim `StayBanner` that opens the room on the slab sheet (`showRoomSheet`, also from the dock's row). Rounds on their way now sit on top of their bill's stack (`placeRounds`/`PendingRound` in `bill_tile.dart`, outlined, faint lines, "Waiting to be confirmed" or "Confirmed, adding to your bill"); left: the web's "forming" bill for rounds with no open bill (today they still show as a waiting group on Bills). Still to do from this list: Places' booking now opens inside the card (`widgets/hold_form.dart`: `HoldForm`, `showHoldSheet` for a scanned code); a hold is now the web's reservation panel (`widgets/reservation_panel.dart`: the slab between the bars, countdown ring, walk-over line, cancel as one morphing button); left: the card opening into it (the web's shared-layout morph) and the visit tab's countdown, Done since: the dock's row opens the bills on the slab sheet (`showDockBills`; at a table under its requests), all through one `OpenBills` (`bills/widgets/open_bills.dart`) with the web's forming bill for orders not on a bill yet; the table's sheet uses the same tiles (`service_request/widgets/request_tiles.dart`: `PlaceRequests` mixin, `RequestGrid`, `RequestTile`), the rate as its own panel, the room sheet's clock hero with members, request tiles reading `myRequestsProvider` (`service-requests/mine`, polled 15 s) with sent → tap to take back (409 = already picked up) → on the way by name, open bills swiped between (`BillSwipe`), (Register and Claim are now on `NinjaPage`: Claim's whose-account on the slab over the form on a panel, link problems as an `EmptyState`; Register's fields on a panel), the expandable receipt under a tab charge (needs `ticketId` on `AccountTransaction`). Not checked in a browser with live data yet: the local stack's services were down at the end of the session, so Loyalty/Bills/Stays/Places were only seen empty.
+The page kit is in `lib/core/ui/ninja_page.dart` (`NinjaPage` with the shrinking title and its own back bar when pushed, `PageTitle`, `RiseGroup`, `PointsRing`, `pointsAmber`), and every page is on it: **You** (slab hero, ring, tier chip, tiles), **Loyalty** (148 px ring on the slab, recent activity; `TierChip`/`tierName` in `loyalty_screen.dart`), **Transactions** (balance slab, ledger panel), **Bills** (one list: open bills as a stack of rounds, rounds on their way on top of their bill, waiting/turned-down orders, on-your-tab, history by month; `bill_tile.dart`, `placeRounds`/`PendingRound`), **Stays**, **Settings**, **Favorites**, **Receipt** (the printed slip), **Places** (`NinjaPage` "Book", web `place-card.tsx` cards, booking inside the card via `widgets/hold_form.dart`, a hold as the web's reservation panel `widgets/reservation_panel.dart`, a running clock as `StayBanner` opening `showRoomSheet`), **Register** / **Claim** / sign-in pills, empty states via `EmptyState`. `AppTheme`, `BalanceCard` and `LoyaltyCard` are gone.
 
-1. **Page title that shrinks and fades** (`page.tsx` `PageTitle`): large title, opacity `1 − y/44`, scale 1 → 0.92 over 44 px of scroll, origin at the start edge; a new title blur-swaps. Make a `NinjaPage` scaffold (title, subtitle, action, back) used by every tab/pushed page; replace today's `PageHeader` uses (`profile`, `places`, `bills`, `stays`, `favorites`, `loyalty`, `transactions`, `receipt`, `settings`, menu's `_Head`).
-2. **You** (`routes/profile.tsx`): the `SlabCard` hero (who you are, points ring 96 px, balance), then `TileGroup`s. Today it is the old avatar + `BalanceCard` + `LoyaltyCard` (metallic tier gradients) — restyle to the slab.
-3. **PointsRing** (`page/points-ring.tsx`): 8 px stroke amber-400 (`0xFFFBBF24`) over a 14 % track, rolling number in the middle; 148 px on Loyalty, 96 px on You.
-4. **Loyalty, Account (transactions), Bills, Stays, Settings, Receipts**: the web's layouts with `Panel` / `SlabCard` / `TileGroup` / `SectionLabel` / `Segment` (Bills and Stays already use `NinjaTabs`). Receipts keep their printed slip.
-5. **Places** (`routes/places.tsx`, `components/places/*`): room list, reservation sheet, active-stay view; the visit tab's live countdown ring in the dock (`nav.tsx` `LiveVisit`).
-6. **Empty states** everywhere via `EmptyState` (floating 80 px tile).
-7. **Login / register / claim** (`components/auth/sign-in-options.tsx`): full pills for Google (outline), Apple (`foreground` fill), Email (secondary), "or" divider.
+Left from phase 3:
+- The web's "forming" bill for rounds with no open bill shows on the dock's bills sheet (`OpenBills`) but the Bills page still lists those as a waiting group.
+- Places: the card opening into the reservation panel (the web's shared-layout morph).
+- The expandable receipt under a tab charge on Transactions (needs `ticketId` on `AccountTransaction`).
+- Loyalty / Bills / Stays / Places have not been looked at with live data (the local stack was down); the owner checks them.
 
-### Gaps left in phases 1–2 (in rough priority)
+### Gaps from phases 1–2 — done
 
-- **Dish view over the dock**: web keeps the dock/tray visible under an open dish (the dish layer is inside the menu, above the categories, below the dock). Flutter pushes `DishRoute` on the root navigator, covering the dock. Moving it into the shell's stack (below the dock) would match and let the Add flight land on a visible tray.
-- **Top bar scrolls away** with the page (web `NinjaTopBar` translates up with the scroller; past the deck's first card it goes up). Flutter's top bar is fixed.
-- **Deck extras**: pinch to zoom out/in (`pinchIntent`, 0.78), photo flights between cards and tiles on zoom (`planFlight`), the chrome going compact past the first card, first-visit gesture hints (`components/ninja/gestures/`).
-- **Tray extras**: the "seat flights" (thumbnails flying from the dock to their rows as the sheet opens), the one-time peek + "drag up" hint on the first dish.
-- **Goes-well-with flight**: a suggestion added from the dish view goes in without a flight (needs the card's rect).
-- **Island live face**: the web island also shows the live order ("Sent · #12") as a sticky face (`lib/island.ts`, `order-pill.ts`); Flutter shows the stage in the dock row only.
-- **Dock row sheet**: the web opens the bill / table / room as a sheet out of the dock (`dock-bill.tsx`); Flutter pushes `/bills`, opens the table-requests sheet, or goes to Places.
-- **Neutral brand's Order button**: slate-900 primary on the slate-950 slab is hard to see (the web has the same issue — decide once for both).
-- **Old helpers**: `lib/core/theme/app_theme.dart` still holds zinc-era constants used for a few icon colours; swap for `NinjaColors.success/warning/error` and delete. `BrandStyle` still carries the unused `categories/header/buttons/surface/density` parts from the six-style era; trim with the tests in `test/features/menu/menu_item_variants_test.dart`.
-- **Hard-coded colours** outside the theme (about 16 `Color(0x…)` and 20 `Colors.*` uses: notice card amber, rating widget, transactions, balance card, loyalty tier gradients) — revisit during phase 3.
+| Gap | Where it landed |
+|---|---|
+| **Dish view over the dock**: a dish opens on the frame's own layer, over the page, its bar and the categories, under the dock, so the tray stays in reach and an added dish lands on it; back or another tab closes it first | `lib/core/shell/dish_layer.dart` (`DishLayer`, `DishNavigator`, `dishOpen`), `main_scaffold.dart` |
+| **Top bar** scrolls away with a list and comes back on the way up (`topBarAt`, `TopBarOnScroll`, `TopBarSlot`); past the deck's first card it goes up by its own height (0.3 s, easeOut) and comes back on the first card. The deck swallows its scroll notifications and drives the dock's tuck and `deckCompactProvider` itself (`null` when no cards are on screen, so the page's scroll has the bar; the two never fight) | `lib/core/shell/{top_bar,deck_compact,tuck}.dart`, `menu_screen.dart` |
+| **Deck extras**: pinch out/in (`pinchIntent`, 0.78), photo flights between cards and tiles on zoom, compact chrome past the first card, first-visit cues (swipe, pinch, hold to add) | `features/menu/widgets/{pinch,zoom_flight,deck}.dart`, `lib/core/ui/gesture_hint.dart` |
+| **One cue on screen at a time** across menu and tray: one book (`ninja-style-hints`, as the web; the tray's old `ninja-hint-tray` key is read once into it), `cueOnScreen`; the deck's cues wait while the order or a dish is open (`orderOpenProvider`, `dishOpen`) | `gesture_hint.dart`, `features/cart/widgets/tray_hint.dart`, `tray.dart` |
+| **Tray extras**: seat flights (circles from the dock to their rows following the finger), the one-time peek + "drag up" cue on the first dish | `features/cart/widgets/{tray_seats,tray_hint}.dart` |
+| **Goes-well-with flight**: a suggestion added from the dish view flies from its card's photo | `dish_view.dart` |
+| **Dock row sheet**: the bill / table / room open as a slab sheet out of the dock (`showDockBills`, request tiles, `showRoomSheet`) | `lib/core/shell/dock_bill.dart`, `bills/widgets/open_bills.dart`, `service_request/widgets/request_tiles.dart` |
+| **Visit tab countdown** while a place is held | `lib/core/shell/live_visit.dart` |
+| **`/item/{id}` deep link** opens the menu with the dish over it, or says it is not on the menu | `features/menu/dish_link.dart`, `app_router.dart` |
+| **Hold ring** on a deck card (hold to add) | `features/menu/widgets/deck.dart` |
+| **Old helpers**: `app_theme.dart` deleted, its colours on `NinjaColors` | |
+| **Hard-coded colours**: statuses map to `NinjaColors.success/warning/error` and their web neighbours added beside them (`successSolid/Ink/OnSlab`, `warningSolid/Ink/InkDeep/OnSlab/OnSlabPale`, `errorSolid/OnSlab`, `otherRate`), the rating's stars to amber-400 over faint muted ink as on the web, spinners on buttons to `primaryForeground`. Left on purpose: the receipt paper (black on white), white/black on photos and their shades, the camera screens, white on a solid status fill, shadows' black with alpha | `lib/core/theme/ninja_theme.dart` |
+
+**The island**: the web's island no longer shows a sticky live order face since web commit 34750373 (the order lives in the dock), so the app matches that: Sent and Confirmed are the dock row's quiet change, and only an order turned down opens the island for a moment.
+
+### Still open
+
+- **Neutral brand's Order button**: slate-900 primary on the slate-950 slab is hard to see; the web has the same issue — an open decision for both.
+- `Layout` still parses the six-style era's `categories` and `header` parts (`lib/core/brand/styles.dart`, only read by `test/core/brand/styles_test.dart`); `buttons`, `surface` and `density` are still used by the dishes.
+- The phase 3 leftovers above.
 
 ---
 

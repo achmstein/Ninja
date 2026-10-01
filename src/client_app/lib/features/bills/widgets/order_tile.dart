@@ -83,11 +83,11 @@ class OrderTile extends ConsumerWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.local_offer, size: 12, color: Colors.green.shade600),
+                    Icon(Icons.local_offer, size: 12, color: NinjaColors.successInk),
                     const SizedBox(width: 2),
                     AppText(
                       money.discount(order.promoDiscount),
-                      style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+                      style: TextStyle(fontSize: 12, color: NinjaColors.successInk),
                     ),
                   ],
                 ),
@@ -95,11 +95,11 @@ class OrderTile extends ConsumerWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.stars, size: 12, color: Colors.green.shade600),
+                    Icon(Icons.stars, size: 12, color: NinjaColors.successInk),
                     const SizedBox(width: 2),
                     AppText(
                       money.discount(discount),
-                      style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+                      style: TextStyle(fontSize: 12, color: NinjaColors.successInk),
                     ),
                   ],
                 ),
@@ -171,7 +171,7 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      OrderStatus.awaitingValidation || OrderStatus.submitted => Colors.orange,
+      OrderStatus.awaitingValidation || OrderStatus.submitted => NinjaColors.warningSolid,
       OrderStatus.confirmed => NinjaColors.success,
       OrderStatus.cancelled => context.theme.colors.destructive,
     };

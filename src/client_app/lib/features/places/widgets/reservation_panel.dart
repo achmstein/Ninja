@@ -77,7 +77,7 @@ class _ReservationPanelState extends ConsumerState<ReservationPanel> with Single
     final total = hold.expiresAt == null ? null : math.max(1, hold.expiresAt!.difference(hold.createdAt).inMilliseconds / 1000);
     final hurry = left != null && left <= _hurry;
     final forTime = hold.forTime == null ? null : DateFormat('h:mm a', locale.languageCode).format(hold.forTime!.toLocal());
-    const amber = Color(0xFFF59E0B);
+    const amber = NinjaColors.warningSolid;
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -204,7 +204,7 @@ class _CountdownRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final c = theme.colors;
-    final tone = hurry ? c.destructive : const Color(0xFFFBBF24);
+    final tone = hurry ? c.destructive : NinjaColors.warning;
     final seconds = left.ceil();
     final clock = '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
     return SizedBox.square(
@@ -334,7 +334,7 @@ class _CancelHoldState extends ConsumerState<_CancelHold> {
         height: 44,
         decoration: BoxDecoration(
           // On the dark panel its own light-on-dark, until the tick's green
-          color: _phase == _Phase.done ? const Color(0xFF10B981) : c.foreground.withValues(alpha: 0.12),
+          color: _phase == _Phase.done ? NinjaColors.successSolid : c.foreground.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(22),
         ),
         child: Center(

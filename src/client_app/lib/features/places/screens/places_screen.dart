@@ -326,13 +326,13 @@ class _YourRoomCardState extends State<YourRoomCard> {
                         // Running now: the live dot and the words for it
                         Container(
                           padding: const EdgeInsetsDirectional.fromSTEB(10, 4, 10, 4),
-                          decoration: const ShapeDecoration(color: Color(0x3334D399), shape: StadiumBorder()),
+                          decoration: ShapeDecoration(color: NinjaColors.success.withValues(alpha: 0.2), shape: const StadiumBorder()),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const LiveDot(size: 6),
                               const SizedBox(width: 6),
-                              Text(l10n.bookClockRunning, style: caption.copyWith(color: const Color(0xFF6EE7B7))),
+                              Text(l10n.bookClockRunning, style: caption.copyWith(color: NinjaColors.successOnSlab)),
                             ],
                           ),
                         ),
@@ -641,7 +641,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> with PlaceRequ
               };
               // Another goes while nothing is asked; the one asked is taken back while it is only sent
               final disabled = (open && !asked) || phase == RequestPhase.onTheWay || sendingRequest != null;
-              const green = Color(0xFF10B981);
+              const green = NinjaColors.successSolid;
               final (Color fill, Color disc, Color ink) = switch (phase) {
                 RequestPhase.onTheWay => (green.withValues(alpha: 0.15), green, Colors.white),
                 RequestPhase.sent => (c.primary.withValues(alpha: 0.12), c.primary, c.primaryForeground),
@@ -956,7 +956,7 @@ class PlaceListItem extends ConsumerWidget {
       builder: (context) {
         final theme = context.theme;
         final c = theme.colors;
-        final statusColor = free ? const Color(0xFF6EE7B7) : placeStatusColor(room, canReserve, c);
+        final statusColor = free ? NinjaColors.successOnSlab : placeStatusColor(room, canReserve, c);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -979,7 +979,7 @@ class PlaceListItem extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: ShapeDecoration(
-                          color: free ? const Color(0x3334D399) : c.muted,
+                          color: free ? NinjaColors.success.withValues(alpha: 0.2) : c.muted,
                           shape: const StadiumBorder(),
                         ),
                         child: Row(
@@ -1386,7 +1386,7 @@ class PlaceTile extends ConsumerWidget {
       builder: (context) {
         final theme = context.theme;
         final c = theme.colors;
-        final statusColor = free ? const Color(0xFF6EE7B7) : placeStatusColor(room, canReserve, c);
+        final statusColor = free ? NinjaColors.successOnSlab : placeStatusColor(room, canReserve, c);
         return Stack(
           clipBehavior: Clip.none,
           // Passed through, so a tile stretched to its neighbour's height sets its name at the foot
@@ -1411,7 +1411,7 @@ class PlaceTile extends ConsumerWidget {
                       Flexible(
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: ShapeDecoration(color: free ? const Color(0x3334D399) : c.muted, shape: const StadiumBorder()),
+                          decoration: ShapeDecoration(color: free ? NinjaColors.success.withValues(alpha: 0.2) : c.muted, shape: const StadiumBorder()),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

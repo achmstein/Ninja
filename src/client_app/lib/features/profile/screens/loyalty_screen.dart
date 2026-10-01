@@ -26,7 +26,7 @@ class TierChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    const ink = Color(0xFFFCD34D);
+    const ink = NinjaColors.warningOnSlab;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: large ? 12 : 10, vertical: 4),
       decoration: ShapeDecoration(color: pointsAmber.withValues(alpha: 0.15), shape: const StadiumBorder()),

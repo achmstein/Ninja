@@ -179,7 +179,7 @@ class RequestTile extends StatelessWidget {
     final c = theme.colors;
     final phase = action.phase;
     final disabled = action.busy || phase == RequestPhase.sending || phase == RequestPhase.onTheWay;
-    const green = Color(0xFF10B981);
+    const green = NinjaColors.successSolid;
     final (Color fill, Color disc, Color ink) = switch (phase) {
       RequestPhase.onTheWay => (green.withValues(alpha: 0.15), green, Colors.white),
       RequestPhase.sent => (c.primary.withValues(alpha: 0.12), c.primary, c.primaryForeground),

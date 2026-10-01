@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/ui/ui.dart';
 import '../models/rating.dart';
 
 /// Star rating widget - can be interactive or read-only
@@ -7,7 +8,9 @@ class StarRating extends StatelessWidget {
   final int maxRating;
   final double size;
   final Color activeColor;
-  final Color inactiveColor;
+
+  /// The stars not given; the page's muted ink, faint, when none is passed (client_web's bill-rating)
+  final Color? inactiveColor;
   final ValueChanged<int>? onRatingChanged;
 
   const StarRating({
@@ -15,13 +18,14 @@ class StarRating extends StatelessWidget {
     required this.rating,
     this.maxRating = 5,
     this.size = 32.0,
-    this.activeColor = const Color(0xFFFFB800),
-    this.inactiveColor = const Color(0xFFE0E0E0),
+    this.activeColor = NinjaColors.warning,
+    this.inactiveColor,
     this.onRatingChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final inactive = inactiveColor ?? context.theme.colors.mutedForeground.withValues(alpha: 0.4);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(maxRating, (index) {
@@ -33,7 +37,7 @@ class StarRating extends StatelessWidget {
           child: Icon(
             isFilled ? Icons.star : Icons.star_border,
             size: size,
-            color: isFilled ? activeColor : inactiveColor,
+            color: isFilled ? activeColor : inactive,
           ),
         );
       }),
@@ -57,7 +61,7 @@ class RatingDisplay extends StatelessWidget {
     return StarRating(
       rating: rating.ratingValue,
       size: 16,
-      inactiveColor: color ?? const Color(0xFFE0E0E0),
+      inactiveColor: color,
     );
   }
 }

@@ -19,9 +19,9 @@ class PausedNotice extends StatelessWidget {
     final colors = context.theme.colors;
     // Read off the page itself, so it follows the business's scheme whichever the phone is in
     final dark = colors.background.computeLuminance() < 0.5;
-    const amber = Color(0xFFF59E0B);
-    final ink = dark ? const Color(0xFFFEF3C7) : const Color(0xFF451A03);
-    final mark = dark ? const Color(0xFFFCD34D) : const Color(0xFFB45309);
+    const amber = NinjaColors.warningSolid;
+    final ink = dark ? NinjaColors.warningOnSlabPale : NinjaColors.warningInkDeep;
+    final mark = dark ? NinjaColors.warningOnSlab : NinjaColors.warningInk;
 
     return Padding(
       padding: margin,

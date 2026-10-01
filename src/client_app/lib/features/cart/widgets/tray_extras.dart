@@ -14,9 +14,9 @@ import '../services/promo_service.dart';
 /// Points go on and off the order in steps of this many
 const pointsStep = 50;
 
-const _emerald = Color(0xFF6EE7B7);
-const _emeraldFill = Color(0x3310B981);
-const _redInk = Color(0xFFFCA5A5);
+const _emerald = NinjaColors.successOnSlab;
+final _emeraldFill = NinjaColors.successSolid.withValues(alpha: 0.2);
+const _redInk = NinjaColors.errorOnSlab;
 
 enum _Open { note, promo, points }
 

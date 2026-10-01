@@ -169,14 +169,14 @@ class _BillTileState extends ConsumerState<BillTile> {
                     children: [
                       Text(DateFormat('h:mm a', locale.languageCode).format(round.order.date.toLocal()), style: small.copyWith(fontWeight: FontWeight.w600)),
                       const Spacer(),
-                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle)),
+                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: NinjaColors.warningSolid, shape: BoxShape.circle)),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
                           round.adding ? l10n.addingToBill : l10n.waitingToBeConfirmed,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: small.copyWith(fontWeight: FontWeight.w700, color: const Color(0xFFF59E0B)),
+                          style: small.copyWith(fontWeight: FontWeight.w700, color: NinjaColors.warningSolid),
                         ),
                       ),
                     ],
@@ -438,10 +438,10 @@ class _StatusChip extends StatelessWidget {
     final (Color fill, Color ink, String label, bool dot) = bill.isVoided
         ? (c.muted, c.mutedForeground, l10n.voided, false)
         : !bill.isSettled
-            ? (NinjaColors.warning.withValues(alpha: 0.15), const Color(0xFFF59E0B), l10n.unpaid, true)
+            ? (NinjaColors.warning.withValues(alpha: 0.15), NinjaColors.warningSolid, l10n.unpaid, true)
             : (
                 NinjaColors.success.withValues(alpha: 0.12),
-                c.brightness == Brightness.dark ? NinjaColors.success : const Color(0xFF059669),
+                c.brightness == Brightness.dark ? NinjaColors.success : NinjaColors.successInk,
                 '${bill.paidWith == 'Account' ? l10n.onYourTab : l10n.paid}${bill.receiptNumber != null ? ' ${l10n.receiptShort(bill.receiptNumber!)}' : ''}',
                 false,
               );

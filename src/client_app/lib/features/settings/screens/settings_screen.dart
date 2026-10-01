@@ -105,7 +105,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           showIsland(
             context: context,
             title: AppText(l10n.profileUpdatedSuccessfully),
-            icon: Icon(LucideIcons.circleCheck, color: Colors.green.shade600),
+            icon: const Icon(LucideIcons.circleCheck, color: NinjaColors.success),
           );
         },
       ),
@@ -126,7 +126,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           showIsland(
             context: context,
             title: AppText(l10n.passwordChangedSuccessfully),
-            icon: Icon(LucideIcons.circleCheck, color: Colors.green.shade600),
+            icon: const Icon(LucideIcons.circleCheck, color: NinjaColors.success),
           );
         },
       ),
@@ -369,12 +369,12 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                       child: NinjaButton(
                         onPress: _isLoading ? null : _handleUpdate,
                         child: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: context.theme.colors.primaryForeground,
                                 ),
                               )
                             : AppText(widget.l10n.updateProfile),
@@ -551,12 +551,12 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       child: NinjaButton(
                         onPress: _isLoading ? null : _handleChangePassword,
                         child: _isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: context.theme.colors.primaryForeground,
                                 ),
                               )
                             : AppText(widget.l10n.changePassword),
