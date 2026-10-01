@@ -169,18 +169,19 @@ class _LiquidChipsState extends State<LiquidChips> with TickerProviderStateMixin
       children: [
         const SizedBox(width: 8),
         Expanded(
-          child: _more
-              ? ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (bounds) => LinearGradient(
-                    begin: rtl ? Alignment.centerRight : Alignment.centerLeft,
-                    end: rtl ? Alignment.centerLeft : Alignment.centerRight,
-                    colors: const [Colors.black, Colors.black, Colors.transparent],
-                    stops: [0, 1 - 28 / bounds.width.clamp(28, double.infinity), 1],
-                  ).createShader(bounds),
-                  child: row,
-                )
-              : row,
+          // The fade at the end while there are more chips past it. Always the same mask, faded or not:
+          // moved in and out of it, the row was built afresh and lost its scroll (back to the first chips
+          // whenever it reached its end, as following the last categories does)
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (bounds) => LinearGradient(
+              begin: rtl ? Alignment.centerRight : Alignment.centerLeft,
+              end: rtl ? Alignment.centerLeft : Alignment.centerRight,
+              colors: [Colors.black, Colors.black, _more ? Colors.transparent : Colors.black],
+              stops: [0, 1 - 28 / bounds.width.clamp(28, double.infinity), 1],
+            ).createShader(bounds),
+            child: row,
+          ),
         ),
         if (widget.trailing != null) ...[const SizedBox(width: 4), widget.trailing!, const SizedBox(width: 4)],
       ],
