@@ -33,7 +33,8 @@ enum ServiceRequestType {
 enum ServiceRequestStatus {
   pending(1),
   acknowledged(2),
-  completed(3);
+  completed(3),
+  cancelled(4);
 
   final int value;
 
@@ -89,6 +90,12 @@ class ServiceRequestResponse {
   final ServiceRequestStatus status;
   final DateTime createdAt;
 
+  /// Who picked it up, once someone has
+  final String? acknowledgedBy;
+
+  /// Still with the staff: sent, or picked up and on the way
+  bool get isOpen => status == ServiceRequestStatus.pending || status == ServiceRequestStatus.acknowledged;
+
   ServiceRequestResponse({
     required this.id,
     required this.userName,
@@ -98,6 +105,7 @@ class ServiceRequestResponse {
     required this.requestType,
     required this.status,
     required this.createdAt,
+    this.acknowledgedBy,
   });
 
   factory ServiceRequestResponse.fromJson(Map<String, dynamic> json) {
@@ -113,6 +121,7 @@ class ServiceRequestResponse {
         orElse: () => ServiceRequestStatus.pending,
       ),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      acknowledgedBy: json['acknowledgedBy'] as String?,
     );
   }
 }

@@ -297,5 +297,11 @@
   "ninjaYoureIn": "أنت في {name}",
   "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبان} other{{count} طلبات}}",
   "bookClockRunning": "الوقت يُحتسب",
-  "addingToBill": "تم التأكيد، ويُضاف إلى فاتورتك"
+  "addingToBill": "تم التأكيد، ويُضاف إلى فاتورتك",
+  "sent": "أُرسل",
+  "tapToCancel": "اضغط للإلغاء",
+  "onTheWay": "في الطريق إليك",
+  "onTheWayBy": "{name} في الطريق إليك",
+  "requestCancelled": "أُلغي الطلب",
+  "requestAlreadyPickedUp": "هناك من هو في الطريق إليك بالفعل"
 }

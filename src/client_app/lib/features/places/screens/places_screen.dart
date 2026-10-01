@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -298,38 +299,40 @@ class _ActiveStayView extends ConsumerStatefulWidget {
 }
 
 class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
-  Timer? _timer;
-  static const _cooldownDuration = 30; // seconds
+  /// The request on its way out, while the tap is answered
+  ServiceRequestType? _sending;
 
-  // Track cooldown end times for each request type
-  final Map<ServiceRequestType, DateTime> _cooldownEndTimes = {};
+  /// Which rate option was asked for: the staff's list says a switch is open, not to what
+  String? _askedOption;
+
+  // The clock ticks once a second
+  late final Timer _tick;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _tick.cancel();
     super.dispose();
   }
 
-  /// Get remaining cooldown seconds for a request type
-  int _getCooldownRemaining(ServiceRequestType type) {
-    final endTime = _cooldownEndTimes[type];
-    if (endTime == null) return 0;
-
-    final remaining = endTime.difference(DateTime.now()).inSeconds;
-    return remaining > 0 ? remaining : 0;
-  }
-
-  /// Start cooldown for a request type
-  void _startCooldown(ServiceRequestType type) {
-    _cooldownEndTimes[type] = DateTime.now().add(const Duration(seconds: _cooldownDuration));
+  /// Where one kind of request from this room stands, as its tile shows it
+  ({_Phase phase, int? id, String? by}) _stateOf(ServiceRequestType type) {
+    if (_sending == type) return (phase: _Phase.sending, id: null, by: null);
+    final open = ref
+        .watch(myRequestsProvider)
+        .where((r) => r.requestType == type && r.placeId == widget.session.placeId && r.isOpen)
+        .firstOrNull;
+    if (open == null) return (phase: _Phase.idle, id: null, by: null);
+    return open.status == ServiceRequestStatus.acknowledged
+        ? (phase: _Phase.onTheWay, id: open.id, by: open.acknowledgedBy)
+        : (phase: _Phase.sent, id: open.id, by: null);
   }
 
   @override
@@ -394,49 +397,71 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
   List<_QuickAction> _quickActions(Stay session) {
     final l10n = AppLocalizations.of(context)!;
     final branchId = ref.watch(selectedBranchIdProvider);
+    final busy = _sending != null;
+    _QuickAction ask(ServiceRequestType type, IconData icon, String label) {
+      final state = _stateOf(type);
+      return _QuickAction(icon: icon, label: label, phase: state.phase, by: state.by, busy: busy, onTap: () => _tap(type));
+    }
+
+    final switching = _stateOf(ServiceRequestType.changeOption);
     return [
-      _QuickAction(
-        icon: LucideIcons.bellRing,
-        label: l10n.callWaiter,
-        cooldownSeconds: _getCooldownRemaining(ServiceRequestType.callWaiter),
-        onTap: () => _submitRequest(ServiceRequestType.callWaiter),
-      ),
-      if (session.takesControllerRequests)
-        _QuickAction(
-          icon: LucideIcons.gamepad2,
-          label: l10n.controller,
-          cooldownSeconds: _getCooldownRemaining(ServiceRequestType.controllerChange),
-          onTap: () => _submitRequest(ServiceRequestType.controllerChange),
-        ),
-      _QuickAction(
-        icon: LucideIcons.receipt,
-        label: l10n.getBill,
-        cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
-        onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
-      ),
+      ask(ServiceRequestType.callWaiter, LucideIcons.bellRing, l10n.callWaiter),
+      if (session.takesControllerRequests) ask(ServiceRequestType.controllerChange, LucideIcons.gamepad2, l10n.controller),
+      ask(ServiceRequestType.receiptToPay, LucideIcons.receipt, l10n.getBill),
       // Online payments: the room's open bill, paid or split from here
       if (ref.watch(featuresProvider).onlinePayments && branchId != null)
         _QuickAction(
           icon: LucideIcons.creditCard,
           label: l10n.payTheBill,
-          cooldownSeconds: 0,
           onTap: () => showPaySheet(context, PaySource.place(session.placeId, branchId)),
         ),
       if (session.hasOptions)
         for (final option in session.options.where((o) => o.code != session.currentOptionCode))
+          // Another goes while nothing is asked; the one asked shows where it stands
           _QuickAction(
             icon: LucideIcons.refreshCw,
             label: l10n.switchToOption(option.name.localized(context)),
-            cooldownSeconds: _getCooldownRemaining(ServiceRequestType.changeOption),
-            onTap: () => _submitRequest(ServiceRequestType.changeOption, optionCode: option.code),
+            phase: option.code == _askedOption ? switching.phase : _Phase.idle,
+            by: option.code == _askedOption ? switching.by : null,
+            busy: busy || (switching.phase != _Phase.idle && option.code != _askedOption),
+            onTap: () {
+              if (switching.phase == _Phase.idle) _askedOption = option.code;
+              _tap(ServiceRequestType.changeOption, optionCode: option.code);
+            },
           ),
     ];
   }
 
-  Future<void> _submitRequest(ServiceRequestType type, {String? optionCode}) async {
-    // Check if still in cooldown
-    if (_getCooldownRemaining(type) > 0) return;
+  /// One tap on a tile: sends the request, or takes it back while it is only sent
+  Future<void> _tap(ServiceRequestType type, {String? optionCode}) async {
+    final state = _stateOf(type);
+    if (state.phase == _Phase.idle) return _submitRequest(type, optionCode: optionCode);
+    if (state.phase == _Phase.sent && state.id != null) return _cancelRequest(type, state.id!);
+  }
 
+  Future<void> _cancelRequest(ServiceRequestType type, int id) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _sending = type);
+    try {
+      await ref.read(serviceRequestRepositoryProvider).cancel(id);
+      ref.read(myRequestsProvider.notifier).remove(id);
+      if (mounted) showIsland(context: context, title: Text(l10n.requestCancelled), icon: const Icon(LucideIcons.undo2));
+    } on DioException catch (e) {
+      // Too late: someone picked it up between the tile and the tap
+      if (mounted) {
+        showIsland(
+          context: context,
+          title: Text(e.response?.statusCode == 409 ? l10n.requestAlreadyPickedUp : l10n.failedToSendRequest),
+          icon: Icon(e.response?.statusCode == 409 ? LucideIcons.footprints : LucideIcons.circleX),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = null);
+      ref.read(myRequestsProvider.notifier).refresh();
+    }
+  }
+
+  Future<void> _submitRequest(ServiceRequestType type, {String? optionCode}) async {
     final session = widget.session;
     final request = CreateServiceRequest(
       placeId: session.placeId,
@@ -447,29 +472,28 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       requestType: type,
     );
 
+    setState(() => _sending = type);
     final success = await ref.read(serviceRequestProvider.notifier).submitRequest(request);
-
-    if (mounted) {
-      if (success) {
-        // Start cooldown on success
-        _startCooldown(type);
-        showIsland(
-          context: context,
-          title: Text(_getSuccessMessage(type)),
-          icon: Icon(LucideIcons.check, color: NinjaColors.success),
-        );
-      } else {
-        final l10n = AppLocalizations.of(context)!;
-        final error = ref.read(serviceRequestProvider).error;
-        final errorMessage = error == 'cooldown'
-            ? l10n.pleaseWaitBeforeRequest
-            : l10n.failedToSendRequest;
-        showIsland(
-          context: context,
-          title: Text(errorMessage),
-          icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
-        );
-      }
+    // Seen at once, then confirmed by the server's own list
+    final created = ref.read(serviceRequestProvider).lastRequest;
+    if (success && created != null) ref.read(myRequestsProvider.notifier).add(created);
+    ref.read(myRequestsProvider.notifier).refresh();
+    if (!mounted) return;
+    setState(() => _sending = null);
+    if (success) {
+      showIsland(
+        context: context,
+        title: Text(_getSuccessMessage(type)),
+        icon: Icon(LucideIcons.check, color: NinjaColors.success),
+      );
+    } else {
+      final l10n = AppLocalizations.of(context)!;
+      final error = ref.read(serviceRequestProvider).error;
+      showIsland(
+        context: context,
+        title: Text(error == 'cooldown' ? l10n.pleaseWaitBeforeRequest : l10n.failedToSendRequest),
+        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
+      );
     }
   }
 
@@ -539,21 +563,31 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
   }
 }
 
+/// Where a request stands, as its tile shows it
+enum _Phase { idle, sending, sent, onTheWay }
+
 class _QuickAction {
   final IconData icon;
   final String label;
-  final int cooldownSeconds;
+  final _Phase phase;
+
+  /// Who is on the way, once someone picked it up
+  final String? by;
+
+  /// Another request is on its way out
+  final bool busy;
   final VoidCallback onTap;
 
   const _QuickAction({
     required this.icon,
     required this.label,
-    required this.cooldownSeconds,
+    this.phase = _Phase.idle,
+    this.by,
+    this.busy = false,
     required this.onTap,
   });
 }
 
-/// Two buttons a row, however many the place can take
 class _StayClock extends ConsumerWidget {
   final Stay stay;
 
@@ -634,6 +668,7 @@ class _StayClock extends ConsumerWidget {
   }
 }
 
+/// Two tiles a row, however many the place can take
 class _QuickActionGrid extends StatelessWidget {
   final List<_QuickAction> actions;
 
@@ -649,12 +684,7 @@ class _QuickActionGrid extends StatelessWidget {
           for (var j = 0; j < pair.length; j++) ...[
             if (j > 0) const SizedBox(width: 12),
             Expanded(
-              child: _QuickActionButton(
-                icon: pair[j].icon,
-                label: pair[j].label,
-                cooldownSeconds: pair[j].cooldownSeconds,
-                onTap: pair[j].onTap,
-              ),
+              child: _QuickActionButton(action: pair[j]),
             ),
           ],
           if (pair.length == 1) ...[
@@ -669,65 +699,81 @@ class _QuickActionGrid extends StatelessWidget {
   }
 }
 
-class _QuickActionButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final int cooldownSeconds;
+/// One thing to ask the staff for, as a tile that is also its status
+/// (client_web's request-tile.tsx): tap to send, tap again to take it back
+/// while it is only sent, then on the way (with who is coming) once the
+/// staff pick it up. The open request is the cooldown; the tile says so.
+class _QuickActionButton extends StatelessWidget {
+  final _QuickAction action;
 
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.cooldownSeconds = 0,
-  });
-
-  @override
-  State<_QuickActionButton> createState() => _QuickActionButtonState();
-}
-
-/// One thing to ask the staff for, as a tile (client_web's request-tile.tsx):
-/// its icon in a circle over its name; once sent it holds for its cooldown,
-/// filled in the brand's colour with the seconds left.
-class _QuickActionButtonState extends State<_QuickActionButton> {
-  bool get _isInCooldown => widget.cooldownSeconds > 0;
+  const _QuickActionButton({required this.action});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = context.theme;
     final c = theme.colors;
-    final sent = _isInCooldown;
+    final phase = action.phase;
+    final disabled = action.busy || phase == _Phase.sending || phase == _Phase.onTheWay;
+    const green = Color(0xFF10B981);
+    final (Color fill, Color disc, Color ink) = switch (phase) {
+      _Phase.onTheWay => (green.withValues(alpha: 0.15), green, Colors.white),
+      _Phase.sent => (c.primary.withValues(alpha: 0.12), c.primary, c.primaryForeground),
+      _ => (c.muted, c.background, c.foreground),
+    };
+    final note = switch (phase) {
+      _Phase.sent => l10n.sent,
+      _Phase.onTheWay => action.by != null && action.by!.isNotEmpty ? l10n.onTheWayBy(action.by!) : l10n.onTheWay,
+      _ => null,
+    };
+    final caption = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
     return Pressable(
-      onTap: sent ? null : widget.onTap,
+      onTap: disabled ? null : action.onTap,
       scale: 0.97,
       child: AnimatedContainer(
-        duration: Motion.base,
+        duration: Motion.slow,
         constraints: const BoxConstraints(minHeight: 96),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: sent ? c.primary.withValues(alpha: 0.12) : c.muted,
-          borderRadius: BorderRadius.circular(Ninja.panelRadius),
-        ),
+        decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AnimatedContainer(
-              duration: Motion.base,
+              duration: Motion.slow,
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: sent ? c.primary : c.background, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: disc, shape: BoxShape.circle),
               child: BlurSwap(
                 alignment: Alignment.center,
-                child: Icon(sent ? LucideIcons.hourglass : widget.icon, key: ValueKey(sent), size: 20, color: sent ? c.primaryForeground : c.foreground),
+                child: phase == _Phase.sending
+                    ? SizedBox(key: const ValueKey('sending'), width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: ink))
+                    : Icon(
+                        switch (phase) {
+                          _Phase.sent => LucideIcons.hourglass,
+                          _Phase.onTheWay => LucideIcons.check,
+                          _ => action.icon,
+                        },
+                        key: ValueKey(phase),
+                        size: 20,
+                        color: ink,
+                      ),
               ),
             ),
             const SizedBox(height: 12),
-            Text(widget.label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground, height: 1.3))),
-            if (sent)
-              Text(
-                AppLocalizations.of(context)!.secondsShort(widget.cooldownSeconds),
-                style: theme.typography.caption.copyWith(color: c.mutedForeground, fontFeatures: NinjaTypography.tabular),
-              ),
+            Text(action.label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground, height: 1.3))),
+            // A third of a phone is narrow: the status wraps, and the way to take it back is a size down
+            BlurSwap(
+              child: note == null
+                  ? const SizedBox.shrink(key: ValueKey('none'))
+                  : Column(
+                      key: ValueKey(note),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(note, style: caption),
+                        if (phase == _Phase.sent) Text(l10n.tapToCancel, style: caption.copyWith(fontSize: 11)),
+                      ],
+                    ),
+            ),
           ],
         ),
       ),

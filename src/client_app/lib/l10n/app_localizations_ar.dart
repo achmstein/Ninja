@@ -1379,6 +1379,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addingToBill => 'اتأكد، بيتضاف على حسابك';
+
+  @override
+  String get sent => 'اتبعت';
+
+  @override
+  String get tapToCancel => 'دوس للإلغاء';
+
+  @override
+  String get onTheWay => 'جايلك';
+
+  @override
+  String onTheWayBy(String name) {
+    return '$name جايلك';
+  }
+
+  @override
+  String get requestCancelled => 'الطلب اتلغى';
+
+  @override
+  String get requestAlreadyPickedUp => 'في حد جايلك خلاص';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2400,4 +2420,24 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get addingToBill => 'تم التأكيد، ويُضاف إلى فاتورتك';
+
+  @override
+  String get sent => 'أُرسل';
+
+  @override
+  String get tapToCancel => 'اضغط للإلغاء';
+
+  @override
+  String get onTheWay => 'في الطريق إليك';
+
+  @override
+  String onTheWayBy(String name) {
+    return '$name في الطريق إليك';
+  }
+
+  @override
+  String get requestCancelled => 'أُلغي الطلب';
+
+  @override
+  String get requestAlreadyPickedUp => 'هناك من هو في الطريق إليك بالفعل';
 }

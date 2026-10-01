@@ -1382,4 +1382,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addingToBill => 'Confirmed, adding to your bill';
+
+  @override
+  String get sent => 'Sent';
+
+  @override
+  String get tapToCancel => 'Tap to cancel';
+
+  @override
+  String get onTheWay => 'On the way';
+
+  @override
+  String onTheWayBy(String name) {
+    return '$name is on the way';
+  }
+
+  @override
+  String get requestCancelled => 'Request cancelled';
+
+  @override
+  String get requestAlreadyPickedUp => 'Someone is already on the way';
 }

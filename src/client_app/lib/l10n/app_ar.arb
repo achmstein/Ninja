@@ -460,5 +460,11 @@
   "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبين} other{{count} طلبات}}",
   "ninjaOpenBill": "الإيصال",
   "bookClockRunning": "العداد شغال",
-  "addingToBill": "اتأكد، بيتضاف على حسابك"
+  "addingToBill": "اتأكد، بيتضاف على حسابك",
+  "sent": "اتبعت",
+  "tapToCancel": "دوس للإلغاء",
+  "onTheWay": "جايلك",
+  "onTheWayBy": "{name} جايلك",
+  "requestCancelled": "الطلب اتلغى",
+  "requestAlreadyPickedUp": "في حد جايلك خلاص"
 }

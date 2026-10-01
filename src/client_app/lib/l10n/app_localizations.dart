@@ -2528,6 +2528,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirmed, adding to your bill'**
   String get addingToBill;
+
+  /// No description provided for @sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sent;
+
+  /// No description provided for @tapToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to cancel'**
+  String get tapToCancel;
+
+  /// No description provided for @onTheWay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way'**
+  String get onTheWay;
+
+  /// No description provided for @onTheWayBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is on the way'**
+  String onTheWayBy(String name);
+
+  /// No description provided for @requestCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cancelled'**
+  String get requestCancelled;
+
+  /// No description provided for @requestAlreadyPickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone is already on the way'**
+  String get requestAlreadyPickedUp;
 }
 
 class _AppLocalizationsDelegate

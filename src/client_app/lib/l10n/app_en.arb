@@ -749,5 +749,12 @@
   "@ninjaRoundCount": {"placeholders": {"count": {"type": "int"}}},
   "ninjaOpenBill": "Receipt",
   "bookClockRunning": "Clock running",
-  "addingToBill": "Confirmed, adding to your bill"
+  "addingToBill": "Confirmed, adding to your bill",
+  "sent": "Sent",
+  "tapToCancel": "Tap to cancel",
+  "onTheWay": "On the way",
+  "onTheWayBy": "{name} is on the way",
+  "@onTheWayBy": {"placeholders": {"name": {"type": "String"}}},
+  "requestCancelled": "Request cancelled",
+  "requestAlreadyPickedUp": "Someone is already on the way"
 }
