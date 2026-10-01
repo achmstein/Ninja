@@ -769,5 +769,6 @@
   "ninjaHoldFor": "For {time}",
   "@ninjaHoldFor": {"placeholders": {"time": {"type": "String"}}},
   "ninjaHoldRanOut": "Your hold ran out. {name} may still have it for you.",
-  "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}}
+  "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}},
+  "ninjaHideReceipt": "Hide the receipt"
 }

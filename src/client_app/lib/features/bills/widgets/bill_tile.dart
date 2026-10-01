@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -18,6 +17,7 @@ import '../models/bill.dart';
 import '../models/bill_math.dart';
 import '../services/bills_service.dart';
 import 'bill_slip.dart';
+import '../../receipts/screens/receipt_screen.dart' show BillReceipt;
 import 'bill_stars.dart';
 
 /// A round on its way to a bill: sent and waiting for the staff, or
@@ -107,6 +107,9 @@ class BillTile extends ConsumerStatefulWidget {
 
 class _BillTileState extends ConsumerState<BillTile> {
   late bool _fanned = widget.bill.isOpen;
+
+  /// The receipt printed out inside the card, under its button
+  bool _paper = false;
 
   @override
   Widget build(BuildContext context) {
@@ -356,8 +359,28 @@ class _BillTileState extends ConsumerState<BillTile> {
                               variant: NinjaButtonVariant.secondary,
                               size: NinjaButtonSize.sm,
                               prefix: const Icon(LucideIcons.receiptText, size: 16),
-                              onPress: () => context.push('/receipts/${bill.id}'),
-                              child: Text(l10n.ninjaOpenBill),
+                              onPress: () => setState(() => _paper = !_paper),
+                              child: BlurSwap(
+                                alignment: Alignment.center,
+                                child: Text(_paper ? l10n.ninjaHideReceipt : l10n.ninjaOpenBill, key: ValueKey(_paper)),
+                              ),
+                            ),
+                            // The receipt, printed out inside the card under its button rather than a page of its own
+                            AnimatedSize(
+                              duration: Motion.slow,
+                              curve: Motion.enter,
+                              alignment: Alignment.topCenter,
+                              child: !_paper
+                                  ? const SizedBox(width: double.infinity)
+                                  : Padding(
+                                      padding: const EdgeInsets.fromLTRB(4, 12, 4, 12),
+                                      child: DecoratedBox(
+                                        decoration: const BoxDecoration(
+                                          boxShadow: [BoxShadow(color: Color(0x1F000000), blurRadius: 6, offset: Offset(0, 2))],
+                                        ),
+                                        child: BillReceipt(ticketId: bill.id, bill: bill),
+                                      ),
+                                    ),
                             ),
                           ],
                         ],

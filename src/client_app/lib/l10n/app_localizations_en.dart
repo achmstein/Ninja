@@ -1437,4 +1437,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String ninjaHoldRanOut(String name) {
     return 'Your hold ran out. $name may still have it for you.';
   }
+
+  @override
+  String get ninjaHideReceipt => 'Hide the receipt';
 }

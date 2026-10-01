@@ -26,7 +26,6 @@ class ReceiptScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
     final bills = ref.watch(myBillsProvider);
     final bill = (bills.value ?? const <Bill>[]).where((b) => b.id == ticketId).firstOrNull;
     // The printed receipt exists once the bill is settled; a bill known to
@@ -40,20 +39,38 @@ class ReceiptScreen extends ConsumerWidget {
         : bill?.receiptNumber != null
             ? l10n.receiptNumber(bill!.receiptNumber!)
             : (place != null && place.isNotEmpty ? place : l10n.receipt);
-    final loading = (printed?.isLoading ?? false) || (bill == null && bills.isLoading);
+    final loading = bill == null && bills.isLoading;
 
-    final Widget body;
-    if (loading) {
-      body = Container(height: 360, decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
-    } else if (printed?.value != null) {
-      body = _ReceiptBody(receipt: printed!.value!);
-    } else if (bill != null) {
-      body = BillSlip(bill: bill);
-    } else {
-      body = EmptyState(icon: LucideIcons.receiptText, title: l10n.receiptUnavailable);
+    return NinjaPage(title: title, back: true, backTo: '/bills', children: [BillReceipt(ticketId: ticketId, bill: bill, loadingBill: loading)]);
+  }
+}
+
+/// A bill as paper (client_web's receipt-view.tsx): paid, the customer's copy
+/// of what the till printed; otherwise the bill as the slip the till would
+/// print. The bill card prints it out under itself; the receipt page shows it
+/// on its own.
+class BillReceipt extends ConsumerWidget {
+  final int ticketId;
+  final Bill? bill;
+
+  /// The bill itself is still being read
+  final bool loadingBill;
+
+  const BillReceipt({super.key, required this.ticketId, this.bill, this.loadingBill = false});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.theme.colors;
+    // The printed receipt exists once the bill is settled; a bill known to be open is not asked for
+    final askPrinted = bill == null || bill!.isSettled;
+    final printed = askPrinted ? ref.watch(receiptProvider(ticketId)) : null;
+    if ((printed?.isLoading ?? false) || (bill == null && loadingBill)) {
+      return Container(height: 360, decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
     }
-
-    return NinjaPage(title: title, back: true, backTo: '/bills', children: [body]);
+    if (printed?.value != null) return _ReceiptBody(receipt: printed!.value!);
+    if (bill != null) return BillSlip(bill: bill!);
+    return EmptyState(icon: LucideIcons.receiptText, title: l10n.receiptUnavailable);
   }
 }
 

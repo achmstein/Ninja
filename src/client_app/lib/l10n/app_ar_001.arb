@@ -312,5 +312,6 @@
   "ninjaHeldFor": "محجوزة لك",
   "ninjaHoldWalkOver": "تفضّل بالحضور وأظهر هذه الشاشة عند الكاشير",
   "ninjaHoldFor": "الساعة {time}",
-  "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك."
+  "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك.",
+  "ninjaHideReceipt": "إخفاء الإيصال"
 }

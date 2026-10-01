@@ -2618,6 +2618,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your hold ran out. {name} may still have it for you.'**
   String ninjaHoldRanOut(String name);
+
+  /// No description provided for @ninjaHideReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the receipt'**
+  String get ninjaHideReceipt;
 }
 
 class _AppLocalizationsDelegate

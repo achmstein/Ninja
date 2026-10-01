@@ -1434,6 +1434,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String ninjaHoldRanOut(String name) {
     return 'وقت الحجز خلص. ممكن $name لسه ماسكهالك.';
   }
+
+  @override
+  String get ninjaHideReceipt => 'اخفي الإيصال';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2510,4 +2513,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String ninjaHoldRanOut(String name) {
     return 'انتهت مدة الحجز. قد يظل $name محتفظًا به لك.';
   }
+
+  @override
+  String get ninjaHideReceipt => 'إخفاء الإيصال';
 }

@@ -475,5 +475,6 @@
   "ninjaHeldFor": "محجوزة ليك",
   "ninjaHoldWalkOver": "تعالى ووري ده للكاشير",
   "ninjaHoldFor": "الساعة {time}",
-  "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك."
+  "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
+  "ninjaHideReceipt": "اخفي الإيصال"
 }

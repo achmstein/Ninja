@@ -9,6 +9,7 @@ import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/bills/models/bill.dart';
 import 'package:ninja_client/features/bills/services/bills_service.dart';
+import 'package:ninja_client/features/bills/widgets/bill_slip.dart';
 import 'package:ninja_client/features/bills/widgets/bill_tile.dart';
 import 'package:ninja_client/features/orders/models/order.dart';
 import 'package:ninja_client/features/places/models/place.dart';
@@ -120,5 +121,23 @@ void main() {
     expect(find.text('3 rounds'), findsOneWidget);
     expect(find.text('Waiting to be confirmed'), findsOneWidget);
     expect(find.text('Mint tea'), findsOneWidget);
+  });
+
+  testWidgets('the receipt prints out inside the card, under its button, and folds away', (tester) async {
+    tester.view.physicalSize = const Size(1170, 3600);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    // An open bill stands open: its receipt is the slip the till would print
+    await tester.pumpWidget(_host(_bill(settled: false)));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Receipt'));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(tester.takeException(), isNull);
+    expect(find.text('Hide the receipt'), findsOneWidget);
+    expect(find.byType(BillSlip), findsOneWidget);
+
+    await tester.tap(find.text('Hide the receipt'));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(BillSlip), findsNothing);
   });
 }
