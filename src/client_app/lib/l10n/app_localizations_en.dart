@@ -1313,6 +1313,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ninjaBackToCards => 'Back to the cards';
 
   @override
+  String get ninjaHintSwipe =>
+      'Swipe up for more, sideways for other categories';
+
+  @override
+  String get ninjaHintZoom => 'Pinch or tap the grid to see everything';
+
+  @override
+  String get ninjaHintHoldAdd => 'Hold to add';
+
+  @override
   String get ninjaUpNext => 'Up next';
 
   @override

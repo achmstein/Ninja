@@ -1307,6 +1307,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ninjaBackToCards => 'ارجع للكروت';
 
   @override
+  String get ninjaHintSwipe => 'اسحب لفوق للمزيد، وللجنب لباقي الأقسام';
+
+  @override
+  String get ninjaHintZoom => 'اقرص أو دوس على المربعات تشوف كل حاجة';
+
+  @override
+  String get ninjaHintHoldAdd => 'دوس وضيف';
+
+  @override
   String get ninjaUpNext => 'اللي بعده';
 
   @override
@@ -2402,6 +2411,15 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaBackToCards => 'العودة إلى البطاقات';
+
+  @override
+  String get ninjaHintSwipe => 'اسحب للأعلى للمزيد، وجانبيًا لبقية الأقسام';
+
+  @override
+  String get ninjaHintZoom => 'اقرص أو اضغط الشبكة لعرض كل شيء';
+
+  @override
+  String get ninjaHintHoldAdd => 'اضغط وأضف';
 
   @override
   String get ninjaUpNext => 'التالي';

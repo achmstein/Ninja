@@ -14,6 +14,7 @@ import '../models/menu_item.dart';
 import '../paired_items.dart';
 import 'dish.dart';
 import 'dish_view.dart';
+import 'zoom_flight.dart';
 
 /// The colour a card without a photo is painted in, round and round the categories
 enum PosterTone { primary, secondary, deep }
@@ -69,7 +70,28 @@ class Deck extends StatefulWidget {
   final int column;
   final ValueChanged<int> onColumnChange;
 
-  const Deck({super.key, required this.columns, required this.column, required this.onColumnChange});
+  /// The card each column opens on (a column not in it, its first); read as a column comes into view
+  final Map<int, int> rows;
+
+  /// A column came to rest on a card (the "up next" counts as its last dish)
+  final void Function(int column, int row)? onRowChange;
+
+  /// The card that carries the one-time "hold to add" cue, if any
+  final int? holdHintId;
+
+  /// A card held until it went into the tray
+  final ValueChanged<MenuItem>? onQuickAdd;
+
+  const Deck({
+    super.key,
+    required this.columns,
+    required this.column,
+    required this.onColumnChange,
+    this.rows = const {},
+    this.onRowChange,
+    this.holdHintId,
+    this.onQuickAdd,
+  });
 
   @override
   State<Deck> createState() => _DeckState();
@@ -77,8 +99,8 @@ class Deck extends StatefulWidget {
 
 class _DeckState extends State<Deck> {
   late final PageController _pager = PageController(initialPage: widget.column);
-  final Map<int, PageController> _rows = {};
-  double _height = 0;
+  late final Map<int, int> _rowAt = {...widget.rows};
+  final Map<int, _DeckColumnState> _shown = {};
   bool _steering = false;
   Timer? _advance;
   Timer? _rewind;
@@ -102,34 +124,22 @@ class _DeckState extends State<Deck> {
     _advance?.cancel();
     _rewind?.cancel();
     _pager.dispose();
-    for (final c in _rows.values) {
-      c.dispose();
-    }
     super.dispose();
   }
 
-  PageController _rowsOf(int column, double height) {
-    if (height != _height) {
-      // The column's height sets how much of a page a card is: made afresh when it changes
-      for (final c in _rows.values) {
-        c.dispose();
-      }
-      _rows.clear();
-      _height = height;
-    }
-    return _rows.putIfAbsent(column, () => PageController(viewportFraction: ((height - _peek) / height).clamp(0.5, 1.0)));
-  }
-
-  /// A column came to rest on a card: on its "up next", on to the next category
+  /// A column came to rest on a card: told on, and on its "up next", on to the next category
   void _onRow(int column, int row) {
     _advance?.cancel();
     final col = widget.columns[column];
+    final dish = math.min(row, col.items.length - 1);
+    _rowAt[column] = dish;
+    widget.onRowChange?.call(column, dish);
     if (row < col.items.length || column + 1 >= widget.columns.length) return;
     _advance = Timer(_advanceAfter, () {
       widget.onColumnChange(column + 1);
       _rewind = Timer(const Duration(milliseconds: 700), () {
-        final rows = _rows[column];
-        if (rows != null && rows.hasClients) rows.jumpToPage(col.items.length - 1);
+        _rowAt[column] = col.items.length - 1;
+        _shown[column]?.jumpTo(col.items.length - 1);
       });
     });
   }
@@ -152,13 +162,12 @@ class _DeckState extends State<Deck> {
             itemBuilder: (context, c) {
               final col = widget.columns[c];
               final next = c + 1 < widget.columns.length ? widget.columns[c + 1] : null;
-              return PageView.builder(
-                key: PageStorageKey('deck-${col.id}'),
-                controller: _rowsOf(c, height),
-                scrollDirection: Axis.vertical,
-                padEnds: false,
-                itemCount: col.items.length + (next != null ? 1 : 0),
-                onPageChanged: (row) => _onRow(c, row),
+              return _DeckColumn(
+                key: ValueKey('deck-${col.id}'),
+                deck: this,
+                index: c,
+                height: height,
+                count: col.items.length + (next != null ? 1 : 0),
                 itemBuilder: (context, row) => Padding(
                   padding: const EdgeInsets.fromLTRB(16, _gap, 16, 0),
                   child: Align(
@@ -166,7 +175,12 @@ class _DeckState extends State<Deck> {
                     child: row < col.items.length
                         ? SizedBox(
                             height: card,
-                            child: DeckCard(item: col.items[row], usual: col.usuals && row == 0),
+                            child: DeckCard(
+                              item: col.items[row],
+                              usual: col.usuals && row == 0,
+                              hint: col.items[row].id == widget.holdHintId,
+                              onQuickAdd: widget.onQuickAdd,
+                            ),
                           )
                         : SizedBox(
                             height: card * 0.5,
@@ -183,23 +197,101 @@ class _DeckState extends State<Deck> {
   }
 }
 
+/// One column of the deck, snapping card by card with the next one peeking
+/// under. Its pages are a share of its height, so a new height (the chrome
+/// coming or going) makes them afresh, on the card it was on.
+class _DeckColumn extends StatefulWidget {
+  final _DeckState deck;
+  final int index;
+  final double height;
+  final int count;
+  final IndexedWidgetBuilder itemBuilder;
+
+  const _DeckColumn({super.key, required this.deck, required this.index, required this.height, required this.count, required this.itemBuilder});
+
+  @override
+  State<_DeckColumn> createState() => _DeckColumnState();
+}
+
+class _DeckColumnState extends State<_DeckColumn> {
+  late PageController _rows = _controller(widget.deck._rowAt[widget.index] ?? 0);
+
+  PageController _controller(int row) =>
+      PageController(initialPage: row, keepPage: false, viewportFraction: ((widget.height - _peek) / widget.height).clamp(0.5, 1.0));
+
+  @override
+  void initState() {
+    super.initState();
+    widget.deck._shown[widget.index] = this;
+  }
+
+  @override
+  void didUpdateWidget(_DeckColumn old) {
+    super.didUpdateWidget(old);
+    if (old.index != widget.index) {
+      if (old.deck._shown[old.index] == this) old.deck._shown.remove(old.index);
+      widget.deck._shown[widget.index] = this;
+    }
+    if (old.height != widget.height) {
+      final was = _rows;
+      final row = was.hasClients ? (was.page ?? 0).round() : widget.deck._rowAt[widget.index] ?? 0;
+      _rows = _controller(row);
+      WidgetsBinding.instance.addPostFrameCallback((_) => was.dispose());
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.deck._shown[widget.index] == this) widget.deck._shown.remove(widget.index);
+    _rows.dispose();
+    super.dispose();
+  }
+
+  void jumpTo(int row) {
+    if (_rows.hasClients) _rows.jumpToPage(row);
+  }
+
+  @override
+  Widget build(BuildContext context) => PageView.builder(
+    controller: _rows,
+    scrollDirection: Axis.vertical,
+    padEnds: false,
+    itemCount: widget.count,
+    onPageChanged: (row) => widget.deck._onRow(widget.index, row),
+    itemBuilder: widget.itemBuilder,
+  );
+}
+
 /// One dish's card: the photo under a scrim with its name, or without a
 /// photo the name set big on the business's colour. A tap opens it grown out
 /// of the card; holding one that needs no choosing fills a ring round a
-/// plus, and at the full ring it is in the tray.
+/// plus, and at the full ring it is in the tray. Its photo is what flies to
+/// its tile when the deck zooms out ([ZoomPhotoAnchor]).
 class DeckCard extends ConsumerStatefulWidget {
   final MenuItem item;
   final bool usual;
 
-  const DeckCard({super.key, required this.item, this.usual = false});
+  /// The one-time "hold to add" cue: the ring shown, with its words
+  final bool hint;
+
+  /// Held until it went into the tray
+  final ValueChanged<MenuItem>? onQuickAdd;
+
+  const DeckCard({super.key, required this.item, this.usual = false, this.hint = false, this.onQuickAdd});
 
   @override
   ConsumerState<DeckCard> createState() => _DeckCardState();
 }
 
 class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderStateMixin {
-  late final AnimationController _ring = AnimationController(vsync: this, duration: kLongPressTimeout);
+  late final AnimationController _ring;
   bool _pressing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ring = AnimationController(vsync: this, duration: kLongPressTimeout);
+  }
 
   @override
   void dispose() {
@@ -231,35 +323,65 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
       onLongPress: () {
         _up();
         quickAdd(context, ref, item);
+        if (canQuickAdd(item)) widget.onQuickAdd?.call(item);
       },
       onLongPressCancel: _up,
       child: AnimatedScale(
         scale: _pressing && !reduceMotion(context) ? 0.97 : 1,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        child: DishPhotoAnchor(
-          id: item.id,
+        child: ZoomPhotoAnchor(
+          view: ZoomView.deck,
+          item: item,
           radius: cardRadius,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(cardRadius),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CardFace(item: item, usual: widget.usual),
-                if (canQuickAdd(item))
-                  PositionedDirectional(
-                    top: 16,
-                    end: 16,
-                    child: AnimatedOpacity(
-                      opacity: _pressing ? 1 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: _PressRing(progress: _ring),
+          child: DishPhotoAnchor(
+            id: item.id,
+            radius: cardRadius,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(cardRadius),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CardFace(item: item, usual: widget.usual),
+                  if (canQuickAdd(item))
+                    PositionedDirectional(
+                      top: 16,
+                      end: 16,
+                      child: AnimatedOpacity(
+                        opacity: _pressing || widget.hint ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.hint) ...[const _HoldWords(), const SizedBox(width: 8)],
+                            _PressRing(progress: _ring),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The words of the one-time "hold to add" cue, beside the ring on the card
+class _HoldWords extends StatelessWidget {
+  const _HoldWords();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: const ShapeDecoration(color: Ninja.sheetScrim, shape: StadiumBorder()),
+      child: Text(
+        AppLocalizations.of(context)!.ninjaHintHoldAdd,
+        style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: Colors.white)),
       ),
     );
   }
@@ -551,7 +673,9 @@ class _UpNext extends StatelessWidget {
                           height: 48,
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(shape: BoxShape.circle, color: ink.withValues(alpha: 0.2)),
-                          child: ClipOval(child: CachedNetworkImage(imageUrl: faces[i].pictureUri!, fit: BoxFit.cover, width: 44, height: 44)),
+                          child: ClipOval(
+                            child: CachedNetworkImage(imageUrl: faces[i].pictureUri!, fit: BoxFit.cover, width: 44, height: 44),
+                          ),
                         ),
                       ),
                   ],
@@ -564,7 +688,8 @@ class _UpNext extends StatelessWidget {
   }
 }
 
-/// A dish on the whole menu: a small photo tile, the name and price under it
+/// A dish on the whole menu: a small photo tile, the name and price under it.
+/// Its photo is what a card's flies to as the deck zooms out ([ZoomPhotoAnchor]).
 class ZoomTile extends ConsumerWidget {
   final MenuItem item;
 
@@ -589,23 +714,29 @@ class ZoomTile extends ConsumerWidget {
             opacity: item.isAvailable ? 1 : 0.5,
             child: AspectRatio(
               aspectRatio: 4 / 5,
-              child: item.pictureUri == null
-                  ? DishPhotoAnchor(
-                      id: item.id,
-                      radius: 18,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        alignment: AlignmentDirectional.bottomStart,
-                        decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(18)),
-                        child: Text(
-                          name,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: BrandStyle.of(context).heading(context, TextStyle(fontSize: 16, height: 1.05, color: c.primaryForeground)),
+              // What a card's photo flies to as the deck zooms out, and back from as it zooms in
+              child: ZoomPhotoAnchor(
+                view: ZoomView.grid,
+                item: item,
+                radius: 18,
+                child: item.pictureUri == null
+                    ? DishPhotoAnchor(
+                        id: item.id,
+                        radius: 18,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          alignment: AlignmentDirectional.bottomStart,
+                          decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(18)),
+                          child: Text(
+                            name,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: BrandStyle.of(context).heading(context, TextStyle(fontSize: 16, height: 1.05, color: c.primaryForeground)),
+                          ),
                         ),
-                      ),
-                    )
-                  : DishPhotoBox(item: item, radius: 18),
+                      )
+                    : DishPhotoBox(item: item, radius: 18),
+              ),
             ),
           ),
           const SizedBox(height: 6),
