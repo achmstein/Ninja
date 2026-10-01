@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/ui/ui.dart';
@@ -36,21 +37,30 @@ class LiveOrder {
   const LiveOrder(this.stage, {this.orderId});
 }
 
-/// The order on its way (client_web's lib/live-order.ts): Sent once it is
+/// Where the order being followed is kept between reloads: the web's own key
+const _followKey = 'ninja-order-pill';
+
+/// The order on its way (client_web's lib/order-pill.ts): Sent once it is
 /// placed, then what the business made of it as the orders list learns it
 /// (a SignalR event refreshes the list). A settled order stays on the dock
-/// for a moment and goes.
+/// for a moment and goes. As on the web, only the moment of placing is kept
+/// on the phone: after a reload the order is found again in the server's
+/// list, the newest one placed since.
 class LiveOrderNotifier extends Notifier<LiveOrder?> {
   /// The newest order before this one was placed: the next one is it
   int _before = 0;
   Timer? _clear;
+
+  /// Followed again after a reload, not placed here: a loaded list without it means it is gone
+  bool _restored = false;
 
   static const _linger = Duration(seconds: 6);
 
   @override
   LiveOrder? build() {
     ref.onDispose(() => _clear?.cancel());
-    ref.listen(ordersProvider, (_, next) => _follow(next.orders));
+    ref.listen(ordersProvider, (_, next) => _follow(next.orders, loaded: !next.isLoading));
+    _restore();
     return null;
   }
 
@@ -62,15 +72,49 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
 
   void sent() {
     _clear?.cancel();
+    _restored = false;
     state = const LiveOrder(OrderStage.sent);
+    _keep();
     _follow(ref.read(ordersProvider).orders);
   }
 
-  void _follow(List<Order> orders) {
+  /// A reload while an order is being followed: follow it again, from the orders list
+  Future<void> _restore() async {
+    try {
+      final before = (await SharedPreferences.getInstance()).getInt(_followKey);
+      if (before == null || state != null) return;
+      _before = before;
+      _restored = true;
+      state = const LiveOrder(OrderStage.sent);
+      final orders = ref.read(ordersProvider);
+      // The list may not have loaded yet (it starts empty, not loading): only a list with orders in it says this one is gone
+      _follow(orders.orders, loaded: !orders.isLoading && orders.orders.isNotEmpty);
+    } catch (_) {
+      // Nothing kept: nothing to follow
+    }
+  }
+
+  Future<void> _keep() async {
+    try {
+      (await SharedPreferences.getInstance()).setInt(_followKey, _before);
+    } catch (_) {}
+  }
+
+  Future<void> _forget() async {
+    try {
+      (await SharedPreferences.getInstance()).remove(_followKey);
+    } catch (_) {}
+  }
+
+  void _follow(List<Order> orders, {bool loaded = false}) {
     final live = state;
     if (live == null) return;
     final mine = orders.where((o) => o.id > _before).toList()..sort((a, b) => a.id.compareTo(b.id));
-    if (mine.isEmpty) return;
+    if (mine.isEmpty) {
+      // Followed again after a reload, and the loaded list holds no such order (another day's): stop
+      if (loaded && _restored) _done();
+      return;
+    }
     final order = mine.first;
     final stage = switch (order.status) {
       OrderStatus.confirmed => OrderStage.confirmed,
@@ -81,8 +125,13 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     state = LiveOrder(stage, orderId: order.id);
     if (stage != OrderStage.sent) {
       _clear?.cancel();
-      _clear = Timer(_linger, () => state = null);
+      _clear = Timer(_linger, _done);
     }
+  }
+
+  void _done() {
+    state = null;
+    _forget();
   }
 }
 
