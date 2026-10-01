@@ -29,10 +29,10 @@ public static class NotificationMessages
             $"طلب #{orderId} من {buyerName}");
 
     // Service requests, from a table or a room
-    public static readonly LocalizedText WaiterNeededTitle = new("Waiter Needed", "طلب نادل");
+    public static readonly LocalizedText WaiterNeededTitle = new("Waiter Needed", "طلب الويتر");
     public static LocalizedText WaiterNeededBody(LocalizedText placeName, string userName) =>
         new($"{placeName.Get("en")} - {userName} is calling for a waiter",
-            $"{placeName.Get("ar")} - {userName} يطلب نادلًا");
+            $"{placeName.Get("ar")} - {userName} يطلب الويتر");
 
     public static readonly LocalizedText ControllerRequestTitle = new("Controller Request", "طلب ذراع تحكم");
     public static LocalizedText ControllerRequestBody(LocalizedText placeName, string userName) =>

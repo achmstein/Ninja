@@ -149,7 +149,7 @@ export const messages = {
   justNow: { en: "Just now", ar: "الآن" },
   minutesAgo: { en: "{minutes}m ago", ar: "منذ {minutes} دقيقة" },
   hoursAgo: { en: "{hours}h ago", ar: "منذ {hours} ساعة" },
-  callWaiter: { en: "Call Waiter", ar: "استدعاء النادل" },
+  callWaiter: { en: "Call Waiter", ar: "استدعاء الويتر" },
   controllerChange: { en: "Controller Change", ar: "تغيير وحدة التحكم" },
   receiptToPay: { en: "Receipt to Pay", ar: "طلب الفاتورة للدفع" },
   switchToMulti: { en: "Switch to Multi", ar: "التحويل إلى متعدد اللاعبين" },

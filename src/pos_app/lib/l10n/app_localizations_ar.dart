@@ -330,7 +330,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get serviceRequests => 'الطلبات';
 
   @override
-  String get requestCallWaiter => 'استدعاء النادل';
+  String get requestCallWaiter => 'استدعاء الويتر';
 
   @override
   String get requestControllerChange => 'تغيير ذراع التحكم';

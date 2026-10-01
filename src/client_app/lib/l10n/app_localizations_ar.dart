@@ -1693,7 +1693,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get failedToLoadRooms => 'تعذّر تحميل الغرف';
 
   @override
-  String get callWaiter => 'النادل';
+  String get callWaiter => 'الويتر';
 
   @override
   String get controller => 'يد تحكم';
@@ -1702,7 +1702,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get getBill => 'الفاتورة';
 
   @override
-  String get waiterNotified => 'تم إبلاغ النادل';
+  String get waiterNotified => 'تم إبلاغ الويتر';
 
   @override
   String get controllerRequestSent => 'تم إرسال طلب يد التحكم';

@@ -141,7 +141,7 @@
   "justNow": "الآن",
   "minutesAgo": "منذ {minutes} دقيقة",
   "hoursAgo": "منذ {hours} ساعة",
-  "callWaiter": "استدعاء النادل",
+  "callWaiter": "استدعاء الويتر",
   "controllerChange": "تغيير وحدة التحكم",
   "receiptToPay": "طلب الفاتورة للدفع",
   "switchToMulti": "التحويل إلى متعدد اللاعبين",

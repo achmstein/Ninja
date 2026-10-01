@@ -61,7 +61,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   continueWithEmail: 'البريد الإلكتروني',
   leaveTable: 'مغادرة الطاولة',
   atTableQuestion: 'هل أنت على طاولة؟',
-  atTableScanHint: 'امسح الرمز الموجود عليها لتطلب وتنادي النادل',
+  atTableScanHint: 'امسح الرمز الموجود عليها لتطلب وتنادي الويتر',
   orderFromMenu: 'اطلب من القائمة',
   sinceTime: 'منذ {time}',
   sent: 'أُرسل',

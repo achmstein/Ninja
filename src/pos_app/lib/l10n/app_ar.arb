@@ -169,7 +169,7 @@
   "roomReserved": "تم حجز الغرفة",
   "failedToReserveRoom": "تعذّر حجز الغرفة",
   "serviceRequests": "الطلبات",
-  "requestCallWaiter": "استدعاء النادل",
+  "requestCallWaiter": "استدعاء الويتر",
   "requestControllerChange": "تغيير ذراع التحكم",
   "requestReceiptToPay": "طلب الفاتورة",
   "acknowledgeRequest": "تم الاستلام",
