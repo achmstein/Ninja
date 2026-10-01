@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
@@ -330,86 +331,13 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
   Widget build(BuildContext context) {
     final session = widget.session;
 
-    final colors = context.theme.colors;
-
     return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // The clock, the room's one big thing
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
-              child: Column(
-                children: [
-                  // Place name + player mode in one row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AppText(
-                        session.placeName.localized(context),
-                        style: TextStyle(
-                          color: colors.foreground,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (session.hasOptions && session.currentOptionName != null) ...[
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: colors.foreground.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: colors.foreground.withValues(alpha: 0.3)),
-                          ),
-                          child: AppText(
-                            session.currentOptionName!.localized(context),
-                            style: TextStyle(
-                              color: colors.foreground,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Timer
-                  AppText(
-                    session.formattedDuration,
-                    style: TextStyle(
-                      color: colors.foreground,
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-
-                  // Price per hour, at the rate running now
-                  if (session.currentHourlyRate != null) ...[
-                    const SizedBox(height: 8),
-                    AppText(
-                      AppLocalizations.of(context)!.hourlyRateFormat(
-                        ref.watch(moneyProvider).whole(session.currentHourlyRate!),
-                      ),
-                      style: TextStyle(
-                        color: colors.foreground.withValues(alpha: 0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Quick actions
-            const SizedBox(height: 16),
+            // The clock as the hero (client_web's stay-clock.tsx): the biggest thing in the room,
+            // and who is in it. No money here; the bill carries that
+            _StayClock(stay: session),
+            const SizedBox(height: 20),
 
             // What the place can take: a waiter and the bill anywhere, a
             // controller in a console room, a switch per other rate option
@@ -602,6 +530,86 @@ class _QuickAction {
 }
 
 /// Two buttons a row, however many the place can take
+class _StayClock extends ConsumerWidget {
+  final Stay stay;
+
+  const _StayClock({required this.stay});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final self = ref.read(authServiceProvider).userId;
+    final caption = context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.foreground));
+    // The owner first, then in the order they joined
+    final members = [...stay.members]..sort((a, b) => a.isOwner == b.isOwner ? 0 : (a.isOwner ? -1 : 1));
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // The place's kind drawn big behind the clock
+        PositionedDirectional(
+          end: -24,
+          top: -20,
+          child: Transform.rotate(angle: 0.21, child: Icon(stay.placeKind.icon, size: 176, color: c.foreground.withValues(alpha: 0.07))),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 8, height: 8, decoration: const BoxDecoration(color: NinjaColors.success, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Expanded(child: Text(l10n.bookClockRunning, style: caption)),
+                if (stay.hasOptions && stay.currentOptionName != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: ShapeDecoration(color: c.muted, shape: const StadiumBorder()),
+                    child: Text(stay.currentOptionName!.localized(context), style: caption.copyWith(fontWeight: FontWeight.w700)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // A clock reads hours first in either language
+            Text(
+              stay.formattedDuration,
+              textDirection: TextDirection.ltr,
+              style: TextStyle(
+                fontFamily: theme.typography.display.fontFamily,
+                fontSize: 52,
+                height: 1,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1,
+                color: c.foreground,
+                fontFeatures: NinjaTypography.tabular,
+              ),
+            ),
+            // Who is in the room: the owner first, you filled in
+            if (members.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final member in members)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: ShapeDecoration(color: member.customerId == self ? c.foreground : c.muted, shape: const StadiumBorder()),
+                      child: Text(
+                        member.customerId == self ? l10n.payYou : (member.customerName?.trim() ?? '').split(' ').first,
+                        style: caption.copyWith(color: member.customerId == self ? c.background : c.foreground),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _QuickActionGrid extends StatelessWidget {
   final List<_QuickAction> actions;
 
@@ -654,73 +662,49 @@ class _QuickActionButton extends StatefulWidget {
   State<_QuickActionButton> createState() => _QuickActionButtonState();
 }
 
+/// One thing to ask the staff for, as a tile (client_web's request-tile.tsx):
+/// its icon in a circle over its name; once sent it holds for its cooldown,
+/// filled in the brand's colour with the seconds left.
 class _QuickActionButtonState extends State<_QuickActionButton> {
-  bool _isPressed = false;
-
   bool get _isInCooldown => widget.cooldownSeconds > 0;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return GestureDetector(
-      onTapDown: _isInCooldown ? null : (_) => setState(() => _isPressed = true),
-      onTapUp: _isInCooldown ? null : (_) => setState(() => _isPressed = false),
-      onTapCancel: _isInCooldown ? null : () => setState(() => _isPressed = false),
-      onTap: _isInCooldown ? null : widget.onTap,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.92 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: _isInCooldown
-                ? colors.mutedForeground.withValues(alpha: 0.15)
-                : _isPressed
-                    ? colors.primary.withValues(alpha: 0.15)
-                    : colors.mutedForeground.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isPressed && !_isInCooldown
-                  ? colors.primary.withValues(alpha: 0.3)
-                  : Colors.transparent,
-              width: 1.5,
+    final theme = context.theme;
+    final c = theme.colors;
+    final sent = _isInCooldown;
+    return Pressable(
+      onTap: sent ? null : widget.onTap,
+      scale: 0.97,
+      child: AnimatedContainer(
+        duration: Motion.base,
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: sent ? c.primary.withValues(alpha: 0.12) : c.muted,
+          borderRadius: BorderRadius.circular(Ninja.panelRadius),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: Motion.base,
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: sent ? c.primary : c.background, shape: BoxShape.circle),
+              child: BlurSwap(
+                alignment: Alignment.center,
+                child: Icon(sent ? LucideIcons.hourglass : widget.icon, key: ValueKey(sent), size: 20, color: sent ? c.primaryForeground : c.foreground),
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              if (_isInCooldown) ...[
-                // Show countdown
-                AppText(
-                  AppLocalizations.of(context)!.secondsShort(widget.cooldownSeconds),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.mutedForeground,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                AppText(
-                  widget.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.mutedForeground,
-                  ),
-                ),
-              ] else ...[
-                Icon(widget.icon, size: 24, color: colors.foreground),
-                const SizedBox(height: 8),
-                AppText(
-                  widget.label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.mutedForeground,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ],
-          ),
+            const SizedBox(height: 12),
+            Text(widget.label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground, height: 1.3))),
+            if (sent)
+              Text(
+                AppLocalizations.of(context)!.secondsShort(widget.cooldownSeconds),
+                style: theme.typography.caption.copyWith(color: c.mutedForeground, fontFeatures: NinjaTypography.tabular),
+              ),
+          ],
         ),
       ),
     );

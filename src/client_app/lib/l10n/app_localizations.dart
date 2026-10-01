@@ -2516,6 +2516,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receipt'**
   String get ninjaOpenBill;
+
+  /// No description provided for @bookClockRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock running'**
+  String get bookClockRunning;
 }
 
 class _AppLocalizationsDelegate

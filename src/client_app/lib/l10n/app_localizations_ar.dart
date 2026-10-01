@@ -1373,6 +1373,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaOpenBill => 'الإيصال';
+
+  @override
+  String get bookClockRunning => 'العداد شغال';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2388,4 +2391,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
     );
     return '$_temp0';
   }
+
+  @override
+  String get bookClockRunning => 'الوقت يُحتسب';
 }

@@ -458,5 +458,6 @@
   "bookFreeNow": "{count, plural, =0{مفيش حاجة فاضية دلوقتي} =1{واحدة فاضية دلوقتي} =2{اتنين فاضيين دلوقتي} other{{count} فاضيين دلوقتي}}",
   "ninjaYoureIn": "انت في {name}",
   "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبين} other{{count} طلبات}}",
-  "ninjaOpenBill": "الإيصال"
+  "ninjaOpenBill": "الإيصال",
+  "bookClockRunning": "العداد شغال"
 }

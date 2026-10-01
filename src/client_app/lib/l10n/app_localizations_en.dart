@@ -1376,4 +1376,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ninjaOpenBill => 'Receipt';
+
+  @override
+  String get bookClockRunning => 'Clock running';
 }
