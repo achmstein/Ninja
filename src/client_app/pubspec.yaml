@@ -124,18 +124,12 @@ flutter_launcher_icons:
 
 # Splash screen configuration
 flutter_native_splash:
-  # Light mode
+  # Light, whatever the phone's own mode: the app starts light
   color: "#FFFFFF"
   image: assets/images/cup_splash.png
-
-  # Dark mode
-  color_dark: "#09090B"
-  image_dark: assets/images/cup_splash_white.png
 
   fullscreen: false
 
   android_12:
     color: "#FFFFFF"
     image: assets/images/cup_splash.png
-    color_dark: "#09090B"
-    image_dark: assets/images/cup_splash_white.png

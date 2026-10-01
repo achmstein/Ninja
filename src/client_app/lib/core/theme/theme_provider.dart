@@ -43,7 +43,7 @@ class ThemeState {
   final bool isLoading;
 
   const ThemeState({
-    this.themeMode = AppThemeMode.system,
+    this.themeMode = AppThemeMode.light,
     this.isLoading = true,
   });
 
@@ -98,10 +98,11 @@ class ThemeNotifier extends Notifier<ThemeState> {
     return const ThemeState();
   }
 
+  /// The business's starting theme; light where it has not said (following the phone only when it asks to)
   AppThemeMode _businessDefault(String? mode) => switch (mode) {
-        'light' => AppThemeMode.light,
         'dark' => AppThemeMode.dark,
-        _ => AppThemeMode.system,
+        'system' => AppThemeMode.system,
+        _ => AppThemeMode.light,
       };
 
   Future<void> _loadTheme() async {
