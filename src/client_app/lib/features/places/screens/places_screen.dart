@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
 import '../widgets/hold_form.dart';
+import '../widgets/reservation_panel.dart';
 import '../../service_request/widgets/request_tiles.dart';
 import '../../bills/models/bill.dart';
 import '../../bills/services/bills_service.dart';
@@ -13,7 +14,6 @@ import '../../bills/widgets/bill_tile.dart';
 import '../../orders/services/order_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
@@ -136,6 +136,14 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     final canReserve = reservedSession == null && stay == null && reservationsEnabled;
     final allBusy = rooms.isNotEmpty && free == 0;
 
+    // A hold open: the tab is the reservation, one slab between the top bar and the dock, while they walk over
+    if (reservedSession != null && stay == null) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.paddingOf(context).bottom + 8),
+        child: ReservationPanel(key: ValueKey(reservedSession.id), reservation: reservedSession),
+      );
+    }
+
     return NinjaPage(
       title: l10n.rooms,
       subtitle: reservedSession == null && stay == null && rooms.isNotEmpty && reservationsEnabled ? AppText(l10n.bookFreeNow(free)) : null,
@@ -151,7 +159,6 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         // Not taking bookings for now: the same notice as the menu's
         if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
-        if (reservedSession != null) _HeldStayBanner(session: reservedSession),
         if (allBusy && reservedSession == null) const NotifyMeBanner(),
         ...roomsAsync.when(
           skipLoadingOnRefresh: true,
@@ -655,185 +662,6 @@ class _StayClock extends ConsumerWidget {
         ),
       ],
     );
-  }
-}
-
-/// Reserved session banner - matches active session card style
-class _HeldStayBanner extends ConsumerWidget {
-  final Reservation session;
-
-  const _HeldStayBanner({required this.session});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            NinjaColors.warning,
-            NinjaColors.warning.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: NinjaColors.warning.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Place name
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(session.placeKind.icon, color: Colors.white, size: 24),
-              const SizedBox(width: 8),
-              AppText(
-                session.placeName.localized(context),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Status badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: AppText(
-              AppLocalizations.of(context)!.reserved,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Date and time
-          AppText(
-            DateFormat('EEEE, MMM d', Localizations.localeOf(context).languageCode).format(session.reservationTime.toLocal()),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          AppText(
-            DateFormat('h:mm a', Localizations.localeOf(context).languageCode).format(session.reservationTime.toLocal()),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (session.startOnConfirm) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(LucideIcons.timerReset, color: Colors.white.withValues(alpha: 0.9), size: 14),
-                const SizedBox(width: 6),
-                AppText(
-                  AppLocalizations.of(context)!.timeStartsOnConfirm,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
-                ),
-                if (session.requestedOptionName != null) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: AppText(
-                      session.requestedOptionName!.localized(context),
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-          const SizedBox(height: 16),
-          // Cancel link
-          GestureDetector(
-            onTap: () => _cancelReservation(context, ref),
-            child: AppText(
-              AppLocalizations.of(context)!.cancelReservation,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 13,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _cancelReservation(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showNinjaSheet<bool>(
-      context: context,
-      builder: (context) => NinjaDialog(
-        title: Text(l10n.cancelReservationQuestion),
-        actions: [
-          NinjaButton(
-            variant: NinjaButtonVariant.secondary,
-            onPress: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          NinjaButton(
-            variant: NinjaButtonVariant.destructive,
-            onPress: () => Navigator.pop(context, true),
-            child: Text(l10n.cancelReservation),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final service = ref.read(placeRepositoryProvider);
-        await service.cancelHold(session.id);
-        ref.read(myStaysProvider.notifier).refresh();
-        final branchId = ref.read(selectedBranchIdProvider);
-        if (branchId != null) ref.invalidate(placesProvider(branchId));
-        if (context.mounted) {
-          showIsland(
-            context: context,
-            title: Text(l10n.reservationCancelled),
-            icon: Icon(LucideIcons.check, color: NinjaColors.success),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          showIsland(
-            context: context,
-            title: Text(l10n.failedToCancelReservation),
-            icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
-          );
-        }
-      }
-    }
   }
 }
 

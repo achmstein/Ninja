@@ -39,16 +39,21 @@ class NinjaTopBar extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            Flexible(
-              child: GestureDetector(
-                onTap: () => context.go('/menu'),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: size.bar - 20, maxWidth: MediaQuery.sizeOf(context).width / 2),
-                  child: BrandWordmark(height: size.wordmark),
+            // The wordmark at the start, and all the room between it and the chips at the end: a
+            // Flexible beside a Spacer would split that room in two and push the chips to the middle
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: GestureDetector(
+                  onTap: () => context.go('/menu'),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: size.bar - 20, maxWidth: MediaQuery.sizeOf(context).width / 2),
+                    child: BrandWordmark(height: size.wordmark),
+                  ),
                 ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             ValueListenableBuilder<bool>(
               valueListenable: island.busy,
               builder: (context, busy, child) => IgnorePointer(

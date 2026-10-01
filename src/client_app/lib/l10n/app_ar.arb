@@ -471,5 +471,9 @@
   "ninjaStaffSwitching": "الموظفين بيحوّلوها",
   "ninjaRateOnceSwitched": "{price} من أول ما يحوّلوها",
   "ninjaSwitchingTo": "بنحوّلها لـ {option}",
-  "bookStartAt": "ابدأ بـ"
+  "bookStartAt": "ابدأ بـ",
+  "ninjaHeldFor": "محجوزة ليك",
+  "ninjaHoldWalkOver": "تعالى ووري ده للكاشير",
+  "ninjaHoldFor": "الساعة {time}",
+  "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك."
 }

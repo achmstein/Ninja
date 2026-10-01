@@ -763,5 +763,11 @@
   "@ninjaRateOnceSwitched": {"placeholders": {"price": {"type": "String"}}},
   "ninjaSwitchingTo": "Switching to {option}",
   "@ninjaSwitchingTo": {"placeholders": {"option": {"type": "String"}}},
-  "bookStartAt": "Start at"
+  "bookStartAt": "Start at",
+  "ninjaHeldFor": "Held for you",
+  "ninjaHoldWalkOver": "Walk over and show this at the counter",
+  "ninjaHoldFor": "For {time}",
+  "@ninjaHoldFor": {"placeholders": {"time": {"type": "String"}}},
+  "ninjaHoldRanOut": "Your hold ran out. {name} may still have it for you.",
+  "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}}
 }

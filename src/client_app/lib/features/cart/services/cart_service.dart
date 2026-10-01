@@ -1,13 +1,50 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../profile/providers/loyalty_provider.dart';
 import '../models/cart_item.dart';
 
-/// Cart state notifier
+/// Where the order is kept between visits: the web's own key
+const _storageKey = 'ninja-cart';
+
+/// The order being put together (client_web's lib/cart.ts): kept on the
+/// phone, so a reload or a closed app finds the tray as it was left
 class CartNotifier extends Notifier<Cart> {
   @override
-  Cart build() => Cart();
+  Cart build() {
+    _restore();
+    return Cart();
+  }
+
+  @override
+  set state(Cart value) {
+    super.state = value;
+    _save(value);
+  }
+
+  Future<void> _restore() async {
+    try {
+      final raw = (await SharedPreferences.getInstance()).getString(_storageKey);
+      if (raw == null) return;
+      final items = [for (final json in jsonDecode(raw) as List) CartItem.fromStorage(json as Map<String, dynamic>)];
+      // Something added before the stored order was read stays, after it
+      if (items.isNotEmpty) super.state = Cart(items: [...items, ...super.state.items]);
+    } catch (_) {
+      // A stored order this version cannot read: start empty
+    }
+  }
+
+  Future<void> _save(Cart cart) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      cart.isEmpty ? await prefs.remove(_storageKey) : await prefs.setString(_storageKey, jsonEncode([for (final i in cart.items) i.toStorage()]));
+    } catch (_) {
+      // Not kept this time; the order on screen is unchanged
+    }
+  }
 
   /// Add item to cart
   void addItem(CartItem item) {

@@ -1421,4 +1421,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookStartAt => 'Start at';
+
+  @override
+  String get ninjaHeldFor => 'Held for you';
+
+  @override
+  String get ninjaHoldWalkOver => 'Walk over and show this at the counter';
+
+  @override
+  String ninjaHoldFor(String time) {
+    return 'For $time';
+  }
+
+  @override
+  String ninjaHoldRanOut(String name) {
+    return 'Your hold ran out. $name may still have it for you.';
+  }
 }

@@ -26,6 +26,14 @@ class SelectedCustomization {
       'priceAdjustment': priceAdjustment,
     };
   }
+
+  factory SelectedCustomization.fromJson(Map<String, dynamic> json) => SelectedCustomization(
+        customizationId: (json['customizationId'] as num).toInt(),
+        customizationName: LocalizedText.parse(json['customizationName']),
+        optionId: (json['optionId'] as num).toInt(),
+        optionName: LocalizedText.parse(json['optionName']),
+        priceAdjustment: (json['priceAdjustment'] as num?)?.toDouble() ?? 0,
+      );
 }
 
 /// Cart item with customizations
@@ -121,6 +129,33 @@ class CartItem {
       'suggestion': suggestion ?? 'None',
     };
   }
+
+  /// The line as the phone keeps it between visits: every field, read back by [CartItem.fromStorage]
+  Map<String, dynamic> toStorage() => {
+        'productId': productId,
+        'productName': productName.toJson(),
+        'unitPrice': unitPrice,
+        'originalUnitPrice': originalUnitPrice,
+        'pictureUri': pictureUri,
+        'quantity': quantity,
+        'specialInstructions': specialInstructions,
+        'selectedCustomizations': selectedCustomizations.map((c) => c.toJson()).toList(),
+        'suggestion': suggestion,
+      };
+
+  factory CartItem.fromStorage(Map<String, dynamic> json) => CartItem(
+        productId: (json['productId'] as num).toInt(),
+        productName: LocalizedText.parse(json['productName']),
+        unitPrice: (json['unitPrice'] as num).toDouble(),
+        originalUnitPrice: (json['originalUnitPrice'] as num?)?.toDouble(),
+        pictureUri: json['pictureUri'] as String?,
+        quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+        specialInstructions: json['specialInstructions'] as String?,
+        selectedCustomizations: [
+          for (final c in (json['selectedCustomizations'] as List? ?? const [])) SelectedCustomization.fromJson(c as Map<String, dynamic>),
+        ],
+        suggestion: json['suggestion'] as String?,
+      );
 }
 
 /// Shopping cart state

@@ -17,12 +17,14 @@ Future<T?> showNinjaSheet<T>({
   bool dismissible = true,
   EdgeInsetsGeometry padding = const EdgeInsets.fromLTRB(20, 0, 20, 20),
 }) {
-  return Navigator.of(context).push<T>(_NinjaSheetRoute<T>(
+  // Over everything, the dock too: on a tab's own navigator the sheet would open under the dock
+  final navigator = Navigator.of(context, rootNavigator: true);
+  return navigator.push<T>(_NinjaSheetRoute<T>(
     builder: builder,
     dismissible: dismissible,
     padding: padding,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    capturedThemes: InheritedTheme.capture(from: context, to: Navigator.of(context).context),
+    capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
   ));
 }
 

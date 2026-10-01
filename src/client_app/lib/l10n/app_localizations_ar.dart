@@ -1418,6 +1418,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bookStartAt => 'ابدأ بـ';
+
+  @override
+  String get ninjaHeldFor => 'محجوزة ليك';
+
+  @override
+  String get ninjaHoldWalkOver => 'تعالى ووري ده للكاشير';
+
+  @override
+  String ninjaHoldFor(String time) {
+    return 'الساعة $time';
+  }
+
+  @override
+  String ninjaHoldRanOut(String name) {
+    return 'وقت الحجز خلص. ممكن $name لسه ماسكهالك.';
+  }
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2478,4 +2494,20 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get bookStartAt => 'البدء بسعر';
+
+  @override
+  String get ninjaHeldFor => 'محجوزة لك';
+
+  @override
+  String get ninjaHoldWalkOver => 'تفضّل بالحضور وأظهر هذه الشاشة عند الكاشير';
+
+  @override
+  String ninjaHoldFor(String time) {
+    return 'الساعة $time';
+  }
+
+  @override
+  String ninjaHoldRanOut(String name) {
+    return 'انتهت مدة الحجز. قد يظل $name محتفظًا به لك.';
+  }
 }

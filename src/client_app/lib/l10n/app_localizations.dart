@@ -2594,6 +2594,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start at'**
   String get bookStartAt;
+
+  /// No description provided for @ninjaHeldFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Held for you'**
+  String get ninjaHeldFor;
+
+  /// No description provided for @ninjaHoldWalkOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk over and show this at the counter'**
+  String get ninjaHoldWalkOver;
+
+  /// No description provided for @ninjaHoldFor.
+  ///
+  /// In en, this message translates to:
+  /// **'For {time}'**
+  String ninjaHoldFor(String time);
+
+  /// No description provided for @ninjaHoldRanOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Your hold ran out. {name} may still have it for you.'**
+  String ninjaHoldRanOut(String name);
 }
 
 class _AppLocalizationsDelegate

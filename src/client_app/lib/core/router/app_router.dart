@@ -73,6 +73,10 @@ String? _pendingLink;
 /// it afterwards.
 void rememberLinkForAfterSignIn(String location) => _pendingLink = location;
 
+/// Where the app was opened (a reload keeps the page in the address bar): the
+/// splash waits out the sign-in check, then goes back there rather than to the menu
+String? _openedAt;
+
 /// App router provider
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = _AuthNotifier(ref);
@@ -98,14 +102,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       // way to sign in yet, which is the point of it
       final isClaiming = currentLocation == '/claim';
 
-      // While initializing, stay on or go to splash
+      // While initializing, stay on or go to splash, remembering the page that was asked for
       if (isInitializing) {
+        if (!isOnSplash && !isLoggingIn && !isRegistering) _openedAt ??= state.uri.toString();
         return isOnSplash ? null : '/splash';
       }
 
-      // After initialization, redirect from splash based on auth status
+      // After initialization, back to the page asked for, or the menu; signed out, it waits for after sign-in
       if (isOnSplash) {
-        return isAuthenticated ? '/menu' : '/login';
+        final opened = _openedAt;
+        _openedAt = null;
+        if (isAuthenticated) return opened ?? '/menu';
+        if (opened != null && (opened.startsWith('/p/') || opened.startsWith('/claim'))) return opened;
+        if (opened != null) _pendingLink = opened;
+        return '/login';
       }
 
       // Redirect to login if not authenticated

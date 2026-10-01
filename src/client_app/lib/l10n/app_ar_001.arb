@@ -308,5 +308,9 @@
   "ninjaStaffSwitching": "الموظفون يحوّلونها",
   "ninjaRateOnceSwitched": "{price} بعد أن يحوّلها الموظفون",
   "ninjaSwitchingTo": "جارٍ التحويل إلى {option}",
-  "bookStartAt": "البدء بسعر"
+  "bookStartAt": "البدء بسعر",
+  "ninjaHeldFor": "محجوزة لك",
+  "ninjaHoldWalkOver": "تفضّل بالحضور وأظهر هذه الشاشة عند الكاشير",
+  "ninjaHoldFor": "الساعة {time}",
+  "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك."
 }
