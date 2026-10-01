@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
+import '../../bills/models/bill.dart';
+import '../../bills/services/bills_service.dart';
+import '../../bills/widgets/bill_tile.dart';
+import '../../orders/services/order_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -343,6 +347,9 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
             // controller in a console room, a switch per other rate option
             _QuickActionGrid(actions: _quickActions(session)),
 
+            // Its bills, as they run: the room's time and the rounds on it, the way to pay
+            ..._openBills(),
+
             // Leave session button (non-owners only)
             if (session.customerId != null &&
                 session.customerId != ref.read(authServiceProvider).userId) ...[
@@ -365,6 +372,18 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
             ],
           ],
         );
+  }
+
+  List<Widget> _openBills() {
+    final bills = ref.watch(myBillsProvider).value ?? const <Bill>[];
+    final orders = ref.watch(ordersProvider).orders;
+    final ordersById = {for (final order in orders) order.id: order};
+    return [
+      for (final bill in bills.where((b) => b.isOpen)) ...[
+        const SizedBox(height: 20),
+        BillTile(bill: bill, ordersById: ordersById),
+      ],
+    ];
   }
 
   List<_QuickAction> _quickActions(Stay session) {
