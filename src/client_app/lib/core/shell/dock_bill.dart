@@ -178,15 +178,19 @@ class DockBill extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            // With a bill to show, the room's time rides along the top line
-                            if (stay != null && total > 0 && stage == null)
+                            // With a bill to show, the room's time rides along the top line. The dot stands on its
+                            // own so it sits between the name and the time in either direction: inside the time's
+                            // left-to-right text it ended up after the time in Arabic
+                            if (stay != null && total > 0 && stage == null) ...[
+                              Text(' · ', style: theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7))),
                               _EverySecond(
                                 builder: (context) => Text(
-                                  ' · ${stay.formattedDuration}',
+                                  stay.formattedDuration,
                                   textDirection: TextDirection.ltr,
                                   style: theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7), fontFeatures: NinjaTypography.tabular),
                                 ),
                               ),
+                            ],
                           ],
                         ),
                       if (total > 0)
