@@ -18,6 +18,7 @@ import '../../orders/services/order_service.dart';
 import '../../profile/providers/account_provider.dart';
 import '../models/bill.dart';
 import '../services/bills_service.dart';
+import '../widgets/bill_swipe.dart';
 import '../widgets/bill_tile.dart';
 import '../widgets/order_tile.dart';
 
@@ -91,7 +92,8 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
       children = [EmptyState(icon: LucideIcons.receiptText, title: l10n.noBillsYet)];
     } else {
       children = [
-        for (final bill in open) BillTile(bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
+        if (open.isNotEmpty)
+          BillSwipe(children: [for (final bill in open) BillTile(key: ValueKey(bill.id), bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const [])]),
         if (waiting.isNotEmpty && open.isEmpty) _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
         if (turnedDown.isNotEmpty) _OrderGroup(title: l10n.statusCancelled, orders: turnedDown),
         const _OnYourTab(),

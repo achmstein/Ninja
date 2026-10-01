@@ -6,6 +6,7 @@ import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
 import '../../bills/models/bill.dart';
 import '../../bills/services/bills_service.dart';
+import '../../bills/widgets/bill_swipe.dart';
 import '../../bills/widgets/bill_tile.dart';
 import '../../orders/services/order_service.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -381,9 +382,11 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
     final open = bills.where((b) => b.isOpen).toList();
     final pending = placeRounds(bills, orders);
     return [
-      for (final bill in open) ...[
+      if (open.isNotEmpty) ...[
         const SizedBox(height: 20),
-        BillTile(bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
+        BillSwipe(children: [
+          for (final bill in open) BillTile(key: ValueKey(bill.id), bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
+        ]),
       ],
     ];
   }
