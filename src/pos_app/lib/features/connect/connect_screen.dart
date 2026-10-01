@@ -159,7 +159,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   onPressed: () => widget.onLanguage!(locale.languageCode == 'ar' ? const Locale('en') : const Locale('ar')),
                   child: Text(
                     locale.languageCode == 'ar' ? 'English' : 'العربية',
-                    style: const TextStyle(color: muted, fontFamily: 'Cairo'),
+                    style: const TextStyle(color: muted, fontFamily: 'Alexandria'),
                   ),
                 ),
               ),

@@ -67,7 +67,7 @@ Widget _app(Widget home, {_Tickets? tickets}) => ProviderScope(
 
 /// The bundled fonts, so widths are the tablet's and not the test font's
 Future<void> _loadFonts() async {
-  for (final family in ['Inter', 'Cairo']) {
+  for (final family in ['Inter', 'Alexandria']) {
     final loader = FontLoader(family);
     for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
       loader.addFont(rootBundle.load('assets/fonts/$family-$weight.ttf'));

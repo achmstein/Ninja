@@ -98,7 +98,7 @@ Widget _app(_Shifts shifts, CashMovementType type) => ProviderScope(
 /// The bundled fonts, so widths are the tablet's and not the test font's
 /// (which draws every glyph a full em wide and overflows narrow cells)
 Future<void> loadFonts() async {
-  for (final family in ['Inter', 'Cairo']) {
+  for (final family in ['Inter', 'Alexandria']) {
     final loader = FontLoader(family);
     for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
       loader.addFont(rootBundle.load('assets/fonts/$family-$weight.ttf'));

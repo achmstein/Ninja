@@ -38,9 +38,9 @@
     cursor: pointer;
   }
 
-  /* Arabic UI renders in Cairo (same as the customer apps) */
+  /* Arabic UI renders in Alexandria: a modern geometric face beside Inter */
   :root[dir='rtl'] body {
-    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+    font-family: 'Alexandria', 'Inter', system-ui, sans-serif;
   }
 
   /* Prevent focus zoom on mobile devices */
@@ -172,7 +172,7 @@
     padding: 4mm 0 8mm;
     color: #000;
     background: #fff;
-    font-family: 'Inter', 'Cairo', system-ui, sans-serif;
+    font-family: 'Inter', 'Alexandria', system-ui, sans-serif;
     font-size: 12px;
     line-height: 1.4;
   }
