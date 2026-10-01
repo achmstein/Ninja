@@ -318,5 +318,6 @@
   "ninjaPlayedWith": "مع",
   "ninjaPlacesRooms": "الغرف",
   "ninjaPlacesTables": "الطاولات",
-  "ninjaPlacesStations": "الألعاب"
+  "ninjaPlacesStations": "الألعاب",
+  "itemNotFound": "هذا الصنف غير موجود في القائمة"
 }

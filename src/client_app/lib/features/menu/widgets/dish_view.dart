@@ -7,6 +7,7 @@ import '../../../core/brand/brand_style.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/shell/dish_layer.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/utils/money.dart';
@@ -86,14 +87,16 @@ class _DishPhotoAnchorState extends State<DishPhotoAnchor> {
 /// The spring a dish opens and closes on (the web's springOpen)
 final _openSpring = SpringCurve(Motion.springOpen);
 
-/// Opens [item] over the app (client_web's tune.tsx): its photo leaves the
+/// Opens [item] over the page (client_web's tune.tsx): its photo leaves the
 /// dish ([DishPhotos]) and becomes the view's banner, the page coming up
 /// round it, and closing takes it back. Added, the view fades instead: the
 /// dish is in the tray. [suggestion] says the dish was suggested
-/// ('Pairing'), which its line keeps saying.
+/// ('Pairing'), which its line keeps saying. In the app's frame it opens
+/// under the dock ([DishLayer]), the tray in reach; out of it, over all.
 Future<void> showDishView(BuildContext context, MenuItem item, {String? suggestion}) {
   final from = DishPhotos.find(item.id);
-  return Navigator.of(context, rootNavigator: true).push(DishRoute(item: item, from: from, suggestion: suggestion));
+  final navigator = DishLayer.maybeOf(context) ?? Navigator.of(context, rootNavigator: true);
+  return navigator.push(DishRoute(item: item, from: from, suggestion: suggestion));
 }
 
 class DishRoute extends PageRoute<void> {
@@ -306,16 +309,24 @@ class _DishViewState extends ConsumerState<DishView> {
 
   void _close() => Navigator.of(context).pop();
 
-  /// A suggestion tapped: in with its defaults when nothing needs choosing, else it opens in this one's place
-  void _suggest(MenuItem suggested) {
+  /// A suggestion tapped: in with its defaults when nothing needs choosing, its photo flying from
+  /// its card to the tray as every add's does; else it opens in this one's place, grown out of that photo
+  void _suggest(MenuItem suggested, Rect? photo) {
     if (canQuickAdd(suggested)) {
       HapticFeedback.selectionClick();
       final cart = ref.read(cartProvider.notifier);
-      trayFlights.fly(from: null, land: () => cart.addItem(suggestedLine(suggested, 'Pairing')));
+      trayFlights.fly(
+        from: photo,
+        radius: Ninja.tileRadius,
+        photo: suggested.pictureUri,
+        reduced: reduceMotion(context),
+        land: () => cart.addItem(suggestedLine(suggested, 'Pairing')),
+      );
       return;
     }
     widget.route.quiet = true;
-    Navigator.of(context).pushReplacement(DishRoute(item: suggested, suggestion: 'Pairing'));
+    final from = photo == null || reduceMotion(context) ? null : (rect: photo, radius: Ninja.tileRadius);
+    Navigator.of(context).pushReplacement(DishRoute(item: suggested, from: from, suggestion: 'Pairing'));
   }
 
   @override
@@ -405,7 +416,8 @@ class _DishViewState extends ConsumerState<DishView> {
         color: c.background,
         border: Border(top: BorderSide(color: c.border)),
       ),
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + media.viewPadding.bottom),
+      // Clear of what is under it: the dock in the app's frame, else the phone's own inset
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + media.padding.bottom),
       child: Row(
         children: [
           NinjaIconButton(
@@ -788,15 +800,30 @@ class _OptionPill extends StatelessWidget {
 }
 
 /// What goes well with the dish: a small card each, in the business's
-/// order, sideways when there are more than fit
-class _GoesWellWith extends ConsumerWidget {
+/// order, sideways when there are more than fit. A pick says where its
+/// card's photo is on screen, for its flight.
+class _GoesWellWith extends ConsumerStatefulWidget {
   final List<MenuItem> items;
-  final ValueChanged<MenuItem> onPick;
+  final void Function(MenuItem item, Rect? photo) onPick;
 
   const _GoesWellWith({required this.items, required this.onPick});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_GoesWellWith> createState() => _GoesWellWithState();
+}
+
+class _GoesWellWithState extends ConsumerState<_GoesWellWith> {
+  final _photos = <int, GlobalKey>{};
+
+  Rect? _photoOf(MenuItem item) {
+    final box = _photos[item.id]?.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
     final l10n = AppLocalizations.of(context)!;
     final theme = context.theme;
     final c = theme.colors;
@@ -817,7 +844,7 @@ class _GoesWellWith extends ConsumerWidget {
               for (final (i, item) in items.indexed) ...[
                 if (i > 0) const SizedBox(width: 10),
                 Pressable(
-                  onTap: () => onPick(item),
+                  onTap: () => widget.onPick(item, _photoOf(item)),
                   scale: 0.98,
                   semanticLabel: l10n.addSuggestion(item.name.getText(locale)),
                   child: Container(
@@ -828,6 +855,7 @@ class _GoesWellWith extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         AspectRatio(
+                          key: _photos.putIfAbsent(item.id, GlobalKey.new),
                           aspectRatio: 4 / 3,
                           child: _Photo(item: item, iconSize: 24),
                         ),

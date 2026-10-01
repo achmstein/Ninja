@@ -775,5 +775,6 @@
   "ninjaPlayedWith": "With",
   "ninjaPlacesRooms": "Rooms",
   "ninjaPlacesTables": "Tables",
-  "ninjaPlacesStations": "Stations"
+  "ninjaPlacesStations": "Stations",
+  "itemNotFound": "This item isn't on the menu"
 }

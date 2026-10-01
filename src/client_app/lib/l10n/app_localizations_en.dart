@@ -1455,4 +1455,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ninjaPlacesStations => 'Stations';
+
+  @override
+  String get itemNotFound => 'This item isn\'t on the menu';
 }

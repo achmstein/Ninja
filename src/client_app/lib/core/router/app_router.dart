@@ -7,6 +7,7 @@ import '../auth/auth_service.dart';
 import '../brand/brand_mark.dart';
 import '../brand/brand_provider.dart';
 import '../../features/receipts/screens/receipt_screen.dart';
+import '../../features/menu/dish_link.dart';
 import '../../features/menu/screens/menu_screen.dart';
 import '../../features/bills/screens/bills_screen.dart';
 import '../../features/places/screens/places_screen.dart';
@@ -310,6 +311,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // A dish by its link (client_web's item.$itemId.tsx): the menu, with the dish
+      // opened over it once the menu is in, or the island saying it is not on it
+      GoRoute(
+        path: '/item/:itemId',
+        redirect: (context, state) {
+          pendingDish.value = dishIdFromLink(state.pathParameters['itemId']);
+          return '/menu';
+        },
+      ),
 
       // The tabs, in the frame with the top bar and the dock
       ShellRoute(
