@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,8 @@ import '../widgets/destination_chip.dart';
 import '../../features/places/screens/places_screen.dart' show showRoomSheet;
 import '../../features/places/services/place_service.dart';
 import '../../features/bills/widgets/open_bills.dart';
+import '../../features/service_request/models/service_request.dart';
+import '../../features/service_request/services/service_request_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
 
@@ -78,7 +82,15 @@ class DockBill extends ConsumerWidget {
       OrderStage.cancelled => l10n.orderStageCancelled,
       null => null,
     };
-    final line = stageWord != null ? '$stageWord${live?.orderId != null ? ' · #${live!.orderId}' : ''}' : (total > 0 ? place : null);
+    // The room's clock ticks in the row (client_web's dock-bill.tsx), so the tab it lived on can go back to booking
+    final stay = destination?.isStay == true
+        ? ref.watch(myStaysProvider).value?.where((s) => s.id == destination!.sessionId && s.startedAt != null).firstOrNull
+        : null;
+    // The order on its way says where it is in the top line; otherwise the line is where the customer is
+    final line = stageWord != null ? '$stageWord${live?.orderId != null ? ' · #${live!.orderId}' : ''}' : (total > 0 || stay != null ? place : null);
+    // A dot on the place while the waiter or the bill is asked for, so the answer is one tap away
+    final asking = destination != null &&
+        ref.watch(myRequestsProvider).any((r) => r.placeId == destination.placeId && r.isOpen && r.requestType != ServiceRequestType.changeOption);
     final label = destination == null
         ? l10n.ninjaBillOpen
         : destination.isStay
@@ -117,15 +129,34 @@ class DockBill extends ConsumerWidget {
             child: Row(
               children: [
                 // The order's stage when one is on its way (its colour saying how it is going), else the place
-                AnimatedContainer(
-                  duration: Motion.slow,
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
-                  child: BlurSwap(
-                    alignment: Alignment.center,
-                    child: Icon(icon, key: ValueKey(icon), size: 20, color: ink),
-                  ),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedContainer(
+                      duration: Motion.slow,
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+                      child: BlurSwap(
+                        alignment: Alignment.center,
+                        child: Icon(icon, key: ValueKey(icon), size: 20, color: ink),
+                      ),
+                    ),
+                    if (asking)
+                      PositionedDirectional(
+                        end: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFBBF24),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: c.background, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -134,20 +165,44 @@ class DockBill extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (line != null)
-                        BlurSwap(
-                          child: Text(
-                            line,
-                            key: ValueKey(line),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.localeText(theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7))),
-                          ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: BlurSwap(
+                                child: Text(
+                                  line,
+                                  key: ValueKey(line),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.localeText(theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7))),
+                                ),
+                              ),
+                            ),
+                            // With a bill to show, the room's time rides along the top line
+                            if (stay != null && total > 0 && stage == null)
+                              _EverySecond(
+                                builder: (context) => Text(
+                                  ' · ${stay.formattedDuration}',
+                                  textDirection: TextDirection.ltr,
+                                  style: theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7), fontFeatures: NinjaTypography.tabular),
+                                ),
+                              ),
+                          ],
                         ),
                       if (total > 0)
                         RollingNumber(
                           money(total),
                           value: total,
                           style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground)),
+                        )
+                      else if (stay != null)
+                        // Nothing on the bill yet: the room's time is the row's big line
+                        _EverySecond(
+                          builder: (context) => Text(
+                            stay.formattedDuration,
+                            textDirection: TextDirection.ltr,
+                            style: theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground, fontFeatures: NinjaTypography.tabular),
+                          ),
                         )
                       else
                         Text(
@@ -179,6 +234,37 @@ class DockBill extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Rebuilds what it holds once a second: the room's clock in the row
+class _EverySecond extends StatefulWidget {
+  final WidgetBuilder builder;
+
+  const _EverySecond({required this.builder});
+
+  @override
+  State<_EverySecond> createState() => _EverySecondState();
+}
+
+class _EverySecondState extends State<_EverySecond> {
+  late final Timer _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
 }
 
 /// The bills running now on the slab sheet, out of the dock's row

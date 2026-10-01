@@ -22,8 +22,6 @@ import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../service_request/models/service_request.dart';
-import '../../pay/services/pay_service.dart';
-import '../../pay/widgets/pay_sheet.dart';
 import '../models/place.dart';
 import '../../../core/services/signalr_service.dart';
 import '../services/place_service.dart';
@@ -390,20 +388,14 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> with PlaceRequ
         if (OpenBills.any(ref)) ...[const SizedBox(height: 20), const OpenBills()],
       ];
 
+  /// The waiter, the bill and, in a console room, the controller (client_web's stay-requests.tsx);
+  /// paying is the bill's own bar, under the bill
   List<RequestAction> _quickActions(Stay session) {
     final l10n = AppLocalizations.of(context)!;
-    final branchId = ref.watch(selectedBranchIdProvider);
     return [
-      requestAction(ServiceRequestType.callWaiter, LucideIcons.bellRing, l10n.callWaiter),
-      if (session.takesControllerRequests) requestAction(ServiceRequestType.controllerChange, LucideIcons.gamepad2, l10n.controller),
+      requestAction(ServiceRequestType.callWaiter, LucideIcons.bell, l10n.callWaiter),
       requestAction(ServiceRequestType.receiptToPay, LucideIcons.receipt, l10n.getBill),
-      // Online payments: the room's open bill, paid or split from here
-      if (ref.watch(featuresProvider).onlinePayments && branchId != null)
-        RequestAction(
-          icon: LucideIcons.creditCard,
-          label: l10n.payTheBill,
-          onTap: () => showPaySheet(context, PaySource.place(session.placeId, branchId)),
-        ),
+      if (session.takesControllerRequests) requestAction(ServiceRequestType.controllerChange, LucideIcons.gamepad2, l10n.controller),
     ];
   }
 

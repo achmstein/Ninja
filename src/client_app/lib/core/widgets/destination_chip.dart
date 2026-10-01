@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../ui/ui.dart';
+import '../brand/brand_style.dart';
 import '../../features/bills/widgets/open_bills.dart';
 import '../../features/service_request/widgets/request_tiles.dart';
 import '../models/localized_text.dart';
@@ -94,20 +95,16 @@ class DestinationChip extends ConsumerWidget {
 Future<void> showPlaceRequests(BuildContext context, OrderDestination destination) {
   return showNinjaSheet<void>(
     context: context,
-    builder: (context) => NinjaDialog(
-      title: Text(destination.name.localized(context)),
-      // The table first (the waiter, the bill, the way to pay), then its bills
-      body: Consumer(
-        builder: (context, ref, _) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _TableRequests(destination: destination),
-            if (OpenBills.any(ref)) ...[const SizedBox(height: 20), const OpenBills()],
-          ],
-        ),
+    // The table first (where, the waiter, the bill, the way to pay), then its bills
+    builder: (context) => Consumer(
+      builder: (context, ref, _) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TableRequests(destination: destination),
+          if (OpenBills.any(ref)) ...[const SizedBox(height: 20), const OpenBills()],
+        ],
       ),
-      actions: const [],
     ),
   );
 }
@@ -130,24 +127,62 @@ class _TableRequestsState extends ConsumerState<_TableRequests> with PlaceReques
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final branchId = ref.watch(selectedBranchIdProvider);
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: RequestGrid(actions: [
-        requestAction(ServiceRequestType.callWaiter, LucideIcons.bellRing, l10n.callWaiter),
-        requestAction(ServiceRequestType.receiptToPay, LucideIcons.receipt, l10n.getBill),
+    final theme = context.theme;
+    final c = theme.colors;
+    final kind = widget.destination.placeKind;
+    // client_web's table-view.tsx: the table on top, its kind drawn big and faint behind it
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRect(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PositionedDirectional(
+                end: -24,
+                bottom: -32,
+                child: Transform.rotate(angle: -0.21, child: Icon(kind.icon, size: 160, color: c.foreground.withValues(alpha: 0.08))),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(color: c.muted, shape: BoxShape.circle),
+                      child: Icon(kind.icon, size: 28, color: c.foreground),
+                    ),
+                    const SizedBox(height: 12),
+                    BrandHeading(widget.destination.name.localized(context), style: theme.typography.title.copyWith(color: c.foreground)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // The waiter and the bill, side by side
+        RequestGrid(actions: [
+          requestAction(ServiceRequestType.callWaiter, LucideIcons.bell, l10n.callWaiter),
+          requestAction(ServiceRequestType.receiptToPay, LucideIcons.receipt, l10n.getBill),
+        ]),
         // Online payments: the table's open bill, paid or split from the phone
-        if (ref.watch(featuresProvider).onlinePayments && branchId != null)
-          RequestAction(
-            icon: LucideIcons.creditCard,
-            label: l10n.payTheBill,
-            onTap: () {
+        if (ref.watch(featuresProvider).onlinePayments && branchId != null) ...[
+          const SizedBox(height: 12),
+          NinjaButton(
+            variant: NinjaButtonVariant.secondary,
+            prefix: const Icon(LucideIcons.creditCard),
+            onPress: () {
               final navigator = Navigator.of(context);
               final sheetContext = navigator.context;
               navigator.pop();
               showPaySheet(sheetContext, PaySource.place(widget.destination.placeId, branchId));
             },
+            child: Text(l10n.payTheBill),
           ),
-      ]),
+        ],
+      ],
     );
   }
 }

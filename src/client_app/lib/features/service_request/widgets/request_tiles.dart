@@ -29,14 +29,7 @@ class RequestAction {
   final bool busy;
   final VoidCallback onTap;
 
-  const RequestAction({
-    required this.icon,
-    required this.label,
-    this.phase = RequestPhase.idle,
-    this.by,
-    this.busy = false,
-    required this.onTap,
-  });
+  const RequestAction({required this.icon, required this.label, this.phase = RequestPhase.idle, this.by, this.busy = false, required this.onTap});
 }
 
 /// What the customer can ask for from a place (client_web's service-requests.ts),
@@ -58,10 +51,7 @@ mixin PlaceRequests<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// Where one kind of request from this place stands, as its tile shows it
   ({RequestPhase phase, int? id, String? by}) requestState(ServiceRequestType type) {
     if (sendingRequest == type) return (phase: RequestPhase.sending, id: null, by: null);
-    final open = ref
-        .watch(myRequestsProvider)
-        .where((r) => r.requestType == type && r.placeId == requestTarget.placeId && r.isOpen)
-        .firstOrNull;
+    final open = ref.watch(myRequestsProvider).where((r) => r.requestType == type && r.placeId == requestTarget.placeId && r.isOpen).firstOrNull;
     if (open == null) return (phase: RequestPhase.idle, id: null, by: null);
     return open.status == ServiceRequestStatus.acknowledged
         ? (phase: RequestPhase.onTheWay, id: open.id, by: open.acknowledgedBy)
@@ -152,7 +142,9 @@ mixin PlaceRequests<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 }
 
-/// Two tiles a row, however many the place can take
+/// The tiles in one row (client_web's stay-requests.tsx and table-view.tsx):
+/// two at a table, three in a console room; every tile as tall as the
+/// tallest, however its status wraps
 class RequestGrid extends StatelessWidget {
   final List<RequestAction> actions;
 
@@ -160,26 +152,14 @@ class RequestGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    for (var i = 0; i < actions.length; i += 2) {
-      final pair = actions.skip(i).take(2).toList();
-      rows.add(Row(
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (var j = 0; j < pair.length; j++) ...[
-            if (j > 0) const SizedBox(width: 12),
-            Expanded(
-              child: RequestTile(action: pair[j]),
-            ),
-          ],
-          if (pair.length == 1) ...[
-            const SizedBox(width: 12),
-            const Expanded(child: SizedBox.shrink()),
-          ],
+          for (final (i, action) in actions.indexed) ...[if (i > 0) const SizedBox(width: 12), Expanded(child: RequestTile(action: action))],
         ],
-      ));
-      if (i + 2 < actions.length) rows.add(const SizedBox(height: 12));
-    }
-    return Column(children: rows);
+      ),
+    );
   }
 }
 
@@ -219,8 +199,10 @@ class RequestTile extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 96),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
+        // The icon at the top, the name and where it stands at the bottom, however tall the row
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             AnimatedContainer(
               duration: Motion.slow,
@@ -230,7 +212,12 @@ class RequestTile extends StatelessWidget {
               child: BlurSwap(
                 alignment: Alignment.center,
                 child: phase == RequestPhase.sending
-                    ? SizedBox(key: const ValueKey('sending'), width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: ink))
+                    ? SizedBox(
+                        key: const ValueKey('sending'),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: ink),
+                      )
                     : Icon(
                         switch (phase) {
                           RequestPhase.sent => LucideIcons.hourglass,
@@ -244,19 +231,27 @@ class RequestTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(action.label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground, height: 1.3))),
-            // A third of a phone is narrow: the status wraps, and the way to take it back is a size down
-            BlurSwap(
-              child: note == null
-                  ? const SizedBox.shrink(key: ValueKey('none'))
-                  : Column(
-                      key: ValueKey(note),
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(note, style: caption),
-                        if (phase == RequestPhase.sent) Text(l10n.tapToCancel, style: caption.copyWith(fontSize: 11)),
-                      ],
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  action.label,
+                  style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground, height: 1.3)),
+                ),
+                // A third of a phone is narrow: the status wraps, and the way to take it back is a size down
+                BlurSwap(
+                  child: note == null
+                      ? const SizedBox.shrink(key: ValueKey('none'))
+                      : Column(
+                          key: ValueKey(note),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(note, style: caption),
+                            if (phase == RequestPhase.sent) Text(l10n.tapToCancel, style: caption.copyWith(fontSize: 11)),
+                          ],
+                        ),
+                ),
+              ],
             ),
           ],
         ),
