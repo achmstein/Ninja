@@ -96,7 +96,10 @@ class BillTile extends ConsumerStatefulWidget {
   /// Rounds on their way to this bill, shown faint on top of its stack
   final List<PendingRound> pending;
 
-  const BillTile({super.key, required this.bill, this.ordersById, this.pending = const []});
+  /// The bill forming out of orders the till has no bill for yet: no receipt and nothing to pay
+  final bool forming;
+
+  const BillTile({super.key, required this.bill, this.ordersById, this.pending = const [], this.forming = false});
 
   @override
   ConsumerState<BillTile> createState() => _BillTileState();
@@ -347,14 +350,16 @@ class _BillTileState extends ConsumerState<BillTile> {
                           if (!parts.shared && bill.vat > 0 && !bill.vatIncluded) row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat)),
                           if (parts.shared) row(l10n.billTotal, '$approx${money(parts.total)}'),
                           if (bill.refundedTotal > 0) row(l10n.refunded, '−${money(bill.refundedTotal)}', style: small.copyWith(color: c.destructive)),
-                          const SizedBox(height: 8),
-                          NinjaButton(
-                            variant: NinjaButtonVariant.secondary,
-                            size: NinjaButtonSize.sm,
-                            prefix: const Icon(LucideIcons.receiptText, size: 16),
-                            onPress: () => context.push('/receipts/${bill.id}'),
-                            child: Text(l10n.ninjaOpenBill),
-                          ),
+                          if (!widget.forming) ...[
+                            const SizedBox(height: 8),
+                            NinjaButton(
+                              variant: NinjaButtonVariant.secondary,
+                              size: NinjaButtonSize.sm,
+                              prefix: const Icon(LucideIcons.receiptText, size: 16),
+                              onPress: () => context.push('/receipts/${bill.id}'),
+                              child: Text(l10n.ninjaOpenBill),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -370,7 +375,7 @@ class _BillTileState extends ConsumerState<BillTile> {
         // An open bill is the dock's dark slab; a closed one a light panel
         open ? SlabCard(child: card) : Panel(padding: const EdgeInsets.all(20), child: card),
         // Paying from the phone, where the business takes it: under the slab
-        if (open) PayBillBar(ticketId: bill.id),
+        if (open && !widget.forming) PayBillBar(ticketId: bill.id),
         // A paid bill is the thanks: the stars for the rounds on it
         if (bill.isSettled && widget.ordersById != null)
           Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: BillStars(bill: bill, ordersById: widget.ordersById!)),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../ui/ui.dart';
+import '../../features/bills/widgets/open_bills.dart';
 import '../../features/service_request/widgets/request_tiles.dart';
 import '../models/localized_text.dart';
 import '../providers/current_place_provider.dart';
@@ -95,7 +96,17 @@ Future<void> showPlaceRequests(BuildContext context, OrderDestination destinatio
     context: context,
     builder: (context) => NinjaDialog(
       title: Text(destination.name.localized(context)),
-      body: _TableRequests(destination: destination),
+      // The table first (the waiter, the bill, the way to pay), then its bills
+      body: Consumer(
+        builder: (context, ref, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _TableRequests(destination: destination),
+            if (OpenBills.any(ref)) ...[const SizedBox(height: 20), const OpenBills()],
+          ],
+        ),
+      ),
       actions: const [],
     ),
   );

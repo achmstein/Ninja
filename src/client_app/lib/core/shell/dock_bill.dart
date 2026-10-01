@@ -13,6 +13,7 @@ import '../utils/money.dart';
 import '../widgets/destination_chip.dart';
 import '../../features/places/screens/places_screen.dart' show showRoomSheet;
 import '../../features/places/services/place_service.dart';
+import '../../features/bills/widgets/open_bills.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
 
@@ -93,7 +94,7 @@ class DockBill extends ConsumerWidget {
 
     void onTap() {
       if (destination == null) {
-        context.push('/bills');
+        showDockBills(context);
       } else if (destination.isStay) {
         // The room, out of the dock: the same sheet the Book tab's card opens
         final stay = ref.read(myStaysProvider).value?.where((s) => s.id == destination.sessionId).firstOrNull;
@@ -179,3 +180,27 @@ class DockBill extends ConsumerWidget {
     );
   }
 }
+
+/// The bills running now on the slab sheet, out of the dock's row
+/// (client_web's dock-bill.tsx): titled "Your bill", the bill forming and the
+/// open ones, swiped between
+Future<void> showDockBills(BuildContext context) => showNinjaSheet<void>(
+      context: context,
+      builder: (context) {
+        final theme = context.theme;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                AppLocalizations.of(context)!.ninjaBillOpen,
+                style: context.localeText(theme.typography.headline.copyWith(fontWeight: FontWeight.w800, color: theme.colors.foreground)),
+              ),
+            ),
+            const OpenBills(),
+          ],
+        );
+      },
+    );

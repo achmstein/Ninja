@@ -7,11 +7,7 @@ import '../../../core/ui/ui.dart';
 import '../widgets/hold_form.dart';
 import '../widgets/reservation_panel.dart';
 import '../../service_request/widgets/request_tiles.dart';
-import '../../bills/models/bill.dart';
-import '../../bills/services/bills_service.dart';
-import '../../bills/widgets/bill_swipe.dart';
-import '../../bills/widgets/bill_tile.dart';
-import '../../orders/services/order_service.dart';
+import '../../bills/widgets/open_bills.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
 import '../../../core/models/localized_text.dart';
@@ -390,21 +386,9 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> with PlaceRequ
         );
   }
 
-  List<Widget> _openBills() {
-    final bills = ref.watch(myBillsProvider).value ?? const <Bill>[];
-    final orders = ref.watch(ordersProvider).orders;
-    final ordersById = {for (final order in orders) order.id: order};
-    final open = bills.where((b) => b.isOpen).toList();
-    final pending = placeRounds(bills, orders);
-    return [
-      if (open.isNotEmpty) ...[
-        const SizedBox(height: 20),
-        BillSwipe(children: [
-          for (final bill in open) BillTile(key: ValueKey(bill.id), bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
-        ]),
-      ],
-    ];
-  }
+  List<Widget> _openBills() => [
+        if (OpenBills.any(ref)) ...[const SizedBox(height: 20), const OpenBills()],
+      ];
 
   List<RequestAction> _quickActions(Stay session) {
     final l10n = AppLocalizations.of(context)!;

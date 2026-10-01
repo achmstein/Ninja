@@ -18,7 +18,7 @@ import '../../orders/services/order_service.dart';
 import '../../profile/providers/account_provider.dart';
 import '../models/bill.dart';
 import '../services/bills_service.dart';
-import '../widgets/bill_swipe.dart';
+import '../widgets/open_bills.dart';
 import '../widgets/bill_tile.dart';
 import '../widgets/order_tile.dart';
 
@@ -63,12 +63,10 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     final bills = ref.watch(myBillsProvider);
     final orders = ref.watch(ordersProvider);
     final all = bills.value ?? const <Bill>[];
-    final open = all.where((b) => b.isOpen).toList();
     final closed = all.where((b) => !b.isOpen).toList();
     final waiting = orders.orders.where((o) => o.status != OrderStatus.confirmed && o.status != OrderStatus.cancelled).toList();
     final turnedDown = orders.orders.where((o) => o.status == OrderStatus.cancelled).toList();
     final ordersById = {for (final order in orders.orders) order.id: order};
-    final pending = placeRounds(all, orders.orders);
 
     final List<Widget> children;
     if (bills.isLoading && all.isEmpty) {
@@ -92,9 +90,8 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
       children = [EmptyState(icon: LucideIcons.receiptText, title: l10n.noBillsYet)];
     } else {
       children = [
-        if (open.isNotEmpty)
-          BillSwipe(children: [for (final bill in open) BillTile(key: ValueKey(bill.id), bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const [])]),
-        if (waiting.isNotEmpty && open.isEmpty) _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
+        // Running now: the bill forming out of orders on their way, and the open ones
+        if (OpenBills.any(ref)) const OpenBills(),
         if (turnedDown.isNotEmpty) _OrderGroup(title: l10n.statusCancelled, orders: turnedDown),
         const _OnYourTab(),
         if (closed.isNotEmpty) _ByMonth(bills: closed, ordersById: ordersById),
