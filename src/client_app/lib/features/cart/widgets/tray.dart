@@ -24,6 +24,20 @@ import 'tray_hint.dart';
 import 'tray_model.dart';
 import 'tray_seats.dart';
 
+/// The order stands open over the page (the shell's [TrayMotion] set
+/// open): the menu's first-visit cues wait while it is (client_web's
+/// `expanded`). One flag for the app, kept by the shell.
+class OrderOpen extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool open) {
+    if (state != open) state = open;
+  }
+}
+
+final orderOpenProvider = NotifierProvider<OrderOpen, bool>(OrderOpen.new);
+
 /// How far the order is open, 0 shut to 1 open, and the way it moves: under
 /// a finger it follows the finger, let go it springs open or back down by
 /// how far and how fast it was pulled (client_web's tray.tsx). The shell

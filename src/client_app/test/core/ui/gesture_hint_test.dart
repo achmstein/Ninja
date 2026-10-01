@@ -72,6 +72,16 @@ void main() {
     expect(tray.showing, isTrue);
   });
 
+  test("a phone that saw the tray's cue under its old key is not shown it again", () async {
+    SharedPreferences.setMockInitialValues({legacyTrayHintKey: true, hintsStorageKey: ['swipe']});
+    final tray = await loaded(HintKey.tray);
+    expect(tray.pending, isFalse);
+    // Read once into the one list, and the old key let go
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList(hintsStorageKey), containsAll(['swipe', 'tray']));
+    expect(prefs.getBool(legacyTrayHintKey), isNull);
+  });
+
   test('the customer doing the gesture first is the same as being shown it', () async {
     final hold = await loaded(HintKey.holdAdd);
     hold.done();

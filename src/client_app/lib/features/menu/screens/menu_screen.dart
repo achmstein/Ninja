@@ -9,11 +9,13 @@ import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/shell/deck_compact.dart';
+import '../../../core/shell/dish_layer.dart';
 import '../../../core/shell/tuck.dart';
 import '../../../core/ui/gesture_hint.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/widgets/notice_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../cart/widgets/tray.dart' show orderOpenProvider;
 import '../../cart/widgets/tray_model.dart' show DockMetrics;
 import '../models/menu_item.dart';
 import '../paired_items.dart';
@@ -67,6 +69,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
   int _column = 0;
   bool _grid = false;
   bool _deckLayout = false;
+  bool _staged = false;
   List<DeckColumn> _columns = const [];
 
   /// The card each column of the deck rests on, so zooming out finds it and back in lands on it
@@ -123,6 +126,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       hint.addListener(_onHints);
     }
     cueOnScreen.addListener(_onHints);
+    dishOpen.addListener(_onHints);
   }
 
   @override
@@ -130,6 +134,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     _positions.itemPositions.removeListener(_spy);
     _section.dispose();
     cueOnScreen.removeListener(_onHints);
+    dishOpen.removeListener(_onHints);
     for (final hint in [_swipeHint, _zoomHint, _holdHint]) {
       hint.removeListener(_onHints);
       hint.dispose();
@@ -143,7 +148,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final drove = _pastFirst;
     scheduleMicrotask(() {
       try {
-        compact.set(false);
+        compact.set(null);
         if (drove) tuck.set(false);
       } catch (_) {
         // The app itself is closing
@@ -156,18 +161,22 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
   /// rather than which way they last swiped, so going back a card to compare two dishes keeps the
   /// room; the first card brings the chrome back. Held as it was while the deck is being left, so
   /// its cards do not change size under their flying photos
-  bool get _compact => _deckLayout && _columns.isNotEmpty && (!_grid || _leaving == ZoomView.deck) && _pastFirst;
+  bool get _compact => _cardsShown && _pastFirst;
 
   /// Asked back on the compact deck, the dock's tabs come up over the next card's peek rather than
   /// taking the cards' room: the categories and the dock rise over the deck's bottom, the cards unmoved
   bool get _tabsOver => _compact && _tabsAsked;
 
+  /// The deck's cards are on screen (or being left), so the chrome is theirs to move
+  bool get _cardsShown => _deckLayout && _columns.isNotEmpty && (!_grid || _leaving == ZoomView.deck);
+
   /// Tells the shell how the chrome stands: compact (the top bar up), and the dock's tabs folded
-  /// while the deck is past its first card and was not swiped back
+  /// while the deck is past its first card and was not swiped back. With no cards on screen the
+  /// page's scroll has the top bar again
   void _syncChrome() {
     void tell() {
       if (!mounted) return;
-      _compactChrome.set(_compact);
+      _compactChrome.set(_cardsShown ? _compact : null);
       if (_deckLayout && !_grid) _tuck.set(_compact && !_tabsAsked);
     }
 
@@ -359,8 +368,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       _cue(null, Duration.zero, () {});
       return null;
     }
-    // A dish open over the menu, or another tab in front, is something going on
-    final covered = !(ModalRoute.of(context)?.isCurrent ?? true) || !TickerMode.valuesOf(context).enabled;
+    // A dish or the order open over the menu, or another tab in front, is something going on. Only a
+    // cue still to show asks: with none left, opening either does not rebuild the menu
+    final covered =
+        dishOpen.value || ref.watch(orderOpenProvider) || !(ModalRoute.of(context)?.isCurrent ?? true) || !TickerMode.valuesOf(context).enabled;
     final idle = ready && !_grid && _leaving == null && !covered;
     final col = _columns.elementAtOrNull(_column);
     final active = col?.items.elementAtOrNull(_rows[_column] ?? 0);
@@ -420,6 +431,11 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     _deckLayout = deck;
     _columns = deck ? buildDeck(usualsLabel: l10n.yourUsuals, usuals: ref.watch(topMenuItemsProvider).value ?? const [], categories: sections) : const [];
     final staged = deck && _columns.isNotEmpty;
+    // The cards come (or go, the menu changed under them): the chrome is theirs to move, or no longer
+    if (staged != _staged) {
+      _staged = staged;
+      _syncChrome();
+    }
     final cards = staged && !_grid;
     final showDeck = staged && (!_grid || _leaving == ZoomView.deck);
     final showGrid = !staged || _grid || _leaving == ZoomView.grid;

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/ui/gesture_hint.dart';
 import '../../../core/ui/ui.dart';
 import '../../../l10n/app_localizations.dart';
 import 'tray_flights.dart';
@@ -18,70 +18,21 @@ const trayHintFor = Duration(milliseconds: _delayMs + _passMs * 2 + _gapMs + 300
 
 /// The tray's first-dish cue (client_web's `useHint('tray')`): the first
 /// dish to land lets the order peek out of the dock once, and a fingertip
-/// with a word shows how to drag it up. It is shown once on this phone:
-/// showing it records it at once, so leaving mid-cue does not replay it,
-/// and opening the order (shown or not) is the end of it. Where the phone
-/// will not keep it, this run's memory stands in.
-class TrayHint extends ChangeNotifier {
-  static const _key = 'ninja-hint-tray';
-
-  /// Not yet shown on this phone; false until the phone has said
-  bool _pending = false;
-  bool _showing = false;
-
+/// with a word shows how to drag it up. It is one of the app's first-visit
+/// cues ([Hint]): kept in the same book on this phone, and waiting while
+/// another cue (the deck's swipe, pinch or hold) is on screen, the next dish
+/// asking again. Showing it records it at once, so leaving mid-cue does not
+/// replay it, and opening the order (shown or not) is the end of it.
+class TrayHint extends Hint {
   /// The tray's row, where the cue stands
   final GlobalKey anchor = GlobalKey(debugLabel: 'tray-hint');
 
-  TrayHint() {
-    _load();
+  TrayHint() : super(HintKey.tray) {
     trayFlights.bump.addListener(_landed);
-  }
-
-  bool get pending => _pending;
-  bool get showing => _showing;
-
-  Future<void> _load() async {
-    try {
-      _pending = !((await SharedPreferences.getInstance()).getBool(_key) ?? false);
-    } catch (_) {
-      // Nothing the phone keeps: this run's memory decides
-      _pending = true;
-    }
   }
 
   /// A dish landed in the tray: the first one brings the cue
   void _landed() => show();
-
-  void show() {
-    if (!_pending || _showing) return;
-    _showing = true;
-    _remember();
-    notifyListeners();
-  }
-
-  void done() {
-    if (!_pending && !_showing) return;
-    _pending = false;
-    _showing = false;
-    _remember();
-    notifyListeners();
-  }
-
-  Future<void> _remember() async {
-    try {
-      (await SharedPreferences.getInstance()).setBool(_key, true);
-    } catch (_) {
-      // This run's memory already has it
-    }
-  }
-
-  /// Starts a test over: the cue not yet shown, or already seen
-  @visibleForTesting
-  void debugReset({bool seen = false}) {
-    _pending = !seen;
-    _showing = false;
-    notifyListeners();
-  }
 }
 
 final trayHint = TrayHint();

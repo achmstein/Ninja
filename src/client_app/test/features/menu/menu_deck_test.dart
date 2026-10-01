@@ -10,10 +10,12 @@ import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/branch_provider.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
 import 'package:ninja_client/core/shell/deck_compact.dart';
+import 'package:ninja_client/core/shell/dish_layer.dart';
 import 'package:ninja_client/core/shell/tuck.dart';
 import 'package:ninja_client/core/ui/gesture_hint.dart';
 import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/utils/money.dart';
+import 'package:ninja_client/features/cart/widgets/tray.dart';
 import 'package:ninja_client/features/menu/models/menu_item.dart';
 import 'package:ninja_client/features/menu/providers/favorites_provider.dart';
 import 'package:ninja_client/features/menu/screens/menu_screen.dart';
@@ -158,6 +160,32 @@ void main() {
     expect(find.byType(HintBubble), findsNothing);
   });
 
+  testWidgets('the cues wait while the order or a dish is open over the deck', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    addTearDown(() => dishOpen.value = false);
+    await tester.pumpWidget(_host());
+    _container.read(orderOpenProvider.notifier).set(true);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 3000));
+    expect(find.text('Swipe up for more, sideways for other categories'), findsNothing);
+
+    // A dish open in its place keeps it waiting
+    dishOpen.value = true;
+    _container.read(orderOpenProvider.notifier).set(false);
+    await tester.pump(const Duration(milliseconds: 3000));
+    expect(find.text('Swipe up for more, sideways for other categories'), findsNothing);
+
+    // Nothing over the deck: once it has sat idle a moment
+    dishOpen.value = false;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1500));
+    expect(find.text('Swipe up for more, sideways for other categories'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 6));
+  });
+
   testWidgets('two fingers closing on the cards zoom out to the whole menu, opening there zoom back in', (tester) async {
     SharedPreferences.setMockInitialValues({
       hintsStorageKey: ['swipe', 'zoom', 'holdAdd'],
@@ -168,14 +196,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Whole menu'), findsNothing);
 
+    expect(_container.read(deckCompactProvider), isFalse);
+
     await _pinch(tester, from: 300, to: 120);
     await tester.pumpAndSettle();
     expect(find.byType(Deck), findsNothing);
     expect(find.text('Whole menu'), findsOneWidget);
+    // The whole menu's own scroll has the top bar
+    expect(_container.read(deckCompactProvider), isNull);
 
     await _pinch(tester, from: 120, to: 300);
     await tester.pumpAndSettle();
     expect(find.byType(Deck), findsOneWidget);
+    expect(_container.read(deckCompactProvider), isFalse);
     expect(find.text('Whole menu'), findsNothing);
     expect(tester.takeException(), isNull);
   });

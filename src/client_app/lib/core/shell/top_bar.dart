@@ -8,6 +8,7 @@ import '../brand/brand_provider.dart';
 import '../motion/motion.dart';
 import '../ui/ui.dart';
 import '../widgets/branch_switcher.dart';
+import 'deck_compact.dart';
 import 'tuck.dart';
 
 /// The top bar's height and the wordmark's in it, per the business's header
@@ -98,8 +99,8 @@ class NinjaTopBar extends ConsumerWidget {
   return (hidden: !hidden, from: y);
 }
 
-/// The top bar gone up while the customer reads on. One flag for the app,
-/// so a page that knows better (the deck past its first card) can set it.
+/// The top bar gone up while the customer reads on, or past the deck's
+/// first card. One flag for the app.
 class TopBarHidden extends Notifier<bool> {
   @override
   bool build() => false;
@@ -113,9 +114,10 @@ final topBarHiddenProvider = NotifierProvider<TopBarHidden, bool>(TopBarHidden.n
 
 /// Sends the top bar up as the page under it scrolls down and brings it
 /// back on the way up, from the page's own scroll notifications, so every
-/// tab gets it without doing anything. On the deck (a card a page) it goes
-/// up past the first card and comes back on it, as the web's does.
-/// [enabled] off leaves it where it is (an open order).
+/// tab gets it without doing anything. The deck's cards scroll nothing the
+/// bar hears: while they are on screen the bar follows [deckCompactProvider]
+/// alone, up past the first card and back on it, as the web's does.
+/// [enabled] off leaves a scroll's bar where it is (an open order).
 class TopBarOnScroll extends ConsumerStatefulWidget {
   final Widget child;
   final bool enabled;
@@ -130,8 +132,17 @@ class _TopBarOnScrollState extends ConsumerState<TopBarOnScroll> {
   double _from = 0;
   DateTime _quietUntil = DateTime.fromMillisecondsSinceEpoch(0);
 
+  @override
+  void initState() {
+    super.initState();
+    // The deck on screen moves the bar by the card it is on; the deck gone, the page it left starts with its bar
+    ref.listenManual(deckCompactProvider, (_, compact) => ref.read(topBarHiddenProvider.notifier).set(compact ?? false));
+  }
+
   bool _onScroll(ScrollNotification n) {
     if (!widget.enabled || n.metrics.axis != Axis.vertical || n is! ScrollUpdateNotification) return false;
+    // The deck has the bar, whatever else scrolls under it
+    if (ref.read(deckCompactProvider) != null) return false;
     final y = n.metrics.pixels;
     final hidden = ref.read(topBarHiddenProvider);
     // The bar going or coming moves the page under it; that scroll is not the customer's
@@ -139,11 +150,7 @@ class _TopBarOnScrollState extends ConsumerState<TopBarOnScroll> {
       _from = y;
       return false;
     }
-    final metrics = n.metrics;
-    final next = metrics is PageMetrics
-        // A card a page: up past the first one, back on it
-        ? (hidden: (metrics.page ?? 0) > 0.5, from: y)
-        : topBarAt(y, topBarSize(ref.read(brandProvider).theme.headerSize).bar, _from, hidden);
+    final next = topBarAt(y, topBarSize(ref.read(brandProvider).theme.headerSize).bar, _from, hidden);
     _from = next.from;
     if (next.hidden != hidden) {
       _quietUntil = DateTime.now().add(tuckSettle);

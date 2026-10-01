@@ -17,6 +17,10 @@ enum HintKey { swipe, zoom, holdAdd, tray }
 /// Where the shown ones are kept on this device (the web's localStorage key)
 const hintsStorageKey = 'ninja-style-hints';
 
+/// Where the tray's cue was kept on its own before it joined the others: a
+/// phone that saw it there is not shown it again
+const legacyTrayHintKey = 'ninja-hint-tray';
+
 /// Which cues this device has been shown. Kept in the app's preferences;
 /// when they are missing or refuse, the app's own memory stands in, so a cue
 /// shows at most once a run. Until [load] has read them nothing is pending,
@@ -33,9 +37,16 @@ class HintBook {
   Future<void> load() => _loading ??= () async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _stored = {...?prefs.getStringList(hintsStorageKey)};
+      // Any shown before it was read stay shown
+      final stored = _stored = {...?_stored, ...?prefs.getStringList(hintsStorageKey)};
+      // The tray's old place, read once into the list and let go
+      if (prefs.getBool(legacyTrayHintKey) ?? false) {
+        stored.add(HintKey.tray.name);
+        await prefs.setStringList(hintsStorageKey, [...stored]);
+        await prefs.remove(legacyTrayHintKey);
+      }
     } catch (_) {
-      _stored = {};
+      _stored ??= {};
     }
   }();
 
@@ -112,6 +123,15 @@ class Hint extends ChangeNotifier {
     if (!_pending && !_showing) return;
     book.markSeen(key);
     _pending = false;
+    _showing = false;
+    if (cueOnScreen.value == key) cueOnScreen.value = null;
+    notifyListeners();
+  }
+
+  /// Starts a test over: the cue not yet shown, or already seen
+  @visibleForTesting
+  void debugReset({bool seen = false}) {
+    _pending = !seen;
     _showing = false;
     if (cueOnScreen.value == key) cueOnScreen.value = null;
     notifyListeners();

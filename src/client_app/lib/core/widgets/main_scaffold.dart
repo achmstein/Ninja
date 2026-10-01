@@ -92,6 +92,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     _tray.addListener(() {
       if (_tray.expanded == _wasExpanded) return;
       _wasExpanded = _tray.expanded;
+      ref.read(orderOpenProvider.notifier).set(_tray.expanded);
       if (!_tray.expanded) return;
       ref.read(checkoutProvider.notifier).reset();
       if (ref.read(featuresProvider).loyalty) ref.read(loyaltyProvider.notifier).loadLoyaltyInfo();

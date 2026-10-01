@@ -8,6 +8,7 @@ import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/branch_provider.dart';
 import 'package:ninja_client/core/providers/current_place_provider.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
+import 'package:ninja_client/core/ui/gesture_hint.dart';
 import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/cart/models/cart_item.dart';
@@ -120,7 +121,11 @@ double _rowPhotoOpacity(WidgetTester tester) {
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    hintBook.reset();
+    cueOnScreen.value = null;
+  });
 
   testWidgets('as the order is pulled up, each dish flies from the dock to its row', (tester) async {
     trayHint.debugReset(seen: true);
@@ -186,12 +191,35 @@ void main() {
     expect(trayHint.showing, isFalse);
     expect(trayHint.pending, isFalse);
     expect(find.text('Drag up to see your order'), findsNothing);
-    expect((await SharedPreferences.getInstance()).getBool('ninja-hint-tray'), isTrue);
+    expect((await SharedPreferences.getInstance()).getStringList(hintsStorageKey), contains('tray'));
 
     // Another dish: no cue
     trayFlights.bump.value++;
     await tester.pump();
     expect(trayHint.showing, isFalse);
+  });
+
+  testWidgets("another cue on screen (the deck's) holds it back, still pending, till the next dish", (tester) async {
+    late TrayMotion motion;
+    await tester.pumpWidget(_app(onMotion: (m) => motion = m));
+    await tester.pump();
+    trayHint.debugReset();
+
+    cueOnScreen.value = HintKey.swipe;
+    trayFlights.bump.value++;
+    await tester.pump();
+    expect(trayHint.showing, isFalse);
+    expect(trayHint.pending, isTrue);
+    expect(motion.sheetShown, isFalse);
+
+    cueOnScreen.value = null;
+    trayFlights.bump.value++;
+    await tester.pump();
+    expect(trayHint.showing, isTrue);
+    expect(cueOnScreen.value, HintKey.tray);
+    await tester.pump(trayHintFor);
+    await tester.pumpAndSettle();
+    expect(cueOnScreen.value, isNull);
   });
 
   testWidgets('opening the order ends the cue at once', (tester) async {
