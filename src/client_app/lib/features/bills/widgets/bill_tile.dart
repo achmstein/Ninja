@@ -502,7 +502,7 @@ class _BillLine extends ConsumerWidget {
             Padding(
               padding: const EdgeInsetsDirectional.only(start: 24),
               child: AppText(
-                '${l10n.hoursShort(line.qty)} × ${money(line.unitPrice)}${l10n.perHourShort}',
+                '${l10n.hoursShort(tidyHours(line.qty))} × ${money(line.unitPrice)}${l10n.perHourShort}',
                 style: TextStyle(
                     fontSize: 12, color: colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
               ),

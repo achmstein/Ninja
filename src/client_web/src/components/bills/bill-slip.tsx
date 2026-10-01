@@ -4,6 +4,7 @@ import { Timer } from 'lucide-react'
 import { type BillLineView, type BillView } from '@/api/sales'
 import {
   closedAt,
+  hoursLabel,
   isSettled,
   percent,
   runningTime,
@@ -216,7 +217,7 @@ function SlipLine({ line }: { line: BillLineView }) {
         </span>
       </div>
       <div className='text-[10px] tabular-nums'>
-        {isTime ? t('hoursShort', { count: String(qty) }) : qty} ×{' '}
+        {isTime ? t('hoursShort', { count: hoursLabel(qty) }) : qty} ×{' '}
         {price(Number(line.unitPrice ?? 0))}
         {isTime && t('perHourShort')}
         {discount > 0 && ` − ${price(discount)} (${t('discount')})`}
@@ -275,7 +276,7 @@ export function RunningTimeLine({
             )}
           >
             {i === 0 && `${elapsed} · `}
-            {t('hoursShort', { count: String(part.hours) })} ×{' '}
+            {t('hoursShort', { count: hoursLabel(part.hours) })} ×{' '}
             {price(part.rate)}
             {t('perHourShort')}
           </p>

@@ -7,7 +7,7 @@ import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
 import { type BillLineView, type BillView } from '@/api/sales'
-import { billParts, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
+import { billParts, hoursLabel, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
 import { ease, spring, springSoft } from '@/lib/motion'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
 import { useActiveStay, useMyStays } from '@/lib/stays'
@@ -407,7 +407,7 @@ function LineRow({ line }: { line: BillLineView }) {
       </div>
       {isTime ? (
         <p className='text-muted-foreground ms-5 text-caption tabular-nums'>
-          {t('hoursShort', { count: String(qty) })} × {price(Number(line.unitPrice ?? 0))}
+          {t('hoursShort', { count: hoursLabel(qty) })} × {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
         </p>
       ) : (

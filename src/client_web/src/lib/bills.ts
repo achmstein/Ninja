@@ -141,6 +141,9 @@ export function runningTime(
   return { minutes, parts, charged }
 }
 
+/** Hours as a bill prints them: to two places, no trailing zeros ("0.83", "1.5", "2"), never the float's sixteen digits */
+export const hoursLabel = (hours: number | string | null | undefined) => String(Math.round(Number(hours ?? 0) * 100) / 100)
+
 export const percent = (rate: number | string | null | undefined) =>
   Math.round(Number(rate ?? 0) * 100)
 

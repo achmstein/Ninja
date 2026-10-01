@@ -27,8 +27,15 @@ String tenderLabel(String tender, AppLocalizations l10n) => switch (tender) {
       _ => tender,
     };
 
-/// Whole hours print as "2", a quarter as "1.25"
-String hoursOf(double hours) => hours % 1 == 0 ? hours.toInt().toString() : hours.toString();
+/// Hours as a bill prints them: to two places, whole ones without a point
+/// ("2", "1.25", "0.83"), never the double's sixteen digits
+num tidyHours(double hours) {
+  final rounded = (hours * 100).round() / 100;
+  return rounded == rounded.truncateToDouble() ? rounded.toInt() : rounded;
+}
+
+/// Whole hours print as "2", a quarter as "1.25", fifty minutes as "0.83"
+String hoursOf(double hours) => tidyHours(hours).toString();
 
 /// The top of the paper, about half its width, as the till prints it: the
 /// wordmark, else the logo, else the name in bold. Paper is white, so the
@@ -128,7 +135,7 @@ class BillSlip extends ConsumerWidget {
             for (final line in bill.lines) ...[
               row(line.description.localized(context), money(line.total)),
               AppText(
-                '${line.isTime ? l10n.hoursShort(line.qty) : hoursOf(line.qty)} × ${money(line.unitPrice)}'
+                '${line.isTime ? l10n.hoursShort(tidyHours(line.qty)) : hoursOf(line.qty)} × ${money(line.unitPrice)}'
                 '${line.isTime ? l10n.perHourShort : ''}'
                 '${line.discount > 0 ? ' − ${money(line.discount)} (${l10n.discount})' : ''}'
                 '${line.customerName != null ? ' · ${line.customerName}' : ''}',
@@ -226,7 +233,7 @@ class RunningTimeLine extends ConsumerWidget {
             padding: EdgeInsetsDirectional.only(start: slip ? 0 : 24),
             child: AppText(
               '${i == 0 ? '$elapsed · ' : ''}'
-              '${l10n.hoursShort(running.parts[i].hours)} × ${money(running.parts[i].rate)}${l10n.perHourShort}',
+              '${l10n.hoursShort(tidyHours(running.parts[i].hours))} × ${money(running.parts[i].rate)}${l10n.perHourShort}',
               style: subStyle,
             ),
           ),
