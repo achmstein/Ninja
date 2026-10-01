@@ -286,14 +286,20 @@ class _BillTileState extends ConsumerState<BillTile> {
                     onTap: () => setState(() => _fanned = !_fanned),
                     scale: 0.95,
                     child: Container(
-                      padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 8, 6),
+                      // With a count, the words then the chevron; with none (only the place's time on it), the
+                      // chevron alone, centred in a round button rather than left where the words would end
+                      height: 32,
+                      constraints: const BoxConstraints(minWidth: 32),
+                      padding: rounds.length + widget.pending.length > 0 ? const EdgeInsetsDirectional.fromSTEB(12, 0, 8, 0) : EdgeInsets.zero,
+                      alignment: Alignment.center,
                       decoration: ShapeDecoration(color: c.muted, shape: const StadiumBorder()),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (rounds.length + widget.pending.length > 0)
+                          if (rounds.length + widget.pending.length > 0) ...[
                             Text(l10n.ninjaRoundCount(rounds.length + widget.pending.length), style: small.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
-                          const SizedBox(width: 4),
+                            const SizedBox(width: 4),
+                          ],
                           AnimatedRotation(
                             turns: _fanned ? 0.5 : 0,
                             duration: Motion.base,
