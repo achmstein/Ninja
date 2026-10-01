@@ -779,5 +779,9 @@
   "ninjaPlacesRooms": "Rooms",
   "ninjaPlacesTables": "Tables",
   "ninjaPlacesStations": "Stations",
-  "itemNotFound": "This item isn't on the menu"
+  "itemNotFound": "This item isn't on the menu",
+  "ninjaHintTray": "Drag up to see your order",
+  "orderSeeBills": "See your bill",
+  "orderCancelledNote": "{name} could not take this order.",
+  "@orderCancelledNote": {"placeholders": {"name": {"type": "String"}}}
 }

@@ -5,7 +5,9 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
+import 'tray_hint.dart';
 import 'tray_model.dart';
+import 'tray_seats.dart';
 
 /// A dish's photo on its way into the tray
 class TrayFlight {
@@ -101,12 +103,22 @@ class _TrayFlightLayerState extends State<TrayFlightLayer> {
       widget.child,
       Positioned.fill(
         child: IgnorePointer(
-          child: ListenableBuilder(
-            listenable: trayFlights,
-            builder: (context, _) => Stack(
-              clipBehavior: Clip.none,
-              children: [for (final f in trayFlights.flights) _Flight(key: ValueKey(f.id), flight: f)],
-            ),
+          child: Stack(
+            children: [
+              // The dishes' circles between the dock and the open order's rows
+              const Positioned.fill(child: TraySeatLayer()),
+              // The first dish's cue on how to open the order
+              const Positioned.fill(child: TrayHintLayer()),
+              Positioned.fill(
+                child: ListenableBuilder(
+                  listenable: trayFlights,
+                  builder: (context, _) => Stack(
+                    clipBehavior: Clip.none,
+                    children: [for (final f in trayFlights.flights) _Flight(key: ValueKey(f.id), flight: f)],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

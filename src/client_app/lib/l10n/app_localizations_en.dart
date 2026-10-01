@@ -1468,4 +1468,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemNotFound => 'This item isn\'t on the menu';
+
+  @override
+  String get ninjaHintTray => 'Drag up to see your order';
+
+  @override
+  String get orderSeeBills => 'See your bill';
+
+  @override
+  String orderCancelledNote(String name) {
+    return '$name could not take this order.';
+  }
 }

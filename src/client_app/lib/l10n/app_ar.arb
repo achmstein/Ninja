@@ -485,5 +485,8 @@
   "ninjaPlacesRooms": "الأوض",
   "ninjaPlacesTables": "الترابيزات",
   "ninjaPlacesStations": "الألعاب",
-  "itemNotFound": "الصنف ده مش في المنيو"
+  "itemNotFound": "الصنف ده مش في المنيو",
+  "ninjaHintTray": "اسحب لفوق تشوف طلبك",
+  "orderSeeBills": "شوف الحساب",
+  "orderCancelledNote": "{name} مقدرش ياخد الطلب ده."
 }

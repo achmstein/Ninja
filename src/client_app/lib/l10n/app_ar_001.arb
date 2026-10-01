@@ -322,5 +322,8 @@
   "ninjaPlacesRooms": "الغرف",
   "ninjaPlacesTables": "الطاولات",
   "ninjaPlacesStations": "الألعاب",
-  "itemNotFound": "هذا الصنف غير موجود في القائمة"
+  "itemNotFound": "هذا الصنف غير موجود في القائمة",
+  "ninjaHintTray": "اسحب للأعلى لعرض طلبك",
+  "orderSeeBills": "اعرض الفاتورة",
+  "orderCancelledNote": "لم يتمكن {name} من قبول هذا الطلب."
 }

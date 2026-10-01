@@ -2678,6 +2678,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This item isn\'t on the menu'**
   String get itemNotFound;
+
+  /// No description provided for @ninjaHintTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag up to see your order'**
+  String get ninjaHintTray;
+
+  /// No description provided for @orderSeeBills.
+  ///
+  /// In en, this message translates to:
+  /// **'See your bill'**
+  String get orderSeeBills;
+
+  /// No description provided for @orderCancelledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} could not take this order.'**
+  String orderCancelledNote(String name);
 }
 
 class _AppLocalizationsDelegate
