@@ -13,12 +13,33 @@ import '../utils/money.dart';
 import '../widgets/destination_chip.dart';
 import '../../features/places/screens/places_screen.dart' show showRoomSheet;
 import '../../features/places/services/place_service.dart';
+import '../../features/orders/models/order.dart';
+import '../../features/orders/services/order_service.dart';
 
-/// Whether the dock has a row to show: an order on its way, a bill running,
-/// or the table or room the customer is at
+/// The orders on their way with no open bill to land on (client_web's
+/// live-bills.ts `forming`): sent and waiting, or confirmed and not on a bill
+/// yet. They stand as a bill of their own, read from the server, so a reload
+/// or another device still shows them.
+final formingOrdersProvider = Provider<List<Order>>((ref) {
+  final bills = ref.watch(myBillsProvider).value ?? const [];
+  if (bills.any((b) => b.isOpen)) return const [];
+  final onBills = {for (final bill in bills) for (final line in bill.lines) line.orderId};
+  return [
+    for (final order in ref.watch(ordersProvider).orders)
+      if ((order.status != OrderStatus.confirmed && order.status != OrderStatus.cancelled) ||
+          (order.status == OrderStatus.confirmed && !onBills.contains(order.id) && order.ticketId == null))
+        order,
+  ];
+});
+
+/// Whether the dock has a row to show: a bill running or forming, an order
+/// on its way, or the table or room the customer is at
 final dockRowShownProvider = Provider<bool>((ref) {
   final open = ref.watch(myBillsProvider).value?.any((b) => b.isOpen) ?? false;
-  return open || ref.watch(liveOrderProvider) != null || ref.watch(orderDestinationProvider) != null;
+  return open ||
+      ref.watch(formingOrdersProvider).isNotEmpty ||
+      ref.watch(liveOrderProvider) != null ||
+      ref.watch(orderDestinationProvider) != null;
 });
 
 /// The bill running now and the order on its way, on the dock
@@ -41,9 +62,14 @@ class DockBill extends ConsumerWidget {
     final live = ref.watch(liveOrderProvider);
     final destination = ref.watch(orderDestinationProvider);
     final open = ref.watch(myBillsProvider).value?.where((b) => b.isOpen).toList() ?? const [];
-    final total = open.fold(0.0, (sum, bill) => sum + bill.total);
+    // The open bills, and the bill forming out of orders that have no bill to land on yet
+    final forming = ref.watch(formingOrdersProvider);
+    final total = open.fold(0.0, (sum, bill) => sum + bill.total) + forming.fold(0.0, (sum, o) => sum + o.total - o.loyaltyDiscount);
 
-    final place = destination?.name.localized(context) ?? open.firstOrNull?.locationName?.localized(context) ?? l10n.atTheCounter;
+    final place = destination?.name.localized(context) ??
+        open.firstOrNull?.locationName?.localized(context) ??
+        forming.firstOrNull?.placeName?.localized(context) ??
+        l10n.atTheCounter;
     final stage = live?.stage;
     final stageWord = switch (stage) {
       OrderStage.sent => l10n.orderStageSent,
