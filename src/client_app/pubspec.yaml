@@ -124,12 +124,13 @@ flutter_launcher_icons:
 
 # Splash screen configuration
 flutter_native_splash:
-  # Light, whatever the phone's own mode: the app starts light
+  # Plain and light, whatever the phone's own mode: one build serves every business, so the
+  # launch screen shows none of their logos; the app's own splash carries the business's wordmark
   color: "#FFFFFF"
-  image: assets/images/cup_splash.png
+  # The web page's splash is written by hand in web/index.html (the business's cached wordmark)
+  web: false
 
   fullscreen: false
 
   android_12:
     color: "#FFFFFF"
-    image: assets/images/cup_splash.png

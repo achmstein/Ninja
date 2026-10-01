@@ -1,3 +1,4 @@
+import '../ui/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,34 +22,28 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/claim/claim_screen.dart';
 import '../widgets/main_scaffold.dart';
 
-/// Splash screen shown while checking authentication
+/// The app's own splash while the sign-in is checked: the page's light (or
+/// dark) background with the business's wordmark, carrying on from the web
+/// page's splash, which shows the same wordmark kept from last time
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
-  /// The neutral slab: the web's dark page (slate-950)
-  static const _bgColor = Color(0xFF020617);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final brandColor = ref.watch(brandProvider).primaryColor;
+    final c = context.theme.colors;
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: c.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // The dark-page wordmark (the splash is always dark), or the tile
-            // standing in for a logo; white when the brand has no color
-            BrandWordmark(height: 150, color: brandColor ?? Colors.white, brightness: Brightness.dark),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
+            // The wordmark for this page's brightness, or the tile standing in for a logo
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.6),
+              child: const BrandWordmark(height: 96),
             ),
+            const SizedBox(height: 32),
+            SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: c.mutedForeground, strokeWidth: 2.5)),
           ],
         ),
       ),

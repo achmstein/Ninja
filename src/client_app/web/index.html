@@ -56,78 +56,47 @@
   
   
   
+  <!-- The splash while the app loads: a light page with the business's wordmark from the brand the app
+       kept on this device last time (flutter.ninja-brand), in the language chosen there; on a first visit,
+       the plain page, as the web app shows. Written by hand: pubspec's flutter_native_splash has web: false -->
   <style id="splash-screen-style">
-    html {
-      height: 100%
-    }
-
-    body {
-      margin: 0;
-      min-height: 100%;
-      background-color: #FFFFFF;
-          background-size: 100% 100%;
-    }
-
-    .center {
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      -ms-transform: translate(-50%, -50%);
-      transform: translate(-50%, -50%);
-    }
-
-    .contain {
-      display:block;
-      width:100%; height:100%;
-      object-fit: contain;
-    }
-
-    .stretch {
-      display:block;
-      width:100%; height:100%;
-    }
-
-    .cover {
-      display:block;
-      width:100%; height:100%;
-      object-fit: cover;
-    }
-
-    .bottom {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      -ms-transform: translate(-50%, 0);
-      transform: translate(-50%, 0);
-    }
-
-    .bottomLeft {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
-
-    .bottomRight {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-    }
+    html { height: 100% }
+    body { margin: 0; min-height: 100%; background-color: #FFFFFF; }
+    #splash { position: fixed; inset: 0; display: grid; place-items: center; }
+    #splash img { max-width: 60vw; max-height: 96px; object-fit: contain; }
   </style>
   <script id="splash-screen-script">
+    // Called by FlutterNativeSplash.remove() once the first frame is up
     function removeSplashFromWeb() {
       document.getElementById("splash")?.remove();
-      document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
     }
   </script>
 </head>
 <body>
-  <picture id="splash">
-      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
-      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
-      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
-  </picture>
+  <div id="splash" aria-hidden="true"></div>
+  <script>
+    (function () {
+      try {
+        // shared_preferences keeps each value JSON-encoded under "flutter."
+        const read = (key) => { const raw = localStorage.getItem("flutter." + key); return raw == null ? null : JSON.parse(raw); };
+        const brandJson = read("ninja-brand");
+        if (!brandJson) return;
+        const brand = JSON.parse(brandJson);
+        const arabic = (read("app_locale") || navigator.language || "").toLowerCase().startsWith("ar");
+        const marks = brand.wordmarks || {};
+        const mark = (arabic ? (marks.ar || marks.en) : marks.en) || null;
+        const url = (mark && mark.url) || brand.logoUrl;
+        if (!url) return;
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "";
+        document.getElementById("splash").appendChild(img);
+      } catch (_) {
+        // Nothing kept, or kept in another shape: the plain page
+      }
+    })();
+  </script>
   
   
   
