@@ -1443,6 +1443,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get itemNotFound => 'الصنف ده مش في المنيو';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2528,4 +2531,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get itemNotFound => 'هذا الصنف غير موجود في القائمة';
 }

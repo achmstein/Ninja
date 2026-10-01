@@ -1446,4 +1446,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ninjaPlayedWith => 'With';
+
+  @override
+  String get itemNotFound => 'This item isn\'t on the menu';
 }

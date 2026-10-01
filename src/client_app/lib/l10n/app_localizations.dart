@@ -2636,6 +2636,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'With'**
   String get ninjaPlayedWith;
+
+  /// No description provided for @itemNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This item isn\'t on the menu'**
+  String get itemNotFound;
 }
 
 class _AppLocalizationsDelegate

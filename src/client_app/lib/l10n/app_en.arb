@@ -772,5 +772,6 @@
   "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}},
   "ninjaHideReceipt": "Hide the receipt",
   "ninjaOtherPlaces": "Other places",
-  "ninjaPlayedWith": "With"
+  "ninjaPlayedWith": "With",
+  "itemNotFound": "This item isn't on the menu"
 }

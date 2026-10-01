@@ -478,5 +478,6 @@
   "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
   "ninjaHideReceipt": "اخفي الإيصال",
   "ninjaOtherPlaces": "أماكن تانية",
-  "ninjaPlayedWith": "مع"
+  "ninjaPlayedWith": "مع",
+  "itemNotFound": "الصنف ده مش في المنيو"
 }
