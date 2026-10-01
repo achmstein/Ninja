@@ -4,7 +4,6 @@ import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
@@ -173,7 +172,7 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = switch (status) {
       OrderStatus.awaitingValidation || OrderStatus.submitted => Colors.orange,
-      OrderStatus.confirmed => AppTheme.successColor,
+      OrderStatus.confirmed => NinjaColors.success,
       OrderStatus.cancelled => context.theme.colors.destructive,
     };
     return Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle));

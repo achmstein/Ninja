@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/ui/ui.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/brand/brand_style.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/notice_card.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/widgets/app_text.dart';
@@ -249,24 +250,16 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           }
           if (showNotifyBanner) currentIndex--;
 
-          // Place items
+          // The places, as big cards a gap apart
           final room = rooms[currentIndex];
-          return Column(
-            children: [
-              PlaceListItem(
-                room: room,
-                canReserve: reservedSession == null &&
-                    ref.watch(featuresProvider).reservations &&
-                    (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
-              ),
-              if (currentIndex < rooms.length - 1)
-                Divider(
-                  height: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: context.theme.colors.border,
-                ),
-            ],
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: PlaceListItem(
+              room: room,
+              canReserve: reservedSession == null &&
+                  ref.watch(featuresProvider).reservations &&
+                  (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
+            ),
           );
         },
       ),
@@ -529,7 +522,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
         showIsland(
           context: context,
           title: Text(_getSuccessMessage(type)),
-          icon: Icon(LucideIcons.check, color: AppTheme.successColor),
+          icon: Icon(LucideIcons.check, color: NinjaColors.success),
         );
       } else {
         final l10n = AppLocalizations.of(context)!;
@@ -592,7 +585,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                 showIsland(
                   context: context,
                   title: Text(l10n.leftSession),
-                  icon: Icon(LucideIcons.check, color: AppTheme.successColor),
+                  icon: Icon(LucideIcons.check, color: NinjaColors.success),
                 );
               } catch (e) {
                 if (mounted) {
@@ -768,14 +761,14 @@ class _HeldStayBanner extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.warningColor,
-            AppTheme.warningColor.withValues(alpha: 0.85),
+            NinjaColors.warning,
+            NinjaColors.warning.withValues(alpha: 0.85),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.warningColor.withValues(alpha: 0.3),
+            color: NinjaColors.warning.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -915,7 +908,7 @@ class _HeldStayBanner extends ConsumerWidget {
           showIsland(
             context: context,
             title: Text(l10n.reservationCancelled),
-            icon: Icon(LucideIcons.check, color: AppTheme.successColor),
+            icon: Icon(LucideIcons.check, color: NinjaColors.success),
           );
         }
       } catch (e) {
@@ -992,7 +985,7 @@ class NotifyMeBanner extends ConsumerWidget {
                       title: Text(success ? l10n.youWillBeNotified : l10n.failedToSubscribe),
                       icon: Icon(
                         success ? LucideIcons.bell : LucideIcons.circleX,
-                        color: success ? AppTheme.successColor : context.theme.colors.destructive,
+                        color: success ? NinjaColors.success : context.theme.colors.destructive,
                       ),
                     );
                   }
@@ -1029,110 +1022,105 @@ class PlaceListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.theme.colors;
-    final isAvailable = room.canBookNow && canReserve;
-    final statusColor = _getStatusColor(colors);
+    final free = room.canBookNow;
+    final tappable = free && canReserve;
     final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
 
-    return GestureDetector(
-      onTap: isAvailable ? () => _showReservationDialog(context, ref) : null,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+    // One bookable place as a big card, the way the deck shows a dish: a free one on the dock's slab
+    // with its name set large and its kind drawn big behind it, a busy one quiet on a light card
+    final face = Builder(
+      builder: (context) {
+        final theme = context.theme;
+        final c = theme.colors;
+        final statusColor = free ? const Color(0xFF6EE7B7) : _getStatusColor(c);
+        return Stack(
+          clipBehavior: Clip.none,
           children: [
-            // Gamepad icon
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: isAvailable
-                    ? colors.primary.withValues(alpha: 0.1)
-                    : colors.mutedForeground.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                room.kind.icon,
-                size: 28,
-                color: isAvailable ? colors.primary : colors.mutedForeground,
+            PositionedDirectional(
+              end: -24,
+              bottom: -32,
+              child: Transform.rotate(
+                angle: -0.21,
+                child: Icon(room.kind.icon, size: 176, color: c.foreground.withValues(alpha: free ? 0.12 : 0.06)),
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Place info
-            Expanded(
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 136),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppText(
-                    room.name.localized(context),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: colors.foreground,
-                    ),
-                  ),
-                  if (room.description != null) ...[
-                    const SizedBox(height: 4),
-                    AppText(
-                      room.description!.localized(context),
-                      style: TextStyle(
-                        color: colors.mutedForeground,
-                        fontSize: 13,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 6),
                   Row(
                     children: [
-                      // A plain table has no rate: the status then starts the line, with no gap or bullet before it
-                      if (rate.isNotEmpty) ...[
-                        Flexible(
-                          child: AppText(
-                            rate,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: colors.foreground,
-                            ),
-                          ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: ShapeDecoration(
+                          color: free ? const Color(0x3334D399) : c.muted,
+                          shape: const StadiumBorder(),
                         ),
-                        const SizedBox(width: 8),
-                      ],
-                      AppText(
-                        rate.isEmpty
-                            ? _getLocalizedStatus(context, room.displayStatus)
-                            : '• ${_getLocalizedStatus(context, room.displayStatus)}',
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 13,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(width: 6, height: 6, decoration: BoxDecoration(color: free ? NinjaColors.success : statusColor, shape: BoxShape.circle)),
+                            const SizedBox(width: 6),
+                            Text(
+                              _getLocalizedStatus(context, room.displayStatus),
+                              style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w700, color: statusColor)),
+                            ),
+                          ],
                         ),
                       ),
+                      const Spacer(),
+                      if (tappable)
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(color: c.foreground, shape: BoxShape.circle),
+                          child: Icon(LucideIcons.plus, size: 20, color: c.background),
+                        ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  BrandHeading(room.name.localized(context), style: theme.typography.title.copyWith(color: c.foreground)),
+                  if (room.description != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      room.description!.localized(context),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.localeText(theme.typography.note.copyWith(color: free ? c.foreground.withValues(alpha: 0.8) : c.mutedForeground)),
+                    ),
+                  ],
+                  if (rate.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: ShapeDecoration(color: free ? c.foreground.withValues(alpha: 0.12) : c.muted, shape: const StadiumBorder()),
+                      child: Text(
+                        rate,
+                        style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.foreground, fontFeatures: NinjaTypography.tabular)),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-
-            // Action - only show calendar button if room is available and user can reserve
-            if (isAvailable)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(
-                  LucideIcons.calendarPlus,
-                  color: colors.primaryForeground,
-                  size: 18,
-                ),
-              ),
           ],
-        ),
+        );
+      },
+    );
+
+    final theme = context.theme;
+    return Pressable(
+      onTap: tappable ? () => _showReservationDialog(context, ref) : null,
+      scale: 0.98,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        padding: const EdgeInsets.all(20),
+        decoration: free
+            ? BoxDecoration(color: theme.colors.slab, borderRadius: BorderRadius.circular(Ninja.cardRadius), boxShadow: Ninja.slabShadow)
+            : theme.surface(radius: Ninja.cardRadius),
+        child: free ? SlabInk(child: face) : face,
       ),
     );
   }
@@ -1140,11 +1128,11 @@ class PlaceListItem extends ConsumerWidget {
   Color _getStatusColor(dynamic colors) {
     switch (room.displayStatus) {
       case PlaceStatus.available:
-        return canReserve ? AppTheme.successColor : colors.mutedForeground;
+        return canReserve ? NinjaColors.success : colors.mutedForeground;
       case PlaceStatus.occupied:
         return colors.destructive;
       case PlaceStatus.reserved:
-        return AppTheme.warningColor;
+        return NinjaColors.warning;
       case PlaceStatus.maintenance:
         return colors.mutedForeground;
     }
@@ -1410,7 +1398,7 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
       showIsland(
         context: context,
         title: Text(l10n.roomReservedSuccess),
-        icon: Icon(LucideIcons.check, color: AppTheme.successColor),
+        icon: Icon(LucideIcons.check, color: NinjaColors.success),
       );
     } else if (mounted) {
       showIsland(

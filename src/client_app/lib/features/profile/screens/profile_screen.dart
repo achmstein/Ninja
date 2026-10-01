@@ -9,10 +9,13 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/app_text.dart';
+import 'loyalty_screen.dart' show tierName, TierChip;
+import '../../../core/brand/brand_style.dart';
+import '../../bills/services/bills_service.dart';
+import '../../../core/utils/money.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/powered_by_ninja.dart';
 import '../../../l10n/app_localizations.dart';
-import '../widgets/balance_card.dart';
-import '../widgets/loyalty_card.dart';
 import '../providers/account_provider.dart';
 import '../providers/loyalty_provider.dart';
 
@@ -60,169 +63,171 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authServiceProvider);
     final loyaltyState = ref.watch(loyaltyProvider);
     final accountState = ref.watch(accountProvider);
-    final colors = context.theme.colors;
+    final theme = context.theme;
+    final c = theme.colors;
     final l10n = AppLocalizations.of(context)!;
     final features = ref.watch(featuresProvider);
+    final money = ref.watch(moneyProvider);
+    final signedIn = authState.isAuthenticated;
+    final loyalty = features.loyalty ? loyaltyState.loyaltyInfo : null;
+    final balance = features.tabs ? accountState.account?.balance ?? 0 : 0.0;
+    final phone = ref.watch(branchProvider).selectedBranch?.phone;
+    final name = authState.name;
+    // How many visits this month closed a bill: what the bills row says it holds
+    final now = DateTime.now();
+    final monthVisits = ref.watch(myBillsProvider).value?.where((bill) {
+          final closed = bill.settledAt;
+          return closed != null && closed.month == now.month && closed.year == now.year;
+        }).length ??
+        0;
 
-    return Column(
+    return NinjaPage(
+      title: l10n.youTab,
+      onRefresh: _loadData,
       children: [
-        // Header
-        PageHeader(title: l10n.youTab),
-
-        // Body
-        Expanded(
-          child: RefreshIndicator(
-            color: colors.primary,
-            backgroundColor: colors.background,
-            onRefresh: _loadData,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
-              child: Column(
-                children: [
-                  // User avatar and info
-                  NinjaAvatar(
-                    size: 80,
-                    child: AppText(
-                      authState.name?.isNotEmpty == true
-                          ? authState.name![0].toUpperCase()
-                          : 'G',
-                      style: TextStyle(fontSize: 32),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AppText(
-                    authState.name ?? l10n.guestUser,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                  if (authState.email != null) ...[
-                    const SizedBox(height: 4),
-                    AppText(
-                      authState.email!,
-                      style: TextStyle(color: colors.mutedForeground),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-
-                  // Balance card (only shown when customer has balance)
-                  // Keep showing if we have data, even while reloading
-                  if (features.tabs &&
-                      authState.isAuthenticated &&
-                      accountState.account != null &&
-                      accountState.account!.hasBalance)
-                    const BalanceCard(),
-
-                  // Loyalty card
-                  // Keep showing existing data while reloading to avoid flicker
-                  if (features.loyalty && authState.isAuthenticated) ...[
-                    if (loyaltyState.loyaltyInfo != null)
-                      LoyaltyCard(
-                        loyaltyInfo: loyaltyState.loyaltyInfo!,
-                        onTap: () => context.push('/loyalty'),
-                      )
-                    else if (loyaltyState.isLoading)
-                      const LoyaltyLoadingCard()
-                    else
-                      LoyaltyEmptyCard(
-                        isLoading: loyaltyState.isLoading,
-                        onJoin: () => ref.read(loyaltyProvider.notifier).joinLoyaltyProgram(),
+        // Who you are, on the dock's slab; a member's points ring at its end
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SlabCard(
+              child: Builder(
+                builder: (context) {
+                  final ink = context.theme.colors.foreground;
+                  return Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(color: ink.withValues(alpha: 0.12), shape: BoxShape.circle),
+                        child: signedIn && name != null && name.isNotEmpty
+                            ? Text(name[0].toUpperCase(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: ink))
+                            : Icon(LucideIcons.user, size: 28, color: ink.withValues(alpha: 0.7)),
                       ),
-                    const SizedBox(height: 16),
-                  ],
-
-                // Where to go from here
-                TileGroup(
-                  children: [
-                    NinjaTile(
-                      icon: LucideIcons.receipt,
-                      title: AppText(l10n.bills),
-                      onPress: () => context.push('/bills'),
-                    ),
-                    if (features.timeBilling)
-                      NinjaTile(
-                        icon: LucideIcons.timer,
-                        title: AppText(l10n.sessions),
-                        onPress: () => context.push('/stays'),
-                      ),
-                    NinjaTile(
-                      icon: LucideIcons.heart,
-                      title: AppText(l10n.favorites),
-                      onPress: () => context.push('/favorites'),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                TileGroup(
-                  children: [
-                    NinjaTile(
-                      icon: LucideIcons.settings,
-                      title: AppText(l10n.settings),
-                      onPress: () => context.push('/settings'),
-                    ),
-                    if (ref.watch(branchProvider).selectedBranch?.phone != null)
-                      NinjaTile(
-                        icon: LucideIcons.phone,
-                        title: AppText(l10n.callUs),
-                        onPress: () => launchUrl(Uri.parse('tel:${ref.read(branchProvider).selectedBranch!.phone}')),
-                      ),
-                    NinjaTile(
-                      icon: LucideIcons.info,
-                      title: AppText(l10n.about),
-                      onPress: () => _showAboutSheet(context),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Sign out / Sign in button
-                SizedBox(
-                  width: double.infinity,
-                  child: authState.isAuthenticated
-                      ? NinjaButton(
-                          variant: NinjaButtonVariant.destructive,
-                          onPress: () => _handleSignOut(context),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(LucideIcons.logOut),
-                              const SizedBox(width: 8),
-                              AppText(l10n.signOut),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            BrandHeading(
+                              signedIn ? (name ?? l10n.guestUser) : l10n.guestUser,
+                              style: theme.typography.headline.copyWith(color: ink),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (signedIn && authState.hasPhone)
+                              Text(
+                                authState.phoneNumber!,
+                                textDirection: TextDirection.ltr,
+                                style: context.localeText(theme.typography.note.copyWith(color: ink.withValues(alpha: 0.6))),
+                              ),
+                            if (loyalty != null) ...[
+                              const SizedBox(height: 8),
+                              TierChip(tier: loyalty.currentTier),
                             ],
+                          ],
+                        ),
+                      ),
+                      if (loyalty != null)
+                        GestureDetector(
+                          onTap: () => context.push('/loyalty'),
+                          child: PointsRing(points: loyalty.pointsBalance, progress: loyalty.ringProgress, label: l10n.pts, size: 96),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (loyalty != null && loyalty.nextTier != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: Text(
+                  l10n.pointsToNextTier(loyalty.pointsToNextTier.toString(), tierName(l10n, loyalty.nextTier!)),
+                  style: context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground)),
+                ),
+              ),
+          ],
+        ),
+
+        if (!signedIn)
+          NinjaButton(
+            onPress: () => context.go('/login'),
+            prefix: const Icon(LucideIcons.logIn),
+            child: AppText(l10n.signIn),
+          ),
+
+        // What you come back to, each row saying what it holds
+        if (signedIn)
+          TileGroup(
+            children: [
+              NinjaTile(
+                icon: LucideIcons.receiptText,
+                title: AppText(l10n.ninjaYourBills),
+                value: monthVisits > 0 ? AppText('${l10n.ninjaMonthVisits(monthVisits)} ${l10n.ninjaThisMonth}') : null,
+                onPress: () => context.push('/bills'),
+              ),
+              if (features.timeBilling)
+                NinjaTile(icon: LucideIcons.timer, title: AppText(l10n.sessions), onPress: () => context.push('/stays')),
+              if (features.tabs)
+                NinjaTile(
+                  icon: LucideIcons.wallet,
+                  title: AppText(l10n.transactions),
+                  value: balance != 0
+                      ? Text(
+                          money(balance.abs()),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: NinjaTypography.tabular,
+                            color: balance > 0 ? c.destructive : NinjaColors.success,
                           ),
                         )
-                      : NinjaButton(
-                          onPress: () => _handleSignIn(context),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(LucideIcons.logIn),
-                              const SizedBox(width: 8),
-                              AppText(l10n.signIn),
-                            ],
-                          ),
-                        ),
+                      : null,
+                  onPress: () => context.push('/transactions'),
                 ),
-
-                const SizedBox(height: 32),
-
-                // App version
-                AppText(
-                  l10n.version(AppConfig.appVersion),
-                  style: TextStyle(
-                    color: colors.mutedForeground,
-                    fontSize: 12,
-                  ),
+              if (features.loyalty)
+                NinjaTile(
+                  icon: LucideIcons.award,
+                  title: AppText(loyalty == null && !loyaltyState.isLoading ? l10n.joinOurLoyaltyProgram : l10n.loyaltyRewards),
+                  value: loyalty != null ? Text('${loyalty.pointsBalance} ${l10n.pts}', style: const TextStyle(fontFeatures: NinjaTypography.tabular)) : null,
+                  onPress: loyalty == null && !loyaltyState.isLoading
+                      ? () => ref.read(loyaltyProvider.notifier).joinLoyaltyProgram()
+                      : () => context.push('/loyalty'),
                 ),
-              ],
-            ),
+              NinjaTile(icon: LucideIcons.heart, title: AppText(l10n.favorites), onPress: () => context.push('/favorites')),
+            ],
           ),
+
+        TileGroup(
+          children: [
+            NinjaTile(icon: LucideIcons.settings, title: AppText(l10n.settings), onPress: () => context.push('/settings')),
+            if (phone != null)
+              NinjaTile(
+                icon: LucideIcons.phone,
+                title: AppText(l10n.callUs),
+                subtitle: Text(phone, textDirection: TextDirection.ltr),
+                onPress: () => launchUrl(Uri.parse('tel:$phone')),
+              ),
+            NinjaTile(icon: LucideIcons.info, title: AppText(l10n.about), onPress: () => _showAboutSheet(context)),
+          ],
         ),
+
+        if (signedIn)
+          TileGroup(
+            children: [
+              NinjaTile(
+                icon: LucideIcons.logOut,
+                title: AppText(l10n.signOut),
+                destructive: true,
+                trailing: const SizedBox.shrink(),
+                onPress: () => _handleSignOut(context),
+              ),
+            ],
+          ),
+
+        AppText(
+          l10n.version(AppConfig.appVersion),
+          textAlign: TextAlign.center,
+          style: theme.typography.caption.copyWith(color: c.mutedForeground),
         ),
       ],
     );
@@ -251,10 +256,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
     );
-  }
-
-  void _handleSignIn(BuildContext context) {
-    context.go('/login');
   }
 
   void _showAboutSheet(BuildContext context) {

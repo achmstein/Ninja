@@ -735,5 +735,10 @@
   "ninjaOptional": "Optional",
   "ninjaChoose": "Choose {name}",
   "@ninjaChoose": {"placeholders": {"name": {"type": "String"}}},
-  "unavailable": "Unavailable"
+  "unavailable": "Unavailable",
+  "ninjaYourBills": "Your bills",
+  "ninjaMonthVisits": "{count, plural, =1{1 visit} other{{count} visits}}",
+  "@ninjaMonthVisits": {"placeholders": {"count": {"type": "int"}}},
+  "ninjaThisMonth": "this month",
+  "yourBalance": "Your balance"
 }

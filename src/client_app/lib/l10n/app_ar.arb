@@ -450,5 +450,9 @@
   "ninjaUpNext": "اللي بعده",
   "ninjaOptional": "اختياري",
   "ninjaChoose": "اختار {name}",
-  "unavailable": "غير متاح"
+  "unavailable": "غير متاح",
+  "ninjaYourBills": "حساباتك",
+  "ninjaMonthVisits": "{count, plural, =1{زيارة واحدة} =2{زيارتين} other{{count} زيارات}}",
+  "ninjaThisMonth": "الشهر ده",
+  "yourBalance": "رصيدك"
 }

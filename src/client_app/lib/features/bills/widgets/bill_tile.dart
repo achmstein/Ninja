@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
@@ -38,7 +39,6 @@ class BillTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
     final locale = ref.watch(localeProvider);
     final now = ref.watch(minuteClockProvider).value ?? DateTime.now();
     final money = ref.watch(moneyProvider);
@@ -54,124 +54,109 @@ class BillTile extends ConsumerWidget {
     final place = bill.locationName?.localized(context);
     final opened = DateFormat('h:mm a', locale.languageCode).format(bill.openedAt.toLocal());
 
-    final rowStyle = TextStyle(fontSize: 13, color: colors.mutedForeground);
-    final totalStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.foreground);
-    Widget row(String label, String value, {required TextStyle style, EdgeInsets padding = EdgeInsets.zero}) =>
-        Padding(
-          padding: padding,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(child: AppText(label, style: style)),
-              const SizedBox(width: 8),
-              AppText(value, style: style.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
-            ],
-          ),
-        );
     final approx = running != null ? '≈ ' : '';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => context.push('/receipts/${bill.id}'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _BillDot(bill: bill),
-                    const SizedBox(width: 8),
-                    AppText(opened,
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: colors.foreground)),
-                    const SizedBox(width: 6),
-                    if (bill.placeId != null && bill.placeKind != null) ...[
-                      Icon(bill.placeKind!.icon, size: 14, color: colors.mutedForeground),
-                      const SizedBox(width: 4),
-                    ],
-                    Expanded(
-                      child: AppText(
-                        place == null || place.isEmpty ? l10n.atTheCounter : place,
-                        style: TextStyle(fontSize: 13, color: colors.mutedForeground),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _BillPill(bill: bill),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    final open = bill.isOpen;
+    final card = Builder(
+      builder: (context) {
+        // On the slab (an open bill) the inks are the slab's
+        final c = context.theme.colors;
+        final theme = context.theme;
+        final rowStyle = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
+        Widget row(String label, String value, {required TextStyle style, EdgeInsets padding = EdgeInsets.zero}) => Padding(
+              padding: padding,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(child: Text(label, style: style)),
+                  const SizedBox(width: 8),
+                  Text(value, style: style.copyWith(fontFeatures: NinjaTypography.tabular)),
+                ],
+              ),
+            );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.push('/receipts/${bill.id}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Where and when, and what the till did with it
+                  Row(
                     children: [
-                      for (final line in mine) _BillLine(line: line),
-                      for (final line in unassigned) _BillLine(line: line),
-                      for (final line in time) _BillLine(line: line),
-                      if (running != null) RunningTimeLine(bill: bill, running: running),
-                      if (parts.shared) ...[
-                        row(l10n.yourRounds, money(parts.ownLines),
-                            style: totalStyle, padding: const EdgeInsets.only(top: 4)),
-                        row(l10n.billTotal, '$approx${money(parts.total)}', style: rowStyle),
-                      ] else ...[
-                        if (bill.discount > 0)
-                          row(
-                            '${l10n.discount}${bill.discountRate != null ? ' ${percent(bill.discountRate)}%' : ''}',
-                            '−${money(bill.discount)}',
-                            style: rowStyle,
-                          ),
-                        if (bill.serviceCharge > 0)
-                          row(l10n.serviceCharge(percent(bill.serviceChargeRate).toString()),
-                              money(bill.serviceCharge),
-                              style: rowStyle),
-                        if (bill.vat > 0 && !bill.vatIncluded)
-                          row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat), style: rowStyle),
-                        row(l10n.total, '$approx${money(parts.total)}',
-                            style: totalStyle, padding: const EdgeInsets.only(top: 4)),
+                      if (bill.placeId != null && bill.placeKind != null) ...[
+                        Icon(bill.placeKind!.icon, size: 16, color: c.mutedForeground),
+                        const SizedBox(width: 6),
                       ],
-                      if (bill.refundedTotal > 0)
-                        row(l10n.refunded, '−${money(bill.refundedTotal)}',
-                            style: TextStyle(fontSize: 13, color: colors.destructive)),
+                      Flexible(
+                        child: Text(
+                          place == null || place.isEmpty ? l10n.atTheCounter : place,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.mutedForeground)),
+                        ),
+                      ),
+                      Text(' · $opened', style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.mutedForeground))),
+                      const Spacer(),
+                      _BillPill(bill: bill),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  // The total, large; with somebody else's rounds on it, the customer's own
+                  Opacity(
+                    opacity: bill.isVoided ? 0.5 : 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(parts.shared ? l10n.yourRounds : l10n.total, style: rowStyle),
+                        RollingNumber(
+                          '$approx${money(parts.shared ? parts.ownLines : parts.total)}',
+                          value: parts.shared ? parts.ownLines : parts.total,
+                          style: context.localeText(theme.typography.display.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: c.foreground,
+                            decoration: bill.isVoided ? TextDecoration.lineThrough : null,
+                          )),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final line in mine) _BillLine(line: line),
+                  for (final line in unassigned) _BillLine(line: line),
+                  for (final line in time) _BillLine(line: line),
+                  if (running != null) RunningTimeLine(bill: bill, running: running),
+                  if (parts.shared)
+                    row(l10n.billTotal, '$approx${money(parts.total)}', style: rowStyle, padding: const EdgeInsets.only(top: 4))
+                  else ...[
+                    if (bill.discount > 0)
+                      row(
+                        '${l10n.discount}${bill.discountRate != null ? ' ${percent(bill.discountRate)}%' : ''}',
+                        '−${money(bill.discount)}',
+                        style: rowStyle,
+                      ),
+                    if (bill.serviceCharge > 0)
+                      row(l10n.serviceCharge(percent(bill.serviceChargeRate).toString()), money(bill.serviceCharge), style: rowStyle),
+                    if (bill.vat > 0 && !bill.vatIncluded) row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat), style: rowStyle),
+                  ],
+                  if (bill.refundedTotal > 0)
+                    row(l10n.refunded, '−${money(bill.refundedTotal)}', style: rowStyle.copyWith(color: c.destructive)),
+                ],
+              ),
             ),
-          ),
-          // Online payments: what the table paid online and the way to pay the rest
-          if (bill.isOpen) PayBillBar(ticketId: bill.id),
-          // A paid bill is the thanks: the stars for the rounds on it, at the
-          // one moment the customer is already looking
-          if (bill.isSettled && ordersById != null)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(start: 18),
-              child: BillStars(bill: bill, ordersById: ordersById!),
-            ),
-        ],
-      ),
+            // Online payments: what the table paid online and the way to pay the rest
+            if (open) PayBillBar(ticketId: bill.id),
+            // A paid bill is the thanks: the stars for the rounds on it
+            if (bill.isSettled && ordersById != null) BillStars(bill: bill, ordersById: ordersById!),
+          ],
+        );
+      },
     );
-  }
-}
-
-/// Open is money outstanding, paid is done, voided is thrown out
-class _BillDot extends StatelessWidget {
-  final Bill bill;
-
-  const _BillDot({required this.bill});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = bill.isSettled
-        ? AppTheme.successColor
-        : bill.isVoided
-            ? context.theme.colors.destructive
-            : Colors.orange;
-    return Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+    // An open bill is the dock's dark slab; a closed one a light panel
+    return open ? SlabCard(child: card) : Panel(padding: const EdgeInsets.all(20), child: card);
   }
 }
 

@@ -255,7 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Apple button
                     if (apple) Expanded(
                       child: NinjaButton(
-                        variant: NinjaButtonVariant.outline,
+                        variant: NinjaButtonVariant.inverse,
                         onPress: _isLoading || _loadingProvider != null
                             ? null
                             : () => _handleSocialSignIn(SocialProvider.apple),
@@ -270,15 +270,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.apple, size: 20,
-                                    color: _loadingProvider != null ? colors.mutedForeground : colors.foreground),
+                                  // The pill's own ink, dimmed with it while another sign-in runs
+                                  const Icon(Icons.apple, size: 20),
                                   const SizedBox(width: 8),
-                                  AppText(
-                                    l10n.apple,
-                                    style: _loadingProvider != null
-                                        ? TextStyle(color: colors.mutedForeground)
-                                        : null,
-                                  ),
+                                  AppText(l10n.apple),
                                 ],
                               ),
                       ),

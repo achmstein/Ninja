@@ -1319,6 +1319,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unavailable => 'غير متاح';
+
+  @override
+  String get ninjaYourBills => 'حساباتك';
+
+  @override
+  String ninjaMonthVisits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count زيارات',
+      two: 'زيارتين',
+      one: 'زيارة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ninjaThisMonth => 'الشهر ده';
+
+  @override
+  String get yourBalance => 'رصيدك';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2286,4 +2307,22 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String ninjaChoose(String name) {
     return 'اختر $name';
   }
+
+  @override
+  String get ninjaYourBills => 'فواتيرك';
+
+  @override
+  String ninjaMonthVisits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count زيارات',
+      two: 'زيارتان',
+      one: 'زيارة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ninjaThisMonth => 'هذا الشهر';
 }

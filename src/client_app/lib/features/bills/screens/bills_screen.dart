@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/brand/brand_style.dart';
+import '../../../core/models/branch.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/utils/business_day.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../core/utils/money.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/account_provider.dart';
@@ -18,12 +21,13 @@ import '../services/bills_service.dart';
 import '../widgets/bill_tile.dart';
 import '../widgets/order_tile.dart';
 
-/// The bills tab: the customer's bills, not their orders. Everything the
-/// business charges — the rounds, a place's time, a discount, service and VAT
-/// — lands on a Sales ticket, and the till's own arithmetic is what the
-/// customer sees. One tile per bill they are on today, open ones first;
-/// an order the till has not confirmed yet waits above, since it is on no
-/// bill until then.
+/// Your bills (client_web's routes/bills.tsx), reached from You: the bill
+/// running now lives on the dock, and this is where all of them are kept.
+/// What the business charges (the rounds, a place's time, a discount,
+/// service and VAT) lands on a Sales ticket, and the till's own arithmetic
+/// is what the customer sees. The bills open now come first; then the
+/// orders still waiting or turned down, what is on the tab, and the
+/// history, month by month.
 class BillsScreen extends ConsumerStatefulWidget {
   const BillsScreen({super.key});
 
@@ -35,7 +39,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
   @override
   void initState() {
     super.initState();
-    // The tab's balance, for the row above the bills
+    // The tab's balance, for the row above the history
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(accountProvider).account == null) {
         ref.read(accountProvider.notifier).loadAccount();
@@ -45,210 +49,85 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     });
   }
 
+  Future<void> _refresh() => Future.wait([
+        ref.read(myBillsProvider.notifier).refresh(),
+        ref.read(ordersProvider.notifier).refresh(),
+        ref.read(accountProvider.notifier).refresh(),
+      ]);
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // A page of its own under You (the bill running now is on the dock)
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            PageHeader(title: l10n.bills, back: true),
-            Expanded(
-              child: NinjaTabs(
-                tabs: [
-                  (label: Text(l10n.today), child: const _TodayTab()),
-                  (label: Text(l10n.earlier), child: const _EarlierTab()),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Future<void> _refreshAll(WidgetRef ref) => Future.wait([
-      ref.read(myBillsProvider.notifier).refresh(),
-      ref.read(ordersProvider.notifier).refresh(),
-      ref.read(accountProvider.notifier).refresh(),
-    ]);
-
-class _TodayTab extends ConsumerWidget {
-  const _TodayTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
+    final c = context.theme.colors;
     final bills = ref.watch(myBillsProvider);
     final orders = ref.watch(ordersProvider);
-    final dayStart = businessDayStart(ref.watch(branchProvider).selectedBranch);
-
-    if (bills.isLoading || (orders.isLoading && orders.orders.isEmpty)) {
-      return Center(child: CircularProgressIndicator(color: colors.primary));
-    }
-    if (bills.hasError && orders.error != null) {
-      return _Message(
-        icon: LucideIcons.circleAlert,
-        text: l10n.failedToLoadBills,
-        action: l10n.retry,
-        onAction: () => ref.read(myBillsProvider.notifier).reload(),
-        onRefresh: () => _refreshAll(ref),
-      );
-    }
-
-    // Open bills whatever their age (last night's unpaid table is still
-    // today's), and bills closed since the business day started
-    final todayBills = (bills.value ?? const <Bill>[]).where((bill) {
-      final closed = bill.closedAt;
-      return closed == null || !closed.isBefore(dayStart);
-    }).toList();
-    final waiting = orders.orders
-        .where((o) => o.status != OrderStatus.confirmed && o.status != OrderStatus.cancelled)
-        .toList();
-    final cancelled = orders.orders.where((o) => o.status == OrderStatus.cancelled).toList();
+    final all = bills.value ?? const <Bill>[];
+    final open = all.where((b) => b.isOpen).toList();
+    final closed = all.where((b) => !b.isOpen).toList();
+    final waiting = orders.orders.where((o) => o.status != OrderStatus.confirmed && o.status != OrderStatus.cancelled).toList();
+    final turnedDown = orders.orders.where((o) => o.status == OrderStatus.cancelled).toList();
     final ordersById = {for (final order in orders.orders) order.id: order};
 
-    if (todayBills.isEmpty && waiting.isEmpty && cancelled.isEmpty) {
-      return _Message(icon: LucideIcons.receipt, text: l10n.nothingOnYouToday, onRefresh: () => _refreshAll(ref));
+    final List<Widget> children;
+    if (bills.isLoading && all.isEmpty) {
+      children = [
+        for (var i = 0; i < 2; i++) Container(height: 168, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+      ];
+    } else if (bills.hasError && all.isEmpty) {
+      children = [
+        EmptyState(
+          icon: LucideIcons.circleAlert,
+          title: l10n.failedToLoadBills,
+          action: NinjaButton(
+            variant: NinjaButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: () => ref.read(myBillsProvider.notifier).reload(),
+            child: AppText(l10n.retry),
+          ),
+        ),
+      ];
+    } else if (all.isEmpty && waiting.isEmpty && turnedDown.isEmpty) {
+      children = [EmptyState(icon: LucideIcons.receiptText, title: l10n.noBillsYet)];
+    } else {
+      children = [
+        for (final bill in open) BillTile(bill: bill, ordersById: ordersById),
+        if (waiting.isNotEmpty) _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
+        if (turnedDown.isNotEmpty) _OrderGroup(title: l10n.statusCancelled, orders: turnedDown),
+        const _OnYourTab(),
+        if (closed.isNotEmpty) _ByMonth(bills: closed, ordersById: ordersById),
+      ];
     }
 
-    return RefreshIndicator(
-      color: colors.primary,
-      backgroundColor: colors.background,
-      onRefresh: () => _refreshAll(ref),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 16),
-        children: [
-          const _OnYourTab(),
-          _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
-          _OrderGroup(title: l10n.statusCancelled, orders: cancelled),
-          for (var i = 0; i < todayBills.length; i++) ...[
-            BillTile(bill: todayBills[i], ordersById: ordersById),
-            if (i < todayBills.length - 1) Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
-          ],
-        ],
-      ),
-    );
+    return NinjaPage(title: l10n.ninjaYourBills, back: true, onRefresh: _refresh, children: children);
   }
 }
 
-class _EarlierTab extends ConsumerWidget {
-  const _EarlierTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
-    final locale = ref.watch(localeProvider);
-    final bills = ref.watch(myBillsProvider);
-    final branch = ref.watch(branchProvider).selectedBranch;
-    final dayStart = businessDayStart(branch);
-
-    if (bills.isLoading) {
-      return Center(child: CircularProgressIndicator(color: colors.primary));
-    }
-    if (bills.hasError) {
-      return _Message(
-        icon: LucideIcons.circleAlert,
-        text: l10n.failedToLoadBills,
-        action: l10n.retry,
-        onAction: () => ref.read(myBillsProvider.notifier).reload(),
-        onRefresh: () => ref.read(myBillsProvider.notifier).refresh(),
-      );
-    }
-
-    final past = (bills.value ?? const <Bill>[]).where((bill) {
-      final closed = bill.closedAt;
-      return closed != null && closed.isBefore(dayStart);
-    }).toList();
-    if (past.isEmpty) {
-      return _Message(
-          icon: LucideIcons.receipt, text: l10n.noBillsYet, onRefresh: () => ref.read(myBillsProvider.notifier).refresh());
-    }
-
-    // One heading per shift day: Today, Yesterday, then the date
-    final todayShift = shiftDayOf(DateTime.now(), branch);
-    final yesterdayShift = DateTime(todayShift.year, todayShift.month, todayShift.day - 1);
-    final dateFormat = DateFormat('EEEE, MMM d', locale.languageCode);
-    final groups = <DateTime, List<Bill>>{};
-    for (final bill in past) {
-      groups.putIfAbsent(shiftDayOf(bill.closedAt!, branch), () => []).add(bill);
-    }
-    String labelOf(DateTime day) => day == todayShift
-        ? l10n.today
-        : day == yesterdayShift
-            ? l10n.yesterday
-            : dateFormat.format(day);
-
-    return RefreshIndicator(
-      color: colors.primary,
-      backgroundColor: colors.background,
-      onRefresh: () => ref.read(myBillsProvider.notifier).refresh(),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 16),
-        children: [
-          for (final entry in groups.entries) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-              child: AppText(labelOf(entry.key),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.mutedForeground)),
-            ),
-            for (var i = 0; i < entry.value.length; i++) ...[
-              BillTile(bill: entry.value[i]),
-              if (i < entry.value.length - 1) Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// What the customer owes the business, as the till decided it: the balance of
-/// their tab in Accounts, where a settled share lands when the cashier puts
-/// it on account. No sum of the open bills — the app cannot know their
-/// part of an unsettled place's time, so it does not guess one. Only for
-/// an account that owes; a tap opens the tab.
+/// What the customer owes the business, as the till decided it: the balance
+/// of their tab. No sum of the open bills: the app cannot know their part of
+/// an unsettled place's time, so it does not guess one. Only for an account
+/// that owes; a tap opens the tab.
 class _OnYourTab extends ConsumerWidget {
   const _OnYourTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
     if (!ref.watch(featuresProvider).tabs) return const SizedBox.shrink();
     final balance = ref.watch(accountProvider).account?.balance ?? 0;
     if (balance <= 0) return const SizedBox.shrink();
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => context.push('/transactions'),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Expanded(child: AppText(l10n.onYourTab, style: TextStyle(fontSize: 13, color: colors.mutedForeground))),
-            AppText(
-              ref.watch(moneyProvider)(balance),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colors.destructive,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    return TileGroup(
+      children: [
+        NinjaTile(
+          icon: LucideIcons.wallet,
+          title: AppText(l10n.onYourTab),
+          value: Text(
+            ref.watch(moneyProvider)(balance),
+            style: theme.typography.body.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive, fontFeatures: NinjaTypography.tabular),
+          ),
+          onPress: () => context.push('/transactions'),
         ),
-      ),
+      ],
     );
   }
 }
@@ -262,64 +141,118 @@ class _OrderGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) return const SizedBox.shrink();
-    final colors = context.theme.colors;
+    final c = context.theme.colors;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: AppText(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.mutedForeground)),
+        SectionLabel(title),
+        Panel(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final (i, order) in orders.indexed) ...[
+                if (i > 0) Divider(height: 1, thickness: 1, color: c.border.withValues(alpha: 0.6)),
+                OrderTile(order: order),
+              ],
+            ],
+          ),
         ),
-        for (final order in orders) ...[
-          OrderTile(order: order),
-          Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
-        ],
       ],
     );
   }
 }
 
-/// One line and an icon, pull-to-refresh under it; a retry when there is
-/// something to retry
-class _Message extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final String? action;
-  final VoidCallback? onAction;
-  final Future<void> Function() onRefresh;
+/// The history, month by month: each month a heading with how many visits it
+/// held and what was paid in it, then its bills by day under it (a day by
+/// the branch's shift: an overnight shift's small hours are the day before)
+class _ByMonth extends ConsumerWidget {
+  final List<Bill> bills;
+  final Map<int, Order> ordersById;
 
-  const _Message({required this.icon, required this.text, this.action, this.onAction, required this.onRefresh});
+  const _ByMonth({required this.bills, required this.ordersById});
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return RefreshIndicator(
-      color: colors.primary,
-      backgroundColor: colors.background,
-      onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 64, color: colors.mutedForeground),
-                  const SizedBox(height: 16),
-                  AppText(text, style: TextStyle(fontSize: 18, color: colors.foreground)),
-                  if (action != null) ...[
-                    const SizedBox(height: 12),
-                    NinjaButton(variant: NinjaButtonVariant.outline, onPress: onAction, child: Text(action!)),
-                  ],
-                ],
-              ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final money = ref.watch(moneyProvider);
+    final language = ref.watch(localeProvider).languageCode;
+    final branch = ref.watch(branchProvider).selectedBranch;
+    final today = shiftDayOf(DateTime.now(), branch);
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
+    final dayFormat = DateFormat('EEEE, MMM d', language);
+    final monthFormat = DateFormat('MMMM y', language);
+    String dayLabel(DateTime day) => day == today
+        ? l10n.today
+        : day == yesterday
+            ? l10n.yesterday
+            : dayFormat.format(day);
+
+    // Months, then days, in the order the bills come (newest first)
+    final months = <({String label, List<Bill> bills})>[];
+    for (final bill in bills) {
+      final closed = bill.closedAt!.toLocal();
+      final label = monthFormat.format(closed);
+      if (months.isNotEmpty && months.last.label == label) {
+        months.last.bills.add(bill);
+      } else {
+        months.add((label: label, bills: [bill]));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (m, month) in months.indexed) ...[
+          if (m > 0) const SizedBox(height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      BrandHeading(month.label, style: theme.typography.title.copyWith(color: c.foreground, height: 1.15)),
+                      Text(l10n.ninjaMonthVisits(month.bills.length), style: context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground))),
+                    ],
+                  ),
+                ),
+                Text(
+                  money(month.bills.where((b) => b.isSettled).fold(0.0, (sum, b) => sum + b.total)),
+                  style: context.localeText(theme.typography.headline.copyWith(fontWeight: FontWeight.w800, color: c.foreground, fontFeatures: NinjaTypography.tabular)),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 12),
+          ..._days(month.bills, branch, dayLabel),
         ],
-      ),
+      ],
     );
+  }
+
+  List<Widget> _days(List<Bill> bills, Branch? branch, String Function(DateTime) label) {
+    final days = <({DateTime day, List<Bill> bills})>[];
+    for (final bill in bills) {
+      final day = shiftDayOf(bill.closedAt!, branch);
+      if (days.isNotEmpty && days.last.day == day) {
+        days.last.bills.add(bill);
+      } else {
+        days.add((day: day, bills: [bill]));
+      }
+    }
+    return [
+      for (final (d, day) in days.indexed) ...[
+        if (d > 0) const SizedBox(height: 20),
+        SectionLabel(label(day.day)),
+        for (final (i, bill) in day.bills.indexed) ...[
+          if (i > 0) const SizedBox(height: 12),
+          BillTile(bill: bill, ordersById: ordersById),
+        ],
+      ],
+    ];
   }
 }

@@ -8,6 +8,7 @@ export 'liquid_chips.dart';
 export 'liquid_pill.dart';
 export 'ninja_button.dart';
 export 'ninja_field.dart';
+export 'ninja_page.dart';
 export 'ninja_sheet.dart';
 export 'page_header.dart';
 export 'parts.dart';

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -60,7 +59,7 @@ class PayBillBar extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (view.paid > 0) row(l10n.payPaidSoFar, money(view.paid), color: AppTheme.successColor),
+          if (view.paid > 0) row(l10n.payPaidSoFar, money(view.paid), color: NinjaColors.success),
           if (view.paid > 0 || view.held > 0) row(l10n.payRemaining, money(view.remaining), strong: true),
           if (!view.canPay && why != null) ...[
             const SizedBox(height: 4),

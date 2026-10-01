@@ -4,8 +4,8 @@ import 'pressable.dart';
 
 /// primary: the one thing to do (`pillAction`); secondary: the muted pill
 /// beside it (`pillCancel`); outline: a hairline pill; ghost: text only;
-/// destructive: a red pill
-enum NinjaButtonVariant { primary, secondary, outline, ghost, destructive }
+/// destructive: a red pill; inverse: the page's ink as the fill (Apple's sign-in)
+enum NinjaButtonVariant { primary, secondary, outline, ghost, destructive, inverse }
 
 /// md: 48 px, the web's `h-12`; sm: 36 px, a pill in a row
 enum NinjaButtonSize { md, sm }
@@ -112,6 +112,7 @@ class NinjaButton extends StatelessWidget {
       NinjaButtonVariant.outline => (Colors.transparent, c.foreground, c.border),
       NinjaButtonVariant.ghost => (Colors.transparent, c.foreground, null),
       NinjaButtonVariant.destructive => (c.destructive, c.destructiveForeground, null),
+      NinjaButtonVariant.inverse => (c.foreground, c.background, null),
     };
 
 /// A round button holding an icon (the web's `grid size-10 rounded-full bg-muted`)

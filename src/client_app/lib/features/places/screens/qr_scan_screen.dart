@@ -6,7 +6,6 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
@@ -175,7 +174,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       showIsland(
         context: context,
         title: Text(l10n.joinedSession),
-        icon: Icon(LucideIcons.check, color: AppTheme.successColor),
+        icon: Icon(LucideIcons.check, color: NinjaColors.success),
       );
     } catch (e) {
       if (mounted) {

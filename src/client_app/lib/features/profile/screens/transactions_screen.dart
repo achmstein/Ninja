@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
+import '../../../core/motion/motion.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
-import 'package:intl/intl.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../core/utils/money.dart';
 import '../models/account_balance.dart';
-import '../services/account_service.dart';
 import '../providers/account_provider.dart';
+import '../services/account_service.dart';
 
-/// Transaction history screen
+/// Amounts in the ledger always in western digits
+final _amount = NumberFormat('#,##0.00', 'en');
+
+const _red = Color(0xFFF87171);
+const _green = Color(0xFF34D399);
+
+/// The house tab (client_web's routes/account.tsx): the balance on the
+/// dock's slab, red when the customer owes and green in credit, and what
+/// moved it underneath.
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -19,353 +28,198 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  late Future<List<AccountTransaction>> _transactionsFuture;
+  late Future<List<AccountTransaction>> _transactions = ref.read(accountRepositoryProvider).getMyTransactions();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTransactions();
-  }
-
-  void _loadTransactions() {
-    _transactionsFuture = ref.read(accountRepositoryProvider).getMyTransactions();
+  Future<void> _reload() async {
+    final next = ref.read(accountRepositoryProvider).getMyTransactions();
+    setState(() => _transactions = next);
+    await Future.wait([next, ref.read(accountProvider.notifier).refresh()]);
   }
 
   @override
   Widget build(BuildContext context) {
-    final accountState = ref.watch(accountProvider);
-    final colors = context.theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final account = ref.watch(accountProvider);
+    final balance = account.account?.balance ?? 0;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
+    return NinjaPage(
+      title: l10n.transactions,
+      back: true,
+      onRefresh: _reload,
+      children: [
+        if (account.isLoading && account.account == null)
+          Container(height: 160, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius)))
+        else
+          _BalanceSlab(balance: balance),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with back button
-            PageHeader(title: AppLocalizations.of(context)!.transactions, back: true),
-
-            // Content
-            Expanded(
-              child: FutureBuilder<List<AccountTransaction>>(
-                future: _transactionsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(color: colors.primary),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return _buildErrorState(colors);
-                  }
-
-                  final transactions = snapshot.data ?? [];
-
-                  return RefreshIndicator(
-                    color: colors.primary,
-                    backgroundColor: colors.background,
-                    onRefresh: () async {
-                      setState(() {
-                        _loadTransactions();
-                      });
-                      await Future.wait([
-                        _transactionsFuture,
-                        ref.read(accountProvider.notifier).refresh(),
-                      ]);
-                    },
-                    child: ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        // Balance summary card
-                        if (accountState.account != null)
-                          _buildBalanceSummaryCard(accountState.account!, colors),
-                        const SizedBox(height: 24),
-
-                        // Recent Activity header
-                        AppText(
-                          AppLocalizations.of(context)!.recentActivity,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: colors.foreground,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Transactions list
-                        if (transactions.isEmpty)
-                          _buildNoTransactions(colors)
-                        else
-                          ...transactions.map(
-                            (transaction) => _TransactionTile(
-                              transaction: transaction,
-                              isLast: transaction == transactions.last,
-                              l10n: AppLocalizations.of(context)!,
-                              locale: Localizations.localeOf(context),
-                            ),
-                          ),
-                      ],
-                    ),
+            SectionLabel(l10n.recentActivity),
+            FutureBuilder<List<AccountTransaction>>(
+              future: _transactions,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return Container(height: 192, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
+                }
+                final list = snapshot.data ?? const [];
+                if (list.isEmpty) {
+                  return Panel(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: AppText(l10n.noTransactionsYet, textAlign: TextAlign.center, style: theme.typography.note.copyWith(color: c.mutedForeground)),
                   );
-                },
-              ),
+                }
+                return Panel(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (final (i, tx) in list.indexed) ...[
+                        if (i > 0) Divider(height: 1, thickness: 1, color: c.border.withValues(alpha: 0.6)),
+                        _LedgerRow(transaction: tx),
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
-      ),
+      ],
     );
   }
+}
 
-  Widget _buildBalanceSummaryCard(AccountBalance account, dynamic colors) {
-    final isOwed = account.owesAmount;
-    final hasCredit = account.hasCredit;
+/// The balance as the page's one big thing: red when the customer owes,
+/// green when in credit, plain when settled
+class _BalanceSlab extends ConsumerWidget {
+  final double balance;
 
-    // Use gradient colors matching the profile's BalanceCard
-    final gradientColors = isOwed
-        ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
-        : hasCredit
-            ? [const Color(0xFF10B981), const Color(0xFF059669)]
-            : [colors.muted as Color, colors.muted as Color];
+  const _BalanceSlab({required this.balance});
 
-    final shadowColor = isOwed
-        ? const Color(0xFFEF4444)
-        : hasCredit
-            ? const Color(0xFF10B981)
-            : colors.muted as Color;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final money = ref.watch(moneyProvider);
+    final owes = balance > 0;
+    final credit = balance < 0;
+    return SlabCard(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      child: Builder(
+        builder: (context) {
+          final ink = context.theme.colors.foreground;
+          final tone = owes ? _red : credit ? _green : ink;
+          return Stack(
+            clipBehavior: Clip.none,
             children: [
-              Icon(
-                isOwed ? LucideIcons.circleAlert : hasCredit ? LucideIcons.check : LucideIcons.wallet,
-                color: Colors.white,
-                size: 20,
+              // The tab's mark, large and faint in the corner
+              PositionedDirectional(
+                end: -24,
+                bottom: -56,
+                child: Transform.rotate(angle: -0.21, child: Icon(LucideIcons.wallet, size: 176, color: ink.withValues(alpha: 0.07))),
               ),
-              const SizedBox(width: 8),
-              AppText(
-                isOwed
-                    ? AppLocalizations.of(context)!.amountDue
-                    : hasCredit
-                        ? AppLocalizations.of(context)!.creditBalance
-                        : AppLocalizations.of(context)!.account,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(owes ? LucideIcons.circleAlert : credit ? LucideIcons.check : LucideIcons.wallet, size: 16, color: owes || credit ? tone : ink.withValues(alpha: 0.6)),
+                      const SizedBox(width: 8),
+                      Text(
+                        owes ? l10n.amountDue : credit ? l10n.creditBalance : l10n.yourBalance,
+                        style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: owes || credit ? tone : ink.withValues(alpha: 0.6))),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  RollingNumber(
+                    money(balance.abs()),
+                    value: balance.abs(),
+                    style: context.localeText(theme.typography.displayLg.copyWith(fontWeight: FontWeight.w800, color: tone)),
+                  ),
+                ],
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          AppText(
-            ref.watch(moneyProvider)(account.balance.abs()),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(dynamic colors) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            LucideIcons.circleAlert,
-            size: 48,
-            color: colors.mutedForeground,
-          ),
-          const SizedBox(height: 16),
-          AppText(
-            AppLocalizations.of(context)!.failedToLoadTransactions,
-            style: TextStyle(color: colors.mutedForeground),
-          ),
-          const SizedBox(height: 16),
-          NinjaButton(
-            onPress: () {
-              setState(() {
-                _loadTransactions();
-              });
-            },
-            child: AppText(AppLocalizations.of(context)!.retry),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoTransactions(dynamic colors) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          Icon(
-            LucideIcons.receipt,
-            size: 40,
-            color: colors.mutedForeground,
-          ),
-          const SizedBox(height: 12),
-          AppText(
-            AppLocalizations.of(context)!.noTransactionsYet,
-            style: TextStyle(color: colors.mutedForeground),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
-/// Transaction tile widget
-class _TransactionTile extends StatelessWidget {
+/// One move on the tab: a charge (+, red) or a payment (−, green), what it came from, and when
+class _LedgerRow extends StatelessWidget {
   final AccountTransaction transaction;
-  final bool isLast;
-  final AppLocalizations l10n;
-  final Locale locale;
 
-  const _TransactionTile({
-    required this.transaction,
-    this.isLast = false,
-    required this.l10n,
-    required this.locale,
-  });
+  const _LedgerRow({required this.transaction});
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final isCharge = transaction.isCharge;
-    final numberFormat = NumberFormat('#,##0.00');
-
-    return Container(
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(bottom: BorderSide(color: colors.border)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final charge = transaction.type == TransactionType.charge;
+    final tone = charge ? c.destructive : NinjaColors.success;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final detail = [_when(context, transaction.createdAt), _detail(l10n, transaction)].where((s) => s.isNotEmpty).join(' · ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Amount indicator - fixed width for alignment
-          SizedBox(
-            width: 100,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isCharge
-                    ? colors.destructive.withValues(alpha: 0.1)
-                    : AppTheme.successColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: AppText(
-                '${isCharge ? '+' : '-'}${numberFormat.format(transaction.amount)}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isCharge ? colors.destructive : AppTheme.successColor,
-                ),
-              ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: tone.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Transform.flip(
+              flipX: rtl,
+              child: Icon(charge ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft, size: 18, color: tone),
             ),
           ),
           const SizedBox(width: 12),
-
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppText(
-                      isCharge ? l10n.charge : l10n.payment,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: colors.foreground,
-                      ),
-                    ),
-                    AppText(
-                      _formatDate(transaction.createdAt, l10n, locale),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                if (_transactionDetail(transaction, l10n) case final detail?)
-                  AppText(
-                    detail,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.mutedForeground,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  AppText(
-                    l10n.byPerson(transaction.recordedBy),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.mutedForeground,
-                    ),
-                  ),
+                AppText(charge ? l10n.charge : l10n.payment, style: theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                AppText(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.caption.copyWith(color: c.mutedForeground)),
               ],
             ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '${charge ? '+' : '−'}${_amount.format(transaction.amount.abs())}',
+            style: theme.typography.body.copyWith(fontWeight: FontWeight.w700, color: tone, fontFeatures: NinjaTypography.tabular),
           ),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date, AppLocalizations l10n, Locale locale) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return l10n.today;
-    } else if (difference.inDays == 1) {
-      return l10n.yesterday;
-    } else if (difference.inDays < 7) {
-      return l10n.daysAgo(difference.inDays);
-    } else {
-      return DateFormat('MMM d', locale.languageCode).format(date);
-    }
+  /// Relative for the first week, then "MMM d"
+  static String _when(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
+    final days = DateTime.now().difference(date).inDays;
+    if (days <= 0) return l10n.today;
+    if (days == 1) return l10n.yesterday;
+    if (days < 7) return l10n.daysAgo(days);
+    return DateFormat('MMM d', Localizations.localeOf(context).languageCode).format(date);
   }
-}
 
-/// The second line of a ledger entry: the till's receipt or credit note by
-/// number, in the user's language, or what staff typed; null falls back to
-/// who recorded it
-String? _transactionDetail(AccountTransaction transaction, AppLocalizations l10n) {
-  if (transaction.source == 'posReceipt' && transaction.sourceNumber != null) return l10n.posReceipt(transaction.sourceNumber!);
-  if (transaction.source == 'posCreditNote' && transaction.sourceNumber != null) return l10n.posCreditNote(transaction.sourceNumber!);
-  if (transaction.source == 'posTabPayment' && transaction.sourceNumber != null) return l10n.posTabPayment(transaction.sourceNumber!);
-  return transaction.description;
+  /// The till's receipt, credit note or tab payment by number, what staff typed, or who recorded it
+  static String _detail(AppLocalizations l10n, AccountTransaction tx) {
+    final number = tx.sourceNumber;
+    if (number != null) {
+      switch (tx.source) {
+        case 'posReceipt':
+          return l10n.posReceipt(number);
+        case 'posCreditNote':
+          return l10n.posCreditNote(number);
+        case 'posTabPayment':
+          return l10n.posTabPayment(number);
+      }
+    }
+    if (tx.description != null && tx.description!.isNotEmpty) return tx.description!;
+    return tx.recordedBy.isEmpty ? '' : l10n.byPerson(tx.recordedBy);
+  }
 }

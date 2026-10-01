@@ -8,7 +8,6 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
@@ -168,7 +167,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
         color: isError
             ? context.theme.colors.destructive
             : success
-                ? AppTheme.successColor
+                ? NinjaColors.success
                 : context.theme.colors.primary,
       ),
     );

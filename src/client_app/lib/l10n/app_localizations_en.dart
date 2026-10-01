@@ -1325,4 +1325,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unavailable => 'Unavailable';
+
+  @override
+  String get ninjaYourBills => 'Your bills';
+
+  @override
+  String ninjaMonthVisits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count visits',
+      one: '1 visit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ninjaThisMonth => 'this month';
+
+  @override
+  String get yourBalance => 'Your balance';
 }

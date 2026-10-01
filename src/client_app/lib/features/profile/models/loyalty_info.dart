@@ -89,6 +89,14 @@ class LoyaltyInfo {
     }
   }
 
+  /// How far round the points ring is: lifetime points against the next
+  /// tier's, from nothing (client_web's useTierProgress); full at the top tier
+  double get ringProgress {
+    if (nextTier == null) return 1;
+    final needed = lifetimePoints + pointsToNextTier;
+    return needed <= 0 ? 1 : (lifetimePoints / needed).clamp(0.0, 1.0);
+  }
+
   /// Progress percentage to next tier (0.0 - 1.0)
   double get progressToNextTier {
     int currentThreshold;

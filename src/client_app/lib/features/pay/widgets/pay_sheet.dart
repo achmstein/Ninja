@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -469,7 +468,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
         Divider(height: 1, color: colors.border),
         const SizedBox(height: 8),
         _AmountRow(label: l10n.total, value: money(view.total), strong: true),
-        if (view.paid > 0) _AmountRow(label: l10n.payPaidSoFar, value: money(view.paid), color: AppTheme.successColor),
+        if (view.paid > 0) _AmountRow(label: l10n.payPaidSoFar, value: money(view.paid), color: NinjaColors.success),
         _AmountRow(label: l10n.payRemaining, value: money(view.remaining), strong: true),
         if (view.shares.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -732,7 +731,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       }
     } else if (status.isPaid) {
       children = [
-        Icon(LucideIcons.circleCheck, size: 56, color: AppTheme.successColor),
+        Icon(LucideIcons.circleCheck, size: 56, color: NinjaColors.success),
         const SizedBox(height: 12),
         _Centered(l10n.payPaidTitle, strong: true),
         const SizedBox(height: 4),
@@ -913,7 +912,7 @@ class _ShareRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(share.isPaid ? LucideIcons.circleCheck : LucideIcons.clock,
-              size: 16, color: share.isPaid ? AppTheme.successColor : colors.mutedForeground),
+              size: 16, color: share.isPaid ? NinjaColors.success : colors.mutedForeground),
           const SizedBox(width: 8),
           Expanded(child: AppText(name, style: TextStyle(fontSize: 14, color: colors.foreground))),
           if (!share.isPaid) ...[

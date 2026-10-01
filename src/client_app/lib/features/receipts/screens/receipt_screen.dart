@@ -44,25 +44,16 @@ class ReceiptScreen extends ConsumerWidget {
 
     final Widget body;
     if (loading) {
-      body = const Center(child: CircularProgressIndicator());
+      body = Container(height: 360, decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
     } else if (printed?.value != null) {
-      body = SingleChildScrollView(padding: const EdgeInsets.all(16), child: _ReceiptBody(receipt: printed!.value!));
+      body = _ReceiptBody(receipt: printed!.value!);
     } else if (bill != null) {
-      body = SingleChildScrollView(padding: const EdgeInsets.all(16), child: BillSlip(bill: bill));
+      body = BillSlip(bill: bill);
     } else {
-      body = Center(child: AppText(l10n.receiptUnavailable, style: TextStyle(color: colors.mutedForeground)));
+      body = EmptyState(icon: LucideIcons.receiptText, title: l10n.receiptUnavailable);
     }
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageHeader(title: title, back: true),
-            Expanded(child: body),
-          ],
-        ),
-      ),
-    );
+    return NinjaPage(title: title, back: true, backTo: '/bills', children: [body]);
   }
 }
 

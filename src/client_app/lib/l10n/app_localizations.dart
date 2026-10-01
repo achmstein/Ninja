@@ -2468,6 +2468,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unavailable'**
   String get unavailable;
+
+  /// No description provided for @ninjaYourBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bills'**
+  String get ninjaYourBills;
+
+  /// No description provided for @ninjaMonthVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 visit} other{{count} visits}}'**
+  String ninjaMonthVisits(int count);
+
+  /// No description provided for @ninjaThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get ninjaThisMonth;
+
+  /// No description provided for @yourBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance'**
+  String get yourBalance;
 }
 
 class _AppLocalizationsDelegate

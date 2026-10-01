@@ -1,15 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/ui/ui.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/loyalty_info.dart';
 import '../providers/loyalty_provider.dart';
-import '../widgets/loyalty_card.dart' show getLocalizedTierName;
 
-/// Loyalty history screen
+/// A tier's name in the app's language
+String tierName(AppLocalizations l10n, LoyaltyTier tier) => switch (tier) {
+      LoyaltyTier.bronze => l10n.tierBronze,
+      LoyaltyTier.silver => l10n.tierSilver,
+      LoyaltyTier.gold => l10n.tierGold,
+      LoyaltyTier.platinum => l10n.tierPlatinum,
+    };
+
+/// The tier, as a chip in the points' amber
+class TierChip extends StatelessWidget {
+  final LoyaltyTier tier;
+  final bool large;
+
+  const TierChip({super.key, required this.tier, this.large = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    const ink = Color(0xFFFCD34D);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: large ? 12 : 10, vertical: 4),
+      decoration: ShapeDecoration(color: pointsAmber.withValues(alpha: 0.15), shape: const StadiumBorder()),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.award, size: large ? 16 : 14, color: ink),
+          const SizedBox(width: 6),
+          Text(
+            tierName(AppLocalizations.of(context)!, tier),
+            style: context.localeText((large ? theme.typography.note : theme.typography.caption).copyWith(fontWeight: FontWeight.w700, color: ink)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Loyalty (client_web's routes/loyalty.tsx): the balance as a ring round
+/// towards the next tier on the dock's slab, the tier, the lifetime points
+/// and what is left to the next; then the recent activity, earned in green
+/// and spent in red. Not a member yet: the way to join.
 class LoyaltyScreen extends ConsumerStatefulWidget {
   const LoyaltyScreen({super.key});
 
@@ -21,339 +60,146 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
   @override
   void initState() {
     super.initState();
+    // Opened straight (a link, a notification) the points are not loaded yet; from You, they are fresh again
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(loyaltyProvider.notifier).refresh();
+      final loyalty = ref.read(loyaltyProvider.notifier);
+      ref.read(loyaltyProvider).loyaltyInfo == null ? loyalty.loadLoyaltyInfo() : loyalty.refresh();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final loyaltyState = ref.watch(loyaltyProvider);
-    final colors = context.theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final state = ref.watch(loyaltyProvider);
+    final info = state.loyaltyInfo;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header with back button
-            PageHeader(title: AppLocalizations.of(context)!.loyaltyRewards, back: true),
-
-            // Content
-            Expanded(
-            child: loyaltyState.isLoading && loyaltyState.loyaltyInfo == null
-                ? Center(
-                    child: CircularProgressIndicator(color: colors.primary),
-                  )
-                : loyaltyState.loyaltyInfo == null
-                    ? _buildEmptyState(colors)
-                    : RefreshIndicator(
-                        color: colors.primary,
-                        backgroundColor: colors.background,
-                        onRefresh: () => ref.read(loyaltyProvider.notifier).refresh(),
-                        child: ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            // Summary card
-                            _buildSummaryCard(loyaltyState.loyaltyInfo!, colors),
-                            const SizedBox(height: 24),
-
-                            // Recent Activity header
-                            AppText(
-                              AppLocalizations.of(context)!.recentActivity,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: colors.foreground,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Transactions list
-                            if (loyaltyState.recentTransactions.isEmpty)
-                              _buildNoTransactions(colors)
-                            else
-                              ...loyaltyState.recentTransactions.map(
-                                (transaction) => _TransactionTile(
-                                  transaction: transaction,
-                                  isLast: transaction ==
-                                      loyaltyState.recentTransactions.last,
-                                  l10n: AppLocalizations.of(context)!,
-                                  locale: Localizations.localeOf(context),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(dynamic colors) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    // Still finding out: a quiet block, so the card never shows 0 points before the way to join
+    if (info == null && state.isLoading) {
+      return NinjaPage(
+        title: l10n.loyaltyRewards,
+        back: true,
         children: [
-          Icon(
-            LucideIcons.gift,
-            size: 48,
-            color: colors.mutedForeground,
-          ),
-          const SizedBox(height: 16),
-          AppText(
-            AppLocalizations.of(context)!.noLoyaltyAccountYet,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: colors.foreground,
+          Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+        ],
+      );
+    }
+
+    if (info == null) {
+      return NinjaPage(
+        title: l10n.loyaltyRewards,
+        back: true,
+        children: [
+          EmptyState(
+            icon: LucideIcons.award,
+            title: l10n.joinOurLoyaltyProgram,
+            action: NinjaButton(
+              mainAxisSize: MainAxisSize.min,
+              lifted: true,
+              onPress: () => ref.read(loyaltyProvider.notifier).joinLoyaltyProgram(),
+              child: AppText(l10n.joinNow),
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildSummaryCard(LoyaltyInfo info, dynamic colors) {
-    final numberFormat = NumberFormat('#,###');
-    final tierColor = Color(info.currentTier.colorValue);
-    final textColor =
-        (info.currentTier == LoyaltyTier.bronze || info.currentTier == LoyaltyTier.platinum)
-            ? Colors.white
-            : Colors.black87;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          // Header (same as LoyaltyCard)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: colors.border)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.gift,
-                  color: tierColor,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                AppText(
-                  AppLocalizations.of(context)!.loyaltyRewards,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: colors.foreground,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: info.currentTier.gradientColors
-                          .map((c) => Color(c))
-                          .toList(),
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+    final number = NumberFormat('#,###');
+    return NinjaPage(
+      title: l10n.loyaltyRewards,
+      back: true,
+      onRefresh: () => ref.read(loyaltyProvider.notifier).refresh(),
+      children: [
+        SlabCard(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+          child: Builder(
+            builder: (context) {
+              final ink = context.theme.colors.foreground;
+              final note = context.localeText(theme.typography.note.copyWith(color: ink.withValues(alpha: 0.6)));
+              return Column(
+                children: [
+                  PointsRing(points: info.pointsBalance, progress: info.ringProgress, label: l10n.pts, size: 148),
+                  const SizedBox(height: 16),
+                  TierChip(tier: info.currentTier, large: true),
+                  const SizedBox(height: 6),
+                  Text(l10n.lifetimePoints(number.format(info.lifetimePoints)), style: note),
+                  if (info.nextTier != null)
+                    Text(
+                      l10n.pointsToNextTier(number.format(info.pointsToNextTier), tierName(l10n, info.nextTier!)),
+                      style: note.copyWith(color: ink.withValues(alpha: 0.8)),
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: tierColor.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: AppText(
-                    getLocalizedTierName(info.currentTier, AppLocalizations.of(context)!),
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
-
-          // Content (same as LoyaltyCard)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Points row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionLabel(l10n.recentActivity),
+            if (state.recentTransactions.isEmpty)
+              Panel(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: AppText(
+                  l10n.noTransactionsYet,
+                  textAlign: TextAlign.center,
+                  style: theme.typography.note.copyWith(color: c.mutedForeground),
+                ),
+              )
+            else
+              Panel(
+                padding: EdgeInsets.zero,
+                child: Column(
                   children: [
-                    Expanded(
-                      child: AppText(
-                        '${numberFormat.format(info.pointsBalance)} ${AppLocalizations.of(context)!.pts}',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: colors.foreground,
-                        ),
-                      ),
-                    ),
-                    AppText(
-                      AppLocalizations.of(context)!.lifetimePoints(numberFormat.format(info.lifetimePoints)),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.mutedForeground,
-                      ),
-                    ),
+                    for (final (i, tx) in state.recentTransactions.indexed) ...[
+                      if (i > 0) Divider(height: 1, thickness: 1, color: c.border.withValues(alpha: 0.6)),
+                      _Activity(transaction: tx),
+                    ],
                   ],
                 ),
-
-                // Progress to next tier
-                if (info.nextTier != null) ...[
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: info.progressToNextTier,
-                      backgroundColor: tierColor.withValues(alpha: 0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(tierColor),
-                      minHeight: 6,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AppText(
-                    AppLocalizations.of(context)!.pointsToNextTier(numberFormat.format(info.pointsToNextTier), getLocalizedTierName(info.nextTier!, AppLocalizations.of(context)!)),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoTransactions(dynamic colors) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          Icon(
-            LucideIcons.history,
-            size: 40,
-            color: colors.mutedForeground,
-          ),
-          const SizedBox(height: 12),
-          AppText(
-            AppLocalizations.of(context)!.noTransactionsYet,
-            style: TextStyle(color: colors.mutedForeground),
-          ),
-        ],
-      ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-/// Transaction tile widget
-class _TransactionTile extends StatelessWidget {
+class _Activity extends StatelessWidget {
   final PointsTransaction transaction;
-  final bool isLast;
-  final AppLocalizations l10n;
-  final Locale locale;
 
-  const _TransactionTile({
-    required this.transaction,
-    this.isLast = false,
-    required this.l10n,
-    required this.locale,
-  });
+  const _Activity({required this.transaction});
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final isEarned = transaction.isEarned;
-    final numberFormat = NumberFormat('#,###');
-
-    return Container(
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(bottom: BorderSide(color: colors.border)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final earned = transaction.points >= 0;
+    final tone = earned ? NinjaColors.success : c.destructive;
+    final detail = [_when(context, transaction.createdAt), _description(l10n, transaction)].where((s) => s.isNotEmpty).join(' · ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Points indicator - fixed width for alignment
-          SizedBox(
-            width: 90,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isEarned
-                    ? AppTheme.successColor.withValues(alpha: 0.1)
-                    : colors.destructive.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: AppText(
-                '${isEarned ? '+' : '-'}${numberFormat.format(transaction.points.abs())}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isEarned ? AppTheme.successColor : colors.destructive,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppText(
-                      _getLocalizedTypeDisplay(transaction.type),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: colors.foreground,
-                      ),
-                    ),
-                    AppText(
-                      _formatDate(transaction.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                AppText(
-                  _getLocalizedDescription(transaction),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colors.mutedForeground,
-                  ),
-                ),
+                AppText(_type(l10n, transaction.type), style: theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                AppText(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.caption.copyWith(color: c.mutedForeground)),
               ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Earned in green, spent in red
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: ShapeDecoration(color: tone.withValues(alpha: 0.12), shape: const StadiumBorder()),
+            child: Text(
+              '${earned ? '+' : '−'}${NumberFormat('#,###').format(transaction.points.abs())}',
+              style: theme.typography.note.copyWith(fontWeight: FontWeight.w700, color: tone, fontFeatures: NinjaTypography.tabular),
             ),
           ),
         ],
@@ -361,64 +207,34 @@ class _TransactionTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return l10n.today;
-    } else if (difference.inDays == 1) {
-      return l10n.yesterday;
-    } else if (difference.inDays < 7) {
-      return l10n.daysAgo(difference.inDays);
-    } else {
-      return DateFormat('MMM d', locale.languageCode).format(date);
-    }
+  /// Relative for the first week, then "MMM d"
+  static String _when(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
+    final days = DateTime.now().difference(date).inDays;
+    if (days <= 0) return l10n.today;
+    if (days == 1) return l10n.yesterday;
+    if (days < 7) return l10n.daysAgo(days);
+    return DateFormat('MMM d', Localizations.localeOf(context).languageCode).format(date);
   }
 
-  String _getLocalizedTypeDisplay(TransactionType type) {
-    switch (type) {
-      case TransactionType.purchase:
-        return l10n.transactionTypePurchase;
-      case TransactionType.bonus:
-        return l10n.transactionTypeBonus;
-      case TransactionType.referral:
-        return l10n.transactionTypeReferral;
-      case TransactionType.promotion:
-        return l10n.transactionTypePromotion;
-      case TransactionType.redemption:
-        return l10n.transactionTypeRedemption;
-      case TransactionType.adjustment:
-        return l10n.transactionTypeAdjustment;
-    }
-  }
+  static String _type(AppLocalizations l10n, TransactionType type) => switch (type) {
+        TransactionType.purchase => l10n.transactionTypePurchase,
+        TransactionType.bonus => l10n.transactionTypeBonus,
+        TransactionType.referral => l10n.transactionTypeReferral,
+        TransactionType.promotion => l10n.transactionTypePromotion,
+        TransactionType.redemption => l10n.transactionTypeRedemption,
+        TransactionType.adjustment => l10n.transactionTypeAdjustment,
+      };
 
-  String _getLocalizedDescription(PointsTransaction transaction) {
-    // If description is provided (from admin), use it
-    if (transaction.description != null && transaction.description!.isNotEmpty) {
-      return transaction.description!;
-    }
-
-    // Otherwise, construct message based on type and referenceId
-    final referenceId = transaction.referenceId;
-
-    switch (transaction.type) {
-      case TransactionType.purchase:
-        return referenceId != null
-            ? l10n.pointsEarnedFromOrder(referenceId)
-            : l10n.transactionTypePurchase;
-      case TransactionType.redemption:
-        return referenceId != null
-            ? l10n.pointsRedeemedForOrder(referenceId)
-            : l10n.transactionTypeRedemption;
-      case TransactionType.bonus:
-        return l10n.transactionTypeBonus;
-      case TransactionType.referral:
-        return l10n.transactionTypeReferral;
-      case TransactionType.promotion:
-        return l10n.transactionTypePromotion;
-      case TransactionType.adjustment:
-        return l10n.transactionTypeAdjustment;
-    }
+  /// What the business wrote, or the order it came from
+  static String _description(AppLocalizations l10n, PointsTransaction tx) {
+    if (tx.description != null && tx.description!.isNotEmpty) return tx.description!;
+    final ref = tx.referenceId;
+    if (ref == null) return '';
+    return switch (tx.type) {
+      TransactionType.purchase => l10n.pointsEarnedFromOrder(ref),
+      TransactionType.redemption => l10n.pointsRedeemedForOrder(ref),
+      _ => '',
+    };
   }
 }

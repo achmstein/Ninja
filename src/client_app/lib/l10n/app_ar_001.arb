@@ -289,5 +289,8 @@
   "ninjaWholeMenu": "القائمة كاملة",
   "ninjaBackToCards": "العودة إلى البطاقات",
   "ninjaUpNext": "التالي",
-  "ninjaChoose": "اختر {name}"
+  "ninjaChoose": "اختر {name}",
+  "ninjaYourBills": "فواتيرك",
+  "ninjaMonthVisits": "{count, plural, =1{زيارة واحدة} =2{زيارتان} other{{count} زيارات}}",
+  "ninjaThisMonth": "هذا الشهر"
 }

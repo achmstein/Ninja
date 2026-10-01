@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/models/branch.dart';
 import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -23,298 +24,78 @@ class StaysScreen extends ConsumerStatefulWidget {
 
 class _StaysScreenState extends ConsumerState<StaysScreen> {
   @override
-  void initState() {
-    super.initState();
-    ref.read(myStaysProvider.notifier).refresh();
-  }
-
-  DateTime _getSessionStart() {
-    final branch = ref.read(branchProvider).selectedBranch;
-    final startHour = branch?.dayStartHour ?? 17;
-    final isOvernight = branch?.isOvernightShift ?? true;
-    final now = DateTime.now();
-    if (isOvernight) {
-      if (now.hour >= startHour) {
-        return DateTime(now.year, now.month, now.day, startHour);
-      } else {
-        final yesterday = now.subtract(const Duration(days: 1));
-        return DateTime(yesterday.year, yesterday.month, yesterday.day, startHour);
-      }
-    } else {
-      return DateTime(now.year, now.month, now.day, startHour);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final sessionsAsync = ref.watch(myStaysProvider);
+    final stays = ref.watch(myStaysProvider);
     final currentUserId = ref.watch(authServiceProvider).userId;
-    final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
-
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            PageHeader(title: l10n.sessions, back: true),
-
-            // Tabs
-            Expanded(
-              child: NinjaTabs(
-                tabs: [
-                  (
-                    label: Text(l10n.todaysSessions),
-                    child: _TodaySessionsList(
-                      sessionsAsync: sessionsAsync,
-                      currentUserId: currentUserId,
-                      colors: colors,
-                      sessionStart: _getSessionStart(),
-                      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
-                    ),
-                  ),
-                  (
-                    label: Text(l10n.previousSessions),
-                    child: _HistorySessionsList(
-                      sessionsAsync: sessionsAsync,
-                      currentUserId: currentUserId,
-                      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════
-// Today's Sessions — flat list, time only
-// ════════════════════════════════════════════════════════════════════
-
-class _TodaySessionsList extends StatelessWidget {
-  final AsyncValue<List<Stay>> sessionsAsync;
-  final String? currentUserId;
-  final dynamic colors;
-  final DateTime sessionStart;
-  final Future<void> Function() onRefresh;
-
-  const _TodaySessionsList({
-    required this.sessionsAsync,
-    required this.currentUserId,
-    required this.colors,
-    required this.sessionStart,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return sessionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => _buildError(l10n),
-      data: (allSessions) {
-        final sessions = allSessions.where((s) {
-          final time = s.startedAt ?? s.createdAt;
-          return time.isAfter(sessionStart);
-        }).toList();
-
-        if (sessions.isEmpty) {
-          return _buildEmpty(l10n.noSessionsToday);
-        }
-
-        return RefreshIndicator(
-          color: colors.primary,
-          backgroundColor: colors.background,
-          onRefresh: onRefresh,
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: sessions.length,
-            separatorBuilder: (_, _) => Divider(height: 1, color: colors.border),
-            itemBuilder: (context, index) => SessionTile(
-              session: sessions[index],
-              currentUserId: currentUserId,
-              showTimeOnly: true,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildError(AppLocalizations l10n) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
-          const SizedBox(height: 16),
-          AppText(l10n.failedToLoadSessions, style: TextStyle(color: colors.foreground)),
-          const SizedBox(height: 16),
-          NinjaButton(onPress: onRefresh, child: AppText(l10n.retry)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmpty(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(LucideIcons.gamepad2, size: 80, color: colors.mutedForeground),
-          const SizedBox(height: 16),
-          AppText(message, style: TextStyle(fontSize: 18, color: colors.foreground)),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════
-// Previous Sessions — grouped by shift date
-// ════════════════════════════════════════════════════════════════════
-
-class _HistorySessionsList extends ConsumerWidget {
-  final AsyncValue<List<Stay>> sessionsAsync;
-  final String? currentUserId;
-  final Future<void> Function() onRefresh;
-
-  const _HistorySessionsList({
-    required this.sessionsAsync,
-    required this.currentUserId,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context)!;
+    final c = context.theme.colors;
     final locale = ref.watch(localeProvider);
+    Future<void> refresh() => ref.read(myStaysProvider.notifier).refresh();
 
-    return sessionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(LucideIcons.circleAlert, size: 48, color: colors.mutedForeground),
-            const SizedBox(height: 16),
-            AppText(l10n.failedToLoadSessions, style: TextStyle(color: colors.foreground)),
-            const SizedBox(height: 16),
-            NinjaButton(onPress: onRefresh, child: AppText(l10n.retry)),
-          ],
+    final List<Widget> children = stays.when(
+      skipLoadingOnRefresh: true,
+      loading: () => [
+        for (var i = 0; i < 3; i++) Container(height: 120, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius))),
+      ],
+      error: (_, _) => [
+        EmptyState(
+          icon: LucideIcons.circleAlert,
+          title: l10n.failedToLoadSessions,
+          action: NinjaButton(variant: NinjaButtonVariant.outline, mainAxisSize: MainAxisSize.min, onPress: refresh, child: AppText(l10n.retry)),
         ),
-      ),
-      data: (sessions) {
-        if (sessions.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(LucideIcons.gamepad2, size: 80, color: colors.mutedForeground),
-                const SizedBox(height: 16),
-                AppText(l10n.noSessionsYet, style: TextStyle(fontSize: 18, color: colors.foreground)),
-              ],
-            ),
-          );
-        }
-
-        final groups = _groupByShift(sessions, locale, l10n, ref);
-
-        return RefreshIndicator(
-          color: colors.primary,
-          backgroundColor: colors.background,
-          onRefresh: onRefresh,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              for (final group in groups) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: AppText(
-                      group.label,
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.mutedForeground),
-                    ),
-                  ),
+      ],
+      data: (list) => list.isEmpty
+          ? [EmptyState(icon: LucideIcons.gamepad2, title: l10n.noSessionsYet)]
+          : [
+              // All of them in one list by shift day, newest first, each a card (a running one the slab)
+              for (final group in _groupByShift(list, locale, l10n, ref.read(branchProvider).selectedBranch))
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SectionLabel(group.label),
+                    for (final (i, stay) in group.sessions.indexed) ...[
+                      if (i > 0) const SizedBox(height: 12),
+                      stay.status == StayStatus.active
+                          ? SlabCard(child: SessionTile(session: stay, currentUserId: currentUserId, showTimeOnly: true))
+                          : Panel(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), child: SessionTile(session: stay, currentUserId: currentUserId, showTimeOnly: true)),
+                    ],
+                  ],
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: SessionTile(
-                            session: group.sessions[index],
-                            currentUserId: currentUserId,
-                            showTimeOnly: true,
-                          ),
-                        ),
-                        if (index < group.sessions.length - 1)
-                          Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
-                      ],
-                    ),
-                    childCount: group.sessions.length,
-                  ),
-                ),
-              ],
-              const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
             ],
-          ),
-        );
-      },
     );
+
+    return NinjaPage(title: l10n.sessions, back: true, onRefresh: refresh, children: children);
   }
+}
 
-  List<_ShiftGroup> _groupByShift(
-    List<Stay> sessions,
-    Locale locale,
-    AppLocalizations l10n,
-    WidgetRef ref,
-  ) {
-    final groups = <String, _ShiftGroup>{};
-    final now = DateTime.now();
-    final dateFormat = DateFormat('EEEE, MMM d', locale.languageCode);
-    final branch = ref.read(branchProvider).selectedBranch;
-    final startHour = branch?.dayStartHour ?? 17;
-    final isOvernight = branch?.isOvernightShift ?? true;
+/// Stays by the branch's shift day: an overnight shift's small hours are the day before
+List<_ShiftGroup> _groupByShift(List<Stay> sessions, Locale locale, AppLocalizations l10n, Branch? branch) {
+  final groups = <String, _ShiftGroup>{};
+  final now = DateTime.now();
+  final dateFormat = DateFormat('EEEE, MMM d', locale.languageCode);
+  final startHour = branch?.dayStartHour ?? 17;
+  final overnight = branch?.isOvernightShift ?? true;
+  DateTime shiftOf(DateTime t) => overnight && t.hour < startHour ? DateTime(t.year, t.month, t.day - 1) : DateTime(t.year, t.month, t.day);
+  final today = shiftOf(now);
+  final yesterday = DateTime(today.year, today.month, today.day - 1);
 
-    for (final session in sessions) {
-      final sessionTime = (session.startedAt ?? session.createdAt).toLocal();
-      final shiftDate = isOvernight && sessionTime.hour < startHour
-          ? DateTime(sessionTime.year, sessionTime.month, sessionTime.day - 1)
-          : DateTime(sessionTime.year, sessionTime.month, sessionTime.day);
-
-      final key = '${shiftDate.year}-${shiftDate.month}-${shiftDate.day}';
-
-      if (!groups.containsKey(key)) {
-        final todayShift = isOvernight && now.hour < startHour
-            ? DateTime(now.year, now.month, now.day - 1)
-            : DateTime(now.year, now.month, now.day);
-        final yesterdayShift = todayShift.subtract(const Duration(days: 1));
-
-        String label;
-        if (_sameDay(shiftDate, todayShift)) {
-          label = l10n.today;
-        } else if (_sameDay(shiftDate, yesterdayShift)) {
-          label = l10n.yesterday;
-        } else {
-          label = dateFormat.format(shiftDate);
-        }
-        groups[key] = _ShiftGroup(label: label, sessions: []);
-      }
-      groups[key]!.sessions.add(session);
-    }
-    return groups.values.toList();
+  for (final session in sessions) {
+    final day = shiftOf((session.startedAt ?? session.createdAt).toLocal());
+    final key = '${day.year}-${day.month}-${day.day}';
+    groups.putIfAbsent(
+      key,
+      () => _ShiftGroup(
+        label: day == today
+            ? l10n.today
+            : day == yesterday
+                ? l10n.yesterday
+                : dateFormat.format(day),
+        sessions: [],
+      ),
+    );
+    groups[key]!.sessions.add(session);
   }
-
-  bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+  return groups.values.toList();
 }
 
 class _ShiftGroup {

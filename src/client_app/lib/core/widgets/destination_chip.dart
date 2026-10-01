@@ -7,7 +7,6 @@ import 'app_text.dart';
 import '../../features/service_request/models/service_request.dart';
 import '../../features/service_request/services/service_request_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../theme/app_theme.dart';
 import '../brand/brand_provider.dart';
 import '../providers/branch_provider.dart';
 import '../../features/pay/services/pay_service.dart';
@@ -137,7 +136,7 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
     if (ok) {
       _tableCooldowns[type] = DateTime.now().add(const Duration(minutes: 1));
       Navigator.of(context).pop();
-      showIsland(context: context, title: Text(success), icon: Icon(LucideIcons.check, color: AppTheme.successColor));
+      showIsland(context: context, title: Text(success), icon: Icon(LucideIcons.check, color: NinjaColors.success));
     } else {
       showIsland(context: context, title: Text(l10n.failedToSendRequest));
     }

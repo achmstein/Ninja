@@ -49,7 +49,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 1'), findsOneWidget);
-    expect(find.byIcon(LucideIcons.calendarPlus), findsOneWidget);
+    expect(find.byIcon(LucideIcons.plus), findsOneWidget);
   });
 
   testWidgets('with bookings out of the plan the same room is still listed, with nothing to book it by', (tester) async {
@@ -57,7 +57,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 1'), findsOneWidget);
-    expect(find.byIcon(LucideIcons.calendarPlus), findsNothing);
+    expect(find.byIcon(LucideIcons.plus), findsNothing);
   });
 
   testWidgets('a room somebody else is in has nothing to book either', (tester) async {
@@ -75,6 +75,6 @@ void main() {
     await tester.pump();
 
     expect(find.text('Room 2'), findsOneWidget);
-    expect(find.byIcon(LucideIcons.calendarPlus), findsNothing);
+    expect(find.byIcon(LucideIcons.plus), findsNothing);
   });
 }
