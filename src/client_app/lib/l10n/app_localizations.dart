@@ -2445,6 +2445,24 @@ abstract class AppLocalizations {
   /// **'Back to the cards'**
   String get ninjaBackToCards;
 
+  /// No description provided for @ninjaHintSwipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up for more, sideways for other categories'**
+  String get ninjaHintSwipe;
+
+  /// No description provided for @ninjaHintZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch or tap the grid to see everything'**
+  String get ninjaHintZoom;
+
+  /// No description provided for @ninjaHintHoldAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to add'**
+  String get ninjaHintHoldAdd;
+
   /// No description provided for @ninjaUpNext.
   ///
   /// In en, this message translates to:
