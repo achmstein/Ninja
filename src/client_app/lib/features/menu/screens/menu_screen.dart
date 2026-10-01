@@ -54,7 +54,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   bool _grid = false;
   List<DeckColumn> _columns = const [];
 
-  /// While a tap on a chip scrolls to its category, the pill stays on it rather than lighting each one passed
+  /// The category a chip was tapped for: lit while the scroll runs there and after it, until the
+  /// customer scrolls themselves (near the end the list cannot bring its heading to the top, and
+  /// the spy alone would light another)
+  int? _held;
+
+  /// The tapped chip's own scroll is running: its movement does not let go of the chip
   bool _jumping = false;
 
   @override
@@ -73,15 +78,27 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   /// Which category is in view: the last one whose heading has reached the
   /// top of the page; at the end of the page the last one, however short
   void _spy() {
-    if (_jumping || _sections == 0) return;
+    if (_sections == 0) return;
+    // A tapped chip stays lit until the customer scrolls themselves
+    final held = _held;
+    if (held != null) {
+      if (_section.value != held) _section.value = held;
+      return;
+    }
     final positions = _positions.itemPositions.value;
     if (positions.isEmpty) return;
+    // The line a heading must reach to light its chip: near the top, until the last half-screen of the
+    // list, over which it slides down to the bottom. The last categories, whose headings can never reach
+    // the top, each light in turn as the list's end comes up, the last one at the end itself
+    final last = positions.where((p) => p.index == _sections).firstOrNull;
+    final left = last == null ? double.infinity : (last.itemTrailingEdge - 1).clamp(0.0, double.infinity);
+    final ramp = (1 - left / 0.5).clamp(0.0, 1.0);
+    final line = 0.08 + (0.92 - 0.08) * ramp;
     var index = 0;
     for (final p in positions) {
       // Item 0 is the title; the sections follow it
-      if (p.index > 0 && p.itemLeadingEdge <= 0.08 && p.index - 1 > index) index = p.index - 1;
+      if (p.index > 0 && p.itemLeadingEdge <= line && p.index - 1 > index) index = p.index - 1;
     }
-    if (positions.any((p) => p.index == _sections && p.itemTrailingEdge <= 1.001)) index = _sections - 1;
     if (_section.value != index) _section.value = index;
   }
 
@@ -105,13 +122,18 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     });
   }
 
+  /// A chip tapped: its category scrolled to the top (as far as the list goes) and its chip held lit
   Future<void> _jump(int index) async {
-    _jumping = true;
+    _held = index;
     _section.value = index;
-    await _scroll.scrollTo(index: index + 1, duration: const Duration(milliseconds: 450), curve: Curves.easeInOutCubic);
-    // Let go once it has settled
-    await Future<void>.delayed(const Duration(milliseconds: 60));
-    _jumping = false;
+    _jumping = true;
+    try {
+      await _scroll.scrollTo(index: index + 1, duration: const Duration(milliseconds: 450), curve: Curves.easeInOutCubic);
+      // The last frames of the scroll land after it says it is done
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+    } finally {
+      _jumping = false;
+    }
   }
 
   @override
@@ -162,19 +184,29 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
               child: MediaQuery.removePadding(
                 context: context,
                 removeBottom: true,
-                child: ScrollablePositionedList.builder(
-                  itemScrollController: _scroll,
-                  itemPositionsListener: _positions,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: sections.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // The deck zoomed out has the way back to its cards by its title
-                      return deck ? _Head(title: l10n.ninjaWholeMenu, paused: !ordering, onBack: _zoomIn) : _Head(title: l10n.menu, paused: !ordering);
+                // The customer's own scrolling (a finger, a wheel, a trackpad) lets go of the chip they tapped
+                child: NotificationListener<ScrollUpdateNotification>(
+                  onNotification: (n) {
+                    if (!_jumping && _held != null) {
+                      _held = null;
+                      _spy();
                     }
-                    return _Section(section: sections[index - 1], layout: layout);
+                    return false;
                   },
+                  child: ScrollablePositionedList.builder(
+                    itemScrollController: _scroll,
+                    itemPositionsListener: _positions,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    itemCount: sections.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        // The deck zoomed out has the way back to its cards by its title
+                        return deck ? _Head(title: l10n.ninjaWholeMenu, paused: !ordering, onBack: _zoomIn) : _Head(title: l10n.menu, paused: !ordering);
+                      }
+                      return _Section(section: sections[index - 1], layout: layout);
+                    },
+                  ),
                 ),
               ),
             ),
