@@ -454,5 +454,9 @@
   "ninjaYourBills": "حساباتك",
   "ninjaMonthVisits": "{count, plural, =1{زيارة واحدة} =2{زيارتين} other{{count} زيارات}}",
   "ninjaThisMonth": "الشهر ده",
-  "yourBalance": "رصيدك"
+  "yourBalance": "رصيدك",
+  "bookFreeNow": "{count, plural, =0{مفيش حاجة فاضية دلوقتي} =1{واحدة فاضية دلوقتي} =2{اتنين فاضيين دلوقتي} other{{count} فاضيين دلوقتي}}",
+  "ninjaYoureIn": "انت في {name}",
+  "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبين} other{{count} طلبات}}",
+  "ninjaOpenBill": "الإيصال"
 }

@@ -20,32 +20,59 @@ import '../services/bills_service.dart';
 import 'bill_slip.dart';
 import 'bill_stars.dart';
 
-/// The till's bill, laid out like a slip: the customer's own view of it.
-/// Their rounds, the rounds the till named nobody for, and the place's
-/// time as the group's. A bill with nobody else on it adds up to its
-/// total, with the till's discount, service and VAT under the lines; one
-/// with somebody else's rounds ends on the customer's own, with the whole
-/// bill's total under it — whose the time is, the till decides at settle.
-/// The tap opens the bill, which itemises everything with the names on it.
-class BillTile extends ConsumerWidget {
+/// One round of a bill: the lines that came in one order (newest first), or a line on its own
+class _Round {
+  final String key;
+  final DateTime? at;
+  final List<BillLine> lines;
+
+  /// The till put it on the bill without a name: there, but not read as theirs
+  final bool unnamed;
+
+  const _Round({required this.key, required this.at, required this.lines, required this.unnamed});
+}
+
+/// The customer's own lines, and the ones nobody's name is on, by the order they came in, newest first
+List<_Round> _roundsOf(Iterable<BillLine> lines, Map<int, Order>? ordersById) {
+  final byOrder = <String, ({DateTime? at, List<BillLine> lines, bool unnamed})>{};
+  for (final line in lines) {
+    final key = line.orderId != null ? 'o${line.orderId}' : 'l${line.id}';
+    final orderId = line.orderId;
+    final at = orderId == null || ordersById == null ? null : ordersById[orderId]?.date;
+    final round = byOrder[key] ?? (at: at, lines: <BillLine>[], unnamed: true);
+    round.lines.add(line);
+    byOrder[key] = (at: round.at, lines: round.lines, unnamed: round.unnamed && line.isUnassigned);
+  }
+  return [for (final e in byOrder.entries) _Round(key: e.key, at: e.value.at, lines: e.value.lines, unnamed: e.value.unnamed)].reversed.toList();
+}
+
+/// A bill as a stack of its rounds (client_web's bill-card.tsx). The total
+/// sits on top and rolls to each new value; a tap fans the stack open to
+/// every round and what the till added to them, and folds it back. An open
+/// bill is the dock's dark slab with the way to pay under it, its stack
+/// standing open; a closed one is a light card, with the stars once paid.
+class BillTile extends ConsumerStatefulWidget {
   final Bill bill;
 
-  /// Today's orders by number, for the stars on a paid bill; the history
-  /// tab has none
+  /// Today's orders by number: when each round was sent, and the stars on a paid bill
   final Map<int, Order>? ordersById;
 
   const BillTile({super.key, required this.bill, this.ordersById});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BillTile> createState() => _BillTileState();
+}
+
+class _BillTileState extends ConsumerState<BillTile> {
+  late bool _fanned = widget.bill.isOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final bill = widget.bill;
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
     final now = ref.watch(minuteClockProvider).value ?? DateTime.now();
     final money = ref.watch(moneyProvider);
-
-    final mine = bill.lines.where((line) => line.isMine && !line.isTime);
-    final unassigned = bill.lines.where((line) => line.isUnassigned);
-    final time = bill.lines.where((line) => line.isTime);
     final stays = ref.watch(myStaysProvider).value ?? const <Stay>[];
     // The stay this bill charges the time of, for its roster
     final stay = bill.sessionId == null ? null : stays.where((s) => s.id == bill.sessionId).firstOrNull;
@@ -53,65 +80,87 @@ class BillTile extends ConsumerWidget {
     final parts = billParts(bill, running, stay);
     final place = bill.locationName?.localized(context);
     final opened = DateFormat('h:mm a', locale.languageCode).format(bill.openedAt.toLocal());
-
+    final time = bill.lines.where((line) => line.isTime).toList();
+    final rounds = _roundsOf(bill.lines.where((line) => (line.isMine || line.isUnassigned) && !line.isTime), widget.ordersById);
+    final hasTime = time.isNotEmpty || running != null;
+    final open = bill.isOpen;
     final approx = running != null ? '≈ ' : '';
 
-    final open = bill.isOpen;
     final card = Builder(
       builder: (context) {
         // On the slab (an open bill) the inks are the slab's
-        final c = context.theme.colors;
         final theme = context.theme;
-        final rowStyle = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
-        Widget row(String label, String value, {required TextStyle style, EdgeInsets padding = EdgeInsets.zero}) => Padding(
-              padding: padding,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Expanded(child: Text(label, style: style)),
-                  const SizedBox(width: 8),
-                  Text(value, style: style.copyWith(fontFeatures: NinjaTypography.tabular)),
-                ],
-              ),
+        final c = theme.colors;
+        final small = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
+        // A round's own fill: a touch lighter than the slab, or the page's muted on a light card
+        final fill = open ? Color.lerp(c.background, c.foreground, 0.09)! : c.background;
+        Widget row(String label, String value, {TextStyle? style}) => Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(child: Text(label, style: style ?? small)),
+                const SizedBox(width: 8),
+                Text(value, style: (style ?? small).copyWith(fontFeatures: NinjaTypography.tabular)),
+              ],
             );
+        Widget shell(List<Widget> children) => Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(Ninja.tileRadius)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+            );
+        final cards = <Widget>[
+          for (final round in rounds)
+            shell([
+              if (round.at != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    DateFormat('h:mm a', locale.languageCode).format(round.at!.toLocal()),
+                    style: small.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              Opacity(opacity: round.unnamed ? 0.6 : 1, child: Column(children: [for (final line in round.lines) _BillLine(line: line)])),
+            ]),
+          if (hasTime) shell([for (final line in time) _BillLine(line: line), if (running != null) RunningTimeLine(bill: bill, running: running)]),
+        ];
+        final edge = BorderRadius.vertical(bottom: Radius.circular(Ninja.tileRadius * 0.7));
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.push('/receipts/${bill.id}'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Where and when, and what the till did with it
-                  Row(
-                    children: [
-                      if (bill.placeId != null && bill.placeKind != null) ...[
-                        Icon(bill.placeKind!.icon, size: 16, color: c.mutedForeground),
-                        const SizedBox(width: 6),
-                      ],
-                      Flexible(
-                        child: Text(
-                          place == null || place.isEmpty ? l10n.atTheCounter : place,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.mutedForeground)),
-                        ),
-                      ),
-                      Text(' · $opened', style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.mutedForeground))),
-                      const Spacer(),
-                      _BillPill(bill: bill),
-                    ],
+            // Where and when, and what the till did with it
+            Row(
+              children: [
+                if (bill.placeId != null && bill.placeKind != null) ...[
+                  Icon(bill.placeKind!.icon, size: 16, color: c.mutedForeground),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    place == null || place.isEmpty ? l10n.atTheCounter : place,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: small.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 12),
-                  // The total, large; with somebody else's rounds on it, the customer's own
-                  Opacity(
+                ),
+                Text(' · $opened', style: small.copyWith(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                _StatusChip(bill: bill),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // The total, large; with somebody else's rounds on it, the customer's own; how many rounds, to open them
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Opacity(
                     opacity: bill.isVoided ? 0.5 : 1,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(parts.shared ? l10n.yourRounds : l10n.total, style: rowStyle),
+                        Text(parts.shared ? l10n.yourRounds : l10n.total, style: small),
                         RollingNumber(
                           '$approx${money(parts.shared ? parts.ownLines : parts.total)}',
                           value: parts.shared ? parts.ownLines : parts.total,
@@ -124,57 +173,151 @@ class BillTile extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  for (final line in mine) _BillLine(line: line),
-                  for (final line in unassigned) _BillLine(line: line),
-                  for (final line in time) _BillLine(line: line),
-                  if (running != null) RunningTimeLine(bill: bill, running: running),
-                  if (parts.shared)
-                    row(l10n.billTotal, '$approx${money(parts.total)}', style: rowStyle, padding: const EdgeInsets.only(top: 4))
-                  else ...[
-                    if (bill.discount > 0)
-                      row(
-                        '${l10n.discount}${bill.discountRate != null ? ' ${percent(bill.discountRate)}%' : ''}',
-                        '−${money(bill.discount)}',
-                        style: rowStyle,
+                ),
+                if (cards.isNotEmpty)
+                  Pressable(
+                    onTap: () => setState(() => _fanned = !_fanned),
+                    scale: 0.95,
+                    child: Container(
+                      padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 8, 6),
+                      decoration: ShapeDecoration(color: c.muted, shape: const StadiumBorder()),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (rounds.isNotEmpty)
+                            Text(l10n.ninjaRoundCount(rounds.length), style: small.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                          const SizedBox(width: 4),
+                          AnimatedRotation(
+                            turns: _fanned ? 0.5 : 0,
+                            duration: Motion.base,
+                            curve: Motion.enter,
+                            child: Icon(LucideIcons.chevronDown, size: 16, color: c.foreground),
+                          ),
+                        ],
                       ),
-                    if (bill.serviceCharge > 0)
-                      row(l10n.serviceCharge(percent(bill.serviceChargeRate).toString()), money(bill.serviceCharge), style: rowStyle),
-                    if (bill.vat > 0 && !bill.vatIncluded) row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat), style: rowStyle),
-                  ],
-                  if (bill.refundedTotal > 0)
-                    row(l10n.refunded, '−${money(bill.refundedTotal)}', style: rowStyle.copyWith(color: c.destructive)),
-                ],
-              ),
+                    ),
+                  ),
+              ],
             ),
-            // Online payments: what the table paid online and the way to pay the rest
-            if (open) PayBillBar(ticketId: bill.id),
-            // A paid bill is the thanks: the stars for the rounds on it
-            if (bill.isSettled && ordersById != null) BillStars(bill: bill, ordersById: ordersById!),
+            if (cards.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _fanned = !_fanned),
+                child: AnimatedSize(
+                  duration: Motion.slow,
+                  curve: Motion.enter,
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // The newest round in full
+                      cards.first,
+                      // Closed: the rounds behind it show as edges under it, and nothing of what is on them
+                      if (!_fanned && cards.length > 1) ...[
+                        Container(
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(color: fill.withValues(alpha: 0.7), borderRadius: edge),
+                        ),
+                        if (cards.length > 2)
+                          Container(
+                            height: 6,
+                            margin: const EdgeInsets.symmetric(horizontal: 24),
+                            decoration: BoxDecoration(color: fill.withValues(alpha: 0.4), borderRadius: edge),
+                          ),
+                      ],
+                      // Open: the rest one under the other
+                      if (_fanned)
+                        for (final card in cards.skip(1)) Padding(padding: const EdgeInsets.only(top: 8), child: card),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            // What the till added, and the whole bill's total when others are on it: with the stack open
+            AnimatedSize(
+              duration: Motion.slow,
+              curve: Motion.enter,
+              alignment: Alignment.topCenter,
+              child: !_fanned
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (!parts.shared && bill.discount > 0)
+                            row('${l10n.discount}${bill.discountRate != null ? ' ${percent(bill.discountRate)}%' : ''}', '−${money(bill.discount)}'),
+                          if (!parts.shared && bill.serviceCharge > 0)
+                            row(l10n.serviceCharge(percent(bill.serviceChargeRate).toString()), money(bill.serviceCharge)),
+                          if (!parts.shared && bill.vat > 0 && !bill.vatIncluded) row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat)),
+                          if (parts.shared) row(l10n.billTotal, '$approx${money(parts.total)}'),
+                          if (bill.refundedTotal > 0) row(l10n.refunded, '−${money(bill.refundedTotal)}', style: small.copyWith(color: c.destructive)),
+                          const SizedBox(height: 8),
+                          NinjaButton(
+                            variant: NinjaButtonVariant.secondary,
+                            size: NinjaButtonSize.sm,
+                            prefix: const Icon(LucideIcons.receiptText, size: 16),
+                            onPress: () => context.push('/receipts/${bill.id}'),
+                            child: Text(l10n.ninjaOpenBill),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
           ],
         );
       },
     );
-    // An open bill is the dock's dark slab; a closed one a light panel
-    return open ? SlabCard(child: card) : Panel(padding: const EdgeInsets.all(20), child: card);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // An open bill is the dock's dark slab; a closed one a light panel
+        open ? SlabCard(child: card) : Panel(padding: const EdgeInsets.all(20), child: card),
+        // Paying from the phone, where the business takes it: under the slab
+        if (open) PayBillBar(ticketId: bill.id),
+        // A paid bill is the thanks: the stars for the rounds on it
+        if (bill.isSettled && widget.ordersById != null)
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: BillStars(bill: bill, ordersById: widget.ordersById!)),
+      ],
+    );
   }
 }
 
-/// What the till did with the bill: paid (and on which receipt), on the
-/// customer's tab, voided — or still unpaid
-class _BillPill extends StatelessWidget {
+/// What the till did with the bill: paid (and on which receipt), on the customer's tab, voided, or still open
+class _StatusChip extends StatelessWidget {
   final Bill bill;
 
-  const _BillPill({required this.bill});
+  const _StatusChip({required this.bill});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (bill.isVoided) return NinjaBadge(variant: NinjaBadgeVariant.outline, child: Text(l10n.voided));
-    if (!bill.isSettled) return NinjaBadge(variant: NinjaBadgeVariant.outline, child: Text(l10n.unpaid));
-    final label = bill.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
-    final receipt = bill.receiptNumber != null ? ' ${l10n.receiptShort(bill.receiptNumber!)}' : '';
-    return NinjaBadge(variant: NinjaBadgeVariant.secondary, child: Text('$label$receipt'));
+    final theme = context.theme;
+    final c = theme.colors;
+    final (Color fill, Color ink, String label, bool dot) = bill.isVoided
+        ? (c.muted, c.mutedForeground, l10n.voided, false)
+        : !bill.isSettled
+            ? (NinjaColors.warning.withValues(alpha: 0.15), const Color(0xFFF59E0B), l10n.unpaid, true)
+            : (
+                NinjaColors.success.withValues(alpha: 0.12),
+                c.brightness == Brightness.dark ? NinjaColors.success : const Color(0xFF059669),
+                '${bill.paidWith == 'Account' ? l10n.onYourTab : l10n.paid}${bill.receiptNumber != null ? ' ${l10n.receiptShort(bill.receiptNumber!)}' : ''}',
+                false,
+              );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: ShapeDecoration(color: fill, shape: const StadiumBorder()),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dot) ...[Container(width: 6, height: 6, decoration: BoxDecoration(color: ink, shape: BoxShape.circle)), const SizedBox(width: 6)],
+          Text(label, style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w700, color: ink, fontFeatures: NinjaTypography.tabular))),
+        ],
+      ),
+    );
   }
 }
 

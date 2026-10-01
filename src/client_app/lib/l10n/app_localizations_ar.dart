@@ -1340,6 +1340,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yourBalance => 'رصيدك';
+
+  @override
+  String bookFreeNow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاضيين دلوقتي',
+      two: 'اتنين فاضيين دلوقتي',
+      one: 'واحدة فاضية دلوقتي',
+      zero: 'مفيش حاجة فاضية دلوقتي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaYoureIn(String name) {
+    return 'انت في $name';
+  }
+
+  @override
+  String ninjaRoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count طلبات',
+      two: 'طلبين',
+      one: 'طلب واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ninjaOpenBill => 'الإيصال';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2325,4 +2358,34 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaThisMonth => 'هذا الشهر';
+
+  @override
+  String bookFreeNow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أماكن متاحة الآن',
+      two: 'مكانان متاحان الآن',
+      one: 'مكان واحد متاح الآن',
+      zero: 'لا يوجد مكان متاح الآن',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaYoureIn(String name) {
+    return 'أنت في $name';
+  }
+
+  @override
+  String ninjaRoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count طلبات',
+      two: 'طلبان',
+      one: 'طلب واحد',
+    );
+    return '$_temp0';
+  }
 }

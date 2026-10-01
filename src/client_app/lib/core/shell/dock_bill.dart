@@ -11,6 +11,8 @@ import '../ui/ui.dart';
 import '../models/localized_text.dart';
 import '../utils/money.dart';
 import '../widgets/destination_chip.dart';
+import '../../features/places/screens/places_screen.dart' show showRoomSheet;
+import '../../features/places/services/place_service.dart';
 
 /// Whether the dock has a row to show: an order on its way, a bill running,
 /// or the table or room the customer is at
@@ -67,7 +69,9 @@ class DockBill extends ConsumerWidget {
       if (destination == null) {
         context.push('/bills');
       } else if (destination.isStay) {
-        context.go('/places');
+        // The room, out of the dock: the same sheet the Book tab's card opens
+        final stay = ref.read(myStaysProvider).value?.where((s) => s.id == destination.sessionId).firstOrNull;
+        stay != null ? showRoomSheet(context, stay) : context.go('/places');
       } else {
         showPlaceRequests(context, destination);
       }

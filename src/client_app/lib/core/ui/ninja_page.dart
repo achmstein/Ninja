@@ -33,6 +33,9 @@ class NinjaPage extends StatefulWidget {
   /// The gap between the blocks
   final double gap;
 
+  /// The page's scroll, for a page that moves it itself (back to the top)
+  final ScrollController? controller;
+
   const NinjaPage({
     super.key,
     required this.title,
@@ -42,6 +45,7 @@ class NinjaPage extends StatefulWidget {
     this.backTo = '/profile',
     this.onRefresh,
     this.gap = Ninja.sectionGap,
+    this.controller,
     required this.children,
   });
 
@@ -50,11 +54,12 @@ class NinjaPage extends StatefulWidget {
 }
 
 class _NinjaPageState extends State<NinjaPage> {
-  final _scroll = ScrollController();
+  final _own = ScrollController();
+  ScrollController get _scroll => widget.controller ?? _own;
 
   @override
   void dispose() {
-    _scroll.dispose();
+    _own.dispose();
     super.dispose();
   }
 

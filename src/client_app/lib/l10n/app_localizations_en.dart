@@ -1345,4 +1345,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourBalance => 'Your balance';
+
+  @override
+  String bookFreeNow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count free now',
+      one: '1 free now',
+      zero: 'Nothing free right now',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ninjaYoureIn(String name) {
+    return 'You\'re in $name';
+  }
+
+  @override
+  String ninjaRoundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rounds',
+      one: '1 round',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ninjaOpenBill => 'Receipt';
 }

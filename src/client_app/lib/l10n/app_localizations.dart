@@ -2492,6 +2492,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your balance'**
   String get yourBalance;
+
+  /// No description provided for @bookFreeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing free right now} =1{1 free now} other{{count} free now}}'**
+  String bookFreeNow(int count);
+
+  /// No description provided for @ninjaYoureIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in {name}'**
+  String ninjaYoureIn(String name);
+
+  /// No description provided for @ninjaRoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 round} other{{count} rounds}}'**
+  String ninjaRoundCount(int count);
+
+  /// No description provided for @ninjaOpenBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get ninjaOpenBill;
 }
 
 class _AppLocalizationsDelegate

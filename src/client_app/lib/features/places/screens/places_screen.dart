@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
@@ -111,168 +111,175 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
     final branchId = ref.watch(selectedBranchIdProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final c = context.theme.colors;
     if (branchId == null) {
-      return Center(child: CircularProgressIndicator(color: colors.primary));
+      return NinjaPage(title: l10n.rooms, children: const [SizedBox.shrink()]);
     }
     final roomsAsync = ref.watch(placesProvider(branchId));
-    final sessionsAsync = ref.watch(myStaysProvider);
-    // The customer's open reservation, once the list has answered; until
-    // then none, so the rooms show rather than wait on it
+    final stay = ref.watch(myStaysProvider).value?.where((s) => s.status == StayStatus.active).firstOrNull;
+    // The customer's open reservation, once the list has answered; until then none, so the places show rather than wait on it
     final reservedSession = openReservationOf(ref.watch(myReservationsProvider).value ?? const []);
-    final l10n = AppLocalizations.of(context)!;
-    final isReservationsEnabled = ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true;
+    final reservationsEnabled = ref.watch(featuresProvider).reservations && (ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true);
+    final rooms = roomsAsync.value ?? const <Place>[];
+    final free = rooms.where((r) => r.canBookNow).length;
+    // One place at a time: a hold, or a clock running
+    final canReserve = reservedSession == null && stay == null && reservationsEnabled;
+    final allBusy = rooms.isNotEmpty && free == 0;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      resizeToAvoidBottomInset: false,
-      body: Column(
-        children: [
-          // Header
-          PageHeader(
-            title: placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
-            actions: [
-              // Scanning is the top bar's: a scanned code may be a room or a table
-              HeaderAction(icon: const Icon(LucideIcons.history), onPress: () => context.push('/stays')),
-            ],
-          ),
-
-          // Not taking bookings for now: the same notice as the Menu's
-          if (!isReservationsEnabled) PausedNotice(title: l10n.reservationsPausedTitle),
-
-          // Content
-          Expanded(
-            child: sessionsAsync.when(
-              skipLoadingOnRefresh: true,
-              loading: () => Center(child: CircularProgressIndicator(color: colors.primary)),
-              error: (_, _) => _buildRoomsList(context, roomsAsync, null, null),
-              data: (sessions) {
-                final activeSession = sessions
-                    .where((s) => s.status == StayStatus.active)
-                    .firstOrNull;
-
-                // If user has active session, show session view
-                if (activeSession != null) {
-                  return _ActiveStayView(session: activeSession);
-                }
-
-                // If user has a reservation, show it above the rooms
-                return _buildRoomsList(context, roomsAsync, reservedSession, null);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoomsList(
-    BuildContext context,
-    AsyncValue<List<Place>> roomsAsync,
-    Reservation? reservedSession,
-    Stay? activeSession,
-  ) {
-    final branchId = ref.read(selectedBranchIdProvider)!;
-
-    // If error but we have previous data (e.g. stale socket after app resume),
-    // keep showing the cached rooms instead of flashing an error
-    return roomsAsync.when(
-      skipLoadingOnRefresh: true,
-      loading: () => Center(child: CircularProgressIndicator(color: context.theme.colors.primary)),
-      error: (error, _) {
-        // Previous data still available — show it, polling will refresh
-        if (roomsAsync.hasValue) {
-          return _buildRoomsContent(context, roomsAsync.value!, reservedSession, activeSession);
-        }
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(LucideIcons.circleAlert, size: 48, color: context.theme.colors.mutedForeground),
-              const SizedBox(height: 16),
-              AppText(AppLocalizations.of(context)!.failedToLoadRooms),
-              const SizedBox(height: 16),
-              NinjaButton(
-                onPress: () => ref.refresh(placesProvider(branchId)),
-                child: Text(AppLocalizations.of(context)!.retry),
-              ),
-            ],
-          ),
-        );
-      },
-      data: (rooms) => _buildRoomsContent(context, rooms, reservedSession, activeSession),
-    );
-  }
-
-  Widget _buildRoomsContent(
-    BuildContext context,
-    List<Place> rooms,
-    Reservation? reservedSession,
-    Stay? activeSession,
-  ) {
-    final branchId = ref.read(selectedBranchIdProvider)!;
-    final colors = context.theme.colors;
-    final allUnavailable = rooms.isNotEmpty &&
-        rooms.every((r) => !r.canBookNow);
-    // Only show notify banner if all rooms unavailable AND user has no reservation
-    final showNotifyBanner = allUnavailable && reservedSession == null;
-
-    return RefreshIndicator(
-      color: colors.primary,
-      backgroundColor: colors.background,
+    return NinjaPage(
+      title: l10n.rooms,
+      subtitle: reservedSession == null && stay == null && rooms.isNotEmpty && reservationsEnabled ? AppText(l10n.bookFreeNow(free)) : null,
+      action: HeaderAction(icon: const Icon(LucideIcons.history), onPress: () => context.push('/stays')),
+      gap: 16,
+      controller: _scrollController,
       onRefresh: () async {
         ref.invalidate(placesProvider(branchId));
         await ref.read(myStaysProvider.notifier).refresh();
       },
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: EdgeInsets.only(top: 8, bottom: 8 + MediaQuery.paddingOf(context).bottom),
-        itemCount: _getItemCount(rooms, reservedSession, showNotifyBanner),
-        itemBuilder: (context, index) {
-          int currentIndex = index;
+      children: [
+        if (stay != null) StayBanner(stay: stay),
+        // Not taking bookings for now: the same notice as the menu's
+        if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
+          PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
+        if (reservedSession != null) _HeldStayBanner(session: reservedSession),
+        if (allBusy && reservedSession == null) const NotifyMeBanner(),
+        ...roomsAsync.when(
+          skipLoadingOnRefresh: true,
+          loading: () => [
+            for (var i = 0; i < 3; i++)
+              Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+          ],
+          // A stale socket after a resume: the places known stay up while the poll catches up
+          error: (_, _) => roomsAsync.hasValue
+              ? [for (final room in rooms) PlaceListItem(room: room, canReserve: canReserve)]
+              : [
+                  EmptyState(
+                    icon: LucideIcons.circleAlert,
+                    title: l10n.failedToLoadRooms,
+                    action: NinjaButton(
+                      variant: NinjaButtonVariant.outline,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () => ref.invalidate(placesProvider(branchId)),
+                      child: AppText(l10n.retry),
+                    ),
+                  ),
+                ],
+          data: (rooms) => [for (final room in rooms) PlaceListItem(room: room, canReserve: canReserve)],
+        ),
+      ],
+    );
+  }
+}
 
-          // Reserved session banner (always first if exists)
-          if (reservedSession != null && currentIndex == 0) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: _HeldStayBanner(session: reservedSession),
-            );
-          }
-          if (reservedSession != null) currentIndex--;
+/// The Book tab while the customer's clock runs (client_web's stay-banner.tsx):
+/// a slim card on the slab over the places, saying where they are and for how
+/// long. A tap opens the room, the same sheet the dock's row opens.
+class StayBanner extends StatefulWidget {
+  final Stay stay;
 
-          // Notify me banner (if all rooms unavailable and no reservation)
-          if (showNotifyBanner && currentIndex == 0) {
-            return const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: NotifyMeBanner(),
-            );
-          }
-          if (showNotifyBanner) currentIndex--;
+  const StayBanner({super.key, required this.stay});
 
-          // The places, as big cards a gap apart
-          final room = rooms[currentIndex];
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: PlaceListItem(
-              room: room,
-              canReserve: reservedSession == null &&
-                  ref.watch(featuresProvider).reservations &&
-                  (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
-            ),
-          );
-        },
+  @override
+  State<StayBanner> createState() => _StayBannerState();
+}
+
+class _StayBannerState extends State<StayBanner> {
+  // The clock ticks once a second while the card is up
+  late final Timer _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    return Pressable(
+      onTap: () => showRoomSheet(context, widget.stay),
+      scale: 0.98,
+      child: Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
+        decoration: BoxDecoration(color: c.slab, borderRadius: BorderRadius.circular(Ninja.panelRadius), boxShadow: Ninja.slabShadow),
+        child: SlabInk(
+          child: Builder(
+            builder: (context) {
+              final ink = context.theme.colors.foreground;
+              return Row(
+                children: [
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(color: ink.withValues(alpha: 0.12), shape: BoxShape.circle),
+                          child: Center(child: Icon(widget.stay.placeKind.icon, size: 20, color: ink)),
+                        ),
+                        PositionedDirectional(
+                          end: 3,
+                          top: 3,
+                          child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: NinjaColors.success, shape: BoxShape.circle)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.ninjaYoureIn(widget.stay.placeName.localized(context)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.localeText(theme.typography.caption.copyWith(color: ink.withValues(alpha: 0.7))),
+                        ),
+                        Text(
+                          widget.stay.formattedDuration,
+                          textDirection: TextDirection.ltr,
+                          style: theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: ink, fontFeatures: NinjaTypography.tabular),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(LucideIcons.chevronUp, size: 20, color: ink.withValues(alpha: 0.7)),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
-
-  int _getItemCount(List<Place> rooms, Reservation? reservedSession, bool showNotifyBanner) {
-    int count = rooms.length;
-    if (reservedSession != null) count++;
-    if (showNotifyBanner) count++;
-    return count;
-  }
 }
+
+/// The room the customer is in, on the slab sheet: its clock, what can be
+/// asked for there, and the way out. The dock's row and the Book tab's
+/// card both open it, so the room lives in one place.
+Future<void> showRoomSheet(BuildContext context, Stay stay) => showNinjaSheet(
+      context: context,
+      builder: (context) => Consumer(
+        builder: (context, ref, _) {
+          // The stay as it is now, while the sheet is open
+          final live = ref.watch(myStaysProvider).value?.where((s) => s.id == stay.id).firstOrNull ?? stay;
+          return _ActiveStayView(session: live);
+        },
+      ),
+    );
 
 /// Active session view - shown when user is currently playing
 class _ActiveStayView extends ConsumerStatefulWidget {
@@ -325,37 +332,14 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
 
     final colors = context.theme.colors;
 
-    return RefreshIndicator(
-      color: colors.primary,
-      backgroundColor: colors.background,
-      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
-        child: Column(
+    return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Main session card
+            // The clock, the room's one big thing
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    context.theme.colors.primary,
-                    context.theme.colors.primary.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.theme.colors.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
+              decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
               child: Column(
                 children: [
                   // Place name + player mode in one row
@@ -365,7 +349,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                       AppText(
                         session.placeName.localized(context),
                         style: TextStyle(
-                          color: colors.primaryForeground,
+                          color: colors.foreground,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -375,14 +359,14 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: colors.primaryForeground.withValues(alpha: 0.15),
+                            color: colors.foreground.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: colors.primaryForeground.withValues(alpha: 0.3)),
+                            border: Border.all(color: colors.foreground.withValues(alpha: 0.3)),
                           ),
                           child: AppText(
                             session.currentOptionName!.localized(context),
                             style: TextStyle(
-                              color: colors.primaryForeground,
+                              color: colors.foreground,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -398,7 +382,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                   AppText(
                     session.formattedDuration,
                     style: TextStyle(
-                      color: colors.primaryForeground,
+                      color: colors.foreground,
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
@@ -413,7 +397,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                         ref.watch(moneyProvider).whole(session.currentHourlyRate!),
                       ),
                       style: TextStyle(
-                        color: colors.primaryForeground.withValues(alpha: 0.7),
+                        color: colors.foreground.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -452,9 +436,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
               ),
             ],
           ],
-        ),
-      ),
-    );
+        );
   }
 
   List<_QuickAction> _quickActions(Stay session) {
