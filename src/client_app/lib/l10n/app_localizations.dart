@@ -2630,6 +2630,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other places'**
   String get ninjaOtherPlaces;
+
+  /// No description provided for @ninjaPlayedWith.
+  ///
+  /// In en, this message translates to:
+  /// **'With'**
+  String get ninjaPlayedWith;
 }
 
 class _AppLocalizationsDelegate

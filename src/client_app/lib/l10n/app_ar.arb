@@ -477,5 +477,6 @@
   "ninjaHoldFor": "الساعة {time}",
   "ninjaHoldRanOut": "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
   "ninjaHideReceipt": "اخفي الإيصال",
-  "ninjaOtherPlaces": "أماكن تانية"
+  "ninjaOtherPlaces": "أماكن تانية",
+  "ninjaPlayedWith": "مع"
 }

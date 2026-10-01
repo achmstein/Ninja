@@ -1440,6 +1440,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaOtherPlaces => 'أماكن تانية';
+
+  @override
+  String get ninjaPlayedWith => 'مع';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2522,4 +2525,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaOtherPlaces => 'أماكن أخرى';
+
+  @override
+  String get ninjaPlayedWith => 'مع';
 }
