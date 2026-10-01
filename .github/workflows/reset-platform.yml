@@ -1,0 +1,76 @@
+name: Reset Platform (destroys all data)
+
+# Takes the platform box back to empty, for a release whose databases cannot
+# follow the ones on the box (migrations squashed into one InitialCreate):
+# every tenant stack goes down with its volumes, the tenants' folders are
+# moved aside (not deleted), and the platform's own Postgres (controldb and
+# Keycloak's realms) and RabbitMQ volumes are removed. Caddy's certificates
+# are kept, so the hosts are not reissued. Run Deploy Platform afterwards:
+# it comes up as on a new box.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "destroy" to delete every tenant and the platform database'
+        required: true
+        type: string
+
+env:
+  DEPLOY_DIR: /opt/ninja/platform
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.confirm == 'destroy' }}
+    environment: platform
+    steps:
+      - name: Take everything down and remove the data
+        uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          envs: DEPLOY_DIR
+          command_timeout: 20m
+          script: |
+            set -u
+            echo "== tenant stacks"
+            for dir in /opt/ninja/tenants/*/; do
+              [ -f "$dir/docker-compose.yml" ] || continue
+              slug=$(basename "$dir")
+              echo "-- $slug"
+              (cd "$dir" && docker compose -p "ninja-$slug" down -v --remove-orphans) || echo "   (down failed for $slug)"
+            done
+            # Anything a tenant left running under its project name
+            for project in $(docker compose ls -a --format json | grep -o '"Name":"ninja-[^"]*"' | cut -d'"' -f4 | grep -v '^ninja$'); do
+              echo "-- leftover $project"
+              docker compose -p "$project" down -v --remove-orphans || true
+            done
+            stamp=$(date +%Y%m%d-%H%M%S)
+            if [ -d /opt/ninja/tenants ]; then
+              sudo mv /opt/ninja/tenants "/opt/ninja/tenants-before-$stamp"
+              echo "tenants moved to /opt/ninja/tenants-before-$stamp"
+            fi
+            sudo mkdir -p /opt/ninja/tenants
+            sudo chown -R "$USER:$USER" /opt/ninja/tenants
+
+            echo "== platform data"
+            cd "$DEPLOY_DIR"
+            docker compose stop control-api keycloak eventbus postgres || true
+            docker compose rm -f control-api keycloak eventbus postgres || true
+            docker volume rm ninja_postgres-data ninja_rabbitmq-data || true
+            # Custom domains belong to tenants that are gone
+            : > custom-domains.caddy
+            docker volume ls --format '{{.Name}}' | grep '^ninja' || true
+            echo "Reset done. Run Deploy Platform."
+
+  aborted:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.confirm != 'destroy' }}
+    steps:
+      - run: |
+          echo 'Not reset: type "destroy" to confirm.'
+          exit 1
