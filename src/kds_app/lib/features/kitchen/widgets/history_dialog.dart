@@ -6,6 +6,7 @@ import '../models/kitchen_order.dart';
 import '../providers/kitchen_orders_provider.dart';
 import 'order_card.dart';
 import 'order_grid.dart';
+import '../../../core/network/server_clock.dart';
 
 /// The day's finished orders, behind the clock icon in the header: newest
 /// first, the same card the board showed, for a "was that with oat milk?"
@@ -35,7 +36,7 @@ class _HistoryDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final orders = ref.watch(kitchenOrdersProvider).value ?? const <KitchenOrder>[];
     final finished = finishedOrders(orders);
-    final now = DateTime.now();
+    final now = serverClock.now();
 
     return Column(
       mainAxisSize: MainAxisSize.min,

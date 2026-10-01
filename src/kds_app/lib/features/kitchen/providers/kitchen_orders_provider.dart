@@ -6,6 +6,7 @@ import '../../../core/providers/branch_provider.dart';
 import '../models/kitchen_order.dart';
 import '../services/kitchen_service.dart';
 import 'station_provider.dart';
+import '../../../core/network/server_clock.dart';
 
 /// The kitchen's day: every confirmed order of the last 24 hours, oldest
 /// first, for the active branch (the X-Branch-Id header every request
@@ -45,7 +46,7 @@ class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
   Future<void> setReady(int orderNumber, bool ready) async {
     final previous = state.value;
     if (previous == null) return;
-    final now = DateTime.now().toUtc();
+    final now = serverClock.now().toUtc();
     state = AsyncData([
       for (final order in previous)
         if (order.orderNumber == orderNumber) order.withReadyAt(ready ? now : null) else order,

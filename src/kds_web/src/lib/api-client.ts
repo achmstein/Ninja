@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { noteServerDate } from './server-clock'
 
 // Version sent with every API call; generated clients require it explicitly.
 export const API_VERSION = '1.0'
@@ -29,6 +30,15 @@ apiClient.interceptors.request.use(
       config.headers['X-Branch-Id'] = String(branchId)
     }
     return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Every answer says what time the server makes it: the board's timers count by it
+apiClient.interceptors.response.use(
+  (response) => {
+    noteServerDate(response.headers?.date as string | undefined)
+    return response
   },
   (error) => Promise.reject(error)
 )

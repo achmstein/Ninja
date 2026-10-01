@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'network_status.dart';
+import 'server_clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../auth/auth_service.dart';
@@ -47,6 +48,8 @@ class ApiClient {
       },
       onResponse: (response, handler) {
         networkStatus.reportSuccess();
+        // Every answer says what time the server makes it: the board's timers count by it
+        serverClock.note(response.headers.value('date'));
         return handler.next(response);
       },
       onError: (error, handler) async {

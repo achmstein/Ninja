@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getKitchenOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { serverNow } from '@/lib/server-clock'
 import { useStation } from './use-station'
 
 /**
@@ -40,10 +41,10 @@ export function useKitchenOrders() {
 
 /** A clock that ticks every second, so the cards' timers run without a refetch. */
 export function useNowMs(intervalMs = 1_000): number {
-  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [nowMs, setNowMs] = useState(() => serverNow())
 
   useEffect(() => {
-    const id = setInterval(() => setNowMs(Date.now()), intervalMs)
+    const id = setInterval(() => setNowMs(serverNow()), intervalMs)
     return () => clearInterval(id)
   }, [intervalMs])
 

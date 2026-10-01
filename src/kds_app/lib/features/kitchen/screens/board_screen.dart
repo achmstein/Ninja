@@ -14,6 +14,7 @@ import '../providers/station_provider.dart';
 import '../widgets/bump_exit.dart';
 import '../widgets/order_card.dart';
 import '../widgets/order_grid.dart';
+import '../../../core/network/server_clock.dart';
 
 /// The kitchen board, as kds_web's Board: one grid of open orders, oldest
 /// first, as many across as the screen fits. Everything confirmed lands
@@ -72,7 +73,8 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     final async = ref.watch(kitchenOrdersProvider);
     final orders = async.value ?? const <KitchenOrder>[];
     final isLoading = async.isLoading && async.value == null;
-    final now = DateTime.now();
+    // By the server's clock: the timers count from when it confirmed each order
+    final now = serverClock.now();
     final open = openOrders(orders);
     final stationId = ref.watch(selectedStationIdProvider);
     final onPass = stationId == null;

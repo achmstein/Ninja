@@ -5,6 +5,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { useStation } from './use-station'
+import { serverNow } from '@/lib/server-clock'
 
 const BOARD_KEY = [{ _id: 'getKitchenOrders' }]
 
@@ -44,7 +45,7 @@ export function useReady() {
       const previous = queryClient.getQueriesData<KitchenOrder[]>({
         queryKey: BOARD_KEY,
       })
-      const nowIso = new Date().toISOString()
+      const nowIso = new Date(serverNow()).toISOString()
       queryClient.setQueriesData<KitchenOrder[]>({ queryKey: BOARD_KEY }, (old) =>
         old?.map((order) =>
           Number(order.orderNumber) === orderNumber
