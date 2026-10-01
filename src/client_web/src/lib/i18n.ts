@@ -409,6 +409,7 @@ const webExtras = {
   ninjaSwitchingTo: { en: 'Switching to {option}', ar: 'بنحوّلها لـ {option}' },
   ninjaStaffSwitching: { en: 'The staff are switching it', ar: 'الموظفين بيحوّلوها' },
   ninjaYoureIn: { en: "You're in {name}", ar: 'انت في {name}' },
+  ninjaOtherPlaces: { en: 'Other places', ar: 'أماكن تانية' },
   ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
   ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
   ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },

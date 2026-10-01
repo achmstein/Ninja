@@ -217,6 +217,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   ninjaSwitchingTo: 'جارٍ التحويل إلى {option}',
   ninjaStaffSwitching: 'الموظفون يحوّلونها',
   ninjaYoureIn: 'أنت في {name}',
+  ninjaOtherPlaces: 'أماكن أخرى',
   ninjaHideReceipt: 'إخفاء الإيصال',
   ninjaBillPrev: 'الفاتورة السابقة',
   ninjaBillNext: 'الفاتورة التالية',

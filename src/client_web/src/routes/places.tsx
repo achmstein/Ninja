@@ -11,10 +11,12 @@ import { useMyHold } from '@/lib/stays'
 import { useAfterTickBeat } from '@/lib/tick-beat'
 import { useScrollLock } from '@/lib/use-scroll-lock'
 import { useFeatures } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/auth/profile-gate'
 import { StayBanner } from '@/components/places/stay-banner'
+import { YourRoomCard } from '@/components/places/your-room-card'
+import { SectionLabel } from '@/components/ninja/page/parts'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
 import { Reservation } from '@/components/places/reservation'
@@ -86,6 +88,7 @@ const FORM_CLOSES_MS = 900
  *  opens into the reservation (Reservation): one hold is all anyone gets. */
 function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel }) {
   const t = useT()
+  const localized = useLocalized()
   const auth = useAuth()
   const branch = useSelectedBranch()
   const hold = useMyHold()
@@ -119,6 +122,9 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
   // free places answer a tap too: with the sign-in sheet, rather than a card that does nothing
   const canReserve = !hold && !stay && reservationsEnabled
   const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+  // The room the customer is in, when it is one of these places, and the rest
+  const mine = stay ? places.find((p) => String(p.id) === String(stay.placeId)) : undefined
+  const others = mine ? places.filter((p) => p !== mine) : places
   const allBusy = places.length > 0 && freeCount === 0
 
   const handleToggle = async (place: PlaceViewModel) => {
@@ -140,11 +146,19 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
     <NinjaPage
       title={t('rooms')}
       fade={titleShown}
-      subtitle={!hold && !stay && !isLoading && places.length > 0 && reservationsEnabled ? t('bookFreeNow', { count: freeCount }) : undefined}
+      // In a room the heading says where; otherwise how many places are free
+      subtitle={
+        stay
+          ? t('ninjaYoureIn', { name: localized(stay.placeName) })
+          : !hold && !isLoading && places.length > 0 && reservationsEnabled
+            ? t('bookFreeNow', { count: freeCount })
+            : undefined
+      }
     >
       <div inert={opened ? true : undefined} aria-hidden={opened ? true : undefined}>
         <Rise className='flex flex-col gap-4'>
-          {stay && (
+          {/* In a room whose card is not on this list (another branch's): the slim card stands in for it */}
+          {stay && !mine && (
             <RiseItem>
               <Recede gone={held}>
                 <StayBanner stay={stay} />
@@ -195,8 +209,20 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
             </RiseItem>
           ) : (
             <div className='flex flex-col gap-4'>
-              {places.map((place) => (
-                <RiseItem key={String(place.id)}>
+              {/* In a room, that room first as the hero, the others after it under their label and quieter:
+                  while the clock runs another place cannot be booked, so they are there to read */}
+              {stay && mine && (
+                <RiseItem>
+                  <YourRoomCard stay={stay} place={mine} />
+                </RiseItem>
+              )}
+              {stay && mine && others.length > 0 && (
+                <RiseItem>
+                  <SectionLabel>{t('ninjaOtherPlaces')}</SectionLabel>
+                </RiseItem>
+              )}
+              {others.map((place) => (
+                <RiseItem key={String(place.id)} className={stay && mine ? 'opacity-60' : undefined}>
                   <Recede gone={held && String(place.id) !== heldId}>
                     <PlaceCard
                       place={place}

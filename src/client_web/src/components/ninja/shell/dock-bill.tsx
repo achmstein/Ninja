@@ -131,7 +131,19 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                   )}
                 </motion.span>
               </AnimatePresence>
-              {asking && <span className='ring-foreground absolute end-0 top-0 size-2.5 rounded-full bg-amber-400 ring-2' />}
+              {/* One dot at a time: amber while the waiter or the bill is asked for (the more urgent), else
+                  green and live while the room's clock runs */}
+              {asking ? (
+                <span className='ring-foreground absolute end-0 top-0 size-2.5 rounded-full bg-amber-400 ring-2' />
+              ) : (
+                stay &&
+                !stage && (
+                  <span className='absolute end-0 top-0 grid size-2.5 place-items-center'>
+                    <span className='absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none' />
+                    <span className='ring-foreground size-2.5 rounded-full bg-emerald-400 ring-2' />
+                  </span>
+                )
+              )}
             </span>
             <span className='flex min-w-0 flex-1 flex-col'>
               <span className='flex min-w-0 items-center gap-1 text-caption'>
