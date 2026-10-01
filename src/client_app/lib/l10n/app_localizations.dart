@@ -2564,6 +2564,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone is already on the way'**
   String get requestAlreadyPickedUp;
+
+  /// No description provided for @ninjaRateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rate now'**
+  String get ninjaRateNow;
+
+  /// No description provided for @ninjaStaffSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'The staff are switching it'**
+  String get ninjaStaffSwitching;
+
+  /// No description provided for @ninjaRateOnceSwitched.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} once the staff switch it'**
+  String ninjaRateOnceSwitched(String price);
+
+  /// No description provided for @ninjaSwitchingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to {option}'**
+  String ninjaSwitchingTo(String option);
 }
 
 class _AppLocalizationsDelegate

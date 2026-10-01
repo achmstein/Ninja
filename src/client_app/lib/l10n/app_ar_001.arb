@@ -303,5 +303,9 @@
   "onTheWay": "في الطريق إليك",
   "onTheWayBy": "{name} في الطريق إليك",
   "requestCancelled": "أُلغي الطلب",
-  "requestAlreadyPickedUp": "هناك من هو في الطريق إليك بالفعل"
+  "requestAlreadyPickedUp": "هناك من هو في الطريق إليك بالفعل",
+  "ninjaRateNow": "سعرك الآن",
+  "ninjaStaffSwitching": "الموظفون يحوّلونها",
+  "ninjaRateOnceSwitched": "{price} بعد أن يحوّلها الموظفون",
+  "ninjaSwitchingTo": "جارٍ التحويل إلى {option}"
 }

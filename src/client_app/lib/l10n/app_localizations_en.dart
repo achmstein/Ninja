@@ -1402,4 +1402,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestAlreadyPickedUp => 'Someone is already on the way';
+
+  @override
+  String get ninjaRateNow => 'Your rate now';
+
+  @override
+  String get ninjaStaffSwitching => 'The staff are switching it';
+
+  @override
+  String ninjaRateOnceSwitched(String price) {
+    return '$price once the staff switch it';
+  }
+
+  @override
+  String ninjaSwitchingTo(String option) {
+    return 'Switching to $option';
+  }
 }

@@ -351,6 +351,12 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
             // controller in a console room, a switch per other rate option
             _QuickActionGrid(actions: _quickActions(session)),
 
+            // Where the rate has options: the rate now, and each other one as the switch to it
+            if (session.hasOptions) ...[
+              const SizedBox(height: 12),
+              _rateSwitch(session),
+            ],
+
             // Its bills, as they run: the room's time and the rounds on it, the way to pay
             ..._openBills(),
 
@@ -403,7 +409,6 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
       return _QuickAction(icon: icon, label: label, phase: state.phase, by: state.by, busy: busy, onTap: () => _tap(type));
     }
 
-    final switching = _stateOf(ServiceRequestType.changeOption);
     return [
       ask(ServiceRequestType.callWaiter, LucideIcons.bellRing, l10n.callWaiter),
       if (session.takesControllerRequests) ask(ServiceRequestType.controllerChange, LucideIcons.gamepad2, l10n.controller),
@@ -415,21 +420,121 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
           label: l10n.payTheBill,
           onTap: () => showPaySheet(context, PaySource.place(session.placeId, branchId)),
         ),
-      if (session.hasOptions)
-        for (final option in session.options.where((o) => o.code != session.currentOptionCode))
-          // Another goes while nothing is asked; the one asked shows where it stands
-          _QuickAction(
-            icon: LucideIcons.refreshCw,
-            label: l10n.switchToOption(option.name.localized(context)),
-            phase: option.code == _askedOption ? switching.phase : _Phase.idle,
-            by: option.code == _askedOption ? switching.by : null,
-            busy: busy || (switching.phase != _Phase.idle && option.code != _askedOption),
-            onTap: () {
-              if (switching.phase == _Phase.idle) _askedOption = option.code;
-              _tap(ServiceRequestType.changeOption, optionCode: option.code);
-            },
-          ),
     ];
+  }
+
+  /// The rate (client_web's stay-requests.tsx `RateSwitch`): where the clock
+  /// stands, said rather than a control, then every other option as the one
+  /// thing it does, ask the staff to switch to it, with what it costs once
+  /// they do. The one asked is taken back with a tap while it is only sent.
+  Widget _rateSwitch(Stay session) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final c = theme.colors;
+    final money = ref.watch(moneyProvider);
+    final state = _stateOf(ServiceRequestType.changeOption);
+    final open = state.phase != _Phase.idle && state.phase != _Phase.sending;
+    final current = session.options.where((o) => o.code == session.currentOptionCode).firstOrNull;
+    String perHour(double rate) => '${money.whole(rate)}${l10n.perHourShort}';
+    final caption = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (current != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(child: Text(l10n.ninjaRateNow, style: caption.copyWith(fontWeight: FontWeight.w500))),
+                  Text(
+                    '${current.name.localized(context)} · ${perHour(current.hourlyRate)}',
+                    style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                  ),
+                ],
+              ),
+            ),
+          for (final option in session.options.where((o) => o.code != session.currentOptionCode))
+            Builder(builder: (context) {
+              final asked = (open || _sending == ServiceRequestType.changeOption) && option.code == _askedOption;
+              final phase = asked ? state.phase : _Phase.idle;
+              final name = option.name.localized(context);
+              final note = switch (phase) {
+                _Phase.onTheWay => l10n.ninjaStaffSwitching,
+                _Phase.sent => '${l10n.sent} · ${l10n.tapToCancel}',
+                _ => l10n.ninjaRateOnceSwitched(perHour(option.hourlyRate)),
+              };
+              // Another goes while nothing is asked; the one asked is taken back while it is only sent
+              final disabled = (open && !asked) || phase == _Phase.onTheWay || _sending != null;
+              const green = Color(0xFF10B981);
+              final (Color fill, Color disc, Color ink) = switch (phase) {
+                _Phase.onTheWay => (green.withValues(alpha: 0.15), green, Colors.white),
+                _Phase.sent => (c.primary.withValues(alpha: 0.12), c.primary, c.primaryForeground),
+                _ => (c.background, c.muted, c.foreground),
+              };
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Pressable(
+                  scale: 0.98,
+                  onTap: disabled
+                      ? null
+                      : () {
+                          if (!asked) _askedOption = option.code;
+                          _tap(ServiceRequestType.changeOption, optionCode: option.code);
+                        },
+                  child: AnimatedContainer(
+                    duration: Motion.slow,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(Ninja.tileRadius)),
+                    child: Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: Motion.slow,
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(color: disc, shape: BoxShape.circle),
+                          child: BlurSwap(
+                            alignment: Alignment.center,
+                            child: phase == _Phase.sending
+                                ? SizedBox(key: const ValueKey('sending'), width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: ink))
+                                : Icon(
+                                    switch (phase) {
+                                      _Phase.onTheWay => LucideIcons.check,
+                                      _Phase.sent => LucideIcons.hourglass,
+                                      _ => LucideIcons.arrowLeftRight,
+                                    },
+                                    key: ValueKey(phase),
+                                    size: 20,
+                                    color: ink,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                phase == _Phase.idle ? l10n.switchToOption(name) : l10n.ninjaSwitchingTo(name),
+                                style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                              ),
+                              BlurSwap(
+                                child: Text(note, key: ValueKey(note), maxLines: 1, overflow: TextOverflow.ellipsis, style: caption),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
   }
 
   /// One tap on a tile: sends the request, or takes it back while it is only sent

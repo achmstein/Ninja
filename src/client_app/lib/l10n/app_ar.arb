@@ -466,5 +466,9 @@
   "onTheWay": "جايلك",
   "onTheWayBy": "{name} جايلك",
   "requestCancelled": "الطلب اتلغى",
-  "requestAlreadyPickedUp": "في حد جايلك خلاص"
+  "requestAlreadyPickedUp": "في حد جايلك خلاص",
+  "ninjaRateNow": "سعرك دلوقتي",
+  "ninjaStaffSwitching": "الموظفين بيحوّلوها",
+  "ninjaRateOnceSwitched": "{price} من أول ما يحوّلوها",
+  "ninjaSwitchingTo": "بنحوّلها لـ {option}"
 }

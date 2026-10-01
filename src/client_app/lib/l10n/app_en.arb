@@ -756,5 +756,11 @@
   "onTheWayBy": "{name} is on the way",
   "@onTheWayBy": {"placeholders": {"name": {"type": "String"}}},
   "requestCancelled": "Request cancelled",
-  "requestAlreadyPickedUp": "Someone is already on the way"
+  "requestAlreadyPickedUp": "Someone is already on the way",
+  "ninjaRateNow": "Your rate now",
+  "ninjaStaffSwitching": "The staff are switching it",
+  "ninjaRateOnceSwitched": "{price} once the staff switch it",
+  "@ninjaRateOnceSwitched": {"placeholders": {"price": {"type": "String"}}},
+  "ninjaSwitchingTo": "Switching to {option}",
+  "@ninjaSwitchingTo": {"placeholders": {"option": {"type": "String"}}}
 }

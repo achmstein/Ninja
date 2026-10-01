@@ -1399,6 +1399,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get requestAlreadyPickedUp => 'في حد جايلك خلاص';
+
+  @override
+  String get ninjaRateNow => 'سعرك دلوقتي';
+
+  @override
+  String get ninjaStaffSwitching => 'الموظفين بيحوّلوها';
+
+  @override
+  String ninjaRateOnceSwitched(String price) {
+    return '$price من أول ما يحوّلوها';
+  }
+
+  @override
+  String ninjaSwitchingTo(String option) {
+    return 'بنحوّلها لـ $option';
+  }
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2440,4 +2456,20 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get requestAlreadyPickedUp => 'هناك من هو في الطريق إليك بالفعل';
+
+  @override
+  String get ninjaRateNow => 'سعرك الآن';
+
+  @override
+  String get ninjaStaffSwitching => 'الموظفون يحوّلونها';
+
+  @override
+  String ninjaRateOnceSwitched(String price) {
+    return '$price بعد أن يحوّلها الموظفون';
+  }
+
+  @override
+  String ninjaSwitchingTo(String option) {
+    return 'جارٍ التحويل إلى $option';
+  }
 }
