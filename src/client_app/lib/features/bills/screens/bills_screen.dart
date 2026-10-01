@@ -67,6 +67,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     final waiting = orders.orders.where((o) => o.status != OrderStatus.confirmed && o.status != OrderStatus.cancelled).toList();
     final turnedDown = orders.orders.where((o) => o.status == OrderStatus.cancelled).toList();
     final ordersById = {for (final order in orders.orders) order.id: order};
+    final pending = placeRounds(all, orders.orders);
 
     final List<Widget> children;
     if (bills.isLoading && all.isEmpty) {
@@ -90,8 +91,8 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
       children = [EmptyState(icon: LucideIcons.receiptText, title: l10n.noBillsYet)];
     } else {
       children = [
-        for (final bill in open) BillTile(bill: bill, ordersById: ordersById),
-        if (waiting.isNotEmpty) _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
+        for (final bill in open) BillTile(bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
+        if (waiting.isNotEmpty && open.isEmpty) _OrderGroup(title: l10n.waitingToBeConfirmed, orders: waiting),
         if (turnedDown.isNotEmpty) _OrderGroup(title: l10n.statusCancelled, orders: turnedDown),
         const _OnYourTab(),
         if (closed.isNotEmpty) _ByMonth(bills: closed, ordersById: ordersById),

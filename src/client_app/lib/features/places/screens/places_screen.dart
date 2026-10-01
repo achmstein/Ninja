@@ -378,10 +378,12 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
     final bills = ref.watch(myBillsProvider).value ?? const <Bill>[];
     final orders = ref.watch(ordersProvider).orders;
     final ordersById = {for (final order in orders) order.id: order};
+    final open = bills.where((b) => b.isOpen).toList();
+    final pending = placeRounds(bills, orders);
     return [
-      for (final bill in bills.where((b) => b.isOpen)) ...[
+      for (final bill in open) ...[
         const SizedBox(height: 20),
-        BillTile(bill: bill, ordersById: ordersById),
+        BillTile(bill: bill, ordersById: ordersById, pending: pending[bill.id] ?? const []),
       ],
     ];
   }

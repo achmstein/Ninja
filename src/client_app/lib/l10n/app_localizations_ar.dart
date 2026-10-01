@@ -1376,6 +1376,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bookClockRunning => 'العداد شغال';
+
+  @override
+  String get addingToBill => 'اتأكد، بيتضاف على حسابك';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2394,4 +2397,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get bookClockRunning => 'الوقت يُحتسب';
+
+  @override
+  String get addingToBill => 'تم التأكيد، ويُضاف إلى فاتورتك';
 }

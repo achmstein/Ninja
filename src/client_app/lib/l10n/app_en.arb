@@ -748,5 +748,6 @@
   "ninjaRoundCount": "{count, plural, =1{1 round} other{{count} rounds}}",
   "@ninjaRoundCount": {"placeholders": {"count": {"type": "int"}}},
   "ninjaOpenBill": "Receipt",
-  "bookClockRunning": "Clock running"
+  "bookClockRunning": "Clock running",
+  "addingToBill": "Confirmed, adding to your bill"
 }

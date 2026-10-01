@@ -10,6 +10,7 @@ import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/bills/models/bill.dart';
 import 'package:ninja_client/features/bills/services/bills_service.dart';
 import 'package:ninja_client/features/bills/widgets/bill_tile.dart';
+import 'package:ninja_client/features/orders/models/order.dart';
 import 'package:ninja_client/features/places/models/place.dart';
 import 'package:ninja_client/features/places/services/place_service.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
@@ -54,7 +55,7 @@ Bill _bill({required bool settled}) => Bill(
       refundedTotal: 0,
     );
 
-Widget _host(Bill bill) => ProviderScope(
+Widget _host(Bill bill, {List<PendingRound> pending = const []}) => ProviderScope(
       overrides: [
         moneyProvider.overrideWithValue(MoneyFormat('EGP', const Locale('en'))),
         featuresProvider.overrideWithValue(TenantFeatures.all),
@@ -71,7 +72,7 @@ Widget _host(Bill bill) => ProviderScope(
           GlobalCupertinoLocalizations.delegate,
         ],
         theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
-        home: Scaffold(body: SingleChildScrollView(child: SizedBox(width: 390, child: BillTile(bill: bill)))),
+        home: Scaffold(body: SingleChildScrollView(child: SizedBox(width: 390, child: BillTile(bill: bill, pending: pending)))),
       ),
     );
 
@@ -91,5 +92,33 @@ void main() {
     expect(find.text('Latte'), findsOneWidget);
     // Opened, the way to its receipt
     expect(find.text('Receipt'), findsOneWidget);
+  });
+
+  test('rounds on their way land on the open bill; confirmed ones only until a bill has them', () {
+    final open = _bill(settled: false);
+    final order = Order(id: 13, date: DateTime(2026, 10, 1, 19, 30), status: OrderStatus.submitted, total: 40);
+    // Confirmed and already on the bill (order 12): nothing pending
+    final onIt = Order(id: 12, date: DateTime(2026, 10, 1, 19), status: OrderStatus.confirmed, total: 70);
+    final confirmed = Order(id: 14, date: DateTime(2026, 10, 1, 19, 40), status: OrderStatus.confirmed, total: 20);
+    final rounds = placeRounds([open], [order, onIt, confirmed])[open.id]!;
+    expect(rounds.map((r) => (r.order.id, r.adding)), [(14, true), (13, false)]);
+    // No open bill: nothing to land on
+    expect(placeRounds([_bill(settled: true)], [order]), isEmpty);
+  });
+
+  testWidgets('a round on its way sits on top of the stack, waiting', (tester) async {
+    final order = Order(
+      id: 13,
+      date: DateTime(2026, 10, 1, 19, 30),
+      status: OrderStatus.submitted,
+      total: 40,
+      items: [OrderItem(productName: const LocalizedText(en: 'Mint tea'), unitPrice: 40, units: 1)],
+    );
+    await tester.pumpWidget(_host(_bill(settled: false), pending: [PendingRound(order, adding: false)]));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+    expect(find.text('3 rounds'), findsOneWidget);
+    expect(find.text('Waiting to be confirmed'), findsOneWidget);
+    expect(find.text('Mint tea'), findsOneWidget);
   });
 }

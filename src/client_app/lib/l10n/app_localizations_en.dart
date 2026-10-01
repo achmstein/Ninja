@@ -1379,4 +1379,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookClockRunning => 'Clock running';
+
+  @override
+  String get addingToBill => 'Confirmed, adding to your bill';
 }

@@ -2522,6 +2522,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clock running'**
   String get bookClockRunning;
+
+  /// No description provided for @addingToBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed, adding to your bill'**
+  String get addingToBill;
 }
 
 class _AppLocalizationsDelegate

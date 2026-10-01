@@ -296,5 +296,6 @@
   "bookFreeNow": "{count, plural, =0{لا يوجد مكان متاح الآن} =1{مكان واحد متاح الآن} =2{مكانان متاحان الآن} other{{count} أماكن متاحة الآن}}",
   "ninjaYoureIn": "أنت في {name}",
   "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبان} other{{count} طلبات}}",
-  "bookClockRunning": "الوقت يُحتسب"
+  "bookClockRunning": "الوقت يُحتسب",
+  "addingToBill": "تم التأكيد، ويُضاف إلى فاتورتك"
 }

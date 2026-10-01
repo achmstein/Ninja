@@ -459,5 +459,6 @@
   "ninjaYoureIn": "انت في {name}",
   "ninjaRoundCount": "{count, plural, =1{طلب واحد} =2{طلبين} other{{count} طلبات}}",
   "ninjaOpenBill": "الإيصال",
-  "bookClockRunning": "العداد شغال"
+  "bookClockRunning": "العداد شغال",
+  "addingToBill": "اتأكد، بيتضاف على حسابك"
 }

@@ -20,6 +20,42 @@ import '../services/bills_service.dart';
 import 'bill_slip.dart';
 import 'bill_stars.dart';
 
+/// A round on its way to a bill: sent and waiting for the staff, or
+/// confirmed and about to be put on it
+class PendingRound {
+  final Order order;
+
+  /// Confirmed: the till is putting it on the bill
+  final bool adding;
+
+  const PendingRound(this.order, {required this.adding});
+}
+
+/// The rounds on their way, each put with the open bill it will land on
+/// (client_web's live-bills.ts): the one at the same place, else the first
+/// open one. With no open bill they are left out, for the page to show them
+/// on their own.
+Map<int, List<PendingRound>> placeRounds(List<Bill> bills, List<Order> orders) {
+  final byBill = <int, List<PendingRound>>{};
+  final open = bills.where((b) => b.isOpen).toList();
+  if (open.isEmpty) return byBill;
+  // On any bill, open or closed: only the ones on none are still being added
+  final onBills = {for (final bill in bills) for (final line in bill.lines) line.orderId};
+  final rounds = [
+    for (final order in orders)
+      if (order.status != OrderStatus.confirmed && order.status != OrderStatus.cancelled)
+        PendingRound(order, adding: false)
+      // Confirmed, but the bill has not caught up yet
+      else if (order.status == OrderStatus.confirmed && !onBills.contains(order.id) && order.ticketId == null)
+        PendingRound(order, adding: true),
+  ]..sort((x, y) => y.order.date.compareTo(x.order.date));
+  for (final round in rounds) {
+    final bill = open.where((b) => b.locationName != null && b.locationName == round.order.placeName).firstOrNull ?? open.first;
+    (byBill[bill.id] ??= []).add(round);
+  }
+  return byBill;
+}
+
 /// One round of a bill: the lines that came in one order (newest first), or a line on its own
 class _Round {
   final String key;
@@ -57,7 +93,10 @@ class BillTile extends ConsumerStatefulWidget {
   /// Today's orders by number: when each round was sent, and the stars on a paid bill
   final Map<int, Order>? ordersById;
 
-  const BillTile({super.key, required this.bill, this.ordersById});
+  /// Rounds on their way to this bill, shown faint on top of its stack
+  final List<PendingRound> pending;
+
+  const BillTile({super.key, required this.bill, this.ordersById, this.pending = const []});
 
   @override
   ConsumerState<BillTile> createState() => _BillTileState();
@@ -109,7 +148,61 @@ class _BillTileState extends ConsumerState<BillTile> {
               decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(Ninja.tileRadius)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
             );
+        // One on its way: an outline, its order's lines faint, and where it has got to
+        Widget pendingCard(PendingRound round) => Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(Ninja.tileRadius),
+                border: Border.all(color: c.foreground.withValues(alpha: 0.3), width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(DateFormat('h:mm a', locale.languageCode).format(round.order.date.toLocal()), style: small.copyWith(fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          round.adding ? l10n.addingToBill : l10n.waitingToBeConfirmed,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: small.copyWith(fontWeight: FontWeight.w700, color: const Color(0xFFF59E0B)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Opacity(
+                    opacity: 0.6,
+                    child: Column(
+                      children: [
+                        for (final (i, item) in round.order.items.indexed)
+                          _BillLine(
+                            line: BillLine(
+                              id: -i - 1,
+                              source: 'Order',
+                              orderId: round.order.id,
+                              description: item.productName,
+                              details: item.customizationsDescription,
+                              qty: item.units.toDouble(),
+                              unitPrice: item.unitPrice,
+                              discount: 0,
+                              total: item.unitPrice * item.units,
+                              isMine: true,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
         final cards = <Widget>[
+          for (final round in widget.pending) pendingCard(round),
           for (final round in rounds)
             shell([
               if (round.at != null)
@@ -184,8 +277,8 @@ class _BillTileState extends ConsumerState<BillTile> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (rounds.isNotEmpty)
-                            Text(l10n.ninjaRoundCount(rounds.length), style: small.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                          if (rounds.length + widget.pending.length > 0)
+                            Text(l10n.ninjaRoundCount(rounds.length + widget.pending.length), style: small.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
                           const SizedBox(width: 4),
                           AnimatedRotation(
                             turns: _fanned ? 0.5 : 0,
