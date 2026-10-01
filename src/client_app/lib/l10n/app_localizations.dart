@@ -2588,6 +2588,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switching to {option}'**
   String ninjaSwitchingTo(String option);
+
+  /// No description provided for @bookStartAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Start at'**
+  String get bookStartAt;
 }
 
 class _AppLocalizationsDelegate

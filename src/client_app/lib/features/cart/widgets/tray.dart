@@ -253,16 +253,19 @@ class _Thumbs extends StatelessWidget {
           for (var i = thumbs.length - 1; i >= 0; i--)
             PositionedDirectional(
               start: i * (size - overlap),
+              // The ring, then the photo clipped to the circle inside it: clipped to the
+              // outer circle, the photo's square corners would cover the ring
               child: Container(
                 width: size,
                 height: size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: c.foreground.withValues(alpha: 0.15),
-                  border: Border.all(color: c.background, width: 2),
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: c.background),
+                child: ClipOval(
+                  child: ColoredBox(
+                    color: c.foreground.withValues(alpha: 0.15),
+                    child: SizedBox.expand(child: DishPhoto(url: thumbs[i].pictureUri)),
+                  ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: DishPhoto(url: thumbs[i].pictureUri),
               ),
             ),
           if (summary.more > 0)
@@ -526,12 +529,13 @@ class _SwipeLine extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               child: Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: c.foreground.withValues(alpha: 0.10)),
-                    clipBehavior: Clip.antiAlias,
-                    child: DishPhoto(url: item.pictureUri),
+                  ClipOval(
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      color: c.foreground.withValues(alpha: 0.10),
+                      child: DishPhoto(url: item.pictureUri),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

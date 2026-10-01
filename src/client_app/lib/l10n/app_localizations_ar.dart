@@ -1415,6 +1415,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String ninjaSwitchingTo(String option) {
     return 'بنحوّلها لـ $option';
   }
+
+  @override
+  String get bookStartAt => 'ابدأ بـ';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2472,4 +2475,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String ninjaSwitchingTo(String option) {
     return 'جارٍ التحويل إلى $option';
   }
+
+  @override
+  String get bookStartAt => 'البدء بسعر';
 }

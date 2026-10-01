@@ -762,5 +762,6 @@
   "ninjaRateOnceSwitched": "{price} once the staff switch it",
   "@ninjaRateOnceSwitched": {"placeholders": {"price": {"type": "String"}}},
   "ninjaSwitchingTo": "Switching to {option}",
-  "@ninjaSwitchingTo": {"placeholders": {"option": {"type": "String"}}}
+  "@ninjaSwitchingTo": {"placeholders": {"option": {"type": "String"}}},
+  "bookStartAt": "Start at"
 }

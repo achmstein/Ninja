@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/hold_form.dart';
 import '../../../core/ui/ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/models/localized_text.dart';
@@ -10,7 +11,6 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
-import 'places_screen.dart';
 
 class QrScanScreen extends ConsumerStatefulWidget {
   const QrScanScreen({super.key});
@@ -201,12 +201,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => HoldSheet(room: result.toPlace()),
-    ).whenComplete(() {
+    showHoldSheet(context, result.toPlace()).whenComplete(() {
       if (!mounted) return;
       // Held or not, the customer is done scanning: the rooms tab shows the hold
       Navigator.of(context).pop();

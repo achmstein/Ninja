@@ -1418,4 +1418,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String ninjaSwitchingTo(String option) {
     return 'Switching to $option';
   }
+
+  @override
+  String get bookStartAt => 'Start at';
 }

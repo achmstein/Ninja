@@ -470,5 +470,6 @@
   "ninjaRateNow": "سعرك دلوقتي",
   "ninjaStaffSwitching": "الموظفين بيحوّلوها",
   "ninjaRateOnceSwitched": "{price} من أول ما يحوّلوها",
-  "ninjaSwitchingTo": "بنحوّلها لـ {option}"
+  "ninjaSwitchingTo": "بنحوّلها لـ {option}",
+  "bookStartAt": "ابدأ بـ"
 }

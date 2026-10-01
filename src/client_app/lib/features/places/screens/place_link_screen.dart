@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../widgets/hold_form.dart';
 import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
@@ -134,12 +135,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
   Future<void> _reserve() async {
     final scan = _scan;
     if (scan == null) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => HoldSheet(room: scan.toPlace()),
-    );
+    await showHoldSheet(context, scan.toPlace());
     if (mounted) context.go('/places');
   }
 

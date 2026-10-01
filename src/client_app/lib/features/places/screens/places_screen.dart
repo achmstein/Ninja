@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
+import '../widgets/hold_form.dart';
 import '../../service_request/widgets/request_tiles.dart';
 import '../../bills/models/bill.dart';
 import '../../bills/services/bills_service.dart';
@@ -17,7 +18,6 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/widgets/notice_card.dart';
-import '../../../core/widgets/profile_gate.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
@@ -31,7 +31,6 @@ import '../../pay/widgets/pay_sheet.dart';
 import '../models/place.dart';
 import '../../../core/services/signalr_service.dart';
 import '../services/place_service.dart';
-import '../../../core/services/sound_service.dart';
 
 /// Rooms screen for viewing and reserving PlayStation rooms
 class PlacesScreen extends ConsumerStatefulWidget {
@@ -45,6 +44,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
   Timer? _pollTimer;
   late final SignalRService _signalRService;
   final _scrollController = ScrollController();
+
+  /// The place whose booking is open under its card: one at a time
+  int? _openId;
 
   @override
   void initState() {
@@ -159,7 +161,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           ],
           // A stale socket after a resume: the places known stay up while the poll catches up
           error: (_, _) => roomsAsync.hasValue
-              ? [for (final room in rooms) PlaceListItem(room: room, canReserve: canReserve)]
+              ? [for (final room in rooms) _card(room, canReserve)]
               : [
                   EmptyState(
                     icon: LucideIcons.circleAlert,
@@ -172,11 +174,21 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                     ),
                   ),
                 ],
-          data: (rooms) => [for (final room in rooms) PlaceListItem(room: room, canReserve: canReserve)],
+          data: (rooms) => [for (final room in rooms) _card(room, canReserve)],
         ),
       ],
     );
   }
+
+  Widget _card(Place room, bool canReserve) => PlaceListItem(
+        key: ValueKey(room.id),
+        room: room,
+        canReserve: canReserve,
+        open: _openId == room.id && canReserve,
+        onToggle: () => setState(() => _openId = _openId == room.id ? null : room.id),
+        // Booked or turned down, the form goes; booked, the hold shows over the places
+        onDone: (_) => setState(() => _openId = null),
+      );
 }
 
 /// The Book tab while the customer's clock runs (client_web's stay-banner.tsx):
@@ -915,10 +927,20 @@ class PlaceListItem extends ConsumerWidget {
   final Place room;
   final bool canReserve;
 
+  /// The booking is open beneath the card's face
+  final bool open;
+  final VoidCallback? onToggle;
+
+  /// The booking under the card went through (true) or was turned down
+  final ValueChanged<bool>? onDone;
+
   const PlaceListItem({
     super.key,
     required this.room,
     this.canReserve = true,
+    this.open = false,
+    this.onToggle,
+    this.onDone,
   });
 
   @override
@@ -972,12 +994,18 @@ class PlaceListItem extends ConsumerWidget {
                         ),
                       ),
                       const Spacer(),
+                      // Open, the plus turns to a cross that folds it away
                       if (tappable)
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(color: c.foreground, shape: BoxShape.circle),
-                          child: Icon(LucideIcons.plus, size: 20, color: c.background),
+                        AnimatedRotation(
+                          turns: open ? 0.125 : 0,
+                          duration: Motion.base,
+                          curve: Motion.enter,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(color: c.foreground, shape: BoxShape.circle),
+                            child: Icon(LucideIcons.plus, size: 20, color: c.background),
+                          ),
                         ),
                     ],
                   ),
@@ -1012,16 +1040,36 @@ class PlaceListItem extends ConsumerWidget {
     );
 
     final theme = context.theme;
-    return Pressable(
-      onTap: tappable ? () => _showReservationDialog(context, ref) : null,
-      scale: 0.98,
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        padding: const EdgeInsets.all(20),
-        decoration: free
-            ? BoxDecoration(color: theme.colors.slab, borderRadius: BorderRadius.circular(Ninja.cardRadius), boxShadow: Ninja.slabShadow)
-            : theme.surface(radius: Ninja.cardRadius),
-        child: free ? SlabInk(child: face) : face,
+    final top = Pressable(
+      onTap: tappable ? onToggle : null,
+      scale: open ? 1 : 0.98,
+      child: Padding(padding: const EdgeInsets.all(20), child: free ? SlabInk(child: face) : face),
+    );
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: free
+          ? BoxDecoration(color: theme.colors.slab, borderRadius: BorderRadius.circular(Ninja.cardRadius), boxShadow: Ninja.slabShadow)
+          : theme.surface(radius: Ninja.cardRadius),
+      child: AnimatedSize(
+        duration: Motion.slow,
+        curve: Motion.enter,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            top,
+            // The booking, beneath the card's face, on the page's own colour
+            if (open)
+              _Reveal(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: theme.colors.background, borderRadius: BorderRadius.circular(22)),
+                  child: HoldForm(place: room, onDone: (booked) => onDone?.call(booked)),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1052,263 +1100,32 @@ class PlaceListItem extends ConsumerWidget {
         return l10n.maintenance;
     }
   }
-
-  void _showReservationDialog(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => HoldSheet(room: room),
-    );
-  }
 }
 
-/// Reservation bottom sheet - immediate reservation with 15 min arrival window
-class HoldSheet extends ConsumerStatefulWidget {
-  final Place room;
+/// Brings the booking into view once it has slid open, above the dock: the
+/// customer should not have to find it under their thumb, or below the edge
+class _Reveal extends StatefulWidget {
+  final Widget child;
 
-  const HoldSheet({super.key, required this.room});
+  const _Reveal({required this.child});
 
   @override
-  ConsumerState<HoldSheet> createState() => _HoldSheetState();
+  State<_Reveal> createState() => _RevealState();
 }
 
-class _HoldSheetState extends ConsumerState<HoldSheet> {
-  bool _isLoading = false;
-  bool _startOnConfirm = false;
-
-  /// The rate the clock starts at when it starts on Confirm: the tariff's
-  /// first option until the customer picks another
-  String? _optionCode;
-
-  bool get _pickRate => _startOnConfirm && widget.room.hasOptions;
-  String? get _chosenCode =>
-      _optionCode ?? (widget.room.options.isNotEmpty ? widget.room.options.first.code : null);
+class _RevealState extends State<_Reveal> {
+  @override
+  void initState() {
+    super.initState();
+    // After the card has grown
+    Future.delayed(Motion.slow, () {
+      if (!mounted) return;
+      Scrollable.ensureVisible(context, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd, duration: Motion.slow, curve: Motion.enter);
+    });
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.mutedForeground,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Title
-              Row(
-                children: [
-                  Expanded(
-                    child: AppText(
-                      l10n.reserveRoomName(widget.room.name.localized(context)),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: colors.foreground,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(LucideIcons.x, size: 24, color: colors.mutedForeground),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              AppText(
-                tariffLine(context, ref.watch(moneyProvider), widget.room.options),
-                style: TextStyle(
-                  color: colors.mutedForeground,
-                  fontSize: 14,
-                ),
-              ),
-              // Place description
-              if (widget.room.description != null) ...[
-                const SizedBox(height: 12),
-                AppText(
-                  widget.room.description!.localized(context),
-                  style: TextStyle(
-                    color: colors.foreground,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 24),
-
-              // Info box
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.clock, size: 24, color: colors.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText(
-                            l10n.fifteenMinutesToArrive,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: colors.foreground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // The clock starts the moment the counter confirms the
-              // reservation, instead of waiting for the cashier to start it.
-              // A plain row, not a card: it is one setting of the
-              // reservation, not a thing of its own. A table with no clock
-              // has nothing to start
-              if (widget.room.isTimed)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: AppText(
-                          l10n.startTimeNow,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15,
-                            color: colors.foreground,
-                          ),
-                        ),
-                      ),
-                      NinjaSwitch(
-                        value: _startOnConfirm,
-                        onChange: (value) => setState(() => _startOnConfirm = value),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // Which rate the clock starts at, where the tariff has a choice:
-              // the customer picks here, so the till confirms without asking
-              if (_pickRate) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    for (final (index, option) in widget.room.options.indexed) ...[
-                      if (index > 0) const SizedBox(width: 8),
-                      Expanded(
-                        child: _RateChoice(
-                          option: option,
-                          selected: option.code == _chosenCode,
-                          upgrade: index > 0,
-                          onTap: () => setState(() => _optionCode = option.code),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-              const SizedBox(height: 24),
-
-              // Reserve button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleReserve,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primary,
-                    foregroundColor: colors.primaryForeground,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: colors.primaryForeground,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : AppText(
-                          l10n.reserveNow,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleReserve() async {
-    // Ensure user has name + phone before reserving
-    if (!await ensureProfileComplete(context, ref)) return;
-    if (!mounted) return;
-
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _isLoading = true);
-
-    final success = await ref.read(holdProvider.notifier).holdPlace(
-          widget.room.id,
-          startOnConfirm: _startOnConfirm,
-          optionCode: _pickRate ? _chosenCode : null,
-        );
-
-    setState(() => _isLoading = false);
-
-    if (success && mounted) {
-      Navigator.pop(context);
-      final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(placesProvider(branchId));
-      ref.read(myStaysProvider.notifier).refresh();
-      SoundService.instance.playSuccess();
-      showIsland(
-        context: context,
-        title: Text(l10n.roomReservedSuccess),
-        icon: Icon(LucideIcons.check, color: NinjaColors.success),
-      );
-    } else if (mounted) {
-      showIsland(
-        context: context,
-        title: Text(l10n.failedToReserveRoom),
-        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
-      );
-    }
-  }
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// The rate as the tariff has it: one figure for a one-rate place, one per
@@ -1323,64 +1140,3 @@ String tariffLine(BuildContext context, MoneyFormat money, List<RateOption> opti
   return '$parts ${l10n.perHourShort}';
 }
 
-/// One rate to start at, as a tile: the option's dot in its colour, its
-/// name, its price. The first option reads as the base rate, the second as
-/// the upgrade, the way Single and Multi always did.
-class _RateChoice extends ConsumerWidget {
-  final RateOption option;
-  final bool selected;
-  final bool upgrade;
-  final VoidCallback onTap;
-
-  const _RateChoice({
-    required this.option,
-    required this.selected,
-    required this.upgrade,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final dot = upgrade ? Colors.orange : colors.primary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? colors.primary.withValues(alpha: 0.05) : null,
-          border: Border.all(color: selected ? colors.primary : colors.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: AppText(
-                    option.name.localized(context),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.foreground),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            AppText(
-              l10n.hourlyRateFormat(ref.watch(moneyProvider).whole(option.hourlyRate)),
-              style: TextStyle(fontSize: 12, color: colors.mutedForeground),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

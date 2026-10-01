@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -210,10 +211,14 @@ class HoldState {
   final String? error;
   final int? reservationId;
 
+  /// Why the server turned the hold down, in its words (a double booking, the place just taken)
+  final String? detail;
+
   const HoldState({
     this.isLoading = false,
     this.error,
     this.reservationId,
+    this.detail,
   });
 
   HoldState copyWith({
@@ -249,10 +254,9 @@ class HoldNotifier extends Notifier<HoldState> {
       state = state.copyWith(isLoading: false, reservationId: reservationId);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      final data = e is DioException ? e.response?.data : null;
+      final detail = data is Map ? data['detail'] as String? : null;
+      state = HoldState(error: e.toString(), detail: detail);
       return false;
     }
   }

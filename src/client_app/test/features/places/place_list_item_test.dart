@@ -24,7 +24,7 @@ final _room = Place(
   options: const [RateOption(code: 'single', name: LocalizedText(en: 'Single'), hourlyRate: 40)],
 );
 
-Widget _list(Place room, {required bool canReserve}) => ProviderScope(
+Widget _list(Place room, {required bool canReserve, bool open = false}) => ProviderScope(
       overrides: [
         // The business's currency, without the brand call that would fetch it
         moneyProvider.overrideWithValue(const MoneyFormat('EGP', Locale('en'))),
@@ -39,7 +39,7 @@ Widget _list(Place room, {required bool canReserve}) => ProviderScope(
           GlobalCupertinoLocalizations.delegate,
         ],
         theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
-        home: Scaffold(body: PlaceListItem(room: room, canReserve: canReserve)),
+        home: Scaffold(body: SingleChildScrollView(child: PlaceListItem(room: room, canReserve: canReserve, open: open))),
       ),
     );
 
@@ -76,5 +76,18 @@ void main() {
 
     expect(find.text('Room 2'), findsOneWidget);
     expect(find.byIcon(LucideIcons.plus), findsNothing);
+  });
+
+  testWidgets('a tap opens the booking under the card, not a sheet', (tester) async {
+    await tester.pumpWidget(_list(_room, canReserve: true));
+    await tester.pump();
+    expect(find.text('Reserve Now'), findsNothing);
+
+    await tester.pumpWidget(_list(_room, canReserve: true, open: true));
+    await tester.pumpAndSettle();
+    expect(find.text('10 minutes to arrive'), findsOneWidget);
+    expect(find.text('Reserve Now'), findsOneWidget);
+    expect(find.text("Start the time now, don't wait for me"), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
   });
 }

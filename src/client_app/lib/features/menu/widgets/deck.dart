@@ -545,15 +545,13 @@ class _UpNext extends StatelessWidget {
                     for (var i = faces.length - 1; i >= 0; i--)
                       PositionedDirectional(
                         start: i * 36.0,
+                        // The ring, then the photo clipped to the circle inside it
                         child: Container(
                           width: 48,
                           height: 48,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: ink.withValues(alpha: 0.2), width: 2),
-                          ),
-                          child: CachedNetworkImage(imageUrl: faces[i].pictureUri!, fit: BoxFit.cover),
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: ink.withValues(alpha: 0.2)),
+                          child: ClipOval(child: CachedNetworkImage(imageUrl: faces[i].pictureUri!, fit: BoxFit.cover, width: 44, height: 44)),
                         ),
                       ),
                   ],

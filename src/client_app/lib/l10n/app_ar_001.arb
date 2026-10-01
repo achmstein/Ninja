@@ -307,5 +307,6 @@
   "ninjaRateNow": "سعرك الآن",
   "ninjaStaffSwitching": "الموظفون يحوّلونها",
   "ninjaRateOnceSwitched": "{price} بعد أن يحوّلها الموظفون",
-  "ninjaSwitchingTo": "جارٍ التحويل إلى {option}"
+  "ninjaSwitchingTo": "جارٍ التحويل إلى {option}",
+  "bookStartAt": "البدء بسعر"
 }
