@@ -872,7 +872,7 @@ class PlaceListItem extends ConsumerWidget {
             top,
             // The booking, beneath the card's face, on the page's own colour
             if (open)
-              _Reveal(
+              Reveal(
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                   padding: const EdgeInsets.all(16),
@@ -912,32 +912,6 @@ class PlaceListItem extends ConsumerWidget {
         return l10n.maintenance;
     }
   }
-}
-
-/// Brings the booking into view once it has slid open, above the dock: the
-/// customer should not have to find it under their thumb, or below the edge
-class _Reveal extends StatefulWidget {
-  final Widget child;
-
-  const _Reveal({required this.child});
-
-  @override
-  State<_Reveal> createState() => _RevealState();
-}
-
-class _RevealState extends State<_Reveal> {
-  @override
-  void initState() {
-    super.initState();
-    // After the card has grown
-    Future.delayed(Motion.slow, () {
-      if (!mounted) return;
-      Scrollable.ensureVisible(context, alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd, duration: Motion.slow, curve: Motion.enter);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 /// The rate as the tariff has it: one figure for a one-rate place, one per

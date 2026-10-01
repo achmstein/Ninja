@@ -13,3 +13,4 @@ export 'ninja_sheet.dart';
 export 'page_header.dart';
 export 'parts.dart';
 export 'pressable.dart';
+export 'reveal.dart';

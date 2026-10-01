@@ -372,13 +372,16 @@ class _BillTileState extends ConsumerState<BillTile> {
                               alignment: Alignment.topCenter,
                               child: !_paper
                                   ? const SizedBox(width: double.infinity)
-                                  : Padding(
-                                      padding: const EdgeInsets.fromLTRB(4, 12, 4, 12),
-                                      child: DecoratedBox(
-                                        decoration: const BoxDecoration(
-                                          boxShadow: [BoxShadow(color: Color(0x1F000000), blurRadius: 6, offset: Offset(0, 2))],
+                                  // Printed out from under the button, then brought into view
+                                  : Reveal(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(4, 12, 4, 12),
+                                        child: DecoratedBox(
+                                          decoration: const BoxDecoration(
+                                            boxShadow: [BoxShadow(color: Color(0x1F000000), blurRadius: 6, offset: Offset(0, 2))],
+                                          ),
+                                          child: BillReceipt(ticketId: bill.id, bill: bill),
                                         ),
-                                        child: BillReceipt(ticketId: bill.id, bill: bill),
                                       ),
                                     ),
                             ),
