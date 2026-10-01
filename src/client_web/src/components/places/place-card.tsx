@@ -8,6 +8,7 @@ import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusMe
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
+import type { PlacesStyle } from './places-style'
 
 /** Room kept at the bottom for the dock (its tabs and a bill's row) and the phone's home bar, px */
 const DOCK_ROOM = 150
@@ -20,7 +21,9 @@ const TOP_ROOM = 16
  * free one on the business's colour with its name set large and its kind drawn
  * big behind it, a busy one quiet on a light card. A tap on a free one
  * grows the card and slides the booking in beneath its face, the way a
- * dish opens into its options; a second tap folds it away.
+ * dish opens into its options; a second tap folds it away. Where the
+ * business lists many places it is a slim row (`list`) or a small tile
+ * (`grid`) instead, opening the same way.
  */
 export function PlaceCard({
   place,
@@ -29,6 +32,7 @@ export function PlaceCard({
   onToggle,
   onDone,
   handedOver = false,
+  look = 'cards',
 }: {
   place: PlaceViewModel
   /** Signed in, no hold already, reservations on */
@@ -39,6 +43,8 @@ export function PlaceCard({
   onDone: (outcome: 'booked' | 'failed') => void
   /** The reservation has opened out of this card: what the card held (the form and its tick) goes at once, so none of it shows through the crossfade */
   handedOver?: boolean
+  /** The face: a big card, a slim row or a small tile */
+  look?: PlacesStyle
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -69,12 +75,18 @@ export function PlaceCard({
       layoutCrossfade={false}
       layout
       transition={springOpen}
-      style={{ borderRadius: 28 }}
+      style={{ borderRadius: look === 'list' ? 20 : look === 'grid' ? 24 : 28 }}
       className={cn(
         'relative isolate overflow-hidden',
-        free ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
+        // A row is light whether free or not: its plus says it can be booked, where a whole list on the slab would shout
+        free && look !== 'list' ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
       )}
     >
+      {look === 'list' ? (
+        <PlaceRow place={place} tappable={tappable} open={open} onToggle={onToggle} />
+      ) : look === 'grid' ? (
+        <PlaceTile place={place} free={free} tappable={tappable} open={open} onToggle={onToggle} />
+      ) : (
       <motion.button
         layout='position'
         type='button'
@@ -126,6 +138,7 @@ export function PlaceCard({
           <RateChips place={place} free={free} />
         </span>
       </motion.button>
+      )}
 
       {/* The booking, beneath the card's face */}
       <AnimatePresence initial={false}>
@@ -146,6 +159,114 @@ export function PlaceCard({
         )}
       </AnimatePresence>
     </motion.article>
+  )
+}
+
+/** The plus that opens the booking, turning to a cross while it is open */
+function OpenToggle({ open, className }: { open: boolean; className: string }) {
+  return (
+    <motion.span
+      aria-hidden
+      animate={{ rotate: open ? 45 : 0 }}
+      transition={spring}
+      className={cn('grid shrink-0 place-items-center rounded-full', className)}
+    >
+      <Plus className='size-4' strokeWidth={2.5} />
+    </motion.span>
+  )
+}
+
+type FaceProps = {
+  place: PlaceViewModel
+  tappable: boolean
+  open: boolean
+  onToggle: (place: PlaceViewModel) => void
+}
+
+/** The place as a slim row: its kind in a square, the name over where it stands and its rate, the plus at the end */
+function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
+  const t = useT()
+  const localized = useLocalized()
+  const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
+  return (
+    <motion.button
+      layout='position'
+      type='button'
+      disabled={!tappable}
+      aria-expanded={tappable ? open : undefined}
+      onClick={() => onToggle(place)}
+      whileTap={tappable && !open ? { scale: 0.98 } : undefined}
+      transition={spring}
+      className='flex min-h-16 w-full items-center gap-3 p-3 text-start disabled:cursor-default'
+    >
+      <span className='bg-muted grid size-11 shrink-0 place-items-center rounded-2xl'>
+        <PlaceIcon kind={Number(place.kind)} className='size-5' />
+      </span>
+      <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
+        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full truncate text-lg leading-tight'>
+          {localized(place.name)}
+        </motion.span>
+        <span className='text-muted-foreground flex min-w-0 items-center gap-1.5 text-caption'>
+          <span className={cn('flex shrink-0 items-center gap-1.5 font-semibold', status.className)}>
+            <span className='size-1.5 rounded-full bg-current' />
+            {t(status.key)}
+          </span>
+          {tariffOptions(place.tariff).length > 0 && (
+            <span className='truncate tabular-nums'>
+              {'· '}
+              <TariffLine place={place} />
+            </span>
+          )}
+        </span>
+      </span>
+      {tappable && <OpenToggle open={open} className='slab size-9' />}
+    </motion.button>
+  )
+}
+
+/** The place as a small tile, two a row: where it stands and the plus on top, the name and its rate under, its kind faint behind */
+function PlaceTile({ place, free, tappable, open, onToggle }: FaceProps & { free: boolean }) {
+  const t = useT()
+  const localized = useLocalized()
+  const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
+  return (
+    <motion.button
+      layout='position'
+      type='button'
+      disabled={!tappable}
+      aria-expanded={tappable ? open : undefined}
+      onClick={() => onToggle(place)}
+      whileTap={tappable && !open ? { scale: 0.97 } : undefined}
+      transition={spring}
+      className='relative flex min-h-31 w-full flex-col justify-between gap-3 p-4 text-start disabled:cursor-default'
+    >
+      <PlaceIcon
+        kind={Number(place.kind)}
+        className={cn('pointer-events-none absolute -end-4 -bottom-5 -z-10 size-24 -rotate-12', free ? 'opacity-[0.12]' : 'opacity-[0.06]')}
+      />
+      <span className='flex w-full items-center justify-between gap-2'>
+        <span
+          className={cn(
+            'flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-caption font-bold',
+            free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
+          )}
+        >
+          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
+          <span className='truncate'>{t(status.key)}</span>
+        </span>
+        {tappable && <OpenToggle open={open} className='bg-background text-foreground size-8' />}
+      </span>
+      <span className='flex min-w-0 flex-col gap-1'>
+        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading line-clamp-2 w-fit text-lg leading-tight break-words'>
+          {localized(place.name)}
+        </motion.span>
+        {tariffOptions(place.tariff).length > 0 && (
+          <span className={cn('truncate text-caption tabular-nums', free ? 'opacity-75' : 'text-muted-foreground')}>
+            <TariffLine place={place} />
+          </span>
+        )}
+      </span>
+    </motion.button>
   )
 }
 
@@ -195,7 +316,29 @@ export function TariffLine({ place }: { place: Pick<PlaceViewModel, 'tariff'> })
 }
 
 /** Loading placeholder for PlaceCard, at its size so nothing jumps when the places arrive */
-export function PlaceCardSkeleton() {
+export function PlaceCardSkeleton({ look = 'cards' }: { look?: PlacesStyle }) {
+  if (look === 'list') {
+    return (
+      <div className='surface flex min-h-16 items-center gap-3 rounded-[1.25rem] p-3'>
+        <Skeleton className='size-11 rounded-2xl' />
+        <div className='flex flex-1 flex-col gap-1.5'>
+          <Skeleton className='h-5 w-32' />
+          <Skeleton className='h-3.5 w-24' />
+        </div>
+      </div>
+    )
+  }
+  if (look === 'grid') {
+    return (
+      <div className='surface flex min-h-31 flex-col justify-between rounded-3xl p-4'>
+        <Skeleton className='h-5 w-16 rounded-full' />
+        <div className='flex flex-col gap-1.5'>
+          <Skeleton className='h-5 w-24' />
+          <Skeleton className='h-3.5 w-16' />
+        </div>
+      </div>
+    )
+  }
   return (
     <div className='surface flex min-h-44 flex-col justify-between rounded-[1.75rem] p-5'>
       <Skeleton className='h-6 w-24 rounded-full' />

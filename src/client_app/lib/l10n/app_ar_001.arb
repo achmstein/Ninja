@@ -315,5 +315,8 @@
   "ninjaHoldRanOut": "انتهت مدة الحجز. قد يظل {name} محتفظًا به لك.",
   "ninjaHideReceipt": "إخفاء الإيصال",
   "ninjaOtherPlaces": "أماكن أخرى",
-  "ninjaPlayedWith": "مع"
+  "ninjaPlayedWith": "مع",
+  "ninjaPlacesRooms": "الغرف",
+  "ninjaPlacesTables": "الطاولات",
+  "ninjaPlacesStations": "الألعاب"
 }

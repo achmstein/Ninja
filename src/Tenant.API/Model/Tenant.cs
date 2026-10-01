@@ -281,6 +281,7 @@ public class TenantLayout
     public static readonly string[] ButtonStyles = ["pill", "rounded", "square"];
     public static readonly string[] Surfaces = ["flat", "outlined", "shadow"];
     public static readonly string[] Densities = ["airy", "comfortable", "compact"];
+    public static readonly string[] PlaceStyles = ["cards", "list", "grid"];
 
     /// <summary>How an item shows on the menu: a row with a thumbnail, a photo card, text only, or a wide photo.</summary>
     public string? MenuItem { get; set; }
@@ -297,7 +298,10 @@ public class TenantLayout
 
     public string? Density { get; set; }
 
-    public bool IsEmpty => (MenuItem ?? Categories ?? Header ?? Buttons ?? Surface ?? Density) is null;
+    /// <summary>How the Book tab shows the places: a big card each (null), a slim row each, or two small tiles a row.</summary>
+    public string? Places { get; set; }
+
+    public bool IsEmpty => (MenuItem ?? Categories ?? Header ?? Buttons ?? Surface ?? Density ?? Places) is null;
 }
 
 /// <summary>

@@ -6,7 +6,7 @@ import { CirclePause, UserRound } from 'lucide-react'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
-import { PLACE_AVAILABLE } from '@/lib/places'
+import { PLACE_AVAILABLE, PLACE_STATION, PLACE_TABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useAfterTickBeat } from '@/lib/tick-beat'
 import { useScrollLock } from '@/lib/use-scroll-lock'
@@ -19,6 +19,7 @@ import { YourRoomCard } from '@/components/places/your-room-card'
 import { SectionLabel } from '@/components/ninja/page/parts'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
+import { type PlacesStyle, usePlacesStyle } from '@/components/places/places-style'
 import { Reservation } from '@/components/places/reservation'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
@@ -27,6 +28,8 @@ import { Notice, noticeAction } from '@/components/ninja/page/notice'
 import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/auth/sign-in-options'
+import { cn } from '@/lib/utils'
+import type { TranslationKey } from '@/lib/i18n'
 
 export const Route = createFileRoute('/places')({
   component: PlacesPage,
@@ -48,6 +51,7 @@ function PlacesPage() {
   const { visible } = useVisitTab()
   const navigate = useNavigate()
   const { scan } = Route.useSearch()
+  const look = usePlacesStyle()
 
   useEffect(() => {
     if (!visible) navigate({ to: '/', replace: true })
@@ -62,20 +66,53 @@ function PlacesPage() {
   if (settling) {
     return (
       <NinjaPage title={t('rooms')}>
-        <div className='flex flex-col gap-4'>
-          <PlaceCardSkeleton />
-          <PlaceCardSkeleton />
-        </div>
+        <PlaceSkeletons look={look} count={look === 'cards' ? 2 : 4} />
       </NinjaPage>
     )
   }
   return (
     <>
       <LayoutGroup>
-        <PlacesList atTable={seat.kind === 'table'} stay={seat.kind === 'stay' ? seat.stay : undefined} />
+        <PlacesList atTable={seat.kind === 'table'} stay={seat.kind === 'stay' ? seat.stay : undefined} look={look} />
       </LayoutGroup>
       {scanSheet}
     </>
+  )
+}
+
+/** How each layout spaces its places: big cards apart, rows close, tiles two a row */
+const LIST_CLASS: Record<PlacesStyle, string> = {
+  cards: 'flex flex-col gap-4',
+  list: 'flex flex-col gap-2',
+  grid: 'grid grid-cols-2 gap-3',
+}
+
+const KIND_HEADINGS: Record<number, TranslationKey> = {
+  [PLACE_TABLE]: 'ninjaPlacesTables',
+  [PLACE_STATION]: 'ninjaPlacesStations',
+}
+
+/**
+ * The places by kind, in the order each kind first appears, for the list and
+ * the grid: where a branch has rooms and tables both, a heading over each lets
+ * the eye skip to its own. One kind, or the big cards, is one group with no heading.
+ */
+function groupByKind(places: PlaceViewModel[], look: PlacesStyle): { heading?: TranslationKey; places: PlaceViewModel[] }[] {
+  const kinds = [...new Set(places.map((p) => Number(p.kind)))]
+  if (look === 'cards' || kinds.length < 2) return [{ places }]
+  return kinds.map((kind) => ({
+    heading: KIND_HEADINGS[kind] ?? 'ninjaPlacesRooms',
+    places: places.filter((p) => Number(p.kind) === kind),
+  }))
+}
+
+function PlaceSkeletons({ look, count }: { look: PlacesStyle; count: number }) {
+  return (
+    <div className={LIST_CLASS[look]}>
+      {Array.from({ length: count }, (_, i) => (
+        <PlaceCardSkeleton key={i} look={look} />
+      ))}
+    </div>
   )
 }
 
@@ -86,7 +123,7 @@ const FORM_CLOSES_MS = 900
  *  clock, and any table the owner opened to reservations — as big cards,
  *  one open at a time with the booking under it. Once one is held its card
  *  opens into the reservation (Reservation): one hold is all anyone gets. */
-function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel }) {
+function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayViewModel; look: PlacesStyle }) {
   const t = useT()
   const localized = useLocalized()
   const auth = useAuth()
@@ -202,10 +239,8 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
           )}
 
           {isLoading ? (
-            <RiseItem className='flex flex-col gap-4'>
-              <PlaceCardSkeleton />
-              <PlaceCardSkeleton />
-              <PlaceCardSkeleton />
+            <RiseItem>
+              <PlaceSkeletons look={look} count={look === 'cards' ? 3 : 6} />
             </RiseItem>
           ) : (
             <div className='flex flex-col gap-4'>
@@ -221,20 +256,39 @@ function PlacesList({ atTable, stay }: { atTable: boolean; stay?: StayViewModel 
                   <SectionLabel>{t('ninjaOtherPlaces')}</SectionLabel>
                 </RiseItem>
               )}
-              {others.map((place) => (
-                <RiseItem key={String(place.id)} className={stay && mine ? 'opacity-60' : undefined}>
-                  <Recede gone={held && String(place.id) !== heldId}>
-                    <PlaceCard
-                      place={place}
-                      canReserve={canReserve}
-                      open={openId === Number(place.id)}
-                      onToggle={handleToggle}
-                      // Booked, the form stays until the hold opens the card into the reservation
-                      onDone={(outcome) => outcome === 'failed' && closeHold()}
-                      handedOver={String(place.id) === heldId}
-                    />
-                  </Recede>
-                </RiseItem>
+              {groupByKind(others, look).map((group) => (
+                <div key={group.heading ?? 'all'} className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}>
+                  {group.heading && (
+                    <RiseItem className={cn(look === 'grid' && 'col-span-2', stay && mine && 'opacity-60')}>
+                      <Recede gone={held}>
+                        <SectionLabel>{t(group.heading)}</SectionLabel>
+                      </Recede>
+                    </RiseItem>
+                  )}
+                  {group.places.map((place) => (
+                    <RiseItem
+                      key={String(place.id)}
+                      className={cn(
+                        stay && mine && 'opacity-60',
+                        // An open tile takes the row, so the booking under it has the width to breathe
+                        look === 'grid' && openId === Number(place.id) && 'col-span-2'
+                      )}
+                    >
+                      <Recede gone={held && String(place.id) !== heldId}>
+                        <PlaceCard
+                          place={place}
+                          look={look}
+                          canReserve={canReserve}
+                          open={openId === Number(place.id)}
+                          onToggle={handleToggle}
+                          // Booked, the form stays until the hold opens the card into the reservation
+                          onDone={(outcome) => outcome === 'failed' && closeHold()}
+                          handedOver={String(place.id) === heldId}
+                        />
+                      </Recede>
+                    </RiseItem>
+                  ))}
+                </div>
               ))}
             </div>
           )}

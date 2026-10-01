@@ -124,7 +124,7 @@ public sealed class TenantScenarios
     }
 
     private record ThemeView(string? Radius, string? Style, LayoutView? Layout);
-    private record LayoutView(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
+    private record LayoutView(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density, string? Places = null);
     private record StyledView(ThemeView Theme, long Version);
 
     private static object Styled(object? theme)
@@ -146,6 +146,10 @@ public sealed class TenantScenarios
         Assert.AreEqual(new LayoutView("row", null, null, null, null, "airy"), saved.Theme.Layout, "only the parts chosen are kept; the rest are the style's");
         Assert.AreEqual("lg", saved.Theme.Radius, "the business's own seeds stand beside the style");
 
+        // The Book tab's layout is a part like the others: alone it is a layout
+        var places = await Owner.PutAsync<StyledView>(Tenant, Styled(new { style = "ninja", layout = new { places = " List " } }));
+        Assert.AreEqual(new LayoutView(null, null, null, null, null, null, "list"), places.Theme.Layout);
+
         // A layout that chooses nothing is no layout
         var cleared = await Owner.PutAsync<StyledView>(Tenant, Styled(new { style = "cozy", layout = new { menuItem = "" } }));
         Assert.AreEqual("cozy", cleared.Theme.Style);
@@ -158,6 +162,10 @@ public sealed class TenantScenarios
         (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { layout = new { header = "floating" } }));
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
         Assert.Contains("header layout", detail);
+
+        (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { layout = new { places = "carousel" } }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("cards, list, grid", detail);
     }
 
     private record FontsView(string? FontLatin, string? FontArabic);

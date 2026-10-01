@@ -137,11 +137,11 @@ const watchers = new Set<() => void>()
 export const draftedTheme = () => drafted
 
 /**
- * The menu style the panel is drafting: undefined while nothing is drafted
- * (the saved brand's holds), null for the classic list. The panel sends the
- * whole theme, the layout with it, though only the colours are painted.
+ * A part of the layout the panel is drafting: undefined while nothing is
+ * drafted (the saved brand's holds), null for the default. The panel sends
+ * the whole theme, the layout with it, though only the colours are painted.
  */
-export function useDraftedMenuItem(): string | null | undefined {
+function useDraftedLayoutPart(part: 'menuItem' | 'places'): string | null | undefined {
   return useSyncExternalStore(
     (w) => {
       watchers.add(w)
@@ -149,11 +149,17 @@ export function useDraftedMenuItem(): string | null | undefined {
     },
     () => {
       if (!drafted) return undefined
-      const layout = (drafted.theme as { layout?: { menuItem?: string | null } | null } | null | undefined)?.layout
-      return layout?.menuItem ?? null
+      const layout = (drafted.theme as { layout?: Record<string, string | null> | null } | null | undefined)?.layout
+      return layout?.[part] ?? null
     }
   )
 }
+
+/** The menu style the panel is drafting; null for the classic list */
+export const useDraftedMenuItem = () => useDraftedLayoutPart('menuItem')
+
+/** How the panel is drafting the Book tab's places; null for the big cards */
+export const useDraftedPlaces = () => useDraftedLayoutPart('places')
 
 /** Listens for the panel's drafts and tells it the frame is ready for one; returns the stop. */
 export function onDraftedTheme(handler: (input: BrandThemeInput | null) => void): () => void {

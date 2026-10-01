@@ -340,7 +340,8 @@ class TenantTheme {
   final String? style;
 
   /// The parts the business dressed its own way, as sent; the app reads
-  /// `menuItem` (how the menu shows its dishes). Resolved by `resolveLayout`.
+  /// `menuItem` (how the menu shows its dishes) and `places` (how the Book tab
+  /// lists its places). Resolved by `resolveLayout`.
   final Map<String, String>? layout;
 
   /// The dock's colour: null a deep shade of the brand colour, "neutral" near-black

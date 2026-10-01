@@ -6,7 +6,8 @@
 /// here is how headings are set and the seeds it suggests, which the
 /// business's own seeds always win over. The business still chooses how its
 /// menu shows its dishes (`theme.layout.menuItem`, client_web's
-/// menu-style.ts); every other part of the page is the style's.
+/// menu-style.ts) and how the Book tab lists its places
+/// (`theme.layout.places`); every other part of the page is the style's.
 library;
 
 import 'tenant_brand.dart';
@@ -28,6 +29,10 @@ enum SurfaceLayout { flat, outlined, shadow }
 
 enum DensityLayout { airy, comfortable, compact }
 
+/// How the Book tab lists its places. cards: one big card each (the
+/// default); list: a slim row each; grid: two small tiles a row
+enum PlacesLayout { cards, list, grid }
+
 /// One choice per part of the customer app.
 class Layout {
   final MenuItemLayout menuItem;
@@ -36,6 +41,7 @@ class Layout {
   final ButtonsLayout buttons;
   final SurfaceLayout surface;
   final DensityLayout density;
+  final PlacesLayout places;
 
   const Layout({
     required this.menuItem,
@@ -44,6 +50,7 @@ class Layout {
     required this.buttons,
     required this.surface,
     required this.density,
+    this.places = PlacesLayout.cards,
   });
 
   Layout copyWith({
@@ -53,6 +60,7 @@ class Layout {
     ButtonsLayout? buttons,
     SurfaceLayout? surface,
     DensityLayout? density,
+    PlacesLayout? places,
   }) =>
       Layout(
         menuItem: menuItem ?? this.menuItem,
@@ -61,6 +69,7 @@ class Layout {
         buttons: buttons ?? this.buttons,
         surface: surface ?? this.surface,
         density: density ?? this.density,
+        places: places ?? this.places,
       );
 
   @override
@@ -72,14 +81,15 @@ class Layout {
           other.header == header &&
           other.buttons == buttons &&
           other.surface == surface &&
-          other.density == density;
+          other.density == density &&
+          other.places == places;
 
   @override
-  int get hashCode => Object.hash(menuItem, categories, header, buttons, surface, density);
+  int get hashCode => Object.hash(menuItem, categories, header, buttons, surface, density, places);
 
   @override
   String toString() =>
-      'Layout(${menuItem.name}, ${categories.name}, ${header.name}, ${buttons.name}, ${surface.name}, ${density.name})';
+      'Layout(${menuItem.name}, ${categories.name}, ${header.name}, ${buttons.name}, ${surface.name}, ${density.name}, ${places.name})';
 }
 
 /// How section and page headings are set.
@@ -135,10 +145,13 @@ T? _pick<T extends Enum>(List<T> values, Object? value) =>
     value is String ? values.where((v) => v.name == value).firstOrNull : null;
 
 /// The layout the customer app wears: Ninja's, with the business's choice
-/// of how the menu shows its dishes over it. A value this build does not
+/// of how the menu shows its dishes and how the Book tab lists its places over it. A value this build does not
 /// know falls back to Ninja's, so an older app never breaks on a newer brand.
 Layout resolveLayout(Map<String, dynamic>? overrides) =>
-    ninja.layout.copyWith(menuItem: _pick(MenuItemLayout.values, overrides?['menuItem']));
+    ninja.layout.copyWith(
+      menuItem: _pick(MenuItemLayout.values, overrides?['menuItem']),
+      places: _pick(PlacesLayout.values, overrides?['places']),
+    );
 
 /// The seeds a theme paints with once the style's defaults fill what the
 /// business left unset. The business's own values always win.

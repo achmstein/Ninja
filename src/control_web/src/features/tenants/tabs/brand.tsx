@@ -65,6 +65,13 @@ const MENU_LAYOUTS: { key: string; label: TranslationKey }[] = [
 ]
 const menuLayoutOf = (v: string | null | undefined) => (MENU_LAYOUTS.some((m) => m.key === v) ? v! : DEFAULT)
 
+/** How the Book tab may list the places (the brand's places part); none is a big card each */
+const PLACES_LAYOUTS: { key: string; label: TranslationKey }[] = [
+  { key: 'list', label: 'placesLayoutList' },
+  { key: 'grid', label: 'placesLayoutGrid' },
+]
+const placesLayoutOf = (v: string | null | undefined) => (PLACES_LAYOUTS.some((m) => m.key === v) ? v! : DEFAULT)
+
 const RADIUS_LABELS: Record<string, TranslationKey> = {
   none: 'radiusNone',
   sm: 'radiusSm',
@@ -200,6 +207,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
   const [dock, setDock] = useState<Dock>(dockOf(brand.theme.slab))
   const [menuLayout, setMenuLayout] = useState(menuLayoutOf(brand.theme.layout?.menuItem))
+  const [placesLayout, setPlacesLayout] = useState(placesLayoutOf(brand.theme.layout?.places))
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
 
@@ -214,11 +222,15 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock; menuLayout: string }) => {
+  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock; menuLayout: string; placesLayout: string }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
-    // The menu's style is this tab's; the layout's other parts go back as they came (the stack replaces the whole theme)
-    const kept = brand.theme.layout ?? { menuItem: null, categories: null, header: null, buttons: null, surface: null, density: null }
-    const layout = { ...kept, menuItem: f.menuLayout === DEFAULT ? null : f.menuLayout }
+    // The menu's style and the Book tab's are this tab's; the layout's other parts go back as they came (the stack replaces the whole theme)
+    const kept = brand.theme.layout ?? { menuItem: null, categories: null, header: null, buttons: null, surface: null, density: null, places: null }
+    const layout = {
+      ...kept,
+      menuItem: f.menuLayout === DEFAULT ? null : f.menuLayout,
+      places: f.placesLayout === DEFAULT ? null : f.placesLayout,
+    }
     return {
       accent: orNull(f.accent),
       surface: orNull(f.surface),
@@ -234,9 +246,9 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     }
   }
   const theme = useMemo(
-    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout }),
+    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout, placesLayout }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout]
+    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface, dock, menuLayout, placesLayout]
   )
   const draft = useMemo<PreviewDraft>(
     () => ({
@@ -265,6 +277,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         darkSurface: brand.theme.dark?.surface ?? '',
         dock: dockOf(brand.theme.slab),
         menuLayout: menuLayoutOf(brand.theme.layout?.menuItem),
+        placesLayout: placesLayoutOf(brand.theme.layout?.places),
       }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -326,6 +339,21 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
               </SelectContent>
             </Select>
             <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>
+          </div>
+          <div className='grid gap-2'>
+            <Label htmlFor='brand-places' className='text-xs'>{t('placesLayout')}</Label>
+            <Select value={placesLayout} onValueChange={setPlacesLayout}>
+              <SelectTrigger id='brand-places' className='w-full'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={DEFAULT}>{t('placesLayoutCards')}</SelectItem>
+                {PLACES_LAYOUTS.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{t(m.label)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className='text-muted-foreground text-xs'>{t('placesLayoutHint')}</p>
           </div>
           <div className='grid gap-4 sm:grid-cols-2'>
             <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper hint={t('secondaryColorHint')} />

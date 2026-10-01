@@ -87,6 +87,7 @@ export type TenantLayoutDto = {
     buttons: null | string;
     surface: null | string;
     density: null | string;
+    places?: null | string;
 };
 
 export type TenantLocaleDto = {

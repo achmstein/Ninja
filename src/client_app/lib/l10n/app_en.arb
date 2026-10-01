@@ -772,5 +772,8 @@
   "@ninjaHoldRanOut": {"placeholders": {"name": {"type": "String"}}},
   "ninjaHideReceipt": "Hide the receipt",
   "ninjaOtherPlaces": "Other places",
-  "ninjaPlayedWith": "With"
+  "ninjaPlayedWith": "With",
+  "ninjaPlacesRooms": "Rooms",
+  "ninjaPlacesTables": "Tables",
+  "ninjaPlacesStations": "Stations"
 }

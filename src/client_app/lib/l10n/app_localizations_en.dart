@@ -1446,4 +1446,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ninjaPlayedWith => 'With';
+
+  @override
+  String get ninjaPlacesRooms => 'Rooms';
+
+  @override
+  String get ninjaPlacesTables => 'Tables';
+
+  @override
+  String get ninjaPlacesStations => 'Stations';
 }

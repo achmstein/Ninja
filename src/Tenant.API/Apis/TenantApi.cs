@@ -411,6 +411,7 @@ public static partial class TenantApi
             (dto.Buttons, TenantLayout.ButtonStyles, "button shape", v => layout.Buttons = v),
             (dto.Surface, TenantLayout.Surfaces, "surface", v => layout.Surface = v),
             (dto.Density, TenantLayout.Densities, "density", v => layout.Density = v),
+            (dto.Places, TenantLayout.PlaceStyles, "places layout", v => layout.Places = v),
         ];
         foreach (var (value, allowed, label, set) in parts)
         {
@@ -547,7 +548,7 @@ public record TenantThemeDto(
             TenantTheme.KnownFont(t.FontArabic, TenantTheme.ArabicFonts),
             t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface),
             t.HeaderSize, t.Mode, t.Style,
-            t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density) : null,
+            t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density, l.Places) : null,
             t.Slab);
 }
 
@@ -557,7 +558,8 @@ public record TenantThemeDto(
 /// <param name="Buttons">pill, rounded or square.</param>
 /// <param name="Surface">flat, outlined or shadow.</param>
 /// <param name="Density">airy, comfortable or compact.</param>
-public record TenantLayoutDto(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
+/// <param name="Places">How the Book tab shows the places: cards (one big card each), list (a slim row each) or grid (two small tiles a row); none is cards. Last and defaulted: a client older than the setting does not send it.</param>
+public record TenantLayoutDto(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density, string? Places = null);
 
 public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
 

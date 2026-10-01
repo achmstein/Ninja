@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react'
+import { type ReactNode, useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ImagePlus, Lock, X } from 'lucide-react'
+import { ChevronDown, ImagePlus, Info, Lock, X } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { type TenantFeatures, type TenantThemeDto } from '@/api/tenant'
 import {
@@ -28,6 +28,7 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Collapsible,
@@ -120,6 +121,8 @@ type ThemeForm = {
   slab: string
   /** How the menu lists the dishes: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
   menuItem: string
+  /** How the Book tab lists the places: '' a big card each, 'list' a slim row each, 'grid' two small tiles a row */
+  places: string
 }
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
@@ -137,6 +140,8 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   slab: t.slab === 'neutral' ? 'neutral' : '',
   // Rows are what a business gets when it chooses nothing, so a saved 'row' reads as that
   menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
+  // Cards are what a business gets when it chooses nothing, so a saved 'cards' reads as that
+  places: ['list', 'grid'].includes(t.layout?.places ?? '') ? (t.layout?.places ?? '') : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
@@ -155,8 +160,11 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     // Ninja is the only style for now, worn whole
     style: 'ninja',
     slab: f.slab || null,
-    // The one part the business picks for now: the classic list instead of the cards
-    layout: f.menuItem ? { menuItem: f.menuItem, categories: null, header: null, buttons: null, surface: null, density: null } : null,
+    // The parts the business picks for now: the menu's style and the Book tab's
+    layout:
+      f.menuItem || f.places
+        ? { menuItem: f.menuItem || null, categories: null, header: null, buttons: null, surface: null, density: null, places: f.places || null }
+        : null,
   }
 }
 
@@ -336,9 +344,12 @@ function BrandForm({ brand }: { brand: Brand }) {
                   hint={t('surfaceColorHint')}
                 />
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-radius' className='text-xs'>
-                    {t('cornerRadius')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-radius' className='text-xs'>
+                      {t('cornerRadius')}
+                    </Label>
+                    <FieldHint>{t('cornerRadiusHint')}</FieldHint>
+                  </div>
                   <Select
                     value={theme.radius || NONE}
                     onValueChange={(v) =>
@@ -357,12 +368,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-dock' className='text-xs'>
-                    {t('dockColour')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-dock' className='text-xs'>
+                      {t('dockColour')}
+                    </Label>
+                    <FieldHint>{t('dockColourHint')}</FieldHint>
+                  </div>
                   <Select value={theme.slab || NONE} onValueChange={(v) => setTheme({ ...theme, slab: v === NONE ? '' : v })}>
                     <SelectTrigger id='brand-dock' className='w-full'>
                       <SelectValue />
@@ -372,12 +385,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='neutral'>{t('dockBlack')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('dockColourHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-menu' className='text-xs'>
-                    {t('menuLayout')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-menu' className='text-xs'>
+                      {t('menuLayout')}
+                    </Label>
+                    <FieldHint>{t('menuLayoutHint')}</FieldHint>
+                  </div>
                   <Select value={theme.menuItem || NONE} onValueChange={(v) => setTheme({ ...theme, menuItem: v === NONE ? '' : v })}>
                     <SelectTrigger id='brand-menu' className='w-full'>
                       <SelectValue />
@@ -391,12 +406,35 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='tiles'>{t('menuLayoutTiles')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('menuLayoutHint')}</p>
                 </div>
+                {/* The Book tab is there only where places are booked or timed */}
+                {(features.reservations || features.timeBilling) && (
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center gap-1'>
+                      <Label htmlFor='brand-places' className='text-xs'>
+                        {t('placesLayout')}
+                      </Label>
+                      <FieldHint>{t('placesLayoutHint')}</FieldHint>
+                    </div>
+                    <Select value={theme.places || NONE} onValueChange={(v) => setTheme({ ...theme, places: v === NONE ? '' : v })}>
+                      <SelectTrigger id='brand-places' className='w-full'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>{t('placesLayoutCards')}</SelectItem>
+                        <SelectItem value='list'>{t('placesLayoutList')}</SelectItem>
+                        <SelectItem value='grid'>{t('placesLayoutGrid')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-mode' className='text-xs'>
-                    {t('startingTheme')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-mode' className='text-xs'>
+                      {t('startingTheme')}
+                    </Label>
+                    <FieldHint>{t('startingThemeHint')}</FieldHint>
+                  </div>
                   <Select
                     value={theme.mode || NONE}
                     onValueChange={(v) => setTheme({ ...theme, mode: v === NONE ? '' : v })}
@@ -410,12 +448,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='dark'>{t('themeDarkOption')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('startingThemeHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-arabic' className='text-xs'>
-                    {t('arabicStyleLabel')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-arabic' className='text-xs'>
+                      {t('arabicStyleLabel')}
+                    </Label>
+                    <FieldHint>{t('arabicStyleLabelHint')}</FieldHint>
+                  </div>
                   <Select value={arabicStyle} onValueChange={setArabicStyle}>
                     <SelectTrigger id='brand-arabic' className='w-full'>
                       <SelectValue />
@@ -425,12 +465,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='egyptian'>{t('arabicEgyptianOption')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('arabicStyleLabelHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-content-languages' className='text-xs'>
-                    {t('contentLanguagesLabel')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-content-languages' className='text-xs'>
+                      {t('contentLanguagesLabel')}
+                    </Label>
+                    <FieldHint>{t('contentLanguagesHint')}</FieldHint>
+                  </div>
                   <Select
                     value={contentLanguages}
                     onValueChange={(value) => setContentLanguages(value as ContentLanguages)}
@@ -444,12 +486,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='en'>{t('contentLanguagesEn')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('contentLanguagesHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='brand-header' className='text-xs'>
-                    {t('headerSize')}
-                  </Label>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='brand-header' className='text-xs'>
+                      {t('headerSize')}
+                    </Label>
+                    <FieldHint>{t('headerSizeHint')}</FieldHint>
+                  </div>
                   <Select
                     value={theme.headerSize || NONE}
                     onValueChange={(v) =>
@@ -466,7 +510,6 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='lg'>{t('headerLg')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className='text-muted-foreground text-xs'>{t('headerSizeHint')}</p>
                 </div>
                 <FontSelect
                   id='brand-font-latin'
@@ -573,10 +616,12 @@ function BrandForm({ brand }: { brand: Brand }) {
               <Label>{t('guestOrdering')}</Label>
               <div className='flex items-start justify-between gap-4 rounded-lg border p-3'>
                 <div className='grid gap-1'>
-                  <Label htmlFor='guest-orders-anywhere' className='text-sm'>
-                    {t('guestOrdersAnywhere')}
-                  </Label>
-                  <p className='text-muted-foreground text-xs'>{t('guestOrdersAnywhereHint')}</p>
+                  <div className='flex items-center gap-1'>
+                    <Label htmlFor='guest-orders-anywhere' className='text-sm'>
+                      {t('guestOrdersAnywhere')}
+                    </Label>
+                    <FieldHint>{t('guestOrdersAnywhereHint')}</FieldHint>
+                  </div>
                 </div>
                 <Switch
                   id='guest-orders-anywhere'
@@ -644,7 +689,10 @@ function ImageSlotField({
   const input = useRef<HTMLInputElement>(null)
   return (
     <div className='space-y-2'>
-      <Label className='text-xs'>{label}</Label>
+      <div className='flex items-center gap-1'>
+        <Label className='text-xs'>{label}</Label>
+        {hint && <FieldHint>{hint}</FieldHint>}
+      </div>
       <div className='flex items-center gap-3'>
         <button
           type='button'
@@ -700,7 +748,6 @@ function ImageSlotField({
           }}
         />
       </div>
-      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
   )
 }
@@ -763,9 +810,12 @@ function ColorField({
   const t = useT()
   return (
     <div className='space-y-1.5'>
-      <Label htmlFor={id} className='text-xs'>
-        {label}
-      </Label>
+      <div className='flex items-center gap-1'>
+        <Label htmlFor={id} className='text-xs'>
+          {label}
+        </Label>
+        {hint && <FieldHint>{hint}</FieldHint>}
+      </div>
       <div className='flex items-center gap-2'>
         <input
           id={id}
@@ -794,7 +844,31 @@ function ColorField({
           </Button>
         )}
       </div>
-      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
+  )
+}
+
+/**
+ * What a field does, behind a small (i) beside its label: the preview shows
+ * a change as it is made, so the words are there for whoever asks, not under
+ * every field. A tap opens it, as a hover cannot on a phone.
+ */
+function FieldHint({ children }: { children: ReactNode }) {
+  const t = useT()
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type='button'
+          aria-label={t('moreInfo')}
+          className='text-muted-foreground hover:text-foreground grid size-5 place-items-center rounded-full'
+        >
+          <Info className='size-3.5' />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align='start' className='text-muted-foreground w-64 p-3 text-xs leading-relaxed'>
+        {children}
+      </PopoverContent>
+    </Popover>
   )
 }

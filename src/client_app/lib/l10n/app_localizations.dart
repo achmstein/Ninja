@@ -2636,6 +2636,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'With'**
   String get ninjaPlayedWith;
+
+  /// No description provided for @ninjaPlacesRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get ninjaPlacesRooms;
+
+  /// No description provided for @ninjaPlacesTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tables'**
+  String get ninjaPlacesTables;
+
+  /// No description provided for @ninjaPlacesStations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get ninjaPlacesStations;
 }
 
 class _AppLocalizationsDelegate

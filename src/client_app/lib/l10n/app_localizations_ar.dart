@@ -1443,6 +1443,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get ninjaPlacesRooms => 'الأوض';
+
+  @override
+  String get ninjaPlacesTables => 'الترابيزات';
+
+  @override
+  String get ninjaPlacesStations => 'الألعاب';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2528,4 +2537,13 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaPlayedWith => 'مع';
+
+  @override
+  String get ninjaPlacesRooms => 'الغرف';
+
+  @override
+  String get ninjaPlacesTables => 'الطاولات';
+
+  @override
+  String get ninjaPlacesStations => 'الألعاب';
 }

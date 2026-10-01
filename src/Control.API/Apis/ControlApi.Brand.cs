@@ -202,7 +202,8 @@ public record BrandTheme(
     string? Slab = null);
 
 /// <summary>One choice per part of the customer app; null is the style's. The stack validates the values.</summary>
-public record BrandLayout(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
+/// <param name="Places">cards, list or grid: how the Book tab shows the places. Last and defaulted: a stack older than the setting does not send it.</param>
+public record BrandLayout(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density, string? Places = null);
 
 public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 

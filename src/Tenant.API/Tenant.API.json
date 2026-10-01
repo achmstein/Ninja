@@ -1025,6 +1025,12 @@
               "null",
               "string"
             ]
+          },
+          "places": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
