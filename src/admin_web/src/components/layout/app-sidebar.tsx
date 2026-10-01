@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getOpenReservationsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { entitledTo, useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLayout } from '@/context/layout-provider'
@@ -13,6 +14,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import { serviceRequestsService } from '@/features/requests/service'
+import { isOpenReservation } from '@/features/places/status'
 import { BranchSwitcher } from './branch-switcher'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
@@ -41,8 +43,19 @@ export function AppSidebar() {
     refetchInterval: 60_000,
   })
 
+  // Places held or booked and not yet arrived, on Rooms & Tables: a reservation
+  // made from the customer app shows here the moment it lands (RoomStatusChanged
+  // refreshes it), whatever page is open
+  const { data: reservations = [] } = useQuery({
+    ...getOpenReservationsOptions(),
+    enabled: features.reservations,
+    refetchInterval: 60_000,
+  })
+  const openReservations = features.reservations ? reservations.filter(isOpenReservation).length : 0
+
   const badges: Record<string, number> = {
     '/orders': pendingOrders.length,
+    '/places': openReservations,
     '/requests': serviceRequests.length,
   }
 
