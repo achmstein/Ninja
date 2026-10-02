@@ -30,6 +30,9 @@ public static partial class ControlApi
         api.MapGet("/tenants/{slug}/seed-images/{slot}", GetSeedImage).WithName("GetTenantSeedImage").WithSummary("One image waiting for the next provision").RequireAuthorization("Platform");
         api.MapPut("/tenants/{slug}/seed-images/{slot}", UploadSeedImage).WithName("UploadTenantSeedImage").WithSummary("An image the brand step uploads into the stack on the next provision").RequireAuthorization("Platform").DisableAntiforgery();
         api.MapDelete("/tenants/{slug}/seed-images/{slot}", DeleteSeedImage).WithName("DeleteTenantSeedImage").RequireAuthorization("Platform");
+
+        api.MapPut("/tenants/{slug}/seed-menu", PutSeedMenu).WithName("PutTenantSeedMenu").WithSummary("The menu read and reviewed while the business was created, in Catalog's import shape; the menu step imports it once the stack is up").RequireAuthorization("Platform");
+        api.MapDelete("/tenants/{slug}/seed-menu", DeleteSeedMenu).WithName("DeleteTenantSeedMenu").RequireAuthorization("Platform");
     }
 
     public static async Task<Results<Ok<BrandDto>, NotFound, Conflict<ProblemDetails>, BadRequest<ProblemDetails>, ProblemHttpResult>> GetBrand(
@@ -158,6 +161,40 @@ public static partial class ControlApi
             await file.CopyToAsync(target, ct);
         }
         await audit.WriteAsync("seed-image.uploaded", slug, new { slot, file.Length }, ct);
+        return TypedResults.NoContent();
+    }
+
+    /// <summary>A menu as Catalog's import takes it is a few hundred items at most; anything far larger is not one.</summary>
+    private const int MaxSeedMenuChars = 512 * 1024;
+
+    public static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> PutSeedMenu(
+        ControlContext context, Provisioner provisioner, IAuditWriter audit, string slug, System.Text.Json.Nodes.JsonObject menu, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (menu["categories"] is not System.Text.Json.Nodes.JsonArray { Count: > 0 } categories)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The menu has no categories." });
+        var json = menu.ToJsonString();
+        if (json.Length > MaxSeedMenuChars)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The menu is too large." });
+
+        var path = provisioner.SeedMenuPath(tenant);
+        var dir = Path.GetDirectoryName(path)!;
+        Directory.CreateDirectory(dir);
+        Provisioner.OwnerOnly(dir);
+        await File.WriteAllTextAsync(path, json, ct);
+        // Catalog checks it again at import; this is only what it holds, for the record
+        var items = categories.Sum(c => (c?["items"] as System.Text.Json.Nodes.JsonArray)?.Count ?? 0);
+        await audit.WriteAsync("seed-menu.saved", slug, new { categories = categories.Count, items }, ct);
+        return TypedResults.NoContent();
+    }
+
+    public static async Task<Results<NoContent, NotFound>> DeleteSeedMenu(ControlContext context, Provisioner provisioner, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        var path = provisioner.SeedMenuPath(tenant);
+        if (File.Exists(path)) File.Delete(path);
         return TypedResults.NoContent();
     }
 

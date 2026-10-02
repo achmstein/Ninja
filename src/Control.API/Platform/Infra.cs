@@ -116,6 +116,8 @@ public interface ITenantStack
     Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct);
     /// <summary>What the plan allows ({ reservations, timeBilling, loyalty, … }), as the control service account; the stack clamps its switches to it.</summary>
     Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct);
+    /// <summary>A menu read while the business was created, into its catalog in one go (Catalog's menu import); answers what was made.</summary>
+    Task<string> ImportMenuAsync(Tenant tenant, string menu, CancellationToken ct);
 }
 
 /// <summary>As the superuser: roles and databases in and out, and the hand-over of a database created before its tenant had a role of its own.</summary>
@@ -915,6 +917,17 @@ public sealed class HttpTenantStack(IStackProxy proxy, ILogger<HttpTenantStack> 
                 throw new InvalidOperationException($"The stack refused the {slot} ({(int)upload.StatusCode}): {await upload.Content.ReadAsStringAsync(ct)}");
         }
     }
+
+    public async Task<string> ImportMenuAsync(Tenant tenant, string menu, CancellationToken ct)
+    {
+        using var content = new StringContent(menu, System.Text.Encoding.UTF8, "application/json");
+        using var response = await proxy.SendAsync(tenant, HttpMethod.Post, "/api/catalog/menu/import?api-version=1.0", content, StackAuth.Control, ct);
+        var body = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"The stack refused the menu ({(int)response.StatusCode}): {body}");
+        var result = JsonNode.Parse(body);
+        return $"{result?["itemIds"]?.AsArray().Count ?? 0} items in {result?["categoriesCreated"]?.GetValue<int>() ?? 0} new categories";
+    }
 }
 
 // ---------- dry run: records, answers yes ----------
@@ -996,5 +1009,11 @@ public sealed class DryRunTenantStack(DryRunStackProxy proxy, ILogger<DryRunTena
         // Through the same double the control app reads, so what was seeded is what it shows
         using var response = await proxy.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(brand), StackAuth.Control, ct);
         logger.LogInformation("(dry run) brand seeded for {Slug} with {Count} image(s): {Brand}", tenant.Slug, images.Count, brand.ToJsonString());
+    }
+
+    public Task<string> ImportMenuAsync(Tenant tenant, string menu, CancellationToken ct)
+    {
+        logger.LogInformation("(dry run) menu imported for {Slug}: {Bytes} bytes", tenant.Slug, menu.Length);
+        return Task.FromResult("the menu (dry run)");
     }
 }

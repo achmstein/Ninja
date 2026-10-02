@@ -42,6 +42,14 @@ public sealed class ProvisionerTests
         public Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct) { SeededBrand = brand; return Task.CompletedTask; }
         public Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct) => Task.FromResult<JsonObject?>(null);
         public Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct) => Task.CompletedTask;
+        public List<string> ImportedMenus { get; } = [];
+        public bool RefuseMenu { get; set; }
+        public Task<string> ImportMenuAsync(Tenant tenant, string menu, CancellationToken ct)
+        {
+            if (RefuseMenu) throw new InvalidOperationException("The stack refused the menu (400): Hot Drinks: an item has no name");
+            ImportedMenus.Add(menu);
+            return Task.FromResult("2 items in 1 new categories");
+        }
     }
 
     /// <summary>The dry-run box, except for the commands told to fail: each answers with the log given and exit 1, once, in order.</summary>
@@ -178,6 +186,56 @@ public sealed class ProvisionerTests
         Assert.IsFalse(features["reservations"]!.GetValue<bool>(), "nobody books a seat");
         Assert.IsFalse(features["timeBilling"]!.GetValue<bool>(), "nothing runs on a clock");
         Assert.IsTrue(features["kds"]!.GetValue<bool>(), "the kitchen cooks every order");
+    }
+
+    private const string Menu = """{"categories":[{"catalogTypeId":null,"name":{"en":"Hot Drinks","ar":null},"items":[]}]}""";
+
+    private async Task<string> ProvisionWithMenuAsync()
+    {
+        _tenant.Status = TenantStatus.Requested;
+        _platform.DryRun = true;
+        _platform.EdgeSnippetPath = Path.Combine(_root, "no-edge", "custom-domains.caddy");
+        await _context.SaveChangesAsync();
+        var path = _provisioner.SeedMenuPath(_tenant);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, Menu);
+        await _provisioner.ProvisionAsync(_tenant.Id, CancellationToken.None);
+        return path;
+    }
+
+    [TestMethod]
+    public async Task A_menu_read_while_the_business_was_created_is_imported_after_its_brand_and_once()
+    {
+        var path = await ProvisionWithMenuAsync();
+
+        CollectionAssert.AreEqual(new[] { Menu }, _stack.ImportedMenus);
+        var steps = Steps().ToList();
+        Assert.IsTrue(steps.IndexOf("brand:Done") < steps.IndexOf("menu:Done"), string.Join(", ", steps));
+        Assert.IsFalse(File.Exists(path), "set aside, so a later provision does not add it again");
+        Assert.IsTrue(File.Exists(Path.ChangeExtension(path, ".imported.json")));
+    }
+
+    [TestMethod]
+    public async Task A_menu_the_catalog_refuses_does_not_stop_the_business()
+    {
+        _stack.RefuseMenu = true;
+        var path = await ProvisionWithMenuAsync();
+
+        var menu = _context.Steps.OrderBy(s => s.Id).Last(s => s.Name == "menu");
+        Assert.AreEqual(StepStatus.Done, menu.Status);
+        StringAssert.StartsWith(menu.Output, "not imported: ");
+        Assert.IsTrue(File.Exists(path), "kept, for another try");
+    }
+
+    [TestMethod]
+    public async Task No_menu_no_menu_step()
+    {
+        _tenant.Status = TenantStatus.Requested;
+        _platform.DryRun = true;
+        _platform.EdgeSnippetPath = Path.Combine(_root, "no-edge", "custom-domains.caddy");
+        await _context.SaveChangesAsync();
+        await _provisioner.ProvisionAsync(_tenant.Id, CancellationToken.None);
+        Assert.IsFalse(Steps().Any(s => s.StartsWith("menu:")));
     }
 
     private string CarryOutput() => _context.Steps.OrderBy(s => s.Id).Last(s => s.Name == "carry").Output ?? "";

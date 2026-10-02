@@ -36,6 +36,9 @@ public sealed class Provisioner(
     /// <summary>Where an image uploaded before provisioning waits for the brand step: {tenants}/{slug}/seed/{slot}.png.</summary>
     public string SeedImagePath(Tenant tenant, string slot) => Path.Combine(Dir(tenant), "seed", $"{slot}.png");
 
+    /// <summary>Where a menu read while the business was created waits for the menu step: {tenants}/{slug}/seed/menu.json, Catalog's import request.</summary>
+    public string SeedMenuPath(Tenant tenant) => Path.Combine(Dir(tenant), "seed", "menu.json");
+
     /// <summary>The seed images on disk, by slot.</summary>
     public IReadOnlyDictionary<string, string> SeedImages(Tenant tenant)
         => BrandImageSlots.All.Where(slot => File.Exists(SeedImagePath(tenant, slot))).ToDictionary(slot => slot, slot => SeedImagePath(tenant, slot));
@@ -131,6 +134,28 @@ public sealed class Provisioner(
                 await stack.SeedBrandAsync(tenant, brand, images, ct);
                 return images.Count == 0 ? "name and color" : $"name, color and {string.Join(", ", images.Keys)}";
             }, ct);
+
+            // The menu read while the business was created, once: imported, it is set aside so a later provision
+            // does not add it again. A menu the catalog refuses does not stop the business; the owner imports it
+            // from the admin instead, and the step says why
+            var menu = SeedMenuPath(tenant);
+            if (File.Exists(menu))
+            {
+                await Step(tenant, runId, "menu", async () =>
+                {
+                    try
+                    {
+                        var made = await stack.ImportMenuAsync(tenant, await File.ReadAllTextAsync(menu, ct), ct);
+                        File.Move(menu, Path.ChangeExtension(menu, ".imported.json"), overwrite: true);
+                        return made;
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        logger.LogWarning(ex, "The menu for {Slug} was not imported", tenant.Slug);
+                        return $"not imported: {ex.Message}";
+                    }
+                }, ct);
+            }
 
             await EntitlementsStepAsync(tenant, runId, ct);
 
