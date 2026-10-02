@@ -23,7 +23,13 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
-import { getHistoryColumns, getOpenColumns } from '../ticket-columns'
+import { dayHeading, dayKey } from '@/lib/when'
+import {
+  getHistoryColumns,
+  getOpenColumns,
+  HistoryListRow,
+  OpenListRow,
+} from '../ticket-columns'
 import { useTillWindow } from '../use-till-window'
 import { TICKET_STATUS_SETTLED, TICKET_STATUS_VOIDED } from './tender'
 import { TicketSheet } from './ticket-sheet'
@@ -200,6 +206,15 @@ export function TicketsList({
             isLoading={openQuery.isLoading}
             emptyMessage={t('noOpenTickets')}
             onRowClick={(row) => setSelectedTicketId(toNumber(row.original.id))}
+            mobileRow={(row) => (
+              <OpenListRow
+                row={row}
+                t={t}
+                localized={localized}
+                locale={locale}
+                nowMs={nowMs}
+              />
+            )}
           />
         ) : (
           <>
@@ -210,6 +225,13 @@ export function TicketsList({
               onRowClick={(row) =>
                 setSelectedTicketId(toNumber(row.original.id))
               }
+              groupBy={{
+                key: (row) => dayKey(row.closedAt),
+                label: (key) => dayHeading(key, locale, t),
+              }}
+              mobileRow={(row) => (
+                <HistoryListRow row={row} t={t} localized={localized} />
+              )}
             />
             <DataTablePagination table={historyTable} />
           </>

@@ -55,7 +55,6 @@ export const sidebarData: SidebarData = {
           needsPlaces: true,
         },
         { title: 'navTill', url: '/till', icon: ReceiptText },
-        { title: 'navBills', url: '/till/tickets', icon: Receipt },
       ],
     },
     {
