@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion, useReducedMotion } from 'motion/react'
-import { QrCode } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { springSoft } from '@/lib/motion'
 import { getPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
@@ -10,6 +9,7 @@ import { useBranchStore } from '@/stores/branch-store'
 import { usePlaceStore } from '@/stores/place-store'
 import { useT, useLocalized } from '@/lib/i18n'
 import { PLACE_TABLE } from '@/lib/places'
+import { BrandWordmark } from '@/components/brand/brand-mark'
 
 export const Route = createFileRoute('/p/$placeId')({
   component: PlaceLinkPage,
@@ -17,9 +17,10 @@ export const Route = createFileRoute('/p/$placeId')({
 
 /**
  * What a place's QR opens: https://chillax.site/p/{id}. It never shows
- * anything itself — a spinner for the moment the place loads — and sends
- * the customer on. While it loads, the code's glyph with a line sweeping
- * over it, as if still being read — there is no page to put a title on:
+ * anything itself — the business's own mark for the moment the place
+ * loads — and sends the customer on. While it loads, the wordmark (or the
+ * logo and the name) breathing, as the splash before it showed it; there is
+ * no page to put a title on:
  *
  * - a place that only takes orders is where their order goes: remembered,
  *   and back to the menu (or the cart they were in) with a toast;
@@ -99,28 +100,23 @@ function PlaceLinkPage() {
   return <Reading label={t('loading')} />
 }
 
-/** The code's glyph in its tile, a line sweeping down it; still under reduced motion */
+/** The business's wordmark, breathing while the place loads: the café's own, not a spinner; still under reduced motion */
 function Reading({ label }: { label: string }) {
   const reduced = useReducedMotion()
   return (
-    <div role='status' className='flex h-[70svh] flex-col items-center justify-center gap-4'>
+    <div role='status' aria-label={label} className='flex h-[70svh] items-center justify-center px-8'>
       <motion.div
-        initial={{ opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={springSoft}
-        className='slab relative grid size-24 place-items-center overflow-hidden rounded-[1.75rem] shadow-(--slab-shadow)'
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={reduced ? { opacity: 1, scale: 1 } : { opacity: [0.55, 1, 0.55], scale: 1 }}
+        transition={
+          reduced
+            ? springSoft
+            : { opacity: { duration: 1.8, ease: 'easeInOut', repeat: Infinity }, scale: springSoft }
+        }
+        className='flex max-w-full flex-col items-center gap-3 [--wordmark-h:3rem]'
       >
-        <QrCode className='size-11' />
-        {!reduced && (
-          <motion.span
-            aria-hidden
-            className='bg-background/70 absolute inset-x-3 top-0 h-0.5 rounded-full shadow-[0_0_12px_2px_var(--background)]'
-            animate={{ y: [12, 84, 12] }}
-            transition={{ duration: 1.6, ease: 'easeInOut', repeat: Infinity }}
-          />
-        )}
+        <BrandWordmark markClassName='size-16 text-2xl rounded-2xl' textClassName='text-xl' />
       </motion.div>
-      <span className='text-muted-foreground text-note font-medium'>{label}</span>
     </div>
   )
 }

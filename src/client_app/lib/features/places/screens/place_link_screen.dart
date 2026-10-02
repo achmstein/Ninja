@@ -5,6 +5,7 @@ import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
@@ -175,9 +176,12 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
     final colors = context.theme.colors;
     final scan = _scan;
 
+    // While the place loads, the business's own mark breathing, as on the web: not a spinner
     if (_loading || scan == null) {
       return Scaffold(
-        body: Center(child: CircularProgressIndicator(color: colors.primary)),
+        body: Center(
+          child: const _Breathing(child: BrandWordmark(height: 48, maxWidth: 240)),
+        ),
       );
     }
 
@@ -250,4 +254,40 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       ),
     );
   }
+}
+
+/// A slow fade in and out while something loads; still under reduced motion.
+class _Breathing extends StatefulWidget {
+  final Widget child;
+  const _Breathing({required this.child});
+
+  @override
+  State<_Breathing> createState() => _BreathingState();
+}
+
+class _BreathingState extends State<_Breathing> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: Tween(begin: 0.55, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
+        child: widget.child,
+      );
 }
