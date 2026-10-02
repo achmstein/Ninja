@@ -5,7 +5,6 @@ import { useT } from '@/lib/i18n'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { SegmentedBar } from '@/components/segmented-bar'
-import { Stat } from '@/components/stat-strip'
 import { formatEgp } from '@/features/orders/status'
 import { tendersFor } from '@/features/till/components/tender'
 
@@ -17,10 +16,11 @@ type TodaysTillProps = {
 }
 
 /**
- * The business day's till at a glance: net as the one big number, the
- * tender split as a bar, and the lines that explain the rest (discounts,
- * refunds, tab payments, what the "goes well with" suggestions sold).
- * Every line links to the till page behind it.
+ * The business day's till at a glance: how it was paid as a bar, and the
+ * lines that explain the rest (discounts, refunds, tab payments, what the
+ * "goes well with" suggestions sold), each only when there is any. The net
+ * itself is the dashboard's first card, so it is not said twice. Every line
+ * links to the till page behind it.
  */
 export function TodaysTill({
   report,
@@ -35,7 +35,6 @@ export function TodaysTill({
     return <ErrorState error={error} onRetry={onRetry} />
   }
 
-  const net = Number(report?.net ?? 0)
   const tenderTotals = new Map(
     (report?.tenderTotals ?? []).map((row) => [row.tender, row])
   )
@@ -61,6 +60,7 @@ export function TodaysTill({
     key: string
     label: string
     value: string
+    amount: number
     hint?: string
     to: '/till'
     search?: Record<string, unknown>
@@ -69,12 +69,14 @@ export function TodaysTill({
       key: 'discounts',
       label: t('discountsTotal'),
       value: formatEgp(report?.discounts),
+      amount: Number(report?.discounts ?? 0),
       to: '/till',
     },
     {
       key: 'refunds',
       label: t('refundsTotal'),
       value: `−${formatEgp(report?.refunds)}`,
+      amount: Number(report?.refunds ?? 0),
       hint: t('posTicketsCount', { count: Number(report?.refundCount ?? 0) }),
       to: '/till',
       search: { view: 'refunds' },
@@ -83,6 +85,7 @@ export function TodaysTill({
       key: 'tabPayments',
       label: t('tabPayments'),
       value: formatEgp(report?.tabPayments),
+      amount: Number(report?.tabPayments ?? 0),
       hint: t('posTicketsCount', {
         count: Number(report?.tabPaymentCount ?? 0),
       }),
@@ -97,26 +100,21 @@ export function TodaysTill({
       key: 'suggestions',
       label: t('fromSuggestions'),
       value: formatEgp(report?.suggestedSales),
+      amount: Number(report?.suggestedSales ?? 0),
       hint: t('suggestedLinesCount', { count: suggestedLines }),
       to: '/till',
     })
   }
   const lines = allLines.filter(
-    (line) => line.key !== 'tabPayments' || features.tabs
+    (line) =>
+      (line.key !== 'tabPayments' || features.tabs) &&
+      line.amount !== 0
   )
 
   return (
     <section className='flex flex-col gap-5'>
       <div className='flex items-start justify-between gap-4'>
-        <Stat
-          size='hero'
-          label={t('todaysTill')}
-          value={formatEgp(net)}
-          hint={t('posTicketsCount', {
-            count: Number(report?.ticketsSettled ?? 0),
-          })}
-          loading={isLoading}
-        />
+        <h2 className='text-sm font-semibold'>{t('todaysTill')}</h2>
         <Link
           to='/till'
           className='text-primary text-sm underline-offset-4 hover:underline'
