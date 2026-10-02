@@ -215,7 +215,7 @@ export function LocalizedInput({
       value={lang}
       onValueChange={(next) => next && setLang(next as Lang)}
       aria-label={t('language')}
-      className={compact ? 'h-6' : 'h-7'}
+      className={cn(LANG_TRACK, compact ? 'h-6' : 'h-7')}
     >
       <LangItem
         lang='en'
@@ -277,6 +277,15 @@ export function LocalizedInput({
   )
 }
 
+/**
+ * The language switch as a segmented control: a grey track, the language being written raised on it as a
+ * white chip with dark text, the other one quiet on the track. Before, the one chosen was told only by the
+ * theme's accent, a grey next to white, and nobody could see which it was.
+ */
+const LANG_TRACK = 'bg-muted h-7 gap-0.5 rounded-md p-0.5'
+const LANG_CHIP =
+  'text-muted-foreground hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground h-full min-w-0 gap-1 rounded-sm px-2 first:rounded-sm last:rounded-sm data-[spacing=0]:first:rounded-sm data-[spacing=0]:last:rounded-sm text-xs font-semibold hover:bg-transparent data-[state=on]:shadow-sm'
+
 function LangItem({
   lang,
   filled,
@@ -290,7 +299,7 @@ function LangItem({
   return (
     <ToggleGroupItem
       value={lang}
-      className='h-full min-w-0 gap-1 px-2 text-xs font-semibold'
+      className={LANG_CHIP}
       aria-label={lang === 'en' ? t('english') : t('arabic')}
     >
       {lang === 'en' ? 'EN' : 'ع'}
