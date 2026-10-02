@@ -5,6 +5,12 @@ import { ease } from '@/lib/motion'
 /** Dots thrown out of the tick: enough to read as a burst, few enough to stay calm */
 const DOTS = 14
 
+/** A number in [0, 1) that looks random but is fixed by the dot and the property it is for */
+const jitter = (i: number, salt: number) => {
+  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
 /**
  * The moment a payment lands, around its tick: two rings swell out and fade,
  * and a burst of small dots, in the business's colour and the tick's green,
@@ -15,18 +21,19 @@ const DOTS = 14
 export function SuccessBurst() {
   const reduced = useReducedMotion()
 
-  // Spread evenly round the circle with a little jitter, so it reads as thrown rather than drawn
+  // Spread evenly round the circle with a little jitter, so it reads as thrown rather than drawn; the jitter
+  // comes from each dot's place, not chance, so the burst draws the same every time
   const dots = useMemo(
     () =>
       Array.from({ length: DOTS }, (_, i) => {
-        const angle = (i / DOTS) * Math.PI * 2 + (Math.random() - 0.5) * 0.35
-        const reach = 70 + Math.random() * 46
+        const angle = (i / DOTS) * Math.PI * 2 + (jitter(i, 1) - 0.5) * 0.35
+        const reach = 70 + jitter(i, 2) * 46
         return {
           x: Math.cos(angle) * reach,
           y: Math.sin(angle) * reach,
-          size: 5 + Math.round(Math.random() * 5),
+          size: 5 + Math.round(jitter(i, 3) * 5),
           brand: i % 3 !== 0,
-          delay: 0.18 + Math.random() * 0.08,
+          delay: 0.18 + jitter(i, 4) * 0.08,
         }
       }),
     []
