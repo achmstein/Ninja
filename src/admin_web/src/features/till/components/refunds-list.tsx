@@ -12,15 +12,20 @@ import {
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
-import { formatEgp, toNumber } from '@/lib/money'
+import { toNumber } from '@/lib/money'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   DataTable,
   DataTablePagination,
   createAppColumnHelper,
   dataTableFeatures,
+  type AppRow,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { When } from '@/components/when'
 import { useTillWindow } from '../use-till-window'
 import { TenderBadge } from './tender-badge'
 import { TicketSheet } from './ticket-sheet'
@@ -31,101 +36,112 @@ const columnHelper = createAppColumnHelper<RefundSummary>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
-function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
+/** Why, as the row's lead line, with the receipt and customer it came off */
+function Reason({ refund, t }: { refund: RefundSummary; t: Translate }) {
+  return (
+    <span className='flex min-w-0 flex-col leading-tight'>
+      <span className='line-clamp-2 whitespace-normal'>
+        {refund.reason || '—'}
+      </span>
+      <span className='text-muted-foreground truncate text-xs'>
+        {t('receiptHash')} {toNumber(refund.receiptNumber)}
+        {refund.customerName && ` · ${refund.customerName}`}
+      </span>
+    </span>
+  )
+}
+
+function Amount({ refund, t }: { refund: RefundSummary; t: Translate }) {
+  return (
+    <Money
+      value={-toNumber(refund.amount)}
+      tone='negative'
+      strong
+      sub={`${toNumber(refund.lineCount)} ${t('lines')}`}
+    />
+  )
+}
+
+/**
+ * Five things a refund says, grouped by day so a row needs only its time:
+ * the credit note and when, why (with the receipt and customer it came
+ * off), who gave it, how the money went back, and how much. The shift is
+ * on the ticket the row opens.
+ */
+function getRefundColumns({ t }: { t: Translate }) {
   return columnHelper.columns([
     columnHelper.accessor('number', {
-      meta: { emphasis: 'primary' },
       id: 'number',
       header: t('creditNoteHash'),
       cell: (info) => (
-        <span className='font-medium tabular-nums'>
-          #{toNumber(info.getValue())}
-        </span>
-      ),
-    }),
-    columnHelper.accessor('refundedAt', {
-      id: 'time',
-      header: t('time'),
-      cell: (info) => {
-        const value = info.getValue()
-        return value ? (
-          <span className='tabular-nums'>
-            {dateTime.format(new Date(value))}
+        <div className='flex flex-col leading-tight'>
+          <span className='font-medium tabular-nums'>
+            #{toNumber(info.getValue())}
           </span>
-        ) : (
-          '—'
-        )
-      },
-    }),
-    columnHelper.accessor('receiptNumber', {
-      meta: { align: 'end' },
-      id: 'receipt',
-      header: t('receiptHash'),
-      cell: (info) => (
-        <span className='tabular-nums'>#{toNumber(info.getValue())}</span>
+          <When
+            value={info.row.original.refundedAt}
+            mode='time'
+            className='text-muted-foreground text-xs'
+          />
+        </div>
       ),
     }),
-    columnHelper.accessor('shiftId', {
-      meta: { align: 'end' },
-      id: 'shift',
-      header: t('shiftHash'),
-      cell: (info) => {
-        const value = info.getValue()
-        return value != null ? (
-          <span className='tabular-nums'>#{toNumber(value)}</span>
-        ) : (
-          <span className='text-muted-foreground'>—</span>
-        )
-      },
+    // The reason is what a reviewer reads first: give it room to wrap
+    columnHelper.accessor('reason', {
+      id: 'reason',
+      header: t('reason'),
+      meta: { className: 'min-w-[16rem]' },
+      cell: (info) => <Reason refund={info.row.original} t={t} />,
+    }),
+    columnHelper.accessor('refundedBy', {
+      id: 'by',
+      header: t('byColumn'),
+      meta: { emphasis: 'muted' },
+      cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor('tender', {
       id: 'tender',
       header: t('tender'),
       cell: (info) => <TenderBadge tender={info.getValue()} />,
     }),
-    columnHelper.accessor('customerName', {
-      id: 'customer',
-      header: t('customer'),
-      cell: (info) => info.getValue() || '—',
-    }),
-    // The reason is what a reviewer reads first: give it room to wrap
-    columnHelper.accessor('reason', {
-      id: 'reason',
-      header: t('reason'),
-      cell: (info) => (
-        <span className='block min-w-[16rem] whitespace-normal'>
-          {info.getValue()}
-        </span>
-      ),
-    }),
-    columnHelper.accessor('refundedBy', {
-      id: 'by',
-      header: t('byColumn'),
-      cell: (info) => info.getValue() || '—',
-    }),
-    columnHelper.accessor('lineCount', {
-      meta: { align: 'end' },
-      id: 'lines',
-      header: () => <div className='text-end'>{t('lines')}</div>,
-      cell: (info) => (
-        <div className='text-end tabular-nums'>{toNumber(info.getValue())}</div>
-      ),
-    }),
     columnHelper.accessor('amount', {
       meta: { align: 'end' },
       id: 'amount',
-      header: () => <div className='text-end'>{t('amount')}</div>,
-      cell: (info) => (
-        <div className='text-destructive text-end font-medium tabular-nums'>
-          −{formatEgp(info.getValue())}
-        </div>
-      ),
+      header: t('amount'),
+      cell: (info) => <Amount refund={info.row.original} t={t} />,
     }),
   ])
+}
+
+/** A refund as a phone lists it: why, then the note, time and who; how much over how it went back */
+function RefundListRow({
+  row,
+  t,
+}: {
+  row: AppRow<RefundSummary>
+  t: Translate
+}) {
+  const refund = row.original
+  return (
+    <ListRow
+      title={<span className='whitespace-normal'>{refund.reason || '—'}</span>}
+      meta={
+        <>
+          <span className='tabular-nums'>#{toNumber(refund.number)}</span>
+          <Dot />
+          <When value={refund.refundedAt} mode='time' />
+          {refund.refundedBy && (
+            <>
+              <Dot />
+              <span className='truncate'>{refund.refundedBy}</span>
+            </>
+          )}
+        </>
+      }
+      trailing={<Amount refund={refund} t={t} />}
+      trailingMeta={<TenderBadge tender={refund.tender} />}
+    />
+  )
 }
 
 /**
@@ -165,7 +181,7 @@ export function RefundsList() {
   })
 
   const columns = useMemo(
-    () => getRefundColumns({ t, locale }),
+    () => getRefundColumns({ t }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   )
@@ -206,6 +222,11 @@ export function RefundsList() {
               onRowClick={(row) =>
                 setSelectedTicketId(toNumber(row.original.ticketId))
               }
+              groupBy={{
+                key: (row) => dayKey(row.refundedAt),
+                label: (key) => dayHeading(key, locale, t),
+              }}
+              mobileRow={(row) => <RefundListRow row={row} t={t} />}
             />
             <DataTablePagination table={table} />
           </>

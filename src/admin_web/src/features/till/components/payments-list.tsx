@@ -24,9 +24,14 @@ import {
   DataTable,
   DataTablePagination,
   createAppColumnHelper,
+  type AppRow,
   dataTableFeatures,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { When } from '@/components/when'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTillWindow } from '../use-till-window'
 import { TENDERS, tendersFor } from './tender'
 import { TenderBadge } from './tender-badge'
@@ -39,80 +44,113 @@ const columnHelper = createAppColumnHelper<PaymentRow>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
+type Localized = (
+  text: { en?: string | null; ar?: string | null } | null | undefined
+) => string
+
+/**
+ * Four things a payment says, grouped by day so a row needs only its time:
+ * the receipt and when, where and who paid, how, and how much. Who took it
+ * is a quiet line under the amount.
+ */
 function getPaymentColumns({
   t,
   localized,
-  locale,
 }: {
   t: Translate
-  localized: (
-    text: { en?: string | null; ar?: string | null } | null | undefined
-  ) => string
-  locale: string
+  localized: Localized
 }) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
   return columnHelper.columns([
-    columnHelper.accessor('recordedAt', {
-      id: 'time',
-      header: t('time'),
-      cell: (info) => {
-        const value = info.getValue()
-        return value ? (
-          <span className='tabular-nums'>
-            {dateTime.format(new Date(value))}
-          </span>
-        ) : (
-          '—'
-        )
-      },
-    }),
     columnHelper.accessor('receiptNumber', {
-      meta: { align: 'end' },
       id: 'receipt',
       header: t('receiptHash'),
       cell: (info) => {
         const value = info.getValue()
-        return value != null ? (
-          <span className='font-medium tabular-nums'>#{toNumber(value)}</span>
-        ) : (
-          <span className='text-muted-foreground'>—</span>
+        return (
+          <div className='flex flex-col leading-tight'>
+            <span className='font-medium tabular-nums'>
+              {value != null ? `#${toNumber(value)}` : '—'}
+            </span>
+            <When
+              value={info.row.original.recordedAt}
+              mode='time'
+              className='text-muted-foreground text-xs'
+            />
+          </div>
         )
       },
     }),
     columnHelper.accessor((row) => ticketTitle(row, localized, t), {
       id: 'place',
       header: t('place'),
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => (
+        <div className='flex max-w-64 flex-col leading-tight'>
+          <span className='truncate'>{info.getValue() || '—'}</span>
+          {info.row.original.customerName && (
+            <span className='text-muted-foreground truncate text-xs'>
+              {info.row.original.customerName}
+            </span>
+          )}
+        </div>
+      ),
     }),
     columnHelper.accessor('tender', {
       id: 'tender',
       header: t('tender'),
       cell: (info) => <TenderBadge tender={info.getValue()} />,
     }),
-    columnHelper.accessor('customerName', {
-      id: 'customer',
-      header: t('customer'),
-      cell: (info) => info.getValue() || '—',
-    }),
-    columnHelper.accessor('recordedBy', {
-      id: 'by',
-      header: t('byColumn'),
-      cell: (info) => info.getValue() || '—',
-    }),
     columnHelper.accessor('amount', {
       meta: { align: 'end' },
       id: 'amount',
-      header: () => <div className='text-end'>{t('amount')}</div>,
+      header: t('amount'),
       cell: (info) => (
-        <div className='text-end font-medium tabular-nums'>
-          {formatEgp(info.getValue())}
-        </div>
+        <Money
+          value={info.getValue()}
+          strong
+          sub={info.row.original.recordedBy || undefined}
+        />
       ),
     }),
   ])
+}
+
+/** A payment as a phone lists it: where, then the receipt, time and who paid; how much over how */
+function PaymentListRow({
+  row,
+  t,
+  localized,
+}: {
+  row: AppRow<PaymentRow>
+  t: Translate
+  localized: Localized
+}) {
+  const payment = row.original
+  return (
+    <ListRow
+      title={ticketTitle(payment, localized, t) || '—'}
+      meta={
+        <>
+          {payment.receiptNumber != null && (
+            <>
+              <span className='tabular-nums'>
+                #{toNumber(payment.receiptNumber)}
+              </span>
+              <Dot />
+            </>
+          )}
+          <When value={payment.recordedAt} mode='time' />
+          {payment.customerName && (
+            <>
+              <Dot />
+              <span className='truncate'>{payment.customerName}</span>
+            </>
+          )}
+        </>
+      }
+      trailing={<Money value={payment.amount} strong />}
+      trailingMeta={<TenderBadge tender={payment.tender} />}
+    />
+  )
 }
 
 /**
@@ -170,7 +208,7 @@ export function PaymentsList() {
   })
 
   const columns = useMemo(
-    () => getPaymentColumns({ t, localized, locale }),
+    () => getPaymentColumns({ t, localized }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   )
@@ -263,6 +301,13 @@ export function PaymentsList() {
               onRowClick={(row) =>
                 setSelectedTicketId(toNumber(row.original.ticketId))
               }
+              groupBy={{
+                key: (row) => dayKey(row.recordedAt),
+                label: (key) => dayHeading(key, locale, t),
+              }}
+              mobileRow={(row) => (
+                <PaymentListRow row={row} t={t} localized={localized} />
+              )}
             />
             <DataTablePagination table={table} />
           </>

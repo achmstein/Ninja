@@ -25,9 +25,13 @@ import {
   DataTable,
   createAppColumnHelper,
   dataTableFeatures,
+  type AppRow,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
 import { Stat } from '@/components/stat-strip'
+import { When } from '@/components/when'
 import { OverShortBadge } from './components/shift-report'
 import { ShiftSheet } from './components/shift-sheet'
 import { TillPage } from './till-page'
@@ -43,78 +47,100 @@ const columnHelper = createAppColumnHelper<ShiftView>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
-function getShiftColumns({ t, locale }: { t: Translate; locale: string }) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-  const at = (
-    value: string | null | undefined,
-    by: string | null | undefined
-  ) =>
-    value ? (
-      <span>
-        <span className='tabular-nums'>{dateTime.format(new Date(value))}</span>
-        {by && <span className='text-muted-foreground text-xs'> · {by}</span>}
-      </span>
-    ) : (
-      '—'
-    )
-  const money = (value: number | string | null | undefined) => (
-    <div className='text-end tabular-nums'>{formatEgp(value)}</div>
+/** When a shift ran, as one line: "Fri 3 Oct, 09:00 – 17:30" */
+function ShiftSpan({ shift }: { shift: ShiftView }) {
+  return (
+    <span className='tabular-nums'>
+      <When value={shift.openedAt} mode='dateTime' /> –{' '}
+      <When value={shift.closedAt} mode='time' />
+    </span>
   )
+}
 
+/** Who opened and closed it, once when the same person did both */
+function shiftPeople(shift: ShiftView): string {
+  const people = [shift.openedBy, shift.closedBy].filter(Boolean)
+  return [...new Set(people)].join(' → ')
+}
+
+/**
+ * A closed shift as the owner reviews it: when it ran and who ran it, how
+ * much it sold (bills under it), and the drawer's verdict with what was
+ * counted against what was expected under it. Over or short is the thing
+ * to scan for.
+ */
+function getShiftColumns({ t }: { t: Translate }) {
   return columnHelper.columns([
-    columnHelper.accessor('id', {
-      meta: { align: 'end' },
-      id: 'id',
+    columnHelper.accessor('openedAt', {
+      id: 'when',
       header: t('shiftHash'),
       cell: (info) => (
-        <span className='font-medium tabular-nums'>
-          #{toNumber(info.getValue())}
-        </span>
-      ),
-    }),
-    // The verdict is what a reviewer scans for: it comes right after the number
-    columnHelper.accessor('overShort', {
-      id: 'overShort',
-      header: t('overShort'),
-      cell: (info) => <OverShortBadge value={toNumber(info.getValue())} />,
-    }),
-    columnHelper.accessor('openedAt', {
-      id: 'openedAt',
-      header: t('openedAt'),
-      cell: (info) => at(info.getValue(), info.row.original.openedBy),
-    }),
-    columnHelper.accessor('closedAt', {
-      id: 'closedAt',
-      header: t('closedAt'),
-      cell: (info) => at(info.getValue(), info.row.original.closedBy),
-    }),
-    columnHelper.accessor('ticketsSettled', {
-      meta: { align: 'end' },
-      id: 'tickets',
-      header: () => <div className='text-end'>{t('posTicketsSettled')}</div>,
-      cell: (info) => (
-        <div className='text-end tabular-nums'>{toNumber(info.getValue())}</div>
+        <div className='flex flex-col leading-tight'>
+          <span className='font-medium'>
+            #{toNumber(info.row.original.id)}{' '}
+            <span className='font-normal'>
+              <ShiftSpan shift={info.row.original} />
+            </span>
+          </span>
+          <span className='text-muted-foreground text-xs'>
+            {shiftPeople(info.row.original) || '—'}
+          </span>
+        </div>
       ),
     }),
     columnHelper.accessor('salesTotal', {
+      meta: { align: 'end' },
       id: 'sales',
-      header: () => <div className='text-end'>{t('salesTotal')}</div>,
-      cell: (info) => money(info.getValue()),
+      header: t('salesTotal'),
+      cell: (info) => (
+        <Money
+          value={info.getValue()}
+          strong
+          sub={t('posTicketsCount', {
+            count: toNumber(info.row.original.ticketsSettled),
+          })}
+        />
+      ),
     }),
-    columnHelper.accessor('expectedCash', {
-      id: 'expected',
-      header: () => <div className='text-end'>{t('expected')}</div>,
-      cell: (info) => money(info.getValue()),
-    }),
-    columnHelper.accessor('closingCount', {
-      id: 'counted',
-      header: () => <div className='text-end'>{t('counted')}</div>,
-      cell: (info) => money(info.getValue()),
+    columnHelper.accessor('overShort', {
+      meta: { align: 'end' },
+      id: 'overShort',
+      header: t('overShort'),
+      cell: (info) => (
+        <div className='flex flex-col items-end gap-1'>
+          <OverShortBadge value={toNumber(info.getValue())} />
+          <span className='text-muted-foreground text-xs tabular-nums'>
+            {formatEgp(info.row.original.closingCount)} /{' '}
+            {formatEgp(info.row.original.expectedCash)}
+          </span>
+        </div>
+      ),
     }),
   ])
+}
+
+function ShiftListRow({ row, t }: { row: AppRow<ShiftView>; t: Translate }) {
+  const shift = row.original
+  return (
+    <ListRow
+      title={<ShiftSpan shift={shift} />}
+      meta={
+        <>
+          <span className='tabular-nums'>#{toNumber(shift.id)}</span>
+          {shiftPeople(shift) && (
+            <>
+              <Dot />
+              <span className='truncate'>{shiftPeople(shift)}</span>
+            </>
+          )}
+          <Dot />
+          {t('posTicketsCount', { count: toNumber(shift.ticketsSettled) })}
+        </>
+      }
+      trailing={<Money value={shift.salesTotal} strong />}
+      trailingMeta={<OverShortBadge value={toNumber(shift.overShort)} />}
+    />
+  )
 }
 
 /**
@@ -162,7 +188,7 @@ export function TillShifts() {
   })
 
   const columns = useMemo(
-    () => getShiftColumns({ t, locale }),
+    () => getShiftColumns({ t }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   )
@@ -259,6 +285,7 @@ export function TillShifts() {
                 isLoading={closed.isLoading}
                 emptyMessage={t('noClosedShifts')}
                 onRowClick={(row) => setSelected(row.original)}
+                mobileRow={(row) => <ShiftListRow row={row} t={t} />}
               />
               <div className='flex items-center justify-end gap-2'>
                 <Button

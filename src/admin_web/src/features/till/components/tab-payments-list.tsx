@@ -12,15 +12,20 @@ import {
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
-import { formatEgp, toNumber } from '@/lib/money'
+import { toNumber } from '@/lib/money'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   DataTable,
   DataTablePagination,
   createAppColumnHelper,
   dataTableFeatures,
+  type AppRow,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { When } from '@/components/when'
 import { useTillWindow } from '../use-till-window'
 import { TenderBadge } from './tender-badge'
 
@@ -30,58 +35,68 @@ const columnHelper = createAppColumnHelper<TabPaymentView>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
-function getTabPaymentColumns({ t, locale }: { t: Translate; locale: string }) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
+/**
+ * Who paid against their tab and how much, grouped by day: the customer
+ * (with the slip and time under them), how, and the amount with who took it
+ * under it.
+ */
+function getTabPaymentColumns({ t }: { t: Translate }) {
   return columnHelper.columns([
-    columnHelper.accessor('recordedAt', {
-      meta: { align: 'end' },
-      id: 'time',
-      header: t('time'),
-      cell: (info) => (
-        <span className='tabular-nums'>
-          {dateTime.format(new Date(info.getValue()))}
-        </span>
-      ),
-    }),
-    columnHelper.accessor('number', {
-      meta: { align: 'end' },
-      id: 'number',
-      header: t('slipHash'),
-      cell: (info) => (
-        <span className='font-medium tabular-nums'>
-          #{toNumber(info.getValue())}
-        </span>
-      ),
-    }),
     columnHelper.accessor('customerName', {
       id: 'customer',
       header: t('customer'),
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => (
+        <div className='flex flex-col leading-tight'>
+          <span className='font-medium'>{info.getValue() || '—'}</span>
+          <span className='text-muted-foreground text-xs tabular-nums'>
+            #{toNumber(info.row.original.number)} ·{' '}
+            <When value={info.row.original.recordedAt} mode='time' />
+          </span>
+        </div>
+      ),
     }),
     columnHelper.accessor('tender', {
       id: 'tender',
       header: t('tender'),
       cell: (info) => <TenderBadge tender={info.getValue()} />,
     }),
-    columnHelper.accessor('recordedBy', {
-      id: 'by',
-      header: t('byColumn'),
-      cell: (info) => info.getValue() || '—',
-    }),
     columnHelper.accessor('amount', {
       meta: { align: 'end' },
       id: 'amount',
-      header: () => <div className='text-end'>{t('amount')}</div>,
+      header: t('amount'),
       cell: (info) => (
-        <div className='text-end font-medium tabular-nums'>
-          {formatEgp(info.getValue())}
-        </div>
+        <Money
+          value={info.getValue()}
+          strong
+          sub={info.row.original.recordedBy || undefined}
+        />
       ),
     }),
   ])
+}
+
+function TabPaymentListRow({ row }: { row: AppRow<TabPaymentView> }) {
+  const slip = row.original
+  return (
+    <ListRow
+      title={slip.customerName || '—'}
+      meta={
+        <>
+          <span className='tabular-nums'>#{toNumber(slip.number)}</span>
+          <Dot />
+          <When value={slip.recordedAt} mode='time' />
+          {slip.recordedBy && (
+            <>
+              <Dot />
+              <span className='truncate'>{slip.recordedBy}</span>
+            </>
+          )}
+        </>
+      }
+      trailing={<Money value={slip.amount} strong />}
+      trailingMeta={<TenderBadge tender={slip.tender} />}
+    />
+  )
 }
 
 /**
@@ -119,7 +134,7 @@ export function TabPaymentsList() {
   })
 
   const columns = useMemo(
-    () => getTabPaymentColumns({ t, locale }),
+    () => getTabPaymentColumns({ t }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   )
@@ -157,6 +172,11 @@ export function TabPaymentsList() {
             table={table}
             isLoading={slipsQuery.isLoading}
             emptyMessage={t('noTabPaymentsInRange')}
+            groupBy={{
+              key: (row) => dayKey(row.recordedAt),
+              label: (key) => dayHeading(key, locale, t),
+            }}
+            mobileRow={(row) => <TabPaymentListRow row={row} />}
           />
           <DataTablePagination table={table} />
         </>
