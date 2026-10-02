@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Info } from 'lucide-react'
 import type { BrandDto, BrandFeatures, TenantDetail } from '@/api/control'
@@ -112,6 +112,10 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   const preview = usePreviewState()
   // What the form holds while it differs from the saved brand; null once they match
   const [draft, setDraft] = useState<PreviewDraft | null>(null)
+  // The form starts over from each version saved, except one a style picked on its own saved: that leaves
+  // the rest of the form's edits where they are
+  const quietVersions = useRef(new Set<string>())
+  const [formKey, setFormKey] = useState<string | null>(null)
   const running = tenantStatus(tenant.status) === 'Running'
 
   const brand = useQuery({
@@ -162,10 +166,18 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   }
 
   const data = brand.data
+  const version = String(data.version)
+  if (version !== formKey && !quietVersions.current.has(version)) setFormKey(version)
   return (
     <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]'>
       <div className='flex flex-col gap-6'>
-        <BrandForm key={String(data.version)} slug={tenant.slug} brand={data} onDraft={setDraft} />
+        <BrandForm
+          key={formKey ?? version}
+          slug={tenant.slug}
+          brand={data}
+          onDraft={setDraft}
+          onQuietSave={(saved) => quietVersions.current.add(saved)}
+        />
         <BrandImagesCard slug={tenant.slug} brand={data} />
       </div>
       {/* The real app in the phone, painted with the draft while it differs from what is saved */}
@@ -191,7 +203,18 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   )
 }
 
-function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; onDraft: (draft: PreviewDraft | null) => void }) {
+function BrandForm({
+  slug,
+  brand,
+  onDraft,
+  onQuietSave,
+}: {
+  slug: string
+  brand: BrandDto
+  onDraft: (draft: PreviewDraft | null) => void
+  /** A version saved by a style picked on its own, before it lands */
+  onQuietSave: (version: string) => void
+}) {
   const t = useT()
   const queryClient = useQueryClient()
 
@@ -222,6 +245,38 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     },
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
+
+  // The menu's style and the Book tab's are seen at once in the app, so each is saved as it is picked: the
+  // brand as it is saved, with that one part of its layout changed. The form's other edits stay drafts
+  const saveLayout = useMutation({
+    ...updateTenantBrandMutation(),
+    onSuccess: (saved) => {
+      onQuietSave(String(saved.version))
+      queryClient.setQueryData(getTenantBrandQueryKey({ path: { slug } }), saved)
+      toast.success(t('brandSaved'))
+    },
+    onError: (e) => {
+      setMenuLayout(menuLayoutOf(brand.theme.layout?.menuItem))
+      setPlacesLayout(placesLayoutOf(brand.theme.layout?.places))
+      toast.error(problemDetail(e) || t('brandSaveFailed'))
+    },
+  })
+  const pickLayout = (part: 'menuItem' | 'places', value: string) => {
+    if (part === 'menuItem') setMenuLayout(value)
+    else setPlacesLayout(value)
+    const layout = brand.theme.layout ?? { menuItem: null, categories: null, header: null, buttons: null, surface: null, density: null, places: null }
+    saveLayout.mutate({
+      path: { slug },
+      body: {
+        name: brand.name,
+        primaryColor: brand.primaryColor ?? null,
+        customerUrl: brand.customerUrl ?? null,
+        features: brand.features,
+        theme: { ...brand.theme, layout: { ...layout, [part]: value === DEFAULT ? null : value } },
+        locale: brand.locale,
+      },
+    })
+  }
 
   const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string; dock: Dock; menuLayout: string; placesLayout: string }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
@@ -328,7 +383,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
           <DockField value={dock} onChange={setDock} color={primary} />
           <div className='grid gap-2'>
             <Label htmlFor='brand-menu' className='text-xs'>{t('menuLayout')}</Label>
-            <Select value={menuLayout} onValueChange={setMenuLayout}>
+            <Select value={menuLayout} onValueChange={(v) => pickLayout('menuItem', v)} disabled={saveLayout.isPending}>
               <SelectTrigger id='brand-menu' className='w-full'>
                 <SelectValue />
               </SelectTrigger>
@@ -343,7 +398,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='brand-places' className='text-xs'>{t('placesLayout')}</Label>
-            <Select value={placesLayout} onValueChange={setPlacesLayout}>
+            <Select value={placesLayout} onValueChange={(v) => pickLayout('places', v)} disabled={saveLayout.isPending}>
               <SelectTrigger id='brand-places' className='w-full'>
                 <SelectValue />
               </SelectTrigger>
