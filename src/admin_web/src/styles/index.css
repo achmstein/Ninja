@@ -34,9 +34,9 @@
     cursor: pointer;
   }
 
-  /* Arabic UI renders in Noto Sans Arabic: calm and easy to read in long tables and forms, beside Inter */
+  /* Arabic UI renders in Cairo (same as the customer apps) */
   :root[dir='rtl'] body {
-    font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
   }
 
   /* Prevent focus zoom on mobile devices */
