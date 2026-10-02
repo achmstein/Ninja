@@ -19,18 +19,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { MonthSwitcher } from '@/components/month-switcher'
+import { ProfitTrend } from './components/profit-trend'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 
@@ -304,67 +297,13 @@ export function Profit() {
       )}
 
       {trend.data && trend.data.length > 1 && (
-        <div className='overflow-x-auto rounded-lg border'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('month')}</TableHead>
-                <TableHead className='text-end'>{t('netSales')}</TableHead>
-                <TableHead className='text-end'>{t('costOfGoods')}</TableHead>
-                <TableHead className='text-end'>{t('labourCost')}</TableHead>
-                <TableHead className='text-end'>
-                  {t('operatingExpenses')}
-                </TableHead>
-                <TableHead className='text-end'>{t('profitLabel')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {trend.data.map((m) => (
-                <TableRow
-                  key={`${m.year}-${m.month}`}
-                  className={cn(
-                    'cursor-pointer',
-                    toNumber(m.year) === year &&
-                      toNumber(m.month) === month &&
-                      'bg-muted/40'
-                  )}
-                  onClick={() =>
-                    navigate({
-                      search: (prev) => ({
-                        ...prev,
-                        month: `${m.year}-${String(m.month).padStart(2, '0')}`,
-                      }),
-                    })
-                  }
-                >
-                  <TableCell>
-                    {monthName(toNumber(m.year), toNumber(m.month))}
-                  </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {formatEgp(m.netSales)}
-                  </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {formatEgp(m.goods)}
-                  </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {formatEgp(m.labour)}
-                  </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {formatEgp(m.expenses)}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-end font-semibold tabular-nums',
-                      toNumber(m.profit) < 0 && 'text-destructive'
-                    )}
-                  >
-                    {formatEgp(m.profit)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ProfitTrend
+          months={trend.data}
+          selected={monthKey}
+          onSelect={(next) =>
+            navigate({ search: (prev) => ({ ...prev, month: next }) })
+          }
+        />
       )}
     </Main>
   )

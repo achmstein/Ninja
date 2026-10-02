@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { EmptyState } from '@/components/empty-state'
+import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
@@ -378,6 +379,7 @@ export function Customers() {
                       guestsView ? selectGuest(row.id) : select(row.id)
                     }
                   >
+                    <EntityAvatar name={row.name} className='size-8' />
                     <div className='min-w-0 flex-1'>
                       <div className='flex items-center gap-2'>
                         <span className='truncate font-medium'>{row.name}</span>
