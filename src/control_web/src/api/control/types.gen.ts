@@ -303,6 +303,10 @@ export type JobLane = 'Stamp' | 'Backup';
 
 export type JobStatus = 'Queued' | 'Running' | 'Done' | 'Failed' | 'Cancelled';
 
+export type JsonObject = {
+    [key: string]: unknown;
+};
+
 export type LaneStatus = {
     lane: JobLane;
     running: null | JobDto;
@@ -1729,6 +1733,78 @@ export type UploadTenantSeedImageResponses = {
 };
 
 export type UploadTenantSeedImageResponse = UploadTenantSeedImageResponses[keyof UploadTenantSeedImageResponses];
+
+export type DeleteTenantSeedMenuData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-menu';
+};
+
+export type DeleteTenantSeedMenuErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteTenantSeedMenuResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteTenantSeedMenuResponse = DeleteTenantSeedMenuResponses[keyof DeleteTenantSeedMenuResponses];
+
+export type PutTenantSeedMenuData = {
+    body: JsonObject;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-menu';
+};
+
+export type PutTenantSeedMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type PutTenantSeedMenuError = PutTenantSeedMenuErrors[keyof PutTenantSeedMenuErrors];
+
+export type PutTenantSeedMenuResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type PutTenantSeedMenuResponse = PutTenantSeedMenuResponses[keyof PutTenantSeedMenuResponses];
 
 export type ConvertTenantData = {
     body?: null | ConvertRequest;

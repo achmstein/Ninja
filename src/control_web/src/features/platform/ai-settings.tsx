@@ -400,7 +400,11 @@ function ModelPicker({
   const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const models = useQuery({ ...listAiProviderModelsOptions({ path: { id: providerId } }), enabled: open, staleTime: 5 * 60_000 })
+  const models = useQuery({
+    ...listAiProviderModelsOptions({ path: { id: providerId } }),
+    enabled: open,
+    staleTime: 5 * 60_000,
+  })
   const typed = search.trim()
 
   return (
@@ -422,7 +426,9 @@ function ModelPicker({
                 <Spinner />
               </div>
             )}
-            {models.isError && <p className='text-destructive p-3 text-xs'>{problemDetail(models.error) || t('aiModelsFailed')}</p>}
+            {models.isError && (
+              <p className='text-destructive p-3 text-xs'>{problemDetail(models.error) || t('aiModelsFailed')}</p>
+            )}
             <CommandEmpty>{t('aiNoModelMatch')}</CommandEmpty>
             {typed && !models.data?.includes(typed) && (
               <CommandGroup>
@@ -464,7 +470,12 @@ function TestLine({ result }: { result: AiTestResult }) {
   return (
     <p className={cn('text-xs', result.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive')}>
       {result.ok
-        ? t('aiTestOk', { provider: result.provider ?? '', model: result.model ?? '', ms: String(result.milliseconds), reply: result.reply ?? '' })
+        ? t('aiTestOk', {
+            provider: result.provider ?? '',
+            model: result.model ?? '',
+            ms: String(result.milliseconds),
+            reply: result.reply ?? '',
+          })
         : t('aiTestFailed', { error: result.error ?? '' })}
     </p>
   )
@@ -501,7 +512,9 @@ function UsageCard() {
             <TableBody>
               {usage.data.map((row) => (
                 <TableRow key={`${row.slug}-${row.role}-${row.model}`}>
-                  <TableCell className='font-medium'>{row.slug === 'platform' ? t('aiUsagePlatform') : row.slug}</TableCell>
+                  <TableCell className='font-medium'>
+                    {row.slug === 'platform' ? t('aiUsagePlatform') : row.slug}
+                  </TableCell>
                   <TableCell>{row.role}</TableCell>
                   <TableCell dir='ltr'>{row.model}</TableCell>
                   <TableCell className='text-end tabular-nums'>{number(row.requests)}</TableCell>

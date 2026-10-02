@@ -8,6 +8,7 @@ import {
   getPlatformCapacityOptions,
   getPlatformOptions,
   listTenantsQueryKey,
+  putTenantSeedMenuMutation,
   uploadTenantSeedImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import type { CreateTenantRequest } from '@/api/control'
@@ -16,12 +17,8 @@ import { DockField, type Dock } from '@/components/brand/dock-field'
 import { SocialField } from '@/components/brand/social-field'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { useLogoCleanup } from '@/components/brand/logo-cleanup'
-import {
-  PhonePreview,
-  PreviewToggles,
-  usePreviewState,
-  type PreviewDraft,
-} from '@/components/brand/phone-preview'
+import { MenuDrop } from './menu-drop'
+import { includedCount, toImportRequest, type DropCategory } from './menu-review'
 import {
   LocalizedInput,
   fromLocalizedValue,
@@ -50,7 +47,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { IMAGE_SLOTS, imagesFromUrls, type ImageSlot } from '@/lib/brand-slots'
+import { IMAGE_SLOTS, type ImageSlot } from '@/lib/brand-slots'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import type { Language } from '@/lib/language'
@@ -139,8 +136,9 @@ const SEED_ORDER: TenantSeedName[] = ['Sample', 'None']
  * by hand; the seed follows the kind and the money, clock and first
  * language follow the country, each until touched. The images picked here
  * are uploaded right after the 201: provisioning is queued, so they land
- * before the stack step reads them. The phone beside the form shows the
- * draft as customers will see it.
+ * before the stack step reads them. Beside the form, the business's menu
+ * is read from a PDF or photos and reviewed; what is ticked goes in after the
+ * brand, once the stack is up (the menu step).
  */
 export function NewTenantPage() {
   const t = useT()
@@ -148,7 +146,6 @@ export function NewTenantPage() {
   const queryClient = useQueryClient()
   const platform = useQuery(getPlatformOptions())
   const capacity = useQuery(getPlatformCapacityOptions({ query: { refresh: false } }))
-  const preview = usePreviewState()
 
   // Identity
   const [name, setName] = useState<LocalizedValue>({ en: '', ar: '' })
@@ -207,6 +204,9 @@ export function NewTenantPage() {
   const noRoom = capacity.data != null && Number(capacity.data.roomFor) === 0
 
   const uploadImage = useMutation(uploadTenantSeedImageMutation())
+  const putMenu = useMutation(putTenantSeedMenuMutation())
+  // The menu read beside the form, ticked and priced; it goes with the business once it is created
+  const [menu, setMenu] = useState<DropCategory[] | null>(null)
 
   const create = useMutation({
     ...createTenantMutation(),
@@ -228,6 +228,13 @@ export function NewTenantPage() {
         if (result.status === 'rejected')
           toast.error(t('imageUploadFailed', { slot: t(SLOT_LABELS[picked[i].slot]) }))
       })
+      if (includedCount(menu) > 0) {
+        try {
+          await putMenu.mutateAsync({ path: { slug: tenant.slug }, body: toImportRequest(menu!) })
+        } catch (e) {
+          toast.error(problemDetail(e) || t('menuDropSaveFailed'))
+        }
+      }
       toast.success(t('tenantCreated'))
       navigate({ to: '/t/$slug', params: { slug: tenant.slug } })
     },
@@ -296,14 +303,6 @@ export function NewTenantPage() {
       force,
     }
     create.mutate({ body })
-  }
-
-  const draft: PreviewDraft = {
-    name,
-    primaryColor: color || null,
-    theme: null,
-    images: imagesFromUrls(objectUrls),
-    currency,
   }
 
   return (
@@ -630,13 +629,23 @@ export function NewTenantPage() {
         </form>
 
         <aside className='flex flex-col gap-3 lg:sticky lg:top-20 lg:self-start'>
-          <PreviewToggles
-            language={preview.language}
-            scheme={preview.scheme}
-            onLanguage={preview.setLanguage}
-            onScheme={preview.setScheme}
+          <div>
+            <h2 className='font-semibold'>{t('menuDropSection')}</h2>
+            <p className='text-muted-foreground text-sm'>{t('menuDropSectionHint')}</p>
+          </div>
+          <MenuDrop
+            languages={contentLanguages}
+            menu={menu}
+            onMenu={(next) => {
+              setMenu(next)
+              // The sample menu would sit beside the business's own: a menu read here takes its place
+              if (next && seed === 'Sample') {
+                setSeed('None')
+                setSeedTouched(true)
+                toast.info(t('menuDropSampleOff'))
+              }
+            }}
           />
-          <PhonePreview draft={draft} language={preview.language} scheme={preview.scheme} />
         </aside>
       </div>
     </div>
