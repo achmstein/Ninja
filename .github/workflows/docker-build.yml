@@ -91,6 +91,9 @@ jobs:
               - 'src/Tenant.API/**'
             control:
               - 'src/Control.API/**'
+              # The AI gateway and the menu scanner it links from Catalog
+              - 'src/Ninja.AI/**'
+              - 'src/Catalog.API/Assist/**'
             shared:
               - 'src/Ninja.ServiceDefaults/**'
               - 'src/EventBus/**'

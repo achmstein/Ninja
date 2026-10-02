@@ -6,12 +6,16 @@ COPY ["Directory.Build.props", "./"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["src/Control.API/Control.API.csproj", "Control.API/"]
 COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
+COPY ["src/Ninja.AI/Ninja.AI.csproj", "Ninja.AI/"]
 COPY ["src/Shared/", "Shared/"]
 
 RUN dotnet restore "Control.API/Control.API.csproj"
 
 COPY ["src/Control.API/", "Control.API/"]
 COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
+COPY ["src/Ninja.AI/", "Ninja.AI/"]
+# The menu scanner is Catalog's, linked into the control plane (Control.API.csproj)
+COPY ["src/Catalog.API/Assist/MenuScanContracts.cs", "src/Catalog.API/Assist/MenuScanner.cs", "src/Catalog.API/Assist/MenuProposalValidator.cs", "src/Catalog.API/Assist/MenuScannerFake.cs", "Catalog.API/Assist/"]
 
 WORKDIR /src/Control.API
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
