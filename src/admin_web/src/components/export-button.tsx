@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button'
 
 /**
  * "Export": the same outline button on every list that can be saved as a
- * spreadsheet. The page decides what goes in the file.
+ * spreadsheet. The page decides what goes in the file. Small, as the buttons
+ * it sits beside in a page's header are; a default-size one stood taller.
  */
 export function ExportButton({
   onExport,
   disabled,
-  size = 'default',
+  size = 'sm',
 }: {
   onExport: () => void
   disabled?: boolean
