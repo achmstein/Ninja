@@ -5,9 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../brand/brand_provider.dart';
 
 /// Get font family based on locale — the pair pos_web loads: Inter, and
-/// Cairo for Arabic.
+/// Alexandria for Arabic.
 String getFontFamily(Locale locale) {
-  return locale.languageCode == 'ar' ? 'Cairo' : 'Inter';
+  return locale.languageCode == 'ar' ? 'Alexandria' : 'Inter';
 }
 
 /// Extension to get font family from context
