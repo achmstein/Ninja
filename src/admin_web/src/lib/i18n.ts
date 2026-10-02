@@ -508,6 +508,9 @@ const webExtras = {
   studioStepLight: { en: "Setting the light…", ar: "نضبط الإضاءة…" },
   studioStepShot: { en: "Taking the shot…", ar: "نلتقط الصورة…" },
   studioStepDeveloping: { en: "Developing…", ar: "نُظهر الصورة…" },
+  promoEnded: { en: "Ended", ar: "انتهى" },
+  promoScheduled: { en: "Not started", ar: "لم يبدأ" },
+  promoUsedUp: { en: "Used up", ar: "استُنفد" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)
