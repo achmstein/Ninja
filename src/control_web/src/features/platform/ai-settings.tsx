@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ProviderLogo } from '@/components/provider-logo'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -124,6 +125,9 @@ function ProviderRow({ provider, onEdit }: { provider: AiProviderDto; onEdit: ()
   })
   return (
     <div className='flex flex-wrap items-center gap-3 p-3'>
+      <span className='bg-muted grid size-10 shrink-0 place-items-center rounded-lg'>
+        <ProviderLogo name={provider.name} baseUrl={provider.baseUrl} className='size-6' />
+      </span>
       <div className='min-w-0 flex-1'>
         <div className='font-medium'>{provider.name}</div>
         <div className='text-muted-foreground truncate text-xs'>{provider.baseUrl}</div>
@@ -206,13 +210,15 @@ function ProviderDialog({
                 <Button
                   key={preset.name}
                   type='button'
-                  variant={baseUrl === preset.baseUrl ? 'default' : 'outline'}
+                  variant={baseUrl === preset.baseUrl ? 'secondary' : 'outline'}
                   size='sm'
+                  className={cn(baseUrl === preset.baseUrl && 'ring-primary ring-2')}
                   onClick={() => {
                     setName(preset.name)
                     setBaseUrl(preset.baseUrl)
                   }}
                 >
+                  <ProviderLogo name={preset.name} baseUrl={preset.baseUrl} className='size-4' />
                   {preset.name}
                 </Button>
               ))}
@@ -353,6 +359,7 @@ function RoleRow({
               {canBeEmpty && <SelectItem value={NONE}>{t('aiSameAsMain')}</SelectItem>}
               {providers.map((p) => (
                 <SelectItem key={p.id} value={String(p.id)}>
+                  <ProviderLogo name={p.name} baseUrl={p.baseUrl} className='size-4' />
                   {p.name}
                 </SelectItem>
               ))}
