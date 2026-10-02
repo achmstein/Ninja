@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { DatePicker } from '@/components/date-picker'
 import { useT } from '@/lib/i18n'
 import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
 import { isValidTag, TagPicker } from './tag-picker'
@@ -479,7 +480,7 @@ export function ConvertDialog({
             </SelectContent>
           </Select>
           <Label htmlFor='convert-paid-through' className='mt-2'>{t('paidThrough')}</Label>
-          <Input id='convert-paid-through' type='date' value={paidThrough} onChange={(e) => setPaidThrough(e.target.value)} />
+          <DatePicker id='convert-paid-through' value={paidThrough} onChange={setPaidThrough} />
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>{t('cancel')}</AlertDialogCancel>
@@ -541,7 +542,7 @@ export function RecordPaymentDialog({
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='payment-period-end'>{t('periodEnd')}</Label>
-            <Input id='payment-period-end' type='date' value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+            <DatePicker id='payment-period-end' value={periodEnd} onChange={setPeriodEnd} />
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='payment-reference'>{t('reference')}</Label>
