@@ -17,6 +17,8 @@ import { Odometer } from '@/components/ninja/odometer'
 import { Rise, RiseItem } from '@/components/ninja/page/page'
 import { Slab } from '@/components/ninja/page/parts'
 import { DemoCheckout } from '@/components/pay/demo-checkout'
+import { SuccessBurst } from '@/components/pay/success-burst'
+import { markAfterPayment, useBackTo } from '@/lib/back-to'
 
 export const Route = createFileRoute('/pay/$key')({
   // simulate: a demo business's pretend checkout, which is this page itself
@@ -56,6 +58,9 @@ function PayReturnPage() {
   })
   const payment = query.data
   const status = payment?.status
+
+  // Once the payment is settled, the browser's back goes to the menu: behind this page is only the provider's checkout
+  useBackTo('/', !!status && status !== 'Pending')
 
   // The bill has moved on: the bills page and any open pay sheet read it again
   useEffect(() => {
@@ -173,16 +178,32 @@ function Outcome({
             <BusinessMark />
           </RiseItem>
           <RiseItem>
-            <Slab layout transition={springSoft} className='flex flex-col items-center gap-4 px-6 py-9 text-center'>
-              <AnimatePresence mode='popLayout' initial={false}>
-                <motion.div key={state} {...swap} className={cn('grid size-20 place-items-center rounded-full', tone)}>
-                  {Icon ? (
-                    <Icon className={cn('size-9', state === 'waiting' && 'animate-spin motion-reduce:animate-none')} />
-                  ) : (
-                    <DrawnCheck reduced={!!reduced} className='size-10' />
-                  )}
-                </motion.div>
-              </AnimatePresence>
+            {/* A paid one's burst flies past the slab's edge rather than being cut off by it */}
+            <Slab
+              layout
+              transition={springSoft}
+              className={cn('flex flex-col items-center gap-4 px-6 py-9 text-center', state === 'good' && 'overflow-visible')}
+            >
+              <div className='relative grid place-items-center'>
+                {/* A paid one lands with a burst round its tick */}
+                {state === 'good' && <SuccessBurst />}
+                <AnimatePresence mode='popLayout' initial={false}>
+                  <motion.div
+                    key={state}
+                    {...swap}
+                    // The tick's circle pops as it lands, a spring's overshoot and back
+                    animate={state === 'good' && !reduced ? { ...swap.animate, scale: [0.6, 1.12, 1] } : swap.animate}
+                    transition={state === 'good' && !reduced ? { scale: { duration: 0.5, times: [0, 0.6, 1] } } : undefined}
+                    className={cn('relative grid size-20 place-items-center rounded-full', tone)}
+                  >
+                    {Icon ? (
+                      <Icon className={cn('size-9', state === 'waiting' && 'animate-spin motion-reduce:animate-none')} />
+                    ) : (
+                      <DrawnCheck reduced={!!reduced} className='size-10' />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.div key={title} {...swap} className='flex flex-col items-center gap-1.5'>
                   <h1 className='heading text-title leading-tight' aria-live='polite'>
@@ -228,10 +249,19 @@ function FeeNote({ payment }: { payment: PaymentStatusView }) {
   )
 }
 
+/**
+ * To the bills, in this page's place: back from the bills then goes to the menu (useBackTo), not to this page
+ * again and not to the provider's checkout behind it.
+ */
 function BackToBills() {
   const t = useT()
   return (
-    <Link to='/bills' className='bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'>
+    <Link
+      to='/bills'
+      replace
+      onClick={markAfterPayment}
+      className='bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
+    >
       {t('backToBills')}
     </Link>
   )

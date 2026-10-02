@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -5,6 +6,7 @@ import { CircleAlert, ReceiptText, Wallet } from 'lucide-react'
 import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'
+import { takeAfterPayment, useBackTo } from '@/lib/back-to'
 import { useLiveBills } from '@/lib/live-bills'
 import { BillsByMonth } from '@/components/bills/bills-history'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
@@ -64,6 +66,9 @@ function BillsRoute() {
 function BillsPage() {
   const t = useT()
   const live = useLiveBills()
+  // Opened from a payment's outcome: back goes to the menu, not to that outcome again
+  const [afterPayment] = useState(takeAfterPayment)
+  useBackTo('/', afterPayment)
 
   return (
     <NinjaPage title={t('ninjaYourBills')} back='/profile' push='bills'>
