@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import {
-  ChevronLeft,
-  ChevronRight,
+  Download,
   Plus,
   Receipt,
   Repeat,
@@ -21,21 +20,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
-import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { MonthSwitcher } from '@/components/month-switcher'
+import { RankedList } from '@/components/ranked-list'
+import { RowActions } from '@/components/row-actions'
 import { Stat } from '@/components/stat-strip'
+import { dayHeading } from '@/lib/when'
 import { monthRange } from '@/features/payroll/format'
 import { CategoriesDialog } from './components/categories-dialog'
 import { ExpenseDialog } from './components/expense-dialog'
@@ -66,11 +62,10 @@ export function Expenses() {
     .map(Number)
   const range = monthRange(year, month - 1)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
-  const monthLabel = new Intl.DateTimeFormat(locale, {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(year, month - 1, 1))
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
+  const percent = new Intl.NumberFormat(locale, {
+    style: 'percent',
+    maximumFractionDigits: 0,
+  })
 
   const expenses = useQuery(expensesQueryOptions(range.from, range.to))
   const [adding, setAdding] = useState(false)
@@ -79,16 +74,6 @@ export function Expenses() {
   const [voiding, setVoiding] = useState<ExpenseView | null>(null)
   const [voidReason, setVoidReason] = useState('')
   const [viewingReceipt, setViewingReceipt] = useState<ExpenseView | null>(null)
-
-  const shiftMonth = (delta: number) => {
-    const next = new Date(year, month - 1 + delta, 1)
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        month: `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`,
-      }),
-    })
-  }
 
   const rows = expenses.data?.expenses ?? []
 
@@ -126,53 +111,42 @@ export function Expenses() {
         <PageHeader
           title={t('navFinanceExpenses')}
           actions={
-            <div className='flex gap-2'>
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => setCategoriesOpen(true)}
-              >
-                <Settings2 className='me-2 h-4 w-4' />
-                {t('expenseCategories')}
-              </Button>
-              <Button
-                size='sm'
-                variant='outline'
-                onClick={() => setRecurringOpen(true)}
-              >
-                <Repeat className='me-2 h-4 w-4' />
-                {t('recurringBills')}
-              </Button>
-              <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
+            <div className='flex items-center gap-1'>
               <Button size='sm' onClick={() => setAdding(true)}>
                 <Plus className='me-2 h-4 w-4' />
                 {t('addExpense')}
               </Button>
+              {/* What is set up once in a while waits behind the menu, not beside the one button used daily */}
+              <RowActions
+                className='size-9'
+                actions={[
+                  {
+                    label: t('expenseCategories'),
+                    icon: Settings2,
+                    onSelect: () => setCategoriesOpen(true),
+                  },
+                  {
+                    label: t('recurringBills'),
+                    icon: Repeat,
+                    onSelect: () => setRecurringOpen(true),
+                  },
+                  {
+                    label: t('exportCsv'),
+                    icon: Download,
+                    disabled: rows.length === 0,
+                    onSelect: exportCsv,
+                  },
+                ]}
+              />
             </div>
           }
         >
-          <div className='flex items-center gap-1'>
-            <Button
-              variant='ghost'
-              size='icon'
-              aria-label={t('previousMonth')}
-              onClick={() => shiftMonth(-1)}
-            >
-              <ChevronLeft className='h-4 w-4 rtl:-scale-x-100' />
-            </Button>
-            <span className='min-w-40 text-center text-sm font-medium'>
-              {monthLabel}
-            </span>
-            <Button
-              variant='ghost'
-              size='icon'
-              aria-label={t('nextMonth')}
-              disabled={monthKey >= today.slice(0, 7)}
-              onClick={() => shiftMonth(1)}
-            >
-              <ChevronRight className='h-4 w-4 rtl:-scale-x-100' />
-            </Button>
-          </div>
+          <MonthSwitcher
+            monthKey={monthKey}
+            onChange={(next) =>
+              navigate({ search: (prev) => ({ ...prev, month: next }) })
+            }
+          />
         </PageHeader>
 
         {expenses.isError ? (
@@ -192,125 +166,112 @@ export function Expenses() {
           />
         ) : (
           <>
-            <div className='grid gap-6 lg:grid-cols-[auto_1fr]'>
+            {/* The month's total, and where it went as bars the eye compares at once */}
+            <div className='grid gap-6 lg:grid-cols-[minmax(12rem,auto)_1fr]'>
               <Stat
                 size='hero'
                 label={t('expensesTotal')}
                 value={formatEgp(expenses.data!.total)}
               />
-              <dl className='divide-y text-sm'>
-                {expenses.data!.byCategory.map((c) => (
-                  <div
-                    key={String(c.categoryId)}
-                    className='flex items-center justify-between gap-4 py-1.5'
-                  >
-                    <dt>{localized(c.categoryName)}</dt>
-                    <dd className='font-medium tabular-nums'>
-                      {formatEgp(c.total)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <RankedList
+                items={[...expenses.data!.byCategory]
+                  .sort((a, b) => toNumber(b.total) - toNumber(a.total))
+                  .map((c) => ({
+                    key: String(c.categoryId),
+                    label: localized(c.categoryName),
+                    value: toNumber(c.total),
+                    display: formatEgp(c.total),
+                    hint:
+                      toNumber(expenses.data!.total) > 0
+                        ? percent.format(
+                            toNumber(c.total) / toNumber(expenses.data!.total)
+                          )
+                        : undefined,
+                  }))}
+              />
             </div>
 
-            <div className='overflow-x-auto rounded-lg border'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('date')}</TableHead>
-                    <TableHead>{t('expenseCategory')}</TableHead>
-                    <TableHead>{t('vendorOrNote')}</TableHead>
-                    <TableHead>{t('paidFrom')}</TableHead>
-                    <TableHead className='text-end'>{t('amount')}</TableHead>
-                    <TableHead className='w-0' />
-                    <TableHead className='w-0' />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((e) => {
-                    const voided = !!e.voidedAt
-                    return (
-                      <TableRow
-                        key={String(e.id)}
-                        className={cn(voided && 'text-muted-foreground')}
-                      >
-                        <TableCell className='whitespace-nowrap tabular-nums'>
-                          {dateFormat.format(new Date(e.date))}
-                        </TableCell>
-                        <TableCell className={cn(voided && 'line-through')}>
-                          {localized(e.categoryName)}
-                        </TableCell>
-                        <TableCell className={cn(voided && 'line-through')}>
-                          {[e.vendor, e.note].filter(Boolean).join(' · ') ||
-                            '—'}
-                          {voided && (
-                            <span className='block text-xs no-underline'>
-                              {t('voidedBecause', {
-                                reason: e.voidReason ?? '',
-                              })}
+            <ul className='divide-y overflow-hidden rounded-lg border'>
+              {rows.map((e, index) => {
+                const voided = !!e.voidedAt
+                const newDay = index === 0 || rows[index - 1].date !== e.date
+                return (
+                  <Fragment key={String(e.id)}>
+                    {newDay && (
+                      <li className='bg-muted/40 text-muted-foreground px-4 py-1.5 text-xs font-medium'>
+                        {dayHeading(e.date, locale, t)}
+                      </li>
+                    )}
+                    <li
+                      className={cn(
+                        'flex items-center gap-2 py-2.5 ps-4 pe-2',
+                        voided && 'text-muted-foreground'
+                      )}
+                    >
+                      <ListRow
+                        className='flex-1'
+                        title={
+                          <span className={cn(voided && 'line-through')}>
+                            {[e.vendor, e.note].filter(Boolean).join(' · ') ||
+                              localized(e.categoryName)}
+                          </span>
+                        }
+                        meta={
+                          <>
+                            <span>{localized(e.categoryName)}</span>
+                            <Dot />
+                            <span>
+                              {paidFromLabel(e.paidFrom, t)}
+                              {toNumber(e.paidFrom) === PAID_FROM.partner &&
+                                e.partnerName &&
+                                ` (${e.partnerName})`}
                             </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className='flex flex-wrap items-center gap-1'>
-                            {paidFromLabel(e.paidFrom, t)}
-                            {toNumber(e.paidFrom) === PAID_FROM.partner &&
-                              e.partnerName && (
-                                <span className='text-muted-foreground'>
-                                  ({e.partnerName})
-                                </span>
-                              )}
                             {toNumber(e.source) === FINANCE_SOURCE.till && (
-                              <Badge variant='outline' className='font-normal'>
-                                {t('fromTill')}
-                              </Badge>
+                              <Badge variant='muted'>{t('fromTill')}</Badge>
                             )}
                             {toNumber(e.source) ===
                               FINANCE_SOURCE.recurring && (
-                              <Badge variant='outline' className='font-normal'>
-                                {t('recurringBadge')}
-                              </Badge>
+                              <Badge variant='muted'>{t('recurringBadge')}</Badge>
                             )}
+                            {voided && (
+                              <span className='text-destructive w-full'>
+                                {t('voidedBecause', {
+                                  reason: e.voidReason ?? '',
+                                })}
+                              </span>
+                            )}
+                          </>
+                        }
+                        trailing={
+                          <span className={cn(voided && 'line-through')}>
+                            <Money value={e.amount} />
                           </span>
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            'text-end font-medium tabular-nums',
-                            voided && 'line-through'
-                          )}
-                        >
-                          {formatEgp(e.amount)}
-                        </TableCell>
-                        <TableCell className='pe-0'>
-                          <ReceiptButton
-                            expense={e}
-                            onView={() => setViewingReceipt(e)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {!voided && (
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              className='text-muted-foreground size-8'
-                              aria-label={t('voidExpense')}
-                              title={t('voidExpense')}
-                              disabled={isPending}
-                              onClick={() => {
-                                setVoidReason('')
-                                setVoiding(e)
-                              }}
-                            >
-                              <Undo2 className='h-4 w-4' />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                        }
+                      />
+                      <ReceiptButton
+                        expense={e}
+                        onView={() => setViewingReceipt(e)}
+                      />
+                      <RowActions
+                        actions={[
+                          {
+                            label: t('voidExpense'),
+                            icon: Undo2,
+                            destructive: true,
+                            disabled: isPending,
+                            hidden: voided,
+                            onSelect: () => {
+                              setVoidReason('')
+                              setVoiding(e)
+                            },
+                          },
+                        ]}
+                      />
+                    </li>
+                  </Fragment>
+                )
+              })}
+            </ul>
           </>
         )}
       </Main>
