@@ -1,7 +1,8 @@
 import { type OrderSummary } from '@/api/ordering'
 import { type BillView } from '@/api/sales'
 import { closedAt } from '@/lib/bills'
-import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
+import { useSelectedBranch } from '@/lib/branch'
+import { businessDayDate } from '@/lib/business-day'
 import { isSettled } from '@/lib/bills'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
 import { SectionLabel } from '@/components/ninja/page/parts'
@@ -13,15 +14,8 @@ export function HistoryList({ bills, ordersById }: { bills: BillView[]; ordersBy
   const language = useLanguage((s) => s.language)
   const branch = useSelectedBranch()
 
-  // For overnight shifts, a bill closed before the start hour belongs to
-  // the previous day's shift (same rule as the mobile app)
-  const startHour = dayStartHour(branch)
-  const overnight = isOvernightShift(branch)
-  const shiftDay = (date: Date): Date => {
-    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    if (overnight && date.getHours() < startHour) day.setDate(day.getDate() - 1)
-    return day
-  }
+  // A bill closed before the day's start hour belongs to the day before
+  const shiftDay = (date: Date): Date => businessDayDate(date, branch)
   const todayShift = shiftDay(new Date())
   const yesterdayShift = new Date(todayShift)
   yesterdayShift.setDate(yesterdayShift.getDate() - 1)

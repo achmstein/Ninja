@@ -31,7 +31,7 @@ export function closedAt(bill: BillView): Date | null {
  */
 export function useMyBills() {
   const branch = useSelectedBranch()
-  // Today = the branch's current business day (overnight shifts included)
+  // Today = the branch's current business day
   const dayStart = businessDayStart(branch)
   const since = new Date(dayStart.getTime() - HISTORY_DAYS * DAY_MS)
   const query = useQuery({

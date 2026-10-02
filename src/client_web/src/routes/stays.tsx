@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Gamepad2 } from 'lucide-react'
 import { type StayViewModel } from '@/api/spaces'
-import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
+import { useSelectedBranch } from '@/lib/branch'
+import { businessDayDate } from '@/lib/business-day'
 import { useMyStays } from '@/lib/stays'
 import { useLanguage, useT } from '@/lib/i18n'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -61,15 +62,9 @@ function StayList({ stays, isLoading }: { stays: StayViewModel[]; isLoading: boo
 
   if (stays.length === 0) return <Empty icon={Gamepad2} title={t('noSessionsYet')} />
 
-  // Overnight shifts: a stay before the start hour belongs to the
-  // previous day's shift (same rule as the bills page and the app)
-  const startHour = dayStartHour(branch)
-  const overnight = isOvernightShift(branch)
-  const shiftDay = (date: Date): Date => {
-    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    if (overnight && date.getHours() < startHour) day.setDate(day.getDate() - 1)
-    return day
-  }
+  // A stay before the day's start hour belongs to the day before (the
+  // bills page's rule)
+  const shiftDay = (date: Date): Date => businessDayDate(date, branch)
   const todayShift = shiftDay(new Date())
   const yesterdayShift = new Date(todayShift)
   yesterdayShift.setDate(yesterdayShift.getDate() - 1)

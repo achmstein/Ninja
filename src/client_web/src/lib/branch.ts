@@ -11,16 +11,6 @@ export function dayStartHour(branch?: BranchResponse | null): number {
   return Number.isNaN(parsed) ? 17 : parsed
 }
 
-export function dayEndHour(branch?: BranchResponse | null): number {
-  const parsed = parseInt(branch?.dayEndTime?.split(':')[0] ?? '')
-  return Number.isNaN(parsed) ? 5 : parsed
-}
-
-/** Whether the business day crosses midnight (e.g. 17:00 → 05:00) */
-export function isOvernightShift(branch?: BranchResponse | null): boolean {
-  return dayEndHour(branch) < dayStartHour(branch)
-}
-
 export function useBranches() {
   return useQuery({
     ...getBranchesOptions(),

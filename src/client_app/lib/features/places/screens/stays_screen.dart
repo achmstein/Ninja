@@ -17,6 +17,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
+import '../../../core/utils/business_day.dart';
 
 /// Screen showing user's sessions with Today / Previous tabs
 class StaysScreen extends ConsumerStatefulWidget {
@@ -70,14 +71,12 @@ class _StaysScreenState extends ConsumerState<StaysScreen> {
   }
 }
 
-/// Stays by the branch's shift day: an overnight shift's small hours are the day before
+/// Stays by the branch's business day: the hours before its start hour are the day before
 List<_ShiftGroup> _groupByShift(List<Stay> sessions, Locale locale, AppLocalizations l10n, Branch? branch) {
   final groups = <String, _ShiftGroup>{};
   final now = DateTime.now();
   final dateFormat = DateFormat('EEEE, MMM d', locale.languageCode);
-  final startHour = branch?.dayStartHour ?? 17;
-  final overnight = branch?.isOvernightShift ?? true;
-  DateTime shiftOf(DateTime t) => overnight && t.hour < startHour ? DateTime(t.year, t.month, t.day - 1) : DateTime(t.year, t.month, t.day);
+  DateTime shiftOf(DateTime t) => shiftDayOf(t, branch);
   final today = shiftOf(now);
   final yesterday = DateTime(today.year, today.month, today.day - 1);
 
