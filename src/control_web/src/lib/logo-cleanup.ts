@@ -185,14 +185,137 @@ export function crop(px: Pixels, box: { x: number; y: number; width: number; hei
   return { data: out, width: box.width, height: box.height }
 }
 
+// ---- Light and dark ----
+//
+// A logo drawn for a white page (Chillax's black) disappears on the dark
+// mode's surface, and one drawn for a dark page (a white mark) on the light
+// one. Each pixel the surface would swallow is moved away from it in
+// lightness until it reads: a grey or black is turned over (black to white,
+// dark grey to light grey), a colour keeps its hue and only lightens or
+// darkens. What already reads is left as it is, so a red and black logo keeps
+// its red and only its black turns.
+
+/** The surfaces a logo is shown on: the apps' light page and their dark one (the slots' dark tile) */
+export const LIGHT_SURFACE: Rgb = { r: 255, g: 255, b: 255 }
+export const DARK_SURFACE: Rgb = { r: 24, g: 24, b: 27 }
+/** What a part of a logo needs against its surface to read (WCAG's for graphics) */
+const READS = 3
+/** Below this a part is as good as gone */
+const LOST = 2
+/** The share of a logo, by opacity, that must be lost before it is worth making another */
+const LOST_SHARE = 0.25
+
+const channel = (v: number) => {
+  const c = v / 255
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+const luminance = (r: number, g: number, b: number) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+const contrastOf = (l1: number, l2: number) => (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+
+/** How much of the logo, weighed by opacity, a surface would swallow (0–1). */
+export function lostOn(px: Pixels, surface: Rgb): number {
+  const { data } = px
+  const ground = luminance(surface.r, surface.g, surface.b)
+  let seen = 0
+  let lost = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3] / 255
+    if (a < VISIBLE / 255) continue
+    seen += a
+    if (contrastOf(luminance(data[i], data[i + 1], data[i + 2]), ground) < LOST) lost += a
+  }
+  return seen === 0 ? 0 : lost / seen
+}
+
+function toHsl(r: number, g: number, b: number): [number, number, number] {
+  const R = r / 255
+  const G = g / 255
+  const B = b / 255
+  const max = Math.max(R, G, B)
+  const min = Math.min(R, G, B)
+  const l = (max + min) / 2
+  if (max === min) return [0, 0, l]
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  const h = max === R ? (G - B) / d + (G < B ? 6 : 0) : max === G ? (B - R) / d + 2 : (R - G) / d + 4
+  return [h / 6, s, l]
+}
+
+function fromHsl(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) return [l * 255, l * 255, l * 255]
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
+  const hue = (t: number) => {
+    if (t < 0) t += 1
+    if (t > 1) t -= 1
+    if (t < 1 / 6) return p + (q - p) * 6 * t
+    if (t < 1 / 2) return q
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+    return p
+  }
+  return [hue(h + 1 / 3) * 255, hue(h) * 255, hue(h - 1 / 3) * 255]
+}
+
+/**
+ * The logo made to read on a surface: each visible pixel the surface would
+ * swallow moved away from it, the rest as it was. Returns a new image and how
+ * many pixels changed.
+ */
+export function adaptTo(px: Pixels, surface: Rgb): { pixels: Pixels; changed: number } {
+  const { data, width, height } = px
+  const ground = luminance(surface.r, surface.g, surface.b)
+  const lighten = ground < 0.5
+  const out = new Uint8ClampedArray(data)
+  let changed = 0
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < VISIBLE) continue
+    let r = data[i]
+    let g = data[i + 1]
+    let b = data[i + 2]
+    if (contrastOf(luminance(r, g, b), ground) >= READS) continue
+    // A grey turned over first: black to white, dark grey to light grey
+    if (Math.max(r, g, b) - Math.min(r, g, b) < 40) {
+      r = 255 - r
+      g = 255 - g
+      b = 255 - b
+    }
+    // Then, a colour (or a mid grey turning over left as dim), lighter or darker on its own hue until it reads
+    if (contrastOf(luminance(r, g, b), ground) < READS) {
+      const [h, s, l0] = toHsl(r, g, b)
+      let l = l0
+      for (let step = 0; step < 50; step++) {
+        l = lighten ? Math.min(0.97, l + 0.02) : Math.max(0.03, l - 0.02)
+        ;[r, g, b] = fromHsl(h, s, l)
+        if (contrastOf(luminance(r, g, b), ground) >= READS || l === 0.97 || l === 0.03) break
+      }
+    }
+    out[i] = r
+    out[i + 1] = g
+    out[i + 2] = b
+    changed++
+  }
+  return { pixels: { data: out, width, height }, changed }
+}
+
+/** Whether a surface swallows enough of the logo to make it another for that surface. */
+export const needsAdapting = (px: Pixels, surface: Rgb) => lostOn(px, surface) > LOST_SHARE
+
 // ---- In the browser ----
 
-/** One way the logo can be saved, with a URL to show it by. */
-export type LogoChoice = {
+/** A file to save, with a URL to show it by. */
+export type LogoImage = {
   file: File
   url: string
   width: number
   height: number
+}
+
+/** One way the logo can be saved, and the logo made to read on each surface where that one does not. */
+export type LogoChoice = LogoImage & {
+  /** Made to read on the dark surface; null when it reads there already (or has its own background) */
+  onDark: LogoImage | null
+  /** Made to read on the light surface (a white mark); null when it reads there already */
+  onLight: LogoImage | null
 }
 
 export type CleanedLogo = {
@@ -206,7 +329,10 @@ export type CleanedLogo = {
 
 /** Revokes every URL a cleaned logo holds. */
 export function releaseLogo(logo: CleanedLogo) {
-  for (const choice of [logo.original, logo.outside, logo.inside]) if (choice) URL.revokeObjectURL(choice.url)
+  for (const choice of [logo.original, logo.outside, logo.inside]) {
+    if (!choice) continue
+    for (const image of [choice, choice.onDark, choice.onLight]) if (image) URL.revokeObjectURL(image.url)
+  }
 }
 
 async function loadImage(
@@ -269,7 +395,7 @@ function readPixels(source: CanvasImageSource, width: number, height: number): P
   return { data: image.data, width: image.width, height: image.height }
 }
 
-async function toChoice(px: Pixels, name: string): Promise<LogoChoice> {
+async function toImage(px: Pixels, name: string): Promise<LogoImage> {
   const canvas = document.createElement('canvas')
   canvas.width = px.width
   canvas.height = px.height
@@ -292,6 +418,17 @@ function cropped(px: Pixels): Pixels {
   return box ? crop(px, box) : px
 }
 
+/** A cut-out logo, with what it becomes on each surface that would swallow it. */
+async function toChoice(px: Pixels, name: string, image?: LogoImage): Promise<LogoChoice> {
+  const adapted = async (surface: Rgb) =>
+    needsAdapting(px, surface) ? toImage(adaptTo(px, surface).pixels, name) : null
+  return {
+    ...(image ?? (await toImage(px, name))),
+    onDark: await adapted(DARK_SURFACE),
+    onLight: await adapted(LIGHT_SURFACE),
+  }
+}
+
 /**
  * The picked file read, its background found and the ways to save it made.
  * `maxSide` is the most the server keeps for the slot: anything larger is
@@ -304,15 +441,15 @@ export async function cleanLogo(file: File, maxSide: number): Promise<CleanedLog
     const px = readPixels(image.source, image.width * scale, image.height * scale)
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)
 
-    const original = isSvg
-      ? await toChoice(cropped(px), file.name)
-      : {
-          file,
-          url: URL.createObjectURL(file),
-          width: px.width,
-          height: px.height,
-        }
     const background = detectBackground(px)
+    const asPicked: LogoImage = isSvg
+      ? await toImage(cropped(px), file.name)
+      : { file, url: URL.createObjectURL(file), width: px.width, height: px.height }
+    // Only a logo already cut out is made again for a surface: one on its own background, or a photo, shows that background on either
+    const original =
+      background?.kind === 'transparent'
+        ? await toChoice(cropped(px), file.name, asPicked)
+        : { ...asPicked, onDark: null, onLight: null }
     if (background?.kind !== 'solid') return { original, outside: null, inside: null }
 
     const outside = removeBackground(px, background.color, false)

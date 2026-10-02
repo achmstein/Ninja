@@ -32,7 +32,9 @@ export function DatePicker({ value, onChange, id, placeholder, disabled, classNa
   const locale = useLocale()
   const [open, setOpen] = useState(false)
   const selected = parseDay(value)
-  const label = selected ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(selected) : (placeholder ?? '')
+  const label = selected
+    ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(selected)
+    : (placeholder ?? '')
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

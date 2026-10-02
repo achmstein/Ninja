@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  adaptTo,
   contentBox,
   crop,
+  DARK_SURFACE,
   detectBackground,
+  LIGHT_SURFACE,
+  lostOn,
+  needsAdapting,
   removeBackground,
   type Pixels,
 } from './logo-cleanup'
@@ -136,5 +141,70 @@ describe('contentBox and crop', () => {
 
   it('has no box for an empty image', () => {
     expect(contentBox(draw(5, 5, () => CLEAR))).toBeNull()
+  })
+})
+
+describe('light and dark', () => {
+  /** A logo cut out: the ink where `at` says, clear elsewhere. */
+  const cutOut = (ink: (x: number) => Rgba) =>
+    draw(20, 20, (x, y) => (y >= 5 && y < 15 ? ink(x) : CLEAR))
+
+  it('finds a black logo lost on the dark surface and not on the light one', () => {
+    const black = cutOut(() => BLACK)
+    expect(lostOn(black, DARK_SURFACE)).toBe(1)
+    expect(needsAdapting(black, DARK_SURFACE)).toBe(true)
+    expect(needsAdapting(black, LIGHT_SURFACE)).toBe(false)
+  })
+
+  it('turns black white for the dark surface and keeps it clear where it was clear', () => {
+    const { pixels } = adaptTo(
+      cutOut(() => BLACK),
+      DARK_SURFACE
+    )
+    expect(pixel(pixels, 10, 10)).toEqual([255, 255, 255, 255])
+    expect(pixel(pixels, 10, 1)[3]).toBe(0)
+  })
+
+  it('keeps a colour that reads and turns only the black of a red and black logo', () => {
+    const bright: Rgba = [255, 90, 60, 255]
+    const { pixels, changed } = adaptTo(
+      cutOut((x) => (x < 10 ? bright : BLACK)),
+      DARK_SURFACE
+    )
+    expect(pixel(pixels, 2, 10)).toEqual(bright)
+    expect(pixel(pixels, 15, 10)).toEqual([255, 255, 255, 255])
+    expect(changed).toBe(10 * 10)
+  })
+
+  it('lightens a dark colour on its own hue rather than turning it grey', () => {
+    const navy: Rgba = [20, 30, 90, 255]
+    const [r, g, b] = pixel(
+      adaptTo(
+        cutOut(() => navy),
+        DARK_SURFACE
+      ).pixels,
+      10,
+      10
+    )
+    expect(b).toBeGreaterThan(r)
+    expect(b).toBeGreaterThan(g)
+    expect(
+      lostOn(
+        adaptTo(
+          cutOut(() => navy),
+          DARK_SURFACE
+        ).pixels,
+        DARK_SURFACE
+      )
+    ).toBe(0)
+  })
+
+  it('darkens a white mark for the light surface', () => {
+    const white = cutOut(() => WHITE)
+    expect(needsAdapting(white, LIGHT_SURFACE)).toBe(true)
+    expect(needsAdapting(white, DARK_SURFACE)).toBe(false)
+    expect(pixel(adaptTo(white, LIGHT_SURFACE).pixels, 10, 10)).toEqual([
+      0, 0, 0, 255,
+    ])
   })
 })

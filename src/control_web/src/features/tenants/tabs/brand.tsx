@@ -552,7 +552,20 @@ function BrandImagesCard({ slug, brand }: { slug: string; brand: BrandDto }) {
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
   })
 
-  const logoCleanup = useLogoCleanup((slot, file) => upload.mutate({ path: { slug, slot }, body: { file } }))
+  // One after the other, a logo and the dark one made from it: each answer is the whole brand, so the last
+  // to land must be the last saved
+  const logoCleanup = useLogoCleanup({
+    onUse: async (picked) => {
+      for (const { slot, file } of picked) {
+        try {
+          await upload.mutateAsync({ path: { slug, slot }, body: { file } })
+        } catch {
+          return // said by the mutation's own onError
+        }
+      }
+    },
+    hasImage: (slot) => imageOf(images, slot) !== null,
+  })
 
   const busySlot = upload.isPending
     ? (upload.variables?.path.slot as ImageSlot)

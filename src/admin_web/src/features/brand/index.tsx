@@ -226,7 +226,20 @@ function BrandForm({ brand }: { brand: Brand }) {
     onError: () => toast.error(t('brandSaveFailed')),
   })
   // One slot is busy at a time: the one whose request is in flight
-  const logoCleanup = useLogoCleanup((slot, file) => uploadImage.mutate({ path: { slot }, body: { file } }))
+  // One after the other, a logo and the dark one made from it: each answer is the whole brand, so the last
+  // to land must be the last saved
+  const logoCleanup = useLogoCleanup({
+    onUse: async (picked) => {
+      for (const { slot, file } of picked) {
+        try {
+          await uploadImage.mutateAsync({ path: { slot }, body: { file } })
+        } catch {
+          return // said by the mutation's own onError
+        }
+      }
+    },
+    hasImage: (slot) => imageOf(brand, slot) !== null,
+  })
   const busySlot =
     (uploadImage.isPending && uploadImage.variables?.path.slot) ||
     (deleteImage.isPending && deleteImage.variables?.path.slot) ||

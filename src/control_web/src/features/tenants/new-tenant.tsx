@@ -193,7 +193,10 @@ export function NewTenantPage() {
   const [social, setSocial] = useState(true)
   const [files, setFiles] = useState<SlotFiles>({})
   const objectUrls = useObjectUrls(files)
-  const logoCleanup = useLogoCleanup((slot, file) => setFiles((prev) => ({ ...prev, [slot]: file })))
+  const logoCleanup = useLogoCleanup({
+    onUse: (images) => setFiles((prev) => ({ ...prev, ...Object.fromEntries(images.map((i) => [i.slot, i.file])) })),
+    hasImage: (slot) => Boolean(files[slot]),
+  })
 
   // Capacity
   const [force, setForce] = useState(false)
