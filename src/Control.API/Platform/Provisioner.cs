@@ -453,7 +453,11 @@ public sealed class Provisioner(
     {
         if (photos is null) return;
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
-        var said = await Step(tenant, Guid.NewGuid(), "photos", () => photos.FillAsync(tenant, ct), ct);
+        // The last step of the latest run, not a run of its own: a business's page shows its latest run, and the
+        // provision this follows (credentials, stack, brand…) must stay on it
+        var runId = await context.Steps.Where(s => s.TenantId == tenantId).OrderByDescending(s => s.Id).Select(s => (Guid?)s.RunId).FirstOrDefaultAsync(ct)
+            ?? Guid.NewGuid();
+        var said = await Step(tenant, runId, "photos", () => photos.FillAsync(tenant, ct), ct);
         await audit.WriteAsync("tenant.photos", tenant.Slug, new { output = said }, ct, Source);
     }
 
