@@ -70,15 +70,26 @@ public sealed class SecretsTests
     }
 
     [TestMethod]
-    public void The_assistant_key_reaches_only_the_plans_that_include_it_and_every_demo()
+    public void A_gateway_key_names_its_business_and_opens_nothing_for_another()
     {
-        var platform = new PlatformOptions { GeminiApiKey = "k" };
+        var key = AiGatewayKeys.For("blue", "platform-key");
+        Assert.StartsWith("blue.", key);
+        Assert.AreEqual("blue", AiGatewayKeys.SlugOf(key, "platform-key"));
+        Assert.IsNull(AiGatewayKeys.SlugOf(key, "another-platform"), "under another platform key it is nobody's");
+        Assert.IsNull(AiGatewayKeys.SlugOf(key.Replace("blue.", "red."), "platform-key"), "blue's secret under red's name");
+        Assert.IsNull(AiGatewayKeys.SlugOf("blue", "platform-key"));
+        Assert.IsNull(AiGatewayKeys.SlugOf(null, "platform-key"));
+    }
+
+    [TestMethod]
+    public void The_gateway_key_reaches_only_the_plans_that_include_the_assistant_and_every_demo()
+    {
+        var platform = new PlatformOptions();
         Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Demo, Plan = TenantPlan.Free }));
         Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Pro }));
         Assert.IsFalse(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Starter }));
         platform.AssistantPlans = [TenantPlan.Starter, TenantPlan.Pro];
         Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Starter }));
-        Assert.IsFalse(new PlatformOptions().AssistantFor(new Tenant { Kind = TenantKind.Demo }), "no key, no assistant");
     }
 
     /// <summary>Answers Keycloak's token endpoint and counts how often it was asked; everything else is 200 {}.</summary>

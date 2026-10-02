@@ -25,5 +25,7 @@ app.UseAuthorization();
 app.MapControlApi();
 // Talabat's plugin for every business, at control.{domain}/api/talabat
 app.MapTalabatApi();
+// Every business's AI calls, at control-api:8080/ai/v1 on the platform's network
+app.MapAiGateway();
 
 app.Run();

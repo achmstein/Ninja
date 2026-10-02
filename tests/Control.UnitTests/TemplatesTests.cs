@@ -312,9 +312,11 @@ public sealed class TemplatesTests
         // Which Arabic the business speaks travels with the rest of its locale, so
         // a push notification reads the same as the screens it follows
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__ArabicStyle: \"standard\"").Count);
-        StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
-        // When the usual model is busy the assistant asks the fallback
-        StringAssert.Contains(yaml, "AI__FallbackModel: \"gemini-3.5-flash-lite\"");
+        // The AI goes through the platform's gateway under the business's own key, naming roles, never a model or a provider's key
+        StringAssert.Contains(yaml, "ConnectionStrings__chatModel: \"Endpoint=http://control-api:8080/ai/v1;Key=${AI_GATEWAY_KEY};Model=main\"");
+        StringAssert.Contains(yaml, "AI__FallbackModel: \"fallback\"");
+        StringAssert.Contains(yaml, "AI__VisionModel: \"vision\"");
+        Assert.IsFalse(yaml.Contains("generativelanguage"));
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__tenant__DESTINATIONS__d1__ADDRESS: \"http://blue-tenant-api:8080\"");
         // The business's own service is Tenant.API, on its own database; the assistant calls it by its Aspire name
@@ -330,16 +332,14 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__HeaderPrefix: \"X-Forwarded-\"");
         Assert.IsFalse(yaml.Contains("TRANSFORMS__1__HeaderPrefix"));
 
-        // Identity has no database; the assistant is off without a key
+        // Identity has no database
         Assert.IsFalse(yaml.Contains("ConnectionStrings__identitydb"));
-        var noAi = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), new PlatformOptions { Domain = "ninja.app" });
-        Assert.IsFalse(noAi.Contains("ConnectionStrings__chatModel"));
-        // With a key, only the plans that include the assistant get it: a customer on Starter runs without, and its .env carries no key
+        // Only the plans that include the assistant reach the gateway: a customer on Starter runs without, and its .env carries no key
         var starter = Blue();
         starter.Kind = TenantKind.Customer;
         starter.Plan = TenantPlan.Starter;
         Assert.IsFalse(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform).Contains("ConnectionStrings__chatModel"));
-        StringAssert.Contains(Templates.Env(starter, Platform), "GEMINI_API_KEY=\n");
+        StringAssert.Contains(Templates.Env(starter, Platform), "AI_GATEWAY_KEY=\n");
         starter.Plan = TenantPlan.Pro;
         StringAssert.Contains(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform), "ConnectionStrings__chatModel");
     }
@@ -398,7 +398,8 @@ public sealed class TemplatesTests
         StringAssert.Contains(env, "DB_PASSWORD=db-password-123456789012345678");
         StringAssert.Contains(env, "BROKER_PASSWORD=broker-password-1234567890123456");
         StringAssert.Contains(env, "IDENTITY_SECRET=identity-secret-1234567890123456");
-        StringAssert.Contains(env, "GEMINI_API_KEY=k");
+        StringAssert.Contains(env, $"AI_GATEWAY_KEY={AiGatewayKeys.For("blue", Platform.EncryptionKey)}");
+        Assert.IsFalse(env.Contains("GEMINI"), "no provider's key reaches a tenant folder");
         StringAssert.Contains(env, "PAYMENTS_KEY=payments-key-12345678901234567890");
         Assert.IsFalse(env.Contains("POSTGRES_PASSWORD"), "the superuser password must not reach a tenant folder");
         Assert.IsFalse(env.Contains("RABBIT_PASSWORD"));

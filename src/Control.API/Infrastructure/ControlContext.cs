@@ -20,8 +20,41 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<OutboxMail> Outbox => Set<OutboxMail>();
 
+    public DbSet<AiProvider> AiProviders => Set<AiProvider>();
+
+    public DbSet<AiRoleModel> AiRoles => Set<AiRoleModel>();
+
+    public DbSet<AiUsage> AiUsage => Set<AiUsage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AiProvider>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(60).IsRequired();
+            entity.Property(e => e.BaseUrl).HasMaxLength(300).IsRequired();
+            // Encrypted like the tenants' secrets; a provider's key may run to a few hundred characters
+            entity.Property(e => e.ApiKey).HasMaxLength(1024).IsRequired().HasConversion(_secrets.Converter());
+        });
+
+        modelBuilder.Entity<AiRoleModel>(entity =>
+        {
+            entity.HasKey(e => e.Role);
+            entity.Property(e => e.Role).HasMaxLength(16);
+            entity.Property(e => e.Model).HasMaxLength(120).IsRequired();
+            entity.HasOne<AiProvider>().WithMany().HasForeignKey(e => e.ProviderId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AiUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Slug).HasMaxLength(24).IsRequired();
+            entity.Property(e => e.Role).HasMaxLength(16).IsRequired();
+            entity.Property(e => e.Model).HasMaxLength(120).IsRequired();
+            entity.HasIndex(e => new { e.Slug, e.Day, e.Role, e.Model }).IsUnique();
+            entity.HasIndex(e => e.Day);
+        });
+
         modelBuilder.Entity<Job>(entity =>
         {
             entity.HasKey(e => e.Id);

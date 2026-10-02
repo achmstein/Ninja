@@ -594,8 +594,8 @@ public static partial class Templates
             $"PAYMENTS_KEY={tenant.PaymentsKey}",
             // The business's key to the Talabat relay, derived from the platform's key; only when the platform has a Talabat account
             $"TALABAT_RELAY_KEY={(platform.Talabat.Configured && !string.IsNullOrWhiteSpace(platform.EncryptionKey) ? TalabatNaming.RelayKey(tenant.Slug, platform.EncryptionKey) : "")}",
-            // The shared key reaches only the stacks whose plan includes the assistant: one business's compromise is not every business's
-            $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
+            // The business's own key to the platform's AI gateway, only when its plan includes the assistant; no provider's key ever reaches a stack
+            $"AI_GATEWAY_KEY={(platform.AssistantFor(tenant) ? AiGatewayKeys.For(tenant.Slug, platform.EncryptionKey) : "")}",
             "",
         ]);
     }
@@ -659,9 +659,10 @@ public static partial class Templates
         // No connection string, no assistant: the services report it off and answer 503
         if (!platform.AssistantFor(tenant))
             return;
-        sb.AppendLine($"      ConnectionStrings__chatModel: \"Endpoint=https://generativelanguage.googleapis.com/v1beta/openai/;Key=${{GEMINI_API_KEY}};Model={platform.GeminiChatModel}\"");
-        if (!string.IsNullOrWhiteSpace(platform.GeminiFallbackModel))
-            sb.AppendLine($"      AI__FallbackModel: \"{platform.GeminiFallbackModel}\"");
+        // The gateway, which answers each role with whatever model the control panel points it at now: the stack names roles, not models
+        sb.AppendLine($"      ConnectionStrings__chatModel: \"Endpoint={platform.AiGatewayUrl};Key=${{AI_GATEWAY_KEY}};Model={AiRoles.Main}\"");
+        sb.AppendLine($"      AI__FallbackModel: \"{AiRoles.Fallback}\"");
+        sb.AppendLine($"      AI__VisionModel: \"{AiRoles.Vision}\"");
     }
 
     /// <summary>The gateway's route table, the one ConfigureMobileBffRoutes declares; kept in step by tests/Ninja.Contracts.Tests.</summary>

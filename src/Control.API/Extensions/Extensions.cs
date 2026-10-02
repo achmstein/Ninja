@@ -2,6 +2,12 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
+using Ninja.AI;
+using Ninja.Catalog.API.Assist;
+using Ninja.Control.API.Apis;
+using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
 using Ninja.ServiceDefaults;
 
@@ -24,7 +30,8 @@ public static class Extensions
             options.UseNpgsql(builder => builder.MigrationsAssembly(typeof(ControlContext).Assembly.FullName));
             options.UseSecretProtector(secrets);
         });
-        builder.Services.AddMigration<ControlContext>();
+        // The AI settings start from the Gemini key the platform's .env held before they were the panel's to set
+        builder.Services.AddMigration<ControlContext>((context, services) => AiSeed.FromConfigurationAsync(context, services.GetRequiredService<IOptions<PlatformOptions>>().Value));
 
         builder.Services.AddOptions<PlatformOptions>()
             .Bind(builder.Configuration.GetSection(PlatformOptions.Section))
@@ -48,6 +55,22 @@ public static class Extensions
         builder.Services.AddHttpClient(TalabatMiddleware.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15)).RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
         builder.Services.AddSingleton<TalabatMiddleware>();
+
+        // The AI: the gateway the businesses call and the panel's own menu reading, both routed by the roles the panel sets
+        builder.Services.AddSingleton<AiRouter>();
+        builder.Services.AddSingleton<AiUsageRecorder>();
+#pragma warning disable EXTEXP0001
+        // A model takes its time; no retries here on top of the stack's SDK's own
+        builder.Services.AddHttpClient(ControlApi.AiProviderClient, client => client.Timeout = TimeSpan.FromSeconds(180)).RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+        // A role is what the agents name: the fallback and the vision model are roles too
+        builder.Configuration["AI:FallbackModel"] ??= AiRoles.Fallback;
+        builder.Configuration["AI:VisionModel"] ??= AiRoles.Vision;
+        builder.AddAIServices();
+        if (!builder.Configuration.GetValue<bool>("AI:UseFake"))
+            builder.Services.AddSingleton<IChatClient, RoutedChatClient>();
+        builder.Services.AddSingleton<MenuScanner>();
+        builder.Services.AddFakeAgentScript(MenuScanner.AgentKey, MenuScannerFake.Respond);
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();

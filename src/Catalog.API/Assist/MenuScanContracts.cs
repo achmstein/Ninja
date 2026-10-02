@@ -56,5 +56,8 @@ public sealed record ExtractedItem(
 
 public sealed record ExtractedChoiceOption(string NameEn, string NameAr, decimal Price);
 
+/// <summary>A category the system has, as a prompt names it; the localizer's prompt uses it too.</summary>
+internal sealed record CategoryOption(int Id, string? En, string? Ar);
+
 /// <summary>The text part of the prompt: the categories the system already has, to match sections to.</summary>
 internal sealed record MenuScanPrompt(IReadOnlyList<CategoryOption> Categories, string Languages = ContentLanguages.Both);

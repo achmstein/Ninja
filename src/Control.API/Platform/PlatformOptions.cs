@@ -68,14 +68,19 @@ public sealed class PlatformOptions
 
     public string KeycloakAdminPassword { get; set; } = "admin";
 
-    /// <summary>Shared assistant key handed to every stack; empty leaves the assistant off.</summary>
+    /// <summary>
+    /// A Gemini key from before the AI was the control panel's to set: on a first start with no provider
+    /// saved, it becomes the "Gemini" provider with main and fallback on the two models below
+    /// (<see cref="AiSeed"/>). After that the panel's settings are the AI's, and these are not read.
+    /// </summary>
     public string? GeminiApiKey { get; set; }
 
-    /// <summary>The model the stacks' assistant asks.</summary>
     public string GeminiChatModel { get; set; } = "gemini-3.8-flash";
 
-    /// <summary>The model asked when <see cref="GeminiChatModel"/> is busy; empty for none.</summary>
     public string? GeminiFallbackModel { get; set; } = "gemini-3.5-flash-lite";
+
+    /// <summary>Where the stacks reach the platform's AI gateway, on the platform's own network.</summary>
+    public string AiGatewayUrl { get; set; } = "http://control-api:8080/ai/v1";
 
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
@@ -213,12 +218,14 @@ public sealed class PlatformOptions
     /// </summary>
     public string? EncryptionKey { get; set; }
 
-    /// <summary>The plans whose stacks get the shared assistant key; a demo always does. Everything else runs with the assistant off.</summary>
+    /// <summary>The plans whose stacks reach the AI gateway; a demo always does. Everything else runs with the assistant off.</summary>
     public TenantPlan[] AssistantPlans { get; set; } = [TenantPlan.Pro];
 
-    /// <summary>Whether this tenant's stack is handed the assistant key.</summary>
-    public bool AssistantFor(Tenant tenant)
-        => !string.IsNullOrEmpty(GeminiApiKey) && (tenant.Kind == TenantKind.Demo || AssistantPlans.Contains(tenant.Plan));
+    /// <summary>
+    /// Whether this tenant's stack is given a key to the AI gateway: by its plan alone. Whether a model
+    /// answers is the gateway's to say (the panel's AI settings), and changes with no stack touched.
+    /// </summary>
+    public bool AssistantFor(Tenant tenant) => tenant.Kind == TenantKind.Demo || AssistantPlans.Contains(tenant.Plan);
 }
 
 public sealed class RegistryOptions

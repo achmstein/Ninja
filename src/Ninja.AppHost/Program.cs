@@ -277,7 +277,7 @@ var controlApi = builder.AddProject<Projects.Control_API>("control-api")
 // leaves the assistant out altogether.
 if (isTestMode)
 {
-    foreach (var api in new[] { catalogApi, inventoryApi, financeApi })
+    foreach (var api in new[] { catalogApi, inventoryApi, financeApi, controlApi })
     {
         api.WithEnvironment("AI__UseFake", "true")
            .WithEnvironment("AI__RequestsPerMinute", "100")
@@ -287,6 +287,9 @@ if (isTestMode)
 else if (Extensions.IsAssistantEnabled(builder.Configuration))
 {
     builder.AddChatModel(catalogApi, inventoryApi, financeApi);
+    // The control panel's AI settings start from the same key, as a platform's .env seeds them
+    controlApi.WithEnvironment("Platform__GeminiApiKey",
+        builder.CreateResourceBuilder(builder.Resources.OfType<ParameterResource>().Single(p => p.Name == Extensions.ApiKeyParameterName)));
 }
 
 if (isTestMode)
