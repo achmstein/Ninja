@@ -16,6 +16,13 @@ const badgeVariants = cva(
           'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
           'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        // Soft chips, a state at a glance without shouting: a tint of the colour and its own text
+        success: 'border-transparent bg-success/15 text-success',
+        warning:
+          'border-transparent bg-warning/20 text-warning-foreground dark:text-warning',
+        info: 'border-transparent bg-info/15 text-info',
+        danger: 'border-transparent bg-destructive/15 text-destructive',
+        muted: 'border-transparent bg-muted text-muted-foreground',
       },
     },
     defaultVariants: {
