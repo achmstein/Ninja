@@ -227,6 +227,10 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
 
             logger.LogInformation("{Lane} job {Id}: {Action} {TenantId}", lane, job.Id, job.Action, job.TenantId);
             string? error = null;
+            // A stamp or a menu's photos runs for minutes: the lane is alive all that time.
+            // A job that hangs is the "past its time" finding's, not a dead lane's
+            using var running = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+            var beating = BeatWhileRunningAsync(running.Token);
             using (var scope = scopes.CreateScope())
             {
                 try
@@ -242,6 +246,8 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
                     await MarkCrashedAsync(scope.ServiceProvider, job, ex, stoppingToken);
                 }
             }
+            await running.CancelAsync();
+            await beating;
             if (stoppingToken.IsCancellationRequested) return;
             try { await queue.CompleteAsync(job.Id, error, stoppingToken); }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested) { logger.LogError(ex, "Could not close job {Id}", job.Id); }
@@ -249,6 +255,20 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
             updates.Invalidate();
         }
     }
+
+    /// <summary>The lane's heartbeat every half minute until <paramref name="ct"/> ends.</summary>
+    private async Task BeatWhileRunningAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(BeatWhileRunning);
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+                heartbeat.Beat(lane);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static readonly TimeSpan BeatWhileRunning = TimeSpan.FromSeconds(30);
 
     private static Task RunAsync(Provisioner provisioner, Job job, CancellationToken ct) => job.Action switch
     {

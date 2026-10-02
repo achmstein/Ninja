@@ -278,6 +278,14 @@ jobs:
             fi
             sudo mkdir -p /opt/ninja/tenants "$DEPLOY_DIR/web"
             sudo chown -R "$USER:$USER" /opt/ninja
+            # Every container shares the kernel's inotify allowance, 128 instances by
+            # default: a few stacks of .NET services used it up and the next stack's
+            # services died at start ("The configured user limit (128) on the number of
+            # inotify instances has been reached"). The stacks no longer watch their
+            # settings, but the box keeps room to spare
+            printf 'fs.inotify.max_user_instances = 8192\nfs.inotify.max_user_watches = 524288\n' \
+              | sudo tee /etc/sysctl.d/60-ninja-inotify.conf >/dev/null
+            sudo sysctl --system >/dev/null
             # 80, 443 and 443/udp (Caddy serves HTTP/3) on whichever firewall is
             # really in force. Asking only "is ufw installed?" is not enough: Oracle
             # Cloud's Ubuntu images ship ufw inactive and do the blocking with

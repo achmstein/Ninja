@@ -169,8 +169,13 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
         if (snapshot is not null && now - _lastReconcile >= Reconcile)
         {
             _lastReconcile = now;
+            // The records first, then docker as it is now: a stack being destroyed is still
+            // Destroying on the record, and a Destroyed one's containers went before its
+            // record said so. A snapshot from minutes ago would call a just-destroyed stack
+            // an orphan for the hour until the next reconciliation
             var records = await context.Tenants.AsNoTracking().Select(t => new ValueTuple<string, TenantStatus>(t.Slug, t.Status)).ToListAsync(ct);
-            var (down, orphans) = Reconciler.Compare(records, snapshot.Projects, snapshot.PlatformProject);
+            var box = await capacity.RefreshAsync(ct);
+            var (down, orphans) = Reconciler.Compare(records, box.Projects, box.PlatformProject);
             foreach (var slug in down)
                 findings.Add(($"down:{slug}", $"{slug} is Running on the record but none of its containers run", "tenant.stack-down", new { slug }, MailTemplates.OpsStackDown(slug, platform)));
             foreach (var project in orphans)

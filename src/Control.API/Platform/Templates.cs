@@ -438,6 +438,9 @@ public static partial class Templates
             AppendLimits(sb, platform.MemoryFor(service), platform.ServiceCpus, platform);
             sb.AppendLine("    environment:");
             sb.AppendLine("      ASPNETCORE_ENVIRONMENT: \"Production\"");
+            // Nothing changes appsettings inside a container: watching it only spends the
+            // kernel's inotify allowance every container on the box shares
+            sb.AppendLine("      DOTNET_hostBuilder__reloadConfigOnChange: \"false\"");
             sb.AppendLine("      ASPNETCORE_FORWARDEDHEADERS_ENABLED: \"true\"");
             sb.AppendLine("      HTTP_PORTS: \"8080\"");
             // Its own broker user and database role, allowed nothing beyond this vhost and these databases
@@ -541,6 +544,7 @@ public static partial class Templates
         sb.AppendLine("    command: [\"/app/yarp.dll\"]");
         sb.AppendLine("    environment:");
         sb.AppendLine("      ASPNETCORE_ENVIRONMENT: \"Production\"");
+        sb.AppendLine("      DOTNET_hostBuilder__reloadConfigOnChange: \"false\"");
         sb.AppendLine("      Kestrel__EndpointDefaults__Protocols: \"Http1AndHttp2\"");
         sb.AppendLine("      HTTP_PORTS: \"5000\"");
         var i = 0;
