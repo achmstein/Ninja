@@ -53,9 +53,17 @@ export const jobActionKey: Record<string, TranslationKey> = {
   entitlements: 'jobEntitlements',
   edge: 'jobEdge',
   backup: 'jobBackup',
+  'demo-data': 'jobDemoData',
+  photos: 'jobPhotos',
 }
 
-const laneKey: Record<string, TranslationKey> = { Stamp: 'laneStamp', Backup: 'laneBackup' }
+const laneKey: Record<string, TranslationKey> = { Stamp: 'laneStamp', Backup: 'laneBackup', Ai: 'laneAi' }
+
+/** A lane's name; one added on the server before here reads as itself rather than taking the tab down. */
+function useLaneLabel() {
+  const t = useT()
+  return (lane: string) => (laneKey[lane] ? t(laneKey[lane]) : lane)
+}
 
 const statusClass: Record<string, string> = {
   Running: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
@@ -85,6 +93,7 @@ export function JobLabel({ job }: { job: JobDto }) {
 /** One line for the platform page: what each lane is on and how many wait. Nothing while the lines are empty. */
 export function QueueSummary({ lanes }: { lanes: LaneStatus[] | undefined }) {
   const t = useT()
+  const laneLabel = useLaneLabel()
   if (!lanes) return null
   const busy = lanes.filter((l) => l.running || l.queued.length > 0)
   if (busy.length === 0) return null
@@ -95,7 +104,7 @@ export function QueueSummary({ lanes }: { lanes: LaneStatus[] | undefined }) {
         <span key={lane.lane} className='flex items-center gap-x-2'>
           {i > 0 && <span>·</span>}
           <span>
-            {t(laneKey[lane.lane])}:{' '}
+            {laneLabel(lane.lane)}:{' '}
             {lane.running ? (
               <>
                 <JobLabel job={lane.running} />{' '}
@@ -123,6 +132,7 @@ export function QueueSummary({ lanes }: { lanes: LaneStatus[] | undefined }) {
  */
 export function QueueTable() {
   const t = useT()
+  const laneLabel = useLaneLabel()
   const queryClient = useQueryClient()
   const [cancelling, setCancelling] = useState<JobDto | null>(null)
 
@@ -163,7 +173,7 @@ export function QueueTable() {
       {data.lanes.map((lane) => (
         <section key={lane.lane} className='flex flex-col gap-2'>
           <h2 className='text-sm font-medium'>
-            {t(laneKey[lane.lane])}
+            {laneLabel(lane.lane)}
             <span className='text-muted-foreground font-normal'>
               {' · '}
               {lane.running ? t('laneRunning') : t('laneIdle')}

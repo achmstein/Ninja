@@ -393,6 +393,7 @@ const dictionary = {
   // The work queue
   laneStamp: "Stamps",
   laneBackup: "Backups",
+  laneAi: "AI",
   laneIdle: "idle",
   laneRunning: "running",
   laneNothingWaiting: "Nothing waiting.",
@@ -427,6 +428,8 @@ const dictionary = {
   jobEntitlements: "Entitlements",
   jobEdge: "Edge",
   jobBackup: "Backup",
+  jobDemoData: "Demo data",
+  jobPhotos: "Dish photos",
   tabOverview: "Overview",
   tabBrand: "Brand",
   tabHealth: "Health",
