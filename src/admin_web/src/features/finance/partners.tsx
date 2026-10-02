@@ -30,20 +30,15 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { DatePicker } from '@/components/date-picker'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { EntityAvatar } from '@/components/entity-avatar'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
 import { Section } from '@/components/section'
 import { LedgerList } from './components/ledger-list'
 import { PARTNER_ENTRY, partnerEntryLabel, sourceLabel } from './format'
@@ -112,61 +107,60 @@ export function Partners() {
             }
           />
         ) : (
-          <div className='overflow-x-auto rounded-lg border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('name')}</TableHead>
-                  <TableHead>{t('phone')}</TableHead>
-                  <TableHead className='text-end'>{t('profitShare')}</TableHead>
-                  <TableHead className='text-end'>
-                    {t('partnerBalance')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((p) => {
-                  const balance = toNumber(p.balance)
-                  return (
-                    <TableRow
-                      key={String(p.id)}
-                      className='cursor-pointer'
-                      onClick={() => open(toNumber(p.id))}
-                    >
-                      <TableCell
-                        className={cn(
-                          'font-medium',
-                          !p.isActive && 'text-muted-foreground line-through'
-                        )}
-                      >
+          <ul className='divide-y overflow-hidden rounded-lg border'>
+            {rows.map((p) => {
+              const balance = toNumber(p.balance)
+              const share = shareHere(p)
+              return (
+                <li
+                  key={String(p.id)}
+                  className='hover:bg-muted cursor-pointer px-4 py-3'
+                  onClick={() => open(toNumber(p.id))}
+                >
+                  <ListRow
+                    className={cn(!p.isActive && 'opacity-60')}
+                    leading={<EntityAvatar name={p.name ?? ''} />}
+                    title={
+                      <span className={cn(!p.isActive && 'line-through')}>
                         {p.name}
-                      </TableCell>
-                      <TableCell className='text-muted-foreground' dir='ltr'>
-                        {p.phone || '—'}
-                      </TableCell>
-                      <TableCell className='text-end tabular-nums'>
-                        {shareHere(p) > 0
-                          ? percent.format(shareHere(p) / 100)
-                          : '—'}
-                      </TableCell>
-                      <TableCell
-                        className={cn(
-                          'text-end tabular-nums',
-                          balance < 0 && 'text-destructive'
+                      </span>
+                    }
+                    meta={
+                      <>
+                        {/* Their share of this branch's profit, the reason they are here */}
+                        <span className='tabular-nums'>
+                          {t('profitShare')}{' '}
+                          {share > 0 ? percent.format(share / 100) : '—'}
+                        </span>
+                        {p.phone && (
+                          <>
+                            <Dot />
+                            <span dir='ltr'>{p.phone}</span>
+                          </>
                         )}
-                      >
-                        {balance === 0
-                          ? '—'
-                          : balance < 0
-                            ? `${t('partnerDrewNet')} ${formatEgp(-balance)}`
-                            : formatEgp(balance)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                      </>
+                    }
+                    trailing={
+                      balance < 0 ? (
+                        <span className='text-destructive'>
+                          {t('partnerDrewNet')} {formatEgp(-balance)}
+                        </span>
+                      ) : (
+                        <Money value={balance} strong dashZero />
+                      )
+                    }
+                    trailingMeta={
+                      balance !== 0 ? (
+                        <span className='text-muted-foreground text-xs'>
+                          {t('partnerBalance')}
+                        </span>
+                      ) : null
+                    }
+                  />
+                </li>
+              )
+            })}
+          </ul>
         )}
       </Main>
 

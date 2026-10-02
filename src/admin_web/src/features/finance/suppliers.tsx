@@ -27,20 +27,15 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { DatePicker } from '@/components/date-picker'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { EntityAvatar } from '@/components/entity-avatar'
+import { ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
 import { Section } from '@/components/section'
 import { LedgerList } from './components/ledger-list'
 import { sourceLabel, SUPPLIER_ENTRY, supplierEntryLabel } from './format'
@@ -127,50 +122,52 @@ export function Suppliers() {
             }
           />
         ) : (
-          <div className='overflow-x-auto rounded-lg border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('name')}</TableHead>
-                  <TableHead>{t('phone')}</TableHead>
-                  <TableHead className='text-end'>{t('weOwe')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((s) => {
-                  const balance = toNumber(s.balance)
-                  return (
-                    <TableRow
-                      key={String(s.id)}
-                      className='cursor-pointer'
-                      onClick={() => open(toNumber(s.id))}
-                    >
-                      <TableCell
-                        className={cn(
-                          'font-medium',
-                          !s.isActive && 'text-muted-foreground line-through'
-                        )}
-                      >
-                        {s.name}
-                      </TableCell>
-                      <TableCell className='text-muted-foreground' dir='ltr'>
-                        {s.phone || '—'}
-                      </TableCell>
-                      <TableCell
-                        className={cn(
-                          'text-end tabular-nums',
-                          balance > 0 && 'font-semibold',
-                          balance < 0 && 'text-success'
-                        )}
-                      >
-                        {balance === 0 ? '—' : formatEgp(balance)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          // Whom the business owes most comes first: that is what this list is opened for
+          <ul className='divide-y overflow-hidden rounded-lg border'>
+            {[...rows]
+              .sort((a, b) => toNumber(b.balance) - toNumber(a.balance))
+              .map((s) => {
+                const balance = toNumber(s.balance)
+                return (
+                  <li
+                    key={String(s.id)}
+                    className='hover:bg-muted cursor-pointer px-4 py-3'
+                    onClick={() => open(toNumber(s.id))}
+                  >
+                    <ListRow
+                      className={cn(!s.isActive && 'opacity-60')}
+                      leading={<EntityAvatar name={s.name ?? ''} />}
+                      title={
+                        <span className={cn(!s.isActive && 'line-through')}>
+                          {s.name}
+                        </span>
+                      }
+                      meta={s.phone ? <span dir='ltr'>{s.phone}</span> : null}
+                      trailing={
+                        balance < 0 ? (
+                          <span className='text-success'>
+                            {formatEgp(-balance)}
+                          </span>
+                        ) : (
+                          <Money value={balance} strong dashZero />
+                        )
+                      }
+                      trailingMeta={
+                        balance > 0 ? (
+                          <span className='text-muted-foreground text-xs'>
+                            {t('weOwe')}
+                          </span>
+                        ) : balance < 0 ? (
+                          <span className='text-success text-xs'>
+                            {t('creditWithSupplier')}
+                          </span>
+                        ) : null
+                      }
+                    />
+                  </li>
+                )
+              })}
+          </ul>
         )}
       </Main>
 

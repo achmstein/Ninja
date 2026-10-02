@@ -511,6 +511,7 @@ const webExtras = {
   promoEnded: { en: "Ended", ar: "انتهى" },
   promoScheduled: { en: "Not started", ar: "لم يبدأ" },
   promoUsedUp: { en: "Used up", ar: "استُنفد" },
+  creditWithSupplier: { en: "In credit", ar: "رصيد لنا" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)
