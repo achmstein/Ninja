@@ -10,7 +10,12 @@ namespace Ninja.Control.API.Platform;
 public sealed record ProvisioningJob(Guid TenantId, string Action, string? ImageTag = null, Guid? CanaryId = null)
 {
     /// <summary>Backups sit beside a stamp; everything else is a stamp or touches the stack.</summary>
-    public static JobLane LaneOf(string action) => action == "backup" ? JobLane.Backup : JobLane.Stamp;
+    public static JobLane LaneOf(string action) => action switch
+    {
+        "backup" => JobLane.Backup,
+        "photos" => JobLane.Ai,
+        _ => JobLane.Stamp,
+    };
 
     /// <summary>What an admin or a sweep needs now goes before a stamp already waiting; a backup after both.</summary>
     public static int PriorityOf(string action) => action switch
@@ -258,6 +263,7 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
         "upgrade" => provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, ct),
         "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
         "demo-data" => provisioner.DemoDataAsync(job.TenantId, ct),
+        "photos" => provisioner.PhotosAsync(job.TenantId, ct),
         _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
     };
 
@@ -288,3 +294,6 @@ public sealed class StampWorker(ProvisioningQueue queue, IServiceScopeFactory sc
 
 public sealed class BackupWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, WorkerHeartbeat heartbeat, ILogger<BackupWorker> logger)
     : ProvisioningWorker(JobLane.Backup, queue, scopes, updates, heartbeat, logger);
+
+public sealed class AiWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, WorkerHeartbeat heartbeat, ILogger<AiWorker> logger)
+    : ProvisioningWorker(JobLane.Ai, queue, scopes, updates, heartbeat, logger);

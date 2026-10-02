@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Ninja.AI;
@@ -58,11 +59,16 @@ public sealed class AiRouter(IServiceScopeFactory scopes)
     public async Task<AiRoute?> RouteAsync(string? role, CancellationToken ct)
     {
         var routes = await RoutesAsync(ct);
+        // Drawing is never asked of a chat model
+        if (role == AiRoles.Image) return routes.GetValueOrDefault(AiRoles.Image);
         var asked = AiRoles.IsKnown(role) ? role! : AiRoles.Main;
         return routes.GetValueOrDefault(asked) ?? routes.GetValueOrDefault(AiRoles.Main);
     }
 
     public async Task<bool> IsConfiguredAsync(CancellationToken ct) => (await RoutesAsync(ct)).ContainsKey(AiRoles.Main);
+
+    /// <summary>The route a role was given itself, with no main to stand in: what drawing needs.</summary>
+    public async Task<AiRoute?> RouteExactAsync(string role, CancellationToken ct) => (await RoutesAsync(ct)).GetValueOrDefault(role);
 
     /// <summary>After a save: the next call reads the database again.</summary>
     public void Forget() => _cached = null;
@@ -213,5 +219,62 @@ public static class AiSeed
         if (!string.IsNullOrWhiteSpace(platform.GeminiFallbackModel))
             context.AiRoles.Add(new AiRoleModel { Role = AiRoles.Fallback, ProviderId = gemini.Id, Model = platform.GeminiFallbackModel, UpdatedAt = DateTime.UtcNow });
         await context.SaveChangesAsync();
+    }
+}
+
+/// <summary>
+/// Pictures from the image role's model, through the provider's OpenAI-style
+/// images endpoint (POST …/images/generations, which Gemini's image models and
+/// OpenAI's both answer): one square PNG per prompt.
+/// </summary>
+public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClientFactory clients)
+{
+    public async Task<bool> IsConfiguredAsync(CancellationToken ct) => await router.RouteExactAsync(AiRoles.Image, ct) is not null;
+
+    /// <summary>The picture's bytes, counted under <paramref name="slug"/>; throws with the provider's reason when it draws none.</summary>
+    public async Task<byte[]> GenerateAsync(string prompt, string slug, CancellationToken ct)
+    {
+        var route = await router.RouteExactAsync(AiRoles.Image, ct) ?? throw new AIUnavailableException();
+        var client = clients.CreateClient(Apis.ControlApi.AiProviderClient);
+        try
+        {
+            var body = new JsonObject { ["model"] = route.Model, ["prompt"] = prompt, ["n"] = 1, ["size"] = "1024x1024", ["response_format"] = "b64_json" };
+            var (status, text) = await PostAsync(client, route, body, ct);
+            // OpenAI's gpt-image models always answer in base64 and refuse to be asked to
+            if (status == 400 && text.Contains("response_format", StringComparison.Ordinal))
+            {
+                body.Remove("response_format");
+                (status, text) = await PostAsync(client, route, body, ct);
+            }
+            if (status is < 200 or > 299)
+                throw new InvalidOperationException($"{route.ProviderName} drew nothing ({status}): {(text.Length > 300 ? text[..300] : text)}");
+
+            var first = JsonNode.Parse(text)?["data"]?[0];
+            byte[] bytes;
+            if (first?["b64_json"]?.GetValue<string>() is { Length: > 0 } b64)
+                bytes = Convert.FromBase64String(b64);
+            else if (first?["url"]?.GetValue<string>() is { Length: > 0 } url)
+                bytes = await client.GetByteArrayAsync(url, ct);
+            else
+                throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+            _ = usage.RecordAsync(slug, route, true, 0, 0);
+            return bytes;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException && ex is not AIUnavailableException)
+        {
+            _ = usage.RecordAsync(slug, route, false, 0, 0);
+            throw ex is InvalidOperationException ? ex : new InvalidOperationException($"{route.ProviderName} could not be reached: {ex.Message}", ex);
+        }
+    }
+
+    private static async Task<(int Status, string Text)> PostAsync(HttpClient client, AiRoute route, JsonObject body, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Apis.ControlApi.Endpoint(route.BaseUrl, "images/generations"))
+        {
+            Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
+        };
+        Apis.ControlApi.Authorize(request, route.ApiKey);
+        using var response = await client.SendAsync(request, ct);
+        return ((int)response.StatusCode, await response.Content.ReadAsStringAsync(ct));
     }
 }

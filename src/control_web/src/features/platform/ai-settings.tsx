@@ -42,6 +42,7 @@ const ROLES: { role: string; label: TranslationKey; hint: TranslationKey }[] = [
   { role: 'main', label: 'aiRoleMain', hint: 'aiRoleMainHint' },
   { role: 'fallback', label: 'aiRoleFallback', hint: 'aiRoleFallbackHint' },
   { role: 'vision', label: 'aiRoleVision', hint: 'aiRoleVisionHint' },
+  { role: 'image', label: 'aiRoleImage', hint: 'aiRoleImageHint' },
 ]
 
 /** Services that speak OpenAI's chat API, their base addresses filled in */

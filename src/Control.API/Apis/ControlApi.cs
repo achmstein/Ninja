@@ -32,6 +32,7 @@ public static partial class ControlApi
         api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/demo-data", FillDemo).WithName("FillDemoData").WithSummary("Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/photos", GeneratePhotos).WithName("GenerateDishPhotos").WithSummary("Draw a photo for every dish of a running business that has none, with the AI tab's image model").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
@@ -244,6 +245,14 @@ public static partial class ControlApi
         if (tenant.Kind != TenantKind.Demo)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = "Only a demo is filled with demo data." });
         return await Enqueue(context, queue, audit, slug, "demo-data", [TenantStatus.Running], ct);
+    }
+
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> GeneratePhotos(
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, AiImages images, string slug, CancellationToken ct)
+    {
+        if (!await images.IsConfiguredAsync(ct))
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = "Pick an image model on the AI tab first." });
+        return await Enqueue(context, queue, audit, slug, "photos", [TenantStatus.Running], ct);
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)

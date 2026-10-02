@@ -11,6 +11,8 @@ public enum JobLane
 {
     Stamp = 0,
     Backup = 1,
+    /// <summary>Long AI work on a running stack (a menu's photos): minutes of calls that must not hold a stamp or a backup.</summary>
+    Ai = 2,
 }
 
 public enum JobStatus
@@ -33,7 +35,7 @@ public class Job
 
     public Guid TenantId { get; set; }
 
-    /// <summary>provision, destroy, stop, start, suspend, resume, upgrade, rollback, secure, rotate, entitlements, edge, backup.</summary>
+    /// <summary>provision, destroy, stop, start, suspend, resume, upgrade, rollback, secure, rotate, entitlements, edge, backup, photos.</summary>
     public string Action { get; set; } = "";
 
     /// <summary>For an upgrade: the tag to move to (null keeps the record's). On the job, not the record, so a queued fleet upgrade that never runs changes nothing.</summary>

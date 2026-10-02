@@ -22,7 +22,9 @@ public sealed class Provisioner(
     IAuditWriter audit,
     BackupService backups,
     ILogger<Provisioner> logger,
-    DemoData? demoData = null)
+    DemoData? demoData = null,
+    ProvisioningQueue? queue = null,
+    DishPhotos? photos = null)
 {
     private const string Source = "provisioner";
 
@@ -147,6 +149,8 @@ public sealed class Provisioner(
                     {
                         var made = await stack.ImportMenuAsync(tenant, await File.ReadAllTextAsync(menu, ct), ct);
                         File.Move(menu, Path.ChangeExtension(menu, ".imported.json"), overwrite: true);
+                        // Its dishes' photos are drawn in the AI lane, minutes of work that hold nothing up
+                        if (queue is not null) await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "photos"), ct);
                         return made;
                     }
                     catch (InvalidOperationException ex)
@@ -440,6 +444,15 @@ public sealed class Provisioner(
         }, ct);
 
     /// <summary>By hand, for a demo made before there was demo data: fills it once, while it runs.</summary>
+    /// <summary>A photo for every dish that has none (<see cref="DishPhotos"/>); the step says how many, and why any were not made.</summary>
+    public async Task PhotosAsync(Guid tenantId, CancellationToken ct)
+    {
+        if (photos is null) return;
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        var said = await Step(tenant, Guid.NewGuid(), "photos", () => photos.FillAsync(tenant, ct), ct);
+        await audit.WriteAsync("tenant.photos", tenant.Slug, new { output = said }, ct, Source);
+    }
+
     public async Task DemoDataAsync(Guid tenantId, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);

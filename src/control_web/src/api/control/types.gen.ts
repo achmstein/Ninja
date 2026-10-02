@@ -299,7 +299,7 @@ export type JobDto = {
     position: null | number | string;
 };
 
-export type JobLane = 'Stamp' | 'Backup';
+export type JobLane = 'Stamp' | 'Backup' | 'Ai';
 
 export type JobStatus = 'Queued' | 'Running' | 'Done' | 'Failed' | 'Cancelled';
 
@@ -1340,6 +1340,43 @@ export type FillDemoDataErrors = {
 export type FillDemoDataError = FillDemoDataErrors[keyof FillDemoDataErrors];
 
 export type FillDemoDataResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type GenerateDishPhotosData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/photos';
+};
+
+export type GenerateDishPhotosErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GenerateDishPhotosError = GenerateDishPhotosErrors[keyof GenerateDishPhotosErrors];
+
+export type GenerateDishPhotosResponses = {
     /**
      * Accepted
      */

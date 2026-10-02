@@ -184,15 +184,22 @@ public static partial class ControlApi
         return TypedResults.Ok((await GetAi(context, router, ct)).Value!);
     }
 
-    public static async Task<Ok<AiTestResult>> TestAi(AiTestRequest request, AiRouter router, IChatClient chat, CancellationToken ct)
+    public static async Task<Ok<AiTestResult>> TestAi(AiTestRequest request, AiRouter router, IChatClient chat, AiImages images, CancellationToken ct)
     {
         var route = await router.RouteAsync(request.Role, ct);
-        if (route is null) return TypedResults.Ok(new AiTestResult(false, null, null, 0, null, "No model answers main yet."));
+        if (route is null)
+            return TypedResults.Ok(new AiTestResult(false, null, null, 0, null, request.Role == AiRoles.Image ? "No image model is picked yet." : "No model answers main yet."));
         var clock = Stopwatch.StartNew();
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            timeout.CancelAfter(TimeSpan.FromSeconds(request.Role == AiRoles.Image ? 90 : 30));
+            if (request.Role == AiRoles.Image)
+            {
+                // One small drawing, the way a dish's photo is asked for
+                var picture = await images.GenerateAsync(DishPhotos.PromptFor("Espresso", null, "a single shot of espresso in a small cup", null), AiUsageRecorder.Platform, timeout.Token);
+                return TypedResults.Ok(new AiTestResult(true, route.ProviderName, route.Model, (int)clock.ElapsedMilliseconds, $"a picture of {picture.Length / 1024} KB", null));
+            }
             var response = await chat.GetResponseAsync("Answer with the single word: ready", new ChatOptions { ModelId = route.Role, MaxOutputTokens = 64 }, timeout.Token);
             return TypedResults.Ok(new AiTestResult(true, route.ProviderName, route.Model, (int)clock.ElapsedMilliseconds, Trim(response.Text), null));
         }

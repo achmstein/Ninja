@@ -17,7 +17,10 @@ public static class AiRoles
     /// <summary>Reading photos (menus, receipts) when a model better at it than the main one is wanted.</summary>
     public const string Vision = "vision";
 
-    public static readonly string[] All = [Main, Fallback, Vision];
+    /// <summary>Drawing: the dishes' photos. An image model, never answered by main (a chat model cannot draw).</summary>
+    public const string Image = "image";
+
+    public static readonly string[] All = [Main, Fallback, Vision, Image];
 
     public static bool IsKnown(string? role) => role is not null && All.Contains(role);
 }

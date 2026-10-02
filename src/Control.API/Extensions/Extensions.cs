@@ -59,6 +59,8 @@ public static class Extensions
         // The AI: the gateway the businesses call and the panel's own menu reading, both routed by the roles the panel sets
         builder.Services.AddSingleton<AiRouter>();
         builder.Services.AddSingleton<AiUsageRecorder>();
+        builder.Services.AddSingleton<AiImages>();
+        builder.Services.AddScoped<DishPhotos>();
 #pragma warning disable EXTEXP0001
         // A model takes its time; no retries here on top of the stack's SDK's own
         builder.Services.AddHttpClient(ControlApi.AiProviderClient, client => client.Timeout = TimeSpan.FromSeconds(180)).RemoveAllResilienceHandlers();
@@ -103,6 +105,7 @@ public static class Extensions
             builder.Services.AddHostedService<JobRecoveryService>();
             builder.Services.AddHostedService<StampWorker>();
             builder.Services.AddHostedService<BackupWorker>();
+            builder.Services.AddHostedService<AiWorker>();
             builder.Services.AddHostedService<MailSender>();
             builder.Services.AddHostedService<DemoExpiryService>();
             builder.Services.AddHostedService<SubscriptionSweepService>();

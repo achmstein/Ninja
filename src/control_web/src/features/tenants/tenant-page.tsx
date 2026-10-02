@@ -17,6 +17,7 @@ import {
   Undo2,
   UserCheck,
   DatabaseZap,
+  ImagePlus,
 } from 'lucide-react'
 import {
   convertTenantMutation,
@@ -25,6 +26,7 @@ import {
   dismissTenantErrorMutation,
   extendDemoMutation,
   fillDemoDataMutation,
+  generateDishPhotosMutation,
   getTenantOptions,
   getTenantQueryKey,
   impersonateOwnerMutation,
@@ -162,6 +164,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
   // A month of a business's life in a demo, once; the steps say what landed
   const fillDemo = useMutation({ ...fillDemoDataMutation(), onSuccess: queued, onError: failed })
+  const photos = useMutation({ ...generateDishPhotosMutation(), onSuccess: queued, onError: failed })
   // The record is gone: back to the list, which no longer has it
   const forget = useMutation({
     ...forgetTenantMutation(),
@@ -330,6 +333,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                     <DropdownMenuItem disabled={busy || fillDemo.isPending} onSelect={() => fillDemo.mutate({ path: { slug } })}>
                       <DatabaseZap />
                       {t('fillDemoData')}
+                    </DropdownMenuItem>
+                  )}
+                  {status === 'Running' && (
+                    <DropdownMenuItem disabled={photos.isPending} onSelect={() => photos.mutate({ path: { slug } })}>
+                      <ImagePlus />
+                      {t('generateDishPhotos')}
                     </DropdownMenuItem>
                   )}
                   {canUpgrade(status) && (
