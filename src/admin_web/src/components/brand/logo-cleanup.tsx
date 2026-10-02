@@ -85,8 +85,9 @@ type Options = {
  * shown on the light and the dark surface, made again for the one that would
  * swallow it (Chillax's black turned white for dark mode, a white mark
  * darkened for light mode), with the dark slot filled from it. A dialog shows
- * the ways to save it, each change swept in over what was picked. A photo, or
- * a logo that needs none of it, goes straight on.
+ * the ways to save it, each change swept in over what was picked, whatever the
+ * logo needed (one with no plain background is said to be kept as it is). A
+ * photo goes straight on.
  */
 export function useLogoCleanup({ onUse, hasImage }: Options): {
   pick: (slot: ImageSlot, file: File) => void
@@ -111,13 +112,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
       setBusySlot(null)
     }
     const choice: Choice = logo.outside ? 'outside' : 'original'
-    const { own, dark } = plan(slot, logo[choice]!)
-    if (!logo.outside && own === logo.original && !dark) {
-      // Nothing to choose: as uploaded (an SVG drawn as a PNG)
-      onUse([{ slot, file: logo.original.file }])
-      releaseLogo(logo)
-      return
-    }
+    const { dark } = plan(slot, logo[choice]!)
     const darkSlot = DARK_OF[slot]
     setPending({
       slot,
@@ -179,6 +174,11 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
         </DialogHeader>
         {pending && chosen && result && (
           <div className='space-y-5'>
+            {pending.logo.background === 'none' && (
+              <p className='text-muted-foreground text-sm'>
+                {t('logoNoPlainBackground')}
+              </p>
+            )}
             {choices.length > 1 && (
               <div
                 className={cn(

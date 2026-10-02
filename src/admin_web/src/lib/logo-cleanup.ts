@@ -13,9 +13,9 @@ export type Pixels = { data: Uint8ClampedArray; width: number; height: number }
 export type Rgb = { r: number; g: number; b: number }
 
 /** How far (0–255, on the channel that differs most) a border pixel may be from the median and still be background */
-const NEAR = 28
+const NEAR = 36
 /** The share of the border that must be one colour */
-const SOLID_SHARE = 0.9
+const SOLID_SHARE = 0.8
 /** A pixel this transparent (0–1) against the background is background; above it, ink */
 const CORE = 0.5
 /** Rings of pixels around the background taken out too, for the soft edge between it and the ink */
@@ -353,6 +353,8 @@ export type LogoChoice = LogoImage & {
 }
 
 export type CleanedLogo = {
+  /** What the logo sat on: a plain colour (taken out), nothing (already cut out), or neither (kept as it is) */
+  background: 'solid' | 'transparent' | 'none'
   /** The file as picked (an SVG drawn as a PNG, since the server takes no vectors) */
   original: LogoChoice
   /** The background taken out from the edge, then cropped; null when there was no plain background */
@@ -502,25 +504,35 @@ export async function cleanLogo(
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)
 
     const background = detectBackground(px)
-    const asPicked: LogoImage = isSvg
-      ? await toImage(cropped(px), file.name)
-      : {
-          file,
-          url: URL.createObjectURL(file),
-          width: px.width,
-          height: px.height,
-        }
-    // Only a logo already cut out is made again for a surface: one on its own background, or a photo, shows that background on either
+    // A logo already cut out is saved cropped to what shows (its clear margins gone) and made again for a
+    // surface that would swallow it; one on its own background, or a photo, goes as it is (an SVG drawn)
     const original =
       background?.kind === 'transparent'
-        ? await toChoice(cropped(px), file.name, asPicked)
-        : { ...asPicked, onDark: null, onLight: null }
+        ? await toChoice(cropped(px), file.name)
+        : {
+            ...(isSvg
+              ? await toImage(cropped(px), file.name)
+              : {
+                  file,
+                  url: URL.createObjectURL(file),
+                  width: px.width,
+                  height: px.height,
+                }),
+            onDark: null,
+            onLight: null,
+          }
     if (background?.kind !== 'solid')
-      return { original, outside: null, inside: null }
+      return {
+        background: background?.kind ?? 'none',
+        original,
+        outside: null,
+        inside: null,
+      }
 
     const outside = removeBackground(px, background.color, false)
     const inside = removeBackground(px, background.color, true)
     return {
+      background: 'solid',
       original,
       outside: await toChoice(cropped(outside.pixels), file.name),
       // Holes in the shapes (the inside of an "o") are what the second pass adds; a logo with none needs no choice
