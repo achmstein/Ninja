@@ -28,6 +28,17 @@ function problemOf(data: unknown): Problem {
   return {}
 }
 
+/** The title of a 429 that is a spent allowance (Ninja.AI's AIProblems.QuotaTitle) */
+export const QUOTA_TITLE = 'AI quota used up'
+
+/** "2h 48m", "35m", "40s": a wait as a person reads it */
+export function readableWait(seconds: number): string {
+  if (seconds >= 3600)
+    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+  if (seconds >= 60) return `${Math.ceil(seconds / 60)}m`
+  return `${Math.ceil(seconds)}s`
+}
+
 /**
  * How long the server asks to wait before the next call (Retry-After, in
  * seconds), when the error is a 429 that says so; null otherwise.
@@ -49,6 +60,11 @@ export function assistErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     const status = error.response?.status
     const problem = problemOf(error.response?.data)
+    // A spent allowance (a free tier's requests a day) comes back in hours, not the busy minute
+    if (status === 429 && problem.title === QUOTA_TITLE)
+      return translate('assistQuota', {
+        wait: readableWait(assistRetryAfter(error) ?? 3600),
+      })
     if (status === 429) return translate('assistBusy')
     if (status === 503 && problem.detail === NOT_CONFIGURED_DETAIL) {
       useAssistStore.getState().markUnavailable()

@@ -170,7 +170,8 @@ export function TrackItemsSheet({
             break
           } catch (error) {
             const wait = assistRetryAfter(error)
-            if (wait == null || attempt === 2) throw error
+            // A wait of more than a couple of minutes is a spent allowance, not a busy minute: stop and say so
+            if (wait == null || wait > 120 || attempt === 2) throw error
             await new Promise((resolve) =>
               setTimeout(resolve, Math.min(wait, 60) * 1000)
             )
