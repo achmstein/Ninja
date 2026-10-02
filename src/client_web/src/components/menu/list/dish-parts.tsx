@@ -41,7 +41,7 @@ export function DishPhotoBox({
     >
       {dish.hasPhoto ? (
         <div className='bg-muted absolute inset-0'>
-          <img src={itemPictureUrl(item.id)} alt='' loading='lazy' decoding='async' draggable={false} onError={dish.fail} className='size-full object-cover' />
+          <img src={itemPictureUrl(item, 640)} alt='' loading='lazy' decoding='async' draggable={false} onError={dish.fail} className='size-full object-cover' />
         </div>
       ) : (
         <div className='absolute inset-0 grid place-items-center'>

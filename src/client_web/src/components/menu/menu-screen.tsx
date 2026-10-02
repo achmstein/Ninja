@@ -287,7 +287,7 @@ export function MenuScreen({ menu }: HomeProps) {
       from: { x: box.x, y: box.y, width: box.width, height: box.height },
       // The first thumbnail's slot
       to: { x: to.x, y: to.y, width: 44, height: 44 },
-      src: item.pictureUri ? itemPictureUrl(item.id) : null,
+      src: item.pictureUri ? itemPictureUrl(item, 640) : null,
       toneClass: TONE_CLASS.primary,
       radius: cornerOf(from),
       land,
@@ -301,7 +301,7 @@ export function MenuScreen({ menu }: HomeProps) {
       nameEn: item.name?.en ?? '',
       nameAr: item.name?.ar ?? '',
       price: result.unitPrice,
-      pictureUrl: item.pictureUri ? itemPictureUrl(item.id) : undefined,
+      pictureUrl: item.pictureUri ? itemPictureUrl(item, 320) : undefined,
       quantity: result.quantity,
       specialInstructions: result.instructions || undefined,
       customizations: result.customizations,

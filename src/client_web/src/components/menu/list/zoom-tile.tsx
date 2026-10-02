@@ -65,7 +65,7 @@ export const ZoomTile = memo(function ZoomTile({
         {hasPhoto ? (
           <div className='bg-muted absolute inset-0'>
             <img
-              src={itemPictureUrl(item.id)}
+              src={itemPictureUrl(item, 640)}
               alt=''
               loading='lazy'
               decoding='async'

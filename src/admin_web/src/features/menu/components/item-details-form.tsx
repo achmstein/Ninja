@@ -276,7 +276,7 @@ export function ItemDetailsForm({
     deletePicture.isPending
 
   const storedUrl = item?.pictureUri
-    ? itemPictureUrl(item.id, item.pictureUri)
+    ? itemPictureUrl(item.id, item.pictureUri, 320)
     : null
   const preview =
     picture.kind === 'file'

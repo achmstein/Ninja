@@ -55,7 +55,7 @@ export function TrayNudge() {
         >
           <div className='border-background/15 mt-2 flex items-center gap-3 rounded-2xl border border-dashed px-2 py-2'>
             <span className='bg-background/10 grid size-10 shrink-0 place-items-center overflow-hidden rounded-full'>
-              <DishPhoto src={offer.pictureUri ? itemPictureUrl(offer.id) : null} />
+              <DishPhoto src={offer.pictureUri ? itemPictureUrl(offer, 320) : null} />
             </span>
             <span className='min-w-0 flex-1'>
               <span className='block truncate text-note font-semibold'>{t('addSuggestion', { name: localized(offer.name) })}</span>
@@ -79,7 +79,7 @@ export function TrayNudge() {
                   nameEn: offer.name?.en ?? '',
                   nameAr: offer.name?.ar ?? '',
                   price: unitPrice,
-                  pictureUrl: offer.pictureUri ? itemPictureUrl(offer.id) : undefined,
+                  pictureUrl: offer.pictureUri ? itemPictureUrl(offer, 320) : undefined,
                   quantity: 1,
                   customizations,
                   suggestion: 'CartNudge',

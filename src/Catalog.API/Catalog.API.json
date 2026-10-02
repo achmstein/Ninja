@@ -1113,6 +1113,14 @@
             }
           },
           {
+            "name": "v",
+            "in": "query",
+            "description": "The picture's version, as its pictureUri carries it; the current one makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",

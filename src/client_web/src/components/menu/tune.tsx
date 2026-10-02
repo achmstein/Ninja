@@ -234,8 +234,9 @@ export function Tune({
         >
           {hasPhoto ? (
             <img
-              src={itemPictureUrl(item.id)}
+              src={itemPictureUrl(item, 640)}
               alt=''
+              decoding='async'
               draggable={false}
               onError={() => setFailed(true)}
               className={cn('size-full object-cover', soldOut && 'grayscale')}
@@ -323,7 +324,7 @@ export function Tune({
       >
         {hasPhoto ? (
           <motion.img
-            src={itemPictureUrl(item.id)}
+            src={itemPictureUrl(item, 640)}
             alt=''
             draggable={false}
             style={{ x: photoX, y: photoY, scale: photoScale, width: photoW, height: photoH, originX: 0, originY: 0 }}
@@ -505,7 +506,7 @@ function SuggestionCard({
     >
       <div ref={photo} className={cn('aspect-[4/3] w-full overflow-hidden', (!item.pictureUri || failed) && TONE_CLASS.primary)}>
         {item.pictureUri && !failed ? (
-          <img src={itemPictureUrl(item.id)} alt='' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
+          <img src={itemPictureUrl(item, 320)} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
         ) : (
           <div className='grid size-full place-items-center'>
             <UtensilsCrossed className='size-6 opacity-50' />

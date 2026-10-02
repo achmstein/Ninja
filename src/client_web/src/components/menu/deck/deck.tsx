@@ -4,7 +4,7 @@ import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { itemPictureUrl } from '@/components/menu/item-picture'
+import { itemPictureSrcSet, itemPictureUrl } from '@/components/menu/item-picture'
 import { canQuickAdd, CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 
 /** How much of the next card shows under the one in view, px */
@@ -284,9 +284,10 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
           {faces.map((item) => (
             <img
               key={String(item.id)}
-              src={itemPictureUrl(item.id)}
+              src={itemPictureUrl(item, 320)}
               alt=''
               loading='lazy'
+              decoding='async'
               draggable={false}
               className='size-12 rounded-full object-cover ring-2 ring-current/20'
             />
@@ -450,7 +451,9 @@ export function CardFace({
         className={cn('bg-muted absolute inset-0 -z-10 overflow-hidden', soldOut && 'grayscale')}
       >
         <img
-          src={itemPictureUrl(item.id)}
+          src={itemPictureUrl(item, 640)}
+          srcSet={itemPictureSrcSet(item)}
+          sizes='100vw'
           alt=''
           loading='lazy'
           decoding='async'

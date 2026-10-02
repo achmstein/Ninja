@@ -342,5 +342,12 @@ public sealed class MenuScenarios
         Assert.AreEqual(("image/webp", 1600), await Picture(""));
         Assert.AreEqual(("image/webp", 320), await Picture("&w=320"));
         Assert.AreEqual(("image/webp", 1600), await Picture("&w=333"), "a width not on the list is the picture itself");
+
+        // The current version's address never changes, so a phone keeps it; a bare one is asked again
+        var fileName = (await upload.Content.ReadAsStringAsync()).Trim('"');
+        using (var versioned = await Customer.Http.GetAsync(Items($"/{item.Id}/pic", $"&w=640&v={fileName}")))
+            StringAssert.Contains(versioned.Headers.CacheControl!.ToString(), "immutable");
+        using (var bare = await Customer.Http.GetAsync(Items($"/{item.Id}/pic")))
+            Assert.IsTrue(bare.Headers.CacheControl!.NoCache, "without its version a picture is revalidated");
     }
 }

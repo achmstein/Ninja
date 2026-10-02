@@ -486,8 +486,10 @@ public static class CatalogApi
     public static async Task<Results<PhysicalFileHttpResult, NotFound>> GetItemPictureById(
         CatalogContext context,
         IWebHostEnvironment environment,
+        HttpContext http,
         [Description("The menu item id")] int id,
-        [Description("A narrower copy: 160, 320, 640 or 1280 px wide")] int? w = null)
+        [Description("A narrower copy: 160, 320, 640 or 1280 px wide")] int? w = null,
+        [Description("The picture's version, as its pictureUri carries it; the current one makes the answer immutable")] string? v = null)
     {
         var item = await context.CatalogItems.FindAsync(id);
 
@@ -510,7 +512,15 @@ public static class CatalogApi
         string mimetype = GetImageMimeTypeFromImageFileExtension(imageFileExtension);
         DateTime lastModified = File.GetLastWriteTimeUtc(path);
 
-        return TypedResults.PhysicalFile(path, mimetype, lastModified: lastModified);
+        // A new picture is a new file name and so a new v: an address with the
+        // current v never changes, and a phone keeps it for good. Without it,
+        // ask again each time (a 304 when nothing changed)
+        http.Response.Headers.CacheControl = v == item.PictureFileName
+            ? "public, max-age=31536000, immutable"
+            : "public, no-cache";
+        var etag = new Microsoft.Net.Http.Headers.EntityTagHeaderValue($"\"{Path.GetFileNameWithoutExtension(item.PictureFileName)}-{w ?? 0}\"");
+
+        return TypedResults.PhysicalFile(path, mimetype, lastModified: lastModified, entityTag: etag);
     }
 
     public static async Task<Ok<List<CatalogTypeDto>>> GetCategories(CatalogContext context)
@@ -1031,7 +1041,12 @@ public static class CatalogApi
 
         // Save file with timestamp to bust client caches
         var fileName = $"{id}_{DateTimeOffset.UtcNow.Ticks}.webp";
-        await File.WriteAllBytesAsync(GetFullPath(environment.ContentRootPath, fileName), webp);
+        var saved = GetFullPath(environment.ContentRootPath, fileName);
+        await File.WriteAllBytesAsync(saved, webp);
+        // The sizes the menu shows (thumbnails, tiles, full cards) cut now, so
+        // no guest waits for the first one
+        foreach (var width in ItemPictures.Precut)
+            ItemPictures.SizedPath(PicsRoot(environment.ContentRootPath), saved, width);
 
         // Update item
         item.PictureFileName = fileName;

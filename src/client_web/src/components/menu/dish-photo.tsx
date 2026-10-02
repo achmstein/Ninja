@@ -35,5 +35,5 @@ export function DishPhoto({
       </span>
     )
   }
-  return <img src={src} alt='' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', className)} />
+  return <img src={src} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', className)} />
 }

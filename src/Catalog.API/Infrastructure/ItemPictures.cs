@@ -20,6 +20,9 @@ public static class ItemPictures
     /// <summary>The widths a smaller copy may be asked for; anything else is the picture itself.</summary>
     public static readonly int[] Widths = [160, 320, 640, 1280];
 
+    /// <summary>The copies cut as a picture is saved: the ones the menu asks for.</summary>
+    public static readonly int[] Precut = [320, 640, 1280];
+
     private const string SizesFolder = "sizes";
 
     /// <summary>The upload as the WebP to store, or why it was refused.</summary>

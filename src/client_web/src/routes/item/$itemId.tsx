@@ -63,7 +63,7 @@ function ItemPage() {
                   nameEn: item.name?.en ?? '',
                   nameAr: item.name?.ar ?? '',
                   price: result.unitPrice,
-                  pictureUrl: item.pictureUri ? itemPictureUrl(item.id) : undefined,
+                  pictureUrl: item.pictureUri ? itemPictureUrl(item, 320) : undefined,
                   quantity: result.quantity,
                   specialInstructions: result.instructions || undefined,
                   customizations: result.customizations,
