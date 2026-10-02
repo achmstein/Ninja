@@ -203,7 +203,9 @@ function ClaimPage() {
                       type={showPassword ? 'text' : 'password'}
                       autoComplete='new-password'
                       dir='ltr'
-                      className='h-12 rounded-2xl pe-11'
+                      // ltr for what is typed, so its own end is the right; in Arabic the eye sits on the left,
+                      // and the room for it goes there too
+                      className='h-12 rounded-2xl pr-11 rtl:pr-4 rtl:pl-11'
                       placeholder={t('createPassword')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

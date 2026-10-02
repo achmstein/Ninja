@@ -127,7 +127,9 @@ function ProfileGateDialog({
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           aria-invalid={error === t('invalidPhone') || undefined}
-          className='ps-11 rtl:text-right'
+          // The field is ltr for the digits, so its own start is the left; in Arabic the icon sits on the
+          // right, and the room for it goes there too
+          className='pl-11 rtl:pr-11 rtl:pl-4 rtl:text-right'
         />
       </div>
     </div>
