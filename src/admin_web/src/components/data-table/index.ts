@@ -3,4 +3,9 @@ export { DataTablePagination } from './pagination'
 export { DataTableColumnHeader } from './column-header'
 export { DataTableToolbar } from './toolbar'
 export { DataTableBulkActions } from './bulk-actions'
-export { createAppColumnHelper, dataTableFeatures } from './features'
+export {
+  createAppColumnHelper,
+  dataTableFeatures,
+  type AppRow,
+  type AppTable,
+} from './features'

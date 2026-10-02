@@ -1,12 +1,12 @@
-import { type RowData } from '@tanstack/react-table'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
 } from '@radix-ui/react-icons'
-import { cn, getPageNumbers } from '@/lib/utils'
+import { type RowData } from '@tanstack/react-table'
 import { useT } from '@/lib/i18n'
+import { cn, getPageNumbers } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -30,6 +30,15 @@ export function DataTablePagination<TData extends RowData>({
   const currentPage = table.state.pagination.pageIndex + 1
   const totalPages = table.getPageCount()
   const pageNumbers = getPageNumbers(currentPage, totalPages)
+
+  // One page with room to spare says nothing: no pager under a short list
+  const pageSize = table.state.pagination.pageSize
+  if (
+    totalPages <= 1 &&
+    table.getRowModel().rows.length < pageSize &&
+    pageSize <= 20
+  )
+    return null
 
   return (
     <div

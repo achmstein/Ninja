@@ -14,20 +14,21 @@ type OrderStatusValue = 'submitted' | 'confirmed' | 'cancelled'
 export const orderStatuses: {
   value: OrderStatusValue
   key: TranslationKey
-  variant: 'default' | 'secondary' | 'destructive'
+  /** A soft chip: waiting is amber, confirmed green, cancelled red */
+  variant: 'warning' | 'success' | 'danger'
   icon: React.ComponentType<{ className?: string }>
 }[] = [
-  { value: 'submitted', key: 'pendingStatus', variant: 'default', icon: Clock },
+  { value: 'submitted', key: 'pendingStatus', variant: 'warning', icon: Clock },
   {
     value: 'confirmed',
     key: 'confirmed',
-    variant: 'secondary',
+    variant: 'success',
     icon: CheckCircle,
   },
   {
     value: 'cancelled',
     key: 'cancelled',
-    variant: 'destructive',
+    variant: 'danger',
     icon: XCircle,
   },
 ]
@@ -87,7 +88,11 @@ export function orderPlace(order: {
 // that re-render on language change, so reading the store here stays fresh.
 /** A price in the business's currency: `12.50 EGP` / `12.50 ج.م`. */
 export function formatEgp(value: number | string | undefined | null): string {
-  return formatMoney(value, useCurrency.getState().code, useLanguage.getState().language)
+  return formatMoney(
+    value,
+    useCurrency.getState().code,
+    useLanguage.getState().language
+  )
 }
 
 export function relativeTime(

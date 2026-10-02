@@ -8,7 +8,7 @@ import {
   getPendingOrdersOptions,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { type RangeSearch } from '@/lib/search-schemas'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { useTillWindow } from '@/features/till/use-till-window'
-import { getOrdersColumns } from './columns'
+import { getOrdersColumns, OrderListRow } from './columns'
 import { LiveOrdersButton } from './components/live-orders-button'
 import { OrderDetailsSheet } from './components/order-details-sheet'
 import { isCancelled, orderStatuses } from './status'
@@ -54,7 +54,6 @@ function toSortParam(sorting: SortingState): SortParam | undefined {
  */
 export function OrdersManagement() {
   const t = useT()
-  const locale = useLocale()
   const localized = useLocalized()
   const language = useLanguage((s) => s.language)
   const search = route.useSearch()
@@ -125,12 +124,10 @@ export function OrdersManagement() {
   const columns = useMemo(
     () =>
       getOrdersColumns({
-        onView: setSelectedOrderId,
         onDelete: setOrderToDelete,
         isActing,
         t,
         localized,
-        locale,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isActing, language]
@@ -225,6 +222,9 @@ export function OrdersManagement() {
               onRowClick={(row) =>
                 setSelectedOrderId(Number(row.original.orderNumber))
               }
+              mobileRow={(row) => (
+                <OrderListRow row={row} t={t} localized={localized} />
+              )}
             />
             <DataTablePagination table={table} />
           </>

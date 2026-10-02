@@ -1,69 +1,85 @@
-import { Eye, Trash2 } from 'lucide-react'
+import { Star, Trash2 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import {
   createAppColumnHelper,
   DataTableColumnHeader,
+  type AppRow,
 } from '@/components/data-table'
-import {
-  formatEgp,
-  getOrderStatus,
-  isCancelled,
-  orderSourceKeys,
-} from './status'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { RowActions } from '@/components/row-actions'
+import { StatusChip } from '@/components/status-chip'
+import { When } from '@/components/when'
 import { PlatformBadge } from './components/platform-badge'
+import { getOrderStatus, isCancelled, orderSourceKeys } from './status'
 
 const columnHelper = createAppColumnHelper<OrderSummary>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-
-function formatRelative(date: Date, t: Translate, locale: string): string {
-  const diffMs = Date.now() - date.getTime()
-  const minutes = Math.round(diffMs / 60_000)
-  if (minutes < 1) return t('justNow')
-  if (minutes < 60) return t('minutesAgo', { minutes })
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return t('hoursAgo', { hours })
-  const days = Math.round(hours / 24)
-  if (days < 7) return t('daysAgo', { days })
-  return date.toLocaleDateString(locale)
-}
+type Localize = (
+  text: { en?: string | null; ar?: string | null } | null | undefined
+) => string
 
 type OrdersColumnsCallbacks = {
-  onView: (orderNumber: number) => void
   onDelete: (orderNumber: number) => void
   isActing: boolean
   t: Translate
-  localized: (
-    text: { en?: string | null; ar?: string | null } | null | undefined
-  ) => string
-  locale: string
+  localized: Localize
+}
+
+function OrderStatus({ status, t }: { status?: string | null; t: Translate }) {
+  const known = getOrderStatus(status)
+  if (!known) return <span>{status ?? '—'}</span>
+  return (
+    <StatusChip tone={known.variant} icon={known.icon}>
+      {t(known.key)}
+    </StatusChip>
+  )
+}
+
+/** Where it came from: a delivery platform by its logo, else a quiet word */
+function OrderSource({ order, t }: { order: OrderSummary; t: Translate }) {
+  if (order.platform) return <PlatformBadge platform={order.platform} />
+  const key = order.source ? orderSourceKeys[order.source] : null
+  return key ? (
+    <Badge variant='muted'>{t(key)}</Badge>
+  ) : (
+    <span className='text-muted-foreground'>—</span>
+  )
+}
+
+function Rating({ value }: { value?: number | string | null }) {
+  if (value == null) return null
+  return (
+    <span
+      className='text-warning inline-flex items-center gap-0.5 text-xs font-medium tabular-nums'
+      aria-label={`${value}/5`}
+    >
+      <Star className='size-3 fill-current' />
+      {Number(value)}
+    </span>
+  )
 }
 
 /**
- * The history table. Confirm/cancel live in the details sheet (one place to
- * act, with the line items in view); the row only opens it or deletes a
- * cancelled order. Placed and Total sort server-side.
+ * The history table, five things a row says: which order and when, who and
+ * where, from where, its state (with the customer's stars when they gave
+ * some), and the total. Confirm/cancel live in the details sheet the row
+ * opens; a cancelled order can be deleted from its ⋯. Placed and Total sort
+ * server-side.
  */
 export function getOrdersColumns({
-  onView,
   onDelete,
   isActing,
   t,
   localized,
-  locale,
 }: OrdersColumnsCallbacks) {
   return columnHelper.columns([
-    // Only cancelled orders are deletable, so only they are selectable —
-    // enableRowSelection on the table enforces it; the checkbox just reflects it
+    // Only cancelled orders are deletable, so only they are selectable;
+    // enableRowSelection on the table enforces it, the checkbox reflects it
     columnHelper.display({
       id: 'select',
       header: ({ table }) => (
@@ -87,73 +103,55 @@ export function getOrdersColumns({
       ),
       meta: { className: 'w-[36px]' },
     }),
-    columnHelper.accessor('orderNumber', {
-      id: 'orderNumber',
-      header: t('orderHash'),
-      enableSorting: false,
-      cell: (info) => <span className='font-medium'>#{info.getValue()}</span>,
-    }),
     columnHelper.accessor('date', {
       id: 'date',
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('placed')} />
+        <DataTableColumnHeader column={column} title={t('orderHash')} />
       ),
-      cell: (info) => {
-        const value = info.getValue()
-        if (!value) return '—'
-        const date = new Date(value)
-        return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>{formatRelative(date, t, locale)}</span>
-            </TooltipTrigger>
-            <TooltipContent>{date.toLocaleString(locale)}</TooltipContent>
-          </Tooltip>
-        )
-      },
+      cell: (info) => (
+        <div className='flex flex-col leading-tight'>
+          <span className='font-medium'>#{info.row.original.orderNumber}</span>
+          <When
+            value={info.getValue()}
+            className='text-muted-foreground text-xs'
+          />
+        </div>
+      ),
     }),
     columnHelper.accessor('userName', {
       id: 'customer',
       header: t('customer'),
       enableSorting: false,
-      cell: (info) => info.getValue() || '—',
-    }),
-    columnHelper.accessor((row) => localized(row.placeName), {
-      id: 'place',
-      header: t('place'),
-      enableSorting: false,
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => {
+        const place = localized(info.row.original.placeName)
+        return (
+          <div className='flex max-w-56 flex-col leading-tight'>
+            <span className='truncate'>{info.getValue() || '—'}</span>
+            {place && (
+              <span className='text-muted-foreground truncate text-xs'>
+                {place}
+              </span>
+            )}
+          </div>
+        )
+      },
     }),
     columnHelper.accessor('source', {
       id: 'source',
       header: t('source'),
       enableSorting: false,
-      cell: (info) => {
-        const platform = info.row.original.platform
-        if (platform) return <PlatformBadge platform={platform} />
-        const key = info.getValue() ? orderSourceKeys[info.getValue()!] : null
-        return key ? (
-          <Badge variant='outline'>{t(key)}</Badge>
-        ) : (
-          <span className='text-muted-foreground'>—</span>
-        )
-      },
+      cell: (info) => <OrderSource order={info.row.original} t={t} />,
     }),
     columnHelper.accessor('status', {
       id: 'status',
       header: t('status'),
       enableSorting: false,
-      cell: (info) => {
-        const status = getOrderStatus(info.getValue())
-        if (!status) return info.getValue() ?? '—'
-        const Icon = status.icon
-        return (
-          <Badge variant={status.variant} className='gap-1'>
-            <Icon className='h-3 w-3' />
-            {t(status.key)}
-          </Badge>
-        )
-      },
+      cell: (info) => (
+        <div className='flex items-center gap-2'>
+          <OrderStatus status={info.getValue()} t={t} />
+          <Rating value={info.row.original.ratingValue} />
+        </div>
+      ),
     }),
     columnHelper.accessor('total', {
       meta: { align: 'end' },
@@ -165,61 +163,70 @@ export function getOrdersColumns({
           className='justify-end'
         />
       ),
-      cell: (info) => (
-        <div className='text-end font-medium tabular-nums'>
-          {formatEgp(info.getValue())}
-        </div>
-      ),
-    }),
-    columnHelper.accessor('ratingValue', {
-      id: 'rating',
-      header: t('rating'),
-      enableSorting: false,
-      cell: (info) => {
-        const rating = info.getValue()
-        if (rating == null) return null
-        return (
-          <span className='text-warning' aria-label={`${rating}/5`}>
-            {'★'.repeat(Number(rating))}
-          </span>
-        )
-      },
+      cell: (info) => <Money value={info.getValue()} strong />,
     }),
     columnHelper.display({
       id: 'actions',
       header: '',
-      cell: ({ row }) => {
-        const orderNumber = Number(row.original.orderNumber)
-        return (
-          <div
-            className='flex justify-end gap-1'
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button
-              variant='ghost'
-              size='icon'
-              className='size-8'
-              aria-label={t('orderNumber', { id: orderNumber })}
-              onClick={() => onView(orderNumber)}
-            >
-              <Eye className='h-4 w-4' />
-            </Button>
-            {isCancelled(row.original.status) && (
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-8'
-                aria-label={t('delete')}
-                disabled={isActing}
-                onClick={() => onDelete(orderNumber)}
-              >
-                <Trash2 className='text-destructive h-4 w-4' />
-              </Button>
-            )}
-          </div>
-        )
-      },
-      meta: { className: 'w-[88px]' },
+      cell: ({ row }) => (
+        <RowActions
+          actions={[
+            {
+              label: t('delete'),
+              icon: Trash2,
+              destructive: true,
+              disabled: isActing,
+              hidden: !isCancelled(row.original.status),
+              onSelect: () => onDelete(Number(row.original.orderNumber)),
+            },
+          ]}
+        />
+      ),
+      meta: { className: 'w-[48px]' },
     }),
   ])
+}
+
+/** An order as a phone lists it: number and who, then when, where and from where; the total over its state */
+export function OrderListRow({
+  row,
+  t,
+  localized,
+}: {
+  row: AppRow<OrderSummary>
+  t: Translate
+  localized: Localize
+}) {
+  const order = row.original
+  const place = localized(order.placeName)
+  return (
+    <ListRow
+      title={
+        <>
+          #{order.orderNumber}
+          {order.userName && (
+            <span className='text-muted-foreground font-normal'>
+              {' '}
+              · {order.userName}
+            </span>
+          )}
+        </>
+      }
+      meta={
+        <>
+          <When value={order.date} />
+          {place && (
+            <>
+              <Dot />
+              <span className='truncate'>{place}</span>
+            </>
+          )}
+          {order.platform && <PlatformBadge platform={order.platform} />}
+          <Rating value={order.ratingValue} />
+        </>
+      }
+      trailing={<Money value={order.total} strong />}
+      trailingMeta={<OrderStatus status={order.status} t={t} />}
+    />
+  )
 }
