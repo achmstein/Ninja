@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import {
   getProfitOptions,
   getProfitTrendOptions,
@@ -30,6 +30,7 @@ import {
 import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
+import { MonthSwitcher } from '@/components/month-switcher'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 
@@ -68,16 +69,6 @@ export function Profit() {
   const trend = useQuery(
     getProfitTrendOptions({ query: { 'api-version': API_VERSION, months: 6 } })
   )
-
-  const shiftMonth = (delta: number) => {
-    const next = new Date(year, month - 1 + delta, 1)
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        month: `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`,
-      }),
-    })
-  }
 
   const p = profit.data
   const net = toNumber(p?.netSales)
@@ -191,28 +182,12 @@ export function Profit() {
           </DropdownMenu>
         }
       >
-        <div className='flex items-center gap-1'>
-          <Button
-            variant='ghost'
-            size='icon'
-            aria-label={t('previousMonth')}
-            onClick={() => shiftMonth(-1)}
-          >
-            <ChevronLeft className='h-4 w-4 rtl:-scale-x-100' />
-          </Button>
-          <span className='min-w-40 text-center text-sm font-medium'>
-            {monthName(year, month)}
-          </span>
-          <Button
-            variant='ghost'
-            size='icon'
-            aria-label={t('nextMonth')}
-            disabled={monthKey >= today.slice(0, 7)}
-            onClick={() => shiftMonth(1)}
-          >
-            <ChevronRight className='h-4 w-4 rtl:-scale-x-100' />
-          </Button>
-        </div>
+        <MonthSwitcher
+          monthKey={monthKey}
+          onChange={(next) =>
+            navigate({ search: (prev) => ({ ...prev, month: next }) })
+          }
+        />
       </PageHeader>
 
       {profit.isError ? (

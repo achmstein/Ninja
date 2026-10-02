@@ -4,8 +4,6 @@ import { getRouteApi, Link } from '@tanstack/react-router'
 import {
   CalendarCheck,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Minus,
   Umbrella,
@@ -29,6 +27,7 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
+import { MonthSwitcher } from '@/components/month-switcher'
 import { PageHeader } from '@/components/page-header'
 import { ATTENDANCE, monthRange, PAY_SCHEME, schemeLabel } from './format'
 import { attendanceQueryOptions, employeesQueryOptions } from './queries'
@@ -89,20 +88,6 @@ export function Attendance() {
     return { iso: formatDay(date), day: i + 1, date }
   })
   const weekday = new Intl.DateTimeFormat(locale, { weekday: 'narrow' })
-  const monthLabel = new Intl.DateTimeFormat(locale, {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(year, month - 1, 1))
-
-  const shiftMonth = (delta: number) => {
-    const next = new Date(year, month - 1 + delta, 1)
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        month: `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`,
-      }),
-    })
-  }
 
   const canMark = (employee: EmployeeView, iso: string) =>
     iso <= today &&
@@ -232,28 +217,12 @@ export function Attendance() {
           ) : null
         }
       >
-        <div className='flex items-center gap-1'>
-          <Button
-            variant='ghost'
-            size='icon'
-            aria-label={t('previousMonth')}
-            onClick={() => shiftMonth(-1)}
-          >
-            <ChevronLeft className='h-4 w-4 rtl:-scale-x-100' />
-          </Button>
-          <span className='min-w-40 text-center text-sm font-medium'>
-            {monthLabel}
-          </span>
-          <Button
-            variant='ghost'
-            size='icon'
-            aria-label={t('nextMonth')}
-            disabled={monthKey >= today.slice(0, 7)}
-            onClick={() => shiftMonth(1)}
-          >
-            <ChevronRight className='h-4 w-4 rtl:-scale-x-100' />
-          </Button>
-        </div>
+        <MonthSwitcher
+          monthKey={monthKey}
+          onChange={(next) =>
+            navigate({ search: (prev) => ({ ...prev, month: next }) })
+          }
+        />
       </PageHeader>
 
       {employees.isError ? (
