@@ -12,6 +12,13 @@ namespace Ninja.Catalog.API.Assist;
 /// <param name="Categories">The menu's sections in printed order, each with its items.</param>
 /// <param name="Warnings">What to look at before accepting ("Hot Drinks, line 3: …").</param>
 /// <param name="Notes">The assistant's own remark, when it had one.</param>
+/// <summary>
+/// What is on the menu already, a category or an item, by id and name: the scanner matches sections to the
+/// categories and flags the items it reads again. Plain, so the control panel scans a menu before there is
+/// a catalog (both lists empty) with the same code (linked into Control.API).
+/// </summary>
+public sealed record MenuEntry(int Id, LocalizedText Name);
+
 public sealed record MenuProposal(IReadOnlyList<ProposedCategory> Categories, IReadOnlyList<string> Warnings, string? Notes);
 
 /// <param name="Name">The section heading in both languages.</param>

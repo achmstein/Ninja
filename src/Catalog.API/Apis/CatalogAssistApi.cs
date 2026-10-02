@@ -138,8 +138,8 @@ public static class CatalogAssistApi
             pages.Add(image);
         }
 
-        var categories = await context.CatalogTypes.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync(ct);
-        var items = await context.CatalogItems.AsNoTracking().ToListAsync(ct);
+        var categories = await context.CatalogTypes.AsNoTracking().OrderBy(c => c.DisplayOrder).Select(c => new MenuEntry(c.Id, c.Name)).ToListAsync(ct);
+        var items = await context.CatalogItems.AsNoTracking().Select(i => new MenuEntry(i.Id, i.Name)).ToListAsync(ct);
 
         try
         {

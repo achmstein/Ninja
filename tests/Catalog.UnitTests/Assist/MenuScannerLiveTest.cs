@@ -17,17 +17,17 @@ namespace Catalog.UnitTests.Assist;
 [TestCategory("Live")]
 public class MenuScannerLiveTest
 {
-    private static readonly List<CatalogType> Categories =
+    private static readonly List<MenuEntry> Categories =
     [
-        new(new LocalizedText("Hot Drinks", "مشروبات سخنة")) { Id = 1, DisplayOrder = 1 },
-        new(new LocalizedText("Iced Drinks", "مشروبات مثلجة")) { Id = 4, DisplayOrder = 4 },
-        new(new LocalizedText("Juices", "عصائر")) { Id = 5, DisplayOrder = 5 },
+        new(1, new LocalizedText("Hot Drinks", "مشروبات سخنة")),
+        new(4, new LocalizedText("Iced Drinks", "مشروبات مثلجة")),
+        new(5, new LocalizedText("Juices", "عصائر")),
     ];
 
-    private static readonly List<CatalogItem> Items =
+    private static readonly List<MenuEntry> Items =
     [
-        new(new LocalizedText("Turkish Coffee", "قهوة تركي")) { Id = 10 },
-        new(new LocalizedText("Mango Juice", "عصير مانجو")) { Id = 11 },
+        new(10, new LocalizedText("Turkish Coffee", "قهوة تركي")),
+        new(11, new LocalizedText("Mango Juice", "عصير مانجو")),
     ];
 
     public TestContext TestContext { get; set; } = null!;

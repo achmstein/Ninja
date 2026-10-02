@@ -17,15 +17,15 @@ public class MenuScannerTest
     private static readonly byte[] TinyPng = Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
 
-    private static readonly List<CatalogType> Categories =
+    private static readonly List<MenuEntry> Categories =
     [
-        new(new LocalizedText("Coffee", "قهوة")) { Id = 1, DisplayOrder = 1 },
-        new(new LocalizedText("Juices", "عصائر")) { Id = 5, DisplayOrder = 2 },
+        new(1, new LocalizedText("Coffee", "قهوة")),
+        new(5, new LocalizedText("Juices", "عصائر")),
     ];
 
-    private static readonly List<CatalogItem> Items =
+    private static readonly List<MenuEntry> Items =
     [
-        new(new LocalizedText("Turkish Coffee", "قهوة تركي")) { Id = 10 },
+        new(10, new LocalizedText("Turkish Coffee", "قهوة تركي")),
     ];
 
     private static MenuScanner Scanner()

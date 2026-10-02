@@ -21,7 +21,7 @@ public static partial class MenuProposalValidator
     public const decimal MaxPrice = 10_000m;
     public const int MaxChoices = 8;
 
-    public static MenuProposal Validate(MenuExtraction extraction, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items, string languages = ContentLanguages.Both)
+    public static MenuProposal Validate(MenuExtraction extraction, IReadOnlyList<MenuEntry> categories, IReadOnlyList<MenuEntry> items, string languages = ContentLanguages.Both)
     {
         var warnings = new List<string>();
         var proposed = new List<ProposedCategory>();

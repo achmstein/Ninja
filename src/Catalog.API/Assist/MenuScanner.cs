@@ -43,7 +43,7 @@ public sealed class MenuScanner(INinjaAgentFactory factory, ILogger<MenuScanner>
     /// <param name="categories">The categories the system has, for the model to match sections to.</param>
     /// <param name="items">The menu as it is, for the validator to flag what is already there.</param>
     /// <param name="languages">The business's languages ("both", "ar" or "en"): a one-language business's menu is read in that language only.</param>
-    public async Task<MenuProposal> ScanAsync(IReadOnlyList<DataContent> pages, IReadOnlyList<CatalogType> categories, IReadOnlyList<CatalogItem> items, CancellationToken ct,
+    public async Task<MenuProposal> ScanAsync(IReadOnlyList<DataContent> pages, IReadOnlyList<MenuEntry> categories, IReadOnlyList<MenuEntry> items, CancellationToken ct,
         string languages = ContentLanguages.Both)
     {
         languages = ContentLanguages.Normalize(languages);

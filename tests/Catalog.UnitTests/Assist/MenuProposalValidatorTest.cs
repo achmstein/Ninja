@@ -6,16 +6,16 @@ namespace Catalog.UnitTests.Assist;
 [TestClass]
 public class MenuProposalValidatorTest
 {
-    private static readonly List<CatalogType> Categories =
+    private static readonly List<MenuEntry> Categories =
     [
-        new(new LocalizedText("Hot Drinks", "مشروبات سخنة")) { Id = 1 },
-        new(new LocalizedText("Juices", "عصائر")) { Id = 5 },
+        new(1, new LocalizedText("Hot Drinks", "مشروبات سخنة")),
+        new(5, new LocalizedText("Juices", "عصائر")),
     ];
 
-    private static readonly List<CatalogItem> Items =
+    private static readonly List<MenuEntry> Items =
     [
-        new(new LocalizedText("Turkish Coffee", "قهوة تركي")) { Id = 10 },
-        new(new LocalizedText("Mango Juice", "عصير مانجو")) { Id = 11 },
+        new(10, new LocalizedText("Turkish Coffee", "قهوة تركي")),
+        new(11, new LocalizedText("Mango Juice", "عصير مانجو")),
     ];
 
     private static ExtractedItem Item(string en, string ar, decimal price, string descEn = "", string descAr = "")
