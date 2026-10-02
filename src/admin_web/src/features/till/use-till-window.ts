@@ -39,13 +39,25 @@ export function useTillWindow(
   const dayWindow = useMemo<DayWindow | null>(
     () =>
       branch && !isAll
-        ? presetWindow(preset, branch.dayStartTime, branch.dayEndTime, {
-            from: parseDay(search.from),
-            to: parseDay(search.to),
-          })
+        ? presetWindow(
+            preset,
+            // Picked hours stand in for the branch's business hours
+            search.fromTime ?? branch.dayStartTime,
+            search.toTime ?? branch.dayEndTime,
+            { from: parseDay(search.from), to: parseDay(search.to) }
+          )
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [branch, preset, isAll, search.from, search.to, minuteTick]
+    [
+      branch,
+      preset,
+      isAll,
+      search.from,
+      search.to,
+      search.fromTime,
+      search.toTime,
+      minuteTick,
+    ]
   )
 
   return {

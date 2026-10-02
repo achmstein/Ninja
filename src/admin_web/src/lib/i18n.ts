@@ -1375,6 +1375,9 @@ const webExtras = {
   scannedLinesAdded: { en: "Lines added; check them and press Receive", ar: "تمت إضافة السطور؛ راجعها واضغط استلام" },
   noLinesSelected: { en: "Tick at least one line", ar: "حدّد سطرًا واحدًا على الأقل" },
   lineNeedsItem: { en: "Every ticked line needs an item or a new item name", ar: "يحتاج كل سطر محدد إلى صنف أو اسم صنف جديد" },
+  rangeStartsAt: { en: "Starts", ar: "يبدأ" },
+  rangeEndsAt: { en: "Ends", ar: "ينتهي" },
+  rangeHoursHint: { en: "Each day runs from the start time to the end time, past midnight when the end is earlier", ar: "يمتد كل يوم من وقت البداية إلى وقت النهاية، ويعبر منتصف الليل إن كانت النهاية أبكر" },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

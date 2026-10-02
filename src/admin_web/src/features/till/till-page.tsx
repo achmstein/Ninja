@@ -34,7 +34,13 @@ export function TillPage({
   children,
 }: TillPageProps) {
   const t = useT()
-  const range = { range: search.range, from: search.from, to: search.to }
+  const range = {
+    range: search.range,
+    from: search.from,
+    to: search.to,
+    fromTime: search.fromTime,
+    toTime: search.toTime,
+  }
   return (
     <Main>
       <PageHeader title={t('navTill')}>

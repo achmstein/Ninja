@@ -91,7 +91,13 @@ export function TillReport() {
     (data?.tabPaymentTenderTotals ?? []).map((row) => [row.tender, row])
   )
   const typeTotals = new Map((data?.byType ?? []).map((row) => [row.type, row]))
-  const range = { range: search.range, from: search.from, to: search.to }
+  const range = {
+    range: search.range,
+    from: search.from,
+    to: search.to,
+    fromTime: search.fromTime,
+    toTime: search.toTime,
+  }
   const loading = !dayWindow || report.isPending
 
   // The list a number opens: same route, a `view` in the URL

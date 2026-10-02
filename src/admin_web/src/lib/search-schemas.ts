@@ -2,16 +2,21 @@ import { z } from 'zod'
 import { rangePresets, type RangePreset } from '@/lib/business-day'
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+const time = z.string().regex(/^\d{2}:\d{2}$/)
 
 /** A business-day preset, or `all` on history pages that can span everything */
 export type RangeKey = RangePreset | 'all'
 
 // The business-day window shared by every report/history page. `from`/`to`
 // are calendar days (yyyy-MM-dd) and only matter for the custom preset.
+// `fromTime`/`toTime` (HH:mm) stand in for the branch's DayStart/DayEnd,
+// so any preset can be narrowed to the hours the owner picks.
 export const rangeSearch = {
   range: z.enum([...rangePresets, 'all']).optional(),
   from: day.optional(),
   to: day.optional(),
+  fromTime: time.optional(),
+  toTime: time.optional(),
 }
 
 export const pagedSearch = {
@@ -23,4 +28,6 @@ export type RangeSearch = {
   range?: RangeKey
   from?: string
   to?: string
+  fromTime?: string
+  toTime?: string
 }

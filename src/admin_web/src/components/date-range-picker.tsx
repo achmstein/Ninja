@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { CalendarIcon, CalendarRange } from 'lucide-react'
+import { format } from 'date-fns'
+import { CalendarIcon, CalendarRange, RotateCcw } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 import {
   formatDay,
@@ -13,6 +14,8 @@ import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
@@ -49,6 +52,8 @@ type DateRangePickerProps = {
  * button naming the current range, opening a popover with the presets
  * beside a two-month range calendar. State lives in the route search
  * (`range`, `from`, `to`); the page's default preset is written as undefined.
+ * Under the calendar, the start and end times stand in for the branch's
+ * business hours (`fromTime`, `toTime`) and stay put across presets.
  */
 export function DateRangePicker({
   search,
@@ -96,6 +101,15 @@ export function DateRangePicker({
     setOpen(false)
   }
 
+  // The hours in force: the picked ones, else the window's (branch hours)
+  const startTime =
+    search.fromTime ?? (dayWindow ? format(dayWindow.from, 'HH:mm') : '')
+  const endTime =
+    search.toTime ?? (dayWindow ? format(dayWindow.to, 'HH:mm') : '')
+  const hoursPicked = search.fromTime != null || search.toTime != null
+  const pickTime = (key: 'fromTime' | 'toTime', value: string) =>
+    onChange({ [key]: value || undefined })
+
   const pickRange = (range: DateRange | undefined) => {
     onChange({
       range: 'custom',
@@ -133,14 +147,62 @@ export function DateRangePicker({
               </Button>
             ))}
           </div>
-          <Calendar
-            mode='range'
-            numberOfMonths={isMobile ? 1 : 2}
-            defaultMonth={from ?? new Date()}
-            selected={preset === 'custom' ? { from, to } : undefined}
-            onSelect={pickRange}
-            disabled={(date: Date) => date > new Date()}
-          />
+          <div className='flex flex-col'>
+            <Calendar
+              mode='range'
+              numberOfMonths={isMobile ? 1 : 2}
+              defaultMonth={from ?? new Date()}
+              selected={preset === 'custom' ? { from, to } : undefined}
+              onSelect={pickRange}
+              disabled={(date: Date) => date > new Date()}
+            />
+            {preset !== 'all' && dayWindow && (
+              <div className='flex flex-col gap-2 border-t p-3'>
+                <div className='flex flex-wrap items-end gap-2'>
+                  <div className='grid gap-1'>
+                    <Label htmlFor='range-from-time' className='text-xs'>
+                      {t('rangeStartsAt')}
+                    </Label>
+                    <Input
+                      id='range-from-time'
+                      type='time'
+                      className='h-8 w-28 tabular-nums'
+                      value={startTime}
+                      onChange={(e) => pickTime('fromTime', e.target.value)}
+                    />
+                  </div>
+                  <div className='grid gap-1'>
+                    <Label htmlFor='range-to-time' className='text-xs'>
+                      {t('rangeEndsAt')}
+                    </Label>
+                    <Input
+                      id='range-to-time'
+                      type='time'
+                      className='h-8 w-28 tabular-nums'
+                      value={endTime}
+                      onChange={(e) => pickTime('toTime', e.target.value)}
+                    />
+                  </div>
+                  {hoursPicked && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='ms-auto'
+                      onClick={() =>
+                        onChange({ fromTime: undefined, toTime: undefined })
+                      }
+                    >
+                      <RotateCcw />
+                      {t('businessHours')}
+                    </Button>
+                  )}
+                </div>
+                <p className='text-muted-foreground max-w-xs text-xs'>
+                  {t('rangeHoursHint')}
+                </p>
+              </div>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
 

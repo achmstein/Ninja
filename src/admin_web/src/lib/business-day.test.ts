@@ -101,3 +101,17 @@ describe('a day in a URL', () => {
     expect(parseDay('2026-3-5')).toBeUndefined()
   })
 })
+
+describe('hours the owner picks in place of the branch’s', () => {
+  it('narrow today to the afternoon', () => {
+    const today = presetWindow('today', '12:00', '18:00', {}, local(2026, 3, 15, 14))
+    expect(today.from.toISOString()).toBe(local(2026, 3, 15, 12).toISOString())
+    expect(today.to.toISOString()).toBe(local(2026, 3, 15, 18).toISOString())
+  })
+
+  it('cross midnight on a custom range when the end is earlier than the start', () => {
+    const custom = presetWindow('custom', '20:00', '03:00', { from: local(2026, 3, 1), to: local(2026, 3, 2) }, local(2026, 3, 15, 14))
+    expect(custom.from.toISOString()).toBe(local(2026, 3, 1, 20).toISOString())
+    expect(custom.to.toISOString()).toBe(local(2026, 3, 3, 3).toISOString())
+  })
+})
