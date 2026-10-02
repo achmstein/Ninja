@@ -9,10 +9,10 @@ import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Card, CardContent } from '@/components/ui/card'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { urgencyTextClass } from '@/components/queue-card'
-import { Stat, StatStrip } from '@/components/stat-strip'
 import { stockLevelsQueryOptions } from '@/features/inventory/queries'
 import { formatEgp, orderUrgency, relativeTime } from '@/features/orders/status'
 import {
@@ -23,10 +23,13 @@ import {
 import { orderIsAt, usePlaces } from '@/features/places/use-places'
 import { serviceRequestsService } from '@/features/requests/service'
 import { useTillWindow } from '@/features/till/use-till-window'
+import { changeOf, KpiCard } from './components/kpi-card'
 import { LiveFloor } from './components/live-floor'
 import { MonthMoney } from './components/month-money'
 import { TodaysTill } from './components/todays-till'
-import { Trends } from './components/trends'
+import { SalesChart, TopLists } from './components/trends'
+
+const WEEK_MS = 7 * 24 * 60 * 60_000
 
 type AttentionLine = {
   key: string
@@ -39,9 +42,12 @@ type AttentionLine = {
 }
 
 /**
- * The branch right now: what needs someone (unboxed lines), four numbers
- * that each open the page behind them, the live floor beside today's till,
- * and the trends below. One bordered surface on the whole page.
+ * The branch right now, phone first: what needs someone (lines under the
+ * title), four cards with the numbers an owner looks at first, each against
+ * the same time last week and opening the page behind it; sales over the
+ * last weeks as one chart against the weeks before; the live floor beside
+ * today's till; the owner's month; what sold. One column on a phone, a grid
+ * where there is room.
  */
 export function Dashboard() {
   const t = useT()
@@ -115,7 +121,39 @@ export function Dashboard() {
     pending.some((order) => orderIsAt(order, table))
   ).length
 
+  // The same stretch of the day a week ago, up to the same time: a fair
+  // comparison while today is still going (to the 5 minutes, so it is not
+  // asked for again every tick)
+  const lastWeekTo = dayWindow
+    ? new Date(
+        Math.floor(Math.min(nowMs, dayWindow.to.getTime()) / 300_000) *
+          300_000 -
+          WEEK_MS
+      ).toISOString()
+    : ''
+  const lastWeekQuery = useQuery({
+    ...getRangeReportOptions({
+      query: {
+        'api-version': API_VERSION,
+        from: dayWindow
+          ? new Date(dayWindow.from.getTime() - WEEK_MS).toISOString()
+          : '',
+        to: lastWeekTo,
+      },
+    }),
+    enabled: dayWindow !== null,
+  })
+
   const report = reportQuery.data
+  const net = Number(report?.net ?? 0)
+  const bills = Number(report?.ticketsSettled ?? 0)
+  const lastWeek = lastWeekQuery.data
+  const lastNet = Number(lastWeek?.net ?? 0)
+  const lastBills = Number(lastWeek?.ticketsSettled ?? 0)
+  const averageBill = bills > 0 ? net / bills : 0
+  const lastAverage = lastBills > 0 ? lastNet / lastBills : 0
+  const compared = lastWeekQuery.isSuccess
+  const reportLoading = dayWindow === null || reportQuery.isPending
   const dateTime = new Intl.DateTimeFormat(locale, {
     weekday: 'short',
     hour: 'numeric',
@@ -191,71 +229,120 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      <StatStrip>
-        <Stat
+      <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        <KpiCard
           label={t('netSales')}
-          value={formatEgp(report?.net)}
-          hint={t('posTicketsCount', {
-            count: Number(report?.ticketsSettled ?? 0),
-          })}
-          loading={dayWindow === null || reportQuery.isPending}
+          value={formatEgp(net)}
+          change={compared ? changeOf(net, lastNet) : undefined}
+          footer={t('vsSameTimeLastWeek')}
+          loading={reportLoading}
           to='/till'
         />
-        <Stat
+        <KpiCard
+          label={t('averageBill')}
+          value={bills > 0 ? formatEgp(averageBill) : '—'}
+          change={
+            compared && bills > 0
+              ? changeOf(averageBill, lastAverage)
+              : undefined
+          }
+          footer={t('posTicketsCount', { count: bills })}
+          loading={reportLoading}
+          to='/till/tickets'
+        />
+        <KpiCard
           label={t('pendingOrders')}
           value={pending.length}
           tone={pending.length > 0 ? 'warning' : 'default'}
+          footer={
+            oldest
+              ? t('oldestAge', {
+                  age: relativeTime(oldest.date, nowMs, t, locale),
+                })
+              : t('ordersWaitingNone')
+          }
           loading={pendingQuery.isPending}
           to='/orders/live'
         />
-        {!cloudKitchen && features.timeBilling && (
-          <Stat
+        {cloudKitchen ? (
+          features.inventory && (
+            <KpiCard
+              label={t('lowStockTitle')}
+              value={lowCount}
+              tone={lowCount > 0 ? 'warning' : 'default'}
+              loading={lowStockQuery.isPending}
+              to='/inventory'
+              search={{ low: true }}
+            />
+          )
+        ) : features.timeBilling ? (
+          <KpiCard
             label={t('placesInUse')}
             value={t('ofTotal', {
               count: running.length,
               total: timedInService,
             })}
+            footer={
+              t('tablesInUse') +
+              ': ' +
+              t('ofTotal', { count: busyTables, total: activeTables })
+            }
             loading={floor.isPending}
             to='/places'
           />
-        )}
-        {!cloudKitchen && (
-          <Stat
+        ) : (
+          <KpiCard
             label={t('tablesInUse')}
             value={t('ofTotal', { count: busyTables, total: activeTables })}
             loading={floor.isPending}
             to='/places'
           />
         )}
-      </StatStrip>
+      </div>
 
-      <div className='grid gap-6 lg:grid-cols-2'>
+      <SalesChart />
+
+      <div className='grid gap-4 lg:grid-cols-2'>
         {!cloudKitchen && (features.timeBilling || features.reservations) && (
-          <LiveFloor
-            stays={running}
-            places={places}
-            pending={pending}
-            nowMs={nowMs}
-            isLoading={pendingQuery.isLoading || floor.isLoading}
-            error={pendingQuery.error ?? floor.error}
-            onRetry={() => {
-              pendingQuery.refetch()
-              floor.refetch()
-            }}
-          />
+          <Card>
+            <CardContent>
+              <LiveFloor
+                stays={running}
+                places={places}
+                pending={pending}
+                nowMs={nowMs}
+                isLoading={pendingQuery.isLoading || floor.isLoading}
+                error={pendingQuery.error ?? floor.error}
+                onRetry={() => {
+                  pendingQuery.refetch()
+                  floor.refetch()
+                }}
+              />
+            </CardContent>
+          </Card>
         )}
-        <TodaysTill
-          report={report}
-          isLoading={dayWindow === null || reportQuery.isPending}
-          error={reportQuery.error}
-          onRetry={() => reportQuery.refetch()}
-        />
+        <Card>
+          <CardContent>
+            <TodaysTill
+              report={report}
+              isLoading={reportLoading}
+              error={reportQuery.error}
+              onRetry={() => reportQuery.refetch()}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* The owners' month: the profit feed is theirs alone */}
-      {owner && features.finance && <MonthMoney />}
+      {owner && features.finance && (
+        <Card>
+          <CardContent>
+            <MonthMoney />
+          </CardContent>
+        </Card>
+      )}
 
-      <Trends />
+      <TopLists />
     </Main>
   )
 }

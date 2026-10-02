@@ -479,6 +479,15 @@ const webExtras = {
   ordersLabel: { en: "orders", ar: "طلبات" },
   unitsLabel: { en: "units", ar: "وحدة" },
   noAnalyticsData: { en: "No data for this range yet", ar: "لا توجد بيانات لهذه الفترة بعد" },
+  salesTitle: { en: "Sales", ar: "المبيعات" },
+  salesThisPeriod: { en: "This period", ar: "هذه الفترة" },
+  salesPreviousPeriod: { en: "Period before", ar: "الفترة السابقة" },
+  vsPeriodBefore: { en: "{change} vs the period before", ar: "{change} عن الفترة السابقة" },
+  trendNew: { en: "New", ar: "جديد" },
+  averageBill: { en: "Average bill", ar: "متوسط الفاتورة" },
+  vsSameTimeLastWeek: { en: "Against the same time last week", ar: "مقارنة بنفس الوقت الأسبوع الماضي" },
+  ordersWaitingNone: { en: "Nothing waiting", ar: "لا شيء في الانتظار" },
+  lowStockTitle: { en: "Running low", ar: "أصناف ناقصة" },
 
   // Dashboard POS sales (current business day, from Sales.API)
   posTicketsSettled: { en: "Tickets settled", ar: "حسابات مُغلقة" },
