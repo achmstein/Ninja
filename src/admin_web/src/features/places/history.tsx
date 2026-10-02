@@ -15,7 +15,6 @@ import {
   type TranslationKey,
 } from '@/lib/i18n'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -30,8 +29,12 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { StatusChip } from '@/components/status-chip'
+import { When } from '@/components/when'
+import { dayHeading, dayKey } from '@/lib/when'
 import { PageHeader } from '@/components/page-header'
-import { formatEgp } from '@/features/orders/status'
 import {
   comparePlaces,
   formatDuration,
@@ -59,6 +62,42 @@ function rangeToFromDate(range: DateRange | undefined): string | undefined {
 }
 
 const columnHelper = createAppColumnHelper<StayViewModel>()
+
+/** When a stay ran, in the day its group names: "14:00 – 16:30" */
+function StaySpan({ stay }: { stay: StayViewModel }) {
+  const start = stay.startedAt ?? stay.createdAt
+  return (
+    <span className='tabular-nums'>
+      <When value={start} mode='time' />
+      {stay.endedAt && (
+        <>
+          {' – '}
+          <When value={stay.endedAt} mode='time' />
+        </>
+      )}
+    </span>
+  )
+}
+
+function stayDuration(stay: StayViewModel): string {
+  return stay.startedAt && stay.endedAt
+    ? formatDuration(stay.startedAt, stay.endedAt)
+    : '—'
+}
+
+/** Paid (with its receipt), not paid, or cancelled, as a soft chip */
+function StayPaid({ stay }: { stay: StayViewModel }) {
+  const t = useT()
+  if (Number(stay.status) === STAY_CANCELLED)
+    return <StatusChip tone='danger'>{t('cancelled')}</StatusChip>
+  return stay.paidAt ? (
+    <StatusChip tone='success'>
+      {stay.receiptNumber != null ? `#${stay.receiptNumber}` : t('paid')}
+    </StatusChip>
+  ) : (
+    <StatusChip tone='warning'>{t('notPaid')}</StatusChip>
+  )
+}
 
 /** Every ended or cancelled stay of the branch, by place and date range. */
 export function StayHistory() {
@@ -109,92 +148,46 @@ export function StayHistory() {
           id: 'place',
           header: t('place'),
           cell: ({ row }) => (
-            <span className='font-medium'>
-              {localized(row.original.placeName) || '—'}
-            </span>
+            <div className='flex flex-col leading-tight'>
+              <span className='font-medium'>
+                {localized(row.original.placeName) || '—'}
+              </span>
+              <span className='text-muted-foreground text-xs'>
+                {row.original.customerName || t('walkIn')}
+              </span>
+            </div>
           ),
-        }),
-        columnHelper.accessor('customerName', {
-          id: 'customer',
-          header: t('customer'),
-          cell: (info) => info.getValue() || t('walkIn'),
         }),
         columnHelper.accessor((row) => row.startedAt ?? row.createdAt ?? '', {
-          id: 'started',
+          id: 'when',
           header: t('started'),
-          cell: ({ row }) => {
-            const start = row.original.startedAt ?? row.original.createdAt
-            return start ? new Date(start).toLocaleString(locale) : '—'
-          },
-        }),
-        columnHelper.accessor((row) => row.endedAt ?? '', {
-          id: 'ended',
-          header: t('ended'),
-          cell: ({ row }) => {
-            const end = row.original.endedAt
-            return end
-              ? new Date(end).toLocaleTimeString(locale, {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })
-              : '—'
-          },
-        }),
-        columnHelper.display({
-          id: 'duration',
-          header: t('duration'),
-          cell: ({ row }) => {
-            const start = row.original.startedAt
-            const end = row.original.endedAt
-            if (!start || !end) return '—'
-            return (
-              <span className='font-mono tabular-nums'>
-                {formatDuration(start, end)}
-              </span>
-            )
-          },
-        }),
-        // Rounded steps per rate, exactly what went on the bill
-        columnHelper.display({
-          id: 'rates',
-          header: t('rateOptions'),
           cell: ({ row }) => (
-            <span className='tabular-nums'>
-              {stayBreakdown(row.original, t, localized) || '—'}
-            </span>
+            <div className='flex flex-col leading-tight'>
+              <StaySpan stay={row.original} />
+              <span className='text-muted-foreground text-xs tabular-nums'>
+                {stayDuration(row.original)}
+              </span>
+            </div>
           ),
         }),
+        // Rounded steps per rate, exactly what went on the bill, under it
         columnHelper.accessor((row) => Number(row.totalCost ?? 0), {
           meta: { align: 'end' },
           id: 'total',
-          header: () => <div className='text-end'>{t('total')}</div>,
-          cell: ({ row }) =>
-            row.original.totalCost != null ? (
-              <div className='text-end font-medium tabular-nums'>
-                {formatEgp(row.original.totalCost)}
-              </div>
-            ) : (
-              <div className='text-end'>—</div>
-            ),
+          header: t('total'),
+          cell: ({ row }) => (
+            <Money
+              value={row.original.totalCost}
+              strong
+              dashZero={row.original.totalCost == null}
+              sub={stayBreakdown(row.original, t, localized) || undefined}
+            />
+          ),
         }),
         columnHelper.display({
           id: 'paid',
           header: t('paid'),
-          cell: ({ row }) => {
-            const stay = row.original
-            if (Number(stay.status) === STAY_CANCELLED) {
-              return <Badge variant='destructive'>{t('cancelled')}</Badge>
-            }
-            return stay.paidAt ? (
-              <Badge variant='secondary'>
-                {stay.receiptNumber != null
-                  ? `#${stay.receiptNumber}`
-                  : t('paid')}
-              </Badge>
-            ) : (
-              <Badge variant='outline'>{t('notPaid')}</Badge>
-            )
-          },
+          cell: ({ row }) => <StayPaid stay={row.original} />,
         }),
       ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -281,6 +274,36 @@ export function StayHistory() {
           table={table}
           isLoading={historyQuery.isLoading}
           emptyMessage={t('noTimeHistory')}
+          groupBy={{
+            key: (row) => dayKey(row.startedAt ?? row.createdAt),
+            label: (key) => dayHeading(key, locale, t),
+          }}
+          mobileRow={({ original: stay }) => (
+            <ListRow
+              title={localized(stay.placeName) || '—'}
+              meta={
+                <>
+                  <span>{stay.customerName || t('walkIn')}</span>
+                  <Dot />
+                  <StaySpan stay={stay} />
+                  {stay.startedAt && stay.endedAt && (
+                    <>
+                      <Dot />
+                      <span className='tabular-nums'>{stayDuration(stay)}</span>
+                    </>
+                  )}
+                </>
+              }
+              trailing={
+                <Money
+                  value={stay.totalCost}
+                  strong
+                  dashZero={stay.totalCost == null}
+                />
+              }
+              trailingMeta={<StayPaid stay={stay} />}
+            />
+          )}
         />
 
         <DataTablePagination table={table} />

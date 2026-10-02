@@ -14,8 +14,8 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -30,7 +30,10 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
+import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
+import { StatusChip } from '@/components/status-chip'
+import { When } from '@/components/when'
 import {
   comparePlaces,
   RESERVATION_CANCELLED,
@@ -67,15 +70,16 @@ export function ReservationOutcome({
   const t = useT()
   switch (Number(reservation.status)) {
     case RESERVATION_SEATED:
-      return <Badge variant='secondary'>{t('seated')}</Badge>
+      return <StatusChip tone='success'>{t('seated')}</StatusChip>
     case RESERVATION_COMPLETED:
-      return <Badge variant='secondary'>{t('completed')}</Badge>
+      return <StatusChip tone='success'>{t('completed')}</StatusChip>
     case RESERVATION_CANCELLED:
-      return <Badge variant='destructive'>{t('cancelled')}</Badge>
+      return <StatusChip tone='muted'>{t('cancelled')}</StatusChip>
     case RESERVATION_EXPIRED:
-      return <Badge variant='outline'>{t('noShow')}</Badge>
+      // The one an owner looks for: who booked and never came
+      return <StatusChip tone='danger'>{t('noShow')}</StatusChip>
     default:
-      return <Badge variant='outline'>{t('held')}</Badge>
+      return <StatusChip tone='info'>{t('held')}</StatusChip>
   }
 }
 
@@ -121,71 +125,67 @@ export function ReservationHistory() {
 
   const reservations = historyQuery.data?.items ?? []
 
+  // The day and time it was for: a booking made ahead sits with the day it
+  // was honoured (or missed), a reservation for now with the moment it was made
+  const forOf = (r: ReservationViewModel) => r.for ?? r.createdAt
+
   const columns = useMemo(
     () =>
       columnHelper.columns([
-        columnHelper.accessor((row) => localized(row.placeName), {
-          id: 'place',
-          header: t('place'),
-          cell: ({ row }) => (
-            <span className='font-medium'>
-              {localized(row.original.placeName) || '—'}
-            </span>
-          ),
-        }),
         columnHelper.accessor('customerName', {
           id: 'customer',
           header: t('customer'),
           cell: ({ row }) => (
-            <span>
-              {row.original.customerName || t('walkIn')}
-              {row.original.partySize ? (
-                <span className='text-muted-foreground'>
-                  {' '}
-                  · {t('partyOf', { count: row.original.partySize })}
-                </span>
-              ) : null}
-            </span>
+            <div className='flex flex-col leading-tight'>
+              <span className='font-medium'>
+                {row.original.customerName || t('walkIn')}
+                {row.original.partySize ? (
+                  <span className='text-muted-foreground font-normal'>
+                    {' '}
+                    · {t('partyOf', { count: row.original.partySize })}
+                  </span>
+                ) : null}
+              </span>
+              <span className='text-muted-foreground text-xs'>
+                {localized(row.original.placeName) || '—'}
+              </span>
+            </div>
           ),
         }),
-        // The day and time it was for: a booking made ahead sits with the
-        // day it was honoured (or missed), a reservation for now with the
-        // moment it was made
-        columnHelper.accessor((row) => row.for ?? row.createdAt ?? '', {
+        columnHelper.accessor((row) => forOf(row) ?? '', {
           id: 'for',
           header: t('reservedFor'),
-          cell: ({ row }) => {
-            const when = row.original.for ?? row.original.createdAt
-            return when ? new Date(when).toLocaleString(locale) : '—'
-          },
-        }),
-        columnHelper.accessor((row) => row.createdAt ?? '', {
-          id: 'made',
-          header: t('madeAt'),
-          cell: ({ row }) => {
-            const made = row.original.createdAt
-            // Same moment as "for" on a reservation for now: nothing to add
-            if (!made || !row.original.for) return '—'
-            return new Date(made).toLocaleString(locale)
-          },
-        }),
-        columnHelper.accessor((row) => row.seatedAt ?? row.closedAt ?? '', {
-          id: 'closed',
-          header: t('outcomeAt'),
-          cell: ({ row }) => {
-            const at = row.original.seatedAt ?? row.original.closedAt
-            return at
-              ? new Date(at).toLocaleTimeString(locale, {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })
-              : '—'
-          },
+          cell: ({ row }) => (
+            <div className='flex flex-col leading-tight'>
+              <When value={forOf(row.original)} mode='time' />
+              {/* Booked ahead: when it was made, quietly */}
+              {row.original.for && row.original.createdAt && (
+                <span className='text-muted-foreground text-xs'>
+                  {t('madeAt')}{' '}
+                  <When value={row.original.createdAt} mode='dateTime' />
+                </span>
+              )}
+            </div>
+          ),
         }),
         columnHelper.display({
           id: 'outcome',
           header: t('outcome'),
-          cell: ({ row }) => <ReservationOutcome reservation={row.original} />,
+          cell: ({ row }) => {
+            const at = row.original.seatedAt ?? row.original.closedAt
+            return (
+              <div className='flex items-center gap-2'>
+                <ReservationOutcome reservation={row.original} />
+                {at && (
+                  <When
+                    value={at}
+                    mode='time'
+                    className='text-muted-foreground text-xs'
+                  />
+                )}
+              </div>
+            )
+          },
         }),
       ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,6 +272,33 @@ export function ReservationHistory() {
           table={table}
           isLoading={historyQuery.isLoading}
           emptyMessage={t('noReservationHistory')}
+          groupBy={{
+            key: (row) => dayKey(forOf(row)),
+            label: (key) => dayHeading(key, locale, t),
+          }}
+          mobileRow={({ original: r }) => (
+            <ListRow
+              title={
+                <>
+                  {r.customerName || t('walkIn')}
+                  {r.partySize ? (
+                    <span className='text-muted-foreground font-normal'>
+                      {' '}
+                      · {t('partyOf', { count: r.partySize })}
+                    </span>
+                  ) : null}
+                </>
+              }
+              meta={
+                <>
+                  <span>{localized(r.placeName) || '—'}</span>
+                  <Dot />
+                  <When value={forOf(r)} mode='time' />
+                </>
+              }
+              trailingMeta={<ReservationOutcome reservation={r} />}
+            />
+          )}
         />
 
         <DataTablePagination table={table} />
