@@ -119,6 +119,15 @@ export type CustomizationOptionDto = {
     isOutOfStock?: boolean;
 };
 
+export type DrawDishPhotoRequest = {
+    nameEn: null | string;
+    nameAr: null | string;
+    description: null | string;
+    category: null | string;
+    style: null | string;
+    note: null | string;
+};
+
 export type IFormFile = Blob | File;
 
 export type IFormFileCollection = Array<IFormFile>;
@@ -522,6 +531,35 @@ export type ScanMenuResponses = {
 };
 
 export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
+
+export type DrawDishPhotoData = {
+    body: DrawDishPhotoRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/photo';
+};
+
+export type DrawDishPhotoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DrawDishPhotoError = DrawDishPhotoErrors[keyof DrawDishPhotoErrors];
 
 export type QuotePromoData = {
     body?: never;
@@ -1126,6 +1164,10 @@ export type GetItemPictureData = {
          * A narrower copy: 160, 320, 640 or 1280 px wide
          */
         w?: number | string;
+        /**
+         * The picture's version, as its pictureUri carries it; the current one makes the answer immutable
+         */
+        v?: string;
         /**
          * The API version, in the format 'major.minor'.
          */

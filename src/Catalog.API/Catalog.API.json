@@ -221,6 +221,58 @@
         ]
       }
     },
+    "/api/catalog/assist/photo": {
+      "post": {
+        "tags": [
+          "Assist"
+        ],
+        "summary": "Draw a photo of a dish",
+        "description": "The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).",
+        "operationId": "DrawDishPhoto",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DrawDishPhotoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/catalog/promos/quote": {
       "get": {
         "tags": [
@@ -4005,6 +4057,55 @@
           },
           "isOutOfStock": {
             "type": "boolean"
+          }
+        }
+      },
+      "DrawDishPhotoRequest": {
+        "required": [
+          "nameEn",
+          "nameAr",
+          "description",
+          "category",
+          "style",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nameAr": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "style": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

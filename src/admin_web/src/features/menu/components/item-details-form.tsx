@@ -50,6 +50,7 @@ import {
   useLocalizeAssist,
 } from '@/features/assist/use-localize-assist'
 import { itemPictureUrl } from '../pictures'
+import { PhotoStudio } from './photo-studio'
 import {
   bodyFromDraft,
   DraftCard,
@@ -160,6 +161,7 @@ export function ItemDetailsForm({
   const queryClient = useQueryClient()
   const isEditing = !!item
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [studioOpen, setStudioOpen] = useState(false)
 
   const base = item?.base ?? item
   const [form, setForm] = useState<FormState>({
@@ -434,6 +436,24 @@ export function ItemDetailsForm({
             {preview ? t('clickToReplacePhoto') : t('clickToAddPhoto')}
             <br />
             {t('photoHint')}
+            {assist.available && (
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                className='text-primary hover:text-primary mt-2 me-2'
+                disabled={!form.name.en?.trim() && !form.name.ar?.trim()}
+                title={
+                  !form.name.en?.trim() && !form.name.ar?.trim()
+                    ? t('studioNameFirst')
+                    : undefined
+                }
+                onClick={() => setStudioOpen(true)}
+              >
+                <Sparkles className='me-1.5 h-3.5 w-3.5' />
+                {t('studioOpen')}
+              </Button>
+            )}
             {preview && (
               <Button
                 type='button'
@@ -453,6 +473,27 @@ export function ItemDetailsForm({
               </Button>
             )}
           </div>
+          {studioOpen && (
+            <PhotoStudio
+              open={studioOpen}
+              onOpenChange={setStudioOpen}
+              dish={{
+                nameEn: form.name.en?.trim() || undefined,
+                nameAr: form.name.ar?.trim() || undefined,
+                description:
+                  form.description.en?.trim() ||
+                  form.description.ar?.trim() ||
+                  undefined,
+                category: (() => {
+                  const category = categories.find(
+                    (c) => Number(c.id) === form.catalogTypeId
+                  )
+                  return category?.name?.en || category?.name?.ar || undefined
+                })(),
+              }}
+              onUse={(file, url) => setPicture({ kind: 'file', file, url })}
+            />
+          )}
           <input
             ref={fileInputRef}
             type='file'

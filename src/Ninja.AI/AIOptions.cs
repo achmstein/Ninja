@@ -56,6 +56,13 @@ public sealed class AIOptions
     public string? VisionModel { get; set; }
 
     /// <summary>
+    /// The model a dish photo is drawn by. Through the platform's gateway it is
+    /// the image role ("image"), which the control panel points at a model;
+    /// straight at a provider, that provider's image model.
+    /// </summary>
+    public string ImageModel { get; set; } = "image";
+
+    /// <summary>
     /// The model asked when the usual one is busy: a 429, or a 5xx the SDK's
     /// one retry did not get past ("This model is currently experiencing high
     /// demand"). On Gemini a smaller model has its own quota and is rarely

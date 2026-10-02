@@ -42,7 +42,43 @@ public static class CatalogAssistApi
             .DisableAntiforgery()
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
+        api.MapPost("/assist/photo", DrawDishPhoto)
+            .WithName("DrawDishPhoto")
+            .WithSummary("Draw a photo of a dish")
+            .WithDescription("The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).")
+            .WithTags("Assist")
+            .RequireAuthorization("Admin")
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
+
         return api;
+    }
+
+    public static async Task<Results<FileContentHttpResult, BadRequest<ProblemDetails>, ProblemHttpResult>> DrawDishPhoto(
+        DrawDishPhotoRequest request,
+        [FromServices] DishPhotoDrawer drawer,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        if (!drawer.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        if (string.IsNullOrWhiteSpace(request.NameEn) && string.IsNullOrWhiteSpace(request.NameAr))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Name the dish first: its photo is drawn from its name." });
+        if (request.Note is { Length: > DishPhotoDrawer.MaxNoteLength })
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Keep the note under {DishPhotoDrawer.MaxNoteLength} characters." });
+
+        try
+        {
+            return TypedResults.File(await drawer.DrawAsync(request, ct), "image/webp", "dish.webp");
+        }
+        catch (NoImageModelException)
+        {
+            return TypedResults.Problem(title: "No image model", detail: "Dish photos are not set up: the platform has no image model yet.", statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
     }
 
     public static async Task<Results<Ok<LocalizeResponse>, BadRequest<ProblemDetails>, ProblemHttpResult>> LocalizeMenuText(

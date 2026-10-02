@@ -227,6 +227,12 @@ public static class AiSeed
 /// images endpoint (POST …/images/generations, which Gemini's image models and
 /// OpenAI's both answer): one square PNG per prompt.
 /// </summary>
+/// <summary>The image model's provider refused, with the status it answered.</summary>
+public sealed class AiImageException(int status, string message) : InvalidOperationException(message)
+{
+    public int Status { get; } = status;
+}
+
 public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClientFactory clients)
 {
     public async Task<bool> IsConfiguredAsync(CancellationToken ct) => await router.RouteExactAsync(AiRoles.Image, ct) is not null;
@@ -247,7 +253,7 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
                 (status, text) = await PostAsync(client, route, body, ct);
             }
             if (status is < 200 or > 299)
-                throw new InvalidOperationException($"{route.ProviderName} drew nothing ({status}): {(text.Length > 300 ? text[..300] : text)}");
+                throw new AiImageException(status, $"{route.ProviderName} drew nothing ({status}): {(text.Length > 300 ? text[..300] : text)}");
 
             var first = JsonNode.Parse(text)?["data"]?[0];
             byte[] bytes;

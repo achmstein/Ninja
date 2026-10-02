@@ -287,7 +287,56 @@ public static class AiGatewayApi
     public static IEndpointRouteBuilder MapAiGateway(this IEndpointRouteBuilder app)
     {
         app.MapPost("/ai/v1/chat/completions", ChatAsync).AllowAnonymous().ExcludeFromDescription();
+        app.MapPost("/ai/v1/images/generations", ImagesAsync).AllowAnonymous().ExcludeFromDescription();
         return app;
+    }
+
+    /// <summary>
+    /// A picture drawn by the image role's model, in OpenAI's shape (base64),
+    /// whatever model the stack names: the image role decides. A provider's
+    /// refusal keeps its status (a 429 stays a 429).
+    /// </summary>
+    public static async Task ImagesAsync(
+        HttpContext http, AiImages images, IOptions<PlatformOptions> options, CancellationToken ct)
+    {
+        var presented = http.Request.Headers.Authorization.ToString();
+        var slug = AiGatewayKeys.SlugOf(presented.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? presented[7..].Trim() : null, options.Value.EncryptionKey);
+        if (slug is null)
+        {
+            await ErrorAsync(http, StatusCodes.Status401Unauthorized, "invalid_api_key", "Not a key of this platform's AI gateway.", ct);
+            return;
+        }
+
+        if (await JsonNode.ParseAsync(http.Request.Body, cancellationToken: ct) is not JsonObject body
+            || body["prompt"]?.GetValue<string>() is not { Length: > 0 } prompt)
+        {
+            await ErrorAsync(http, StatusCodes.Status400BadRequest, "invalid_request_error", "The body must be an image request with a prompt.", ct);
+            return;
+        }
+
+        if (!await images.IsConfiguredAsync(ct))
+        {
+            await ErrorAsync(http, StatusCodes.Status503ServiceUnavailable, "not_configured", "The platform has no image model: set one on the AI tab.", ct);
+            return;
+        }
+
+        try
+        {
+            var picture = await images.GenerateAsync(prompt, slug, ct);
+            await http.Response.WriteAsJsonAsync(new
+            {
+                created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                data = new[] { new { b64_json = Convert.ToBase64String(picture) } },
+            }, ct);
+        }
+        catch (AiImageException ex)
+        {
+            await ErrorAsync(http, ex.Status, "provider_error", ex.Message, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await ErrorAsync(http, StatusCodes.Status502BadGateway, "provider_unreachable", ex.Message, ct);
+        }
     }
 
     public static async Task ChatAsync(
