@@ -7,7 +7,6 @@ import { type EmployeeView } from '@/api/payroll'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -16,15 +15,50 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
+import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
+import { StatusChip } from '@/components/status-chip'
 import { EmployeeSheet } from './components/employee-sheet'
 import { payLabel } from './format'
 import { employeesQueryOptions } from './queries'
 
 const route = getRouteApi('/_authenticated/payroll/employees')
 const columnHelper = createAppColumnHelper<EmployeeView>()
+
+/** What the business owes them; what they owe (an advance past their pay) in red */
+function Owed({ balance }: { balance: EmployeeView['balance'] }) {
+  const t = useT()
+  const n = toNumber(balance)
+  return n < 0 ? (
+    <span className='text-destructive tabular-nums'>
+      {t('owesShort')} {formatEgp(-n)}
+    </span>
+  ) : (
+    <Money value={n} strong={n > 0} dashZero />
+  )
+}
+
+function EmployeeChips({ employee }: { employee: EmployeeView }) {
+  const t = useT()
+  return (
+    <>
+      {employee.userId && (
+        <StatusChip tone='muted' icon={KeyRound}>
+          {t('hasLogin')}
+        </StatusChip>
+      )}
+      {!employee.isActive && (
+        <StatusChip tone='muted'>
+          {t('leftOn', { date: employee.endedOn ?? '' })}
+        </StatusChip>
+      )}
+    </>
+  )
+}
 
 /**
  * The register: everyone who works at the branch, with their pay and what
@@ -54,18 +88,19 @@ export function Employees() {
         columnHelper.accessor('name', {
           header: t('name'),
           cell: ({ row }) => (
-            <div className='flex flex-col'>
-              <span
-                className={cn(
-                  'font-medium',
-                  !row.original.isActive && 'text-muted-foreground'
-                )}
-              >
-                {row.original.name}
-              </span>
-              <span className='text-muted-foreground text-xs'>
-                {row.original.jobTitle || '—'}
-              </span>
+            <div
+              className={cn(
+                'flex items-center gap-3',
+                !row.original.isActive && 'opacity-60'
+              )}
+            >
+              <EntityAvatar name={row.original.name ?? ''} />
+              <div className='flex flex-col leading-tight'>
+                <span className='font-medium'>{row.original.name}</span>
+                <span className='text-muted-foreground text-xs'>
+                  {row.original.jobTitle || '—'}
+                </span>
+              </div>
             </div>
           ),
         }),
@@ -83,39 +118,14 @@ export function Employees() {
           meta: { align: 'end' },
           id: 'balance',
           header: t('owed'),
-          cell: ({ row }) => {
-            const balance = toNumber(row.original.balance)
-            return (
-              <span
-                className={cn(
-                  'tabular-nums',
-                  balance > 0 && 'font-medium',
-                  balance < 0 && 'text-destructive'
-                )}
-              >
-                {balance < 0
-                  ? `${t('owesShort')} ${formatEgp(-balance)}`
-                  : formatEgp(balance)}
-              </span>
-            )
-          },
+          cell: ({ row }) => <Owed balance={row.original.balance} />,
         }),
         columnHelper.display({
           id: 'status',
           header: '',
           cell: ({ row }) => (
             <div className='flex gap-1'>
-              {row.original.userId && (
-                <Badge variant='outline' className='gap-1 font-normal'>
-                  <KeyRound className='h-3 w-3' />
-                  {t('hasLogin')}
-                </Badge>
-              )}
-              {!row.original.isActive && (
-                <Badge variant='secondary' className='font-normal'>
-                  {t('leftOn', { date: row.original.endedOn ?? '' })}
-                </Badge>
-              )}
+              <EmployeeChips employee={row.original} />
             </div>
           ),
         }),
@@ -181,6 +191,24 @@ export function Employees() {
             table={table}
             isLoading={employees.isLoading}
             onRowClick={(row) => open(toNumber(row.original.id))}
+            mobileRow={({ original: e }) => (
+              <ListRow
+                className={cn(!e.isActive && 'opacity-60')}
+                leading={<EntityAvatar name={e.name ?? ''} />}
+                title={e.name}
+                meta={
+                  <>
+                    {e.jobTitle && <span>{e.jobTitle}</span>}
+                    {e.jobTitle && <Dot />}
+                    <span className='tabular-nums'>
+                      {payLabel(e.currentTerms, t)}
+                    </span>
+                    <EmployeeChips employee={e} />
+                  </>
+                }
+                trailing={<Owed balance={e.balance} />}
+              />
+            )}
           />
         )}
       </Main>

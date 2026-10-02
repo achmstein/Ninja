@@ -6,8 +6,7 @@ import { Store, UserPlus } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -15,13 +14,17 @@ import {
   DataTable,
   dataTableFeatures,
 } from '@/components/data-table'
+import { EntityAvatar } from '@/components/entity-avatar'
 import { Main } from '@/components/layout/main'
+import { ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
+import { RowActions } from '@/components/row-actions'
+import { StatusChip } from '@/components/status-chip'
+import { When } from '@/components/when'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
   getCustomerDisplayName,
-  getCustomerInitials,
 } from '@/features/customers/types'
 import { AddStaffDialog } from './components/add-staff-dialog'
 import { ManageBranchesDialog } from './components/manage-branches-dialog'
@@ -47,7 +50,10 @@ export function StaffManagement() {
   const staffQuery = useQuery({
     queryKey: ['staff'],
     queryFn: () =>
-      customersService.getCustomers({ role: 'Admin,Owner,Cashier,Kitchen', max: 200 }),
+      customersService.getCustomers({
+        role: 'Admin,Owner,Cashier,Kitchen',
+        max: 200,
+      }),
   })
 
   const staff = useMemo(
@@ -75,32 +81,67 @@ export function StaffManagement() {
           ? t('kitchenRole')
           : t('cashierRole')
 
+  const rolesOf = (user: (typeof staff)[number]) =>
+    STAFF_ROLES.filter((role) => (user.realmRoles ?? []).includes(role)).map(
+      (role) => (
+        <StatusChip
+          key={role}
+          tone={
+            role === 'Owner' ? 'info' : role === 'Admin' ? 'success' : 'muted'
+          }
+        >
+          {roleLabel(role)}
+        </StatusChip>
+      )
+    )
+
+  const enabledSwitch = (user: (typeof staff)[number]) => (
+    <Switch
+      checked={user.enabled}
+      disabled={
+        !isOwner || user.id === currentUserId || toggleEnabled.isPending
+      }
+      onCheckedChange={() => toggleEnabled.mutate(user.id)}
+      aria-label={t('toggleAccountFor', { name: getCustomerDisplayName(user) })}
+    />
+  )
+
+  // Owners hold every branch implicitly; Admins and Cashiers are assigned theirs
+  const actionsOf = (user: (typeof staff)[number]) => (
+    <RowActions
+      actions={[
+        {
+          label: t('assignedBranches'),
+          icon: Store,
+          hidden: !isOwner || (user.realmRoles ?? []).includes('Owner'),
+          onSelect: () => setBranchesUser(user),
+        },
+      ]}
+    />
+  )
+
   const columns = useMemo(
     () =>
       columnHelper.columns([
-        columnHelper.display({
-          id: 'avatar',
-          header: '',
-          cell: ({ row }) => (
-            <Avatar className='h-8 w-8'>
-              <AvatarFallback className='bg-primary/10 text-primary text-xs'>
-                {getCustomerInitials(row.original)}
-              </AvatarFallback>
-            </Avatar>
-          ),
-          meta: { className: 'w-[50px]' },
-        }),
         columnHelper.accessor((row) => getCustomerDisplayName(row), {
           id: 'name',
           header: t('name'),
           cell: ({ row }) => (
-            <div className='flex flex-col'>
-              <span className='font-medium'>
-                {getCustomerDisplayName(row.original)}
-              </span>
-              <span className='text-muted-foreground text-xs'>
-                {row.original.email || '—'}
-              </span>
+            <div
+              className={cn(
+                'flex items-center gap-3',
+                !row.original.enabled && 'opacity-60'
+              )}
+            >
+              <EntityAvatar name={getCustomerDisplayName(row.original)} />
+              <div className='flex min-w-0 flex-col leading-tight'>
+                <span className='truncate font-medium'>
+                  {getCustomerDisplayName(row.original)}
+                </span>
+                <span className='text-muted-foreground truncate text-xs'>
+                  {row.original.email || '—'}
+                </span>
+              </div>
             </div>
           ),
         }),
@@ -108,71 +149,27 @@ export function StaffManagement() {
           id: 'roles',
           header: t('roles'),
           cell: ({ row }) => (
-            <div className='flex gap-1'>
-              {STAFF_ROLES.filter((role) =>
-                (row.original.realmRoles ?? []).includes(role)
-              ).map((role) => (
-                <Badge
-                  key={role}
-                  variant={
-                    role === 'Owner'
-                      ? 'default'
-                      : role === 'Admin'
-                        ? 'secondary'
-                        : 'outline'
-                  }
-                >
-                  {roleLabel(role)}
-                </Badge>
-              ))}
-            </div>
+            <div className='flex flex-wrap gap-1'>{rolesOf(row.original)}</div>
           ),
         }),
-        columnHelper.accessor(
-          (row) =>
-            row.createdTimestamp
-              ? new Date(row.createdTimestamp).toLocaleDateString(locale)
-              : '',
-          {
-            id: 'joined',
-            header: t('joined'),
-          }
-        ),
+        columnHelper.display({
+          id: 'joined',
+          header: t('joined'),
+          meta: { emphasis: 'muted' },
+          cell: ({ row }) => (
+            <When value={row.original.createdTimestamp} mode='date' />
+          ),
+        }),
         columnHelper.display({
           id: 'enabled',
           header: t('active'),
-          cell: ({ row }) => (
-            <Switch
-              checked={row.original.enabled}
-              disabled={
-                !isOwner ||
-                row.original.id === currentUserId ||
-                toggleEnabled.isPending
-              }
-              onCheckedChange={() => toggleEnabled.mutate(row.original.id)}
-              aria-label={t('toggleAccountFor', {
-                name: getCustomerDisplayName(row.original),
-              })}
-            />
-          ),
+          cell: ({ row }) => enabledSwitch(row.original),
         }),
         columnHelper.display({
-          id: 'branches',
+          id: 'actions',
           header: '',
-          cell: ({ row }) =>
-            // Owners hold every branch implicitly — Admins and Cashiers are assigned
-            isOwner && !(row.original.realmRoles ?? []).includes('Owner') ? (
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-8'
-                aria-label={t('assignedBranches')}
-                onClick={() => setBranchesUser(row.original)}
-              >
-                <Store className='h-4 w-4' />
-              </Button>
-            ) : null,
-          meta: { className: 'w-[50px]' },
+          cell: ({ row }) => actionsOf(row.original),
+          meta: { className: 'w-[48px]' },
         }),
       ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -210,6 +207,18 @@ export function StaffManagement() {
           table={table}
           isLoading={staffQuery.isLoading}
           emptyMessage={t('noAdminsFound')}
+          mobileRow={({ original: user }) => (
+            <div className='flex items-center gap-2'>
+              <ListRow
+                className={cn('flex-1', !user.enabled && 'opacity-60')}
+                leading={<EntityAvatar name={getCustomerDisplayName(user)} />}
+                title={getCustomerDisplayName(user)}
+                meta={rolesOf(user)}
+              />
+              {enabledSwitch(user)}
+              {actionsOf(user)}
+            </div>
+          )}
         />
       </Main>
 
