@@ -154,6 +154,7 @@ export function Stock() {
                   <Button
                     variant='outline'
                     size='icon'
+                    className='size-9'
                     aria-label={t('moreActions')}
                   >
                     <MoreHorizontal className='h-4 w-4' />
@@ -479,10 +480,10 @@ function CountMode({
         <span className='text-muted-foreground text-sm tabular-nums'>
           {t('countingProgress', { done, total })}
         </span>
-        <Button variant='ghost' onClick={onDone} disabled={isPending}>
+        <Button variant='ghost' size='sm' onClick={onDone} disabled={isPending}>
           {t('cancel')}
         </Button>
-        <Button onClick={save} disabled={isPending || done === 0}>
+        <Button size='sm' onClick={save} disabled={isPending || done === 0}>
           {isPending && <Spinner className='me-2' />}
           {t('saveCount')}
         </Button>

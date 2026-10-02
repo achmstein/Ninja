@@ -178,7 +178,7 @@ export function TillReport() {
                 }),
               })
             }}
-            className='h-8 w-[160px] ps-8'
+            className='w-[160px] ps-8'
           />
         </div>
       }

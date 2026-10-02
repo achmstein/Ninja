@@ -367,7 +367,7 @@ export function Payslips() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='text-muted-foreground size-8'
+                              className='text-muted-foreground size-9'
                               aria-label={t('refreshPayslip')}
                               title={t('refreshPayslip')}
                               disabled={isPending}
@@ -378,7 +378,7 @@ export function Payslips() {
                             <Button
                               variant='ghost'
                               size='icon'
-                              className='text-muted-foreground size-8'
+                              className='text-muted-foreground size-9'
                               aria-label={t('deletePayslip')}
                               title={t('deletePayslip')}
                               disabled={isPending}

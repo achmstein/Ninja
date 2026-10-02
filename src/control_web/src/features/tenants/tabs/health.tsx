@@ -229,7 +229,7 @@ function Logs({ slug, sources }: { slug: string; sources: string[] }) {
         <Button
           variant='ghost'
           size='icon'
-          className='ms-auto size-8'
+          className='ms-auto size-9'
           aria-label={t('refresh')}
           disabled={logs.isFetching}
           onClick={() => logs.refetch()}

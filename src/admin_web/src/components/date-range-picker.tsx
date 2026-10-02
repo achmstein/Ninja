@@ -44,6 +44,8 @@ type DateRangePickerProps = {
   defaultPreset?: 'today' | 'all'
   /** Extra controls on the same row (a lookup field, a filter) */
   children?: React.ReactNode
+  /** h-8 trigger, for a dense table toolbar; otherwise h-9 like the inputs */
+  compact?: boolean
   className?: string
 }
 
@@ -61,6 +63,7 @@ export function DateRangePicker({
   onChange,
   defaultPreset = 'today',
   children,
+  compact = false,
   className,
 }: DateRangePickerProps) {
   const t = useT()
@@ -127,7 +130,10 @@ export function DateRangePicker({
           <Button
             variant='outline'
             size='sm'
-            className='h-8 min-w-[11rem] justify-start font-normal'
+            className={cn(
+              'min-w-[11rem] justify-start font-normal',
+              compact ? 'h-8' : 'h-9'
+            )}
           >
             <CalendarIcon className='text-muted-foreground' />
             <span className='truncate'>{label}</span>

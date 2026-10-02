@@ -42,7 +42,7 @@ export function Header({ className, ...props }: HeaderProps) {
             'after:bg-background/20 after:absolute after:inset-0 after:-z-10 after:backdrop-blur-lg'
         )}
       >
-        <SidebarTrigger variant='outline' className='max-md:scale-125' />
+        <SidebarTrigger variant='outline' className='size-8' />
         <Separator orientation='vertical' className='h-6' />
         <Search />
         <div className='ms-auto flex items-center gap-2 sm:gap-3'>

@@ -280,7 +280,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='size-8'
+                className='size-9'
                 aria-label={t('moreActions')}
               >
                 <MoreHorizontal className='h-4 w-4' />

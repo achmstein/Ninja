@@ -315,7 +315,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             {showMore && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size='icon' variant='outline' className='size-8' aria-label={t('more')}>
+                  <Button size='icon' variant='outline' className='size-9' aria-label={t('more')}>
                     <MoreHorizontal />
                   </Button>
                 </DropdownMenuTrigger>

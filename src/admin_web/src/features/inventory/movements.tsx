@@ -122,7 +122,6 @@ export function Movements() {
             options={toStockItemOptions(items, localized, t)}
             placeholder={t('allItems')}
             clearLabel={t('allItems')}
-            size='default'
             className='w-[240px]'
           />
           <Combobox
@@ -136,7 +135,6 @@ export function Movements() {
             }))}
             placeholder={t('allTypes')}
             clearLabel={t('allTypes')}
-            size='default'
             className='w-[180px]'
           />
           <DateRangePicker
@@ -149,7 +147,7 @@ export function Movements() {
             <Button
               variant='ghost'
               size='sm'
-              className='h-8 px-2 lg:px-3'
+              className='px-2 lg:px-3'
               onClick={() =>
                 patchSearch({
                   stockItemId: undefined,

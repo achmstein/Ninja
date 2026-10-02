@@ -443,7 +443,6 @@ export function RecipeReviewSheet({
             <Button
               type='button'
               variant='ghost'
-              size='sm'
               disabled={!!saving}
               onClick={onBack}
             >

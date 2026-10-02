@@ -23,7 +23,7 @@ export function LanguageSwitch() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' className='scale-95 rounded-full'>
+        <Button variant='ghost' size='icon' className='size-8 rounded-full'>
           <Languages className='size-[1.2rem]' />
           <span className='sr-only'>Change language</span>
         </Button>

@@ -202,6 +202,7 @@ export function OrdersManagement() {
             search={search}
             dayWindow={dayWindow}
             defaultPreset='all'
+            compact
             onChange={(next: RangeSearch) =>
               navigate({
                 search: (prev) => ({ ...prev, page: undefined, ...next }),

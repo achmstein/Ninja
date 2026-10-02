@@ -71,7 +71,7 @@ export function AuditTable({ slug }: AuditTableProps) {
       <div className='flex flex-wrap items-center gap-2'>
         <span className='text-muted-foreground text-sm'>{t('showCount')}</span>
         <Select value={take} onValueChange={(v) => setTake(v as Take)}>
-          <SelectTrigger size='sm' aria-label={t('showCount')}>
+          <SelectTrigger aria-label={t('showCount')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

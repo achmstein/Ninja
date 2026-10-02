@@ -242,7 +242,12 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
                 className='font-mono text-xs'
                 onFocus={(e) => e.target.select()}
               />
-              <Button type='button' variant='outline' onClick={copyCallback}>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={copyCallback}
+              >
                 <Copy className='size-4' />
                 {t('copy')}
               </Button>
@@ -392,6 +397,7 @@ function SecretField({
             <Button
               type='button'
               variant='ghost'
+              size='sm'
               onClick={() => onChange({ mode: 'keep' })}
             >
               {t('cancel')}

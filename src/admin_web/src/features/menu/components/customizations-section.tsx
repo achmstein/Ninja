@@ -738,7 +738,7 @@ function GroupEditor({
         </div>
 
         <div className='space-y-1.5'>
-          <div className='text-muted-foreground grid grid-cols-[1fr_64px_36px_28px] items-center gap-1.5 px-0.5 text-xs'>
+          <div className='text-muted-foreground grid grid-cols-[1fr_64px_36px_32px] items-center gap-1.5 px-0.5 text-xs'>
             <span>{t('name')}</span>
             <span>± {currency}</span>
             <span className='text-center'>{t('defaultOption')}</span>
@@ -747,7 +747,7 @@ function GroupEditor({
           {options.map((option, index) => (
             <div
               key={index}
-              className='grid grid-cols-[1fr_64px_36px_28px] items-center gap-1.5'
+              className='grid grid-cols-[1fr_64px_36px_32px] items-center gap-1.5'
             >
               <LocalizedInput
                 ariaLabel={t('name')}
@@ -777,7 +777,7 @@ function GroupEditor({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='size-7'
+                className='size-8'
                 aria-label={t('removeOption')}
                 disabled={options.length === 1}
                 onClick={() =>
