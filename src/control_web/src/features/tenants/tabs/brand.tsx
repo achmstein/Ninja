@@ -13,6 +13,7 @@ import { ColorField } from '@/components/brand/color-field'
 import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
+import { useLogoCleanup } from '@/components/brand/logo-cleanup'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { FontOptions } from '@/components/brand/font-options'
@@ -496,11 +497,13 @@ function BrandImagesCard({ slug, brand }: { slug: string; brand: BrandDto }) {
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
   })
 
+  const logoCleanup = useLogoCleanup((slot, file) => upload.mutate({ path: { slug, slot }, body: { file } }))
+
   const busySlot = upload.isPending
     ? (upload.variables?.path.slot as ImageSlot)
     : remove.isPending
       ? (remove.variables?.path.slot as ImageSlot)
-      : null
+      : logoCleanup.busySlot
 
   return (
     <Card>
@@ -508,10 +511,11 @@ function BrandImagesCard({ slug, brand }: { slug: string; brand: BrandDto }) {
         <ImageSlotGrid
           srcOf={(slot) => imageOf(images, slot)}
           busySlot={busySlot}
-          onUpload={(slot, file) => upload.mutate({ path: { slug, slot }, body: { file } })}
+          onUpload={logoCleanup.pick}
           onRemove={(slot) => remove.mutate({ path: { slug, slot } })}
           defaultOpen={VARIANT_SLOTS.some((slot) => imageOf(images, slot) !== null)}
         />
+        {logoCleanup.dialog}
       </CardContent>
     </Card>
   )

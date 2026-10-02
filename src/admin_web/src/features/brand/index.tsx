@@ -60,6 +60,7 @@ import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { FontOptions } from '@/components/brand/font-options'
+import { useLogoCleanup } from '@/components/brand/logo-cleanup'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean; addon?: boolean }[] = [
   // Both hang off a place: a cloud kitchen, with none, is not offered them
@@ -225,10 +226,11 @@ function BrandForm({ brand }: { brand: Brand }) {
     onError: () => toast.error(t('brandSaveFailed')),
   })
   // One slot is busy at a time: the one whose request is in flight
+  const logoCleanup = useLogoCleanup((slot, file) => uploadImage.mutate({ path: { slot }, body: { file } }))
   const busySlot =
     (uploadImage.isPending && uploadImage.variables?.path.slot) ||
     (deleteImage.isPending && deleteImage.variables?.path.slot) ||
-    null
+    logoCleanup.busySlot
   const imageSlot = ({ slot, label, hint }: { slot: ImageSlot; label: TranslationKey; hint?: TranslationKey }) => (
     <ImageSlotField
       key={slot}
@@ -238,7 +240,7 @@ function BrandForm({ brand }: { brand: Brand }) {
       square={isMark(slot)}
       photo={isPhoto(slot)}
       busy={busySlot === slot}
-      onUpload={(file) => uploadImage.mutate({ path: { slot }, body: { file } })}
+      onUpload={(file) => logoCleanup.pick(slot, file)}
       onRemove={() => deleteImage.mutate({ path: { slot } })}
     />
   )
@@ -317,6 +319,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                 {VARIANT_SLOTS.map(imageSlot)}
               </CollapsibleContent>
             </Collapsible>
+            {logoCleanup.dialog}
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
@@ -739,7 +742,8 @@ function ImageSlotField({
         <input
           ref={input}
           type='file'
-          accept='image/png,image/jpeg,image/webp'
+          // An SVG is drawn as a PNG before it is uploaded; a photo is never a vector
+          accept={photo ? 'image/png,image/jpeg,image/webp' : 'image/png,image/jpeg,image/webp,image/svg+xml'}
           className='hidden'
           onChange={(e) => {
             const file = e.target.files?.[0]

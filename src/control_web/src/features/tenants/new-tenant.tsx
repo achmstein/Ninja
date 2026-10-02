@@ -15,6 +15,7 @@ import { ColorField } from '@/components/brand/color-field'
 import { DockField, type Dock } from '@/components/brand/dock-field'
 import { SocialField } from '@/components/brand/social-field'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
+import { useLogoCleanup } from '@/components/brand/logo-cleanup'
 import {
   PhonePreview,
   PreviewToggles,
@@ -192,6 +193,7 @@ export function NewTenantPage() {
   const [social, setSocial] = useState(true)
   const [files, setFiles] = useState<SlotFiles>({})
   const objectUrls = useObjectUrls(files)
+  const logoCleanup = useLogoCleanup((slot, file) => setFiles((prev) => ({ ...prev, [slot]: file })))
 
   // Capacity
   const [force, setForce] = useState(false)
@@ -574,7 +576,8 @@ export function NewTenantPage() {
               <SocialField id='socialSignIn' checked={social} onChange={setSocial} />
               <ImageSlotGrid
                 srcOf={(slot) => objectUrls[slot] ?? null}
-                onUpload={(slot, file) => setFiles((prev) => ({ ...prev, [slot]: file }))}
+                busySlot={logoCleanup.busySlot}
+                onUpload={logoCleanup.pick}
                 onRemove={(slot) =>
                   setFiles((prev) => {
                     const next = { ...prev }
@@ -583,6 +586,7 @@ export function NewTenantPage() {
                   })
                 }
               />
+              {logoCleanup.dialog}
             </CardContent>
           </Card>
 
