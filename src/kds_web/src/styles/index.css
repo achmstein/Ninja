@@ -38,9 +38,9 @@
     cursor: pointer;
   }
 
-  /* Arabic UI renders in Cairo (same as the customer apps) */
+  /* Arabic UI renders in Alexandria, as the till does */
   :root[dir='rtl'] body {
-    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+    font-family: 'Alexandria', 'Inter', system-ui, sans-serif;
   }
 
   /* Prevent focus zoom on mobile devices */
