@@ -219,6 +219,26 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
+    public void A_realm_s_phone_follows_the_country_the_business_is_in_now()
+    {
+        // A realm made with the catch-all pattern, before the business was set to Egypt
+        var old = JsonNode.Parse("""
+            [{"name":"username"},
+             {"name":"phoneNumber","validations":{"pattern":{"pattern":"^\\+?[0-9]{7,15}$","error-message":"invalidPhone"}},"annotations":{"inputType":"html5-tel","inputTypePlaceholder":"+xxxxxxxxxxx"}}]
+            """)!.AsArray();
+        Assert.IsTrue(Templates.WithPhoneRule(old, "EG"));
+        Assert.AreEqual("^01[0-9]{9}$", old[1]!["validations"]!["pattern"]!["pattern"]!.GetValue<string>());
+        Assert.AreEqual("01xxxxxxxxx", old[1]!["annotations"]!["inputTypePlaceholder"]!.GetValue<string>());
+        Assert.IsFalse(Templates.WithPhoneRule(old, "EG"), "twice is once");
+
+        // The template stamps the same rule, so a new realm needs nothing
+        var tenant = Blue();
+        var realm = JsonNode.Parse(Templates.TenantRealm(tenant, TenantHosts.For(tenant, Platform), Platform))!.AsObject();
+        var profile = realm["components"]!["org.keycloak.userprofile.UserProfileProvider"]![0]!["config"]!["kc.user.profile.config"]![0]!.GetValue<string>();
+        Assert.IsFalse(Templates.WithPhoneRule(JsonNode.Parse(profile)!["attributes"]!.AsArray(), tenant.Country));
+    }
+
+    [TestMethod]
     public void No_business_can_take_the_hubs_name()
     {
         Assert.IsFalse(TenantNaming.IsValidSlug(TenantNaming.HubRealm));

@@ -17,6 +17,7 @@ public static class Extensions
         var services = builder.Services;
 
         TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
+        services.AddSingleton<TenantCountry>();
         builder.AddDefaultAuthentication();
 
         // Avoid loading full database config and migrations if startup

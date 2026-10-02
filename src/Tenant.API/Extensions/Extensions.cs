@@ -17,6 +17,7 @@ public static class Extensions
         builder.Services.AddMigration<TenantContext, TenantContextSeed>();
 
         builder.Services.AddScoped<BranchSettingsService>();
+        builder.Services.AddSingleton<TenantCountry>();
 
         builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));
         builder.Services.AddSingleton<TenantBrandStore>();

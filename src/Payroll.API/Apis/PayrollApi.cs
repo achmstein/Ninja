@@ -124,12 +124,13 @@ public static class PayrollApi
     public static async Task<Results<Ok<CreatedResponse>, BadRequest<string>>> HireEmployee(
         HireEmployeeRequest request,
         [FromHeader(Name = "x-requestid")] Guid? requestId,
-        [FromServices] IMediator mediator)
+        [FromServices] IMediator mediator,
+        [FromServices] TenantCountry country)
     {
         try
         {
             var id = await mediator.SendIdentified<HireEmployeeCommand, int>(requestId, new HireEmployeeCommand(
-                request.Name, request.JobTitle, request.Phone, request.BranchId, request.UserId,
+                request.Name, request.JobTitle, PhoneRules.Tidy(request.Phone, country.Code), request.BranchId, request.UserId,
                 request.StartedOn, request.Scheme, request.Rate, request.PaidDaysOff ?? Employee.DefaultPaidDaysOff));
 
             return TypedResults.Ok(new CreatedResponse(id));
@@ -143,11 +144,12 @@ public static class PayrollApi
     public static async Task<Results<Ok, BadRequest<string>>> UpdateEmployee(
         int id,
         UpdateEmployeeRequest request,
-        [FromServices] IMediator mediator)
+        [FromServices] IMediator mediator,
+        [FromServices] TenantCountry country)
     {
         try
         {
-            await mediator.Send(new UpdateEmployeeCommand(id, request.Name, request.JobTitle, request.Phone, request.BranchId, request.UserId, request.PaidDaysOff ?? Employee.DefaultPaidDaysOff));
+            await mediator.Send(new UpdateEmployeeCommand(id, request.Name, request.JobTitle, PhoneRules.Tidy(request.Phone, country.Code), request.BranchId, request.UserId, request.PaidDaysOff ?? Employee.DefaultPaidDaysOff));
             return TypedResults.Ok();
         }
         catch (PayrollDomainException ex)

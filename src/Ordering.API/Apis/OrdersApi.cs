@@ -181,6 +181,7 @@ public static partial class OrdersApi
         var isGuest = string.IsNullOrEmpty(signedInUserId);
 
         string? guestId = null;
+        string? guestPhone = null;
         var guestOrdersAnywhere = false;
 
         if (isGuest)
@@ -202,8 +203,10 @@ public static partial class OrdersApi
                 return TypedResults.BadRequest("A name is required to order as a guest.");
             }
 
-            // The same rule the realm and the apps use, for this business's country
-            if (!PhoneRules.IsValid(request.GuestPhone, services.Country.Code))
+            // Read the way this business's country writes a number (+20 10â€¦, 10â€¦ â†’ 010â€¦), then held to the
+            // same rule the realm and the apps use
+            guestPhone = PhoneRules.Normalize(request.GuestPhone, services.Country.Code);
+            if (!PhoneRules.IsValid(guestPhone, services.Country.Code))
             {
                 return TypedResults.BadRequest("A valid phone number is required to order as a guest.");
             }
@@ -306,7 +309,7 @@ public static partial class OrdersApi
                 request.PointsToRedeem,
                 guestId,
                 isGuest ? request.GuestName : null,
-                isGuest ? request.GuestPhone : null,
+                isGuest ? guestPhone : null,
                 sessionId: request.SessionId,
                 placeId: request.PlaceId,
                 // The projection fills in what the client left out

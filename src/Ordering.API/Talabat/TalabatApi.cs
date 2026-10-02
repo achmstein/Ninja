@@ -44,6 +44,7 @@ public static class TalabatApi
         HttpContext http,
         IMediator mediator,
         IOrderRepository orders,
+        TenantCountry country,
         ILoggerFactory loggers)
     {
         var logger = loggers.CreateLogger("Ninja.Ordering.API.Talabat");
@@ -79,7 +80,9 @@ public static class TalabatApi
             branchId,
             customerNote: order.CustomerComment,
             guestName: order.CustomerName ?? $"{TalabatOrder.PlatformName} {order.ShortCode ?? order.Code}",
-            guestPhone: order.CustomerPhone,
+            // Talabat sends +20 10â€¦, 20 10â€¦ or 10â€¦: kept the way the country writes it, so the guest is the same
+            // person as on any other order and the number dials as staff expect; empty stays empty
+            guestPhone: PhoneRules.Normalize(order.CustomerPhone, country.Code) is { Length: > 0 } phone ? phone : null,
             source: OrderSource.Talabat,
             platform: order.ToPlatformOrder());
 

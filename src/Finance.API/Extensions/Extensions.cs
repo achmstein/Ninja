@@ -20,6 +20,7 @@ public static class Extensions
         var services = builder.Services;
 
         TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
+        services.AddSingleton<TenantCountry>();
         builder.AddDefaultAuthentication();
 
         // The assistant: on when the AppHost handed out a chat model, scripted

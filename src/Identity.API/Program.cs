@@ -57,8 +57,13 @@ app.Use(async (context, next) =>
 });
 
 // Registration endpoint
-app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, TenantCountry country) =>
 {
+    if (!PhoneInput.TryRead(request.PhoneNumber, country, out var phone, out var phoneProblem))
+    {
+        return phoneProblem;
+    }
+
     var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
     var realm = config["Keycloak:Realm"] ?? "chillax";
     var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
@@ -108,7 +113,7 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
         requiredActions = Array.Empty<string>(),
         attributes = new Dictionary<string, string[]>
         {
-            ["phoneNumber"] = string.IsNullOrEmpty(request.PhoneNumber) ? [] : [request.PhoneNumber]
+            ["phoneNumber"] = phone is null ? [] : [phone]
         },
         credentials = new[]
         {
@@ -619,8 +624,13 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
 }).RequireAuthorization();
 
 // Update profile (name + phone) - used from settings
-app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus) =>
+app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country) =>
 {
+    if (!PhoneInput.TryRead(request.PhoneNumber, country, out var phone, out var phoneProblem))
+    {
+        return phoneProblem;
+    }
+
     var userId = httpContext.User.GetUserId();
     if (string.IsNullOrEmpty(userId))
     {
@@ -677,14 +687,14 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
     }
 
     // Merge attributes — only update phone if provided
-    if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+    if (phone is not null)
     {
         if (userJson["attributes"] is not JsonObject attributes)
         {
             attributes = new JsonObject();
             userJson["attributes"] = attributes;
         }
-        attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
+        attributes["phoneNumber"] = new JsonArray(phone);
     }
 
     // The name only if given, otherwise kept as it is
@@ -714,8 +724,13 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
 }).RequireAuthorization();
 
 // Admin: Update customer profile (name + phone) endpoint
-app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateProfileRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus) =>
+app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateProfileRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country) =>
 {
+    if (!PhoneInput.TryRead(request.PhoneNumber, country, out var phone, out var phoneProblem))
+    {
+        return phoneProblem;
+    }
+
     if (!PersonName.Given(request.FirstName, request.LastName, request.Name))
     {
         return Results.BadRequest(new { message = "Name is required" });
@@ -771,14 +786,14 @@ app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateP
     }
 
     // Merge attributes
-    if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+    if (phone is not null)
     {
         if (userJson["attributes"] is not JsonObject attributes)
         {
             attributes = new JsonObject();
             userJson["attributes"] = attributes;
         }
-        attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
+        attributes["phoneNumber"] = new JsonArray(phone);
     }
 
     var (firstName, lastName) = PersonName.Of(request.FirstName, request.LastName, request.Name);
@@ -1050,7 +1065,7 @@ app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBra
     return Results.Ok(new { branches = branchIds });
 }).RequireAuthorization("Owner");
 
-app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, TenantCountry country) =>
 {
     var userId = httpContext.User.GetUserId();
     if (string.IsNullOrEmpty(userId))
@@ -1101,9 +1116,13 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
     }
 
     var fullName = $"{user.FirstName} {user.LastName}".Trim();
-    var phoneNumber = user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault();
-    // First and last name both, and a phone: an Apple account (a name only on the very first sign-in, none through the browser) is asked for what it lacks
-    var isProfileComplete = PersonName.Complete(user.FirstName, user.LastName) && !string.IsNullOrWhiteSpace(phoneNumber);
+    // Shown as the country writes it, whatever shape an older version stored it in
+    var stored = user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault();
+    var phoneNumber = string.IsNullOrWhiteSpace(stored) ? stored : PhoneRules.Normalize(stored, country.Code);
+    // First and last name both, and a phone that is one here: an Apple account (a name only on the very first
+    // sign-in, none through the browser) is asked for what it lacks, and a customer whose number is not a
+    // number here is asked for it again
+    var isProfileComplete = PersonName.Complete(user.FirstName, user.LastName) && PhoneRules.IsValid(phoneNumber, country.Code);
 
     return Results.Ok(new
     {
@@ -1127,6 +1146,25 @@ static string[] SplitRoles(string? roles) =>
 app.MapCounterCustomers();
 
 app.Run();
+
+/// <summary>A phone a customer or a cashier sent, read the one way the country writes it.</summary>
+static class PhoneInput
+{
+    /// <summary>
+    /// Nothing sent reads as no phone; anything else is normalized (+20 10…, 10…, ٠١٠… → 010…) and must
+    /// then be a number here, or the request is answered with why.
+    /// </summary>
+    public static bool TryRead(string? sent, TenantCountry country, out string? phone, out IResult problem)
+    {
+        problem = Results.Empty;
+        phone = null;
+        if (string.IsNullOrWhiteSpace(sent)) return true;
+        phone = PhoneRules.Normalize(sent, country.Code);
+        if (PhoneRules.IsValid(phone, country.Code)) return true;
+        problem = Results.BadRequest(new { message = "That is not a phone number here", field = "phoneNumber", placeholder = PhoneRules.For(country.Code).Placeholder });
+        return false;
+    }
+}
 
 /// <param name="Name">An older app's one name; FirstName and LastName win when given.</param>
 record RegisterRequest(string? Name, string Email, string Password, string? PhoneNumber, string? FirstName = null, string? LastName = null);

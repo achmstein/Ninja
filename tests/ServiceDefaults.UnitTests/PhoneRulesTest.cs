@@ -49,4 +49,16 @@ public class PhoneRulesTest
         Assert.IsFalse(PhoneRules.IsValid(PhoneRules.Normalize("010-1", "EG"), "EG"));
         Assert.IsFalse(PhoneRules.IsValid(PhoneRules.Normalize("+44 7700 900123", "EG"), "EG"), "a foreign number is not an Egyptian mobile");
     }
+
+    [TestMethod]
+    public void A_free_phone_field_takes_a_mobile_in_the_country_s_form_and_anything_else_as_it_is()
+    {
+        Assert.AreEqual("01012345678", PhoneRules.Tidy("1012345678", "EG"), "the trunk zero comes back");
+        Assert.AreEqual("01012345678", PhoneRules.Tidy("+20 10 1234 5678", "EG"));
+        Assert.AreEqual("0223456789", PhoneRules.Tidy("02 2345 6789", "EG"), "a Cairo landline stays a landline");
+        Assert.AreEqual("0223456789", PhoneRules.Tidy("+20 2 2345 6789", "EG"));
+        Assert.AreEqual("+447700900123", PhoneRules.Tidy("+44 7700 900123", "EG"), "abroad keeps its plus");
+        Assert.AreEqual("ask Ahmed", PhoneRules.Tidy(" ask Ahmed ", "EG"), "a note is kept as typed");
+        Assert.IsNull(PhoneRules.Tidy("  ", "EG"));
+    }
 }

@@ -79,8 +79,8 @@ public sealed class Provisioner(
                     await keycloak.EnsureSocialProvidersAsync(realm, ct);
                     await SocialBrokersAsync(tenant, ct);
                     await keycloak.EnsureAccountConsoleAsync(realm, ct);
-                    await keycloak.EnsureNameFieldsAsync(realm, ct);
-                    return $"realm {realm} already there (assistant clients, social providers, account console and name fields ensured)";
+                    await keycloak.EnsureProfileFieldsAsync(realm, tenant.Country, ct);
+                    return $"realm {realm} already there (assistant clients, social providers, account console, name and phone fields ensured)";
                 }
                 await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts, Platform), ct);
                 // The shared Google and Apple apps are the platform's, not the template's: they carry
@@ -587,8 +587,8 @@ public sealed class Provisioner(
                 if (!await keycloak.RealmExistsAsync(realm, ct)) return "no realm";
                 await keycloak.EnsureSocialProvidersAsync(realm, ct);
                 await SocialBrokersAsync(tenant, ct);
-                await keycloak.EnsureNameFieldsAsync(realm, ct);
-                return "social providers and name fields ensured";
+                await keycloak.EnsureProfileFieldsAsync(realm, tenant.Country, ct);
+                return "social providers, name and phone fields ensured";
             }, ct);
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);

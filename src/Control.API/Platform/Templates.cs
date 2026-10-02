@@ -203,6 +203,27 @@ public static partial class Templates
     }
 
     /// <summary>
+    /// A realm's phone field held to the country the business is in now (PhoneRules), as the template
+    /// stamps it at creation: a realm made before the pattern existed, or for another country before
+    /// the business moved, took numbers the stack then refused, or kept ones without their trunk zero.
+    /// True when anything changed.
+    /// </summary>
+    public static bool WithPhoneRule(JsonArray attributes, string? country)
+    {
+        if (attributes.OfType<JsonObject>().FirstOrDefault(a => a["name"]?.GetValue<string>() == "phoneNumber") is not { } phone) return false;
+        var before = phone.ToJsonString();
+        var (pattern, placeholder) = PhoneRules.For(country);
+        var validations = phone["validations"] as JsonObject ?? new JsonObject();
+        phone["validations"] = validations;
+        validations["pattern"] = new JsonObject { ["pattern"] = pattern, ["error-message"] = "invalidPhone" };
+        var annotations = phone["annotations"] as JsonObject ?? new JsonObject();
+        phone["annotations"] = annotations;
+        annotations["inputType"] = "html5-tel";
+        annotations["inputTypePlaceholder"] = placeholder;
+        return phone.ToJsonString() != before;
+    }
+
+    /// <summary>
     /// A realm's user-profile attributes brought to the first and last name the apps ask for: first
     /// name labelled as such, last name the customer's to see, edit and fill in, right after it.
     /// True when anything changed.

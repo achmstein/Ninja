@@ -271,11 +271,12 @@ public static class FinanceApi
 
     public static async Task<Results<Ok<CreatedResponse>, BadRequest<string>>> SaveSupplier(
         SupplierRequest request,
-        [FromServices] IMediator mediator)
+        [FromServices] IMediator mediator,
+        [FromServices] TenantCountry country)
     {
         try
         {
-            var id = await mediator.Send(new SaveSupplierCommand(request.Id, request.Name, request.Phone, request.Notes, request.IsActive ?? true));
+            var id = await mediator.Send(new SaveSupplierCommand(request.Id, request.Name, PhoneRules.Tidy(request.Phone, country.Code), request.Notes, request.IsActive ?? true));
             return TypedResults.Ok(new CreatedResponse(id));
         }
         catch (FinanceDomainException ex)
@@ -324,11 +325,12 @@ public static class FinanceApi
 
     public static async Task<Results<Ok<CreatedResponse>, BadRequest<string>>> SavePartner(
         PartnerRequest request,
-        [FromServices] IMediator mediator)
+        [FromServices] IMediator mediator,
+        [FromServices] TenantCountry country)
     {
         try
         {
-            var id = await mediator.Send(new SavePartnerCommand(request.Id, request.Name, request.Phone, request.UserId,
+            var id = await mediator.Send(new SavePartnerCommand(request.Id, request.Name, PhoneRules.Tidy(request.Phone, country.Code), request.UserId,
                 request.Shares.Select(s => new PartnerShareInput(s.BranchId, s.Percent)).ToList(), request.IsActive ?? true));
             return TypedResults.Ok(new CreatedResponse(id));
         }

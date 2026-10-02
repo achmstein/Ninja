@@ -74,6 +74,7 @@ public static class BranchApi
     public static async Task<Results<Created<BranchResponse>, BadRequest<ProblemDetails>>> CreateBranch(
         TenantContext context,
         BranchSettingsService settings,
+        TenantCountry country,
         CreateBranchRequest request)
     {
         if (request.Name is null || request.Name.IsEmpty)
@@ -83,7 +84,7 @@ public static class BranchApi
         {
             Name = request.Name,
             Address = LocalizedText.Optional(request.Address),
-            Phone = request.Phone,
+            Phone = PhoneRules.Tidy(request.Phone, country.Code),
             TaxNumber = request.TaxNumber,
             ReceiptFooter = LocalizedText.Optional(request.ReceiptFooter),
             IsActive = true,
@@ -107,6 +108,7 @@ public static class BranchApi
         TenantContext context,
         BranchSettingsService settings,
         [Description("The branch ID")] int id,
+        TenantCountry country,
         UpdateBranchRequest request)
     {
         if (request.Name is null || request.Name.IsEmpty)
@@ -118,7 +120,7 @@ public static class BranchApi
 
         branch.Name = request.Name;
         branch.Address = LocalizedText.Optional(request.Address);
-        branch.Phone = request.Phone;
+        branch.Phone = PhoneRules.Tidy(request.Phone, country.Code);
         branch.TaxNumber = request.TaxNumber;
         branch.ReceiptFooter = LocalizedText.Optional(request.ReceiptFooter);
         branch.IsActive = request.IsActive;

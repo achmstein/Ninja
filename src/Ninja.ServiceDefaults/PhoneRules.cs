@@ -82,4 +82,17 @@ public static class PhoneRules
         }
         return plus ? $"+{number}" : number;
     }
+
+    /// <summary>
+    /// A phone typed into a field that takes any phone (a supplier's, a branch's, a member of staff's):
+    /// put in the country's form when it is a number, as <see cref="Normalize"/> does, but never refused,
+    /// since a landline or an abroad number is a phone too. Kept as typed when it holds no digits; null
+    /// when empty.
+    /// </summary>
+    public static string? Tidy(string? phone, string? country)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return null;
+        var normalized = Normalize(phone, country);
+        return normalized.Length > 0 ? normalized : phone.Trim();
+    }
 }

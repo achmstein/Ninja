@@ -17,7 +17,10 @@ import '../brand/brand_provider.dart';
 /// once at app startup and cached in [AuthState].
 Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
   final authState = ref.read(authServiceProvider);
-  if (authState.isProfileComplete) return true;
+  // A phone on file must be a number here too: one an older version kept without its trunk zero, or
+  // from before the business's country was set, is asked for again, with what is there to correct
+  final phoneOk = authState.hasPhone && ref.read(brandProvider).locale.isValidPhone(authState.phoneNumber!);
+  if (authState.hasName && phoneOk) return true;
 
   if (!context.mounted) return false;
 
@@ -29,7 +32,7 @@ Future<bool> ensureProfileComplete(BuildContext context, WidgetRef ref) async {
       canPop: false,
       child: _ProfilePromptSheet(
         hasName: authState.hasName,
-        hasPhone: authState.hasPhone,
+        hasPhone: phoneOk,
         // Whatever part of the name there is (an Apple account may hold a first name alone)
         currentName: authState.nameParts,
         currentPhone: authState.hasPhone ? authState.phoneNumber : null,
