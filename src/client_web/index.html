@@ -13,10 +13,21 @@
     <link rel="apple-touch-icon" href="/api/tenant/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Not render-blocking: a stylesheet still on its way holds the app's script back, and on a first visit
+         this one is a lookup, a connection and a download from another host; the text swaps in when it lands -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <script>
+      // The business's brand, asked for as the page arrives rather than once the app's script has come and run:
+      // on a first visit the app waits for it before it draws (lib/brand.ts bootBrand takes it from here)
+      window.__brandRequest = fetch('/api/tenant', { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -32,6 +32,9 @@
 	# args: root
 	root * {args[0]}
 	try_files {path} /index.html
+	# The app's script is 1 MB as built and a third of that compressed: a phone on a first visit
+	# downloads it before the menu shows
+	encode zstd gzip
 	file_server
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
@@ -42,6 +45,8 @@
 (tenant_api) {
 	# args: the tenant's gateway host
 	handle /api/* {
+		# The menu's JSON compresses five to ten times; the live hub below is left as it is
+		encode zstd gzip
 		reverse_proxy {args[0]}:5000
 	}
 	handle /hub/* {

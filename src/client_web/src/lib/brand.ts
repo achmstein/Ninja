@@ -101,11 +101,30 @@ function pausedBy(error: unknown): boolean {
   return response?.status === 503 && response.data?.code === 'paused'
 }
 
+declare global {
+  interface Window {
+    /** The brand index.html asked for as the page arrived; null when that failed */
+    __brandRequest?: Promise<Brand | null>
+  }
+}
+
 export async function bootBrand(queryClient: QueryClient) {
   const cached = readCachedBrand()
   if (cached) {
     queryClient.setQueryData(brandQueryKey(), cached)
     applyBrand(cached)
+  } else if (window.__brandRequest) {
+    // A first visit: the answer to the request index.html started while the script was on its way, most often
+    // in hand already, is drawn from at once, the way the last visit's would be; the query below still checks it
+    const early = await window.__brandRequest
+    if (early) {
+      queryClient.setQueryData(brandQueryKey(), early)
+      writeCachedBrand(early)
+      useLanguage.getState().followBusiness(early.locale)
+      applyBrand(early)
+      void queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
+      return
+    }
   }
 
   // Mirrored to localStorage the moment it lands, not only from

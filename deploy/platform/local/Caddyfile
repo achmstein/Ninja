@@ -17,12 +17,14 @@
 (spa) {
 	root * {args[0]}
 	try_files {path} /index.html
+	encode zstd gzip
 	file_server
 	header Cache-Control "no-cache"
 }
 
 (tenant_api) {
 	handle /api/* {
+		encode zstd gzip
 		reverse_proxy {args[0]}:5000
 	}
 	handle /hub/* {
