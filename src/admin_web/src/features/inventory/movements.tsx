@@ -6,7 +6,9 @@ import { X } from 'lucide-react'
 import { getStockMovementsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { type RangeKey } from '@/lib/search-schemas'
+import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/combobox'
@@ -16,8 +18,15 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
+import { ListRow } from '@/components/list-row'
+import { When } from '@/components/when'
 import { useTillWindow } from '@/features/till/use-till-window'
-import { movementTypeKeys, MOVEMENT_TYPE_VALUES } from './format'
+import { MovementTypeBadge } from './components/movement-type-badge'
+import {
+  formatSignedQuantity,
+  movementTypeKeys,
+  MOVEMENT_TYPE_VALUES,
+} from './format'
 import { HistoryPage } from './history-page'
 import { getMovementColumns } from './movement-columns'
 import { stockItemsQueryOptions, toStockItemOptions } from './queries'
@@ -172,6 +181,30 @@ export function Movements() {
           }}
           isLoading={query.isLoading}
           emptyMessage={t('noStockMovements')}
+          mobileRow={({ original: m }) => {
+            const quantity = toNumber(m.quantity)
+            return (
+              <ListRow
+                title={localized(m.stockItemName) || '—'}
+                meta={
+                  <>
+                    <MovementTypeBadge type={m.type} />
+                    <When value={m.recordedAt} mode='time' />
+                  </>
+                }
+                trailing={
+                  <span
+                    className={cn(
+                      quantity < 0 && 'text-destructive',
+                      quantity > 0 && 'text-success'
+                    )}
+                  >
+                    {formatSignedQuantity(quantity, m.unit, t)}
+                  </span>
+                }
+              />
+            )
+          }}
         />
 
         <DataTablePagination table={table} />

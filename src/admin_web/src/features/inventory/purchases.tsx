@@ -12,6 +12,9 @@ import {
   DataTablePagination,
   dataTableFeatures,
 } from '@/components/data-table'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { When } from '@/components/when'
 import { PurchaseSheet } from './components/purchase-sheet'
 import { HistoryPage } from './history-page'
 import { getPurchaseColumns } from './purchase-columns'
@@ -78,6 +81,27 @@ export function Purchases() {
           isLoading={query.isLoading}
           emptyMessage={t('noPurchases')}
           onRowClick={(row) => setSelectedId(toNumber(row.original.id))}
+          mobileRow={({ original: p }) => (
+            <ListRow
+              title={p.supplier || '—'}
+              meta={
+                <>
+                  <When value={p.receivedAt} mode='dateTime' />
+                  {p.invoiceRef && (
+                    <>
+                      <Dot />
+                      <span>{p.invoiceRef}</span>
+                    </>
+                  )}
+                  <Dot />
+                  <span className='tabular-nums'>
+                    {p.lines.length} {t('lines')}
+                  </span>
+                </>
+              }
+              trailing={<Money value={p.total} strong />}
+            />
+          )}
         />
 
         <DataTablePagination table={table} />

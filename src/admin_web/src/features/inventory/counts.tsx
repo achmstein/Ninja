@@ -12,6 +12,9 @@ import {
   DataTablePagination,
   dataTableFeatures,
 } from '@/components/data-table'
+import { Dot, ListRow } from '@/components/list-row'
+import { StatusChip } from '@/components/status-chip'
+import { When } from '@/components/when'
 import { CountSheet } from './components/count-sheet'
 import { getCountColumns } from './count-columns'
 import { HistoryPage } from './history-page'
@@ -78,6 +81,33 @@ export function StockCounts() {
           isLoading={query.isLoading}
           emptyMessage={t('noCounts')}
           onRowClick={(row) => setSelectedId(toNumber(row.original.id))}
+          mobileRow={({ original: c }) => {
+            const off = toNumber(c.linesOff)
+            const total = toNumber(c.linesCounted)
+            return (
+              <ListRow
+                title={<When value={c.countedAt} mode='dateTime' />}
+                meta={
+                  <>
+                    <span>{c.countedBy}</span>
+                    {c.note && (
+                      <>
+                        <Dot />
+                        <span className='truncate'>{c.note}</span>
+                      </>
+                    )}
+                  </>
+                }
+                trailingMeta={
+                  <StatusChip tone={off > 0 ? 'danger' : 'success'}>
+                    {off > 0
+                      ? t('countOffSummary', { off, total })
+                      : t('countAllMatched', { total })}
+                  </StatusChip>
+                }
+              />
+            )
+          }}
         />
 
         <DataTablePagination table={table} />

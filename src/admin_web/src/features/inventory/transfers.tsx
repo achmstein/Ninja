@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { ArrowRight } from 'lucide-react'
 import { getTransfersOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -13,6 +14,8 @@ import {
   DataTablePagination,
   dataTableFeatures,
 } from '@/components/data-table'
+import { Dot, ListRow } from '@/components/list-row'
+import { When } from '@/components/when'
 import { TransferSheet } from './components/transfer-sheet'
 import { HistoryPage } from './history-page'
 import { getTransferColumns } from './transfer-columns'
@@ -88,6 +91,32 @@ export function Transfers() {
           isLoading={query.isLoading}
           emptyMessage={t('noTransfers')}
           onRowClick={(row) => setSelectedId(toNumber(row.original.id))}
+          mobileRow={({ original: x }) => (
+            <ListRow
+              title={
+                <span className='flex items-center gap-1.5'>
+                  {branchName(x.fromBranchId)}
+                  <ArrowRight className='text-muted-foreground size-3.5 shrink-0 rtl:rotate-180' />
+                  {branchName(x.toBranchId)}
+                </span>
+              }
+              meta={
+                <>
+                  <When value={x.sentAt} mode='dateTime' />
+                  <Dot />
+                  <span>{x.sentBy}</span>
+                </>
+              }
+              trailing={
+                <span className='tabular-nums'>
+                  {x.lines.length}{' '}
+                  <span className='text-muted-foreground font-normal'>
+                    {t('lines')}
+                  </span>
+                </span>
+              }
+            />
+          )}
         />
 
         <DataTablePagination table={table} />
