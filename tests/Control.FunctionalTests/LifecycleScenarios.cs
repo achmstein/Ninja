@@ -116,4 +116,25 @@ public sealed class LifecycleScenarios
         (status, _) = await api.RefusedAsync(HttpMethod.Get, $"/api/control/tenants/{slug}");
         Assert.AreEqual(HttpStatusCode.NotFound, status);
     }
+
+    [TestMethod]
+    public async Task A_destroyed_business_s_slug_can_be_taken_again_straight_away_and_a_live_one_s_cannot()
+    {
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("again");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: true);
+        await api.SettledAsync(slug);
+
+        var (status, detail) = await api.RefusedAsync(HttpMethod.Post, "/api/control/tenants",
+            new { slug, nameEn = "Again", ownerEmail = "owner@again.test", kind = "Customer", plan = "Starter", provision = false });
+        Assert.AreEqual(HttpStatusCode.Conflict, status);
+        Assert.Contains("is taken", detail);
+
+        await api.DestroyAsync(slug);
+        Assert.AreEqual(TenantStatus.Destroyed, (await api.SettledAsync(slug)).Status);
+
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: false);
+        Assert.AreEqual(TenantStatus.Requested, (await api.TenantAsync(slug)).Status, "a new record, not the destroyed one");
+        Assert.IsTrue((await api.AuditAsync(slug)).Any(a => a.Action == "tenant.forgotten"), "the old one's going is on the record");
+    }
 }

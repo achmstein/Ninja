@@ -159,7 +159,10 @@ public static partial class ControlApi
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
-        if (await context.Tenants.AnyAsync(t => t.Slug == slug, ct))
+        // A destroyed business's slug is free: its record goes (the audit keeps its history, its last backup stays
+        // archived), as Forget would have done, so destroying and creating again needs no step in between
+        var previous = await context.Tenants.Include(t => t.Steps).Include(t => t.Payments).SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (previous is not null && previous.Status != TenantStatus.Destroyed)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is taken." });
         if (domain is not null && await context.Tenants.AnyAsync(t => t.CustomerDomain == domain && t.Status != TenantStatus.Destroyed, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{domain} already belongs to another tenant." });
@@ -201,6 +204,13 @@ public static partial class ControlApi
             ImageTag = options.Value.DefaultImageTag,
             ExpiresAt = request.Kind == TenantKind.Demo ? DateTimeOffset.UtcNow.AddDays(request.DemoDays ?? options.Value.DemoDays) : null,
         };
+        if (previous is not null)
+        {
+            await audit.WriteAsync("tenant.forgotten", slug, new { previous.NameEn, previous.Kind, previous.Plan, steps = previous.Steps.Count, payments = previous.Payments.Count, reason = "its slug was taken again" }, ct);
+            context.Tenants.Remove(previous);
+            // Gone before the new record takes its slug (unique)
+            await context.SaveChangesAsync(ct);
+        }
         context.Tenants.Add(tenant);
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.created", slug, new { request.NameEn, request.Kind, tenant.Seed, tenant.Country, tenant.Currency, request.OwnerEmail, provision = request.Provision ?? true }, ct);
