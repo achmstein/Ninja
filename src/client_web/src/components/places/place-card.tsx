@@ -131,7 +131,7 @@ export function PlaceCard({
             {localized(place.name)}
           </motion.span>
           {place.description && (
-            <span className={cn('line-clamp-2 max-w-[34ch] text-note', free ? 'opacity-80' : 'text-muted-foreground')}>
+            <span className={cn('max-w-[34ch] text-note', free ? 'opacity-80' : 'text-muted-foreground')}>
               {localized(place.description)}
             </span>
           )}
@@ -183,7 +183,10 @@ type FaceProps = {
   onToggle: (place: PlaceViewModel) => void
 }
 
-/** The place as a slim row: its kind in a square, the name over where it stands and its rate, the plus at the end */
+/**
+ * The place as a row: its kind in a square, then the name, where it stands, what it is and its rates, each
+ * on its own line and whole (a name or a price cut short is no use), the plus at the end
+ */
 function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
   const t = useT()
   const localized = useLocalized()
@@ -197,34 +200,31 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       onClick={() => onToggle(place)}
       whileTap={tappable && !open ? { scale: 0.98 } : undefined}
       transition={spring}
-      className='flex min-h-16 w-full items-center gap-3 p-3 text-start disabled:cursor-default'
+      className='flex min-h-16 w-full items-start gap-3 p-3 text-start disabled:cursor-default'
     >
       <span className='bg-muted grid size-11 shrink-0 place-items-center rounded-2xl'>
         <PlaceIcon kind={Number(place.kind)} className='size-5' />
       </span>
-      <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
-        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full truncate text-lg leading-tight'>
+      <span className='flex min-w-0 flex-1 flex-col gap-1'>
+        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full text-lg leading-tight break-words'>
           {localized(place.name)}
         </motion.span>
-        <span className='text-muted-foreground flex min-w-0 items-center gap-1.5 text-caption'>
-          <span className={cn('flex shrink-0 items-center gap-1.5 font-semibold', status.className)}>
-            <span className='size-1.5 rounded-full bg-current' />
-            {t(status.key)}
-          </span>
-          {tariffOptions(place.tariff).length > 0 && (
-            <span className='truncate tabular-nums'>
-              {'· '}
-              <TariffLine place={place} />
-            </span>
-          )}
+        <span className={cn('flex items-center gap-1.5 text-caption font-semibold', status.className)}>
+          <span className='size-1.5 rounded-full bg-current' />
+          {t(status.key)}
         </span>
+        {place.description && <span className='text-muted-foreground text-note'>{localized(place.description)}</span>}
+        <RateChips place={place} free={false} />
       </span>
-      {tappable && <OpenToggle open={open} className='slab size-9' />}
+      {tappable && <OpenToggle open={open} className='slab mt-1 size-9' />}
     </motion.button>
   )
 }
 
-/** The place as a small tile, two a row: where it stands and the plus on top, the name and its rate under, its kind faint behind */
+/**
+ * The place as a tile, two a row: where it stands and the plus on top, then the name, what it is and its
+ * rates, whole, its kind faint behind
+ */
 function PlaceTile({ place, free, tappable, open, onToggle }: FaceProps & { free: boolean }) {
   const t = useT()
   const localized = useLocalized()
@@ -257,14 +257,13 @@ function PlaceTile({ place, free, tappable, open, onToggle }: FaceProps & { free
         {tappable && <OpenToggle open={open} className='bg-background text-foreground size-8' />}
       </span>
       <span className='flex min-w-0 flex-col gap-1'>
-        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading line-clamp-2 w-fit text-lg leading-tight break-words'>
+        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full text-lg leading-tight break-words'>
           {localized(place.name)}
         </motion.span>
-        {tariffOptions(place.tariff).length > 0 && (
-          <span className={cn('truncate text-caption tabular-nums', free ? 'opacity-75' : 'text-muted-foreground')}>
-            <TariffLine place={place} />
-          </span>
+        {place.description && (
+          <span className={cn('text-caption', free ? 'opacity-75' : 'text-muted-foreground')}>{localized(place.description)}</span>
         )}
+        <RateChips place={place} free={free} />
       </span>
     </motion.button>
   )
