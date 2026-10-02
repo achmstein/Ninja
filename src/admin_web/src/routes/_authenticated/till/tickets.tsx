@@ -1,11 +1,9 @@
-import { z } from 'zod'
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { rangeSearch } from '@/lib/search-schemas'
+import { createFileRoute } from '@tanstack/react-router'
+import { TillBills } from '@/features/till/bills'
+import { tillSearchSchema } from '@/features/till/search'
 
-// The list now opens under the report on the Till page
+// The bills on a tab of their own, the sidebar's Bills
 export const Route = createFileRoute('/_authenticated/till/tickets')({
-  validateSearch: z.object(rangeSearch),
-  beforeLoad: ({ search }) => {
-    throw redirect({ to: '/till', search: { ...search, view: 'tickets' } })
-  },
+  validateSearch: tillSearchSchema,
+  component: TillBills,
 })

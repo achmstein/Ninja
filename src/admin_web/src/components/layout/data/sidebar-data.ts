@@ -41,18 +41,26 @@ export const sidebarData: SidebarData = {
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
         // Rooms & Tables is every business's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
-        { title: 'placesNav', url: '/places', icon: Armchair, needsPlaces: true },
+        {
+          title: 'placesNav',
+          url: '/places',
+          icon: Armchair,
+          needsPlaces: true,
+        },
         // A waiter call or a bill request comes from any table's scan page, whatever the plan
-        { title: 'requests', url: '/requests', icon: ConciergeBell, needsPlaces: true },
+        {
+          title: 'requests',
+          url: '/requests',
+          icon: ConciergeBell,
+          needsPlaces: true,
+        },
         { title: 'navTill', url: '/till', icon: ReceiptText },
-        { title: 'navBills', url: '/bills', icon: Receipt },
+        { title: 'navBills', url: '/till/tickets', icon: Receipt },
       ],
     },
     {
       title: 'navCatalog',
-      items: [
-        { title: 'menuItems', url: '/menu', icon: Coffee },
-      ],
+      items: [{ title: 'menuItems', url: '/menu', icon: Coffee }],
     },
     {
       // Stock: what the branch has, what the menu takes out of it, and the

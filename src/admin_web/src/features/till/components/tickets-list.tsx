@@ -28,7 +28,8 @@ import { useTillWindow } from '../use-till-window'
 import { TICKET_STATUS_SETTLED, TICKET_STATUS_VOIDED } from './tender'
 import { TicketSheet } from './ticket-sheet'
 
-const route = getRouteApi('/_authenticated/till/')
+/** The routes the list sits on: the report, under its numbers, and the Bills tab; both read the till's search */
+type TicketsListRoute = '/_authenticated/till/' | '/_authenticated/till/tickets'
 
 type TicketTab = 'settled' | 'open' | 'voided'
 
@@ -43,7 +44,12 @@ const tabs: { value: TicketTab; key: TranslationKey }[] = [
  * window (or one bill by receipt number), and the ones still open on the
  * floor with how long they have sat. Read-only — a row opens the ticket.
  */
-export function TicketsList() {
+export function TicketsList({
+  from = '/_authenticated/till/',
+}: {
+  from?: TicketsListRoute
+}) {
+  const route = getRouteApi(from)
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()

@@ -48,6 +48,8 @@ function problemDetail(e: unknown): string | undefined {
   return data?.detail
 }
 
+const paymobLogo = `${import.meta.env.BASE_URL}platforms/paymob.png`
+
 /**
  * Online payments, the owner's side: the business's own Paymob account (keys,
  * integrations, the callback to paste into Paymob), who pays the fee and
@@ -153,13 +155,15 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
           <h2 className='font-semibold'>{t('payAccount')}</h2>
           <div className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-1.5'>
-              <Label htmlFor='pay-provider'>{t('payProvider')}</Label>
-              <Input
-                id='pay-provider'
-                value={settings.provider || 'Paymob'}
-                disabled
-                dir='ltr'
-              />
+              <Label>{t('payProvider')}</Label>
+              {/* The provider by its mark (Paymob's own wordmark), where its name sat in a field nobody could change */}
+              <div className='flex h-9 items-center'>
+                {(settings.provider || 'Paymob') === 'Paymob' ? (
+                  <img src={paymobLogo} alt='Paymob' className='h-6 w-auto' />
+                ) : (
+                  <span dir='ltr'>{settings.provider}</span>
+                )}
+              </div>
             </div>
             <div className='space-y-1.5'>
               <Label htmlFor='pay-currency'>{t('payCurrency')}</Label>

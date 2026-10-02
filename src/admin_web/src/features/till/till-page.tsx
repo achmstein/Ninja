@@ -6,7 +6,7 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
 
-type TillTab = 'report' | 'breakdown' | 'shifts'
+type TillTab = 'report' | 'bills' | 'breakdown' | 'shifts'
 
 type TillPageProps = {
   tab: TillTab
@@ -52,6 +52,12 @@ export function TillPage({
                 value: 'report',
                 label: t('tillReport'),
                 to: '/till',
+                search: range,
+              },
+              {
+                value: 'bills',
+                label: t('navBills'),
+                to: '/till/tickets',
                 search: range,
               },
               {
