@@ -57,7 +57,7 @@ export function MenuDrop({ languages, menu, onMenu }: MenuDropProps) {
     }
     setPages(prepared.pages.map((page) => URL.createObjectURL(page)))
     scan.mutate(
-      { body: { files: prepared.pages, languages } },
+      { body: { files: prepared.pages, languages, inOrder: prepared.inOrder } },
       {
         onSuccess: (proposal) => {
           const read = fromProposal(proposal)

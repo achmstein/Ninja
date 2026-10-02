@@ -24,6 +24,7 @@ public static class Extensions
         builder.Services.AddFakeAgentScript(CustomizationSuggester.AgentKey, CustomizationSuggesterFake.Respond);
         builder.Services.AddSingleton<MenuScanner>();
         builder.Services.AddFakeAgentScript(MenuScanner.AgentKey, MenuScannerFake.Respond);
+        builder.Services.AddFakeAgentScript(MenuScanner.OrdererKey, MenuScannerFake.RespondOrder);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

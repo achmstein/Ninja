@@ -112,6 +112,7 @@ public static class CatalogAssistApi
     public static async Task<Results<Ok<MenuProposal>, BadRequest<ProblemDetails>, ProblemHttpResult>> ScanMenu(
         [Description("The menu's pages, in order: one photo each")] IFormFileCollection files,
         [FromForm, Description("The business's languages: both, ar or en; a one-language business's menu is read in that language only. Absent is both")] string? languages,
+        [FromForm, Description("The pages are in the menu's own order already (one PDF's); otherwise they are put in it first")] bool? inOrder,
         [FromServices] MenuScanner scanner,
         [FromServices] IOptions<AIOptions> aiOptions,
         CatalogContext context,
@@ -143,7 +144,7 @@ public static class CatalogAssistApi
 
         try
         {
-            return TypedResults.Ok(await scanner.ScanAsync(pages, categories, items, ct, languages ?? ContentLanguages.Both));
+            return TypedResults.Ok(await scanner.ScanAsync(pages, categories, items, ct, languages ?? ContentLanguages.Both, inOrder ?? false));
         }
         catch (AIException ex)
         {

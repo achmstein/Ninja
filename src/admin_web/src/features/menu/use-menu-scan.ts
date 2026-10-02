@@ -85,7 +85,12 @@ export function useMenuScan() {
     if (!pages || pages.length === 0) return
     try {
       await scan.mutateAsync({
-        body: { files: pages, languages },
+        // One PDF's pages are in the menu's own order; photos are put in it first
+        body: {
+          files: pages,
+          languages,
+          inOrder: files.length === 1 && isPdf(files[0]),
+        },
         query: { 'api-version': API_VERSION },
       })
     } catch {

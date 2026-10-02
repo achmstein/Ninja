@@ -3604,6 +3604,14 @@
                         "type": "string"
                       }
                     }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "inOrder": {
+                        "type": "boolean"
+                      }
+                    }
                   }
                 ]
               }

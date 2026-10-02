@@ -484,6 +484,8 @@ export type ScanMenuData = {
         files: IFormFileCollection;
     } & {
         languages?: string;
+    } & {
+        inOrder?: boolean;
     };
     path?: never;
     query?: {

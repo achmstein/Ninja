@@ -73,6 +73,7 @@ public static class Extensions
             builder.Services.AddSingleton<IChatClient, RoutedChatClient>();
         builder.Services.AddSingleton<MenuScanner>();
         builder.Services.AddFakeAgentScript(MenuScanner.AgentKey, MenuScannerFake.Respond);
+        builder.Services.AddFakeAgentScript(MenuScanner.OrdererKey, MenuScannerFake.RespondOrder);
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();

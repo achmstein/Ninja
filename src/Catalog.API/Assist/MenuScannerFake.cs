@@ -42,4 +42,12 @@ public static class MenuScannerFake
 
         return JsonSerializer.Serialize(extraction, AIJson.Options);
     }
+
+    /// <summary>The pages kept in the order they were given, none left out.</summary>
+    public static string RespondOrder(FakeAgentRequest request)
+    {
+        var prompt = JsonSerializer.Deserialize<MenuPageOrderPrompt>(request.UserText, AIJson.Options)
+            ?? throw new InvalidOperationException("The page orderer prompt is not the expected JSON");
+        return JsonSerializer.Serialize(new MenuPageOrder([.. Enumerable.Range(1, prompt.Pages)], [], string.Empty), AIJson.Options);
+    }
 }

@@ -3300,6 +3300,8 @@ export type ScanMenuForNewTenantData = {
         files: IFormFileCollection;
     } & {
         languages?: string;
+    } & {
+        inOrder?: boolean;
     };
     path?: never;
     query?: never;

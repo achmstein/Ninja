@@ -53,4 +53,45 @@ public class MenuScanMergeTest
         Assert.HasCount(1, merged.Categories);
         Assert.HasCount(2, merged.Categories[0].Items);
     }
+
+    [TestMethod]
+    public void Dishes_at_the_top_of_a_page_under_no_heading_carry_on_the_section_the_page_before_ended_with()
+    {
+        var merged = MenuScanner.Merge(
+        [
+            Page(new ExtractedCategory("Hot Drinks", "", 0, [Item("Tea", 15)]), new ExtractedCategory("Juices", "", 0, [Item("Orange", 40)])),
+            Page(new ExtractedCategory("", "", 0, [Item("Mango", 45)], ContinuesPreviousPage: true), new ExtractedCategory("Desserts", "", 0, [Item("Cake", 60)])),
+        ]);
+
+        CollectionAssert.AreEqual(new[] { "Hot Drinks", "Juices", "Desserts" }, merged.Categories.Select(c => c.NameEn).ToList());
+        CollectionAssert.AreEqual(new[] { "Orange", "Mango" }, merged.Categories[1].Items.Select(i => i.NameEn).ToList(), "with Juices, not Hot Drinks");
+    }
+
+    [TestMethod]
+    public void A_note_names_a_page_by_the_number_it_was_given_in_whatever_order_it_was_read()
+    {
+        var merged = MenuScanner.Merge(
+        [
+            new MenuScanner.PageRead(new MenuExtraction([new ExtractedCategory("Hot Drinks", "", 0, [Item("Tea", 15)])], ""), null, 3),
+            new MenuScanner.PageRead(null, new AITimeoutException("menu-scanner", TimeSpan.FromSeconds(90)), 1),
+        ]);
+
+        StringAssert.StartsWith(merged.Notes, "Page 1: could not be read");
+    }
+
+    [TestMethod]
+    public void The_pages_are_read_in_the_menus_own_order_and_the_ones_with_no_dishes_left_out()
+    {
+        var plan = MenuScanner.PlanFrom(new MenuPageOrder([3, 1, 4], [2], ""), 4);
+        CollectionAssert.AreEqual(new[] { 3, 1, 4 }, plan!.Order.ToList());
+        CollectionAssert.AreEqual(new[] { 2 }, plan.Skipped.ToList());
+    }
+
+    [TestMethod]
+    [DataRow(new[] { 1, 2 }, new int[0], 3, "a page missing")]
+    [DataRow(new[] { 1, 1, 2 }, new int[0], 3, "a page twice")]
+    [DataRow(new[] { 1, 2, 5 }, new int[0], 3, "a page that is not there")]
+    [DataRow(new int[0], new[] { 1, 2 }, 2, "nothing left to read")]
+    public void An_order_that_does_not_add_up_keeps_the_pages_as_they_came(int[] order, int[] notMenu, int pages, string why)
+        => Assert.IsNull(MenuScanner.PlanFrom(new MenuPageOrder(order, notMenu, ""), pages), why);
 }

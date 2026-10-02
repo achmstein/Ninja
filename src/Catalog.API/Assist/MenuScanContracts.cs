@@ -48,7 +48,15 @@ public sealed record ProposedChoiceOption(LocalizedText Name, decimal Price);
 
 public sealed record MenuExtraction(IReadOnlyList<ExtractedCategory> Categories, string Notes);
 
-public sealed record ExtractedCategory(string NameEn, string NameAr, int CatalogTypeId, IReadOnlyList<ExtractedItem> Items);
+/// <param name="ContinuesPreviousPage">The page opens on items under no heading that carry on the section the page before ended with.</param>
+public sealed record ExtractedCategory(string NameEn, string NameAr, int CatalogTypeId, IReadOnlyList<ExtractedItem> Items, bool ContinuesPreviousPage = false);
+
+/// <summary>
+/// How a menu's pages read, as the business printed them: <paramref name="Order"/> the pages holding dishes, by
+/// the number they were given in (1 first), in reading order; <paramref name="NotMenu"/> the ones with none (a
+/// cover with only the logo, a contact page).
+/// </summary>
+public sealed record MenuPageOrder(IReadOnlyList<int> Order, IReadOnlyList<int> NotMenu, string Notes);
 
 public sealed record ExtractedItem(
     string RawText, string NameEn, string NameAr, string DescriptionEn, string DescriptionAr, decimal Price,
@@ -60,4 +68,8 @@ public sealed record ExtractedChoiceOption(string NameEn, string NameAr, decimal
 internal sealed record CategoryOption(int Id, string? En, string? Ar);
 
 /// <summary>The text part of the prompt: the categories the system already has, to match sections to.</summary>
-internal sealed record MenuScanPrompt(IReadOnlyList<CategoryOption> Categories, string Languages = ContentLanguages.Both);
+/// <param name="Page">Where this page falls in the menu's reading order, 1 first.</param>
+internal sealed record MenuScanPrompt(IReadOnlyList<CategoryOption> Categories, string Languages = ContentLanguages.Both, int Page = 1, int Pages = 1);
+
+/// <summary>The text part of the ordering call: how many pages follow, in the order they were given.</summary>
+internal sealed record MenuPageOrderPrompt(int Pages);

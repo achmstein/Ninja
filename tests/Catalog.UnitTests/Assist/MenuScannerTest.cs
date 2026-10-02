@@ -31,7 +31,11 @@ public class MenuScannerTest
     private static MenuScanner Scanner()
     {
         var services = new ServiceCollection().BuildServiceProvider();
-        var client = new FakeChatClient([new FakeAgentScriptRegistration(MenuScanner.AgentKey, MenuScannerFake.Respond)]);
+        var client = new FakeChatClient(
+        [
+            new FakeAgentScriptRegistration(MenuScanner.AgentKey, MenuScannerFake.Respond),
+            new FakeAgentScriptRegistration(MenuScanner.OrdererKey, MenuScannerFake.RespondOrder),
+        ]);
         var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
         return new MenuScanner(factory, NullLogger<MenuScanner>.Instance);
     }

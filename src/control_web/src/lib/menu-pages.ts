@@ -71,7 +71,9 @@ async function pdfPages(file: File, room: number): Promise<{ pages: File[]; tota
  * Dropped files as menu pages, in order, at most {@link MENU_MAX_PAGES}: how many
  * were left out past that, and which files were neither a photo nor a PDF.
  */
-export async function menuPages(files: File[]): Promise<{ pages: File[]; leftOut: number; rejected: string[] }> {
+export async function menuPages(
+  files: File[]
+): Promise<{ pages: File[]; leftOut: number; rejected: string[]; inOrder: boolean }> {
   const pages: File[] = []
   const rejected: string[] = []
   let leftOut = 0
@@ -92,5 +94,6 @@ export async function menuPages(files: File[]): Promise<{ pages: File[]; leftOut
       rejected.push(file.name)
     }
   }
-  return { pages, leftOut, rejected }
+  // One PDF's pages are in the menu's own order already; photos are put in it by the scan
+  return { pages, leftOut, rejected, inOrder: files.length === 1 && isPdf(files[0]) }
 }

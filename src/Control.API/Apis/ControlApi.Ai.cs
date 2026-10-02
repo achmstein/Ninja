@@ -224,6 +224,7 @@ public static partial class ControlApi
     public static async Task<Results<Ok<MenuProposal>, BadRequest<ProblemDetails>, ProblemHttpResult>> ScanMenu(
         [Description("The menu's pages, in order: one photo each")] IFormFileCollection files,
         [FromForm, Description("The business's languages: both, ar or en. Absent is both")] string? languages,
+        [FromForm, Description("The pages are in the menu's own order already (one PDF's); otherwise they are put in it first")] bool? inOrder,
         [FromServices] MenuScanner scanner,
         [FromServices] AiRouter router,
         [FromServices] IOptions<AIOptions> aiOptions,
@@ -252,7 +253,7 @@ public static partial class ControlApi
         try
         {
             // No catalog yet: nothing to match a section to, nothing already on the menu
-            return TypedResults.Ok(await scanner.ScanAsync(pages, [], [], ct, languages ?? ContentLanguages.Both));
+            return TypedResults.Ok(await scanner.ScanAsync(pages, [], [], ct, languages ?? ContentLanguages.Both, inOrder ?? false));
         }
         catch (AIException ex)
         {
