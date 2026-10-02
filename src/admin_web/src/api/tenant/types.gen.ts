@@ -35,7 +35,6 @@ export type CreateBranchRequest = {
     taxNumber?: null | string;
     receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
-    dayEndTime?: null | string;
     isOrderingEnabled?: boolean;
     isReservationsEnabled?: boolean;
 };
@@ -170,7 +169,6 @@ export type UpdateBranchRequest = {
     taxNumber?: null | string;
     receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
-    dayEndTime?: null | string;
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
     requireSignInForTableOrders?: null | boolean;

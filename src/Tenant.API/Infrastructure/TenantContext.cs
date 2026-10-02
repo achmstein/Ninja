@@ -117,15 +117,14 @@ public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration
                     {
                         Name = new LocalizedText("El-Manshia", "المنشية"),
                         DisplayOrder = 1,
-                        DayStartTime = new TimeOnly(17, 0),
-                        DayEndTime = new TimeOnly(5, 0),
+                        // Open 17:00 to 05:00: the day turns over at closing, the night one day
+                        DayStartTime = new TimeOnly(5, 0),
                     },
                     new Model.Branch
                     {
                         Name = new LocalizedText("El-Benzina", "البنزينة"),
                         DisplayOrder = 2,
-                        DayStartTime = new TimeOnly(17, 0),
-                        DayEndTime = new TimeOnly(5, 0),
+                        DayStartTime = new TimeOnly(5, 0),
                     });
             }
             else

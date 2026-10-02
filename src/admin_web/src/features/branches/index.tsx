@@ -147,8 +147,7 @@ export function BranchesManagement() {
                       </div>
                     )}
                     <div>
-                      {t('businessHours')}: {branch.dayStartTime?.slice(0, 5)} –{' '}
-                      {branch.dayEndTime?.slice(0, 5)}
+                      {t('dayStartTime')} {branch.dayStartTime?.slice(0, 5)}
                     </div>
                   </div>
 

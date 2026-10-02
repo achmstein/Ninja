@@ -814,12 +814,6 @@
               "string"
             ]
           },
-          "dayEndTime": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "isOrderingEnabled": {
             "type": "boolean",
             "default": true
@@ -1471,12 +1465,6 @@
             ]
           },
           "dayStartTime": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "dayEndTime": {
             "type": [
               "null",
               "string"

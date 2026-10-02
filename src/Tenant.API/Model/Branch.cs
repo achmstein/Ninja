@@ -14,8 +14,13 @@ public class Branch
     public LocalizedText? ReceiptFooter { get; set; }
     public bool IsActive { get; set; } = true;
     public int DisplayOrder { get; set; }
-    public TimeOnly DayStartTime { get; set; } = new(8, 0);
-    public TimeOnly DayEndTime { get; set; } = new(2, 0);
+    /// <summary>
+    /// When the branch's day turns over: a day runs from it to the same time the next day, so every sale,
+    /// cash movement and report lands in a day, whatever hours the branch keeps (a branch open all night
+    /// or all week included). Not its opening hours: set it where nothing is sold, 06:00 by default, as
+    /// Finance and Payroll turn their day over.
+    /// </summary>
+    public TimeOnly DayStartTime { get; set; } = new(6, 0);
     public bool IsOrderingEnabled { get; set; } = true;
     public bool IsReservationsEnabled { get; set; } = true;
 

@@ -79,8 +79,8 @@ function BranchForm({
     phone: branch?.phone ?? '',
     taxNumber: branch?.taxNumber ?? '',
     receiptFooter: toLocalizedValue(branch?.receiptFooter),
-    dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '10:00',
-    dayEndTime: branch?.dayEndTime?.slice(0, 5) ?? '02:00',
+    // When the day turns over, not when the branch opens: early morning, when nothing is sold
+    dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '06:00',
     isActive: branch?.isActive ?? true,
     requireSignInForTableOrders: branch?.requireSignInForTableOrders ?? false,
   })
@@ -132,7 +132,6 @@ function BranchForm({
         ? fromLocalizedValue(form.receiptFooter)
         : null
     const dayStartTime = `${form.dayStartTime}:00`
-    const dayEndTime = `${form.dayEndTime}:00`
 
     if (isEditing) {
       updateBranch.mutate({
@@ -146,7 +145,6 @@ function BranchForm({
           isActive: form.isActive,
           displayOrder: branch.displayOrder,
           dayStartTime,
-          dayEndTime,
           isOrderingEnabled: branch.isOrderingEnabled,
           isReservationsEnabled: branch.isReservationsEnabled,
           requireSignInForTableOrders: form.requireSignInForTableOrders,
@@ -161,7 +159,6 @@ function BranchForm({
           taxNumber,
           receiptFooter,
           dayStartTime,
-          dayEndTime,
         },
       })
     }
@@ -224,25 +221,17 @@ function BranchForm({
         onChange={(receiptFooter) => setForm({ ...form, receiptFooter })}
       />
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='dayStart'>{t('dayStartTime')}</Label>
-          <Input
-            id='dayStart'
-            type='time'
-            value={form.dayStartTime}
-            onChange={(e) => setForm({ ...form, dayStartTime: e.target.value })}
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='dayEnd'>{t('dayEndTime')}</Label>
-          <Input
-            id='dayEnd'
-            type='time'
-            value={form.dayEndTime}
-            onChange={(e) => setForm({ ...form, dayEndTime: e.target.value })}
-          />
-        </div>
+      {/* One time, when the day turns over: a day runs from it round to it, so nothing falls outside one */}
+      <div className='space-y-2'>
+        <Label htmlFor='dayStart'>{t('dayStartTime')}</Label>
+        <Input
+          id='dayStart'
+          type='time'
+          className='w-32'
+          value={form.dayStartTime}
+          onChange={(e) => setForm({ ...form, dayStartTime: e.target.value })}
+        />
+        <p className='text-muted-foreground text-xs'>{t('dayStartTimeHint')}</p>
       </div>
 
       {isEditing && (

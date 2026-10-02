@@ -193,7 +193,7 @@ export function DateRangePicker({
                       }
                     >
                       <RotateCcw />
-                      {t('businessHours')}
+                      {t('wholeDay')}
                     </Button>
                   )}
                 </div>
