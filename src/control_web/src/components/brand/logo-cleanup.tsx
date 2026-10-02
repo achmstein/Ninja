@@ -237,7 +237,16 @@ function Sweep({ before, after, delay = 0 }: { before: string; after: string; de
   if (reduced || before === after) return <img src={after} alt='' className='max-h-full max-w-full object-contain' />
   return (
     <div className='relative flex h-full w-full items-center justify-center'>
-      <img src={before} alt='' className='max-h-full max-w-full object-contain' />
+      {/* The picture as it was gives way behind the line: where the new one is clear (a removed
+          background) nothing of the old shows through it */}
+      <motion.div
+        className='absolute inset-0 flex items-center justify-center'
+        initial={{ clipPath: 'inset(0 0 0 0%)' }}
+        animate={{ clipPath: 'inset(0 0 0 100%)' }}
+        transition={{ duration: 0.9, delay, ease: SWEEP_EASE }}
+      >
+        <img src={before} alt='' className='max-h-full max-w-full object-contain' />
+      </motion.div>
       <motion.div
         className='absolute inset-0 flex items-center justify-center'
         initial={{ clipPath: 'inset(0 100% 0 0)' }}
