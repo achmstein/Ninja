@@ -149,8 +149,6 @@ public sealed class Provisioner(
                     {
                         var made = await stack.ImportMenuAsync(tenant, await File.ReadAllTextAsync(menu, ct), ct);
                         File.Move(menu, Path.ChangeExtension(menu, ".imported.json"), overwrite: true);
-                        // Its dishes' photos are drawn in the AI lane, minutes of work that hold nothing up
-                        if (queue is not null) await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "photos"), ct);
                         return made;
                     }
                     catch (InvalidOperationException ex)
@@ -188,6 +186,12 @@ public sealed class Provisioner(
             }
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag, restoredFrom = restore?.Slug }, ct, Source);
+
+            // A new business's dishes get their photos, whichever way its menu came (read at creation, or the
+            // sample's): drawn in the AI lane, minutes of work that hold nothing up; a dish with a photo is left
+            // alone, and without an image model the step says so. A restore brings its own pictures
+            if (restore is null && queue is not null)
+                await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "photos"), ct);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
