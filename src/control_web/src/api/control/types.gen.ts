@@ -4,6 +4,49 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AiProviderDto = {
+    id: number | string;
+    name: string;
+    baseUrl: string;
+    keyHint: string;
+    updatedAt: string;
+};
+
+export type AiRoleDto = {
+    role: string;
+    providerId: null | number | string;
+    model: null | string;
+};
+
+export type AiSettingsDto = {
+    providers: Array<AiProviderDto>;
+    roles: Array<AiRoleDto>;
+    configured: boolean;
+};
+
+export type AiTestRequest = {
+    role: string;
+};
+
+export type AiTestResult = {
+    ok: boolean;
+    provider: null | string;
+    model: null | string;
+    milliseconds: number | string;
+    reply: null | string;
+    error: null | string;
+};
+
+export type AiUsageRow = {
+    slug: string;
+    role: string;
+    model: string;
+    requests: number | string;
+    failures: number | string;
+    promptTokens: number | string;
+    completionTokens: number | string;
+};
+
 export type AuditEntry = {
     id: number | string;
     at: string;
@@ -227,6 +270,8 @@ export type HttpValidationProblemDetails = {
 
 export type IFormFile = Blob | File;
 
+export type IFormFileCollection = Array<IFormFile>;
+
 export type ImpersonationLink = {
     url: string;
     expiresAt: string;
@@ -264,6 +309,11 @@ export type LaneStatus = {
     queued: Array<JobDto>;
 };
 
+export type LocalizedText = {
+    en?: null | string;
+    ar?: null | string;
+};
+
 export type MailStatusResponse = {
     configured: boolean;
     host: null | string;
@@ -275,6 +325,12 @@ export type MailStatusResponse = {
     failed: number | string;
     skipped: number | string;
     queued: number | string;
+};
+
+export type MenuProposal = {
+    categories: Array<ProposedCategory>;
+    warnings: Array<string>;
+    notes: null | string;
 };
 
 export type MetricsDay = {
@@ -363,6 +419,31 @@ export type ProblemDetails = {
     instance?: null | string;
 };
 
+export type ProposedCategory = {
+    name: LocalizedText;
+    catalogTypeId: null | number | string;
+    items: Array<ProposedItem>;
+};
+
+export type ProposedChoice = {
+    name: LocalizedText;
+    options: Array<ProposedChoiceOption>;
+};
+
+export type ProposedChoiceOption = {
+    name: LocalizedText;
+    price: number | string;
+};
+
+export type ProposedItem = {
+    rawText: string;
+    name: LocalizedText;
+    description: LocalizedText;
+    price: number | string;
+    existingItemId: null | number | string;
+    choice?: null | ProposedChoice;
+};
+
 export type QueueResponse = {
     lanes: Array<LaneStatus>;
     recent: Array<JobDto>;
@@ -382,6 +463,17 @@ export type RestoreRequest = {
     nameEn?: null | string;
     ownerEmail?: null | string;
     force?: boolean;
+};
+
+export type SaveAiProviderRequest = {
+    id: null | number | string;
+    name: string;
+    baseUrl: string;
+    apiKey: null | string;
+};
+
+export type SaveAiRolesRequest = {
+    roles: Array<AiRoleDto>;
 };
 
 export type ServiceHealth = {
@@ -2867,6 +2959,265 @@ export type UpdateTenantTalabatResponses = {
 };
 
 export type UpdateTenantTalabatResponse = UpdateTenantTalabatResponses[keyof UpdateTenantTalabatResponses];
+
+export type GetAiSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/ai';
+};
+
+export type GetAiSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetAiSettingsResponses = {
+    /**
+     * OK
+     */
+    200: AiSettingsDto;
+};
+
+export type GetAiSettingsResponse = GetAiSettingsResponses[keyof GetAiSettingsResponses];
+
+export type SaveAiProviderData = {
+    body: SaveAiProviderRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/ai/providers';
+};
+
+export type SaveAiProviderErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SaveAiProviderError = SaveAiProviderErrors[keyof SaveAiProviderErrors];
+
+export type SaveAiProviderResponses = {
+    /**
+     * OK
+     */
+    200: AiProviderDto;
+};
+
+export type SaveAiProviderResponse = SaveAiProviderResponses[keyof SaveAiProviderResponses];
+
+export type DeleteAiProviderData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/ai/providers/{id}';
+};
+
+export type DeleteAiProviderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteAiProviderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteAiProviderResponse = DeleteAiProviderResponses[keyof DeleteAiProviderResponses];
+
+export type ListAiProviderModelsData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/ai/providers/{id}/models';
+};
+
+export type ListAiProviderModelsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ListAiProviderModelsResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type ListAiProviderModelsResponse = ListAiProviderModelsResponses[keyof ListAiProviderModelsResponses];
+
+export type SaveAiRolesData = {
+    body: SaveAiRolesRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/ai/roles';
+};
+
+export type SaveAiRolesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveAiRolesError = SaveAiRolesErrors[keyof SaveAiRolesErrors];
+
+export type SaveAiRolesResponses = {
+    /**
+     * OK
+     */
+    200: AiSettingsDto;
+};
+
+export type SaveAiRolesResponse = SaveAiRolesResponses[keyof SaveAiRolesResponses];
+
+export type TestAiRoleData = {
+    body: AiTestRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/ai/test';
+};
+
+export type TestAiRoleErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TestAiRoleResponses = {
+    /**
+     * OK
+     */
+    200: AiTestResult;
+};
+
+export type TestAiRoleResponse = TestAiRoleResponses[keyof TestAiRoleResponses];
+
+export type GetAiUsageData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * How many days back, today included (1–90, 30 when left out)
+         */
+        days?: number | string;
+    };
+    url: '/api/control/ai/usage';
+};
+
+export type GetAiUsageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetAiUsageResponses = {
+    /**
+     * OK
+     */
+    200: Array<AiUsageRow>;
+};
+
+export type GetAiUsageResponse = GetAiUsageResponses[keyof GetAiUsageResponses];
+
+export type ScanMenuForNewTenantData = {
+    body: {
+        files: IFormFileCollection;
+    } & {
+        languages?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/control/menu/scan';
+};
+
+export type ScanMenuForNewTenantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ScanMenuForNewTenantError = ScanMenuForNewTenantErrors[keyof ScanMenuForNewTenantErrors];
+
+export type ScanMenuForNewTenantResponses = {
+    /**
+     * OK
+     */
+    200: MenuProposal;
+};
+
+export type ScanMenuForNewTenantResponse = ScanMenuForNewTenantResponses[keyof ScanMenuForNewTenantResponses];
 
 export type TlsAskData = {
     body?: never;

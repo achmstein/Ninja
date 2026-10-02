@@ -46,6 +46,7 @@ import {
   type BillingTone,
 } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
+import { AiSettings } from './ai-settings'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
@@ -55,7 +56,7 @@ import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team' | 'ai'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -222,6 +223,7 @@ export function PlatformPage() {
           <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
           <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
           <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
+          <TabsTrigger value='ai'>{t('tabAi')}</TabsTrigger>
         </TabsList>
         <TabsContent value='tenants'>
           {destroyedCount > 0 && (
@@ -255,6 +257,9 @@ export function PlatformPage() {
         </TabsContent>
         <TabsContent value='team'>
           <TeamTable />
+        </TabsContent>
+        <TabsContent value='ai'>
+          <AiSettings />
         </TabsContent>
       </Tabs>
     </div>

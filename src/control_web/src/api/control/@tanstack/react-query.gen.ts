@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAudit, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAuditData, ListAuditResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, getAiSettings, getAiUsage, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listAudit, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, saveAiProvider, saveAiRoles, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListAuditData, ListAuditResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1095,6 +1095,147 @@ export const updateTenantTalabatMutation = (options?: Partial<Options<UpdateTena
     const mutationOptions: UseMutationOptions<UpdateTenantTalabatResponse, AxiosError<UpdateTenantTalabatError>, Options<UpdateTenantTalabatData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateTenantTalabat({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAiSettingsQueryKey = (options?: Options<GetAiSettingsData>) => createQueryKey('getAiSettings', options);
+
+/**
+ * The AI providers (keys shown by their last four characters) and which model answers each role
+ */
+export const getAiSettingsOptions = (options?: Options<GetAiSettingsData>) => queryOptions<GetAiSettingsResponse, AxiosError<DefaultError>, GetAiSettingsResponse, ReturnType<typeof getAiSettingsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAiSettings({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAiSettingsQueryKey(options)
+});
+
+/**
+ * Add a provider, or change one; a change without a key keeps the saved key
+ */
+export const saveAiProviderMutation = (options?: Partial<Options<SaveAiProviderData>>): UseMutationOptions<SaveAiProviderResponse, AxiosError<SaveAiProviderError>, Options<SaveAiProviderData>> => {
+    const mutationOptions: UseMutationOptions<SaveAiProviderResponse, AxiosError<SaveAiProviderError>, Options<SaveAiProviderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveAiProvider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Remove a provider, and the roles pointed at it
+ */
+export const deleteAiProviderMutation = (options?: Partial<Options<DeleteAiProviderData>>): UseMutationOptions<DeleteAiProviderResponse, AxiosError<DefaultError>, Options<DeleteAiProviderData>> => {
+    const mutationOptions: UseMutationOptions<DeleteAiProviderResponse, AxiosError<DefaultError>, Options<DeleteAiProviderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteAiProvider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listAiProviderModelsQueryKey = (options: Options<ListAiProviderModelsData>) => createQueryKey('listAiProviderModels', options);
+
+/**
+ * The models the provider offers, as its own list says
+ */
+export const listAiProviderModelsOptions = (options: Options<ListAiProviderModelsData>) => queryOptions<ListAiProviderModelsResponse, AxiosError<DefaultError>, ListAiProviderModelsResponse, ReturnType<typeof listAiProviderModelsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAiProviderModels({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAiProviderModelsQueryKey(options)
+});
+
+/**
+ * Point each role at a provider's model; the next call of every business follows
+ */
+export const saveAiRolesMutation = (options?: Partial<Options<SaveAiRolesData>>): UseMutationOptions<SaveAiRolesResponse, AxiosError<SaveAiRolesError>, Options<SaveAiRolesData>> => {
+    const mutationOptions: UseMutationOptions<SaveAiRolesResponse, AxiosError<SaveAiRolesError>, Options<SaveAiRolesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveAiRoles({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * One short call through a role, to see it answer and how fast
+ */
+export const testAiRoleMutation = (options?: Partial<Options<TestAiRoleData>>): UseMutationOptions<TestAiRoleResponse, AxiosError<DefaultError>, Options<TestAiRoleData>> => {
+    const mutationOptions: UseMutationOptions<TestAiRoleResponse, AxiosError<DefaultError>, Options<TestAiRoleData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testAiRole({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAiUsageQueryKey = (options?: Options<GetAiUsageData>) => createQueryKey('getAiUsage', options);
+
+/**
+ * Calls and tokens by business, role and model over the last days
+ */
+export const getAiUsageOptions = (options?: Options<GetAiUsageData>) => queryOptions<GetAiUsageResponse, AxiosError<DefaultError>, GetAiUsageResponse, ReturnType<typeof getAiUsageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAiUsage({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAiUsageQueryKey(options)
+});
+
+/**
+ * Read a menu's photos into proposed categories and items, before the business has a catalog
+ *
+ * The same reading the admin's menu scan does (up to 8 pages, both languages, the choices printed beside an item), for a business being created: nothing is saved here; the reviewed menu goes with the new tenant and is imported once its stack is up.
+ */
+export const scanMenuForNewTenantMutation = (options?: Partial<Options<ScanMenuForNewTenantData>>): UseMutationOptions<ScanMenuForNewTenantResponse, AxiosError<ScanMenuForNewTenantError>, Options<ScanMenuForNewTenantData>> => {
+    const mutationOptions: UseMutationOptions<ScanMenuForNewTenantResponse, AxiosError<ScanMenuForNewTenantError>, Options<ScanMenuForNewTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await scanMenuForNewTenant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DisableOperatorData, DisableOperatorErrors, DisableOperatorResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, EnableOperatorData, EnableOperatorErrors, EnableOperatorResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FillDemoDataData, FillDemoDataErrors, FillDemoDataResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, InviteOperatorData, InviteOperatorErrors, InviteOperatorResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListOperatorsData, ListOperatorsErrors, ListOperatorsResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorErrors, ResetOperatorAuthenticatorResponses, ResetOperatorPasswordData, ResetOperatorPasswordErrors, ResetOperatorPasswordResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, SignOutOperatorData, SignOutOperatorErrors, SignOutOperatorResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpdateTenantTalabatData, UpdateTenantTalabatErrors, UpdateTenantTalabatResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteAiProviderData, DeleteAiProviderErrors, DeleteAiProviderResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DisableOperatorData, DisableOperatorErrors, DisableOperatorResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, EnableOperatorData, EnableOperatorErrors, EnableOperatorResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FillDemoDataData, FillDemoDataErrors, FillDemoDataResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GetAiSettingsData, GetAiSettingsErrors, GetAiSettingsResponses, GetAiUsageData, GetAiUsageErrors, GetAiUsageResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, InviteOperatorData, InviteOperatorErrors, InviteOperatorResponses, ListAiProviderModelsData, ListAiProviderModelsErrors, ListAiProviderModelsResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListOperatorsData, ListOperatorsErrors, ListOperatorsResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorErrors, ResetOperatorAuthenticatorResponses, ResetOperatorPasswordData, ResetOperatorPasswordErrors, ResetOperatorPasswordResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SaveAiProviderData, SaveAiProviderErrors, SaveAiProviderResponses, SaveAiRolesData, SaveAiRolesErrors, SaveAiRolesResponses, ScanMenuForNewTenantData, ScanMenuForNewTenantErrors, ScanMenuForNewTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, SignOutOperatorData, SignOutOperatorErrors, SignOutOperatorResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TestAiRoleData, TestAiRoleErrors, TestAiRoleResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpdateTenantTalabatData, UpdateTenantTalabatErrors, UpdateTenantTalabatResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -516,6 +516,93 @@ export const updateTenantTalabat = <ThrowOnError extends boolean = false>(option
     ...options,
     headers: {
         'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The AI providers (keys shown by their last four characters) and which model answers each role
+ */
+export const getAiSettings = <ThrowOnError extends boolean = false>(options?: Options<GetAiSettingsData, ThrowOnError>): RequestResult<GetAiSettingsResponses, GetAiSettingsErrors, ThrowOnError> => (options?.client ?? client).get<GetAiSettingsResponses, GetAiSettingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai',
+    ...options
+});
+
+/**
+ * Add a provider, or change one; a change without a key keeps the saved key
+ */
+export const saveAiProvider = <ThrowOnError extends boolean = false>(options: Options<SaveAiProviderData, ThrowOnError>): RequestResult<SaveAiProviderResponses, SaveAiProviderErrors, ThrowOnError> => (options.client ?? client).post<SaveAiProviderResponses, SaveAiProviderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai/providers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove a provider, and the roles pointed at it
+ */
+export const deleteAiProvider = <ThrowOnError extends boolean = false>(options: Options<DeleteAiProviderData, ThrowOnError>): RequestResult<DeleteAiProviderResponses, DeleteAiProviderErrors, ThrowOnError> => (options.client ?? client).delete<DeleteAiProviderResponses, DeleteAiProviderErrors, ThrowOnError>({ url: '/api/control/ai/providers/{id}', ...options });
+
+/**
+ * The models the provider offers, as its own list says
+ */
+export const listAiProviderModels = <ThrowOnError extends boolean = false>(options: Options<ListAiProviderModelsData, ThrowOnError>): RequestResult<ListAiProviderModelsResponses, ListAiProviderModelsErrors, ThrowOnError> => (options.client ?? client).get<ListAiProviderModelsResponses, ListAiProviderModelsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai/providers/{id}/models',
+    ...options
+});
+
+/**
+ * Point each role at a provider's model; the next call of every business follows
+ */
+export const saveAiRoles = <ThrowOnError extends boolean = false>(options: Options<SaveAiRolesData, ThrowOnError>): RequestResult<SaveAiRolesResponses, SaveAiRolesErrors, ThrowOnError> => (options.client ?? client).put<SaveAiRolesResponses, SaveAiRolesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai/roles',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One short call through a role, to see it answer and how fast
+ */
+export const testAiRole = <ThrowOnError extends boolean = false>(options: Options<TestAiRoleData, ThrowOnError>): RequestResult<TestAiRoleResponses, TestAiRoleErrors, ThrowOnError> => (options.client ?? client).post<TestAiRoleResponses, TestAiRoleErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai/test',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Calls and tokens by business, role and model over the last days
+ */
+export const getAiUsage = <ThrowOnError extends boolean = false>(options?: Options<GetAiUsageData, ThrowOnError>): RequestResult<GetAiUsageResponses, GetAiUsageErrors, ThrowOnError> => (options?.client ?? client).get<GetAiUsageResponses, GetAiUsageErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/ai/usage',
+    ...options
+});
+
+/**
+ * Read a menu's photos into proposed categories and items, before the business has a catalog
+ *
+ * The same reading the admin's menu scan does (up to 8 pages, both languages, the choices printed beside an item), for a business being created: nothing is saved here; the reviewed menu goes with the new tenant and is imported once its stack is up.
+ */
+export const scanMenuForNewTenant = <ThrowOnError extends boolean = false>(options: Options<ScanMenuForNewTenantData, ThrowOnError>): RequestResult<ScanMenuForNewTenantResponses, ScanMenuForNewTenantErrors, ThrowOnError> => (options.client ?? client).post<ScanMenuForNewTenantResponses, ScanMenuForNewTenantErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    responseType: 'json',
+    url: '/api/control/menu/scan',
+    ...options,
+    headers: {
+        'Content-Type': null,
         ...options.headers
     }
 });

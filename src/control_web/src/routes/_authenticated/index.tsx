@@ -8,7 +8,7 @@ import { PlatformPage } from '@/features/platform'
 // zod 4 keeps a caught key required on the input side.
 const searchSchema = z.object({
   tab: z
-    .enum(['tenants', 'queue', 'capacity', 'backups', 'audit', 'team'])
+    .enum(['tenants', 'queue', 'capacity', 'backups', 'audit', 'team', 'ai'])
     .catch('tenants')
     .default('tenants'),
 })
