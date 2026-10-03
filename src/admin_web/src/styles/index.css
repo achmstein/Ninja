@@ -34,11 +34,11 @@
     cursor: pointer;
   }
 
-  /* The admin's type: Geist for English, and for Arabic Alexandria, the
-     till's and the kitchen display's, so the three read as one app; Arabic
-     leads when the page is in Arabic, a little taller to breathe */
+  /* The admin's type: Geist for English, and for Arabic Noto Kufi Arabic,
+     geometric like Geist so the two read as one hand; Arabic leads when the
+     page is in Arabic, a little taller to breathe */
   :root[dir='rtl'] body {
-    font-family: 'Alexandria', 'Geist', system-ui, sans-serif;
+    font-family: 'Noto Kufi Arabic', 'Geist', system-ui, sans-serif;
     line-height: 1.6;
   }
   /* Arabic letters join: tracking that tightens or spaces English pulls
