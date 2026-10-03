@@ -9,6 +9,7 @@ import {
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { InfoTip } from '@/components/info-tip'
 import { SPRING } from '@/components/motion'
 
 /**
@@ -295,12 +296,11 @@ export function SettingsCard({
     >
       {title && (
         <div className='border-border/60 border-b px-5 py-4'>
-          <h2 className='font-semibold tracking-tight'>{title}</h2>
-          {description && (
-            <p className='text-muted-foreground mt-0.5 text-sm'>
-              {description}
-            </p>
-          )}
+          {/* What the card is about, a tap away: the card stays clean */}
+          <div className='flex items-center gap-1'>
+            <h2 className='font-semibold tracking-tight'>{title}</h2>
+            {description && <InfoTip>{description}</InfoTip>}
+          </div>
         </div>
       )}
       <div className='divide-border/60 divide-y'>{children}</div>

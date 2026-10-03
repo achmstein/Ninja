@@ -62,17 +62,19 @@ function SheetContent({
         data-side={placed}
         className={cn(
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-0 overflow-y-auto shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
+          // Everything is rounded: the sheet floats off the edge it opens
+          // from, docked a little in, its corners round on every side
           placed === 'right' &&
-            'data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end inset-y-0 end-0 h-full w-full sm:max-w-sm',
+            'data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end inset-y-2 end-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] rounded-2xl border sm:max-w-sm',
           side === 'right' &&
             placed === 'bottom' &&
-            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[92dvh] w-full rounded-t-2xl',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] max-h-[90dvh] w-[calc(100%-1rem)] rounded-3xl border',
           side === 'left' &&
-            'data-[state=closed]:slide-out-to-start data-[state=open]:slide-in-from-start inset-y-0 start-0 h-full w-full border-e sm:max-w-sm',
+            'data-[state=closed]:slide-out-to-start data-[state=open]:slide-in-from-start inset-y-2 start-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] rounded-2xl border sm:max-w-sm',
           side === 'top' &&
             'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
           side === 'bottom' &&
-            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] h-auto max-h-[90dvh] w-[calc(100%-1rem)] rounded-3xl border',
           className
         )}
         {...props}
@@ -122,7 +124,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot='sheet-footer'
       // The actions stay in reach while the sheet scrolls under them
       className={cn(
-        'border-border/60 bg-background/95 sticky bottom-0 mt-auto flex flex-col gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur',
+        'border-border/60 bg-background/95 sticky bottom-0 mt-auto flex flex-col gap-2 border-t p-4 backdrop-blur',
         className
       )}
       {...props}

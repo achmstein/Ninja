@@ -3,9 +3,11 @@ import { ArrowLeft } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { InfoTip } from '@/components/info-tip'
 
 type PageHeaderProps = {
   title: React.ReactNode
+  /** What the page is for: a tap away behind an ⓘ beside the title, never a line on the page */
   description?: React.ReactNode
   /** Child page of a sidebar entry (history, print): a back arrow before the title */
   back?: { to: LinkProps['to']; search?: LinkProps['search'] }
@@ -19,8 +21,9 @@ type PageHeaderProps = {
 }
 
 /**
- * The one page title block. Title and description on the start side, the
- * page's actions on the end side, an optional row (tabs, filters) below.
+ * The one page title block. The title on the start side, what the page is
+ * for behind an ⓘ beside it (the page stays clean), the page's actions on
+ * the end side, an optional row (tabs, filters) below.
  */
 export function PageHeader({
   title,
@@ -51,11 +54,9 @@ export function PageHeader({
           <div className='min-w-0'>
             <div className='flex flex-wrap items-center gap-2'>
               <h1 className='text-2xl font-bold tracking-tight'>{title}</h1>
+              {description && <InfoTip>{description}</InfoTip>}
               {badge}
             </div>
-            {description && (
-              <p className='text-muted-foreground text-sm'>{description}</p>
-            )}
           </div>
         </div>
         {actions && (

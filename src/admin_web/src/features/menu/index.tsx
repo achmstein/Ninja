@@ -67,7 +67,9 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ImageWithFallback } from '@/components/image-fallback'
+import { InfoBadge } from '@/components/info-badge'
 import { Grip, Sortable } from '@/components/sortable'
+import { DEFAULT_FOOD_COST_TARGET } from '@/features/inventory/menu-cost-rows'
 import {
   type StockRuleBadge,
   useStockRuleBadges,
@@ -467,11 +469,7 @@ export function MenuManagement() {
                     disabled={scan.isScanning}
                     onClick={() => scanInputRef.current?.click()}
                   >
-                    {scan.isScanning ? (
-                      <Spinner />
-                    ) : (
-                      <ScanLine />
-                    )}
+                    {scan.isScanning ? <Spinner /> : <ScanLine />}
                     {scan.isScanning ? t('readingMenu') : t('scanMenuPages')}
                   </Button>
                 )}
@@ -782,41 +780,75 @@ function MenuRow({
             />
             <div className='min-w-0 flex-1'>
               <div className='flex flex-wrap items-center gap-2'>
-                <span className='truncate font-medium'>
+                {/* The app's list sizes: the name at 14px, its line at 12px */}
+                <span className='truncate text-sm font-medium'>
                   {localized(item.name) || '—'}
                 </span>
                 {item.isPopular && (
-                  <Badge variant='secondary'>{t('popular')}</Badge>
+                  <InfoBadge
+                    badge={<Badge variant='secondary'>{t('popular')}</Badge>}
+                    title={t('popular')}
+                  >
+                    {t('popularWhy')}
+                  </InfoBadge>
                 )}
                 {item.isOutOfStock && (
-                  <Badge variant='danger'>{t('outOfStock')}</Badge>
+                  <InfoBadge
+                    badge={<Badge variant='danger'>{t('outOfStock')}</Badge>}
+                    title={t('outOfStock')}
+                  >
+                    {t('outOfStockWhy')}
+                  </InfoBadge>
                 )}
                 {stockRule && (
-                  <Badge
-                    variant='outline'
-                    className={cn(
-                      'gap-1 font-normal',
-                      stockRule.overTarget &&
-                        'border-destructive text-destructive'
-                    )}
+                  <InfoBadge
+                    badge={
+                      <Badge
+                        variant='outline'
+                        className={cn(
+                          'gap-1 font-normal',
+                          stockRule.overTarget &&
+                            'border-destructive text-destructive'
+                        )}
+                      >
+                        {stockRule.kind === 'unit' ? (
+                          <Package className='size-3' aria-hidden />
+                        ) : (
+                          <CookingPot className='size-3' aria-hidden />
+                        )}
+                        {t('tracked')}
+                        {stockRule.foodCost !== null && (
+                          <span className='tabular-nums'>
+                            · {stockRule.foodCost}%{stockRule.incomplete && '+'}
+                          </span>
+                        )}
+                      </Badge>
+                    }
                     title={
                       stockRule.kind === 'unit'
                         ? t('soldAsUnitBadge')
-                        : t('usesIngredientsBadge')
+                        : t('trackedRecipeTitle')
                     }
                   >
-                    {stockRule.kind === 'unit' ? (
-                      <Package className='size-3' aria-hidden />
-                    ) : (
-                      <CookingPot className='size-3' aria-hidden />
-                    )}
-                    {t('tracked')}
+                    <p>
+                      {stockRule.kind === 'unit'
+                        ? t('trackedUnitWhy')
+                        : t('trackedRecipeWhy')}
+                    </p>
                     {stockRule.foodCost !== null && (
-                      <span className='tabular-nums'>
-                        · {stockRule.foodCost}%{stockRule.incomplete && '+'}
-                      </span>
+                      <p>{t('foodCostWhy', { cost: stockRule.foodCost })}</p>
                     )}
-                  </Badge>
+                    {stockRule.overTarget && (
+                      <p>
+                        {t('foodCostOverWhy', {
+                          target: DEFAULT_FOOD_COST_TARGET,
+                        })}
+                      </p>
+                    )}
+                    {stockRule.incomplete && (
+                      <p>{t('foodCostIncompleteWhy')}</p>
+                    )}
+                  </InfoBadge>
                 )}
               </div>
               {description && (
@@ -826,7 +858,7 @@ function MenuRow({
               )}
             </div>
             <div className='shrink-0 text-end tabular-nums'>
-              <div className='font-medium'>
+              <div className='text-sm font-medium'>
                 {formatEgp(onOffer ? item.offerPrice : item.price)}
               </div>
               {onOffer && (

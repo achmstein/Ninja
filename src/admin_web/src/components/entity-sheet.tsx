@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -190,7 +185,7 @@ export function EntitySheet({
             </>
           )}
           {/* Shown once anything is in it: a prop, or a SheetActions portal */}
-          <div className='border-border/60 bg-background hidden items-center gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] has-[[data-sheet-slot]>*]:flex'>
+          <div className='border-border/60 bg-background hidden items-center gap-2 border-t p-4 has-[[data-sheet-slot]>*]:flex'>
             <div
               ref={setStart}
               data-sheet-slot=''

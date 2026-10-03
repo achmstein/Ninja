@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Download, Settings, Share } from 'lucide-react'
+import { ChevronRight, Download, Settings, Share } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { useInstallApp } from '@/lib/install-prompt'
 import { cn } from '@/lib/utils'
@@ -25,7 +25,8 @@ function iosNeedsHint() {
 
 /**
  * Everything beyond the tab bar, on a phone: every page of the sidebar as
- * tiles under their group, rising from the bottom in the thumb's reach;
+ * a row in its group's card, as a phone app lists them, rising from the
+ * bottom in the thumb's reach;
  * then the settings, and the way to install the admin as an app.
  */
 export function MoreSheet({
@@ -42,14 +43,11 @@ export function MoreSheet({
   const close = () => onOpenChange(false)
 
   const row =
-    'hover:bg-muted flex w-full items-center gap-3 rounded-lg px-3 py-3 text-start text-sm font-medium transition-colors'
+    'hover:bg-muted flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm font-medium transition-colors'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side='bottom'
-        className='max-h-[88dvh] overflow-y-auto rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))]'
-      >
+      <SheetContent side='bottom' className='overflow-y-auto pb-4'>
         <div
           aria-hidden
           className='bg-muted-foreground/30 mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full'
@@ -68,7 +66,8 @@ export function MoreSheet({
                 <h3 className='text-muted-foreground px-1 text-xs font-medium'>
                   {t(group.title)}
                 </h3>
-                <div className='grid grid-cols-3 gap-2'>
+                {/* A phone app's list: one card per group, a row per page */}
+                <div className='bg-card flex flex-col rounded-xl p-1 shadow-xs'>
                   {group.items.map((item) => {
                     if (!item.url) return null
                     const active = checkIsActive(href, item, false, urls)
@@ -77,22 +76,19 @@ export function MoreSheet({
                         key={String(item.url)}
                         to={item.url}
                         onClick={close}
-                        className={cn(
-                          'bg-card relative flex flex-col items-center gap-2 rounded-xl px-2 py-3 text-center shadow-xs transition-colors',
-                          active ? 'ring-primary ring-2' : 'hover:bg-muted/60'
-                        )}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(row, active && 'bg-muted')}
                       >
                         {item.icon && (
                           <item.icon className='text-muted-foreground size-5' />
                         )}
-                        <span className='line-clamp-2 text-xs leading-tight font-medium'>
-                          {t(item.title)}
-                        </span>
+                        <span className='flex-1 truncate'>{t(item.title)}</span>
                         {item.badge && (
-                          <span className='bg-primary text-primary-foreground absolute end-2 top-2 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold tabular-nums'>
+                          <span className='bg-primary text-primary-foreground min-w-5 rounded-full px-1.5 text-center text-xs leading-5 font-semibold tabular-nums'>
                             {item.badge}
                           </span>
                         )}
+                        <ChevronRight className='text-muted-foreground/60 size-4 rtl:rotate-180' />
                       </Link>
                     )
                   })}
