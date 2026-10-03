@@ -10,7 +10,11 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { MetricStrip, MetricTile } from '@/components/kit'
@@ -156,17 +160,19 @@ export function TillReport() {
         })
       }
       headerExtra={
-        <div className='relative'>
-          <Search className='text-muted-foreground absolute start-2.5 top-1/2 size-4 -translate-y-1/2' />
-          <Input
-            type='number'
+        // A receipt number, digits only: no browser spinner, the date picker's height
+        <InputGroup className='h-9 w-44'>
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
             inputMode='numeric'
-            min={1}
+            pattern='[0-9]*'
             aria-label={t('findReceipt')}
             placeholder={t('findReceipt')}
             value={search.receipt ?? ''}
             onChange={(event) => {
-              const value = Number(event.target.value)
+              const value = Number(event.target.value.replace(/\D/g, ''))
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -177,9 +183,8 @@ export function TillReport() {
                 }),
               })
             }}
-            className='w-[160px] ps-8'
           />
-        </div>
+        </InputGroup>
       }
     >
       {report.isError ? (

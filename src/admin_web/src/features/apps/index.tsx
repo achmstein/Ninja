@@ -1,12 +1,23 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Copy, Download, ExternalLink, Link2, Printer } from 'lucide-react'
+import {
+  Copy,
+  Download,
+  ExternalLink,
+  Link2,
+  Printer,
+  QrCode,
+} from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
@@ -18,8 +29,8 @@ import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
  * generic build of each from the platform's download page, then the
  * connect code, which is nothing more than this business's API host. The
  * web versions stay a link away for iPads and for a browser on anything.
- * One app shows at a time, with one code: the download's or the connect
- * code, whichever step is picked.
+ * One app shows at a time, in two plain steps; each step's QR code is a
+ * tap away beside it rather than on the page.
  */
 /** A camera opens only a full URL; the platform's download page may be given relative to this host. */
 function absoluteUrl(url: string): string {
@@ -69,19 +80,23 @@ export function AppsPage() {
         onValueChange={(v) => setSelected(v as AppKey)}
         className='gap-4'
       >
+        {/* On a phone the icon over a short label, so no name runs edge to edge */}
         {tabs > 1 && (
-          <TabsList className='h-auto w-full sm:w-fit'>
+          <TabsList className='grid h-auto w-full grid-cols-3 p-1 sm:inline-flex sm:w-fit'>
             {tablets.map((app) => (
               <TabsTrigger
                 key={app.key}
                 value={app.key}
-                className='gap-2 px-3 py-1.5'
+                className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
               >
                 <img src={app.icon} alt='' className='size-5 rounded' />
                 {app.tab}
               </TabsTrigger>
             ))}
-            <TabsTrigger value='connector' className='gap-2 px-3 py-1.5'>
+            <TabsTrigger
+              value='connector'
+              className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
+            >
               <Printer className='size-4' />
               {t('appsTabPrinter')}
             </TabsTrigger>
@@ -139,8 +154,6 @@ function AppHeader({
   )
 }
 
-type Step = 'install' | 'connect'
-
 /**
  * A tablet app in two steps, install and connect, beside the one code the
  * picked step needs: the download for the tablet's camera, or the connect
@@ -162,13 +175,6 @@ function TabletApp({
   apiUrl: string
 }) {
   const t = useT()
-  // With no download published here, only the connect code has something to show
-  const [step, setStep] = useState<Step>(downloadUrl ? 'install' : 'connect')
-  const qr =
-    step === 'install' && downloadUrl
-      ? { value: absoluteUrl(downloadUrl), caption: t('appsScanToDownload') }
-      : { value: apiUrl, caption: t('appsScanToConnect') }
-
   const copyAddress = () => {
     navigator.clipboard.writeText(apiUrl)
     toast.success(t('appsAddressCopied'))
@@ -184,14 +190,9 @@ function TabletApp({
         about={about}
       />
 
-      <div className='grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start'>
-        <ol className='space-y-2'>
-          <StepRow
-            n={1}
-            title={t('appsStepInstall')}
-            active={step === 'install'}
-            onSelect={downloadUrl ? () => setStep('install') : undefined}
-          >
+      <div className='p-5'>
+        <ol className='space-y-5'>
+          <StepRow n={1} title={t('appsStepInstall')}>
             <div className='flex flex-wrap items-center gap-2'>
               {downloadUrl ? (
                 <Button asChild>
@@ -205,6 +206,12 @@ function TabletApp({
                   <Download />
                   {t('appsDownloadAndroid')}
                 </Button>
+              )}
+              {downloadUrl && (
+                <QrButton
+                  value={absoluteUrl(downloadUrl)}
+                  caption={t('appsScanToDownload')}
+                />
               )}
               <Button variant='outline' asChild>
                 <a href={webUrl} target='_blank' rel='noreferrer'>
@@ -220,8 +227,6 @@ function TabletApp({
             n={2}
             title={t('appsConnectTitle')}
             hint={t('appsConnectHint')}
-            active={step === 'connect'}
-            onSelect={() => setStep('connect')}
           >
             <div className='bg-muted/50 flex items-center gap-2 rounded-lg border p-1.5 ps-3'>
               <code
@@ -234,83 +239,78 @@ function TabletApp({
                 <Copy />
                 {t('copy')}
               </Button>
+              <QrButton value={apiUrl} caption={t('appsScanToConnect')} small />
             </div>
           </StepRow>
         </ol>
-
-        {/* The one code on the page: it follows the picked step */}
-        <figure className='bg-muted/40 flex flex-col items-center gap-3 rounded-xl p-5 md:w-64'>
-          <div
-            key={qr.value}
-            className='animate-in fade-in-0 zoom-in-95 rounded-xl bg-white p-3 shadow-sm duration-300'
-          >
-            <QRCodeSVG
-              value={qr.value}
-              size={168}
-              level='M'
-              marginSize={1}
-              bgColor='#ffffff'
-              fgColor='#000000'
-            />
-          </div>
-          <figcaption className='text-muted-foreground text-center text-sm text-balance'>
-            {qr.caption}
-          </figcaption>
-        </figure>
       </div>
     </section>
   )
 }
 
-/** A numbered step; picking it brings its code up beside it. */
+/** A numbered step: its number, what to do, and what does it under it. */
 function StepRow({
   n,
   title,
   hint,
-  active,
-  onSelect,
   children,
 }: {
   n: number
   title: string
   hint?: string
-  active: boolean
-  onSelect?: () => void
   children: React.ReactNode
 }) {
   return (
-    <li
-      className={cn(
-        'rounded-xl border p-4 transition-colors',
-        active && onSelect
-          ? 'border-foreground/20 bg-muted/40'
-          : 'border-transparent'
-      )}
-    >
-      <div className='mb-3 flex items-center gap-1'>
-        <button
-          type='button'
-          onClick={onSelect}
-          disabled={!onSelect}
-          aria-pressed={active}
-          className='focus-visible:ring-ring/50 flex items-center gap-3 rounded-md text-start outline-none focus-visible:ring-[3px] disabled:cursor-default'
-        >
-          <span
-            className={cn(
-              'grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums transition-colors',
-              active
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground border'
-            )}
-          >
-            {n}
-          </span>
+    <li className='flex gap-3'>
+      <span className='bg-foreground text-background grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums'>
+        {n}
+      </span>
+      <div className='min-w-0 flex-1 space-y-3 pt-0.5'>
+        <div className='flex items-center gap-1'>
           <span className='text-sm font-medium'>{title}</span>
-        </button>
-        {hint && <InfoTip>{hint}</InfoTip>}
+          {hint && <InfoTip>{hint}</InfoTip>}
+        </div>
+        {children}
       </div>
-      <div className='ps-10'>{children}</div>
     </li>
+  )
+}
+
+/** A QR code a tap away, for the tablet's camera, where its step needs one */
+function QrButton({
+  value,
+  caption,
+  small = false,
+}: {
+  value: string
+  caption: string
+  small?: boolean
+}) {
+  const t = useT()
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant='outline' size={small ? 'sm' : 'default'}>
+          <QrCode />
+          {t('appsShowQr')}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='flex w-64 flex-col items-center gap-3'>
+        <div className='rounded-xl bg-white p-3 shadow-sm'>
+          <QRCodeSVG
+            value={value}
+            size={180}
+            level='M'
+            marginSize={1}
+            bgColor='#ffffff'
+            fgColor='#000000'
+          />
+        </div>
+        <p className='text-muted-foreground text-center text-sm text-balance'>
+          {caption}
+        </p>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -334,7 +334,7 @@ function PrinterConnector({ downloadUrl }: { downloadUrl: string | null }) {
         }
       />
       <ol className='space-y-2 p-5'>
-        <StepRow n={1} title={t('appsConnectorInstall')} active>
+        <StepRow n={1} title={t('appsConnectorInstall')}>
           {downloadUrl ? (
             <Button asChild>
               <a href={downloadUrl}>
@@ -349,7 +349,7 @@ function PrinterConnector({ downloadUrl }: { downloadUrl: string | null }) {
             </Button>
           )}
         </StepRow>
-        <StepRow n={2} title={t('appsConnectorPairStep')} active>
+        <StepRow n={2} title={t('appsConnectorPairStep')}>
           <Button variant='outline' asChild>
             <Link to='/branches'>
               <Link2 />
