@@ -516,6 +516,9 @@ const webExtras = {
   busiestAt: { en: "Busiest: {when}", ar: "الأكثر ازدحامًا: {when}" },
   navigation: { en: "Navigation", ar: "التنقل" },
   goTo: { en: "Go to…", ar: "انتقل إلى…" },
+  howNetIsMade: { en: "How net is made", ar: "كيف يُحسب الصافي" },
+  againstPeriodBefore: { en: "against the period before", ar: "مقارنة بالفترة السابقة" },
+  whereTheMoneyWent: { en: "Where the money went", ar: "أين ذهبت الأموال" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)

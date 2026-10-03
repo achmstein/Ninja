@@ -9,11 +9,13 @@ import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
+import { MetricStrip, MetricTile } from '@/components/kit'
+import { CountUp } from '@/components/motion'
 import { SegmentedBar } from '@/components/segmented-bar'
-import { Stat, StatStrip } from '@/components/stat-strip'
 import { PaymentsList } from './components/payments-list'
 import { RefundsList } from './components/refunds-list'
 import { TabPaymentsList } from './components/tab-payments-list'
@@ -78,6 +80,8 @@ export function TillReport() {
 
   const data = report.data
   const net = toNumber(data?.net)
+  const bills = toNumber(data?.ticketsSettled)
+  const refunds = toNumber(data?.refunds)
   const previousNet = toNumber(previousReport.data?.net)
   const delta =
     previousReport.data && previousNet > 0
@@ -128,11 +132,6 @@ export function TillReport() {
     if (view)
       drill.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [view, search.tender, search.status])
-
-  const active = (which: TillView, tender?: string) =>
-    view === which && (tender === undefined || search.tender === tender)
-      ? 'bg-accent/50'
-      : undefined
 
   const viewTitle: Record<TillView, string> = {
     tickets: t('tillTickets'),
@@ -187,77 +186,41 @@ export function TillReport() {
         <ErrorState error={report.error} onRetry={() => report.refetch()} />
       ) : (
         <>
-          <div className='flex flex-wrap items-end justify-between gap-4'>
-            <Stat
-              size='hero'
+          {/* The numbers the till is opened for, on one strip; each opens the list behind it */}
+          <MetricStrip>
+            <MetricTile
               label={t('netSales')}
-              value={formatEgp(net)}
+              value={<CountUp value={net} format={formatEgp} />}
+              change={delta != null ? delta / 100 : undefined}
+              hint={t('againstPeriodBefore')}
               loading={loading}
-              hint={
-                delta != null ? (
-                  <span
-                    className={cn(
-                      'font-medium',
-                      delta > 0 && 'text-success',
-                      delta < 0 && 'text-destructive'
-                    )}
-                  >
-                    {delta > 0 ? '+' : ''}
-                    {delta.toFixed(0)}%
-                  </span>
-                ) : undefined
-              }
             />
-            {!loading && toNumber(data?.changeGiven) > 0 && (
-              <span className='text-muted-foreground text-sm tabular-nums'>
-                {t('changeGivenNote', {
-                  amount: formatEgp(data?.changeGiven),
-                })}
-              </span>
-            )}
-          </div>
-
-          <StatStrip>
-            <Stat
+            <MetricTile
               label={t('posTicketsSettled')}
-              value={String(toNumber(data?.ticketsSettled))}
+              value={<CountUp value={bills} />}
               loading={loading}
               to='/till'
               search={open('tickets')}
-              className={active('tickets')}
             />
-            <Stat
-              label={t('subtotal')}
-              value={formatEgp(data?.subtotal)}
+            <MetricTile
+              label={t('averageBill')}
+              value={bills > 0 ? formatEgp(net / bills) : '—'}
               loading={loading}
             />
-            <Stat
-              label={t('serviceChargeTotal')}
-              value={formatEgp(data?.serviceCharge)}
-              loading={loading}
-            />
-            <Stat
-              label={t('vatTotal')}
-              value={formatEgp(data?.vat)}
-              loading={loading}
-            />
-            <Stat
-              label={t('discountsTotal')}
-              value={formatEgp(data?.discounts)}
-              loading={loading}
-            />
-            <Stat
+            <MetricTile
               label={t('refundsTotal')}
-              value={`−${formatEgp(data?.refunds)}`}
+              value={
+                <span className={cn(refunds > 0 && 'text-destructive')}>
+                  {refunds > 0 ? `−${formatEgp(refunds)}` : formatEgp(0)}
+                </span>
+              }
               hint={t('refundsCount', { count: toNumber(data?.refundCount) })}
-              tone={toNumber(data?.refunds) > 0 ? 'negative' : 'default'}
               loading={loading}
               to='/till'
               search={open('refunds')}
-              className={active('refunds')}
             />
             {features.tabs && (
-              <Stat
+              <MetricTile
                 label={t('tabPayments')}
                 value={formatEgp(data?.tabPayments)}
                 hint={t('paymentsCount', {
@@ -266,84 +229,146 @@ export function TillReport() {
                 loading={loading}
                 to='/till'
                 search={open('tab-payments')}
-                className={active('tab-payments')}
               />
             )}
-          </StatStrip>
+          </MetricStrip>
 
-          <div className='grid gap-10 lg:grid-cols-2'>
-            <section>
-              <h2 className='mb-3 text-sm font-semibold'>{t('tenderSplit')}</h2>
-              {loading ? (
-                <Skeleton className='h-40' />
-              ) : (
-                <SegmentedBar
-                  segments={tendersFor(
-                    features.onlinePayments,
-                    toNumber(tenderTotals.get('Online')?.amount) > 0,
-                    toNumber(tenderTotals.get('Talabat')?.amount) > 0
-                  ).map(({ name, value, labelKey }) => {
-                    const payments = toNumber(tenderTotals.get(name)?.count)
-                    const slips = toNumber(tabTenderTotals.get(name)?.count)
-                    const amount =
-                      toNumber(tenderTotals.get(name)?.amount) +
-                      toNumber(tabTenderTotals.get(name)?.amount)
-                    // "3 payments · 1 tab payment": each kind only when there is one
-                    const hint =
+          <div className='grid gap-4 lg:grid-cols-3'>
+            <Card className='gap-3 lg:col-span-2'>
+              <CardHeader>
+                <CardTitle>{t('tenderSplit')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className='h-40' />
+                ) : (
+                  <SegmentedBar
+                    segments={tendersFor(
+                      features.onlinePayments,
+                      toNumber(tenderTotals.get('Online')?.amount) > 0,
+                      toNumber(tenderTotals.get('Talabat')?.amount) > 0
+                    ).map(({ name, value, labelKey }) => {
+                      const payments = toNumber(tenderTotals.get(name)?.count)
+                      const slips = toNumber(tabTenderTotals.get(name)?.count)
+                      const amount =
+                        toNumber(tenderTotals.get(name)?.amount) +
+                        toNumber(tabTenderTotals.get(name)?.amount)
+                      // "3 payments · 1 tab payment": each kind only when there is one
+                      const hint =
+                        [
+                          payments > 0 &&
+                            t('paymentsCount', { count: payments }),
+                          slips > 0 && t('tabPaymentsCount', { count: slips }),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ') || t('paymentsCount', { count: 0 })
+                      return {
+                        key: name,
+                        label: t(labelKey),
+                        value: amount,
+                        display: formatEgp(amount),
+                        hint,
+                        to: '/till' as const,
+                        search: open('payments', { tender: String(value) }),
+                      }
+                    })}
+                  />
+                )}
+                {!loading && toNumber(data?.changeGiven) > 0 && (
+                  <p className='text-muted-foreground mt-3 text-xs tabular-nums'>
+                    {t('changeGivenNote', {
+                      amount: formatEgp(data?.changeGiven),
+                    })}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* How the net is made, as a short statement: the figures an accountant wants, in their order */}
+            <Card className='gap-3'>
+              <CardHeader>
+                <CardTitle>{t('howNetIsMade')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className='h-40' />
+                ) : (
+                  <dl className='grid gap-2 text-sm'>
+                    {[
+                      [t('subtotal'), toNumber(data?.subtotal), ''],
                       [
-                        payments > 0 && t('paymentsCount', { count: payments }),
-                        slips > 0 && t('tabPaymentsCount', { count: slips }),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ') || t('paymentsCount', { count: 0 })
-                    return {
-                      key: name,
-                      label: t(labelKey),
-                      value: amount,
-                      display: formatEgp(amount),
-                      hint,
-                      to: '/till' as const,
-                      search: open('payments', { tender: String(value) }),
-                    }
-                  })}
-                />
-              )}
-            </section>
+                        t('serviceChargeTotal'),
+                        toNumber(data?.serviceCharge),
+                        '+',
+                      ],
+                      [t('vatTotal'), toNumber(data?.vat), '+'],
+                      [t('discountsTotal'), toNumber(data?.discounts), '−'],
+                      [t('refundsTotal'), refunds, '−'],
+                    ]
+                      .filter(([, amount, sign]) => !sign || Number(amount) > 0)
+                      .map(([label, amount, sign]) => (
+                        <div
+                          key={String(label)}
+                          className='flex justify-between gap-3'
+                        >
+                          <dt className='text-muted-foreground'>{label}</dt>
+                          <dd
+                            className={cn(
+                              'tabular-nums',
+                              sign === '−' && 'text-destructive'
+                            )}
+                          >
+                            {sign}
+                            {formatEgp(Number(amount))}
+                          </dd>
+                        </div>
+                      ))}
+                    <div className='mt-1 flex justify-between gap-3 border-t pt-2 font-semibold'>
+                      <dt>{t('netSales')}</dt>
+                      <dd className='tabular-nums'>{formatEgp(net)}</dd>
+                    </div>
+                  </dl>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-            <section>
-              <h2 className='mb-3 text-sm font-semibold'>
-                {t('byTicketType')}
-              </h2>
+          <Card className='gap-3'>
+            <CardHeader>
+              <CardTitle>{t('byTicketType')}</CardTitle>
+            </CardHeader>
+            <CardContent>
               {loading ? (
-                <Skeleton className='h-40' />
+                <Skeleton className='h-24' />
               ) : (
-                <ul className='divide-y text-sm'>
+                <div className='grid gap-3 sm:grid-cols-3'>
                   {TICKET_TYPES.map(({ name, labelKey }) => {
                     const row = typeTotals.get(name)
                     return (
-                      <li key={name}>
-                        <Link
-                          to='/till'
-                          search={open('tickets')}
-                          className='hover:bg-accent/50 -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors'
-                        >
-                          <span className='flex-1'>{t(labelKey)}</span>
-                          <span className='text-muted-foreground text-xs tabular-nums'>
-                            {t('posTicketsCount', {
-                              count: toNumber(row?.count),
-                            })}
-                          </span>
-                          <span className='font-medium tabular-nums'>
-                            {formatEgp(row?.net)}
-                          </span>
-                        </Link>
-                      </li>
+                      <Link
+                        key={name}
+                        to='/till'
+                        search={open('tickets')}
+                        className='bg-muted/40 hover:bg-muted rounded-lg p-3 transition-colors'
+                      >
+                        <div className='text-muted-foreground text-xs'>
+                          {t(labelKey)}
+                        </div>
+                        <div className='mt-0.5 font-semibold tabular-nums'>
+                          {formatEgp(row?.net)}
+                        </div>
+                        <div className='text-muted-foreground text-xs tabular-nums'>
+                          {t('posTicketsCount', {
+                            count: toNumber(row?.count),
+                          })}
+                        </div>
+                      </Link>
                     )
                   })}
-                </ul>
+                </div>
               )}
-            </section>
-          </div>
+            </CardContent>
+          </Card>
 
           {view && (
             <section

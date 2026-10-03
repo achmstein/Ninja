@@ -24,6 +24,8 @@ import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { MonthSwitcher } from '@/components/month-switcher'
 import { ProfitTrend } from './components/profit-trend'
+import { ProfitWaterfall } from './components/profit-waterfall'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 
@@ -221,7 +223,23 @@ export function Profit() {
             />
           </StatStrip>
 
-          <div className='divide-y rounded-lg border px-4'>
+          {/* Where the money went, before the lines that say it in detail */}
+          <Card className='gap-4'>
+            <CardHeader>
+              <CardTitle>{t('whereTheMoneyWent')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProfitWaterfall
+                sales={net}
+                goods={toNumber(p.goods) + toNumber(p.waste)}
+                labour={toNumber(p.labour)}
+                expenses={toNumber(p.expenses)}
+                profit={toNumber(p.profit)}
+              />
+            </CardContent>
+          </Card>
+
+          <div className='bg-card divide-border/60 divide-y rounded-xl px-4 shadow-sm'>
             {line(t('salesGross'), toNumber(p.sales))}
             {toNumber(p.refunds) > 0 &&
               line(t('refundsTotal'), toNumber(p.refunds), {
