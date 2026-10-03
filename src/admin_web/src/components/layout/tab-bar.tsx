@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
   BookOpen,
-  Radio,
+  ClipboardList,
   LayoutDashboard,
   Menu as MenuIcon,
   ReceiptText,
@@ -19,31 +19,31 @@ import { ActiveMarker } from '@/components/motion'
 import { MoreSheet } from './more-sheet'
 
 type Tab = {
-  to: '/' | '/orders/live' | '/till' | '/inventory' | '/menu'
+  to: '/' | '/till' | '/inventory' | '/menu' | '/orders'
   label: TranslationKey
   icon: LucideIcon
 }
 
 /**
- * The places an owner goes every day: the overview, what is live, the till,
- * the stock (the menu where there is no stock to keep); the rest is behind
- * More
+ * The places an owner goes every day: the overview, the till, the stock and
+ * the menu (the orders where there is no stock to keep). What is live is
+ * the staff's screen, behind More with its count
  */
 function tabsFor(inventory: boolean): Tab[] {
   return [
     { to: '/', label: 'overview', icon: LayoutDashboard },
-    { to: '/orders/live', label: 'liveNav', icon: Radio },
     { to: '/till', label: 'navTill', icon: ReceiptText },
     inventory
       ? { to: '/inventory', label: 'stock', icon: Warehouse }
-      : { to: '/menu', label: 'menuItems', icon: BookOpen },
+      : { to: '/orders', label: 'orders', icon: ClipboardList },
+    { to: '/menu', label: 'menuItems', icon: BookOpen },
   ]
 }
 
 function isActive(pathname: string, to: Tab['to']) {
   if (to === '/') return pathname === '/'
-  if (to === '/orders/live')
-    return pathname.startsWith('/orders') || pathname.startsWith('/requests')
+  // Orders is the list; Live (/orders/live) is its own page behind More
+  if (to === '/orders') return pathname === '/orders'
   if (to === '/menu')
     return pathname.startsWith('/menu') || pathname.startsWith('/promos')
   return pathname === to || pathname.startsWith(`${to}/`)
@@ -80,7 +80,6 @@ export function TabBar() {
         <div className='mx-auto flex max-w-md items-center gap-1'>
           {TABS.map((tab) => {
             const active = isActive(pathname, tab.to)
-            const count = tab.to === '/orders/live' ? pending.length : 0
             return (
               <Link
                 key={tab.to}
@@ -97,17 +96,10 @@ export function TabBar() {
                     className='bg-muted rounded-xl'
                   />
                 )}
-                <span className='relative'>
-                  <tab.icon
-                    className='size-5'
-                    strokeWidth={active ? 2.25 : 1.75}
-                  />
-                  {count > 0 && (
-                    <span className='bg-primary text-primary-foreground absolute -end-2.5 -top-1.5 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold tabular-nums'>
-                      {count}
-                    </span>
-                  )}
-                </span>
+                <tab.icon
+                  className='size-5'
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
                 {t(tab.label)}
               </Link>
             )
@@ -123,7 +115,15 @@ export function TabBar() {
             {!onTab && (
               <ActiveMarker group='tab-bar' className='bg-muted rounded-xl' />
             )}
-            <MenuIcon className='size-5' strokeWidth={onTab ? 1.75 : 2.25} />
+            {/* Live is behind More: its waiting orders show here */}
+            <span className='relative'>
+              <MenuIcon className='size-5' strokeWidth={onTab ? 1.75 : 2.25} />
+              {pending.length > 0 && (
+                <span className='bg-primary text-primary-foreground absolute -end-2.5 -top-1.5 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold tabular-nums'>
+                  {pending.length}
+                </span>
+              )}
+            </span>
             {t('more')}
           </button>
         </div>
