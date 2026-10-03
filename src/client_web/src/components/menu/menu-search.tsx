@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Search, X } from 'lucide-react'
+import { ArrowLeft, Search, X } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -105,6 +105,15 @@ export function MenuSearch({
             onAnimationComplete={() => input.current?.focus()}
           >
             <div className='mx-auto flex w-full max-w-lg items-center gap-2 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3'>
+              {/* The way back, as every pushed page has it: a round button on the start side */}
+              <button
+                type='button'
+                onClick={close}
+                aria-label={t('back')}
+                className='bg-muted/80 active:bg-muted -ms-1 grid size-10 shrink-0 place-items-center rounded-full transition-colors'
+              >
+                <ArrowLeft className='size-5 rtl:rotate-180' />
+              </button>
               <div className='bg-muted flex h-12 flex-1 items-center gap-2 rounded-full px-4'>
                 <Search className='text-muted-foreground size-5 shrink-0' />
                 <input
@@ -122,9 +131,6 @@ export function MenuSearch({
                   </button>
                 )}
               </div>
-              <button type='button' onClick={close} className='text-body font-medium'>
-                {t('close')}
-              </button>
             </div>
 
             <div className='mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]'>
