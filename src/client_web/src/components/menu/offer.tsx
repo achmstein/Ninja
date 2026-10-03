@@ -17,11 +17,10 @@ export function offerPercent(item: CatalogItemDto): number {
 }
 
 /**
- * The deal, said the same way in every menu style: "−20%" on a warm coral
- * to orange pill with a flame, a light catching it once as it comes into
- * view. On a photo it sits in the corner (`photo`), in a row beside the name.
- * The colour is the offer's own, not the business's, so a deal reads as one
- * on any brand.
+ * The deal, said the same way in every menu style: "−20%" with a flame on a
+ * pill of the business's own colour, a light catching it once as it comes
+ * into view. On a photo it sits in the corner (`photo`), in a row beside the
+ * name.
  */
 export function OfferBadge({
   item,
@@ -84,9 +83,7 @@ export function OfferPrice({
   const on = isOnOffer(item)
   if (!on) {
     return tone === 'page' ? (
-      <span className={cn('bg-muted rounded-full px-2.5 py-1 text-caption font-bold tabular-nums', className)}>
-        {price(item.price)}
-      </span>
+      <span className={cn('text-caption font-bold tabular-nums', className)}>{price(item.price)}</span>
     ) : (
       <span className={cn('font-bold tabular-nums', className)}>{price(item.price)}</span>
     )
@@ -96,9 +93,8 @@ export function OfferPrice({
       <span
         className={cn(
           'font-bold',
-          tone === 'page'
-            ? 'from-offer to-offer-to text-offer-foreground rounded-full bg-gradient-to-r px-2.5 py-1 text-caption'
-            : 'text-offer-to'
+          // The offer price in the business's colour; on a photo's shade, white as the rest of its text
+          tone === 'page' ? 'text-offer text-caption' : 'text-white'
         )}
       >
         {price(item.offerPrice)}

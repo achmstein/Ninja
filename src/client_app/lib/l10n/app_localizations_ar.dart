@@ -184,6 +184,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchMenu => 'دور في المنيو...';
 
   @override
+  String get noDishesFound => 'مفيش أصناف بالاسم ده';
+
+  @override
   String get noItemsAvailable => 'مفيش حاجات متاحة';
 
   @override
@@ -1617,6 +1620,9 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get searchMenu => 'ابحث في القائمة...';
+
+  @override
+  String get noDishesFound => 'لا توجد أصناف بهذا الاسم';
 
   @override
   String get noItemsAvailable => 'لا توجد أصناف متاحة';

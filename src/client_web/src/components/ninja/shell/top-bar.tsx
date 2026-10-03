@@ -18,12 +18,15 @@ import { ScanCodeButton } from '@/components/places/table-scanner'
  */
 export function NinjaTopBar({
   start,
+  end,
   chips = true,
   className,
   style,
   ref,
 }: {
   start?: ReactNode
+  /** Something of the page's own at the end, before the chips (the menu's search) */
+  end?: ReactNode
   chips?: boolean
   className?: string
   style?: MotionStyle
@@ -45,6 +48,7 @@ export function NinjaTopBar({
       style={style}
     >
       <div className='flex min-w-0 items-center gap-1'>{start ?? brand}</div>
+      {end && <div className='ms-auto flex shrink-0 items-center'>{end}</div>}
       {chips && (
         <motion.div
           className='flex shrink-0 items-center gap-2 empty:hidden'

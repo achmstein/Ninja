@@ -22,6 +22,7 @@ import { DECK_COMPACT_TOP, DECK_TOP, DOCK_INSET, DOCK_SIDE, TABS_H } from '@/com
 import { DockBill } from '@/components/ninja/shell/dock-bill'
 import { TuckedTabs } from '@/components/ninja/shell/nav'
 import { NinjaTopBar } from '@/components/ninja/shell/top-bar'
+import { MenuSearch } from './menu-search'
 import { useDockRowShown } from '@/components/ninja/shell/use-dock-row'
 import { useTuck, useTuckOnScroll } from '@/components/ninja/shell/use-tuck'
 import { Tray } from '@/components/tray/tray'
@@ -457,6 +458,7 @@ export function MenuScreen({ menu }: HomeProps) {
             ref={bar}
             className='absolute inset-x-0 top-0'
             style={{ y: barY }}
+            end={<MenuSearch sections={menu.sections} onOpen={openDish} />}
             start={
               mode === 'grid' && !classic ? (
                 <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>

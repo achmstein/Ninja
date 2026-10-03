@@ -80,6 +80,7 @@
   "cart": "Cart",
   "settings": "Settings",
   "searchMenu": "Search menu...",
+  "noDishesFound": "No dishes match that",
   "noItemsAvailable": "No items available",
   "failedToLoadMenu": "Failed to load menu: {error}",
   "@failedToLoadMenu": {

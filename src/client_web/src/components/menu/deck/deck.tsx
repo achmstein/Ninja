@@ -425,7 +425,7 @@ export function CardFace({
 
   const priceLine = (
     <div className='flex items-baseline gap-2 tabular-nums'>
-      <span className={cn('text-lg font-bold', onOffer && hasPhoto && 'text-offer-to')}>{price(onOffer ? item.offerPrice : item.price)}</span>
+      <span className='text-lg font-bold'>{price(onOffer ? item.offerPrice : item.price)}</span>
       {onOffer && <span className='text-note line-through opacity-60'>{price(item.price)}</span>}
     </div>
   )

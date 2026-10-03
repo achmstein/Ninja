@@ -276,18 +276,17 @@ function RateChips({ place, free }: { place: PlaceViewModel; free: boolean }) {
   const price = usePrice()
   const options = tariffOptions(place.tariff)
   if (options.length === 0) return null
-  const chip = cn('rounded-full px-2.5 py-1 text-caption font-semibold tabular-nums', free ? 'bg-background/12' : 'bg-muted')
+  // A chip never breaks, and each carries its own "/hr": a unit left alone at the end wrapped onto a line of its own
+  const chip = cn('rounded-full px-2.5 py-1 text-caption font-semibold whitespace-nowrap tabular-nums', free ? 'bg-background/12' : 'bg-muted')
   return (
     <span className='mt-1 flex flex-wrap items-center gap-1.5'>
       {hasOptions(place.tariff) ? (
-        <>
-          {options.map((o) => (
-            <span key={o.code} className={chip}>
-              {t('optionRateFormat', { option: localized(o.name), rate: price.whole(o.hourlyRate) })}
-            </span>
-          ))}
-          <span className={cn('text-caption font-medium', free ? 'opacity-70' : 'text-muted-foreground')}>{t('perHourShort')}</span>
-        </>
+        options.map((o) => (
+          <span key={o.code} className={chip}>
+            {t('optionRateFormat', { option: localized(o.name), rate: price.whole(o.hourlyRate) })}
+            <span className={cn('font-medium', free ? 'opacity-70' : 'text-muted-foreground')}>{t('perHourShort')}</span>
+          </span>
+        ))
       ) : (
         <span className={chip}>{t('hourlyRateFormat', { rate: price.whole(options[0].hourlyRate) })}</span>
       )}

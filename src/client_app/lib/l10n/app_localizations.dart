@@ -435,6 +435,12 @@ abstract class AppLocalizations {
   /// **'Search menu...'**
   String get searchMenu;
 
+  /// No description provided for @noDishesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No dishes match that'**
+  String get noDishesFound;
+
   /// No description provided for @noItemsAvailable.
   ///
   /// In en, this message translates to:

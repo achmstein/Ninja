@@ -56,6 +56,7 @@
   "cart": "السلة",
   "settings": "الاعدادات",
   "searchMenu": "دور في المنيو...",
+  "noDishesFound": "مفيش أصناف بالاسم ده",
   "noItemsAvailable": "مفيش حاجات متاحة",
   "failedToLoadMenu": "المنيو مش بيحمل: {error}",
   "viewCart": "شوف السلة",

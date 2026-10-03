@@ -863,7 +863,7 @@ function MenuCard({
           fallbackIcon={<Coffee className='text-muted-foreground size-6' />}
         />
         {saving > 0 && (
-          <span className='absolute start-2 top-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm'>
+          <span className='bg-foreground text-background absolute start-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm'>
             −{saving}%
           </span>
         )}
@@ -883,7 +883,7 @@ function MenuCard({
             {localized(item.name) || '—'}
           </div>
           <div className='flex items-baseline gap-1.5 text-sm tabular-nums'>
-            <span className={cn('font-semibold', onOffer && 'text-orange-600')}>
+            <span className={cn('font-semibold', onOffer && 'text-foreground')}>
               {formatEgp(onOffer ? item.offerPrice : item.price)}
             </span>
             {onOffer && (
