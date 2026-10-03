@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { BrandLockup, BrandMark, useBrandLockup } from '@/components/brand-mark'
+import { BrandMark } from '@/components/brand-mark'
 import { useBrandName } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 
@@ -31,7 +31,6 @@ export function BranchSwitcher() {
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
   const business = useBrandName()
-  const lockup = useBrandLockup()
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
@@ -44,13 +43,8 @@ export function BranchSwitcher() {
     queryClient.resetQueries()
   }
 
-  // The business's own wordmark or logo when it has one, the mark and name otherwise
-  const brand = lockup ? (
-    <>
-      <BrandLockup lockup={lockup} alt={business} />
-      {branches.length > 1 && <span className='text-muted-foreground truncate text-sm'>{label}</span>}
-    </>
-  ) : (
+  // The business's logo (its square mark), its name and the branch, as the admin shows them
+  const brand = (
     <>
       <BrandMark className='size-8 shrink-0 text-base' />
       <div className='grid min-w-0 flex-1 text-start text-sm leading-tight'>
