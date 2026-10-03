@@ -1,23 +1,19 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, ScanLine, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { type StockItemView } from '@/api/inventory'
 import { useLocalized, useT } from '@/lib/i18n'
 import { SCAN_ACCEPT } from '@/lib/image'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
+import { AiButton } from '@/components/ai-button'
 import { Combobox } from '@/components/combobox'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid } from '@/components/field'
 import { suppliersQueryOptions } from '@/features/finance/queries'
 import { isComplete, type Line, newLine, reprice } from '../lines'
 import { stockItemsQueryOptions, toStockItemOptions } from '../queries'
@@ -42,19 +38,19 @@ export function ReceiveDialog({
   const t = useT()
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-3xl'>
-        <DialogHeader>
-          <DialogTitle>{t('receiveStock')}</DialogTitle>
-        </DialogHeader>
-        {open && (
-          <ReceiveForm
-            onOpenChange={onOpenChange}
-            initialStockItemId={stockItemId ?? null}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('receiveStock')}
+      size='wide'
+    >
+      {open && (
+        <ReceiveForm
+          onOpenChange={onOpenChange}
+          initialStockItemId={stockItemId ?? null}
+        />
+      )}
+    </EntitySheet>
   )
 }
 
@@ -134,10 +130,9 @@ function ReceiveForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label>{t('supplier')}</Label>
+    <form id='receive-form' onSubmit={handleSubmit} className='space-y-4'>
+      <FieldGrid>
+        <Field label={t('supplier')}>
           <Combobox
             value={supplierId}
             onChange={setSupplierId}
@@ -149,17 +144,16 @@ function ReceiveForm({
             placeholder={t('noSupplier')}
             clearLabel={t('noSupplier')}
           />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='invoiceRef'>{t('invoiceRef')}</Label>
+        </Field>
+        <Field label={t('invoiceRef')} htmlFor='invoiceRef'>
           <Input
             id='invoiceRef'
             placeholder={t('invoiceRefPlaceholder')}
             value={invoiceRef}
             onChange={(e) => setInvoiceRef(e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
       <div className='space-y-2'>
         <Label>{t('lines')}</Label>
@@ -205,20 +199,12 @@ function ReceiveForm({
           </Button>
           {scan.available && (
             <>
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                disabled={scan.isScanning}
+              <AiButton
+                pending={scan.isScanning}
                 onClick={() => scanInputRef.current?.click()}
               >
-                {scan.isScanning ? (
-                  <Spinner />
-                ) : (
-                  <ScanLine />
-                )}
                 {scan.isScanning ? t('readingReceipt') : t('scanReceipt')}
-              </Button>
+              </AiButton>
               {scan.isScanning && (
                 <span className='text-muted-foreground text-xs'>
                   {t('readingReceiptHint')}
@@ -249,7 +235,7 @@ function ReceiveForm({
         </span>
       </div>
 
-      <DialogFooter>
+      <SheetActions>
         <Button
           type='button'
           variant='outline'
@@ -257,11 +243,11 @@ function ReceiveForm({
         >
           {t('cancel')}
         </Button>
-        <Button type='submit' disabled={isPending}>
+        <Button type='submit' form='receive-form' disabled={isPending}>
           {isPending && <Spinner />}
           {t('receiveStock')}
         </Button>
-      </DialogFooter>
+      </SheetActions>
 
       {scan.proposal && (
         <ReceiptReviewSheet

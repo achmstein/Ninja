@@ -22,8 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
-import { InfoTip } from '@/components/info-tip'
+import { Field, SwitchRow } from '@/components/field'
 import {
   customersService,
   type StaffRole,
@@ -135,8 +134,7 @@ export function AddStaffDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='staffName'>{t('name')}</Label>
+          <Field label={t('name')} htmlFor='staffName'>
             <Input
               id='staffName'
               placeholder={t('enterName')}
@@ -144,9 +142,8 @@ export function AddStaffDialog({
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='staffEmail'>{t('email')}</Label>
+          </Field>
+          <Field label={t('email')} htmlFor='staffEmail'>
             <Input
               id='staffEmail'
               type='email'
@@ -154,9 +151,8 @@ export function AddStaffDialog({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='staffPassword'>{t('password')}</Label>
+          </Field>
+          <Field label={t('password')} htmlFor='staffPassword'>
             <Input
               id='staffPassword'
               type='password'
@@ -164,9 +160,8 @@ export function AddStaffDialog({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='staffRole'>{t('staffRole')}</Label>
+          </Field>
+          <Field label={t('staffRole')} htmlFor='staffRole'>
             <Select value={role} onValueChange={(v) => setRole(v as StaffRole)}>
               <SelectTrigger id='staffRole' className='w-full'>
                 <SelectValue />
@@ -177,19 +172,17 @@ export function AddStaffDialog({
                 <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
           {role === 'Admin' && (
-            <div className='flex items-center justify-between'>
-              <Label className='flex items-center gap-1 text-sm'>
-                {t('makeOwner')}
-                <InfoTip>{t('ownerDescription')}</InfoTip>
-              </Label>
-              <Switch checked={isOwner} onCheckedChange={setIsOwner} />
-            </div>
+            <SwitchRow
+              title={t('makeOwner')}
+              description={t('ownerDescription')}
+              checked={isOwner}
+              onCheckedChange={setIsOwner}
+            />
           )}
           {!makeOwner && branches.length > 0 && (
-            <div className='space-y-2'>
-              <Label>{t('initialBranches')}</Label>
+            <Field label={t('initialBranches')}>
               <div className='flex flex-col gap-2 rounded-lg border p-3'>
                 {branches.map((branch) => {
                   const branchId = Number(branch.id)
@@ -210,7 +203,7 @@ export function AddStaffDialog({
                   )
                 })}
               </div>
-            </div>
+            </Field>
           )}
 
           {error && <p className='text-destructive text-sm'>{error}</p>}

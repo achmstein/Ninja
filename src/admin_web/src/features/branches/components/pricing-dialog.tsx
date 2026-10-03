@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Receipt } from 'lucide-react'
-import { type BranchResponse } from '@/api/tenant'
 import { type PricingView } from '@/api/sales'
 import {
   getBranchPricingOptions,
   setBranchPricingMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
+import { type BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -19,10 +19,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { Field, FieldGrid, SwitchRow } from '@/components/field'
 
 interface PricingDialogProps {
   branch: BranchResponse | null
@@ -123,9 +122,8 @@ function PricingForm({
   return (
     <>
       <div className='space-y-4 py-2'>
-        <div className='grid grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='vat-rate'>{t('vatRatePercent')}</Label>
+        <FieldGrid>
+          <Field label={t('vatRatePercent')} htmlFor='vat-rate'>
             <Input
               id='vat-rate'
               type='number'
@@ -136,9 +134,8 @@ function PricingForm({
               value={vat}
               onChange={(e) => setVat(e.target.value)}
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='service-rate'>{t('serviceChargePercent')}</Label>
+          </Field>
+          <Field label={t('serviceChargePercent')} htmlFor='service-rate'>
             <Input
               id='service-rate'
               type='number'
@@ -149,18 +146,16 @@ function PricingForm({
               value={service}
               onChange={(e) => setService(e.target.value)}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGrid>
 
-        <div className='flex items-center justify-between'>
-          <Label className='text-sm'>{t('pricesIncludeVat')}</Label>
-          <Switch checked={includesVat} onCheckedChange={setIncludesVat} />
-        </div>
+        <SwitchRow
+          title={t('pricesIncludeVat')}
+          checked={includesVat}
+          onCheckedChange={setIncludesVat}
+        />
 
-        <div className='space-y-2'>
-          <Label htmlFor='cashier-discount-cap'>
-            {t('cashierDiscountCap')}
-          </Label>
+        <Field label={t('cashierDiscountCap')} htmlFor='cashier-discount-cap'>
           <Input
             id='cashier-discount-cap'
             type='number'
@@ -171,7 +166,7 @@ function PricingForm({
             value={cap}
             onChange={(e) => setCap(e.target.value)}
           />
-        </div>
+        </Field>
       </div>
 
       <DialogFooter>

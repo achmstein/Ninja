@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, Check, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipesProposal, type StockItemView } from '@/api/inventory'
@@ -26,16 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { EntitySheet } from '@/components/entity-sheet'
 import { InfoTip } from '@/components/info-tip'
 import {
   fromLocalizedValue,
@@ -225,254 +218,244 @@ export function RecipeReviewSheet({
   }
 
   return (
-    <Sheet open onOpenChange={(open) => !saving && onOpenChange(open)}>
-      <SheetContent className='sm:max-w-3xl'>
-        <SheetHeader>
-          <SheetTitle className='flex items-center gap-2'>
-            <Sparkles className='text-primary size-4' aria-hidden />
-            {t('reviewRecipes')}
-          </SheetTitle>
-        </SheetHeader>
+    <EntitySheet
+      open
+      onOpenChange={(open) => !saving && onOpenChange(open)}
+      title={t('reviewRecipes')}
+      size='wide'
+      danger={
+        <Button
+          type='button'
+          variant='ghost'
+          disabled={!!saving}
+          onClick={onBack}
+        >
+          <ArrowLeft className='rtl:rotate-180' />
+          {t('back')}
+        </Button>
+      }
+      footerNote={
+        saving && (
+          <span className='tabular-nums'>
+            {t('creatingItems', {
+              done: saving.done,
+              total: saving.total,
+            })}
+          </span>
+        )
+      }
+      actions={
+        <Button
+          type='button'
+          disabled={!!saving || included.length === 0}
+          onClick={confirm}
+        >
+          {saving ? <Spinner /> : <Check />}
+          {t('trackCount', { count: included.length })}
+        </Button>
+      }
+    >
+      <LocalizedFields>
+        {review.warnings.length > 0 && (
+          <Alert>
+            <AlertTriangle />
+            <AlertTitle>{t('toastWarning')}</AlertTitle>
+            <AlertDescription>
+              <ul className='list-disc ps-4'>
+                {review.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
-        <LocalizedFields>
-          <SheetBody>
-            {review.warnings.length > 0 && (
-              <Alert>
-                <AlertTriangle />
-                <AlertTitle>{t('toastWarning')}</AlertTitle>
-                <AlertDescription>
-                  <ul className='list-disc ps-4'>
-                    {review.warnings.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {review.ingredients.length > 0 && (
-              <section className='space-y-2'>
-                <h3 className='flex items-center gap-1 text-sm font-medium'>
-                  {t('newIngredients')}
-                  <InfoTip>{t('newIngredientsHint')}</InfoTip>
-                </h3>
-                <div className='divide-y rounded-lg border'>
-                  {review.ingredients.map((ingredient) => {
-                    const used = needed.some((n) => n.key === ingredient.key)
-                    return (
-                      <div
-                        key={ingredient.key}
-                        className={cn(
-                          'grid gap-2 p-3 sm:grid-cols-[minmax(0,2fr)_5rem_5rem_minmax(0,1fr)_auto] sm:items-end',
-                          !used && 'opacity-60'
-                        )}
-                      >
-                        <LocalizedInput
-                          ariaLabel={t('stockItemName')}
-                          value={ingredient.name}
-                          onChange={(name) =>
-                            updateIngredient(ingredient.key, { name })
-                          }
-                          compact
-                        />
-                        <Select
-                          value={ingredient.unit}
-                          onValueChange={(unit) =>
-                            updateIngredient(ingredient.key, { unit })
-                          }
-                        >
-                          <SelectTrigger className='h-8' aria-label={t('unit')}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {UNITS.map((u) => (
-                              <SelectItem key={u} value={u}>
-                                {unitLabel(u, t)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          type='number'
-                          min='0'
-                          step='any'
-                          className='h-8'
-                          placeholder={t('packSize')}
-                          aria-label={t('packSize')}
-                          value={ingredient.packSize}
-                          onChange={(e) =>
-                            updateIngredient(ingredient.key, {
-                              packSize: e.target.value,
-                            })
-                          }
-                        />
-                        <LocalizedInput
-                          ariaLabel={t('packName')}
-                          placeholder={bilingual('packNameHint')}
-                          value={ingredient.packName}
-                          onChange={(packName) =>
-                            updateIngredient(ingredient.key, { packName })
-                          }
-                          compact
-                        />
-                        <div className='flex items-center gap-2'>
-                          {ingredient.createdId != null ? (
-                            <Badge variant='secondary' className='gap-1'>
-                              <Check className='size-3' /> {t('created')}
-                            </Badge>
-                          ) : (
-                            <label className='flex items-center gap-1.5 text-xs'>
-                              <Checkbox
-                                checked={ingredient.autoSoldOut}
-                                onCheckedChange={(on) =>
-                                  updateIngredient(ingredient.key, {
-                                    autoSoldOut: on === true,
-                                  })
-                                }
-                              />
-                              {t('autoSoldOutShort')}
-                            </label>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
-
-            <section className='space-y-2'>
-              <h3 className='text-sm font-medium'>{t('menuItems')}</h3>
-              <div className='space-y-3'>
-                {review.recipes.map((recipe) => {
-                  const item = itemById.get(recipe.catalogItemId)
-                  const menu = item
-                    ? menuOptionsOf(item, localized)
-                    : { groups: [], byId: new Map() }
-                  return (
-                    <div
-                      key={recipe.catalogItemId}
-                      className={cn(
-                        'rounded-lg border',
-                        !recipe.include && 'opacity-60',
-                        recipe.done && 'border-success/50'
-                      )}
+        {review.ingredients.length > 0 && (
+          <section className='space-y-2'>
+            <h3 className='flex items-center gap-1 text-sm font-medium'>
+              {t('newIngredients')}
+              <InfoTip>{t('newIngredientsHint')}</InfoTip>
+            </h3>
+            <div className='divide-y rounded-lg border'>
+              {review.ingredients.map((ingredient) => {
+                const used = needed.some((n) => n.key === ingredient.key)
+                return (
+                  <div
+                    key={ingredient.key}
+                    className={cn(
+                      'grid gap-2 p-3 sm:grid-cols-[minmax(0,2fr)_5rem_5rem_minmax(0,1fr)_auto] sm:items-end',
+                      !used && 'opacity-60'
+                    )}
+                  >
+                    <LocalizedInput
+                      ariaLabel={t('stockItemName')}
+                      value={ingredient.name}
+                      onChange={(name) =>
+                        updateIngredient(ingredient.key, { name })
+                      }
+                      compact
+                    />
+                    <Select
+                      value={ingredient.unit}
+                      onValueChange={(unit) =>
+                        updateIngredient(ingredient.key, { unit })
+                      }
                     >
-                      <div className='flex flex-wrap items-center gap-2 border-b px-3 py-2'>
-                        <Checkbox
-                          checked={recipe.include}
-                          disabled={recipe.done}
-                          onCheckedChange={(on) =>
-                            updateRecipe(recipe.catalogItemId, {
-                              include: on === true,
-                            })
-                          }
-                          aria-label={t('includeItem')}
-                        />
-                        <span className='min-w-0 flex-1 truncate font-medium'>
-                          {localized(item?.name) || `#${recipe.catalogItemId}`}
-                        </span>
-                        {recipe.done ? (
-                          <Badge variant='secondary' className='gap-1'>
-                            <Check className='size-3' /> {t('tracked')}
-                          </Badge>
-                        ) : (
-                          <ToggleGroup
-                            type='single'
-                            size='sm'
-                            value={recipe.kind}
-                            onValueChange={(kind) =>
-                              kind &&
-                              updateRecipe(recipe.catalogItemId, {
-                                kind: kind as 'unit' | 'recipe',
+                      <SelectTrigger className='h-8' aria-label={t('unit')}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNITS.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {unitLabel(u, t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type='number'
+                      min='0'
+                      step='any'
+                      className='h-8'
+                      placeholder={t('packSize')}
+                      aria-label={t('packSize')}
+                      value={ingredient.packSize}
+                      onChange={(e) =>
+                        updateIngredient(ingredient.key, {
+                          packSize: e.target.value,
+                        })
+                      }
+                    />
+                    <LocalizedInput
+                      ariaLabel={t('packName')}
+                      placeholder={bilingual('packNameHint')}
+                      value={ingredient.packName}
+                      onChange={(packName) =>
+                        updateIngredient(ingredient.key, { packName })
+                      }
+                      compact
+                    />
+                    <div className='flex items-center gap-2'>
+                      {ingredient.createdId != null ? (
+                        <Badge variant='secondary' className='gap-1'>
+                          <Check className='size-3' /> {t('created')}
+                        </Badge>
+                      ) : (
+                        <label className='flex items-center gap-1.5 text-xs'>
+                          <Checkbox
+                            checked={ingredient.autoSoldOut}
+                            onCheckedChange={(on) =>
+                              updateIngredient(ingredient.key, {
+                                autoSoldOut: on === true,
                               })
                             }
-                          >
-                            <ToggleGroupItem
-                              value='unit'
-                              className='h-7 px-2 text-xs'
-                            >
-                              {t('sellAsUnit')}
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                              value='recipe'
-                              className='h-7 px-2 text-xs'
-                            >
-                              {t('usesIngredients')}
-                            </ToggleGroupItem>
-                          </ToggleGroup>
-                        )}
-                      </div>
-
-                      {recipe.warnings.length > 0 && (
-                        <ul className='text-warning list-disc px-3 py-1.5 ps-8 text-xs'>
-                          {recipe.warnings.map((w, i) => (
-                            <li key={i}>{w}</li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {recipe.kind === 'unit' ? (
-                        <p className='text-muted-foreground px-3 py-2 text-sm'>
-                          {t('sellAsUnitExplained', {
-                            name: localized(item?.name),
-                          })}
-                        </p>
-                      ) : recipe.done ? null : (
-                        <div className='px-3 py-2'>
-                          <RecipeBuilder
-                            draft={recipe.draft}
-                            onChange={(draft) =>
-                              updateRecipe(recipe.catalogItemId, { draft })
-                            }
-                            menu={menu}
-                            ingredients={ingredients}
                           />
-                        </div>
+                          {t('autoSoldOutShort')}
+                        </label>
                       )}
                     </div>
-                  )
-                })}
-              </div>
-            </section>
-          </SheetBody>
-        </LocalizedFields>
-
-        <SheetFooter>
-          <div className='flex w-full flex-wrap items-center justify-between gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              disabled={!!saving}
-              onClick={onBack}
-            >
-              <ArrowLeft className='me-1 h-4 w-4 rtl:rotate-180' /> {t('back')}
-            </Button>
-            <div className='flex items-center gap-3'>
-              {saving && (
-                <span className='text-muted-foreground text-sm tabular-nums'>
-                  {t('creatingItems', {
-                    done: saving.done,
-                    total: saving.total,
-                  })}
-                </span>
-              )}
-              <Button
-                type='button'
-                disabled={!!saving || included.length === 0}
-                onClick={confirm}
-              >
-                {saving ? (
-                  <Spinner />
-                ) : (
-                  <Check />
-                )}
-                {t('trackCount', { count: included.length })}
-              </Button>
+                  </div>
+                )
+              })}
             </div>
+          </section>
+        )}
+
+        <section className='space-y-2'>
+          <h3 className='text-sm font-medium'>{t('menuItems')}</h3>
+          <div className='space-y-3'>
+            {review.recipes.map((recipe) => {
+              const item = itemById.get(recipe.catalogItemId)
+              const menu = item
+                ? menuOptionsOf(item, localized)
+                : { groups: [], byId: new Map() }
+              return (
+                <div
+                  key={recipe.catalogItemId}
+                  className={cn(
+                    'rounded-lg border',
+                    !recipe.include && 'opacity-60',
+                    recipe.done && 'border-success/50'
+                  )}
+                >
+                  <div className='flex flex-wrap items-center gap-2 border-b px-3 py-2'>
+                    <Checkbox
+                      checked={recipe.include}
+                      disabled={recipe.done}
+                      onCheckedChange={(on) =>
+                        updateRecipe(recipe.catalogItemId, {
+                          include: on === true,
+                        })
+                      }
+                      aria-label={t('includeItem')}
+                    />
+                    <span className='min-w-0 flex-1 truncate font-medium'>
+                      {localized(item?.name) || `#${recipe.catalogItemId}`}
+                    </span>
+                    {recipe.done ? (
+                      <Badge variant='secondary' className='gap-1'>
+                        <Check className='size-3' /> {t('tracked')}
+                      </Badge>
+                    ) : (
+                      <ToggleGroup
+                        type='single'
+                        size='sm'
+                        value={recipe.kind}
+                        onValueChange={(kind) =>
+                          kind &&
+                          updateRecipe(recipe.catalogItemId, {
+                            kind: kind as 'unit' | 'recipe',
+                          })
+                        }
+                      >
+                        <ToggleGroupItem
+                          value='unit'
+                          className='h-7 px-2 text-xs'
+                        >
+                          {t('sellAsUnit')}
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value='recipe'
+                          className='h-7 px-2 text-xs'
+                        >
+                          {t('usesIngredients')}
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    )}
+                  </div>
+
+                  {recipe.warnings.length > 0 && (
+                    <ul className='text-warning list-disc px-3 py-1.5 ps-8 text-xs'>
+                      {recipe.warnings.map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {recipe.kind === 'unit' ? (
+                    <p className='text-muted-foreground px-3 py-2 text-sm'>
+                      {t('sellAsUnitExplained', {
+                        name: localized(item?.name),
+                      })}
+                    </p>
+                  ) : recipe.done ? null : (
+                    <div className='px-3 py-2'>
+                      <RecipeBuilder
+                        draft={recipe.draft}
+                        onChange={(draft) =>
+                          updateRecipe(recipe.catalogItemId, { draft })
+                        }
+                        menu={menu}
+                        ingredients={ingredients}
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </section>
+      </LocalizedFields>
+    </EntitySheet>
   )
 }

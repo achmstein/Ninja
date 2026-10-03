@@ -11,7 +11,6 @@ import {
   Printer,
   Trash2,
 } from 'lucide-react'
-import { type BranchResponse } from '@/api/tenant'
 import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import {
   type KitchenStationView,
@@ -26,25 +25,19 @@ import {
   updateKitchenStationMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { updateKitchenStation } from '@/api/ordering/sdk.gen'
+import { type BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, SwitchGroup, SwitchRow } from '@/components/field'
 import {
   fromLocalizedValue,
   isBlank,
@@ -53,7 +46,6 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { ConfirmDialog } from '@/components/confirm-dialog'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {
@@ -139,7 +131,8 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
             printsTickets: station.printsTickets ?? false,
             printerHost: station.printerHost ?? null,
             printerPort: Number(station.printerPort ?? 9100),
-            connectorId: station.connectorId == null ? null : Number(station.connectorId),
+            connectorId:
+              station.connectorId == null ? null : Number(station.connectorId),
             printerName: station.printerName ?? null,
             displayOrder: index,
           },
@@ -148,130 +141,137 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
       }
     },
     onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getKitchenStations' }] }),
+      queryClient.invalidateQueries({
+        queryKey: [{ _id: 'getKitchenStations' }],
+      }),
     onError: (e) => toast.error(refusal(e) ?? t('failedToSaveStation')),
   })
 
   return (
-    <Dialog open={branch != null} onOpenChange={close}>
-      <DialogContent className='sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle className='flex items-center gap-2'>
-            <ChefHat className='h-5 w-5' />
-            {editing === 'new'
-              ? t('addStation')
-              : editing
-                ? t('editStation')
-                : t('kitchenStations')}
-          </DialogTitle>
-          {editing == null && (
-            <DialogDescription>{t('kitchenStationsHint')}</DialogDescription>
-          )}
-        </DialogHeader>
-
-        {editing != null ? (
-          <StationForm
-            key={editing === 'new' ? 'new' : String(editing.id)}
-            branchId={branchId}
-            station={editing === 'new' ? null : editing}
-            stations={stations}
-            connectors={connectors}
-            categoryName={categoryName}
-            onDone={() => setEditing(null)}
-          />
-        ) : stationsQuery.isLoading ? (
-          <div className='space-y-2'>
-            <Skeleton className='h-16' />
-            <Skeleton className='h-16' />
-          </div>
-        ) : (
-          <>
-            <ul className='divide-y rounded-lg border'>
-              {stations.map((station, index) => (
-                <li
-                  key={String(station.id)}
-                  className='flex items-start justify-between gap-3 p-3'
-                >
-                  <div className='min-w-0 space-y-1'>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm font-medium'>
-                        {localized(station.name)}
+    <EntitySheet
+      open={branch != null}
+      onOpenChange={close}
+      title={
+        <span className='flex items-center gap-2'>
+          <ChefHat className='h-5 w-5' />
+          {editing === 'new'
+            ? t('addStation')
+            : editing
+              ? t('editStation')
+              : t('kitchenStations')}
+        </span>
+      }
+      subtitle={editing == null ? t('kitchenStationsHint') : undefined}
+    >
+      {editing != null ? (
+        <StationForm
+          key={editing === 'new' ? 'new' : String(editing.id)}
+          branchId={branchId}
+          station={editing === 'new' ? null : editing}
+          stations={stations}
+          connectors={connectors}
+          categoryName={categoryName}
+          onDone={() => setEditing(null)}
+        />
+      ) : stationsQuery.isLoading ? (
+        <div className='space-y-2'>
+          <Skeleton className='h-16' />
+          <Skeleton className='h-16' />
+        </div>
+      ) : (
+        <>
+          <ul className='divide-y rounded-lg border'>
+            {stations.map((station, index) => (
+              <li
+                key={String(station.id)}
+                className='flex items-start justify-between gap-3 p-3'
+              >
+                <div className='min-w-0 space-y-1'>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-sm font-medium'>
+                      {localized(station.name)}
+                    </span>
+                    {station.isDefault && (
+                      <Badge variant='secondary'>{t('defaultStation')}</Badge>
+                    )}
+                  </div>
+                  <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
+                    {station.showsOnScreen && (
+                      <span className='flex items-center gap-1'>
+                        <Monitor className='h-3.5 w-3.5' />
+                        {t('stationShowsOnScreen')}
                       </span>
-                      {station.isDefault && (
-                        <Badge variant='secondary'>{t('defaultStation')}</Badge>
-                      )}
-                    </div>
-                    <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
-                      {station.showsOnScreen && (
-                        <span className='flex items-center gap-1'>
-                          <Monitor className='h-3.5 w-3.5' />
-                          {t('stationShowsOnScreen')}
-                        </span>
-                      )}
-                      {station.printsTickets && (
-                        <span className='flex items-center gap-1' dir='ltr'>
-                          <Printer className='h-3.5 w-3.5' />
-                          {station.printerName
-                            ? `${station.printerName} · ${
-                                connectors.find((c) => Number(c.id) === Number(station.connectorId))?.name ?? ''
-                              }`
-                            : `${station.printerHost}:${String(station.printerPort)}`}
-                        </span>
-                      )}
-                    </div>
-                    <div className='text-muted-foreground text-xs'>
-                      {station.isDefault &&
-                      (station.categoryIds ?? []).length === 0
-                        ? t('defaultStationHint')
-                        : (station.categoryIds ?? [])
-                            .map(
-                              (id) => categoryName.get(Number(id)) ?? `#${id}`
-                            )
-                            .join(' · ')}
-                    </div>
+                    )}
+                    {station.printsTickets && (
+                      <span className='flex items-center gap-1' dir='ltr'>
+                        <Printer className='h-3.5 w-3.5' />
+                        {station.printerName
+                          ? `${station.printerName} · ${
+                              connectors.find(
+                                (c) =>
+                                  Number(c.id) === Number(station.connectorId)
+                              )?.name ?? ''
+                            }`
+                          : `${station.printerHost}:${String(station.printerPort)}`}
+                      </span>
+                    )}
                   </div>
-                  <div className='flex shrink-0 items-center'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('moveUp')}
-                      disabled={index === 0 || reorder.isPending}
-                      onClick={() => reorder.mutate({ from: index, to: index - 1 })}
-                    >
-                      <ArrowUp className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('moveDown')}
-                      disabled={index === stations.length - 1 || reorder.isPending}
-                      onClick={() => reorder.mutate({ from: index, to: index + 1 })}
-                    >
-                      <ArrowDown className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('editStation')}
-                      onClick={() => setEditing(station)}
-                    >
-                      <Pencil className='h-4 w-4' />
-                    </Button>
+                  <div className='text-muted-foreground text-xs'>
+                    {station.isDefault &&
+                    (station.categoryIds ?? []).length === 0
+                      ? t('defaultStationHint')
+                      : (station.categoryIds ?? [])
+                          .map((id) => categoryName.get(Number(id)) ?? `#${id}`)
+                          .join(' · ')}
                   </div>
-                </li>
-              ))}
-            </ul>
-            <DialogFooter>
-              <Button variant='outline' onClick={() => setEditing('new')}>
-                <Plus />
-                {t('addStation')}
-              </Button>
-            </DialogFooter>
-            <PrintConnectors branchId={branchId} connectors={connectors} />
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+                </div>
+                <div className='flex shrink-0 items-center'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    aria-label={t('moveUp')}
+                    disabled={index === 0 || reorder.isPending}
+                    onClick={() =>
+                      reorder.mutate({ from: index, to: index - 1 })
+                    }
+                  >
+                    <ArrowUp className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    aria-label={t('moveDown')}
+                    disabled={
+                      index === stations.length - 1 || reorder.isPending
+                    }
+                    onClick={() =>
+                      reorder.mutate({ from: index, to: index + 1 })
+                    }
+                  >
+                    <ArrowDown className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    aria-label={t('editStation')}
+                    onClick={() => setEditing(station)}
+                  >
+                    <Pencil className='h-4 w-4' />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <SheetActions>
+            <Button onClick={() => setEditing('new')}>
+              <Plus />
+              {t('addStation')}
+            </Button>
+          </SheetActions>
+          <PrintConnectors branchId={branchId} connectors={connectors} />
+        </>
+      )}
+    </EntitySheet>
   )
 }
 
@@ -406,8 +406,12 @@ function StationForm({
       printsTickets,
       printerHost: onConnector ? null : printerHost.trim() || null,
       printerPort: Number(printerPort) || 9100,
-      connectorId: printsTickets && onConnector ? Number(target.split('|')[0]) : null,
-      printerName: printsTickets && onConnector ? target.slice(target.indexOf('|') + 1) : null,
+      connectorId:
+        printsTickets && onConnector ? Number(target.split('|')[0]) : null,
+      printerName:
+        printsTickets && onConnector
+          ? target.slice(target.indexOf('|') + 1)
+          : null,
       displayOrder: station?.displayOrder ?? stations.length,
     }
     const query = { 'api-version': API_VERSION }
@@ -428,7 +432,7 @@ function StationForm({
 
   return (
     <LocalizedFields>
-      <form onSubmit={handleSubmit} className='space-y-4'>
+      <form id='station-form' onSubmit={handleSubmit} className='space-y-4'>
         <LocalizedInput
           id='station-name'
           label={t('name')}
@@ -437,40 +441,31 @@ function StationForm({
           autoFocus={!station}
         />
 
-        <div className='grid grid-cols-2 gap-3'>
-          <div className='flex items-center justify-between rounded-lg border p-3'>
-            <Label
-              htmlFor='station-screen'
-              className='flex items-center gap-2 text-sm'
-            >
-              <Monitor className='h-4 w-4' />
-              {t('stationShowsOnScreen')}
-            </Label>
-            <Switch
-              id='station-screen'
-              checked={showsOnScreen}
-              onCheckedChange={setShowsOnScreen}
-            />
-          </div>
-          <div className='flex items-center justify-between rounded-lg border p-3'>
-            <Label
-              htmlFor='station-printer'
-              className='flex items-center gap-2 text-sm'
-            >
-              <Printer className='h-4 w-4' />
-              {t('stationPrintsTickets')}
-            </Label>
-            <Switch
-              id='station-printer'
-              checked={printsTickets}
-              onCheckedChange={setPrintsTickets}
-            />
-          </div>
-        </div>
+        <SwitchGroup>
+          <SwitchRow
+            title={
+              <span className='flex items-center gap-2'>
+                <Monitor className='h-4 w-4' />
+                {t('stationShowsOnScreen')}
+              </span>
+            }
+            checked={showsOnScreen}
+            onCheckedChange={setShowsOnScreen}
+          />
+          <SwitchRow
+            title={
+              <span className='flex items-center gap-2'>
+                <Printer className='h-4 w-4' />
+                {t('stationPrintsTickets')}
+              </span>
+            }
+            checked={printsTickets}
+            onCheckedChange={setPrintsTickets}
+          />
+        </SwitchGroup>
 
         {printsTickets && (
-          <div className='space-y-1.5'>
-            <Label htmlFor='printer-target'>{t('printerTarget')}</Label>
+          <Field label={t('printerTarget')} htmlFor='printer-target'>
             <select
               id='printer-target'
               className='border-input bg-background h-9 w-full rounded-md border px-3 text-sm'
@@ -479,7 +474,10 @@ function StationForm({
             >
               <option value='network'>{t('networkPrinter')}</option>
               {connectors.map((connector) => (
-                <optgroup key={String(connector.id)} label={connector.name ?? ''}>
+                <optgroup
+                  key={String(connector.id)}
+                  label={connector.name ?? ''}
+                >
                   {(connector.printers ?? []).map((printer) => (
                     <option key={printer} value={`${connector.id}|${printer}`}>
                       {printer}
@@ -489,15 +487,16 @@ function StationForm({
               ))}
             </select>
             {connectors.length === 0 && (
-              <p className='text-muted-foreground text-xs'>{t('pairConnectorForWindowsPrinters')}</p>
+              <p className='text-muted-foreground text-xs'>
+                {t('pairConnectorForWindowsPrinters')}
+              </p>
             )}
-          </div>
+          </Field>
         )}
 
         {printsTickets && !onConnector && (
           <div className='grid grid-cols-[1fr_6rem] gap-3'>
-            <div className='space-y-1.5'>
-              <Label htmlFor='printer-host'>{t('printerAddress')}</Label>
+            <Field label={t('printerAddress')} htmlFor='printer-host'>
               <Input
                 id='printer-host'
                 dir='ltr'
@@ -506,9 +505,8 @@ function StationForm({
                 value={printerHost}
                 onChange={(e) => setPrinterHost(e.target.value)}
               />
-            </div>
-            <div className='space-y-1.5'>
-              <Label htmlFor='printer-port'>{t('printerPort')}</Label>
+            </Field>
+            <Field label={t('printerPort')} htmlFor='printer-port'>
               <Input
                 id='printer-port'
                 dir='ltr'
@@ -518,12 +516,34 @@ function StationForm({
                   setPrinterPort(e.target.value.replace(/\D/g, ''))
                 }
               />
-            </div>
+            </Field>
           </div>
         )}
 
-        <div className='space-y-2'>
-          <Label>{t('stationCategories')}</Label>
+        {/* What is saved, not what is being typed: the ticket goes to the
+            printer the station has now */}
+        {station?.printsTickets && (
+          <div>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={testPrint.isPending}
+              onClick={() =>
+                testPrint.mutate({
+                  ...scope,
+                  path: { stationId: Number(station.id) },
+                  query: { 'api-version': API_VERSION },
+                })
+              }
+            >
+              {testPrint.isPending ? <Spinner /> : <Printer />}
+              {t('sendTestTicket')}
+            </Button>
+          </div>
+        )}
+
+        <Field label={t('stationCategories')}>
           {station?.isDefault && (
             <p className='text-muted-foreground text-xs'>
               {t('defaultStationHint')}
@@ -552,51 +572,32 @@ function StationForm({
               )
             })}
           </div>
-        </div>
+        </Field>
 
         {error && <p className='text-destructive text-sm'>{error}</p>}
 
-        <DialogFooter className='gap-2 sm:justify-between'>
-          <div className='flex gap-2'>
-            {station && !station.isDefault && (
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon'
-                aria-label={t('delete')}
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className='h-4 w-4' />
-              </Button>
-            )}
-            {station?.printsTickets && (
-              <Button
-                type='button'
-                variant='outline'
-                disabled={testPrint.isPending}
-                onClick={() =>
-                  testPrint.mutate({
-                    ...scope,
-                    path: { stationId: Number(station.id) },
-                    query: { 'api-version': API_VERSION },
-                  })
-                }
-              >
-                {testPrint.isPending && <Spinner />}
-                {t('sendTestTicket')}
-              </Button>
-            )}
-          </div>
-          <div className='flex gap-2'>
-            <Button type='button' variant='outline' onClick={onDone}>
-              {t('cancel')}
+        {station && !station.isDefault && (
+          <SheetActions side='start'>
+            <Button
+              type='button'
+              variant='ghost'
+              className='text-destructive hover:text-destructive'
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 />
+              {t('deleteStation')}
             </Button>
-            <Button type='submit' disabled={busy}>
-              {busy && <Spinner />}
-              {t('save')}
-            </Button>
-          </div>
-        </DialogFooter>
+          </SheetActions>
+        )}
+        <SheetActions>
+          <Button type='button' variant='outline' onClick={onDone}>
+            {t('cancel')}
+          </Button>
+          <Button type='submit' form='station-form' disabled={busy}>
+            {busy && <Spinner />}
+            {t('save')}
+          </Button>
+        </SheetActions>
       </form>
 
       {station && (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Sparkles, X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 import { type CatalogTypeDto, type MenuProposal } from '@/api/catalog'
 import { importMenuMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -18,15 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
+import { EntitySheet } from '@/components/entity-sheet'
 import { LocalizedFields, LocalizedInput } from '@/components/localized-input'
 import { hasText } from '@/features/assist/helpers'
 import {
@@ -150,230 +143,14 @@ export function MenuReviewSheet({
   }
 
   return (
-    <Sheet open onOpenChange={(open) => !creating && onOpenChange(open)}>
-      <SheetContent className='sm:max-w-3xl'>
-        <SheetHeader>
-          <SheetTitle className='flex items-center gap-2'>
-            <Sparkles className='text-primary size-4' aria-hidden />
-            {t('reviewMenuScan')}
-          </SheetTitle>
-        </SheetHeader>
-
-        <LocalizedFields>
-          <SheetBody>
-            {(proposal.warnings.length > 0 || proposal.notes) && (
-              <Alert>
-                <AlertTriangle />
-                <AlertTitle>{t('toastWarning')}</AlertTitle>
-                <AlertDescription>
-                  <ul className='list-disc space-y-0.5 ps-4'>
-                    {proposal.notes && <li>{proposal.notes}</li>}
-                    {proposal.warnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {sections.map((section) => {
-              const ticked = section.items.filter((i) => i.include).length
-              return (
-                <section key={section.key} className='rounded-lg border'>
-                  <div className='bg-muted/40 flex flex-wrap items-center gap-2 border-b p-3'>
-                    <Checkbox
-                      aria-label={t('selectAll')}
-                      checked={
-                        ticked === 0
-                          ? false
-                          : ticked === section.items.length
-                            ? true
-                            : 'indeterminate'
-                      }
-                      onCheckedChange={(checked) =>
-                        updateSection(section.key, {
-                          items: section.items.map((item) => ({
-                            ...item,
-                            include: checked === true,
-                          })),
-                        })
-                      }
-                    />
-                    <LocalizedInput
-                      ariaLabel={t('category')}
-                      value={section.name}
-                      onChange={(name) => updateSection(section.key, { name })}
-                      compact
-                      className='min-w-48 flex-1'
-                    />
-                    <Select
-                      value={section.catalogTypeId}
-                      onValueChange={(catalogTypeId) =>
-                        updateSection(section.key, { catalogTypeId })
-                      }
-                    >
-                      <SelectTrigger
-                        className='h-8 w-52'
-                        aria-label={t('category')}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NEW_CATEGORY}>
-                          {t('newCategoryFromScan')}
-                        </SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem
-                            key={String(category.id)}
-                            value={String(category.id)}
-                          >
-                            {localized(category.name)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className='divide-y'>
-                    {section.items.map((item) => (
-                      <div
-                        key={item.key}
-                        className='grid grid-cols-[auto_1fr_6rem] items-start gap-2 p-3'
-                      >
-                        <Checkbox
-                          className='mt-2'
-                          aria-label={t('includeLine')}
-                          checked={item.include}
-                          onCheckedChange={(checked) =>
-                            updateItem(item.key, { include: checked === true })
-                          }
-                        />
-                        <div className='min-w-0 space-y-1.5'>
-                          <LocalizedInput
-                            ariaLabel={t('name')}
-                            value={item.name}
-                            onChange={(name) => updateItem(item.key, { name })}
-                            compact
-                          />
-                          {(hasText(item.description.en) ||
-                            hasText(item.description.ar)) && (
-                            <LocalizedInput
-                              ariaLabel={t('description')}
-                              value={item.description}
-                              onChange={(description) =>
-                                updateItem(item.key, { description })
-                              }
-                              compact
-                            />
-                          )}
-                          <div className='flex flex-wrap items-center gap-2'>
-                            <p
-                              className='text-muted-foreground min-w-0 truncate text-xs'
-                              dir='auto'
-                            >
-                              {t('onThePhoto', { text: item.rawText })}
-                            </p>
-                            {item.existingItemId != null && (
-                              <Badge variant='outline' className='shrink-0'>
-                                {t('alreadyOnMenu')}
-                              </Badge>
-                            )}
-                          </div>
-                          {item.choice && (
-                            <div className='space-y-1.5 rounded-md border p-2'>
-                              <div className='flex items-center gap-2'>
-                                <LocalizedInput
-                                  ariaLabel={t('menuChoice')}
-                                  value={item.choice.name}
-                                  onChange={(name) =>
-                                    updateItem(item.key, {
-                                      choice: { ...item.choice!, name },
-                                    })
-                                  }
-                                  compact
-                                  className='flex-1'
-                                />
-                                <Button
-                                  type='button'
-                                  variant='ghost'
-                                  size='sm'
-                                  className='h-8 shrink-0'
-                                  onClick={() =>
-                                    updateItem(item.key, {
-                                      choice: null,
-                                      price: String(
-                                        reviewItemPrice(item) ?? ''
-                                      ),
-                                    })
-                                  }
-                                >
-                                  <X className='size-3.5' />
-                                  {t('removeChoice')}
-                                </Button>
-                              </div>
-                              {item.choice.options.map((option) => (
-                                <div
-                                  key={option.key}
-                                  className='grid grid-cols-[1fr_6rem] gap-2'
-                                >
-                                  <LocalizedInput
-                                    ariaLabel={t('name')}
-                                    value={option.name}
-                                    onChange={(name) =>
-                                      updateOption(item.key, option.key, {
-                                        name,
-                                      })
-                                    }
-                                    compact
-                                  />
-                                  <Input
-                                    type='number'
-                                    step='0.5'
-                                    min='0'
-                                    aria-label={t('price')}
-                                    className='h-8 tabular-nums'
-                                    value={option.price}
-                                    onChange={(e) =>
-                                      updateOption(item.key, option.key, {
-                                        price: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {/* With sizes, the item costs the cheapest one */}
-                        <Input
-                          type='number'
-                          step='0.5'
-                          min='0'
-                          aria-label={t('price')}
-                          className='h-8 tabular-nums'
-                          disabled={!!item.choice}
-                          value={
-                            item.choice
-                              ? String(reviewItemPrice(item) ?? '')
-                              : item.price
-                          }
-                          onChange={(e) =>
-                            updateItem(item.key, { price: e.target.value })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )
-            })}
-          </SheetBody>
-        </LocalizedFields>
-
-        <SheetFooter className='flex-row items-center'>
-          <span className='text-muted-foreground me-auto text-sm'>
-            {creating ? t('savingMenu') : t('itemsSelected', { count })}
-          </span>
+    <EntitySheet
+      open
+      onOpenChange={(open) => !creating && onOpenChange(open)}
+      title={t('reviewMenuScan')}
+      size='wide'
+      footerNote={creating ? t('savingMenu') : t('itemsSelected', { count })}
+      actions={
+        <>
           <Button
             type='button'
             variant='outline'
@@ -386,8 +163,215 @@ export function MenuReviewSheet({
             {creating && <Spinner />}
             {t('createScannedItems', { count })}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </>
+      }
+    >
+      <LocalizedFields>
+        {(proposal.warnings.length > 0 || proposal.notes) && (
+          <Alert>
+            <AlertTriangle />
+            <AlertTitle>{t('toastWarning')}</AlertTitle>
+            <AlertDescription>
+              <ul className='list-disc space-y-0.5 ps-4'>
+                {proposal.notes && <li>{proposal.notes}</li>}
+                {proposal.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {sections.map((section) => {
+          const ticked = section.items.filter((i) => i.include).length
+          return (
+            <section key={section.key} className='rounded-lg border'>
+              <div className='bg-muted/40 flex flex-wrap items-center gap-2 border-b p-3'>
+                <Checkbox
+                  aria-label={t('selectAll')}
+                  checked={
+                    ticked === 0
+                      ? false
+                      : ticked === section.items.length
+                        ? true
+                        : 'indeterminate'
+                  }
+                  onCheckedChange={(checked) =>
+                    updateSection(section.key, {
+                      items: section.items.map((item) => ({
+                        ...item,
+                        include: checked === true,
+                      })),
+                    })
+                  }
+                />
+                <LocalizedInput
+                  ariaLabel={t('category')}
+                  value={section.name}
+                  onChange={(name) => updateSection(section.key, { name })}
+                  compact
+                  className='min-w-48 flex-1'
+                />
+                <Select
+                  value={section.catalogTypeId}
+                  onValueChange={(catalogTypeId) =>
+                    updateSection(section.key, { catalogTypeId })
+                  }
+                >
+                  <SelectTrigger
+                    className='h-8 w-52'
+                    aria-label={t('category')}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NEW_CATEGORY}>
+                      {t('newCategoryFromScan')}
+                    </SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem
+                        key={String(category.id)}
+                        value={String(category.id)}
+                      >
+                        {localized(category.name)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='divide-y'>
+                {section.items.map((item) => (
+                  <div
+                    key={item.key}
+                    className='grid grid-cols-[auto_1fr_6rem] items-start gap-2 p-3'
+                  >
+                    <Checkbox
+                      className='mt-2'
+                      aria-label={t('includeLine')}
+                      checked={item.include}
+                      onCheckedChange={(checked) =>
+                        updateItem(item.key, { include: checked === true })
+                      }
+                    />
+                    <div className='min-w-0 space-y-1.5'>
+                      <LocalizedInput
+                        ariaLabel={t('name')}
+                        value={item.name}
+                        onChange={(name) => updateItem(item.key, { name })}
+                        compact
+                      />
+                      {(hasText(item.description.en) ||
+                        hasText(item.description.ar)) && (
+                        <LocalizedInput
+                          ariaLabel={t('description')}
+                          value={item.description}
+                          onChange={(description) =>
+                            updateItem(item.key, { description })
+                          }
+                          compact
+                        />
+                      )}
+                      <div className='flex flex-wrap items-center gap-2'>
+                        <p
+                          className='text-muted-foreground min-w-0 truncate text-xs'
+                          dir='auto'
+                        >
+                          {t('onThePhoto', { text: item.rawText })}
+                        </p>
+                        {item.existingItemId != null && (
+                          <Badge variant='outline' className='shrink-0'>
+                            {t('alreadyOnMenu')}
+                          </Badge>
+                        )}
+                      </div>
+                      {item.choice && (
+                        <div className='space-y-1.5 rounded-md border p-2'>
+                          <div className='flex items-center gap-2'>
+                            <LocalizedInput
+                              ariaLabel={t('menuChoice')}
+                              value={item.choice.name}
+                              onChange={(name) =>
+                                updateItem(item.key, {
+                                  choice: { ...item.choice!, name },
+                                })
+                              }
+                              compact
+                              className='flex-1'
+                            />
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              className='h-8 shrink-0'
+                              onClick={() =>
+                                updateItem(item.key, {
+                                  choice: null,
+                                  price: String(reviewItemPrice(item) ?? ''),
+                                })
+                              }
+                            >
+                              <X className='size-3.5' />
+                              {t('removeChoice')}
+                            </Button>
+                          </div>
+                          {item.choice.options.map((option) => (
+                            <div
+                              key={option.key}
+                              className='grid grid-cols-[1fr_6rem] gap-2'
+                            >
+                              <LocalizedInput
+                                ariaLabel={t('name')}
+                                value={option.name}
+                                onChange={(name) =>
+                                  updateOption(item.key, option.key, {
+                                    name,
+                                  })
+                                }
+                                compact
+                              />
+                              <Input
+                                type='number'
+                                step='0.5'
+                                min='0'
+                                aria-label={t('price')}
+                                className='h-8 tabular-nums'
+                                value={option.price}
+                                onChange={(e) =>
+                                  updateOption(item.key, option.key, {
+                                    price: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* With sizes, the item costs the cheapest one */}
+                    <Input
+                      type='number'
+                      step='0.5'
+                      min='0'
+                      aria-label={t('price')}
+                      className='h-8 tabular-nums'
+                      disabled={!!item.choice}
+                      value={
+                        item.choice
+                          ? String(reviewItemPrice(item) ?? '')
+                          : item.price
+                      }
+                      onChange={(e) =>
+                        updateItem(item.key, { price: e.target.value })
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        })}
+      </LocalizedFields>
+    </EntitySheet>
   )
 }

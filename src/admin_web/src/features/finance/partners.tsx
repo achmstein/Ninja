@@ -21,26 +21,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
 import { DatePicker } from '@/components/date-picker'
 import { EmptyState } from '@/components/empty-state'
+import { EntityAvatar } from '@/components/entity-avatar'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
+import { SwitchRow } from '@/components/field'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/page-header'
-import { AccountsTabs } from './accounts-tabs'
-import { EntityAvatar } from '@/components/entity-avatar'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
+import { PageHeader } from '@/components/page-header'
 import { Section } from '@/components/section'
+import { AccountsTabs } from './accounts-tabs'
 import { LedgerList } from './components/ledger-list'
 import { PARTNER_ENTRY, partnerEntryLabel, sourceLabel } from './format'
 import { partnerLedgerQueryOptions, partnersQueryOptions } from './queries'
@@ -192,34 +187,31 @@ function PartnerSheet({
   const open = isNew || partner !== null
 
   return (
-    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent className='sm:max-w-xl'>
-        <SheetHeader>
-          <SheetTitle>
-            {isNew ? t('addPartner') : (partner?.name ?? '')}
-          </SheetTitle>
-        </SheetHeader>
-
-        {isNew ? (
+    <EntitySheet
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+      title={isNew ? t('addPartner') : (partner?.name ?? '')}
+      flush
+    >
+      {isNew ? (
+        <Section title={t('details')}>
+          <PartnerForm key='new' partner={null} onSaved={onClose} />
+        </Section>
+      ) : partner ? (
+        <>
           <Section title={t('details')}>
-            <PartnerForm key='new' partner={null} onSaved={onClose} />
+            <PartnerForm
+              key={String(partner.id)}
+              partner={partner}
+              onSaved={() => {}}
+            />
           </Section>
-        ) : partner ? (
-          <>
-            <Section title={t('details')}>
-              <PartnerForm
-                key={String(partner.id)}
-                partner={partner}
-                onSaved={() => {}}
-              />
-            </Section>
-            <Section title={t('account')}>
-              <PartnerLedger partner={partner} />
-            </Section>
-          </>
-        ) : null}
-      </SheetContent>
-    </Sheet>
+          <Section title={t('account')}>
+            <PartnerLedger partner={partner} />
+          </Section>
+        </>
+      ) : null}
+    </EntitySheet>
   )
 }
 
@@ -288,7 +280,7 @@ function PartnerForm({
   }
 
   return (
-    <form onSubmit={submit} className='space-y-4'>
+    <form id='partner-form' onSubmit={submit} className='space-y-4'>
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='partner-name'>{t('name')}</Label>
@@ -356,17 +348,17 @@ function PartnerForm({
           </div>
         </div>
       </div>
-      <div className='flex items-center justify-between gap-2'>
-        {partner ? (
-          <label className='flex items-center gap-2 text-sm'>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-            {t('active')}
-          </label>
-        ) : (
-          <span />
-        )}
+      {partner && (
+        <SwitchRow
+          title={t('active')}
+          checked={isActive}
+          onCheckedChange={setIsActive}
+        />
+      )}
+      <SheetActions>
         <Button
           type='submit'
+          form='partner-form'
           disabled={
             name.trim() === '' || shares.size === 0 || !sharesValid || isPending
           }
@@ -374,7 +366,7 @@ function PartnerForm({
           {isPending && <Spinner />}
           {partner ? t('save') : t('addPartner')}
         </Button>
-      </div>
+      </SheetActions>
     </form>
   )
 }

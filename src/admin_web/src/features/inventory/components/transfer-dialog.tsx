@@ -9,13 +9,6 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -27,6 +20,8 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid } from '@/components/field'
 import { formatQuantity, unitLabel } from '../format'
 import { stockLevelsQueryOptions, toStockItemOptions } from '../queries'
 import { useInventoryActions } from '../use-inventory-actions'
@@ -40,14 +35,14 @@ export function TransferDialog({ open, onOpenChange }: TransferDialogProps) {
   const t = useT()
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle>{t('transferStock')}</DialogTitle>
-        </DialogHeader>
-        {open && <TransferForm onOpenChange={onOpenChange} />}
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('transferStock')}
+      size='wide'
+    >
+      {open && <TransferForm onOpenChange={onOpenChange} />}
+    </EntitySheet>
   )
 }
 
@@ -127,10 +122,9 @@ function TransferForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='grid gap-4 sm:grid-cols-2'>
-        <div className='space-y-2'>
-          <Label htmlFor='toBranch'>{t('toBranch')}</Label>
+    <form id='transfer-form' onSubmit={handleSubmit} className='space-y-4'>
+      <FieldGrid>
+        <Field label={t('toBranch')} htmlFor='toBranch'>
           <Select
             value={toBranchId}
             onValueChange={setToBranchId}
@@ -153,17 +147,16 @@ function TransferForm({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='transferNote'>{t('notesOptional')}</Label>
+        </Field>
+        <Field label={t('notesOptional')} htmlFor='transferNote'>
           <Input
             id='transferNote'
             placeholder={t('transferNotePlaceholder')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
       <div className='space-y-2'>
         <Label>{t('lines')}</Label>
@@ -206,7 +199,7 @@ function TransferForm({
         </Button>
       </div>
 
-      <DialogFooter>
+      <SheetActions>
         <Button
           type='button'
           variant='outline'
@@ -214,11 +207,15 @@ function TransferForm({
         >
           {t('cancel')}
         </Button>
-        <Button type='submit' disabled={isPending || destinations.length === 0}>
+        <Button
+          type='submit'
+          form='transfer-form'
+          disabled={isPending || destinations.length === 0}
+        >
           {isPending && <Spinner />}
           {t('transferStock')}
         </Button>
-      </DialogFooter>
+      </SheetActions>
     </form>
   )
 }

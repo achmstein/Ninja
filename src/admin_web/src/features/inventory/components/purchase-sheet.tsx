@@ -5,13 +5,6 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -22,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity } from '../format'
 
 type PurchaseSheetProps = {
@@ -55,88 +49,83 @@ export function PurchaseSheet({
   })
 
   return (
-    <Sheet open={purchaseId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='sm:max-w-xl print:max-w-none print:border-0 print:shadow-none'>
-        <SheetHeader className='flex-row items-start justify-between gap-4'>
-          <div>
-            <SheetTitle>
-              {t('purchaseHash', {
-                id: toNumber(purchase?.id ?? purchaseId),
-              })}
-            </SheetTitle>
-          </div>
-          <Button
-            variant='outline'
-            size='sm'
-            className='print:hidden'
-            onClick={() => window.print()}
-          >
-            <Printer />
-            {t('print')}
-          </Button>
-        </SheetHeader>
+    <EntitySheet
+      open={purchaseId != null}
+      onOpenChange={onOpenChange}
+      className='print:max-w-none print:border-0 print:shadow-none'
+      title={t('purchaseHash', {
+        id: toNumber(purchase?.id ?? purchaseId),
+      })}
+      headerAction={
+        <Button
+          variant='outline'
+          size='sm'
+          className='print:hidden'
+          onClick={() => window.print()}
+        >
+          <Printer />
+          {t('print')}
+        </Button>
+      }
+    >
+      {isLoading || !purchase ? (
+        <div className='space-y-3'>
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className='h-12' />
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* The invoice head: who, which invoice, when, who took it in */}
+          <dl className='grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4'>
+            <Field label={t('supplier')} value={purchase.supplier} />
+            <Field label={t('invoiceRef')} value={purchase.invoiceRef} />
+            <Field
+              label={t('receivedAt')}
+              value={dateTime.format(new Date(purchase.receivedAt))}
+            />
+            <Field label={t('receivedBy')} value={purchase.receivedBy} />
+          </dl>
 
-        <SheetBody>
-          {isLoading || !purchase ? (
-            <div className='space-y-3'>
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className='h-12' />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('stockItem')}</TableHead>
+                <TableHead className='text-end'>{t('quantity')}</TableHead>
+                <TableHead className='text-end'>{t('unitCost')}</TableHead>
+                <TableHead className='text-end'>{t('total')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {purchase.lines.map((line, index) => (
+                <TableRow key={`${line.stockItemId}-${index}`}>
+                  <TableCell className='font-medium'>
+                    {localized(line.name)}
+                  </TableCell>
+                  <TableCell className='text-end tabular-nums'>
+                    {formatQuantity(line.quantity, line.unit, t)}
+                  </TableCell>
+                  <TableCell className='text-muted-foreground text-end tabular-nums'>
+                    {formatEgp(line.unitCost)}
+                  </TableCell>
+                  <TableCell className='text-end font-medium tabular-nums'>
+                    {formatEgp(line.total)}
+                  </TableCell>
+                </TableRow>
               ))}
-            </div>
-          ) : (
-            <>
-              {/* The invoice head: who, which invoice, when, who took it in */}
-              <dl className='grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4'>
-                <Field label={t('supplier')} value={purchase.supplier} />
-                <Field label={t('invoiceRef')} value={purchase.invoiceRef} />
-                <Field
-                  label={t('receivedAt')}
-                  value={dateTime.format(new Date(purchase.receivedAt))}
-                />
-                <Field label={t('receivedBy')} value={purchase.receivedBy} />
-              </dl>
-
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('stockItem')}</TableHead>
-                    <TableHead className='text-end'>{t('quantity')}</TableHead>
-                    <TableHead className='text-end'>{t('unitCost')}</TableHead>
-                    <TableHead className='text-end'>{t('total')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchase.lines.map((line, index) => (
-                    <TableRow key={`${line.stockItemId}-${index}`}>
-                      <TableCell className='font-medium'>
-                        {localized(line.name)}
-                      </TableCell>
-                      <TableCell className='text-end tabular-nums'>
-                        {formatQuantity(line.quantity, line.unit, t)}
-                      </TableCell>
-                      <TableCell className='text-muted-foreground text-end tabular-nums'>
-                        {formatEgp(line.unitCost)}
-                      </TableCell>
-                      <TableCell className='text-end font-medium tabular-nums'>
-                        {formatEgp(line.total)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3}>{t('grandTotal')}</TableCell>
-                    <TableCell className='text-end text-base font-semibold tabular-nums'>
-                      {formatEgp(purchase.total)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </>
-          )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={3}>{t('grandTotal')}</TableCell>
+                <TableCell className='text-end text-base font-semibold tabular-nums'>
+                  {formatEgp(purchase.total)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </>
+      )}
+    </EntitySheet>
   )
 }
 

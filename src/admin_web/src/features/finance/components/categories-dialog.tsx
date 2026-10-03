@@ -6,15 +6,10 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { EntitySheet } from '@/components/entity-sheet'
 import {
   fromLocalizedValue,
   LocalizedFields,
@@ -44,25 +39,24 @@ export function CategoriesDialog({
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle>{t('expenseCategories')}</DialogTitle>
-        </DialogHeader>
-        {categories.isLoading ? (
-          <Skeleton className='h-40' />
-        ) : (
-          <LocalizedFields>
-            <div className='divide-y'>
-              {(categories.data ?? []).map((c) => (
-                <CategoryRow key={String(c.id)} category={c} />
-              ))}
-              <NewCategoryRow order={categories.data?.length ?? 0} />
-            </div>
-          </LocalizedFields>
-        )}
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('expenseCategories')}
+    >
+      {categories.isLoading ? (
+        <Skeleton className='h-40' />
+      ) : (
+        <LocalizedFields>
+          <div className='divide-y'>
+            {(categories.data ?? []).map((c) => (
+              <CategoryRow key={String(c.id)} category={c} />
+            ))}
+            <NewCategoryRow order={categories.data?.length ?? 0} />
+          </div>
+        </LocalizedFields>
+      )}
+    </EntitySheet>
   )
 }
 

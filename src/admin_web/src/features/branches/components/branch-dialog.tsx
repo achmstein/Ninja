@@ -9,17 +9,10 @@ import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid, SwitchGroup, SwitchRow } from '@/components/field'
 import {
   fromLocalizedValue,
   isBlank,
@@ -42,21 +35,18 @@ export function BranchDialog({
   const isEditing = !!branch
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('editBranch') : t('createBranch')}
-          </DialogTitle>
-        </DialogHeader>
-        {/* Keyed so form state resets per branch; closing unmounts it */}
-        <BranchForm
-          key={String(branch?.id ?? 'new')}
-          branch={branch}
-          onOpenChange={onOpenChange}
-        />
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? t('editBranch') : t('createBranch')}
+    >
+      {/* Keyed so form state resets per branch; closing unmounts it */}
+      <BranchForm
+        key={String(branch?.id ?? 'new')}
+        branch={branch}
+        onOpenChange={onOpenChange}
+      />
+    </EntitySheet>
   )
 }
 
@@ -165,7 +155,7 @@ function BranchForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
+    <form id='branch-form' onSubmit={handleSubmit} className='space-y-4'>
       <LocalizedInput
         id='branch-name'
         label={t('name')}
@@ -175,44 +165,40 @@ function BranchForm({
         autoFocus
       />
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='branchAddressEn'>{t('addressEnglish')}</Label>
+      <FieldGrid>
+        <Field label={t('addressEnglish')} htmlFor='branchAddressEn'>
           <Input
             id='branchAddressEn'
             value={form.addressEn}
             onChange={(e) => setForm({ ...form, addressEn: e.target.value })}
           />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='branchAddressAr'>{t('addressArabic')}</Label>
+        </Field>
+        <Field label={t('addressArabic')} htmlFor='branchAddressAr'>
           <Input
             id='branchAddressAr'
             dir='rtl'
             value={form.addressAr}
             onChange={(e) => setForm({ ...form, addressAr: e.target.value })}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <div className='space-y-2'>
-        <Label htmlFor='branchPhone'>{t('branchPhone')}</Label>
+      <Field label={t('branchPhone')} htmlFor='branchPhone'>
         <Input
           id='branchPhone'
           type='tel'
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
-      </div>
+      </Field>
 
-      <div className='space-y-2'>
-        <Label htmlFor='branchTaxNumber'>{t('taxNumber')}</Label>
+      <Field label={t('taxNumber')} htmlFor='branchTaxNumber'>
         <Input
           id='branchTaxNumber'
           value={form.taxNumber}
           onChange={(e) => setForm({ ...form, taxNumber: e.target.value })}
         />
-      </div>
+      </Field>
 
       <LocalizedInput
         id='branch-receipt-footer'
@@ -222,8 +208,7 @@ function BranchForm({
       />
 
       {/* One time, when the day turns over: a day runs from it round to it, so nothing falls outside one */}
-      <div className='space-y-2'>
-        <Label htmlFor='dayStart'>{t('dayStartTime')}</Label>
+      <Field label={t('dayStartTime')} htmlFor='dayStart'>
         <Input
           id='dayStart'
           type='time'
@@ -232,36 +217,33 @@ function BranchForm({
           onChange={(e) => setForm({ ...form, dayStartTime: e.target.value })}
         />
         <p className='text-muted-foreground text-xs'>{t('dayStartTimeHint')}</p>
-      </div>
+      </Field>
 
       {isEditing && (
-        <div className='flex items-center justify-between rounded-lg border p-3'>
-          <Label className='text-sm'>{t('branchActive')}</Label>
-          <Switch
+        <SwitchGroup>
+          <SwitchRow
+            title={t('branchActive')}
             checked={form.isActive}
             onCheckedChange={(checked) =>
               setForm({ ...form, isActive: checked })
             }
           />
-        </div>
+          {/* Off by default; on when strangers with a table's link become a
+              problem — a guest may still browse, but a table order needs an
+              account the branch can hold to. A cloud kitchen has no tables */}
+          {!cloudKitchen && (
+            <SwitchRow
+              title={t('requireSignInForTableOrders')}
+              checked={form.requireSignInForTableOrders}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, requireSignInForTableOrders: checked })
+              }
+            />
+          )}
+        </SwitchGroup>
       )}
 
-      {/* Off by default; on when strangers with a table's link become a
-          problem — a guest may still browse, but a table order needs an
-          account the branch can hold to. A cloud kitchen has no tables */}
-      {isEditing && !cloudKitchen && (
-        <div className='flex items-center justify-between rounded-lg border p-3'>
-          <Label className='text-sm'>{t('requireSignInForTableOrders')}</Label>
-          <Switch
-            checked={form.requireSignInForTableOrders}
-            onCheckedChange={(checked) =>
-              setForm({ ...form, requireSignInForTableOrders: checked })
-            }
-          />
-        </div>
-      )}
-
-      <DialogFooter>
+      <SheetActions>
         <Button
           type='button'
           variant='outline'
@@ -269,11 +251,11 @@ function BranchForm({
         >
           {t('cancel')}
         </Button>
-        <Button type='submit' disabled={isSaving}>
+        <Button type='submit' form='branch-form' disabled={isSaving}>
           {isSaving && <Spinner />}
-          {isEditing ? t('update') : t('create')}
+          {isEditing ? t('save') : t('create')}
         </Button>
-      </DialogFooter>
+      </SheetActions>
     </form>
   )
 }

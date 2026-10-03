@@ -7,14 +7,6 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -24,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity, formatSignedQuantity } from '../format'
 
 type CountSheetProps = {
@@ -93,85 +86,75 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
     })
 
   return (
-    <Sheet open={countId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='sm:max-w-lg'>
-        <SheetHeader>
-          <SheetTitle>
-            {t('countHash', { id: toNumber(count?.id ?? countId) })}
-          </SheetTitle>
-          <SheetDescription>{meta}</SheetDescription>
-        </SheetHeader>
+    <EntitySheet
+      open={countId != null}
+      onOpenChange={onOpenChange}
+      title={t('countHash', { id: toNumber(count?.id ?? countId) })}
+      subtitle={count ? meta : undefined}
+    >
+      {isLoading || !count ? (
+        <div className='space-y-3'>
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className='h-10' />
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* The verdict */}
+          <div
+            className={cn(
+              'flex items-center gap-2 text-sm font-medium',
+              off.length > 0 ? 'text-destructive' : 'text-success'
+            )}
+          >
+            {off.length > 0 ? (
+              <TriangleAlert className='h-4 w-4' />
+            ) : (
+              <CircleCheck className='h-4 w-4' />
+            )}
+            {off.length > 0
+              ? t('countOffSummary', {
+                  off: off.length,
+                  total: count.lines.length,
+                })
+              : t('countAllMatched', { total: count.lines.length })}
+          </div>
 
-        <SheetBody>
-          {isLoading || !count ? (
-            <div className='space-y-3'>
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className='h-10' />
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* The verdict */}
-              <div
-                className={cn(
-                  'flex items-center gap-2 text-sm font-medium',
-                  off.length > 0 ? 'text-destructive' : 'text-success'
-                )}
+          {off.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('stockItem')}</TableHead>
+                  <TableHead className='text-end'>{t('expected')}</TableHead>
+                  <TableHead className='text-end'>{t('counted')}</TableHead>
+                  <TableHead className='text-end'>{t('variance')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{rows(off)}</TableBody>
+            </Table>
+          )}
+
+          {matched.length > 0 && (
+            <div className='space-y-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='text-muted-foreground -ms-2'
+                onClick={() => setShowMatched((v) => !v)}
               >
-                {off.length > 0 ? (
-                  <TriangleAlert className='h-4 w-4' />
-                ) : (
-                  <CircleCheck className='h-4 w-4' />
-                )}
-                {off.length > 0
-                  ? t('countOffSummary', {
-                      off: off.length,
-                      total: count.lines.length,
-                    })
-                  : t('countAllMatched', { total: count.lines.length })}
-              </div>
-
-              {off.length > 0 && (
+                {showMatched
+                  ? t('hideMatchedLines', { count: matched.length })
+                  : t('showMatchedLines', { count: matched.length })}
+              </Button>
+              {showMatched && (
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('stockItem')}</TableHead>
-                      <TableHead className='text-end'>
-                        {t('expected')}
-                      </TableHead>
-                      <TableHead className='text-end'>{t('counted')}</TableHead>
-                      <TableHead className='text-end'>
-                        {t('variance')}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>{rows(off)}</TableBody>
+                  <TableBody>{rows(matched)}</TableBody>
                 </Table>
               )}
-
-              {matched.length > 0 && (
-                <div className='space-y-2'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='text-muted-foreground -ms-2'
-                    onClick={() => setShowMatched((v) => !v)}
-                  >
-                    {showMatched
-                      ? t('hideMatchedLines', { count: matched.length })
-                      : t('showMatchedLines', { count: matched.length })}
-                  </Button>
-                  {showMatched && (
-                    <Table>
-                      <TableBody>{rows(matched)}</TableBody>
-                    </Table>
-                  )}
-                </div>
-              )}
-            </>
+            </div>
           )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
+        </>
+      )}
+    </EntitySheet>
   )
 }

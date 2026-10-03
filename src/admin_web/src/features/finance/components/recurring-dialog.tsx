@@ -6,14 +6,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -23,7 +16,8 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid, SwitchRow } from '@/components/field'
 import { PAID_FROM, paidFromLabel } from '../format'
 import {
   categoriesQueryOptions,
@@ -52,80 +46,74 @@ export function RecurringDialog({
   )
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle>{t('recurringBills')}</DialogTitle>
-        </DialogHeader>
-
-        {editing ? (
-          <RecurringForm
-            key={editing === 'new' ? 'new' : String(editing.id)}
-            bill={editing === 'new' ? null : editing}
-            onDone={() => setEditing(null)}
-          />
-        ) : bills.isLoading ? (
-          <Skeleton className='h-32' />
-        ) : (
-          <div className='space-y-3'>
-            {(bills.data ?? []).length === 0 ? (
-              <p className='text-muted-foreground text-sm'>
-                {t('noRecurringBills')}
-              </p>
-            ) : (
-              <ul className='divide-y text-sm'>
-                {bills.data!.map((bill) => (
-                  <li key={String(bill.id)}>
-                    <button
-                      type='button'
-                      className='flex w-full items-center justify-between gap-3 py-2 text-start hover:underline'
-                      onClick={() => setEditing(bill)}
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('recurringBills')}
+    >
+      {editing ? (
+        <RecurringForm
+          key={editing === 'new' ? 'new' : String(editing.id)}
+          bill={editing === 'new' ? null : editing}
+          onDone={() => setEditing(null)}
+        />
+      ) : bills.isLoading ? (
+        <Skeleton className='h-32' />
+      ) : (
+        <div className='space-y-3'>
+          {(bills.data ?? []).length === 0 ? (
+            <p className='text-muted-foreground text-sm'>
+              {t('noRecurringBills')}
+            </p>
+          ) : (
+            <ul className='divide-y text-sm'>
+              {bills.data!.map((bill) => (
+                <li key={String(bill.id)}>
+                  <button
+                    type='button'
+                    className='flex w-full items-center justify-between gap-3 py-2 text-start hover:underline'
+                    onClick={() => setEditing(bill)}
+                  >
+                    <span
+                      className={cn(
+                        'min-w-0',
+                        !bill.isActive && 'text-muted-foreground line-through'
+                      )}
                     >
-                      <span
-                        className={cn(
-                          'min-w-0',
-                          !bill.isActive && 'text-muted-foreground line-through'
-                        )}
-                      >
-                        <span className='font-medium'>
-                          {localized(bill.categoryName)}
-                        </span>
-                        {bill.vendor && (
-                          <span className='text-muted-foreground'>
-                            {' '}
-                            · {bill.vendor}
-                          </span>
-                        )}
-                        <span className='text-muted-foreground block text-xs'>
-                          {t('onDayOfMonth', {
-                            day: String(toNumber(bill.dayOfMonth)),
-                          })}{' '}
-                          · {paidFromLabel(bill.paidFrom, t)}
-                          {bill.partnerName ? ` (${bill.partnerName})` : ''}
-                        </span>
+                      <span className='font-medium'>
+                        {localized(bill.categoryName)}
                       </span>
-                      <span className='shrink-0 tabular-nums'>
-                        {formatEgp(bill.amount)}
+                      {bill.vendor && (
+                        <span className='text-muted-foreground'>
+                          {' '}
+                          · {bill.vendor}
+                        </span>
+                      )}
+                      <span className='text-muted-foreground block text-xs'>
+                        {t('onDayOfMonth', {
+                          day: String(toNumber(bill.dayOfMonth)),
+                        })}{' '}
+                        · {paidFromLabel(bill.paidFrom, t)}
+                        {bill.partnerName ? ` (${bill.partnerName})` : ''}
                       </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              className='text-muted-foreground h-8 px-2'
-              onClick={() => setEditing('new')}
-            >
-              <Plus className='size-3.5' />
+                    </span>
+                    <span className='shrink-0 tabular-nums'>
+                      {formatEgp(bill.amount)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <SheetActions>
+            <Button type='button' onClick={() => setEditing('new')}>
+              <Plus />
               {t('addRecurringBill')}
             </Button>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          </SheetActions>
+        </div>
+      )}
+    </EntitySheet>
   )
 }
 
@@ -189,10 +177,9 @@ function RecurringForm({
   }
 
   return (
-    <form onSubmit={submit} className='space-y-4'>
-      <div className='grid gap-3 sm:grid-cols-2'>
-        <div className='flex flex-col gap-1.5'>
-          <Label>{t('expenseCategory')}</Label>
+    <form id='recurring-form' onSubmit={submit} className='space-y-4'>
+      <FieldGrid>
+        <Field label={t('expenseCategory')}>
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger className='h-9 w-full'>
               <SelectValue placeholder={t('pickCategory')} />
@@ -205,9 +192,8 @@ function RecurringForm({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='rec-amount'>{t('amount')}</Label>
+        </Field>
+        <Field label={t('amount')} htmlFor='rec-amount'>
           <Input
             id='rec-amount'
             type='number'
@@ -219,9 +205,8 @@ function RecurringForm({
             autoFocus={!bill}
             required
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='rec-day'>{t('dayOfMonth')}</Label>
+        </Field>
+        <Field label={t('dayOfMonth')} htmlFor='rec-day'>
           <Input
             id='rec-day'
             type='number'
@@ -233,9 +218,8 @@ function RecurringForm({
             onChange={(e) => setDay(e.target.value)}
             required
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label>{t('paidFrom')}</Label>
+        </Field>
+        <Field label={t('paidFrom')}>
           <Select value={paidFrom} onValueChange={setPaidFrom}>
             <SelectTrigger className='h-9 w-full'>
               <SelectValue />
@@ -250,10 +234,9 @@ function RecurringForm({
               )}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
         {fromPartner && (
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>{t('whichPartner')}</Label>
+          <Field label={t('whichPartner')} className='sm:col-span-2'>
             <Select value={partnerId} onValueChange={setPartnerId}>
               <SelectTrigger className='h-9 w-full'>
                 <SelectValue placeholder={t('whichPartner')} />
@@ -266,45 +249,45 @@ function RecurringForm({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         )}
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='rec-vendor'>{t('vendor')}</Label>
+        <Field label={t('vendor')} htmlFor='rec-vendor'>
           <Input
             id='rec-vendor'
             value={vendor}
             onChange={(e) => setVendor(e.target.value)}
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='rec-note'>{t('note')}</Label>
+        </Field>
+        <Field label={t('note')} htmlFor='rec-note'>
           <Input
             id='rec-note'
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <div className='flex items-center justify-between gap-2'>
-        {bill ? (
-          <label className='flex items-center gap-2 text-sm'>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-            {t('active')}
-          </label>
-        ) : (
-          <span />
-        )}
-        <div className='flex gap-2'>
-          <Button type='button' variant='ghost' size='sm' onClick={onDone}>
-            {t('cancel')}
-          </Button>
-          <Button type='submit' size='sm' disabled={!canSubmit || isPending}>
-            {isPending && <Spinner />}
-            {t('save')}
-          </Button>
-        </div>
-      </div>
+      {bill && (
+        <SwitchRow
+          title={t('active')}
+          checked={isActive}
+          onCheckedChange={setIsActive}
+        />
+      )}
+
+      <SheetActions>
+        <Button type='button' variant='outline' onClick={onDone}>
+          {t('cancel')}
+        </Button>
+        <Button
+          type='submit'
+          form='recurring-form'
+          disabled={!canSubmit || isPending}
+        >
+          {isPending && <Spinner />}
+          {t('save')}
+        </Button>
+      </SheetActions>
     </form>
   )
 }

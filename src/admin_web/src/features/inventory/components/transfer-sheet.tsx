@@ -4,15 +4,8 @@ import { getTransferOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity } from '../format'
 
 type TransferSheetProps = {
@@ -45,57 +38,49 @@ export function TransferSheet({
   })
 
   return (
-    <Sheet open={transferId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='sm:max-w-lg'>
-        <SheetHeader>
-          <SheetTitle>
-            {t('transferHash', { id: toNumber(transfer?.id ?? transferId) })}
-          </SheetTitle>
-          <SheetDescription>
-            {transfer
-              ? `${dateTime.format(new Date(transfer.sentAt))} · ${transfer.sentBy}`
-              : ' '}
-          </SheetDescription>
-        </SheetHeader>
-
-        <SheetBody>
-          {isLoading || !transfer ? (
-            <div className='space-y-3'>
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className='h-12' />
-              ))}
-            </div>
-          ) : (
-            <>
-              <div className='mb-3 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium'>
-                {branchName(transfer.fromBranchId)}
-                <ArrowRight className='text-muted-foreground h-3.5 w-3.5 shrink-0 rtl:rotate-180' />
-                {branchName(transfer.toBranchId)}
-              </div>
-              {transfer.note && (
-                <p className='text-muted-foreground mb-3 text-sm'>
-                  {transfer.note}
-                </p>
-              )}
-              <div className='divide-y'>
-                {transfer.lines.map((line, index) => (
-                  <div
-                    key={`${line.stockItemId}-${index}`}
-                    className='flex items-center gap-3 py-2'
-                  >
-                    <div className='min-w-0 flex-1 truncate text-sm font-medium'>
-                      {localized(line.name)}
-                    </div>
-                    <div className='shrink-0 text-sm tabular-nums'>
-                      {formatQuantity(line.quantity, line.unit, t)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
+    <EntitySheet
+      open={transferId != null}
+      onOpenChange={onOpenChange}
+      title={t('transferHash', { id: toNumber(transfer?.id ?? transferId) })}
+      subtitle={
+        transfer
+          ? `${dateTime.format(new Date(transfer.sentAt))} · ${transfer.sentBy}`
+          : undefined
+      }
+    >
+      {isLoading || !transfer ? (
+        <div className='space-y-3'>
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className='h-12' />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className='flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium'>
+            {branchName(transfer.fromBranchId)}
+            <ArrowRight className='text-muted-foreground h-3.5 w-3.5 shrink-0 rtl:rotate-180' />
+            {branchName(transfer.toBranchId)}
+          </div>
+          {transfer.note && (
+            <p className='text-muted-foreground text-sm'>{transfer.note}</p>
           )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
+          <div className='divide-y'>
+            {transfer.lines.map((line, index) => (
+              <div
+                key={`${line.stockItemId}-${index}`}
+                className='flex items-center gap-3 py-2'
+              >
+                <div className='min-w-0 flex-1 truncate text-sm font-medium'>
+                  {localized(line.name)}
+                </div>
+                <div className='shrink-0 text-sm tabular-nums'>
+                  {formatQuantity(line.quantity, line.unit, t)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </EntitySheet>
   )
 }

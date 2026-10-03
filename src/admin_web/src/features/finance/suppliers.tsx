@@ -18,26 +18,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { DatePicker } from '@/components/date-picker'
 import { EmptyState } from '@/components/empty-state'
+import { EntityAvatar } from '@/components/entity-avatar'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
+import { SwitchRow } from '@/components/field'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/page-header'
-import { AccountsTabs } from './accounts-tabs'
-import { EntityAvatar } from '@/components/entity-avatar'
 import { ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
+import { PageHeader } from '@/components/page-header'
 import { Section } from '@/components/section'
+import { AccountsTabs } from './accounts-tabs'
 import { LedgerList } from './components/ledger-list'
 import { sourceLabel, SUPPLIER_ENTRY, supplierEntryLabel } from './format'
 import { supplierLedgerQueryOptions, suppliersQueryOptions } from './queries'
@@ -198,34 +194,31 @@ function SupplierSheet({
   const open = isNew || supplier !== null
 
   return (
-    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent className='sm:max-w-xl'>
-        <SheetHeader>
-          <SheetTitle>
-            {isNew ? t('addSupplier') : (supplier?.name ?? '')}
-          </SheetTitle>
-        </SheetHeader>
-
-        {isNew ? (
+    <EntitySheet
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+      title={isNew ? t('addSupplier') : (supplier?.name ?? '')}
+      flush
+    >
+      {isNew ? (
+        <Section title={t('details')}>
+          <SupplierForm key='new' supplier={null} onSaved={onClose} />
+        </Section>
+      ) : supplier ? (
+        <>
           <Section title={t('details')}>
-            <SupplierForm key='new' supplier={null} onSaved={onClose} />
+            <SupplierForm
+              key={String(supplier.id)}
+              supplier={supplier}
+              onSaved={() => {}}
+            />
           </Section>
-        ) : supplier ? (
-          <>
-            <Section title={t('details')}>
-              <SupplierForm
-                key={String(supplier.id)}
-                supplier={supplier}
-                onSaved={() => {}}
-              />
-            </Section>
-            <Section title={t('account')}>
-              <SupplierLedger supplier={supplier} />
-            </Section>
-          </>
-        ) : null}
-      </SheetContent>
-    </Sheet>
+          <Section title={t('account')}>
+            <SupplierLedger supplier={supplier} />
+          </Section>
+        </>
+      ) : null}
+    </EntitySheet>
   )
 }
 
@@ -260,7 +253,7 @@ function SupplierForm({
   }
 
   return (
-    <form onSubmit={submit} className='space-y-4'>
+    <form id='supplier-form' onSubmit={submit} className='space-y-4'>
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='sup-name'>{t('name')}</Label>
@@ -291,20 +284,23 @@ function SupplierForm({
           />
         </div>
       </div>
-      <div className='flex items-center justify-between gap-2'>
-        {supplier ? (
-          <label className='flex items-center gap-2 text-sm'>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-            {t('active')}
-          </label>
-        ) : (
-          <span />
-        )}
-        <Button type='submit' disabled={name.trim() === '' || isPending}>
+      {supplier && (
+        <SwitchRow
+          title={t('active')}
+          checked={isActive}
+          onCheckedChange={setIsActive}
+        />
+      )}
+      <SheetActions>
+        <Button
+          type='submit'
+          form='supplier-form'
+          disabled={name.trim() === '' || isPending}
+        >
           {isPending && <Spinner />}
           {supplier ? t('save') : t('addSupplier')}
         </Button>
-      </div>
+      </SheetActions>
     </form>
   )
 }

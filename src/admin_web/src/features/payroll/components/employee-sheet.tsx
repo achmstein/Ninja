@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { isOwner } from '@/config/oidc-config'
 import { KeyRound } from 'lucide-react'
@@ -21,18 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { DatePicker } from '@/components/date-picker'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { InfoTip } from '@/components/info-tip'
 import { Section } from '@/components/section'
 import { customersService } from '@/features/customers/services/customers-service'
@@ -70,46 +64,45 @@ export function EmployeeSheet({
   })
 
   return (
-    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent className='sm:max-w-xl'>
-        <SheetHeader>
-          <SheetTitle>
-            {isNew ? t('addEmployee') : (employee.data?.name ?? '…')}
-          </SheetTitle>
-        </SheetHeader>
-
-        {isNew ? (
+    <EntitySheet
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+      title={isNew ? t('addEmployee') : (employee.data?.name ?? '…')}
+      subtitle={isNew ? undefined : (employee.data?.jobTitle ?? undefined)}
+      flush
+    >
+      {isNew ? (
+        <Section title={t('details')}>
+          <EmployeeForm key='new' employee={null} onSaved={onClose} inSheet />
+        </Section>
+      ) : employee.data ? (
+        <>
           <Section title={t('details')}>
-            <EmployeeForm key='new' employee={null} onSaved={onClose} />
+            <EmployeeForm
+              key={String(employee.data.id)}
+              employee={employee.data}
+              onSaved={() => {}}
+              inSheet
+            />
           </Section>
-        ) : employee.data ? (
-          <>
-            <Section title={t('details')}>
-              <EmployeeForm
-                key={String(employee.data.id)}
-                employee={employee.data}
-                onSaved={() => {}}
-              />
-            </Section>
-            <Section title={t('pay')}>
-              <PayTermsSection employee={employee.data} />
-            </Section>
-            <Section title={t('ledger')}>
-              <LedgerSection employee={employee.data} />
-            </Section>
-            <Section title={t('employment')}>
-              <EmploymentSection employee={employee.data} />
-            </Section>
-          </>
-        ) : (
-          <SheetBody>
-            <Skeleton className='h-9' />
-            <Skeleton className='h-9' />
-            <Skeleton className='h-9' />
-          </SheetBody>
-        )}
-      </SheetContent>
-    </Sheet>
+          <Section title={t('pay')}>
+            <PayTermsSection employee={employee.data} />
+          </Section>
+          <Section title={t('ledger')}>
+            <LedgerSection employee={employee.data} />
+          </Section>
+          <Section title={t('employment')}>
+            <EmploymentSection employee={employee.data} inSheet />
+          </Section>
+        </>
+      ) : (
+        <div className='flex flex-col gap-5 p-5'>
+          <Skeleton className='h-9' />
+          <Skeleton className='h-9' />
+          <Skeleton className='h-9' />
+        </div>
+      )}
+    </EntitySheet>
   )
 }
 
@@ -119,11 +112,15 @@ export function EmployeeSheet({
 export function EmployeeForm({
   employee,
   onSaved,
+  inSheet = false,
 }: {
   employee: EmployeeView | null
   onSaved: () => void
+  /** Inside a sheet the Save goes to the sheet's footer */
+  inSheet?: boolean
 }) {
   const t = useT()
+  const formId = useId()
   const localized = useLocalized()
   const auth = useAuth()
   // Making a login is the owner's call, like on the accounts page
@@ -206,8 +203,15 @@ export function EmployeeForm({
     branchId !== '' &&
     (employee !== null || parseFloat(rate) > 0)
 
+  const saveButton = (
+    <Button type='submit' form={formId} disabled={!canSubmit || isPending}>
+      {isPending && <Spinner />}
+      {employee ? t('save') : t('addEmployee')}
+    </Button>
+  )
+
   return (
-    <form onSubmit={submit} className='space-y-4'>
+    <form id={formId} onSubmit={submit} className='space-y-4'>
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5 sm:col-span-2'>
           <Label htmlFor='emp-name'>{t('name')}</Label>
@@ -361,12 +365,11 @@ export function EmployeeForm({
         <InfoTip className='self-end'>{t('paidDaysOffHint')}</InfoTip>
       </div>
 
-      <div className='flex justify-end'>
-        <Button type='submit' disabled={!canSubmit || isPending}>
-          {isPending && <Spinner />}
-          {employee ? t('save') : t('addEmployee')}
-        </Button>
-      </div>
+      {inSheet ? (
+        <SheetActions>{saveButton}</SheetActions>
+      ) : (
+        <div className='flex justify-end'>{saveButton}</div>
+      )}
     </form>
   )
 }
@@ -508,7 +511,14 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
 // ---------------------------------------------------------------------------
 // Still here, or left on a date
 
-export function EmploymentSection({ employee }: { employee: EmployeeView }) {
+export function EmploymentSection({
+  employee,
+  inSheet = false,
+}: {
+  employee: EmployeeView
+  /** Inside a sheet, Mark left (or Rehire) is the footer's way out */
+  inSheet?: boolean
+}) {
   const t = useT()
   const { leave, rehire, isPending } = usePayrollActions()
   const [leaveOpen, setLeaveOpen] = useState(false)
@@ -535,15 +545,32 @@ export function EmploymentSection({ employee }: { employee: EmployeeView }) {
           ? `${formatEgp(-toNumber(employee.balance))} ${t('owesShort')}`
           : `${formatEgp(employee.balance)} ${t('owedShort')}`}
       </span>
-      <Button
-        type='button'
-        variant={employee.isActive ? 'ghost' : 'outline'}
-        size='sm'
-        className={employee.isActive ? 'text-muted-foreground' : undefined}
-        onClick={() => setLeaveOpen(true)}
-      >
-        {employee.isActive ? t('markLeft') : t('rehire')}
-      </Button>
+      {inSheet ? (
+        <SheetActions side='start'>
+          <Button
+            type='button'
+            variant={employee.isActive ? 'ghost' : 'outline'}
+            className={
+              employee.isActive
+                ? 'text-destructive hover:text-destructive'
+                : undefined
+            }
+            onClick={() => setLeaveOpen(true)}
+          >
+            {employee.isActive ? t('markLeft') : t('rehire')}
+          </Button>
+        </SheetActions>
+      ) : (
+        <Button
+          type='button'
+          variant={employee.isActive ? 'ghost' : 'outline'}
+          size='sm'
+          className={employee.isActive ? 'text-muted-foreground' : undefined}
+          onClick={() => setLeaveOpen(true)}
+        >
+          {employee.isActive ? t('markLeft') : t('rehire')}
+        </Button>
+      )}
 
       <ConfirmDialog
         open={leaveOpen}

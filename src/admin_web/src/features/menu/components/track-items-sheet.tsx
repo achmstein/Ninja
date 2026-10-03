@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Package, Sparkles } from 'lucide-react'
+import { CircleCheck, Package, SearchX } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipesProposal } from '@/api/inventory'
@@ -17,15 +17,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
+import { AiButton } from '@/components/ai-button'
+import { EmptyState } from '@/components/empty-state'
+import { EntitySheet } from '@/components/entity-sheet'
 import {
   assistErrorMessage,
   assistRetryAfter,
@@ -207,12 +202,11 @@ export function TrackItemsSheet({
   }
 
   return (
-    <Sheet open onOpenChange={(open) => !busy && onOpenChange(open)}>
-      <SheetContent className='sm:max-w-xl'>
-        <SheetHeader>
-          <SheetTitle>{t('trackItems')}</SheetTitle>
-        </SheetHeader>
-
+    <EntitySheet
+      open
+      onOpenChange={(open) => !busy && onOpenChange(open)}
+      title={t('trackItems')}
+      toolbar={
         <div className='flex items-center gap-2 border-b px-4 py-2'>
           <Input
             value={filter}
@@ -243,109 +237,95 @@ export function TrackItemsSheet({
             {t('clearSelection')}
           </Button>
         </div>
-
-        <SheetBody className='min-h-0 overflow-y-auto'>
-          {untracked.length === 0 ? (
-            <p className='text-muted-foreground py-8 text-center text-sm'>
-              {t('everythingTracked')}
-            </p>
-          ) : groups.length === 0 ? (
-            <p className='text-muted-foreground py-8 text-center text-sm'>
-              {t('noItemsFound')}
-            </p>
-          ) : (
-            groups.map(([category, items]) => {
-              const ids = items.map((i) => toNumber(i.id))
-              const all = ids.every((id) => selected.has(id))
-              return (
-                <div key={category} className='py-2'>
-                  <label className='flex cursor-pointer items-center gap-2 py-1 text-sm font-medium'>
-                    <Checkbox
-                      checked={
-                        all
-                          ? true
-                          : ids.some((id) => selected.has(id))
-                            ? 'indeterminate'
-                            : false
-                      }
-                      onCheckedChange={(on) => toggleMany(ids, on === true)}
-                    />
-                    {category}
-                    <span className='text-muted-foreground text-xs font-normal'>
-                      {items.length}
-                    </span>
-                  </label>
-                  <ul className='ms-6 divide-y'>
-                    {items.map((item) => {
-                      const id = toNumber(item.id)
-                      return (
-                        <li key={id}>
-                          <label
-                            className={cn(
-                              'flex cursor-pointer items-center gap-2 py-1.5 text-sm',
-                              !item.isAvailable && 'text-muted-foreground'
-                            )}
-                          >
-                            <Checkbox
-                              checked={selected.has(id)}
-                              onCheckedChange={(on) => toggle(id, on === true)}
-                            />
-                            <span className='min-w-0 flex-1 truncate'>
-                              {localized(item.name) || '—'}
-                            </span>
-                          </label>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </div>
-              )
-            })
+      }
+      footerNote={
+        <span className='tabular-nums'>
+          {progress
+            ? t('trackingProgress', {
+                done: progress.done,
+                total: progress.total,
+              })
+            : t('itemsPicked', { count: picked.length })}
+        </span>
+      }
+      actions={
+        <>
+          <Button
+            type='button'
+            variant='outline'
+            disabled={picked.length === 0 || busy}
+            onClick={sellAsUnits}
+          >
+            {busy && trackByUnit.isPending ? <Spinner /> : <Package />}
+            {t('sellAsUnits')}
+          </Button>
+          {assistAvailable && (
+            <AiButton
+              variant='default'
+              className='h-10 has-[>svg]:px-3'
+              pending={busy && propose.isPending}
+              disabled={picked.length === 0 || busy}
+              onClick={proposeRecipes}
+            >
+              {t('proposeRecipes')}
+            </AiButton>
           )}
-        </SheetBody>
-
-        <SheetFooter>
-          <div className='flex w-full flex-wrap items-center justify-between gap-2'>
-            <span className='text-muted-foreground text-sm tabular-nums'>
-              {progress
-                ? t('trackingProgress', {
-                    done: progress.done,
-                    total: progress.total,
-                  })
-                : t('itemsPicked', { count: picked.length })}
-            </span>
-            <div className='flex gap-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={picked.length === 0 || busy}
-                onClick={sellAsUnits}
-              >
-                {busy && trackByUnit.isPending ? (
-                  <Spinner />
-                ) : (
-                  <Package />
-                )}
-                {t('sellAsUnits')}
-              </Button>
-              {assistAvailable && (
-                <Button
-                  type='button'
-                  disabled={picked.length === 0 || busy}
-                  onClick={proposeRecipes}
-                >
-                  {busy && propose.isPending ? (
-                    <Spinner />
-                  ) : (
-                    <Sparkles />
-                  )}
-                  {t('proposeRecipes')}
-                </Button>
-              )}
+        </>
+      }
+    >
+      {untracked.length === 0 ? (
+        <EmptyState compact icon={CircleCheck} title={t('everythingTracked')} />
+      ) : groups.length === 0 ? (
+        <EmptyState compact icon={SearchX} title={t('noItemsFound')} />
+      ) : (
+        groups.map(([category, items]) => {
+          const ids = items.map((i) => toNumber(i.id))
+          const all = ids.every((id) => selected.has(id))
+          return (
+            <div key={category}>
+              <label className='flex cursor-pointer items-center gap-2 py-1 text-sm font-medium'>
+                <Checkbox
+                  checked={
+                    all
+                      ? true
+                      : ids.some((id) => selected.has(id))
+                        ? 'indeterminate'
+                        : false
+                  }
+                  onCheckedChange={(on) => toggleMany(ids, on === true)}
+                />
+                {category}
+                <span className='text-muted-foreground text-xs font-normal'>
+                  {items.length}
+                </span>
+              </label>
+              <ul className='ms-6 divide-y'>
+                {items.map((item) => {
+                  const id = toNumber(item.id)
+                  return (
+                    <li key={id}>
+                      <label
+                        className={cn(
+                          'flex cursor-pointer items-center gap-2 py-1.5 text-sm',
+                          !item.isAvailable && 'text-muted-foreground'
+                        )}
+                      >
+                        <Checkbox
+                          checked={selected.has(id)}
+                          onCheckedChange={(on) => toggle(id, on === true)}
+                        />
+                        <span className='min-w-0 flex-1 truncate'>
+                          {localized(item.name) || '—'}
+                        </span>
+                      </label>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          )
+        })
+      )}
+    </EntitySheet>
   )
 }

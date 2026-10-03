@@ -1,15 +1,8 @@
 import { type ShiftView } from '@/api/sales'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { Badge } from '@/components/ui/badge'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { EntitySheet } from '@/components/entity-sheet'
+import { StatusChip } from '@/components/status-chip'
 import { ShiftReport } from './shift-report'
 
 type ShiftSheetProps = {
@@ -28,28 +21,24 @@ export function ShiftSheet({ shift, onOpenChange }: ShiftSheetProps) {
   const closed = shift?.status === 'Closed'
 
   return (
-    <Sheet open={shift != null} onOpenChange={onOpenChange}>
-      <SheetContent className='sm:max-w-lg'>
-        <SheetHeader>
-          <div className='flex items-center gap-2'>
-            <SheetTitle>
-              {t('shiftNumber', { id: toNumber(shift?.id) })}
-            </SheetTitle>
-            {shift && (
-              <Badge variant={closed ? 'secondary' : 'default'}>
-                {t(closed ? 'shiftClosedBadge' : 'shiftOpenBadge')}
-              </Badge>
-            )}
-          </div>
-          <SheetDescription>
-            {shift?.openedAt
-              ? `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}${shift.openedBy ? ` · ${shift.openedBy}` : ''}`
-              : ' '}
-          </SheetDescription>
-        </SheetHeader>
-
-        <SheetBody>{shift && <ShiftReport shift={shift} />}</SheetBody>
-      </SheetContent>
-    </Sheet>
+    <EntitySheet
+      open={shift != null}
+      onOpenChange={onOpenChange}
+      title={t('shiftNumber', { id: toNumber(shift?.id) })}
+      status={
+        shift && (
+          <StatusChip tone={closed ? 'muted' : 'success'}>
+            {t(closed ? 'shiftClosedBadge' : 'shiftOpenBadge')}
+          </StatusChip>
+        )
+      }
+      subtitle={
+        shift?.openedAt
+          ? `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}${shift.openedBy ? ` · ${shift.openedBy}` : ''}`
+          : undefined
+      }
+    >
+      {shift && <ShiftReport shift={shift} />}
+    </EntitySheet>
   )
 }

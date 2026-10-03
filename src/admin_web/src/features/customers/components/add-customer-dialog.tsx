@@ -6,6 +6,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { UserCheck, UserRound } from 'lucide-react'
+import { getGuestsOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { normalizeName, normalizePhone } from '@/lib/phone'
@@ -20,8 +22,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getGuestsOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { loyaltyService } from '@/features/loyalty/services/loyalty-service'
 import { customersKeys } from '../hooks/use-customers'
 import {
@@ -195,7 +195,9 @@ export function AddCustomerDialog({
                     {guest.name || t('guestBadge')}
                   </span>
                   <span className='text-muted-foreground text-xs'>
-                    {t('guestOrderCount', { count: Number(guest.orderCount ?? 0) })}
+                    {t('guestOrderCount', {
+                      count: Number(guest.orderCount ?? 0),
+                    })}
                   </span>
                 </span>
                 {guest.name && !name.trim() && (

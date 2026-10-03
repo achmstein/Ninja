@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { type PlaceViewModel, type TariffRequest } from '@/api/spaces'
 import {
   createPlaceMutation,
@@ -13,21 +13,16 @@ import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { EntitySheet } from '@/components/entity-sheet'
+import { Field, SwitchRow } from '@/components/field'
 import {
   fromLocalizedValue,
   isBlank,
@@ -290,229 +285,211 @@ export function PlaceDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* A column capped like every other dialog, so the fields scroll only
-          once the whole thing is taller than the window, with Save pinned
-          under them: a room's rates used to trip a fixed 65svh cap long
-          before that */}
-      <DialogContent className='flex max-h-[90svh] flex-col sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle className='flex items-center gap-2'>
-            {isEditing && (
-              <PlaceKindIcon
-                kind={kind}
-                className='text-muted-foreground size-5'
-              />
-            )}
-            {t(isEditing ? 'editPlace' : 'newPlace')}
-          </DialogTitle>
-        </DialogHeader>
-
-        <LocalizedFields>
-          <div className='-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto px-1'>
-            {/* The kind first: it decides what the rest of the form is */}
-            <div className='space-y-4'>
-              {!isEditing && (
-                <div className='space-y-2'>
-                  <Label>{t('kind')}</Label>
-                  {/* The same segmented strip the dashboard and the stock
-                      panel use, three equal segments wide */}
-                  <ToggleGroup
-                    type='single'
-                    variant='outline'
-                    value={String(kind)}
-                    onValueChange={(value) =>
-                      value && changeKind(Number(value))
-                    }
-                    className='w-full'
-                    aria-label={t('kind')}
-                  >
-                    {placeKinds.map(({ kind: value }) => (
-                      <ToggleGroupItem
-                        key={value}
-                        value={String(value)}
-                        className='flex-1 px-3'
-                      >
-                        <PlaceKindIcon kind={value} className='size-4' />
-                        {t(placeKindKey[value])}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </div>
-              )}
-
-              <LocalizedInput
-                id='place-name'
-                label={t('name')}
-                value={name}
-                onChange={setName}
-                autoFocus={!isEditing}
-              />
-
-              <LocalizedInput
-                id='place-description'
-                label={t('description')}
-                value={description}
-                onChange={setDescription}
-                multiline
-                rows={2}
-              />
-            </div>
-
-            {/* Time: off means the place only takes orders */}
-            {features.timeBilling && (
-              <div className='rounded-lg border'>
-                <div className='flex items-center justify-between gap-4 px-3 py-2.5'>
-                  <Label htmlFor='place-timed' className='cursor-pointer'>
-                    {t('chargedByTheHour')}
-                  </Label>
-                  <Switch
-                    id='place-timed'
-                    checked={timed}
-                    onCheckedChange={changeTimed}
-                  />
-                </div>
-
-                {timed && (
-                  <div className='space-y-4 border-t px-3 py-3'>
-                    <div className='space-y-2'>
-                      {/* Column heads once, not a label per cell */}
-                      <div className='text-muted-foreground grid grid-cols-[1fr_8rem_2rem] gap-2 px-0.5 text-xs'>
-                        <span>{t('rateOptions')}</span>
-                        <span>{t('hourlyRate')}</span>
-                        <span />
-                      </div>
-
-                      {options.map((option) => (
-                        <div
-                          key={option.key}
-                          className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'
-                        >
-                          <LocalizedInput
-                            id={`option-name-${option.key}`}
-                            ariaLabel={t('rateOptions')}
-                            value={option.name}
-                            onChange={(value) =>
-                              updateOption(option.key, { name: value })
-                            }
-                            compact
-                          />
-                          <InputGroup className='h-8'>
-                            <InputGroupInput
-                              id={`option-rate-${option.key}`}
-                              type='number'
-                              inputMode='decimal'
-                              min={0}
-                              step='0.01'
-                              value={option.rate}
-                              aria-label={t('hourlyRate')}
-                              onChange={(e) =>
-                                updateOption(option.key, {
-                                  rate: e.target.value,
-                                })
-                              }
-                              dir='ltr'
-                            />
-                            <InputGroupAddon align='inline-end'>
-                              <InputGroupText>{t('perHour')}</InputGroupText>
-                            </InputGroupAddon>
-                          </InputGroup>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='size-8'
-                            aria-label={t('remove')}
-                            disabled={options.length <= 1}
-                            onClick={() =>
-                              setOptions((list) =>
-                                list.filter((o) => o.key !== option.key)
-                              )
-                            }
-                          >
-                            <X className='h-4 w-4' />
-                          </Button>
-                        </div>
-                      ))}
-
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        className='-ms-2'
-                        onClick={() =>
-                          setOptions((list) => [
-                            ...list,
-                            draft('', { en: '', ar: '' }, undefined),
-                          ])
-                        }
-                      >
-                        <Plus />
-                        {t('addRateOption')}
-                      </Button>
-                    </div>
-
-                    <div className='flex items-center justify-between gap-4'>
-                      <Label>{t('roundTimeTo')}</Label>
-                      <ToggleGroup
-                        type='single'
-                        variant='outline'
-                        size='sm'
-                        value={String(rounding)}
-                        onValueChange={(value) =>
-                          value && setRounding(Number(value))
-                        }
-                      >
-                        {roundingChoices.map((minutes) => (
-                          <ToggleGroupItem
-                            key={minutes}
-                            value={String(minutes)}
-                            className='px-2.5 tabular-nums'
-                          >
-                            {t('minutesShort', { count: minutes })}
-                          </ToggleGroupItem>
-                        ))}
-                      </ToggleGroup>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Bookings: with a clock or without one */}
-            {features.reservations && (
-              <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
-                <div className='min-w-0'>
-                  <Label htmlFor='place-reservable' className='cursor-pointer'>
-                    {t('takesReservations')}
-                  </Label>
-                  <p className='text-muted-foreground text-xs'>
-                    {t('takesReservationsHint')}
-                  </p>
-                </div>
-                <Switch
-                  id='place-reservable'
-                  checked={reservable}
-                  onCheckedChange={(next) => {
-                    setReservableTouched(true)
-                    setReservable(next)
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </LocalizedFields>
-
-        <DialogFooter>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className='flex items-center gap-2'>
+          {isEditing && (
+            <PlaceKindIcon
+              kind={kind}
+              className='text-muted-foreground size-5'
+            />
+          )}
+          {t(isEditing ? 'editPlace' : 'newPlace')}
+        </span>
+      }
+      actions={
+        <>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button onClick={handleSave} disabled={isSaving || !canSave}>
-            {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+            {isSaving && <Spinner />}
             {t('save')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <LocalizedFields>
+        <div className='space-y-5'>
+          {/* The kind first: it decides what the rest of the form is */}
+          <div className='space-y-4'>
+            {!isEditing && (
+              <Field label={t('kind')}>
+                {/* The same segmented strip the dashboard and the stock
+                      panel use, three equal segments wide */}
+                <ToggleGroup
+                  type='single'
+                  variant='outline'
+                  value={String(kind)}
+                  onValueChange={(value) => value && changeKind(Number(value))}
+                  className='w-full'
+                  aria-label={t('kind')}
+                >
+                  {placeKinds.map(({ kind: value }) => (
+                    <ToggleGroupItem
+                      key={value}
+                      value={String(value)}
+                      className='flex-1 px-3'
+                    >
+                      <PlaceKindIcon kind={value} className='size-4' />
+                      {t(placeKindKey[value])}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </Field>
+            )}
+
+            <LocalizedInput
+              id='place-name'
+              label={t('name')}
+              value={name}
+              onChange={setName}
+              autoFocus={!isEditing}
+            />
+
+            <LocalizedInput
+              id='place-description'
+              label={t('description')}
+              value={description}
+              onChange={setDescription}
+              multiline
+              rows={2}
+            />
+          </div>
+
+          {/* Time: off means the place only takes orders */}
+          {features.timeBilling && (
+            <div className='rounded-lg border'>
+              <SwitchRow
+                className='px-3 py-2.5'
+                title={t('chargedByTheHour')}
+                checked={timed}
+                onCheckedChange={changeTimed}
+              />
+
+              {timed && (
+                <div className='space-y-4 border-t px-3 py-3'>
+                  <div className='space-y-2'>
+                    {/* Column heads once, not a label per cell */}
+                    <div className='text-muted-foreground grid grid-cols-[1fr_8rem_2rem] gap-2 px-0.5 text-xs'>
+                      <span>{t('rateOptions')}</span>
+                      <span>{t('hourlyRate')}</span>
+                      <span />
+                    </div>
+
+                    {options.map((option) => (
+                      <div
+                        key={option.key}
+                        className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'
+                      >
+                        <LocalizedInput
+                          id={`option-name-${option.key}`}
+                          ariaLabel={t('rateOptions')}
+                          value={option.name}
+                          onChange={(value) =>
+                            updateOption(option.key, { name: value })
+                          }
+                          compact
+                        />
+                        <InputGroup className='h-8'>
+                          <InputGroupInput
+                            id={`option-rate-${option.key}`}
+                            type='number'
+                            inputMode='decimal'
+                            min={0}
+                            step='0.01'
+                            value={option.rate}
+                            aria-label={t('hourlyRate')}
+                            onChange={(e) =>
+                              updateOption(option.key, {
+                                rate: e.target.value,
+                              })
+                            }
+                            dir='ltr'
+                          />
+                          <InputGroupAddon align='inline-end'>
+                            <InputGroupText>{t('perHour')}</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='size-8'
+                          aria-label={t('remove')}
+                          disabled={options.length <= 1}
+                          onClick={() =>
+                            setOptions((list) =>
+                              list.filter((o) => o.key !== option.key)
+                            )
+                          }
+                        >
+                          <X className='h-4 w-4' />
+                        </Button>
+                      </div>
+                    ))}
+
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='-ms-2'
+                      onClick={() =>
+                        setOptions((list) => [
+                          ...list,
+                          draft('', { en: '', ar: '' }, undefined),
+                        ])
+                      }
+                    >
+                      <Plus />
+                      {t('addRateOption')}
+                    </Button>
+                  </div>
+
+                  <div className='flex items-center justify-between gap-4'>
+                    <Label>{t('roundTimeTo')}</Label>
+                    <ToggleGroup
+                      type='single'
+                      variant='outline'
+                      size='sm'
+                      value={String(rounding)}
+                      onValueChange={(value) =>
+                        value && setRounding(Number(value))
+                      }
+                    >
+                      {roundingChoices.map((minutes) => (
+                        <ToggleGroupItem
+                          key={minutes}
+                          value={String(minutes)}
+                          className='px-2.5 tabular-nums'
+                        >
+                          {t('minutesShort', { count: minutes })}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bookings: with a clock or without one */}
+          {features.reservations && (
+            <SwitchRow
+              className='rounded-lg border px-3 py-2.5'
+              title={t('takesReservations')}
+              description={t('takesReservationsHint')}
+              checked={reservable}
+              onCheckedChange={(next) => {
+                setReservableTouched(true)
+                setReservable(next)
+              }}
+            />
+          )}
+        </div>
+      </LocalizedFields>
+    </EntitySheet>
   )
 }

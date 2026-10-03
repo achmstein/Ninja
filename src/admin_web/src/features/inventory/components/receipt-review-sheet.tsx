@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, Sparkles } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { type SupplierView } from '@/api/finance'
 import { type ReceiptProposal, type StockItemView } from '@/api/inventory'
 import { bestMatch } from '@/lib/fuzzy'
@@ -20,16 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
+import { EntitySheet } from '@/components/entity-sheet'
 import {
   fromLocalizedValue,
   inScriptOf,
@@ -189,116 +182,18 @@ export function ReceiptReviewSheet({
   }
 
   return (
-    <Sheet open onOpenChange={onOpenChange}>
-      <SheetContent className='sm:max-w-3xl'>
-        <SheetHeader>
-          <SheetTitle className='flex items-center gap-2'>
-            <Sparkles className='text-primary size-4' aria-hidden />
-            {t('reviewScan')}
-          </SheetTitle>
-        </SheetHeader>
-
-        <SheetBody>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-2'>
-              <Label>{t('supplier')}</Label>
-              <Combobox
-                value={supplierId}
-                onChange={setSupplierId}
-                options={suppliers.map((s) => ({
-                  value: String(s.id),
-                  label: s.name,
-                  hint: s.phone ?? undefined,
-                }))}
-                placeholder={t('noSupplier')}
-                clearLabel={t('noSupplier')}
-              />
-              {proposal.supplier && (
-                <p className='text-muted-foreground text-xs'>
-                  {t('onTheReceipt', { text: proposal.supplier })}
-                  {!matchedSupplier && ` — ${t('supplierNotFound')}`}
-                </p>
-              )}
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='scan-invoiceRef'>{t('invoiceRef')}</Label>
-              <Input
-                id='scan-invoiceRef'
-                value={invoiceRef}
-                onChange={(e) => setInvoiceRef(e.target.value)}
-              />
-              {proposal.date && (
-                <p className='text-muted-foreground text-xs'>
-                  {t('onTheReceipt', { text: proposal.date })}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {(proposal.warnings.length > 0 || proposal.notes) && (
-            <Alert>
-              <AlertTriangle />
-              <AlertTitle>{t('toastWarning')}</AlertTitle>
-              <AlertDescription>
-                <ul className='list-disc space-y-0.5 ps-4'>
-                  {proposal.notes && <li>{proposal.notes}</li>}
-                  {proposal.warnings.map((warning) => (
-                    <li key={warning}>{warning}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <div className='space-y-3'>
-            {lines.map((line) => (
-              <ReviewLineCard
-                key={line.key}
-                line={line}
-                item={matchedItem(line, itemById)}
-                items={items}
-                itemById={itemById}
-                lastCost={
-                  line.stockItemId
-                    ? (lastCosts.get(toNumber(line.stockItemId)) ?? null)
-                    : null
-                }
-                onChange={(patch) => updateLine(line.key, patch)}
-                onAmounts={(patch) => updateAmounts(line.key, patch)}
-              />
-            ))}
-          </div>
-
-          <div className='space-y-1 rounded-lg border px-3 py-2'>
-            <div className='flex items-center justify-between'>
-              <span className='text-sm font-medium'>{t('grandTotal')}</span>
-              <span className='font-semibold tabular-nums'>
-                {formatEgp(computedTotal)}
-              </span>
-            </div>
-            {printedTotal != null && (
-              <div
-                className={cn(
-                  'flex items-center justify-between text-xs',
-                  totalsDiffer ? 'text-warning' : 'text-muted-foreground'
-                )}
-              >
-                <span>{t('printedTotal')}</span>
-                <span className='tabular-nums'>{formatEgp(printedTotal)}</span>
-              </div>
-            )}
-            {totalsDiffer && (
-              <p className='text-warning text-xs'>
-                {t('totalsDiffer', {
-                  computed: formatEgp(computedTotal),
-                  printed: formatEgp(printedTotal),
-                })}
-              </p>
-            )}
-          </div>
-        </SheetBody>
-
-        <SheetFooter className='sm:flex-row sm:justify-end'>
+    <EntitySheet
+      open
+      onOpenChange={onOpenChange}
+      title={t('reviewScan')}
+      size='wide'
+      footerNote={
+        <span className='tabular-nums'>
+          {t('grandTotal')} {formatEgp(computedTotal)}
+        </span>
+      }
+      actions={
+        <>
           <Button
             type='button'
             variant='outline'
@@ -317,9 +212,107 @@ export function ReceiptReviewSheet({
               ? t('creatingItems', creating)
               : t('addScannedLines', { count: included.length })}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </>
+      }
+    >
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <div className='space-y-2'>
+          <Label>{t('supplier')}</Label>
+          <Combobox
+            value={supplierId}
+            onChange={setSupplierId}
+            options={suppliers.map((s) => ({
+              value: String(s.id),
+              label: s.name,
+              hint: s.phone ?? undefined,
+            }))}
+            placeholder={t('noSupplier')}
+            clearLabel={t('noSupplier')}
+          />
+          {proposal.supplier && (
+            <p className='text-muted-foreground text-xs'>
+              {t('onTheReceipt', { text: proposal.supplier })}
+              {!matchedSupplier && ` — ${t('supplierNotFound')}`}
+            </p>
+          )}
+        </div>
+        <div className='space-y-2'>
+          <Label htmlFor='scan-invoiceRef'>{t('invoiceRef')}</Label>
+          <Input
+            id='scan-invoiceRef'
+            value={invoiceRef}
+            onChange={(e) => setInvoiceRef(e.target.value)}
+          />
+          {proposal.date && (
+            <p className='text-muted-foreground text-xs'>
+              {t('onTheReceipt', { text: proposal.date })}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {(proposal.warnings.length > 0 || proposal.notes) && (
+        <Alert>
+          <AlertTriangle />
+          <AlertTitle>{t('toastWarning')}</AlertTitle>
+          <AlertDescription>
+            <ul className='list-disc space-y-0.5 ps-4'>
+              {proposal.notes && <li>{proposal.notes}</li>}
+              {proposal.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className='space-y-3'>
+        {lines.map((line) => (
+          <ReviewLineCard
+            key={line.key}
+            line={line}
+            item={matchedItem(line, itemById)}
+            items={items}
+            itemById={itemById}
+            lastCost={
+              line.stockItemId
+                ? (lastCosts.get(toNumber(line.stockItemId)) ?? null)
+                : null
+            }
+            onChange={(patch) => updateLine(line.key, patch)}
+            onAmounts={(patch) => updateAmounts(line.key, patch)}
+          />
+        ))}
+      </div>
+
+      <div className='space-y-1 rounded-lg border px-3 py-2'>
+        <div className='flex items-center justify-between'>
+          <span className='text-sm font-medium'>{t('grandTotal')}</span>
+          <span className='font-semibold tabular-nums'>
+            {formatEgp(computedTotal)}
+          </span>
+        </div>
+        {printedTotal != null && (
+          <div
+            className={cn(
+              'flex items-center justify-between text-xs',
+              totalsDiffer ? 'text-warning' : 'text-muted-foreground'
+            )}
+          >
+            <span>{t('printedTotal')}</span>
+            <span className='tabular-nums'>{formatEgp(printedTotal)}</span>
+          </div>
+        )}
+        {totalsDiffer && (
+          <p className='text-warning text-xs'>
+            {t('totalsDiffer', {
+              computed: formatEgp(computedTotal),
+              printed: formatEgp(printedTotal),
+            })}
+          </p>
+        )}
+      </div>
+    </EntitySheet>
   )
 }
 

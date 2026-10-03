@@ -3,15 +3,7 @@ import { type StockItemView } from '@/api/inventory'
 import { bilingual, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -20,8 +12,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
-import { InfoTip } from '@/components/info-tip'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid, SwitchRow } from '@/components/field'
 import {
   fromLocalizedValue,
   isBlank,
@@ -50,21 +42,18 @@ export function StockItemDialog({
   const isEditing = !!item
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('editStockItem') : t('addStockItem')}
-          </DialogTitle>
-        </DialogHeader>
-        {/* Keyed so form state resets per item; closing unmounts and resets */}
-        <StockItemForm
-          key={String(item?.id ?? 'new')}
-          item={item}
-          onOpenChange={onOpenChange}
-        />
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? t('editStockItem') : t('addStockItem')}
+    >
+      {/* Keyed so form state resets per item; closing unmounts and resets */}
+      <StockItemForm
+        key={String(item?.id ?? 'new')}
+        item={item}
+        onOpenChange={onOpenChange}
+      />
+    </EntitySheet>
   )
 }
 
@@ -139,7 +128,7 @@ function StockItemForm({
 
   return (
     <LocalizedFields lang={nameAssist.lang} onLangChange={nameAssist.setLang}>
-      <form onSubmit={handleSubmit} className='space-y-4'>
+      <form id='stock-item-form' onSubmit={handleSubmit} className='space-y-4'>
         <LocalizedInput
           id='stock-item-name'
           label={t('name')}
@@ -151,9 +140,8 @@ function StockItemForm({
           suggested={nameAssist.suggested}
         />
 
-        <div className='grid grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='unit'>{t('unit')}</Label>
+        <FieldGrid>
+          <Field label={t('unit')} htmlFor='unit' error={errors.unit}>
             <Select
               value={form.unitChoice}
               onValueChange={(value) => setForm({ ...form, unitChoice: value })}
@@ -170,13 +158,9 @@ function StockItemForm({
                 <SelectItem value={CUSTOM_UNIT}>{t('unitOther')}</SelectItem>
               </SelectContent>
             </Select>
-            {errors.unit && (
-              <p className='text-destructive text-sm'>{errors.unit}</p>
-            )}
-          </div>
+          </Field>
           {form.unitChoice === CUSTOM_UNIT && (
-            <div className='space-y-2'>
-              <Label htmlFor='customUnit'>{t('unitOther')}</Label>
+            <Field label={t('unitOther')} htmlFor='customUnit'>
               <Input
                 id='customUnit'
                 placeholder={t('unitCustomPlaceholder')}
@@ -185,14 +169,13 @@ function StockItemForm({
                   setForm({ ...form, customUnit: e.target.value })
                 }
               />
-            </div>
+            </Field>
           )}
-        </div>
+        </FieldGrid>
 
         <div className='space-y-3 rounded-lg border p-3'>
-          <div className='grid grid-cols-2 gap-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='packSize'>{t('packSize')}</Label>
+          <FieldGrid>
+            <Field label={t('packSize')} htmlFor='packSize'>
               <Input
                 id='packSize'
                 type='number'
@@ -202,7 +185,7 @@ function StockItemForm({
                 value={form.packSize}
                 onChange={(e) => setForm({ ...form, packSize: e.target.value })}
               />
-            </div>
+            </Field>
             <LocalizedInput
               id='packName'
               label={t('packName')}
@@ -211,23 +194,19 @@ function StockItemForm({
               disabled={!form.packSize}
               onChange={(packName) => setForm({ ...form, packName })}
             />
-          </div>
+          </FieldGrid>
         </div>
 
-        <div className='flex items-center justify-between'>
-          <Label className='flex items-center gap-1 text-sm'>
-            {t('autoSoldOut')}
-            <InfoTip>{t('autoSoldOutHint')}</InfoTip>
-          </Label>
-          <Switch
-            checked={form.autoSoldOut}
-            onCheckedChange={(checked) =>
-              setForm({ ...form, autoSoldOut: checked })
-            }
-          />
-        </div>
+        <SwitchRow
+          title={t('autoSoldOut')}
+          description={t('autoSoldOutHint')}
+          checked={form.autoSoldOut}
+          onCheckedChange={(checked) =>
+            setForm({ ...form, autoSoldOut: checked })
+          }
+        />
 
-        <DialogFooter>
+        <SheetActions>
           <Button
             type='button'
             variant='outline'
@@ -235,11 +214,11 @@ function StockItemForm({
           >
             {t('cancel')}
           </Button>
-          <Button type='submit' disabled={isPending}>
+          <Button type='submit' form='stock-item-form' disabled={isPending}>
             {isPending && <Spinner />}
             {t('save')}
           </Button>
-        </DialogFooter>
+        </SheetActions>
       </form>
     </LocalizedFields>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type PromoCodeDto, type PromoCodeRequest } from '@/api/catalog'
 import {
   createPromoMutation,
@@ -12,15 +12,7 @@ import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -29,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
 import { DatePicker } from '@/components/date-picker'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid, SwitchRow } from '@/components/field'
 import { PROMO_KIND } from '../promo-kind'
 
 interface PromoDialogProps {
@@ -42,21 +35,18 @@ interface PromoDialogProps {
 export function PromoDialog({ open, onOpenChange, promo }: PromoDialogProps) {
   const t = useT()
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle>
-            {promo ? t('editPromoCode') : t('newPromoCode')}
-          </DialogTitle>
-        </DialogHeader>
-        {/* Keyed so form state resets per code; closing unmounts it */}
-        <PromoForm
-          key={String(promo?.id ?? 'new')}
-          promo={promo}
-          onOpenChange={onOpenChange}
-        />
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={promo ? t('editPromoCode') : t('newPromoCode')}
+    >
+      {/* Keyed so form state resets per code; closing unmounts it */}
+      <PromoForm
+        key={String(promo?.id ?? 'new')}
+        promo={promo}
+        onOpenChange={onOpenChange}
+      />
+    </EntitySheet>
   )
 }
 
@@ -151,9 +141,8 @@ function PromoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='space-y-2'>
-        <Label htmlFor='promo-code'>{t('promoCode')}</Label>
+    <form id='promo-form' onSubmit={handleSubmit} className='space-y-4'>
+      <Field label={t('promoCode')} htmlFor='promo-code'>
         <Input
           id='promo-code'
           value={form.code}
@@ -162,11 +151,10 @@ function PromoForm({
           maxLength={20}
           autoFocus={!isEditing}
         />
-      </div>
+      </Field>
 
-      <div className='grid grid-cols-2 gap-3'>
-        <div className='space-y-2'>
-          <Label>{t('discount')}</Label>
+      <FieldGrid>
+        <Field label={t('discount')}>
           <Select
             value={String(form.kind)}
             onValueChange={(v) => set('kind', Number(v))}
@@ -183,11 +171,11 @@ function PromoForm({
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='promo-value'>
-            {form.kind === PROMO_KIND.percent ? '%' : currency}
-          </Label>
+        </Field>
+        <Field
+          label={form.kind === PROMO_KIND.percent ? '%' : currency}
+          htmlFor='promo-value'
+        >
           <Input
             id='promo-value'
             type='number'
@@ -197,14 +185,11 @@ function PromoForm({
             value={form.value}
             onChange={(e) => set('value', e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <div className='grid grid-cols-2 gap-3'>
-        <div className='space-y-2'>
-          <Label htmlFor='promo-min'>
-            {t('minimumOrder')} ({currency})
-          </Label>
+      <FieldGrid>
+        <Field label={`${t('minimumOrder')} (${currency})`} htmlFor='promo-min'>
           <Input
             id='promo-min'
             type='number'
@@ -213,9 +198,8 @@ function PromoForm({
             value={form.minSubtotal}
             onChange={(e) => set('minSubtotal', e.target.value)}
           />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='promo-max'>{t('maxUses')}</Label>
+        </Field>
+        <Field label={t('maxUses')} htmlFor='promo-max'>
           <Input
             id='promo-max'
             type='number'
@@ -225,40 +209,35 @@ function PromoForm({
             value={form.maxUses}
             onChange={(e) => set('maxUses', e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <div className='grid grid-cols-2 gap-3'>
-        <div className='space-y-2'>
-          <Label>{t('validFrom')}</Label>
+      <FieldGrid>
+        <Field label={t('validFrom')}>
           <DatePicker
             value={form.from}
             onChange={(v) => set('from', v)}
             placeholder={t('always')}
           />
-        </div>
-        <div className='space-y-2'>
-          <Label>{t('validUntil')}</Label>
+        </Field>
+        <Field label={t('validUntil')}>
           <DatePicker
             value={form.until}
             onChange={(v) => set('until', v)}
             placeholder={t('always')}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <div className='flex items-center justify-between'>
-        <Label htmlFor='promo-once'>{t('oncePerCustomer')}</Label>
-        <Switch
-          id='promo-once'
-          checked={form.oncePerCustomer}
-          onCheckedChange={(v) => set('oncePerCustomer', v)}
-        />
-      </div>
+      <SwitchRow
+        title={t('oncePerCustomer')}
+        checked={form.oncePerCustomer}
+        onCheckedChange={(v) => set('oncePerCustomer', v)}
+      />
 
       {error && <p className='text-destructive text-sm'>{error}</p>}
 
-      <DialogFooter>
+      <SheetActions>
         <Button
           type='button'
           variant='outline'
@@ -266,11 +245,11 @@ function PromoForm({
         >
           {t('cancel')}
         </Button>
-        <Button type='submit' disabled={isSaving}>
+        <Button type='submit' form='promo-form' disabled={isSaving}>
           {isSaving && <Spinner />}
           {t('save')}
         </Button>
-      </DialogFooter>
+      </SheetActions>
     </form>
   )
 }

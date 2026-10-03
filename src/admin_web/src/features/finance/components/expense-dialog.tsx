@@ -7,15 +7,7 @@ import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -24,7 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { AiButton } from '@/components/ai-button'
 import { DatePicker } from '@/components/date-picker'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid } from '@/components/field'
 import { PAID_FROM, paidFromLabel } from '../format'
 import { categoriesQueryOptions, partnersQueryOptions } from '../queries'
 import { pickedReceipt, RECEIPT_ACCEPT } from '../receipts'
@@ -44,13 +39,16 @@ export function ExpenseDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const t = useT()
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
-        {/* Keyed on open so each opening starts clean */}
-        {open && <ExpenseForm onDone={() => onOpenChange(false)} />}
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('addExpense')}
+    >
+      {/* Keyed on open so each opening starts clean */}
+      {open && <ExpenseForm onDone={() => onOpenChange(false)} />}
+    </EntitySheet>
   )
 }
 
@@ -155,14 +153,9 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
   const receiptIsPhoto = !!receipt && receipt.type.startsWith('image/')
 
   return (
-    <form onSubmit={submit} className='space-y-4'>
-      <DialogHeader>
-        <DialogTitle>{t('addExpense')}</DialogTitle>
-      </DialogHeader>
-
-      <div className='grid gap-3 sm:grid-cols-2'>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='expense-date'>{t('date')}</Label>
+    <form id='expense-form' onSubmit={submit} className='space-y-4'>
+      <FieldGrid>
+        <Field label={t('date')} htmlFor='expense-date'>
           <DatePicker
             id='expense-date'
             value={date}
@@ -174,9 +167,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             disabled={(d) => d > new Date()}
             className={cn(tint('date'))}
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='expense-amount'>{t('amount')}</Label>
+        </Field>
+        <Field label={t('amount')} htmlFor='expense-amount'>
           <Input
             id='expense-amount'
             type='number'
@@ -192,9 +184,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             autoFocus
             required
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label>{t('expenseCategory')}</Label>
+        </Field>
+        <Field label={t('expenseCategory')}>
           <Select
             value={categoryId}
             onValueChange={(next) => {
@@ -213,9 +204,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label>{t('paidFrom')}</Label>
+        </Field>
+        <Field label={t('paidFrom')}>
           <Select value={paidFrom} onValueChange={setPaidFrom}>
             <SelectTrigger className='h-9 w-full'>
               <SelectValue />
@@ -230,10 +220,9 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               )}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
         {fromPartner && (
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>{t('whichPartner')}</Label>
+          <Field label={t('whichPartner')} className='sm:col-span-2'>
             <Select value={partnerId} onValueChange={setPartnerId}>
               <SelectTrigger className='h-9 w-full'>
                 <SelectValue placeholder={t('whichPartner')} />
@@ -246,10 +235,9 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         )}
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='expense-vendor'>{t('vendor')}</Label>
+        <Field label={t('vendor')} htmlFor='expense-vendor'>
           <Input
             id='expense-vendor'
             value={vendor}
@@ -260,9 +248,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             }}
             className={cn(tint('vendor'))}
           />
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='expense-note'>{t('note')}</Label>
+        </Field>
+        <Field label={t('note')} htmlFor='expense-note'>
           <Input
             id='expense-note'
             value={note}
@@ -272,9 +259,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             }}
             className={cn(tint('note'))}
           />
-        </div>
-        <div className='flex flex-col gap-1.5 sm:col-span-2'>
-          <Label>{t('receiptPhoto')}</Label>
+        </Field>
+        <Field label={t('receiptPhoto')} className='sm:col-span-2'>
           <div className='flex flex-wrap items-center gap-2'>
             <Button
               type='button'
@@ -286,22 +272,14 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               {receipt ? t('replaceReceipt') : t('attachReceipt')}
             </Button>
             {receipt && billScan.available && (
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                className='text-primary'
-                disabled={!receiptIsPhoto || billScan.isScanning}
-                title={receiptIsPhoto ? t('readBill') : t('scanImageOnly')}
+              <AiButton
+                pending={billScan.isScanning}
+                disabled={!receiptIsPhoto}
+                why={t('scanImageOnly')}
                 onClick={readBill}
               >
-                {billScan.isScanning ? (
-                  <Spinner />
-                ) : (
-                  <Sparkles />
-                )}
                 {billScan.isScanning ? t('readingBill') : t('readBill')}
-              </Button>
+              </AiButton>
             )}
             {receipt && (
               <span className='text-muted-foreground flex min-w-0 items-center gap-1 text-xs'>
@@ -335,18 +313,22 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               if (file) setReceipt(file)
             }}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGrid>
 
-      <DialogFooter>
+      <SheetActions>
         <Button type='button' variant='outline' onClick={onDone}>
           {t('cancel')}
         </Button>
-        <Button type='submit' disabled={!canSubmit || isPending}>
+        <Button
+          type='submit'
+          form='expense-form'
+          disabled={!canSubmit || isPending}
+        >
           {isPending && <Spinner />}
           {t('save')}
         </Button>
-      </DialogFooter>
+      </SheetActions>
     </form>
   )
 }

@@ -7,16 +7,9 @@ import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { pickedReceipt, RECEIPT_ACCEPT } from '../receipts'
 import { useFinanceActions } from '../use-finance-actions'
 
@@ -80,18 +73,28 @@ export function ReceiptDialog({
   expense: ExpenseView | null
   onClose: () => void
 }) {
+  const t = useT()
   return (
-    <Dialog open={expense !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-2xl'>
-        {expense && (
-          <ReceiptViewer
-            key={String(expense.id)}
-            expense={expense}
-            onClose={onClose}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <EntitySheet
+      open={expense !== null}
+      onOpenChange={(open) => !open && onClose()}
+      title={t('receiptOfExpense')}
+      subtitle={
+        expense
+          ? [expense.vendor, expense.note].filter(Boolean).join(' · ') ||
+            expense.date
+          : undefined
+      }
+      size='wide'
+    >
+      {expense && (
+        <ReceiptViewer
+          key={String(expense.id)}
+          expense={expense}
+          onClose={onClose}
+        />
+      )}
+    </EntitySheet>
   )
 }
 
@@ -136,14 +139,6 @@ function ReceiptViewer({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>{t('receiptOfExpense')}</DialogTitle>
-        <DialogDescription>
-          {[expense.vendor, expense.note].filter(Boolean).join(' · ') ||
-            expense.date}
-        </DialogDescription>
-      </DialogHeader>
-
       {receipt.isLoading || !objectUrl ? (
         <Skeleton className='h-80' />
       ) : receipt.isError ? (
@@ -179,11 +174,11 @@ function ReceiptViewer({
         }}
       />
 
-      <DialogFooter className='sm:justify-between'>
+      <SheetActions side='start'>
         <Button
           type='button'
           variant='ghost'
-          className='text-destructive'
+          className='text-destructive hover:text-destructive'
           disabled={isPending}
           onClick={() =>
             void removeReceipt(id)
@@ -196,25 +191,21 @@ function ReceiptViewer({
           <Trash2 />
           {t('removeReceipt')}
         </Button>
-        <div className='flex gap-2'>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={isPending}
-            onClick={() => input.current?.click()}
-          >
-            {isPending ? (
-              <Spinner />
-            ) : (
-              <Upload />
-            )}
-            {t('replaceReceipt')}
-          </Button>
-          <Button type='button' onClick={onClose}>
-            {t('close')}
-          </Button>
-        </div>
-      </DialogFooter>
+      </SheetActions>
+      <SheetActions>
+        <Button
+          type='button'
+          variant='outline'
+          disabled={isPending}
+          onClick={() => input.current?.click()}
+        >
+          {isPending ? <Spinner /> : <Upload />}
+          {t('replaceReceipt')}
+        </Button>
+        <Button type='button' onClick={onClose}>
+          {t('close')}
+        </Button>
+      </SheetActions>
     </>
   )
 }
