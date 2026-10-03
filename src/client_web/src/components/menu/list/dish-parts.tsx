@@ -3,12 +3,13 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronRight, Minus, Plus, UtensilsCrossed } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { lineKey, useCart } from '@/lib/cart'
-import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { Odometer } from '@/components/ninja/odometer'
 import { TONE_CLASS } from '../deck/deck-model'
+import { OfferBadge, OfferPrice } from '../offer'
 import type { useDish } from './use-dish'
 
 /** The photo box of a list's dish: the photo, or the plate on the business's colour; its options grow out of it when opened */
@@ -19,6 +20,7 @@ export function DishPhotoBox({
   radius,
   className,
   children,
+  offerSmall = false,
 }: {
   item: CatalogItemDto
   dish: ReturnType<typeof useDish>
@@ -26,6 +28,8 @@ export function DishPhotoBox({
   radius: number
   className?: string
   children?: ReactNode
+  /** A small photo (a classic row's) carries the row-sized badge */
+  offerSmall?: boolean
 }) {
   return (
     <div
@@ -48,20 +52,19 @@ export function DishPhotoBox({
           <UtensilsCrossed className='size-1/3 max-w-12 opacity-40' />
         </div>
       )}
+      {dish.onOffer && !dish.soldOut && (
+        <span className={cn('absolute z-10', offerSmall ? 'start-1 top-1' : 'start-2.5 top-2.5')}>
+          <OfferBadge item={item} photo={!offerSmall} />
+        </span>
+      )}
       {children}
     </div>
   )
 }
 
-/** The price, and the struck-out one under an offer */
-export function DishPrice({ item, onOffer, className }: { item: CatalogItemDto; onOffer: boolean; className?: string }) {
-  const price = usePrice()
-  return (
-    <span className={cn('flex items-center gap-2', className)}>
-      <span className='bg-muted rounded-full px-2.5 py-1 text-caption font-bold tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
-      {onOffer && <span className='text-muted-foreground text-caption font-medium tabular-nums line-through'>{price(item.price)}</span>}
-    </span>
-  )
+/** The price: under an offer the new one in the offer's colour, the old one struck beside it */
+export function DishPrice({ item, className }: { item: CatalogItemDto; onOffer?: boolean; className?: string }) {
+  return <OfferPrice item={item} className={cn('flex', className)} />
 }
 
 /**

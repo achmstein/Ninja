@@ -1,14 +1,14 @@
 import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
-import { useLocalized, usePrice } from '@/lib/i18n'
+import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { OfferPrice } from '../offer'
 import { DishPhotoBox, RowAction } from './dish-parts'
 import { DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
 
 /** Magazine: one wide photo a dish, the name and price set on it under a shade, the button on its corner */
 export const HeroCard = memo(function HeroCard({ scroller, item, onOpen, onQuickAdd }: DishProps) {
   const localized = useLocalized()
-  const price = usePrice()
   const photo = useRef<HTMLDivElement>(null)
   const dish = useDish({ item, onOpen, onQuickAdd, photo })
   return (
@@ -18,10 +18,7 @@ export const HeroCard = memo(function HeroCard({ scroller, item, onOpen, onQuick
           <span className='absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-5 pe-20 pt-16 text-white'>
             <span className='heading text-title leading-tight'>{localized(item.name)}</span>
             {item.description && <span className={cn('line-clamp-1 opacity-80', DISH_NOTE)}>{localized(item.description)}</span>}
-            <span className='mt-1 text-body font-bold tabular-nums'>
-              {price(dish.onOffer ? item.offerPrice : item.price)}
-              {dish.onOffer && <span className='ms-2 text-caption font-medium line-through opacity-70'>{price(item.price)}</span>}
-            </span>
+            <OfferPrice item={item} tone='photo' className='mt-1 text-body' />
           </span>
         </DishPhotoBox>
       </button>

@@ -22,7 +22,7 @@ export const Row = memo(function Row({ scroller, item, onOpen, onQuickAdd }: Dis
     <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3', dish.soldOut && 'opacity-50')}>
       <button type='button' {...dish.handlers} className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'>
         {/* Sized to leave the name and its line the room to read on a small phone, and a few dishes to a screen */}
-        <DishPhotoBox item={item} dish={dish} photoRef={photo} radius={20} className={SHORT ? 'size-18' : 'size-20'} />
+        <DishPhotoBox item={item} dish={dish} photoRef={photo} radius={20} offerSmall className={SHORT ? 'size-18' : 'size-20'} />
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
           <span className={DISH_NAME}>{localized(item.name)}</span>
           {item.description && <span className={cn('text-muted-foreground line-clamp-2', DISH_NOTE)}>{localized(item.description)}</span>}

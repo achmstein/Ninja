@@ -6,6 +6,7 @@ import { itemPictureUrl } from '@/components/menu/item-picture'
 import { usePress } from '@/components/ninja/gestures/use-press'
 import { PressRing } from '../deck/deck'
 import { canQuickAdd, TONE_CLASS } from '../deck/deck-model'
+import { OfferBadge } from '../offer'
 
 /** A tile's corner; the card it came from is rounder, and the photo's flight carries it across */
 const TILE_RADIUS = 18
@@ -56,6 +57,11 @@ export const ZoomTile = memo(function ZoomTile({
           pressing && 'scale-[0.95]'
         )}
       >
+        {onOffer && !soldOut && (
+          <span className='absolute start-1.5 top-1.5 z-10'>
+            <OfferBadge item={item} />
+          </span>
+        )}
         {/* Held, a dish that needs no choosing fills a ring and drops into the tray */}
         {quick && (
           <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-200', pressing ? 'opacity-100' : 'opacity-0')}>
@@ -81,7 +87,10 @@ export const ZoomTile = memo(function ZoomTile({
         )}
       </div>
       <span className='mt-1.5 truncate text-caption font-semibold'>{localized(item.name)}</span>
-      <span className='text-muted-foreground text-caption tabular-nums'>{price(onOffer ? item.offerPrice : item.price)}</span>
+      <span className='text-caption tabular-nums'>
+        <span className={cn(onOffer ? 'text-offer font-semibold' : 'text-muted-foreground')}>{price(onOffer ? item.offerPrice : item.price)}</span>
+        {onOffer && <span className='text-muted-foreground ms-1.5 line-through'>{price(item.price)}</span>}
+      </span>
     </button>
   )
 })

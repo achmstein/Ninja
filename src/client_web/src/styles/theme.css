@@ -44,6 +44,10 @@
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
+  /* A deal: warm coral to orange, the same whatever the business's colour, so an offer reads as one */
+  --offer: oklch(0.64 0.21 33);
+  --offer-to: oklch(0.72 0.19 55);
+  --offer-foreground: oklch(1 0 0);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.704 0.04 256.788);
@@ -76,6 +80,9 @@
   --accent: oklch(0.279 0.041 260.031);
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.704 0.191 22.216);
+  --offer: oklch(0.7 0.19 35);
+  --offer-to: oklch(0.78 0.17 58);
+  --offer-foreground: oklch(0.15 0.02 30);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.551 0.027 264.364);
@@ -140,6 +147,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-offer: var(--offer);
+  --color-offer-to: var(--offer-to);
+  --color-offer-foreground: var(--offer-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
