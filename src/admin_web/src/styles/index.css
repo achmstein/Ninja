@@ -34,10 +34,20 @@
     cursor: pointer;
   }
 
-  /* The admin's type: Geist for English, IBM Plex Sans Arabic for Arabic,
-     drawn to sit together; Arabic leads when the page is in Arabic */
+  /* The admin's type: Geist for English, and for Arabic Alexandria, the
+     till's and the kitchen display's, so the three read as one app; Arabic
+     leads when the page is in Arabic, a little taller to breathe */
   :root[dir='rtl'] body {
-    font-family: 'IBM Plex Sans Arabic', 'Geist', system-ui, sans-serif;
+    font-family: 'Alexandria', 'Geist', system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  /* Arabic letters join: tracking that tightens or spaces English pulls
+     them apart, and its 11px labels are too small to read */
+  :root[dir='rtl'] [class*='tracking-'] {
+    letter-spacing: 0 !important;
+  }
+  :root[dir='rtl'] .text-\[11px\] {
+    font-size: 12px !important;
   }
   body {
     -webkit-font-smoothing: antialiased;
