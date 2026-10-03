@@ -9,10 +9,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { LanguageSwitch } from '@/components/language-switch'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { BranchSwitcher } from './branch-switcher'
 import { sidebarData } from './data/sidebar-data'
-import { LogoSlot } from './logo-slot'
 import { navTrail } from './nav-active'
-import { PhoneBranchPicker } from './phone-branch-picker'
 
 type HeaderProps = React.HTMLAttributes<HTMLElement>
 
@@ -55,8 +54,7 @@ export function Header({ className, ...props }: HeaderProps) {
       <div className='flex h-full items-center gap-2 px-4 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,28rem)_minmax(0,1fr)] md:gap-3'>
         {/* A phone: the business, and its branch to switch with a tap; the menu is the tab bar's More */}
         <div className='flex min-w-0 items-center gap-2 md:hidden'>
-          <LogoSlot nameClassName='text-sm' />
-          <PhoneBranchPicker />
+          <BranchSwitcher variant='bar' />
         </div>
 
         <div className='hidden min-w-0 items-center gap-3 md:flex'>

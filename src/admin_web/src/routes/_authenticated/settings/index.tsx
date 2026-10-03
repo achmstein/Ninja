@@ -8,10 +8,9 @@ export const Route = createFileRoute('/_authenticated/settings/')({
 
 function SettingsPage() {
   return (
+    // The full width, as every page: no narrow column of its own
     <Main>
-      <div className='mx-auto w-full max-w-2xl'>
-        <SettingsProfile />
-      </div>
+      <SettingsProfile />
     </Main>
   )
 }

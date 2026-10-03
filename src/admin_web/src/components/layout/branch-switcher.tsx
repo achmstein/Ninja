@@ -48,7 +48,16 @@ export function useBranchSwitch() {
   }
 }
 
-export function BranchSwitcher() {
+/**
+ * `bar` is the same switcher in the phone's top bar: the logo with the
+ * branch under it, the same list on a tap, without the sidebar
+ */
+export function BranchSwitcher({
+  variant = 'sidebar',
+}: {
+  variant?: 'sidebar' | 'bar'
+}) {
+  const bar = variant === 'bar'
   const t = useT()
   const localized = useLocalized()
   const { isMobile } = useSidebar()
@@ -65,7 +74,7 @@ export function BranchSwitcher() {
 
   // ⌘/Ctrl+1..9 switches branches, matching the shortcut hints below
   useEffect(() => {
-    if (!switchable) return
+    if (!switchable || bar) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey)) return
       const index = Number(event.key) - 1
@@ -78,7 +87,7 @@ export function BranchSwitcher() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branches, branchId, switchable])
+  }, [branches, branchId, switchable, bar])
 
   // The business's logo, whatever its shape (components/layout/logo-slot.tsx); the branch under it when
   // there is more than one to switch between
@@ -95,6 +104,50 @@ export function BranchSwitcher() {
       )}
     </div>
   )
+
+  const menu = (
+    <DropdownMenuContent
+      className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
+      align='start'
+      side={isMobile || bar ? 'bottom' : 'right'}
+      sideOffset={4}
+    >
+      <DropdownMenuLabel className='text-muted-foreground text-xs'>
+        {t('branches')}
+      </DropdownMenuLabel>
+      {branches.map((branch, index) => (
+        <DropdownMenuItem
+          key={String(branch.id)}
+          onClick={() => handleSelect(Number(branch.id))}
+          className='gap-2 p-2'
+        >
+          <span className='flex-1 truncate'>{localized(branch.name)}</span>
+          {Number(branch.id) === branchId && <Check className='size-4' />}
+          {!bar && index < 9 && (
+            <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+          )}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuContent>
+  )
+
+  if (bar) {
+    if (!switchable) return tile
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type='button'
+            className='hover:bg-muted data-[state=open]:bg-muted -ms-1.5 flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 transition-colors'
+          >
+            {tile}
+            <ChevronsUpDown className='text-muted-foreground size-4 shrink-0' />
+          </button>
+        </DropdownMenuTrigger>
+        {menu}
+      </DropdownMenu>
+    )
+  }
 
   if (!switchable) {
     return (
@@ -121,31 +174,7 @@ export function BranchSwitcher() {
               <ChevronsUpDown className='ms-auto' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
-            align='start'
-            side={isMobile ? 'bottom' : 'right'}
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className='text-muted-foreground text-xs'>
-              {t('branches')}
-            </DropdownMenuLabel>
-            {branches.map((branch, index) => (
-              <DropdownMenuItem
-                key={String(branch.id)}
-                onClick={() => handleSelect(Number(branch.id))}
-                className='gap-2 p-2'
-              >
-                <span className='flex-1 truncate'>
-                  {localized(branch.name)}
-                </span>
-                {Number(branch.id) === branchId && <Check className='size-4' />}
-                {index < 9 && (
-                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+          {menu}
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
