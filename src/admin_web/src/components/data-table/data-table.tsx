@@ -59,7 +59,7 @@ export function DataTable<TData extends RowData>({
   const list = mobileRow && (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border @2xl/content:hidden',
+        'bg-card overflow-hidden rounded-xl shadow-sm @2xl/content:hidden',
         className
       )}
     >
@@ -121,7 +121,7 @@ export function DataTable<TData extends RowData>({
       {list}
       <div
         className={cn(
-          'overflow-hidden rounded-lg border',
+          'bg-card overflow-hidden rounded-xl shadow-sm',
           mobileRow && '@max-2xl/content:hidden',
           className
         )}
@@ -136,7 +136,7 @@ export function DataTable<TData extends RowData>({
                     key={header.id}
                     colSpan={header.colSpan}
                     className={cn(
-                      'bg-background group-hover/row:bg-muted',
+                      'group-hover/row:bg-transparent',
                       header.column.columnDef.meta?.align === 'end' &&
                         'text-end [&>div]:justify-end',
                       header.column.columnDef.meta?.className,
@@ -194,7 +194,7 @@ export function DataTable<TData extends RowData>({
                         <TableCell
                           key={cell.id}
                           className={cn(
-                            'bg-background group-hover/row:bg-muted',
+                            'group-hover/row:bg-muted/40',
                             cell.column.columnDef.meta?.align === 'end' &&
                               'text-end tabular-nums',
                             cell.column.columnDef.meta?.emphasis ===

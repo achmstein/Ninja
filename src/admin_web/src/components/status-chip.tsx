@@ -18,7 +18,7 @@ export type ChipTone =
 export function StatusChip({
   tone,
   icon: Icon,
-  dot = false,
+  dot = true,
   children,
   className,
 }: {
@@ -33,7 +33,9 @@ export function StatusChip({
       variant={tone}
       className={cn('gap-1.5 rounded-full px-2', className)}
     >
-      {dot && <span aria-hidden className='size-1.5 rounded-full bg-current' />}
+      {dot && !Icon && (
+        <span aria-hidden className='size-1.5 rounded-full bg-current' />
+      )}
       {Icon && <Icon className='size-3' />}
       {children}
     </Badge>

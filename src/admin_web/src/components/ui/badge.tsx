@@ -17,12 +17,15 @@ const badgeVariants = cva(
         outline:
           'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
         // Soft chips, a state at a glance without shouting: a tint of the colour and its own text
-        success: 'border-transparent bg-success/15 text-success',
+        success:
+          'border-transparent bg-success/10 text-success ring-1 ring-inset ring-success/25',
         warning:
-          'border-transparent bg-warning/20 text-warning-foreground dark:text-warning',
-        info: 'border-transparent bg-info/15 text-info',
-        danger: 'border-transparent bg-destructive/15 text-destructive',
-        muted: 'border-transparent bg-muted text-muted-foreground',
+          'border-transparent bg-warning/15 text-warning-foreground ring-1 ring-inset ring-warning/35 dark:text-warning',
+        info: 'border-transparent bg-info/10 text-info ring-1 ring-inset ring-info/25',
+        danger:
+          'border-transparent bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/25',
+        muted:
+          'border-transparent bg-muted text-muted-foreground ring-1 ring-inset ring-border',
       },
     },
     defaultVariants: {

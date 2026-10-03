@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { CalendarIcon, CalendarRange, RotateCcw } from 'lucide-react'
+import { CalendarIcon, RotateCcw } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 import {
   formatDay,
@@ -90,10 +90,18 @@ export function DateRangePicker({
         : t('pickADate')
       : t(presetKeys[preset])
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+  const shortDay = new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'short',
   })
+  const span =
+    dayWindow && preset !== 'all'
+      ? dayWindow.to.getTime() - dayWindow.from.getTime() <= 86_400_000
+        ? `${format(dayWindow.from, 'HH:mm')} → ${format(dayWindow.to, 'HH:mm')}`
+        : `${shortDay.format(dayWindow.from)} → ${shortDay.format(
+            new Date(dayWindow.to.getTime() - 1)
+          )}`
+      : null
 
   const pickPreset = (next: RangeKey) => {
     onChange({
@@ -136,7 +144,13 @@ export function DateRangePicker({
             )}
           >
             <CalendarIcon className='text-muted-foreground' />
-            <span className='truncate'>{label}</span>
+            <span className='truncate font-medium'>{label}</span>
+            {/* The window itself, once, where the range is chosen: not again as a line beside it */}
+            {span && preset !== 'custom' && (
+              <span className='text-muted-foreground truncate tabular-nums'>
+                · {span}
+              </span>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent align='start' className='flex w-auto p-0'>
@@ -213,13 +227,6 @@ export function DateRangePicker({
       </Popover>
 
       {children}
-
-      {dayWindow && preset !== 'all' && (
-        <span className='text-muted-foreground ms-auto flex items-center gap-1.5 text-xs tabular-nums'>
-          <CalendarRange className='h-3.5 w-3.5' />
-          {dateTime.format(dayWindow.from)} – {dateTime.format(dayWindow.to)}
-        </span>
-      )}
     </div>
   )
 }
