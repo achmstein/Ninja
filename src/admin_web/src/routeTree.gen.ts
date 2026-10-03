@@ -60,6 +60,7 @@ import { Route as AuthenticatedFinancePartnersRouteImport } from './routes/_auth
 import { Route as AuthenticatedFinanceExpensesRouteImport } from './routes/_authenticated/finance/expenses'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedInventoryHistoryIndexRouteImport } from './routes/_authenticated/inventory/history/index'
+import { Route as AuthenticatedPayrollEmployeeEmployeeIdRouteImport } from './routes/_authenticated/payroll/employee.$employeeId'
 import { Route as AuthenticatedInventoryHistoryTransfersRouteImport } from './routes/_authenticated/inventory/history/transfers'
 import { Route as AuthenticatedInventoryHistoryPurchasesRouteImport } from './routes/_authenticated/inventory/history/purchases'
 import { Route as AuthenticatedInventoryHistoryCountsRouteImport } from './routes/_authenticated/inventory/history/counts'
@@ -351,6 +352,12 @@ const AuthenticatedInventoryHistoryIndexRoute =
     path: '/inventory/history/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPayrollEmployeeEmployeeIdRoute =
+  AuthenticatedPayrollEmployeeEmployeeIdRouteImport.update({
+    id: '/payroll/employee/$employeeId',
+    path: '/payroll/employee/$employeeId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInventoryHistoryTransfersRoute =
   AuthenticatedInventoryHistoryTransfersRouteImport.update({
     id: '/inventory/history/transfers',
@@ -423,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
   '/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/payroll/employee/$employeeId': typeof AuthenticatedPayrollEmployeeEmployeeIdRoute
   '/inventory/history': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRoutesByTo {
@@ -478,6 +486,7 @@ export interface FileRoutesByTo {
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
   '/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/payroll/employee/$employeeId': typeof AuthenticatedPayrollEmployeeEmployeeIdRoute
   '/inventory/history': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRoutesById {
@@ -535,6 +544,7 @@ export interface FileRoutesById {
   '/_authenticated/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/_authenticated/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
   '/_authenticated/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/_authenticated/payroll/employee/$employeeId': typeof AuthenticatedPayrollEmployeeEmployeeIdRoute
   '/_authenticated/inventory/history/': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRouteTypes {
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
     | '/inventory/history/transfers'
+    | '/payroll/employee/$employeeId'
     | '/inventory/history'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
     | '/inventory/history/transfers'
+    | '/payroll/employee/$employeeId'
     | '/inventory/history'
   id:
     | '__root__'
@@ -703,6 +715,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inventory/history/counts'
     | '/_authenticated/inventory/history/purchases'
     | '/_authenticated/inventory/history/transfers'
+    | '/_authenticated/payroll/employee/$employeeId'
     | '/_authenticated/inventory/history/'
   fileRoutesById: FileRoutesById
 }
@@ -1077,6 +1090,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInventoryHistoryIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payroll/employee/$employeeId': {
+      id: '/_authenticated/payroll/employee/$employeeId'
+      path: '/payroll/employee/$employeeId'
+      fullPath: '/payroll/employee/$employeeId'
+      preLoaderRoute: typeof AuthenticatedPayrollEmployeeEmployeeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inventory/history/transfers': {
       id: '/_authenticated/inventory/history/transfers'
       path: '/inventory/history/transfers'
@@ -1146,6 +1166,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventoryHistoryCountsRoute: typeof AuthenticatedInventoryHistoryCountsRoute
   AuthenticatedInventoryHistoryPurchasesRoute: typeof AuthenticatedInventoryHistoryPurchasesRoute
   AuthenticatedInventoryHistoryTransfersRoute: typeof AuthenticatedInventoryHistoryTransfersRoute
+  AuthenticatedPayrollEmployeeEmployeeIdRoute: typeof AuthenticatedPayrollEmployeeEmployeeIdRoute
   AuthenticatedInventoryHistoryIndexRoute: typeof AuthenticatedInventoryHistoryIndexRoute
 }
 
@@ -1197,6 +1218,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedInventoryHistoryPurchasesRoute,
   AuthenticatedInventoryHistoryTransfersRoute:
     AuthenticatedInventoryHistoryTransfersRoute,
+  AuthenticatedPayrollEmployeeEmployeeIdRoute:
+    AuthenticatedPayrollEmployeeEmployeeIdRoute,
   AuthenticatedInventoryHistoryIndexRoute:
     AuthenticatedInventoryHistoryIndexRoute,
 }

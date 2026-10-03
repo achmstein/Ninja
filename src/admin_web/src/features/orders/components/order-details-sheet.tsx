@@ -4,8 +4,9 @@ import { Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusChip } from '@/components/status-chip'
+import { formatWhen } from '@/lib/when'
 import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
@@ -78,15 +79,46 @@ export function OrderDetailsSheet({
               {t('orderNumber', { id: String(orderId ?? '') })}
             </SheetTitle>
             {status && (
-              <Badge variant={status.variant} className='gap-1'>
-                {StatusIcon && <StatusIcon className='h-3 w-3' />}
+              <StatusChip tone={status.variant} icon={StatusIcon}>
                 {t(status.key)}
-              </Badge>
+              </StatusChip>
             )}
           </div>
           <SheetDescription>
-            {order?.date ? new Date(order.date).toLocaleString(locale) : ' '}
+            {order?.date ? formatWhen(order.date, 'dateTime', locale, t) : ' '}
           </SheetDescription>
+          {/* What the order comes to, at a glance before its lines */}
+          {order && (
+            <div className='bg-muted/40 mt-2 grid grid-cols-3 divide-x overflow-hidden rounded-lg text-center rtl:divide-x-reverse'>
+              <div className='px-2 py-2'>
+                <div className='text-muted-foreground text-[11px]'>
+                  {t('total')}
+                </div>
+                <div className='font-semibold tabular-nums'>
+                  {formatEgp(order.total)}
+                </div>
+              </div>
+              <div className='px-2 py-2'>
+                <div className='text-muted-foreground text-[11px]'>
+                  {t('items')}
+                </div>
+                <div className='font-semibold tabular-nums'>
+                  {(order.orderItems ?? []).reduce(
+                    (sum, item) => sum + Number(item.units ?? 0),
+                    0
+                  )}
+                </div>
+              </div>
+              <div className='px-2 py-2'>
+                <div className='text-muted-foreground text-[11px]'>
+                  {t('placed')}
+                </div>
+                <div className='font-semibold tabular-nums'>
+                  {formatWhen(order.date, 'relative', locale, t)}
+                </div>
+              </div>
+            </div>
+          )}
         </SheetHeader>
 
         <SheetBody>

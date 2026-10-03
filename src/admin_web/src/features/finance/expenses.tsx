@@ -1,20 +1,14 @@
 import { Fragment, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import {
-  Download,
-  Plus,
-  Receipt,
-  Repeat,
-  Settings2,
-  Undo2,
-} from 'lucide-react'
+import { Download, Plus, Receipt, Repeat, Settings2, Undo2 } from 'lucide-react'
 import { type ExpenseView } from '@/api/finance'
 import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { dayHeading } from '@/lib/when'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,14 +18,13 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/page-header'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { MonthSwitcher } from '@/components/month-switcher'
+import { PageHeader } from '@/components/page-header'
 import { RankedList } from '@/components/ranked-list'
 import { RowActions } from '@/components/row-actions'
 import { Stat } from '@/components/stat-strip'
-import { dayHeading } from '@/lib/when'
 import { monthRange } from '@/features/payroll/format'
 import { CategoriesDialog } from './components/categories-dialog'
 import { ExpenseDialog } from './components/expense-dialog'
@@ -68,6 +61,17 @@ export function Expenses() {
   })
 
   const expenses = useQuery(expensesQueryOptions(range.from, range.to))
+  // The month before, to say whether spending went up or down
+  const before = monthRange(
+    month === 1 ? year - 1 : year,
+    month === 1 ? 11 : month - 2
+  )
+  const lastMonth = useQuery(expensesQueryOptions(before.from, before.to))
+  const lastTotal = toNumber(lastMonth.data?.total)
+  const change =
+    lastMonth.data && lastTotal > 0
+      ? (toNumber(expenses.data?.total) - lastTotal) / lastTotal
+      : null
   const [adding, setAdding] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [recurringOpen, setRecurringOpen] = useState(false)
@@ -172,6 +176,20 @@ export function Expenses() {
                 size='hero'
                 label={t('expensesTotal')}
                 value={formatEgp(expenses.data!.total)}
+                hint={
+                  change != null ? (
+                    // Spending: down is the good direction
+                    <span
+                      className={cn(
+                        'font-medium tabular-nums',
+                        change > 0.005 && 'text-destructive',
+                        change < -0.005 && 'text-success'
+                      )}
+                    >
+                      {`${change > 0 ? '+' : ''}${Math.round(change * 100)}% ${t('vsLastMonth')}`}
+                    </span>
+                  ) : undefined
+                }
               />
               <RankedList
                 items={[...expenses.data!.byCategory]
@@ -231,7 +249,9 @@ export function Expenses() {
                             )}
                             {toNumber(e.source) ===
                               FINANCE_SOURCE.recurring && (
-                              <Badge variant='muted'>{t('recurringBadge')}</Badge>
+                              <Badge variant='muted'>
+                                {t('recurringBadge')}
+                              </Badge>
                             )}
                             {voided && (
                               <span className='text-destructive w-full'>

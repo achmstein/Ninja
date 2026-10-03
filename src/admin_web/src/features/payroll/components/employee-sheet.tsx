@@ -116,7 +116,7 @@ export function EmployeeSheet({
 // ---------------------------------------------------------------------------
 // Who they are (and, for a new hire, what they start on)
 
-function EmployeeForm({
+export function EmployeeForm({
   employee,
   onSaved,
 }: {
@@ -374,7 +374,7 @@ function EmployeeForm({
 // ---------------------------------------------------------------------------
 // How they are paid: the terms in force, the history, a dated change
 
-function PayTermsSection({ employee }: { employee: EmployeeView }) {
+export function PayTermsSection({ employee }: { employee: EmployeeView }) {
   const t = useT()
   const auth = useAuth()
   // Changing pay is the owner's call; a manager sees it, not the button
@@ -508,7 +508,7 @@ function PayTermsSection({ employee }: { employee: EmployeeView }) {
 // ---------------------------------------------------------------------------
 // Still here, or left on a date
 
-function EmploymentSection({ employee }: { employee: EmployeeView }) {
+export function EmploymentSection({ employee }: { employee: EmployeeView }) {
   const t = useT()
   const { leave, rehire, isPending } = usePayrollActions()
   const [leaveOpen, setLeaveOpen] = useState(false)

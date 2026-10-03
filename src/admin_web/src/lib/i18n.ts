@@ -533,6 +533,7 @@ const webExtras = {
   receiptPricingHint: { en: "VAT and service charge on every bill.", ar: "ضريبة القيمة المضافة وخدمة على كل فاتورة." },
   kitchenStationsHint: { en: "Where each dish is prepared, and its printer.", ar: "أين يُحضَّر كل صنف وطابعته." },
   branchDetailsHint: { en: "Name, address, phone, tax number and the day's start.", ar: "الاسم والعنوان والهاتف والرقم الضريبي وبداية اليوم." },
+  vsLastMonth: { en: "vs last month", ar: "عن الشهر الماضي" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)

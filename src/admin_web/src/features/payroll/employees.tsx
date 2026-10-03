@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { KeyRound, UserPlus, Users } from 'lucide-react'
 import { type EmployeeView } from '@/api/payroll'
@@ -70,6 +70,7 @@ export function Employees() {
   const navigate = route.useNavigate()
   const search = route.useSearch()
   const showInactive = search.inactive === true
+  const goTo = useNavigate()
 
   const employees = useQuery(employeesQueryOptions(showInactive))
 
@@ -190,7 +191,12 @@ export function Employees() {
           <DataTable
             table={table}
             isLoading={employees.isLoading}
-            onRowClick={(row) => open(toNumber(row.original.id))}
+            onRowClick={(row) =>
+              goTo({
+                to: '/payroll/employee/$employeeId',
+                params: { employeeId: String(toNumber(row.original.id)) },
+              })
+            }
             mobileRow={({ original: e }) => (
               <ListRow
                 className={cn(!e.isActive && 'opacity-60')}

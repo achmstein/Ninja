@@ -15,7 +15,7 @@ function shapeOf(width: number, height: number): Shape {
 
 /**
  * The business's logo in one slot of fixed height, whatever its shape, never
- * cropped or stretched: a mark (about square) sits on a tile with the name
+ * cropped or stretched: a mark (about square) stands as it is, the name
  * beside it; a wordmark (wide) stands alone, being the name, up to a width;
  * an emblem (tall) is held by the height with the name beside it. The shape
  * is read from the logo itself once it loads. No logo: the name's first
@@ -74,9 +74,8 @@ export function LogoSlot({
   return (
     <span className={cn('flex min-w-0 items-center gap-2', className)}>
       {shape === 'mark' ? (
-        <span className='bg-card grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg p-0.5 shadow-xs'>
-          {img}
-        </span>
+        // The logo on its own: no tile, no frame around it
+        <span className='grid size-8 shrink-0 place-items-center'>{img}</span>
       ) : (
         img
       )}
