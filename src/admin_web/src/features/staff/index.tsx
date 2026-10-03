@@ -196,7 +196,7 @@ export function StaffManagement() {
           actions={
             isOwner && (
               <Button size='sm' onClick={() => setAddOpen(true)}>
-                <UserPlus className='me-2 h-4 w-4' />
+                <UserPlus />
                 {t('addStaff')}
               </Button>
             )

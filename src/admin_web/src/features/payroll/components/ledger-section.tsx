@@ -91,7 +91,7 @@ export function LedgerSection({ employee }: { employee: EmployeeView }) {
             size='sm'
             onClick={() => setAdding(true)}
           >
-            <Plus className='me-2 h-4 w-4' />
+            <Plus />
             {t('addLedgerEntry')}
           </Button>
         )}
@@ -165,7 +165,7 @@ export function LedgerSection({ employee }: { employee: EmployeeView }) {
               size='sm'
               disabled={isPending || !(parseFloat(amount) > 0)}
             >
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('post')}
             </Button>
           </div>

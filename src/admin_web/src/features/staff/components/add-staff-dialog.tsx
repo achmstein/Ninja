@@ -224,7 +224,7 @@ export function AddStaffDialog({
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={register.isPending}>
-              {register.isPending && <Spinner className='me-2' />}
+              {register.isPending && <Spinner />}
               {t('create')}
             </Button>
           </DialogFooter>

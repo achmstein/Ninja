@@ -119,7 +119,7 @@ export function RecurringDialog({
               className='text-muted-foreground h-8 px-2'
               onClick={() => setEditing('new')}
             >
-              <Plus className='me-1 h-3.5 w-3.5' />
+              <Plus className='size-3.5' />
               {t('addRecurringBill')}
             </Button>
           </div>
@@ -300,7 +300,7 @@ function RecurringForm({
             {t('cancel')}
           </Button>
           <Button type='submit' size='sm' disabled={!canSubmit || isPending}>
-            {isPending && <Spinner className='me-2' />}
+            {isPending && <Spinner />}
             {t('save')}
           </Button>
         </div>

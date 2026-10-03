@@ -180,9 +180,9 @@ export function Payslips() {
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
               <Button size='sm' onClick={() => generate()} disabled={isPending}>
                 {isPending ? (
-                  <Spinner className='me-2' />
+                  <Spinner />
                 ) : (
-                  <FileText className='me-2 h-4 w-4' />
+                  <FileText />
                 )}
                 {rows.length > 0 ? t('refreshPayslips') : t('generatePayslips')}
               </Button>
@@ -246,7 +246,7 @@ export function Payslips() {
             title={t('noPayslips')}
             action={
               <Button onClick={() => generate()} disabled={isPending}>
-                <FileText className='me-2 h-4 w-4' />
+                <FileText />
                 {t('generatePayslips')}
               </Button>
             }
@@ -338,7 +338,7 @@ export function Payslips() {
                         onClick={() => setPaying(p)}
                         disabled={isPending}
                       >
-                        <Banknote className='me-2 h-4 w-4' />
+                        <Banknote />
                         {t('pay')}
                       </Button>
                       <RowActions
@@ -569,7 +569,7 @@ function PayForm({
           type='submit'
           disabled={isPending || !(parseFloat(amount) >= 0)}
         >
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('confirmPayment')}
         </Button>
       </DialogFooter>

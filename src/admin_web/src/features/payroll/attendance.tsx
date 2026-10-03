@@ -191,7 +191,7 @@ export function Attendance() {
         actions={
           rows.length > 0 && todayInMonth ? (
             <Button size='sm' variant='outline' onClick={everyoneToday}>
-              <CalendarCheck className='me-2 h-4 w-4' />
+              <CalendarCheck />
               {t('everyonePresentToday')}
             </Button>
           ) : null

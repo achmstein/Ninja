@@ -145,7 +145,7 @@ function CustomerHub({
             <ArrowLeft className='rtl:rotate-180' />
           </Button>
           <Avatar className='size-10'>
-            <AvatarFallback className='bg-primary/10 text-primary'>
+            <AvatarFallback className='bg-muted text-muted-foreground'>
               {getCustomerInitials(customer)}
             </AvatarFallback>
           </Avatar>
@@ -288,9 +288,9 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             onClick={() => enrol.mutate(customer.id)}
           >
             {enrol.isPending ? (
-              <Spinner className='me-2' />
+              <Spinner />
             ) : (
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
             )}
             {t('enrolInLoyalty')}
           </Button>
@@ -314,7 +314,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
       actions={
         <>
           <Button size='sm' onClick={() => setEarnOpen(true)}>
-            <Plus className='me-1.5 h-4 w-4' />
+            <Plus />
             {t('addPoints')}
           </Button>
           <Button
@@ -322,7 +322,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             variant='outline'
             onClick={() => setAdjustOpen(true)}
           >
-            <RefreshCw className='me-1.5 h-4 w-4' />
+            <RefreshCw />
             {t('adjust')}
           </Button>
         </>
@@ -451,7 +451,7 @@ function TabSection({ customer }: { customer: Customer }) {
             variant='outline'
             onClick={() => setChargeOpen(true)}
           >
-            <Plus className='me-1.5 h-4 w-4' />
+            <Plus />
             {t('addCharge')}
           </Button>
           {account.data && (

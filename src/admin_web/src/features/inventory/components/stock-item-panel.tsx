@@ -139,9 +139,9 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
           {!level.isActive && (
             <Button onClick={() => setActive(true)} disabled={isPending}>
               {isPending ? (
-                <Spinner className='me-2' />
+                <Spinner />
               ) : (
-                <ArchiveRestore className='me-2 h-4 w-4' />
+                <ArchiveRestore />
               )}
               {t('restoreItem')}
             </Button>
@@ -365,7 +365,7 @@ function QuickFix({ level }: { level: StockLevelView }) {
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={!valid || isPending}>
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('postFix')}
             </Button>
           </div>

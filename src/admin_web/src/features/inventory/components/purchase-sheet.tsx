@@ -71,7 +71,7 @@ export function PurchaseSheet({
             className='print:hidden'
             onClick={() => window.print()}
           >
-            <Printer className='me-2 h-4 w-4' />
+            <Printer />
             {t('print')}
           </Button>
         </SheetHeader>

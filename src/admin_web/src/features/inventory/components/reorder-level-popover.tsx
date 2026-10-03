@@ -100,7 +100,7 @@ export function ReorderLevelPopover({ level }: { level: StockLevelView }) {
               </Button>
             )}
             <Button type='submit' size='sm' disabled={isPending}>
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('save')}
             </Button>
           </div>

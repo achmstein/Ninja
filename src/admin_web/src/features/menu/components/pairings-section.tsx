@@ -190,7 +190,7 @@ function PairingsForm({
             })
           }
         >
-          {save.isPending && <Spinner className='me-2' />}
+          {save.isPending && <Spinner />}
           {t('save')}
         </Button>
       </div>

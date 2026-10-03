@@ -312,7 +312,7 @@ export function ReceiptReviewSheet({
             onClick={confirm}
             disabled={creating != null || included.length === 0 || !allReady}
           >
-            {creating && <Spinner className='me-2' />}
+            {creating && <Spinner />}
             {creating
               ? t('creatingItems', creating)
               : t('addScannedLines', { count: included.length })}

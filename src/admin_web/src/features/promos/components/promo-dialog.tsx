@@ -267,7 +267,7 @@ function PromoForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isSaving}>
-          {isSaving && <Spinner className='me-2' />}
+          {isSaving && <Spinner />}
           {t('save')}
         </Button>
       </DialogFooter>

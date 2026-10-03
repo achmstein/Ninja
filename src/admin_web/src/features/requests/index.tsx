@@ -279,18 +279,18 @@ function RequestCard({
             onClick={onAcknowledge}
           >
             {acknowledging ? (
-              <Spinner className='me-1' />
+              <Spinner />
             ) : (
-              <Check className='me-1 h-4 w-4' />
+              <Check />
             )}
             {t('onIt')}
           </Button>
         )}
         <Button className='flex-1' disabled={acting} onClick={onComplete}>
           {completing ? (
-            <Spinner className='me-1' />
+            <Spinner />
           ) : (
-            <CheckCircle2 className='me-1 h-4 w-4' />
+            <CheckCircle2 />
           )}
           {t('done')}
         </Button>

@@ -282,7 +282,7 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               size='sm'
               onClick={() => fileInput.current?.click()}
             >
-              <Paperclip className='me-2 h-4 w-4' />
+              <Paperclip />
               {receipt ? t('replaceReceipt') : t('attachReceipt')}
             </Button>
             {receipt && billScan.available && (
@@ -296,9 +296,9 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
                 onClick={readBill}
               >
                 {billScan.isScanning ? (
-                  <Spinner className='me-2' />
+                  <Spinner />
                 ) : (
-                  <Sparkles className='me-2 h-4 w-4' />
+                  <Sparkles />
                 )}
                 {billScan.isScanning ? t('readingBill') : t('readBill')}
               </Button>
@@ -343,7 +343,7 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={!canSubmit || isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('save')}
         </Button>
       </DialogFooter>

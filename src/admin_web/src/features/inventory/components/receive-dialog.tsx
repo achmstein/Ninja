@@ -200,7 +200,7 @@ function ReceiveForm({
             size='sm'
             onClick={() => setLines((prev) => [...prev, newLine()])}
           >
-            <Plus className='me-1 h-4 w-4' />
+            <Plus />
             {t('addLine')}
           </Button>
           {scan.available && (
@@ -213,9 +213,9 @@ function ReceiveForm({
                 onClick={() => scanInputRef.current?.click()}
               >
                 {scan.isScanning ? (
-                  <Spinner className='me-1' />
+                  <Spinner />
                 ) : (
-                  <ScanLine className='me-1 h-4 w-4' />
+                  <ScanLine />
                 )}
                 {scan.isScanning ? t('readingReceipt') : t('scanReceipt')}
               </Button>
@@ -258,7 +258,7 @@ function ReceiveForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('receiveStock')}
         </Button>
       </DialogFooter>

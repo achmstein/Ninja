@@ -307,7 +307,7 @@ export function MenuReviewSheet({
                                     })
                                   }
                                 >
-                                  <X className='me-1 h-3.5 w-3.5' />
+                                  <X className='size-3.5' />
                                   {t('removeChoice')}
                                 </Button>
                               </div>
@@ -383,7 +383,7 @@ export function MenuReviewSheet({
             {t('cancel')}
           </Button>
           <Button type='button' disabled={!!creating} onClick={confirm}>
-            {creating && <Spinner className='me-2' />}
+            {creating && <Spinner />}
             {t('createScannedItems', { count })}
           </Button>
         </SheetFooter>

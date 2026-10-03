@@ -73,7 +73,6 @@ import {
   useStockRuleBadges,
 } from '@/features/inventory/stock-rules'
 import { CategoryDialog } from './components/category-dialog'
-import { DeleteConfirmDialog } from './components/delete-confirm-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
 import { MenuReviewSheet } from './components/menu-review-sheet'
 import { TrackItemsSheet } from './components/track-items-sheet'
@@ -316,12 +315,12 @@ export function MenuManagement() {
             {/* A scan takes a while: it says so where it was started */}
             {scan.isScanning && (
               <Button variant='outline' disabled>
-                <Spinner className='me-2' />
+                <Spinner />
                 {t('readingMenu')}
               </Button>
             )}
             <Button onClick={() => newItem()}>
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addItem')}
             </Button>
             {/* One button for the page; the rest is behind More */}
@@ -469,9 +468,9 @@ export function MenuManagement() {
                     onClick={() => scanInputRef.current?.click()}
                   >
                     {scan.isScanning ? (
-                      <Spinner className='me-2' />
+                      <Spinner />
                     ) : (
-                      <ScanLine className='me-2 h-4 w-4' />
+                      <ScanLine />
                     )}
                     {scan.isScanning ? t('readingMenu') : t('scanMenuPages')}
                   </Button>
@@ -484,7 +483,7 @@ export function MenuManagement() {
                       : setCategoryDialog({ category: null })
                   }
                 >
-                  <Plus className='me-2 h-4 w-4' />
+                  <Plus />
                   {scan.available ? t('orBuildByHand') : t('addItem')}
                 </Button>
               </div>
@@ -500,7 +499,7 @@ export function MenuManagement() {
                   variant='outline'
                   onClick={() => setCategoryDialog({ category: null })}
                 >
-                  <Tag className='me-2 h-4 w-4' />
+                  <Tag />
                   {t('addCategory')}
                 </Button>
               )
@@ -556,7 +555,7 @@ export function MenuManagement() {
                                   size='sm'
                                   onClick={() => newItem(categoryId)}
                                 >
-                                  <Plus className='me-1.5 h-4 w-4' />
+                                  <Plus />
                                   {t('addItem')}
                                 </Button>
                                 <DropdownMenu>
@@ -677,17 +676,20 @@ export function MenuManagement() {
         />
       )}
 
-      <DeleteConfirmDialog
+      <ConfirmDialog
         open={!!deleteItem}
         onOpenChange={() => setDeleteItem(null)}
-        onConfirm={() =>
+        title={t('deleteItemTitle')}
+        desc={`${t('deleteItemConfirmation', { name: localized(deleteItem?.name) })} ${t('cannotBeUndone')}`}
+        destructive
+        confirmText={t('delete')}
+        handleConfirm={() =>
           deleteItem &&
           deleteItemMut.mutate({
             path: { id: Number(deleteItem.id) },
             query: { 'api-version': API_VERSION },
           })
         }
-        itemName={localized(deleteItem?.name)}
         isLoading={deleteItemMut.isPending}
       />
 
@@ -705,7 +707,7 @@ export function MenuManagement() {
           if (!open) setDeleteCategory(null)
         }}
         destructive
-        title={t('deleteCategory')}
+        title={t('deleteCategoryTitle')}
         desc={localized(deleteCategory?.name)}
         confirmText={t('delete')}
         isLoading={deleteCategoryMut.isPending}

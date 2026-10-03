@@ -86,7 +86,7 @@ export function Suppliers() {
           }
           actions={
             <Button size='sm' onClick={() => setAdding(true)}>
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addSupplier')}
             </Button>
           }
@@ -118,7 +118,7 @@ export function Suppliers() {
             title={t('noSuppliers')}
             action={
               <Button onClick={() => setAdding(true)}>
-                <Plus className='me-2 h-4 w-4' />
+                <Plus />
                 {t('addSupplier')}
               </Button>
             }
@@ -301,7 +301,7 @@ function SupplierForm({
           <span />
         )}
         <Button type='submit' disabled={name.trim() === '' || isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {supplier ? t('save') : t('addSupplier')}
         </Button>
       </div>
@@ -377,7 +377,7 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
               size='sm'
               onClick={() => setAdding(true)}
             >
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addLedgerEntry')}
             </Button>
           </div>
@@ -455,7 +455,7 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
               size='sm'
               disabled={isPending || !(parseFloat(amount) > 0)}
             >
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('post')}
             </Button>
           </div>

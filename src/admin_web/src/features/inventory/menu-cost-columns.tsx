@@ -82,7 +82,7 @@ export function getMenuCostColumns({
             className='h-auto p-0 text-xs'
             onClick={() => onEdit(row.original.catalogItemId)}
           >
-            <CookingPot className='me-1 size-3' />
+            <CookingPot className='size-3' />
             {t('editRecipe')}
           </Button>
         </div>

@@ -450,7 +450,7 @@ export function ItemDetailsForm({
                 }
                 onClick={() => setStudioOpen(true)}
               >
-                <Sparkles className='me-1.5 h-3.5 w-3.5' />
+                <Sparkles className='size-3.5' />
                 {t('studioOpen')}
               </Button>
             )}
@@ -468,7 +468,7 @@ export function ItemDetailsForm({
                   )
                 }
               >
-                <X className='me-1 h-3.5 w-3.5' />
+                <X className='size-3.5' />
                 {t('removePhoto')}
               </Button>
             )}
@@ -539,9 +539,9 @@ export function ItemDetailsForm({
               onClick={fillWithAssistant}
             >
               {filling ? (
-                <Spinner className='me-2 size-4' />
+                <Spinner />
               ) : (
-                <Sparkles className='me-2 size-4' />
+                <Sparkles />
               )}
               {t('assistFillIn')}
             </Button>
@@ -769,7 +769,7 @@ export function ItemDetailsForm({
             </Button>
           )}
           <Button type='submit' disabled={isSaving}>
-            {isSaving && <Spinner className='me-2' />}
+            {isSaving && <Spinner />}
             {isEditing ? t('save') : t('addItem')}
           </Button>
         </div>

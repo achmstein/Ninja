@@ -107,7 +107,7 @@ function CategoryRow({ category }: { category: ExpenseCategoryView }) {
             />
           </div>
           <Button type='submit' size='sm' disabled={isPending}>
-            {isPending && <Spinner className='me-2' />}
+            {isPending && <Spinner />}
             {t('save')}
           </Button>
           <Button
@@ -158,7 +158,7 @@ function NewCategoryRow({ order }: { order: number }) {
         className='text-muted-foreground mt-2 h-8 px-2'
         onClick={() => setAdding(true)}
       >
-        <Plus className='me-1 h-3.5 w-3.5' />
+        <Plus className='size-3.5' />
         {t('addExpenseCategory')}
       </Button>
     )
@@ -191,7 +191,7 @@ function NewCategoryRow({ order }: { order: number }) {
         size='sm'
         disabled={isPending || (!name.en.trim() && !name.ar.trim())}
       >
-        {isPending && <Spinner className='me-2' />}
+        {isPending && <Spinner />}
         {t('save')}
       </Button>
       <Button

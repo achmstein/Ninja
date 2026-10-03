@@ -324,7 +324,7 @@ export function PlaceDetailPanel({
                         setPickerFor(stay.customerId ? 'member' : 'assign')
                       }
                     >
-                      <UserPlus className='me-1 h-4 w-4' />
+                      <UserPlus />
                       {t(stay.customerId ? 'addCustomer' : 'assignCustomer')}
                     </Button>
                   </>
@@ -363,7 +363,7 @@ export function PlaceDetailPanel({
                     disabled={actions.isBusy}
                     onClick={() => setConfirmCancel(true)}
                   >
-                    <X className='me-1 h-4 w-4' />
+                    <X />
                     {t('cancelTime')}
                   </Button>
                   <Button
@@ -371,7 +371,7 @@ export function PlaceDetailPanel({
                     disabled={actions.isBusy}
                     onClick={() => setConfirmEnd(true)}
                   >
-                    <Square className='me-1 h-4 w-4' />
+                    <Square />
                     {t('end')}
                   </Button>
                 </div>
@@ -427,7 +427,7 @@ export function PlaceDetailPanel({
                     disabled={actions.isBusy}
                     onClick={() => setPickerFor('assign')}
                   >
-                    <UserPlus className='me-1 h-4 w-4' />
+                    <UserPlus />
                     {t('assignCustomer')}
                   </Button>
                 )}
@@ -456,7 +456,7 @@ export function PlaceDetailPanel({
                     disabled={actions.isBusy}
                     onClick={() => setConfirmCancel(true)}
                   >
-                    <X className='me-1 h-4 w-4' />
+                    <X />
                     {t('cancel')}
                   </Button>
                   {timed && (
@@ -467,7 +467,7 @@ export function PlaceDetailPanel({
                       disabled={actions.isBusy}
                       onClick={confirmHold}
                     >
-                      <CheckCircle2 className='me-1 h-4 w-4' />
+                      <CheckCircle2 />
                       {t('confirm')}
                     </Button>
                   )}
@@ -476,7 +476,7 @@ export function PlaceDetailPanel({
                       {timed ? (
                         <Play className='me-1 h-4 w-4 rtl:rotate-180' />
                       ) : (
-                        <CheckCircle2 className='me-1 h-4 w-4' />
+                        <CheckCircle2 />
                       )}
                       {t(timed ? 'start' : 'seatParty')}
                     </Button>
@@ -508,7 +508,7 @@ export function PlaceDetailPanel({
                 <div className='mt-2 flex gap-2'>
                   {features.reservations && (
                     <Button variant='outline' onClick={onHold}>
-                      <CalendarClock className='me-1 h-4 w-4' />
+                      <CalendarClock />
                       {t('hold')}
                     </Button>
                   )}

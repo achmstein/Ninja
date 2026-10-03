@@ -154,9 +154,9 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       onClick={askAssistant}
     >
       {propose.isPending ? (
-        <Spinner className='me-2' />
+        <Spinner />
       ) : (
-        <Sparkles className='me-2 h-4 w-4' />
+        <Sparkles />
       )}
       {t('proposeRecipe')}
     </Button>
@@ -226,14 +226,14 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
               }
             >
               {isPending ? (
-                <Spinner className='me-2' />
+                <Spinner />
               ) : (
-                <Package className='me-2 h-4 w-4' />
+                <Package />
               )}
               {t('sellAsUnit')}
             </Button>
             <Button type='button' onClick={() => setEditing(true)}>
-              <CookingPot className='me-2 h-4 w-4' />
+              <CookingPot />
               {t('usesIngredients')}
             </Button>
             {proposeButton}
@@ -271,7 +271,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
         </h3>
         <div className='flex items-center gap-2'>
           <Button type='button' size='sm' onClick={() => setEditing(true)}>
-            <CookingPot className='me-2 h-4 w-4' />
+            <CookingPot />
             {unitLine ? t('usesIngredientsInstead') : t('editRecipe')}
           </Button>
           <DropdownMenu>
@@ -407,7 +407,7 @@ function RecipeEditorForm({
           {t('cancel')}
         </Button>
         <Button type='submit' size='sm' disabled={isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('save')}
         </Button>
       </div>

@@ -201,7 +201,7 @@ function TransferForm({
           size='sm'
           onClick={() => setLines((prev) => [...prev, newLine()])}
         >
-          <Plus className='me-1 h-4 w-4' />
+          <Plus />
           {t('addLine')}
         </Button>
       </div>
@@ -215,7 +215,7 @@ function TransferForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isPending || destinations.length === 0}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('transferStock')}
         </Button>
       </DialogFooter>

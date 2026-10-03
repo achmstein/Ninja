@@ -270,7 +270,7 @@ function BranchForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isSaving}>
-          {isSaving && <Spinner className='me-2' />}
+          {isSaving && <Spinner />}
           {isEditing ? t('update') : t('create')}
         </Button>
       </DialogFooter>

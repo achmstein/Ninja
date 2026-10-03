@@ -85,7 +85,7 @@ export function DataTableToolbar<TData extends RowData>({
             className='h-8 px-2 lg:px-3'
           >
             {t('clearFilters')}
-            <Cross2Icon className='ms-2 h-4 w-4' />
+            <Cross2Icon />
           </Button>
         )}
       </div>

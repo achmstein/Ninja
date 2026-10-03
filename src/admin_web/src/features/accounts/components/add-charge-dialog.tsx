@@ -109,7 +109,7 @@ export function AddChargeDialog({
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={addChargeMutation.isPending}>
-              {addChargeMutation.isPending && <Spinner className='me-2' />}
+              {addChargeMutation.isPending && <Spinner />}
               {t('addCharge')}
             </Button>
           </DialogFooter>

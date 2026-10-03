@@ -463,9 +463,9 @@ export function RecipeReviewSheet({
                 onClick={confirm}
               >
                 {saving ? (
-                  <Spinner className='me-2' />
+                  <Spinner />
                 ) : (
-                  <Check className='me-2 h-4 w-4' />
+                  <Check />
                 )}
                 {t('trackCount', { count: included.length })}
               </Button>

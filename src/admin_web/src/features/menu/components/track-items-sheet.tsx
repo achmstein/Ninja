@@ -322,9 +322,9 @@ export function TrackItemsSheet({
                 onClick={sellAsUnits}
               >
                 {busy && trackByUnit.isPending ? (
-                  <Spinner className='me-2' />
+                  <Spinner />
                 ) : (
-                  <Package className='me-2 h-4 w-4' />
+                  <Package />
                 )}
                 {t('sellAsUnits')}
               </Button>
@@ -335,9 +335,9 @@ export function TrackItemsSheet({
                   onClick={proposeRecipes}
                 >
                   {busy && propose.isPending ? (
-                    <Spinner className='me-2' />
+                    <Spinner />
                   ) : (
-                    <Sparkles className='me-2 h-4 w-4' />
+                    <Sparkles />
                   )}
                   {t('proposeRecipes')}
                 </Button>

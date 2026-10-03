@@ -366,6 +366,9 @@ const webExtras = {
   selectCustomer: { en: "Pick a customer", ar: "اختر عميلًا" },
   pointsIssued: { en: "Points issued", ar: "النقاط الممنوحة" },
   removePhoto: { en: "Remove photo", ar: "إزالة الصورة" },
+  replaceImage: { en: "Replace", ar: "استبدال" },
+  deleteItemTitle: { en: "Delete this item?", ar: "حذف هذا الصنف؟" },
+  deleteCategoryTitle: { en: "Delete this category?", ar: "حذف هذا القسم؟" },
   // The recipe cards: one verb, on the answer it applies to
   splitBy: { en: "Split by", ar: "قسّم حسب" },
   noIngredientsTitle: { en: "Nothing comes off the shelf yet", ar: "لسه مفيش حاجة بتتخصم من المخزن" },
@@ -1285,7 +1288,7 @@ const webExtras = {
   assistFillOtherLanguage: { en: "Fill in the other language", ar: "أكمل اللغة الأخرى" },
   assistNeedsOneSide: { en: "Type the name in one language first", ar: "اكتب الاسم بإحدى اللغتين أولًا" },
   // AI assistant: the one button on the item form
-  assistFillIn: { en: "Fill in with AI", ar: "أكمل بمساعد نينجا" },
+  assistFillIn: { en: "Fill in with AI", ar: "أكمل بالذكاء الاصطناعي" },
   assistNeedsName: { en: "Type the name first", ar: "اكتب الاسم أولًا" },
   assistNothingMissing: { en: "Nothing is missing", ar: "لا يوجد شيء ناقص" },
   assistProposedCustomizations: { en: "Proposed by the assistant", ar: "مقترح من مساعد نينجا" },
@@ -1348,7 +1351,7 @@ const webExtras = {
   // Recipe builder: one question per option group
   simpleEditor: { en: "Back to the simple editor", ar: "العودة إلى التحرير البسيط" },
   advancedEditor: { en: "Advanced editor", ar: "تحرير متقدم" },
-  proposeRecipe: { en: "Propose with AI", ar: "اقترح بمساعد نينجا" },
+  proposeRecipe: { en: "Propose with AI", ar: "اقترح بالذكاء الاصطناعي" },
   // Recipe editor: slots, overrides, size factors
   recipeSlotsHint: { en: "One row per thing a sale takes. Pick the choices a row depends on and say what each choice makes of it; an empty cell means the same as the default.", ar: "سطر لكل ما تستهلكه عملية البيع. اختر الاختيارات التي يعتمد عليها السطر وحدّد أثر كل اختيار عليه؛ الخانة الفارغة تعني القيمة الافتراضية نفسها." },
   nothingByDefault: { en: "Nothing unless chosen", ar: "لا شيء إلا إذا اختير" },

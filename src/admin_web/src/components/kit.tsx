@@ -8,14 +8,6 @@ import {
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
-import { useIsMobile } from '@/hooks/use-mobile'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SPRING } from '@/components/motion'
 
@@ -274,116 +266,6 @@ export function MoneyBar({
         ))}
       </div>
     </div>
-  )
-}
-
-/* ───────────── The sheet ───────────── */
-
-/**
- * Anything a page opens (an order, a bill, a dish, a person, a shift) in one
- * shape: a header with what it is, a line under it, its state and its key
- * figures; the sections; its actions pinned at the bottom in reach. From
- * the side on a desk, rising from the bottom on a phone.
- */
-export function EntitySheet({
-  open,
-  onOpenChange,
-  title,
-  subtitle,
-  status,
-  figures,
-  children,
-  actions,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: ReactNode
-  subtitle?: ReactNode
-  status?: ReactNode
-  figures?: { label: ReactNode; value: ReactNode; tone?: string }[]
-  children: ReactNode
-  actions?: ReactNode
-}) {
-  const isMobile = useIsMobile()
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side={isMobile ? 'bottom' : 'right'}
-        className={cn(
-          'flex flex-col gap-0 p-0 shadow-lg sm:max-w-md',
-          isMobile && 'max-h-[92dvh] rounded-t-2xl'
-        )}
-      >
-        {isMobile && (
-          <div className='bg-muted-foreground/30 mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full' />
-        )}
-        <SheetHeader className='border-border/60 gap-3 border-b p-5'>
-          <div className='flex items-start justify-between gap-3 pe-6'>
-            <div className='min-w-0'>
-              <SheetTitle className='text-lg tracking-tight'>
-                {title}
-              </SheetTitle>
-              {subtitle && (
-                <SheetDescription className='mt-0.5'>
-                  {subtitle}
-                </SheetDescription>
-              )}
-            </div>
-            {status}
-          </div>
-          {figures && figures.length > 0 && (
-            <div
-              className='bg-muted/40 grid divide-x overflow-hidden rounded-lg text-center rtl:divide-x-reverse'
-              style={{
-                gridTemplateColumns: `repeat(${figures.length}, minmax(0, 1fr))`,
-              }}
-            >
-              {figures.map((f, i) => (
-                <div key={i} className='px-2 py-2'>
-                  <div className='text-muted-foreground text-[11px]'>
-                    {f.label}
-                  </div>
-                  <div className={cn('font-semibold tabular-nums', f.tone)}>
-                    {f.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </SheetHeader>
-        <div className='flex-1 space-y-5 overflow-y-auto p-5'>{children}</div>
-        {actions && (
-          <div className='border-border/60 bg-muted/30 flex gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]'>
-            {actions}
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-/** A titled part of a sheet or a page: small spaced capitals over its content */
-export function Section({
-  title,
-  action,
-  children,
-  className,
-}: {
-  title: ReactNode
-  action?: ReactNode
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <section className={cn('grid gap-2', className)}>
-      <div className='flex items-center justify-between gap-3'>
-        <h3 className='text-muted-foreground text-[11px] font-semibold tracking-wider uppercase'>
-          {title}
-        </h3>
-        {action}
-      </div>
-      {children}
-    </section>
   )
 }
 

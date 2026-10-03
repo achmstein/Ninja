@@ -237,7 +237,7 @@ export function OrdersManagement() {
             disabled={isActing}
             onClick={() => setBulkDeleteOpen(true)}
           >
-            <Trash2 className='me-1 h-4 w-4' />
+            <Trash2 />
             {t('delete')}
           </Button>
         </DataTableBulkActions>

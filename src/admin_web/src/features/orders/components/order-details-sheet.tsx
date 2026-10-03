@@ -258,7 +258,7 @@ export function OrderDetailsSheet({
                 onCancel(orderId, order.platform ? cancelReason : undefined)
               }
             >
-              <X className='me-1 h-4 w-4' />
+              <X />
               {t('cancelOrderButton')}
             </Button>
             <Button
@@ -267,9 +267,9 @@ export function OrderDetailsSheet({
               onClick={() => onConfirm(orderId)}
             >
               {isActing ? (
-                <Spinner className='me-1' />
+                <Spinner />
               ) : (
-                <Check className='me-1 h-4 w-4' />
+                <Check />
               )}
               {t('confirmOrder')}
             </Button>

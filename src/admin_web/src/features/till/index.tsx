@@ -378,7 +378,7 @@ export function TillReport() {
               <div className='flex items-center justify-between gap-2'>
                 <h2 className='text-sm font-semibold'>{viewTitle[view]}</h2>
                 <Button variant='ghost' size='sm' onClick={closeView}>
-                  <X className='me-1.5 h-4 w-4' />
+                  <X />
                   {t('close')}
                 </Button>
               </div>

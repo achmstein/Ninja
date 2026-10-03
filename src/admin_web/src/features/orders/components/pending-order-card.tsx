@@ -203,7 +203,7 @@ export function PendingOrderCard({
       {/* One primary decision; cancelling hides behind the menu and a confirm */}
       <div className='mt-4 flex gap-2'>
         <Button className='flex-1' disabled={isActing} onClick={onConfirm}>
-          <Check className='me-1 h-4 w-4' />
+          <Check />
           {t('confirm')}
         </Button>
         <DropdownMenu>

@@ -153,7 +153,7 @@ function BranchesForm({
           disabled={save.isPending || branchesQuery.isLoading}
           onClick={() => save.mutate()}
         >
-          {save.isPending && <Spinner className='me-2' />}
+          {save.isPending && <Spinner />}
           {t('save')}
         </Button>
       </DialogFooter>

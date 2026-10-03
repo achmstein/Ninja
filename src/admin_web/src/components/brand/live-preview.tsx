@@ -68,12 +68,12 @@ export function LivePreview({
       </PhoneFrame>
       <div className='flex justify-center gap-1'>
         <Button type='button' variant='ghost' size='sm' onClick={() => setReloads((n) => n + 1)}>
-          <RotateCw className='me-1 size-3.5' />
+          <RotateCw className='size-3.5' />
           {t('reloadPage')}
         </Button>
         <Button asChild variant='ghost' size='sm'>
           <a href={url.href} target='_blank' rel='noreferrer'>
-            <ExternalLink className='me-1 size-3.5' />
+            <ExternalLink className='size-3.5' />
             {t('openInNewTab')}
           </a>
         </Button>

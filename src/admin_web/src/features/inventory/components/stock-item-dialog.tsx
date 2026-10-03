@@ -236,7 +236,7 @@ function StockItemForm({
             {t('cancel')}
           </Button>
           <Button type='submit' disabled={isPending}>
-            {isPending && <Spinner className='me-2' />}
+            {isPending && <Spinner />}
             {t('save')}
           </Button>
         </DialogFooter>

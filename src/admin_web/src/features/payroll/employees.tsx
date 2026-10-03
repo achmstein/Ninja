@@ -154,7 +154,7 @@ export function Employees() {
           title={t('navPayrollEmployees')}
           actions={
             <Button size='sm' onClick={() => open(undefined, true)}>
-              <UserPlus className='me-2 h-4 w-4' />
+              <UserPlus />
               {t('addEmployee')}
             </Button>
           }
@@ -184,7 +184,7 @@ export function Employees() {
             title={t('noEmployees')}
             action={
               <Button onClick={() => open(undefined, true)}>
-                <UserPlus className='me-2 h-4 w-4' />
+                <UserPlus />
                 {t('addEmployee')}
               </Button>
             }

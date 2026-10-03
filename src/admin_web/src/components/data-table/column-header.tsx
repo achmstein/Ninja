@@ -44,11 +44,11 @@ export function DataTableColumnHeader<TData extends RowData, TValue>({
           >
             <span>{title}</span>
             {column.getIsSorted() === 'desc' ? (
-              <ArrowDownIcon className='ms-2 h-4 w-4' />
+              <ArrowDownIcon />
             ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUpIcon className='ms-2 h-4 w-4' />
+              <ArrowUpIcon />
             ) : (
-              <CaretSortIcon className='ms-2 h-4 w-4' />
+              <CaretSortIcon />
             )}
           </Button>
         </DropdownMenuTrigger>

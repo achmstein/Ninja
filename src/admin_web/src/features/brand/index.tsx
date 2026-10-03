@@ -649,7 +649,7 @@ function BrandForm({ brand }: { brand: Brand }) {
 
             <div className='flex justify-end'>
               <Button type='submit' disabled={update.isPending}>
-                {update.isPending && <Spinner className='me-2' />}
+                {update.isPending && <Spinner />}
                 {t('save')}
               </Button>
             </div>
@@ -747,7 +747,7 @@ function ImageSlotField({
               disabled={busy}
               onClick={onRemove}
             >
-              <X className='me-1 h-3.5 w-3.5' />
+              <X className='size-3.5' />
               {t('removeLogo')}
             </Button>
           )}

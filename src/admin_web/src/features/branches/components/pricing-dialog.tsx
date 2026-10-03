@@ -179,7 +179,7 @@ function PricingForm({
           {t('cancel')}
         </Button>
         <Button onClick={submit} disabled={save.isPending}>
-          {save.isPending && <Spinner className='me-2' />}
+          {save.isPending && <Spinner />}
           {t('save')}
         </Button>
       </DialogFooter>

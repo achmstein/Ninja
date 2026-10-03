@@ -152,7 +152,7 @@ function CategoryForm({
             {t('cancel')}
           </Button>
           <Button type='submit' disabled={isLoading}>
-            {isLoading && <Spinner className='me-2' />}
+            {isLoading && <Spinner />}
             {isEditing ? t('update') : t('create')}
           </Button>
         </DialogFooter>

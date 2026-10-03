@@ -85,7 +85,7 @@ export function PrintConnectors({
             })
           }
         >
-          <Plus className='me-1 h-4 w-4' />
+          <Plus />
           {t('pairWindowsPc')}
         </Button>
       </div>

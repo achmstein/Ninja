@@ -193,7 +193,7 @@ function ReceiptViewer({
               })
           }
         >
-          <Trash2 className='me-2 h-4 w-4' />
+          <Trash2 />
           {t('removeReceipt')}
         </Button>
         <div className='flex gap-2'>
@@ -204,9 +204,9 @@ function ReceiptViewer({
             onClick={() => input.current?.click()}
           >
             {isPending ? (
-              <Spinner className='me-2' />
+              <Spinner />
             ) : (
-              <Upload className='me-2 h-4 w-4' />
+              <Upload />
             )}
             {t('replaceReceipt')}
           </Button>

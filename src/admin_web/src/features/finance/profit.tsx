@@ -159,7 +159,7 @@ export function Profit() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size='sm' variant='outline' disabled={!p}>
-                <Download className='me-2 h-4 w-4' />
+                <Download />
                 {t('exportCsv')}
               </Button>
             </DropdownMenuTrigger>

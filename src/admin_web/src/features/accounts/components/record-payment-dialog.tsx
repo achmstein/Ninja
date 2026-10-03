@@ -119,7 +119,7 @@ export function RecordPaymentDialog({
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={recordPaymentMutation.isPending}>
-              {recordPaymentMutation.isPending && <Spinner className='me-2' />}
+              {recordPaymentMutation.isPending && <Spinner />}
               {t('recordPayment')}
             </Button>
           </DialogFooter>

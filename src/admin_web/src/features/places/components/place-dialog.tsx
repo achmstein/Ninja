@@ -447,7 +447,7 @@ export function PlaceDialog({
                           ])
                         }
                       >
-                        <Plus className='me-1 h-4 w-4' />
+                        <Plus />
                         {t('addRateOption')}
                       </Button>
                     </div>

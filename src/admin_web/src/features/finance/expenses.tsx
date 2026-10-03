@@ -117,7 +117,7 @@ export function Expenses() {
           actions={
             <div className='flex items-center gap-1'>
               <Button size='sm' onClick={() => setAdding(true)}>
-                <Plus className='me-2 h-4 w-4' />
+                <Plus />
                 {t('addExpense')}
               </Button>
               {/* What is set up once in a while waits behind the menu, not beside the one button used daily */}
@@ -163,7 +163,7 @@ export function Expenses() {
             title={t('noExpenses')}
             action={
               <Button onClick={() => setAdding(true)}>
-                <Plus className='me-2 h-4 w-4' />
+                <Plus />
                 {t('addExpense')}
               </Button>
             }

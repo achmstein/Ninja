@@ -53,7 +53,7 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {
@@ -263,7 +263,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
             </ul>
             <DialogFooter>
               <Button variant='outline' onClick={() => setEditing('new')}>
-                <Plus className='me-2 h-4 w-4' />
+                <Plus />
                 {t('addStation')}
               </Button>
             </DialogFooter>
@@ -582,7 +582,7 @@ function StationForm({
                   })
                 }
               >
-                {testPrint.isPending && <Spinner className='me-2' />}
+                {testPrint.isPending && <Spinner />}
                 {t('sendTestTicket')}
               </Button>
             )}
@@ -592,7 +592,7 @@ function StationForm({
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={busy}>
-              {busy && <Spinner className='me-2' />}
+              {busy && <Spinner />}
               {t('save')}
             </Button>
           </div>
@@ -600,13 +600,15 @@ function StationForm({
       </form>
 
       {station && (
-        <DeleteConfirmDialog
+        <ConfirmDialog
           open={confirmDelete}
           onOpenChange={setConfirmDelete}
-          itemName={localized(station.name)}
           title={t('deleteStation')}
+          desc={`${t('deleteItemConfirmation', { name: localized(station.name) })} ${t('cannotBeUndone')}`}
+          destructive
+          confirmText={t('delete')}
           isLoading={remove.isPending}
-          onConfirm={() =>
+          handleConfirm={() =>
             remove.mutate({
               ...scope,
               path: { stationId: Number(station.id) },

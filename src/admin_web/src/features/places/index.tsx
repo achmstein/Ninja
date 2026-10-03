@@ -208,7 +208,7 @@ export function PlacesManagement() {
                   title={t('noPlacesYet')}
                   action={
                     <Button variant='outline' onClick={() => setAddOpen(true)}>
-                      <Plus className='me-2 h-4 w-4' />
+                      <Plus />
                       {t('newPlace')}
                     </Button>
                   }

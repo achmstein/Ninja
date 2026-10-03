@@ -80,7 +80,7 @@
   "editCategory": "Edit Category",
   "all": "All",
   "noItemsFound": "No items found",
-  "deleteItem": "Delete Item?",
+  "deleteItem": "Delete item",
   "deleteItemConfirmation": "Are you sure you want to delete \"{name}\"?",
   "@deleteItemConfirmation": {
     "placeholders": {
@@ -108,7 +108,7 @@
       }
     }
   },
-  "deleteCategory": "Delete Category?",
+  "deleteCategory": "Delete category",
   "deleteCategoryConfirmation": "Are you sure you want to delete \"{name}\"?",
   "@deleteCategoryConfirmation": {
     "placeholders": {

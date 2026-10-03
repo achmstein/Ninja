@@ -83,7 +83,7 @@ export function QrSheet({
         </div>
 
         <Button onClick={() => window.print()}>
-          <Printer className='me-2 h-4 w-4' />
+          <Printer />
           {t('printQrSheet')}
         </Button>
       </div>

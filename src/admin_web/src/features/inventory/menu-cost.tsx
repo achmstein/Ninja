@@ -28,7 +28,7 @@ import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { StatusChip } from '@/components/status-chip'
-import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   ItemSheet,
   type ItemSheetState,
@@ -264,17 +264,20 @@ export function MenuCost() {
         onDelete={setDeleteItem}
       />
 
-      <DeleteConfirmDialog
+      <ConfirmDialog
         open={!!deleteItem}
         onOpenChange={() => setDeleteItem(null)}
-        onConfirm={() =>
+        title={t('deleteItemTitle')}
+        desc={`${t('deleteItemConfirmation', { name: localized(deleteItem?.name) })} ${t('cannotBeUndone')}`}
+        destructive
+        confirmText={t('delete')}
+        handleConfirm={() =>
           deleteItem &&
           deleteItemMut.mutate({
             path: { id: Number(deleteItem.id) },
             query: { 'api-version': API_VERSION },
           })
         }
-        itemName={localized(deleteItem?.name)}
         isLoading={deleteItemMut.isPending}
       />
     </Main>

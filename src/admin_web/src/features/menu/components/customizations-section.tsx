@@ -51,7 +51,7 @@ import {
   type DraftGroup,
   type OptionRow,
 } from './customization-draft'
-import { DeleteConfirmDialog } from './delete-confirm-dialog'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 type CustomizationsSectionProps = {
   item: CatalogItemDto
@@ -434,7 +434,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                       onClick={() => addDrafts(drafts.map((_, i) => i))}
                     >
                       {addingDraft === 'all' && (
-                        <Spinner className='me-1.5 size-3.5' />
+                        <Spinner className='size-3.5' />
                       )}
                       {t('addAll')}
                     </Button>
@@ -493,7 +493,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               className='text-muted-foreground hover:text-foreground flex-1 border-dashed'
               onClick={() => setEditing('new')}
             >
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addCustomization')}
             </Button>
             {assist.available && (
@@ -506,9 +506,9 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                 onClick={askAssistant}
               >
                 {assist.isPending ? (
-                  <Spinner className='me-2 size-4' />
+                  <Spinner />
                 ) : (
-                  <Sparkles className='me-2 h-4 w-4' />
+                  <Sparkles />
                 )}
                 {t('assistSuggest')}
               </Button>
@@ -517,18 +517,20 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
         )}
       </div>
 
-      <DeleteConfirmDialog
+      <ConfirmDialog
         open={!!deletingGroup}
         onOpenChange={() => setDeletingGroup(null)}
-        onConfirm={() =>
+        title={t('deleteCustomizationConfirm')}
+        desc={`${t('deleteItemConfirmation', { name: localized(deletingGroup?.name) })} ${t('cannotBeUndone')}`}
+        destructive
+        confirmText={t('delete')}
+        handleConfirm={() =>
           deletingGroup &&
           deleteGroup.mutate({
             path: { id: itemId, customizationId: Number(deletingGroup.id) },
             query: { 'api-version': API_VERSION },
           })
         }
-        title={t('deleteCustomizationConfirm')}
-        itemName={localized(deletingGroup?.name)}
         isLoading={deleteGroup.isPending}
       />
     </>
@@ -561,7 +563,7 @@ function DraftActions({
         disabled={disabled}
         onClick={onAdd}
       >
-        {adding && <Spinner className='me-1.5 size-3.5' />}
+        {adding && <Spinner className='size-3.5' />}
         {t('add')}
       </Button>
       <Button
@@ -795,7 +797,7 @@ function GroupEditor({
             className='text-muted-foreground h-7'
             onClick={() => setOptions((rows) => [...rows, { ...emptyOption }])}
           >
-            <Plus className='me-1 h-3.5 w-3.5' />
+            <Plus className='size-3.5' />
             {t('addOption')}
           </Button>
         </div>
@@ -818,7 +820,7 @@ function GroupEditor({
             onClick={handleSubmit}
             disabled={isSaving}
           >
-            {isSaving && <Spinner className='me-1.5 size-3.5' />}
+            {isSaving && <Spinner className='size-3.5' />}
             {isEditing ? t('update') : t('add')}
           </Button>
         </div>

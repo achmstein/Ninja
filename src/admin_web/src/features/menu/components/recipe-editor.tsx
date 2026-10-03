@@ -178,7 +178,7 @@ export function RecipeSlotsEditor({
           onChange({ ...draft, slots: [...draft.slots, newSlot()] })
         }
       >
-        <Plus className='me-1 h-3.5 w-3.5' />
+        <Plus className='size-3.5' />
         {t('addIngredient')}
       </Button>
     </div>
@@ -662,7 +662,7 @@ function RuleAdder({
           setPicked({})
         }}
       >
-        <Plus className='me-1 h-3.5 w-3.5' />
+        <Plus className='size-3.5' />
         {t('addRule')}
       </Button>
     </div>

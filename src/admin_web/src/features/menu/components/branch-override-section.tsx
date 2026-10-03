@@ -217,7 +217,7 @@ function OverrideForm({
           </Button>
         )}
         <Button type='submit' size='sm' disabled={!dirty || isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('save')}
         </Button>
       </div>

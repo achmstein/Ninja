@@ -375,7 +375,7 @@ export function PhotoStudio({
             disabled={drawing || !name}
             onClick={() => void draw()}
           >
-            <Sparkles className='me-2 size-4' />
+            <Sparkles />
             {drawing
               ? t('studioDrawing')
               : current
@@ -384,7 +384,7 @@ export function PhotoStudio({
           </Button>
           {current && (
             <Button type='button' disabled={drawing} onClick={use}>
-              <Check className='me-2 size-4' />
+              <Check />
               {t('studioUse')}
             </Button>
           )}

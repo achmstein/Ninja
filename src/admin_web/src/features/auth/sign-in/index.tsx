@@ -87,7 +87,7 @@ export function SignIn() {
           </CardHeader>
           <CardContent>
             <Button onClick={beginSignIn} size='lg' className='w-full'>
-              <RefreshCw className='me-2 h-4 w-4' />
+              <RefreshCw />
               {t('retry')}
             </Button>
           </CardContent>

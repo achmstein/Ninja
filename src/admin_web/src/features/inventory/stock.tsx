@@ -128,7 +128,7 @@ export function Stock() {
                 }
                 disabled={counting}
               >
-                <PackagePlus className='me-2 h-4 w-4' />
+                <PackagePlus />
                 {t('receiveStock')}
               </Button>
               <DropdownMenu>
@@ -290,7 +290,7 @@ export function Stock() {
                               variant='outline'
                               onClick={() => setNewItemOpen(true)}
                             >
-                              <Plus className='me-2 h-4 w-4' />
+                              <Plus />
                               {t('addStockItem')}
                             </Button>
                           ) : undefined
@@ -495,7 +495,7 @@ function CountMode({
           {t('cancel')}
         </Button>
         <Button size='sm' onClick={save} disabled={isPending || done === 0}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {t('saveCount')}
         </Button>
       </div>

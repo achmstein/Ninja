@@ -168,7 +168,7 @@ export function Movements() {
               }
             >
               {t('clearFilters')}
-              <X className='ms-2 h-4 w-4' />
+              <X />
             </Button>
           )}
         </div>

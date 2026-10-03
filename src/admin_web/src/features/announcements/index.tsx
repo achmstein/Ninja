@@ -85,7 +85,7 @@ export function AnnouncementsManagement() {
               <div>
                 <Button type='submit' disabled={send.isPending}>
                   {send.isPending ? (
-                    <Spinner className='me-2' />
+                    <Spinner />
                   ) : (
                     <Send className='me-2 h-4 w-4 rtl:-scale-x-100' />
                   )}

@@ -132,7 +132,7 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
                   className='w-full justify-start'
                   onClick={() => setPickerOpen(true)}
                 >
-                  <Search className='me-2 h-4 w-4' />
+                  <Search />
                   {t('findRegisteredCustomer')}
                 </Button>
               )}

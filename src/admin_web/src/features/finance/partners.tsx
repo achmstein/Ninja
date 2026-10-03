@@ -86,7 +86,7 @@ export function Partners() {
           title={t('accountsNav')}
           actions={
             <Button size='sm' onClick={() => setAdding(true)}>
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addPartner')}
             </Button>
           }
@@ -104,7 +104,7 @@ export function Partners() {
             title={t('noPartners')}
             action={
               <Button onClick={() => setAdding(true)}>
-                <Plus className='me-2 h-4 w-4' />
+                <Plus />
                 {t('addPartner')}
               </Button>
             }
@@ -371,7 +371,7 @@ function PartnerForm({
             name.trim() === '' || shares.size === 0 || !sharesValid || isPending
           }
         >
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {partner ? t('save') : t('addPartner')}
         </Button>
       </div>
@@ -452,7 +452,7 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
               size='sm'
               onClick={() => setAdding(true)}
             >
-              <Plus className='me-2 h-4 w-4' />
+              <Plus />
               {t('addLedgerEntry')}
             </Button>
           </div>
@@ -528,7 +528,7 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
               size='sm'
               disabled={isPending || !(parseFloat(amount) > 0)}
             >
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('post')}
             </Button>
           </div>

@@ -181,7 +181,7 @@ export function ItemSheet({
               className='text-destructive hover:text-destructive'
               onClick={() => onDelete(item)}
             >
-              <Trash2 className='me-2 h-4 w-4' />
+              <Trash2 />
               {t('deleteItem')}
             </Button>
           </div>

@@ -274,7 +274,7 @@ export function EmployeeForm({
                 title={t('createLoginHint')}
                 onClick={() => setCreatingLogin(true)}
               >
-                <KeyRound className='me-2 h-4 w-4' />
+                <KeyRound />
                 {t('createLogin')}
               </Button>
             )}
@@ -363,7 +363,7 @@ export function EmployeeForm({
 
       <div className='flex justify-end'>
         <Button type='submit' disabled={!canSubmit || isPending}>
-          {isPending && <Spinner className='me-2' />}
+          {isPending && <Spinner />}
           {employee ? t('save') : t('addEmployee')}
         </Button>
       </div>
@@ -481,7 +481,7 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
               size='sm'
               disabled={isPending || !(parseFloat(rate) > 0)}
             >
-              {isPending && <Spinner className='me-2' />}
+              {isPending && <Spinner />}
               {t('save')}
             </Button>
           </div>
