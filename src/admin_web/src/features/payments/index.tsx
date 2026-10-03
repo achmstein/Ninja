@@ -68,7 +68,7 @@ export function PaymentSettingsPage() {
       <PageHeader
         // The provider by its own mark, as Talabat's page wears Talabat's
         title={
-          provider === 'Paymob' ? (
+          provider.toLowerCase() === 'paymob' ? (
             <span className='flex items-center gap-3'>
               <img src={paymobLogo} alt='Paymob' className='h-6 w-auto' />
             </span>

@@ -2064,7 +2064,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get receiptUnavailable => 'الإيصال غير متاح';
 
   @override
-  String get cash => 'نقدًا';
+  String get cash => 'كاش';
 
   @override
   String creditNote(int number) {

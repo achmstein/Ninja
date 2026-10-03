@@ -627,7 +627,7 @@ export const messagesArStandard: Partial<Record<keyof typeof messages, string | 
   refunded: "مسترد",
   voided: "ملغى",
   receiptUnavailable: "الإيصال غير متاح",
-  cash: "نقدًا",
+  cash: "كاش",
   creditNote: "إشعار دائن #{number}",
   receiptThanks: "شكرًا لزيارتك!",
   bills: "الفواتير",

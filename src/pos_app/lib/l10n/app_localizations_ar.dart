@@ -812,7 +812,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payments => 'المدفوعات';
 
   @override
-  String get cash => 'نقدًا';
+  String get cash => 'كاش';
 
   @override
   String get card => 'بطاقة';
@@ -1119,7 +1119,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get closeShiftAction => 'إغلاق الوردية';
 
   @override
-  String get countedAmount => 'النقد المعدود في الدرج';
+  String get countedAmount => 'الكاش المعدود في الدرج';
 
   @override
   String get confirmCloseShift => 'تأكيد وإغلاق الوردية';

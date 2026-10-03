@@ -300,7 +300,7 @@ const dictionary = {
   // Settle dialog
   settleTitle: { en: "Settle ticket", ar: "إغلاق الفاتورة" },
   payments: { en: "Payments", ar: "المدفوعات" },
-  cash: { en: "Cash", ar: "نقدًا" },
+  cash: { en: "Cash", ar: "كاش" },
   card: { en: "Card", ar: "بطاقة" },
   instapay: { en: "InstaPay", ar: "إنستاباي" },
   account: { en: "On account", ar: "على الحساب" },
@@ -438,7 +438,7 @@ const dictionary = {
   payOutWho: { en: "Who?", ar: "لمن؟" },
   closeShiftTitle: { en: "Close shift", ar: "إغلاق الوردية" },
   closeShiftAction: { en: "Close shift", ar: "أغلق الوردية" },
-  countedAmount: { en: "Counted drawer cash", ar: "النقد المعدود في الدرج" },
+  countedAmount: { en: "Counted drawer cash", ar: "الكاش المعدود في الدرج" },
   confirmCloseShift: { en: "Count & close", ar: "أكّد وأغلق الوردية" },
   shiftClosed: { en: "Shift closed", ar: "أُغلقت الوردية" },
   expected: { en: "Expected", ar: "المتوقع" },
