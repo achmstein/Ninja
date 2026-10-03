@@ -1,6 +1,7 @@
 import { Link, type LinkProps } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { ActiveMarker } from '@/components/motion'
 
 type PageTab = {
   value: string
@@ -41,12 +42,16 @@ export function PageTabs({ value, tabs, className }: PageTabsProps) {
             aria-selected={active}
             data-state={active ? 'active' : 'inactive'}
             className={cn(
-              'focus-visible:ring-ring/50 inline-flex h-full items-center gap-1.5 rounded-md border border-transparent px-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px]',
-              active
-                ? 'bg-background text-foreground dark:border-input dark:bg-input/30 shadow-sm'
-                : 'hover:text-foreground'
+              'focus-visible:ring-ring/50 relative isolate inline-flex h-full items-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]',
+              active ? 'text-foreground' : 'hover:text-foreground'
             )}
           >
+            {active && (
+              <ActiveMarker
+                group='page-tabs'
+                className='bg-background dark:bg-input/40 rounded-md shadow-sm'
+              />
+            )}
             {tab.label}
             {tab.badge ? (
               <Badge

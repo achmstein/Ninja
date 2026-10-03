@@ -62,7 +62,8 @@ export function KpiCard({
     <Card
       className={cn(
         'from-primary/5 to-card @container/card h-full gap-3 bg-gradient-to-t py-4 shadow-xs transition-colors',
-        to && 'hover:border-primary/40'
+        to &&
+          'transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md'
       )}
     >
       <CardHeader className='px-4'>

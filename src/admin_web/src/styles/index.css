@@ -34,9 +34,21 @@
     cursor: pointer;
   }
 
-  /* Arabic UI renders in Cairo (same as the customer apps) */
+  /* The admin's type: Geist for English, IBM Plex Sans Arabic for Arabic,
+     drawn to sit together; Arabic leads when the page is in Arabic */
   :root[dir='rtl'] body {
-    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans Arabic', 'Geist', system-ui, sans-serif;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  :root:not([dir='rtl']) body {
+    letter-spacing: -0.006em;
+  }
+  :root:not([dir='rtl']) :is(h1, h2, h3) {
+    letter-spacing: -0.022em;
   }
 
   /* Prevent focus zoom on mobile devices */

@@ -1,4 +1,5 @@
 import { StrictMode } from 'react'
+import { MotionConfig } from 'motion/react'
 import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
 import {
@@ -99,7 +100,10 @@ if (!rootElement.innerHTML) {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <DirectionProvider>
-              <RouterProvider router={router} />
+              {/* Every animation in the admin steps aside when the device asks for less motion */}
+              <MotionConfig reducedMotion='user'>
+                <RouterProvider router={router} />
+              </MotionConfig>
             </DirectionProvider>
           </ThemeProvider>
         </QueryClientProvider>

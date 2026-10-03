@@ -1,4 +1,6 @@
+import { motion, type HTMLMotionProps } from 'motion/react'
 import { cn } from '@/lib/utils'
+import { RISE } from '@/components/motion'
 
 type MainProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean
@@ -8,7 +10,9 @@ type MainProps = React.HTMLAttributes<HTMLElement> & {
 
 export function Main({ fixed, className, fluid, ...props }: MainProps) {
   return (
-    <main
+    <motion.main
+      // Each page eases in as it opens: the content rises a little and fades in
+      {...RISE}
       // The skip link's target
       id='content'
       data-layout={fixed ? 'fixed' : 'auto'}
@@ -23,7 +27,7 @@ export function Main({ fixed, className, fluid, ...props }: MainProps) {
           '@7xl/content:mx-auto @7xl/content:w-full @7xl/content:max-w-7xl',
         className
       )}
-      {...props}
+      {...(props as HTMLMotionProps<'main'>)}
     />
   )
 }

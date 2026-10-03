@@ -11,6 +11,7 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Main } from '@/components/layout/main'
+import { CountUp, Stagger, StaggerItem } from '@/components/motion'
 import { PageHeader } from '@/components/page-header'
 import { urgencyTextClass } from '@/components/queue-card'
 import { stockLevelsQueryOptions } from '@/features/inventory/queries'
@@ -229,76 +230,90 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-        <KpiCard
-          label={t('netSales')}
-          value={formatEgp(net)}
-          change={compared ? changeOf(net, lastNet) : undefined}
-          footer={t('vsSameTimeLastWeek')}
-          loading={reportLoading}
-          to='/till'
-        />
-        <KpiCard
-          label={t('averageBill')}
-          value={bills > 0 ? formatEgp(averageBill) : '—'}
-          change={
-            compared && bills > 0
-              ? changeOf(averageBill, lastAverage)
-              : undefined
-          }
-          footer={t('posTicketsCount', { count: bills })}
-          loading={reportLoading}
-          to='/till/tickets'
-        />
-        <KpiCard
-          label={t('pendingOrders')}
-          value={pending.length}
-          tone={pending.length > 0 ? 'warning' : 'default'}
-          footer={
-            oldest
-              ? t('oldestAge', {
-                  age: relativeTime(oldest.date, nowMs, t, locale),
-                })
-              : t('ordersWaitingNone')
-          }
-          loading={pendingQuery.isPending}
-          to='/orders/live'
-        />
-        {cloudKitchen ? (
-          features.inventory && (
-            <KpiCard
-              label={t('lowStockTitle')}
-              value={lowCount}
-              tone={lowCount > 0 ? 'warning' : 'default'}
-              loading={lowStockQuery.isPending}
-              to='/inventory'
-              search={{ low: true }}
-            />
-          )
-        ) : features.timeBilling ? (
+      <Stagger className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+        <StaggerItem>
           <KpiCard
-            label={t('placesInUse')}
-            value={t('ofTotal', {
-              count: running.length,
-              total: timedInService,
-            })}
-            footer={
-              t('tablesInUse') +
-              ': ' +
-              t('ofTotal', { count: busyTables, total: activeTables })
+            label={t('netSales')}
+            value={<CountUp value={net} format={formatEgp} />}
+            change={compared ? changeOf(net, lastNet) : undefined}
+            footer={t('vsSameTimeLastWeek')}
+            loading={reportLoading}
+            to='/till'
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <KpiCard
+            label={t('averageBill')}
+            value={
+              bills > 0 ? (
+                <CountUp value={averageBill} format={formatEgp} />
+              ) : (
+                '—'
+              )
             }
-            loading={floor.isPending}
-            to='/places'
+            change={
+              compared && bills > 0
+                ? changeOf(averageBill, lastAverage)
+                : undefined
+            }
+            footer={t('posTicketsCount', { count: bills })}
+            loading={reportLoading}
+            to='/till/tickets'
           />
-        ) : (
+        </StaggerItem>
+        <StaggerItem>
           <KpiCard
-            label={t('tablesInUse')}
-            value={t('ofTotal', { count: busyTables, total: activeTables })}
-            loading={floor.isPending}
-            to='/places'
+            label={t('pendingOrders')}
+            value={<CountUp value={pending.length} />}
+            tone={pending.length > 0 ? 'warning' : 'default'}
+            footer={
+              oldest
+                ? t('oldestAge', {
+                    age: relativeTime(oldest.date, nowMs, t, locale),
+                  })
+                : t('ordersWaitingNone')
+            }
+            loading={pendingQuery.isPending}
+            to='/orders/live'
           />
-        )}
-      </div>
+        </StaggerItem>
+        <StaggerItem>
+          {cloudKitchen ? (
+            features.inventory && (
+              <KpiCard
+                label={t('lowStockTitle')}
+                value={lowCount}
+                tone={lowCount > 0 ? 'warning' : 'default'}
+                loading={lowStockQuery.isPending}
+                to='/inventory'
+                search={{ low: true }}
+              />
+            )
+          ) : features.timeBilling ? (
+            <KpiCard
+              label={t('placesInUse')}
+              value={t('ofTotal', {
+                count: running.length,
+                total: timedInService,
+              })}
+              footer={
+                t('tablesInUse') +
+                ': ' +
+                t('ofTotal', { count: busyTables, total: activeTables })
+              }
+              loading={floor.isPending}
+              to='/places'
+            />
+          ) : (
+            <KpiCard
+              label={t('tablesInUse')}
+              value={t('ofTotal', { count: busyTables, total: activeTables })}
+              loading={floor.isPending}
+              to='/places'
+            />
+          )}
+        </StaggerItem>
+      </Stagger>
 
       <SalesChart />
 

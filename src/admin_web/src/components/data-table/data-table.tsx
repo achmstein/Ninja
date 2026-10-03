@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { flexRender, type RowData } from '@tanstack/react-table'
+import { motion } from 'motion/react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -87,7 +88,13 @@ export function DataTable<TData extends RowData>({
                     {groupBy.label(group!, row.original)}
                   </li>
                 )}
-                <li
+                <motion.li
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.25,
+                    delay: Math.min(index, 12) * 0.025,
+                  }}
                   data-state={row.getIsSelected() && 'selected'}
                   className={cn(
                     'data-[state=selected]:bg-muted px-4 py-3',
@@ -96,7 +103,7 @@ export function DataTable<TData extends RowData>({
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {mobileRow(row)}
-                </li>
+                </motion.li>
               </Fragment>
             )
           })}

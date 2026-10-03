@@ -18,6 +18,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { ActiveMarker } from '@/components/motion'
 import { Badge } from '../ui/badge'
 import {
   DropdownMenu,
@@ -91,12 +92,20 @@ function SidebarMenuLink({
 }) {
   const t = useT()
   const { setOpenMobile } = useSidebar()
+  const active = checkIsActive(href, item, false, groupUrls)
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className='isolate'>
+      {active && (
+        <ActiveMarker
+          group='sidebar'
+          className='bg-sidebar-accent rounded-md shadow-xs'
+        />
+      )}
       <SidebarMenuButton
         asChild
-        isActive={checkIsActive(href, item, false, groupUrls)}
+        isActive={active}
         tooltip={t(item.title)}
+        className='data-[active=true]:bg-transparent'
       >
         <Link to={item.url} onClick={() => setOpenMobile(false)}>
           {item.icon && <item.icon />}
@@ -137,10 +146,17 @@ function SidebarMenuCollapsible({
         <CollapsibleContent className='CollapsibleContent'>
           <SidebarMenuSub>
             {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
+              <SidebarMenuSubItem key={subItem.title} className='isolate'>
+                {checkIsActive(href, subItem, false, subUrls) && (
+                  <ActiveMarker
+                    group='sidebar'
+                    className='bg-sidebar-accent rounded-md shadow-xs'
+                  />
+                )}
                 <SidebarMenuSubButton
                   asChild
                   isActive={checkIsActive(href, subItem, false, subUrls)}
+                  className='data-[active=true]:bg-transparent'
                 >
                   <Link to={subItem.url} onClick={() => setOpenMobile(false)}>
                     {subItem.icon && <subItem.icon />}
