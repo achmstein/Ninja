@@ -28,25 +28,40 @@ import { LogoSlot } from './logo-slot'
  * X-Branch-Id header. Only the branches the token allows are offered; with
  * a single one there is nothing to switch and the tile is plain.
  */
-export function BranchSwitcher() {
-  const t = useT()
-  const localized = useLocalized()
-  const { isMobile } = useSidebar()
+/** The branches this person may work in, the one on screen, and the way to change it */
+export function useBranchSwitch() {
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
   const { branches } = useAllowedBranches()
-
-  const activeBranch = branches.find((b) => Number(b.id) === branchId)
-  const label = localized(activeBranch?.name) || t('branches')
-  const businessName = useBrandName()
-  const switchable = branches.length > 1
-
-  const handleSelect = (id: number) => {
+  const select = (id: number) => {
     if (id === branchId) return
     setBranchId(id)
     // Everything on screen is scoped to the branch — refetch it all
     queryClient.invalidateQueries()
   }
+  return {
+    branches,
+    branchId,
+    active: branches.find((b) => Number(b.id) === branchId),
+    switchable: branches.length > 1,
+    select,
+  }
+}
+
+export function BranchSwitcher() {
+  const t = useT()
+  const localized = useLocalized()
+  const { isMobile } = useSidebar()
+  const {
+    branches,
+    branchId,
+    active: activeBranch,
+    switchable,
+    select: handleSelect,
+  } = useBranchSwitch()
+
+  const label = localized(activeBranch?.name) || t('branches')
+  const businessName = useBrandName()
 
   // ⌘/Ctrl+1..9 switches branches, matching the shortcut hints below
   useEffect(() => {

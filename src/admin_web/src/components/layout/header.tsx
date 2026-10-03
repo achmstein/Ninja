@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { ChevronRight, SearchIcon } from 'lucide-react'
-import { useBranchStore } from '@/stores/branch-store'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useSearch } from '@/context/search-provider'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { LanguageSwitch } from '@/components/language-switch'
@@ -14,6 +12,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { sidebarData } from './data/sidebar-data'
 import { LogoSlot } from './logo-slot'
 import { navTrail } from './nav-active'
+import { PhoneBranchPicker } from './phone-branch-picker'
 
 type HeaderProps = React.HTMLAttributes<HTMLElement>
 
@@ -27,13 +26,9 @@ type HeaderProps = React.HTMLAttributes<HTMLElement>
  */
 export function Header({ className, ...props }: HeaderProps) {
   const t = useT()
-  const localized = useLocalized()
   const { setOpen } = useSearch()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const trail = navTrail(pathname, sidebarData.navGroups)
-  const { branches } = useAllowedBranches()
-  const branchId = useBranchStore((s) => s.branchId)
-  const branch = branches.find((b) => Number(b.id) === branchId)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -58,14 +53,10 @@ export function Header({ className, ...props }: HeaderProps) {
           middle, the controls at the end; a long page name never moves the
           search */}
       <div className='flex h-full items-center gap-2 px-4 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,28rem)_minmax(0,1fr)] md:gap-3'>
-        {/* A phone: the business and its branch; the menu is the tab bar's More */}
+        {/* A phone: the business, and its branch to switch with a tap; the menu is the tab bar's More */}
         <div className='flex min-w-0 items-center gap-2 md:hidden'>
           <LogoSlot nameClassName='text-sm' />
-          {branches.length > 1 && branch && (
-            <span className='text-muted-foreground truncate text-sm'>
-              / {localized(branch.name)}
-            </span>
-          )}
+          <PhoneBranchPicker />
         </div>
 
         <div className='hidden min-w-0 items-center gap-3 md:flex'>

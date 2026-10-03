@@ -80,7 +80,7 @@ export function KpiCard({
       {/* The trend sits on the foot line rather than beside the number, so a
           half-width card on a phone keeps the number whole */}
       {(footer || (change !== undefined && !loading)) && (
-        <CardFooter className='text-muted-foreground flex-wrap gap-x-2 gap-y-1 px-4 text-xs'>
+        <CardFooter className='text-muted-foreground mt-auto flex-wrap gap-x-2 gap-y-1 px-4 text-xs'>
           {change !== undefined && !loading && (
             <Badge
               variant={up ? 'success' : down ? 'danger' : 'muted'}
@@ -99,7 +99,7 @@ export function KpiCard({
     <Link
       to={to}
       search={search}
-      className='block rounded-xl focus-visible:ring-2 focus-visible:outline-none'
+      className='block h-full rounded-xl focus-visible:ring-2 focus-visible:outline-none'
     >
       {body}
     </Link>

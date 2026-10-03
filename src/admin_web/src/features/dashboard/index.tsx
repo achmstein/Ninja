@@ -230,7 +230,8 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      <Stagger className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+      {/* Every card the same height, whatever its foot line says */}
+      <Stagger className='grid auto-rows-fr grid-cols-2 gap-3 lg:grid-cols-4'>
         <StaggerItem>
           <KpiCard
             label={t('netSales')}

@@ -367,6 +367,8 @@ const webExtras = {
   pointsIssued: { en: "Points issued", ar: "النقاط الممنوحة" },
   removePhoto: { en: "Remove photo", ar: "إزالة الصورة" },
   replaceImage: { en: "Replace", ar: "استبدال" },
+  installApp: { en: "Install the app", ar: "تثبيت التطبيق" },
+  installAppIos: { en: "Tap Share, then Add to Home Screen.", ar: "اضغط مشاركة، ثم إضافة إلى الشاشة الرئيسية." },
   deleteItemTitle: { en: "Delete this item?", ar: "حذف هذا الصنف؟" },
   deleteCategoryTitle: { en: "Delete this category?", ar: "حذف هذا القسم؟" },
   // The recipe cards: one verb, on the answer it applies to
