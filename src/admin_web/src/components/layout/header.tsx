@@ -54,7 +54,10 @@ export function Header({ className, ...props }: HeaderProps) {
       )}
       {...props}
     >
-      <div className='flex h-full items-center gap-2 px-4 md:gap-3'>
+      {/* On a desk, three fixed columns: where you are, "Go to…" in the
+          middle, the controls at the end; a long page name never moves the
+          search */}
+      <div className='flex h-full items-center gap-2 px-4 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,28rem)_minmax(0,1fr)] md:gap-3'>
         {/* A phone: the business and its branch; the menu is the tab bar's More */}
         <div className='flex min-w-0 items-center gap-2 md:hidden'>
           <LogoSlot nameClassName='text-sm' />
@@ -65,30 +68,31 @@ export function Header({ className, ...props }: HeaderProps) {
           )}
         </div>
 
-        <SidebarTrigger className='text-muted-foreground hidden size-8 md:inline-flex' />
-
-        {trail && (
-          <nav
-            aria-label={t('navigation')}
-            className='hidden min-w-0 items-center gap-1.5 text-sm md:flex'
-          >
-            {trail.group && (
-              <>
-                <span className='text-muted-foreground truncate'>
-                  {t(trail.group)}
-                </span>
-                <ChevronRight className='text-muted-foreground/60 size-3.5 shrink-0 rtl:rotate-180' />
-              </>
-            )}
-            <span className='truncate font-medium'>{t(trail.page)}</span>
-          </nav>
-        )}
+        <div className='hidden min-w-0 items-center gap-3 md:flex'>
+          <SidebarTrigger className='text-muted-foreground size-8 shrink-0' />
+          {trail && (
+            <nav
+              aria-label={t('navigation')}
+              className='flex min-w-0 items-center gap-1.5 text-sm'
+            >
+              {trail.group && (
+                <>
+                  <span className='text-muted-foreground truncate'>
+                    {t(trail.group)}
+                  </span>
+                  <ChevronRight className='text-muted-foreground/60 size-3.5 shrink-0 rtl:rotate-180' />
+                </>
+              )}
+              <span className='truncate font-medium'>{t(trail.page)}</span>
+            </nav>
+          )}
+        </div>
 
         {/* "Go to…": a wide field on a desk, an icon on a phone */}
         <button
           type='button'
           onClick={() => setOpen(true)}
-          className='bg-muted/60 text-muted-foreground hover:bg-muted mx-auto hidden h-9 w-full max-w-md items-center gap-2 rounded-lg px-3 text-sm shadow-xs transition-colors md:flex'
+          className='bg-muted/60 text-muted-foreground hover:bg-muted hidden h-9 w-full items-center gap-2 rounded-lg px-3 text-sm shadow-xs transition-colors md:flex'
         >
           <SearchIcon className='size-4' />
           <span className='flex-1 text-start'>{t('goTo')}</span>
@@ -97,7 +101,7 @@ export function Header({ className, ...props }: HeaderProps) {
           </kbd>
         </button>
 
-        <div className='ms-auto flex items-center gap-1 md:ms-0 md:gap-2'>
+        <div className='ms-auto flex items-center gap-1 md:ms-0 md:gap-2 md:justify-self-end'>
           <Button
             variant='ghost'
             size='icon'

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { sidebarData } from './data/sidebar-data'
 import { checkIsActive, navTrail } from './nav-active'
 import { type NavItem } from './types'
 
@@ -105,4 +106,37 @@ describe('navTrail', () => {
       page: 'inventoryStock',
     })
   })
+})
+
+describe('every page tab keeps its sidebar entry lit', () => {
+  // The tab rows' destinations (Live | Calls, Dishes | Offers, the till's,
+  // Stock's, Employees', Accounts'): each must light one sidebar entry
+  const tabUrls = [
+    '/orders/live',
+    '/requests',
+    '/menu',
+    '/promos',
+    '/till/tickets',
+    '/till/shifts',
+    '/till/breakdown',
+    '/places/history',
+    '/places/reservations',
+    '/inventory/history/counts',
+    '/inventory/reports',
+    '/inventory/menu-cost',
+    '/payroll/attendance',
+    '/payroll/payslips',
+    '/finance/partners',
+  ]
+  for (const url of tabUrls) {
+    it(url, () => {
+      const lit = sidebarData.navGroups.flatMap((group) => {
+        const urls = group.items.map((item) => String(item.url))
+        return group.items.filter((item) =>
+          checkIsActive(url, item, false, urls)
+        )
+      })
+      expect(lit).toHaveLength(1)
+    })
+  }
 })

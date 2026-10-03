@@ -34,7 +34,12 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         // Everything that needs someone now: orders to confirm and tables calling, as two tabs
-        { title: 'liveNav', url: '/orders/live', icon: Radio },
+        {
+          title: 'liveNav',
+          url: '/orders/live',
+          icon: Radio,
+          tabs: [{ title: 'waiterCalls', url: '/requests' }],
+        },
         { title: 'orders', url: '/orders', icon: ClipboardList },
         // Rooms & Tables is every business's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
         {
@@ -49,7 +54,12 @@ export const sidebarData: SidebarData = {
       title: 'navMenuStock',
       items: [
         // The dishes, and the offers and codes on them, as tabs of one page
-        { title: 'menuItems', url: '/menu', icon: Coffee },
+        {
+          title: 'menuItems',
+          url: '/menu',
+          icon: Coffee,
+          tabs: [{ title: 'offersTab', url: '/promos' }],
+        },
         // What the branch has, the ledger behind it, what the menu takes out
         // of it. Every posting is made from Stock.
         {
