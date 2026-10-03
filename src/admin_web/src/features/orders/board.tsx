@@ -105,7 +105,7 @@ export function OrdersBoard() {
                 <Badge className='h-6 tabular-nums'>{pending.length}</Badge>
               )}
               {delayedCount > 0 && (
-                <Badge variant='destructive' className='h-6 gap-1 tabular-nums'>
+                <Badge variant='danger' className='h-6 gap-1 tabular-nums'>
                   <Clock className='h-3 w-3' />
                   {delayedCount} {t('delayed')}
                 </Badge>

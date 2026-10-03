@@ -758,7 +758,7 @@ function MenuRow({
                   <Badge variant='secondary'>{t('popular')}</Badge>
                 )}
                 {item.isOutOfStock && (
-                  <Badge variant='destructive'>{t('outOfStock')}</Badge>
+                  <Badge variant='danger'>{t('outOfStock')}</Badge>
                 )}
                 {stockRule && (
                   <Badge

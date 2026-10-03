@@ -23,6 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { StatusChip } from '@/components/status-chip'
 import {
   FEE_BUSINESS,
   FEE_GUEST,
@@ -68,13 +69,11 @@ export function PaymentSettingsPage() {
         badge={
           settings &&
           (settings.ready ? (
-            <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
-              {t('payReady')}
-            </Badge>
+            <StatusChip tone='success'>{t('payReady')}</StatusChip>
           ) : settings.simulated ? (
-            <Badge variant='secondary'>{t('payDemoBadge')}</Badge>
+            <StatusChip tone='info'>{t('payDemoBadge')}</StatusChip>
           ) : (
-            <Badge variant='outline'>{t('payNotReady')}</Badge>
+            <StatusChip tone='warning'>{t('payNotReady')}</StatusChip>
           ))
         }
       />

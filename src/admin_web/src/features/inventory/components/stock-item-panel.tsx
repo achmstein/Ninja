@@ -188,7 +188,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
           >
             {formatQuantity(level.onHand, level.unit, t)}
             {level.isLow && (
-              <Badge variant='destructive' className='ms-3 align-middle'>
+              <Badge variant='danger' className='ms-3 align-middle'>
                 {t('lowBadge')}
               </Badge>
             )}

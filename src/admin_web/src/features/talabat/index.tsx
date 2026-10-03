@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { StatusChip } from '@/components/status-chip'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 
 const talabatQuery = { query: { 'api-version': API_VERSION } }
@@ -56,11 +57,9 @@ export function TalabatSettingsPage() {
         badge={
           status &&
           (status.connected ? (
-            <Badge className='bg-emerald-600 text-white hover:bg-emerald-600'>
-              {t('talabatConnected')}
-            </Badge>
+            <StatusChip tone='success'>{t('talabatConnected')}</StatusChip>
           ) : (
-            <Badge variant='outline'>{t('talabatNotConnected')}</Badge>
+            <StatusChip tone='warning'>{t('talabatNotConnected')}</StatusChip>
           ))
         }
       />

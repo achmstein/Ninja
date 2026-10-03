@@ -115,7 +115,7 @@ export function getMenuCostColumns({
               </Badge>
             )}
             {status === 'over' && (
-              <Badge variant='destructive'>{t('overTarget')}</Badge>
+              <Badge variant='danger'>{t('overTarget')}</Badge>
             )}
             <span
               className={cn(

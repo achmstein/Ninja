@@ -119,7 +119,7 @@ export function ServiceRequests() {
         description={t('liveDescription')}
         badge={
           all.length > 0 && (
-            <Badge variant='destructive' className='h-6 tabular-nums'>
+            <Badge variant='danger' className='h-6 tabular-nums'>
               {all.length}
             </Badge>
           )

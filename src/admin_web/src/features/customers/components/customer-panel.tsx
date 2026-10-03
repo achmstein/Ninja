@@ -153,7 +153,7 @@ function CustomerHub({
             <div className='flex items-center gap-2'>
               <h2 className='truncate text-sm font-semibold'>{name}</h2>
               {!customer.enabled && (
-                <Badge variant='destructive'>{t('disabled')}</Badge>
+                <Badge variant='danger'>{t('disabled')}</Badge>
               )}
               {customer.addedAtCounter && <AddedAtCounterBadge />}
             </div>
