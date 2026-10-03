@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkIsActive } from './nav-active'
+import { checkIsActive, navTrail } from './nav-active'
 import { type NavItem } from './types'
 
 // The sidebar highlights exactly one entry per group. These pin the rule
@@ -8,49 +8,74 @@ import { type NavItem } from './types'
 const link = (url: string): NavItem =>
   ({ title: 'menu', url }) as unknown as NavItem
 
-/** The Inventory group, as sidebar data has it */
-const inventory = [
-  '/inventory',
-  '/inventory/history',
-  '/inventory/reports',
-  '/inventory/menu-cost',
-]
+/** The Menu & stock group, as sidebar data has it */
+const menuStock = ['/menu', '/inventory']
+
+/** Stock, whose History, Reports and Menu cost are tabs of its page */
+const stock = {
+  title: 'inventoryStock',
+  url: '/inventory',
+  tabs: [
+    { title: 'inventoryHistory', url: '/inventory/history' },
+    { title: 'inventoryReports', url: '/inventory/reports' },
+    { title: 'menuCost', url: '/inventory/menu-cost' },
+  ],
+} as unknown as NavItem
+
+/** Employees, with its tabs and the employee's own page */
+const employees = {
+  title: 'navPayrollEmployees',
+  url: '/payroll/employees',
+  tabs: [
+    { title: 'navPayrollAttendance', url: '/payroll/attendance' },
+    { title: 'navPayrollPayslips', url: '/payroll/payslips' },
+  ],
+  match: ['/payroll/employee'],
+} as unknown as NavItem
 
 describe('checkIsActive', () => {
   it('lights the entry whose url the page is', () => {
-    expect(
-      checkIsActive('/inventory', link('/inventory'), false, inventory)
-    ).toBe(true)
+    expect(checkIsActive('/inventory', stock, false, menuStock)).toBe(true)
   })
 
   it('keeps a query string out of the comparison', () => {
-    expect(
-      checkIsActive('/inventory?page=2', link('/inventory'), false, inventory)
-    ).toBe(true)
-  })
-
-  it('lights the nearest entry for a child page with no nav item of its own', () => {
-    // /inventory/history/counts belongs to History, not to Stock
-    const path = '/inventory/history/counts'
-    expect(
-      checkIsActive(path, link('/inventory/history'), false, inventory)
-    ).toBe(true)
-    expect(checkIsActive(path, link('/inventory'), false, inventory)).toBe(
-      false
+    expect(checkIsActive('/inventory?page=2', stock, false, menuStock)).toBe(
+      true
     )
   })
 
-  it('lights every history tab under the same entry', () => {
-    for (const tab of ['counts', 'purchases', 'transfers']) {
-      expect(
-        checkIsActive(
-          `/inventory/history/${tab}`,
-          link('/inventory/history'),
-          false,
-          inventory
-        )
-      ).toBe(true)
+  it('lights the entry for each of its tabs', () => {
+    for (const path of [
+      '/inventory/history',
+      '/inventory/history/counts',
+      '/inventory/reports',
+      '/inventory/menu-cost',
+    ]) {
+      expect(checkIsActive(path, stock, false, menuStock)).toBe(true)
     }
+    expect(checkIsActive('/menu', stock, false, menuStock)).toBe(false)
+  })
+
+  it('lights Employees for its tabs and an employee page, not Staff', () => {
+    const team = ['/payroll/employees', '/staff']
+    for (const path of [
+      '/payroll/attendance',
+      '/payroll/payslips',
+      '/payroll/employee/5',
+    ]) {
+      expect(checkIsActive(path, employees, false, team)).toBe(true)
+      expect(checkIsActive(path, link('/staff'), false, team)).toBe(false)
+    }
+  })
+
+  it('lets a more specific sibling win: Live, not Orders', () => {
+    const today = ['/', '/orders/live', '/orders']
+    expect(checkIsActive('/orders/live', link('/orders'), false, today)).toBe(
+      false
+    )
+    expect(
+      checkIsActive('/orders/live', link('/orders/live'), false, today)
+    ).toBe(true)
   })
 
   it('lights Menu for a menu item page', () => {
@@ -67,5 +92,17 @@ describe('checkIsActive', () => {
     expect(checkIsActive('/inventory/history', link('/'), false, ['/'])).toBe(
       false
     )
+  })
+})
+
+describe('navTrail', () => {
+  it('names a tab by its entry and group', () => {
+    const groups = [
+      { title: 'navMenuStock', items: [link('/menu'), stock] },
+    ] as Parameters<typeof navTrail>[1]
+    expect(navTrail('/inventory/history/counts', groups)).toEqual({
+      group: 'navMenuStock',
+      page: 'inventoryStock',
+    })
   })
 })

@@ -15,6 +15,11 @@ type PageTab = {
 type PageTabsProps = {
   value: string
   tabs: PageTab[]
+  /**
+   * A second row inside one tab (History's kinds of record): no well and a
+   * smaller type, so it reads as a choice within the tab above it
+   */
+  quiet?: boolean
   className?: string
 }
 
@@ -22,12 +27,13 @@ type PageTabsProps = {
  * Sibling pages of one section (Live | History, Sales | Tickets | …) as a
  * tab row of links, so each tab is a real URL. Sits under the PageHeader.
  */
-export function PageTabs({ value, tabs, className }: PageTabsProps) {
+export function PageTabs({ value, tabs, quiet, className }: PageTabsProps) {
   return (
     <nav
       role='tablist'
       className={cn(
-        'bg-muted text-muted-foreground inline-flex h-9 w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-lg p-[3px]',
+        'text-muted-foreground inline-flex w-fit max-w-full items-center gap-0.5 overflow-x-auto',
+        quiet ? 'h-8' : 'bg-muted h-9 rounded-lg p-[3px]',
         className
       )}
     >
@@ -42,14 +48,19 @@ export function PageTabs({ value, tabs, className }: PageTabsProps) {
             aria-selected={active}
             data-state={active ? 'active' : 'inactive'}
             className={cn(
-              'focus-visible:ring-ring/50 relative isolate inline-flex h-full items-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]',
+              'focus-visible:ring-ring/50 relative isolate inline-flex h-full items-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px]',
+              quiet ? 'px-2.5 text-[13px]' : 'px-3 text-sm',
               active ? 'text-foreground' : 'hover:text-foreground'
             )}
           >
             {active && (
               <ActiveMarker
-                group='page-tabs'
-                className='bg-background dark:bg-input/40 rounded-md shadow-sm'
+                group={quiet ? 'page-tabs-quiet' : 'page-tabs'}
+                className={
+                  quiet
+                    ? 'bg-muted rounded-md'
+                    : 'bg-background dark:bg-input/40 rounded-md shadow-sm'
+                }
               />
             )}
             {tab.label}

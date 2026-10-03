@@ -1,9 +1,9 @@
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { getRealmRoles } from '@/config/oidc-config'
-import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useSearch } from '@/context/search-provider'
 import { useTheme } from '@/context/theme-provider'
@@ -46,10 +46,12 @@ export function CommandMenu() {
       items: group.items.filter(
         (item) =>
           item.items ||
-          ((!item.feature || features[item.feature]) &&
+          ((!item.ownerOnly || isOwner) &&
+            (!item.feature || features[item.feature]) &&
             (!item.needsPlaces || !cloudKitchen))
       ),
     }))
+    .filter((group) => group.items.length > 0)
 
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>
@@ -61,7 +63,7 @@ export function CommandMenu() {
             <CommandGroup key={group.title} heading={t(group.title)}>
               {group.items.map((navItem, i) => {
                 if (navItem.url)
-                  return (
+                  return [
                     <CommandItem
                       key={`${navItem.url}-${i}`}
                       // Localized value so typing in the UI language matches
@@ -74,8 +76,27 @@ export function CommandMenu() {
                         <ArrowRight className='text-muted-foreground/80 size-2' />
                       </div>
                       {t(navItem.title)}
-                    </CommandItem>
-                  )
+                    </CommandItem>,
+                    // The page's other tabs, each found by its own name
+                    ...(navItem.tabs ?? [])
+                      .filter((tab) => !tab.ownerOnly || isOwner)
+                      .map((tab) => (
+                        <CommandItem
+                          key={String(tab.url)}
+                          value={`${t(navItem.title)} ${t(tab.title)}`}
+                          onSelect={() => {
+                            runCommand(() => navigate({ to: tab.url }))
+                          }}
+                        >
+                          <div className='flex size-4 items-center justify-center'>
+                            <ArrowRight className='text-muted-foreground/80 size-2' />
+                          </div>
+                          {t(navItem.title)}{' '}
+                          <ChevronRight className='rtl:rotate-180' />{' '}
+                          {t(tab.title)}
+                        </CommandItem>
+                      )),
+                  ]
 
                 return navItem.items?.map((subItem, i) => (
                   <CommandItem

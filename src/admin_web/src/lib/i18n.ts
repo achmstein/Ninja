@@ -422,10 +422,13 @@ const webExtras = {
   orderWaitingToast: { en: "Order #{orderId} has been waiting {minutes} min", ar: "الطلب #{orderId} ينتظر منذ {minutes} دقيقة" },
 
   // Navigation
-  navOperations: { en: "Operations", ar: "التشغيل" },
-  navCatalog: { en: "Catalog", ar: "الكتالوج" },
+  navToday: { en: "Today", ar: "اليوم" },
+  navMenuStock: { en: "Menu & stock", ar: "القائمة والمخزون" },
+  navMoney: { en: "Money", ar: "المال" },
+  navTeam: { en: "Team", ar: "الفريق" },
   navCustomers: { en: "Customers", ar: "العملاء" },
-  navAdministration: { en: "Administration", ar: "الإدارة" },
+  navBusiness: { en: "Business", ar: "النشاط" },
+  navConnections: { en: "Connections", ar: "الربط" },
   orderHistory: { en: "Order History", ar: "سجل الطلبات" },
   menuItems: { en: "Menu Items", ar: "أصناف القائمة" },
   announcements: { en: "Announcements", ar: "الإعلانات" },
@@ -840,7 +843,6 @@ const webExtras = {
   contentNotFound: { en: "Content not found.", ar: "المحتوى غير موجود." },
 
   // Inventory: stock levels, items, recipes, purchases, counts, movements, transfers, reports
-  navInventory: { en: "Inventory", ar: "المخزون" },
   inventoryStock: { en: "Stock", ar: "المخزون الحالي" },
   inventoryItems: { en: "Items", ar: "الأصناف" },
   inventoryPurchases: { en: "Purchases", ar: "المشتريات" },
@@ -1064,7 +1066,6 @@ const webExtras = {
   cashTabPayments: { en: "Cash tab payments", ar: "دفعات حسابات نقدية" },
   allTenders: { en: "All tenders", ar: "كل طرق الدفع" },
   // Payroll
-  navPayroll: { en: "Payroll", ar: "الرواتب" },
   navPayrollEmployees: { en: "Employees", ar: "الموظفون" },
   navPayrollAttendance: { en: "Attendance", ar: "الحضور" },
   navPayrollPayslips: { en: "Payslips", ar: "كشوف الرواتب" },
@@ -1177,7 +1178,6 @@ const webExtras = {
   monthlyGridHint: { en: "Monthly staff: mark only days off and absences — an unmarked day is a working day. Daily workers: mark the days worked and the agreed days off; a day off within the allowance is paid.", ar: "الموظفون الشهريون: سجّل الإجازات والغياب فقط — اليوم غير المُسجَّل يوم عمل. العمالة اليومية: سجّل أيام العمل والإجازات المتفق عليها؛ الإجازة في حدود الرصيد مدفوعة." },
 
   // Finance
-  navFinance: { en: "Finance", ar: "المالية" },
   navFinanceExpenses: { en: "Expenses", ar: "المصروفات" },
   navFinanceSuppliers: { en: "Suppliers", ar: "الموردون" },
   navFinancePartners: { en: "Partners", ar: "الشركاء" },

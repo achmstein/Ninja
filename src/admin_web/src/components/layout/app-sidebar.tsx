@@ -94,6 +94,8 @@ export function AppSidebar() {
           return withBadge(item)
         }),
     }))
+    // A group left with nothing (Team for a manager without payroll) goes too
+    .filter((group) => group.items.length > 0)
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>

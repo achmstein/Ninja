@@ -38,6 +38,7 @@ import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { monthRange, PAY_SCHEME, PAYSLIP_STATUS, schemeLabel } from './format'
+import { PayrollTabs } from './payroll-tabs'
 import { payslipsQueryOptions } from './queries'
 import { usePayrollActions } from './use-payroll-actions'
 
@@ -173,7 +174,7 @@ export function Payslips() {
     <>
       <Main>
         <PageHeader
-          title={t('navPayrollPayslips')}
+          title={t('navPayrollEmployees')}
           actions={
             <div className='flex gap-2'>
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
@@ -188,6 +189,7 @@ export function Payslips() {
             </div>
           }
         >
+          <PayrollTabs value='payslips' />
           <MonthSwitcher
             monthKey={monthKey}
             onChange={(next) =>

@@ -11,6 +11,8 @@ import {
 import { getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
+import { formatEgp } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,10 +24,8 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/page-header'
-import { formatEgp } from '@/lib/money'
-import { cn } from '@/lib/utils'
 import { Dot, ListRow } from '@/components/list-row'
+import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { StatusChip } from '@/components/status-chip'
 import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
@@ -39,6 +39,7 @@ import {
   summarize,
   toMenuCostRows,
 } from './menu-cost-rows'
+import { StockTabs } from './stock-tabs'
 
 const route = getRouteApi('/_authenticated/inventory/menu-cost')
 
@@ -125,7 +126,7 @@ export function MenuCost() {
   return (
     <Main>
       <PageHeader
-        title={t('menuCost')}
+        title={t('inventoryStock')}
         actions={
           <div className='flex items-center gap-2'>
             <Label htmlFor='food-cost-target' className='whitespace-nowrap'>
@@ -162,7 +163,9 @@ export function MenuCost() {
             </div>
           </div>
         }
-      />
+      >
+        <StockTabs value='menu-cost' />
+      </PageHeader>
 
       {loading ? (
         <Skeleton className='h-24' />

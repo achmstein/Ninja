@@ -1,17 +1,12 @@
 import {
-  Banknote,
-  BarChart3,
   Building2,
-  CalendarCheck,
-  ChefHat,
-  ClipboardList,
   Coffee,
   Radio,
   Contact,
   CreditCard,
   Bike,
   Armchair,
-  History,
+  ClipboardList,
   LayoutDashboard,
   Megaphone,
   Palette,
@@ -29,12 +24,13 @@ import { type SidebarData } from '../types'
 
 // Titles are translation keys, rendered through t() in NavGroup.
 // Every page is one click away: flat items, no nested menus (owner's call —
-// a second click to reach a page you need is one too many).
+// a second click to reach a page you need is one too many). A job is one
+// entry; its views are tabs of that page (Live, Till, Menu, Stock, Employees).
 export const sidebarData: SidebarData = {
   navGroups: [
     {
-      // The day-to-day screens staff keep open
-      title: 'navOperations',
+      // The screens kept open through the day
+      title: 'navToday',
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         // Everything that needs someone now: orders to confirm and tables calling, as two tabs
@@ -47,80 +43,82 @@ export const sidebarData: SidebarData = {
           icon: Armchair,
           needsPlaces: true,
         },
+      ],
+    },
+    {
+      title: 'navMenuStock',
+      items: [
+        // The dishes, and the offers and codes on them, as tabs of one page
+        { title: 'menuItems', url: '/menu', icon: Coffee },
+        // What the branch has, the ledger behind it, what the menu takes out
+        // of it. Every posting is made from Stock.
+        {
+          title: 'inventoryStock',
+          url: '/inventory',
+          icon: Warehouse,
+          feature: 'inventory',
+          tabs: [
+            { title: 'inventoryHistory', url: '/inventory/history' },
+            { title: 'inventoryReports', url: '/inventory/reports' },
+            { title: 'menuCost', url: '/inventory/menu-cost' },
+          ],
+        },
+      ],
+    },
+    {
+      // What came in (the till) and what went out (bills, suppliers), and what is left
+      title: 'navMoney',
+      items: [
         { title: 'navTill', url: '/till', icon: ReceiptText },
-      ],
-    },
-    {
-      title: 'navCatalog',
-      // The dishes, and the offers and codes on them, as tabs of one page
-      items: [{ title: 'menuItems', url: '/menu', icon: Coffee }],
-    },
-    {
-      // Stock: what the branch has, what the menu takes out of it, and the
-      // ledger behind it. Every posting is made from Stock.
-      title: 'navInventory',
-      feature: 'inventory',
-      items: [
-        { title: 'inventoryStock', url: '/inventory', icon: Warehouse },
-        {
-          title: 'inventoryHistory',
-          url: '/inventory/history',
-          icon: History,
-        },
-        {
-          title: 'inventoryReports',
-          url: '/inventory/reports',
-          icon: BarChart3,
-        },
-        {
-          title: 'menuCost',
-          url: '/inventory/menu-cost',
-          icon: ChefHat,
-        },
-      ],
-    },
-    {
-      // People: the register, the month's attendance, the month's payslips
-      title: 'navPayroll',
-      feature: 'payroll',
-      items: [
-        {
-          title: 'navPayrollEmployees',
-          url: '/payroll/employees',
-          icon: Contact,
-        },
-        {
-          title: 'navPayrollAttendance',
-          url: '/payroll/attendance',
-          icon: CalendarCheck,
-        },
-        {
-          title: 'navPayrollPayslips',
-          url: '/payroll/payslips',
-          icon: Banknote,
-        },
-      ],
-    },
-    {
-      // Money beyond stock and staff: bills, supplier tabs, the owners' own
-      title: 'navFinance',
-      feature: 'finance',
-      items: [
         {
           title: 'navFinanceExpenses',
           url: '/finance/expenses',
           icon: Receipt,
+          feature: 'finance',
         },
         // Who the business owes and who shares its profit: suppliers and partners as tabs of one page
         {
           title: 'accountsNav',
           url: '/finance/suppliers',
           icon: Truck,
+          feature: 'finance',
+          tabs: [
+            {
+              title: 'navFinancePartners',
+              url: '/finance/partners',
+              ownerOnly: true,
+            },
+          ],
         },
         {
           title: 'navFinanceProfit',
           url: '/finance/profit',
           icon: TrendingUp,
+          feature: 'finance',
+          ownerOnly: true,
+        },
+      ],
+    },
+    {
+      // The people: the register with its attendance and payslips, and who signs in
+      title: 'navTeam',
+      items: [
+        {
+          title: 'navPayrollEmployees',
+          url: '/payroll/employees',
+          icon: Contact,
+          feature: 'payroll',
+          tabs: [
+            { title: 'navPayrollAttendance', url: '/payroll/attendance' },
+            { title: 'navPayrollPayslips', url: '/payroll/payslips' },
+          ],
+          // An employee's own page
+          match: ['/payroll/employee'],
+        },
+        {
+          title: 'staffAccounts',
+          url: '/staff',
+          icon: ShieldCheck,
           ownerOnly: true,
         },
       ],
@@ -133,12 +131,19 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'navAdministration',
+      // The business itself: where it is and how it looks
+      title: 'navBusiness',
       ownerOnly: true,
       items: [
         { title: 'branches', url: '/branches', icon: Building2 },
-        { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
+      ],
+    },
+    {
+      // What the business is plugged into outside the admin
+      title: 'navConnections',
+      ownerOnly: true,
+      items: [
         // Online payments: the business's own payment account, fee and splits
         {
           title: 'onlinePaymentsNav',

@@ -24,6 +24,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { EmployeeSheet } from './components/employee-sheet'
 import { payLabel } from './format'
+import { PayrollTabs } from './payroll-tabs'
 import { employeesQueryOptions } from './queries'
 
 const route = getRouteApi('/_authenticated/payroll/employees')
@@ -158,6 +159,7 @@ export function Employees() {
             </Button>
           }
         >
+          <PayrollTabs value='employees' />
           <label className='flex items-center gap-2 text-sm'>
             <Switch
               checked={showInactive}

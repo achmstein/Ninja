@@ -1,14 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import {
-  CalendarCheck,
-  Check,
-  Clock,
-  Minus,
-  Umbrella,
-  X,
-} from 'lucide-react'
+import { CalendarCheck, Check, Clock, Minus, Umbrella, X } from 'lucide-react'
 import { type AttendanceView, type EmployeeView } from '@/api/payroll'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
@@ -30,6 +23,7 @@ import { Main } from '@/components/layout/main'
 import { MonthSwitcher } from '@/components/month-switcher'
 import { PageHeader } from '@/components/page-header'
 import { ATTENDANCE, monthRange, PAY_SCHEME, schemeLabel } from './format'
+import { PayrollTabs } from './payroll-tabs'
 import { attendanceQueryOptions, employeesQueryOptions } from './queries'
 import { usePayrollActions } from './use-payroll-actions'
 
@@ -186,7 +180,7 @@ export function Attendance() {
   return (
     <Main>
       <PageHeader
-        title={t('navPayrollAttendance')}
+        title={t('navPayrollEmployees')}
         badge={
           <InfoTip>
             <p>{t('attendanceLegend')}</p>
@@ -217,6 +211,7 @@ export function Attendance() {
           ) : null
         }
       >
+        <PayrollTabs value='attendance' />
         <MonthSwitcher
           monthKey={monthKey}
           onChange={(next) =>

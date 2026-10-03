@@ -45,6 +45,7 @@ import { StockStats } from './components/stock-stats'
 import { TransferDialog } from './components/transfer-dialog'
 import { formatQuantity, packsOf, unitLabel } from './format'
 import { stockLevelsQueryOptions } from './queries'
+import { StockTabs } from './stock-tabs'
 import { useInventoryActions } from './use-inventory-actions'
 
 const route = getRouteApi('/_authenticated/inventory/')
@@ -192,6 +193,7 @@ export function Stock() {
             </>
           }
         >
+          <StockTabs value='stock' />
           <StockStats levels={active} />
         </PageHeader>
 

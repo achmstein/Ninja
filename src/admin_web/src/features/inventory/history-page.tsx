@@ -2,6 +2,7 @@ import { useT } from '@/lib/i18n'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
+import { StockTabs } from './stock-tabs'
 
 type HistoryTab = 'movements' | 'purchases' | 'counts' | 'transfers'
 
@@ -11,15 +12,18 @@ type HistoryPageProps = {
 }
 
 /**
- * The inventory ledger as one page with a tab per kind of record. Every
- * posting is made from Stock; here you only look things up.
+ * The inventory ledger, Stock's History tab, with a quieter row under it
+ * per kind of record. Every posting is made from Stock; here you only look
+ * things up.
  */
 export function HistoryPage({ tab, children }: HistoryPageProps) {
   const t = useT()
   return (
     <Main>
-      <PageHeader title={t('inventoryHistory')}>
+      <PageHeader title={t('inventoryStock')}>
+        <StockTabs value='history' />
         <PageTabs
+          quiet
           value={tab}
           tabs={[
             {

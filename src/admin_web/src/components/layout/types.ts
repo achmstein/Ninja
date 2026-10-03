@@ -23,6 +23,18 @@ type NavLink = BaseNavItem & {
    * owner switches it on (the setup comes first)
    */
   entitled?: FeatureKey
+  /**
+   * The page's other tabs: they light this entry, and Go to… still finds
+   * each by its own name
+   */
+  tabs?: {
+    title: TranslationKey
+    url: LinkProps['to']
+    /** A tab only the owner sees */
+    ownerOnly?: boolean
+  }[]
+  /** Further paths that belong to this entry (a detail page off a tab) */
+  match?: string[]
 }
 
 type NavCollapsible = BaseNavItem & {

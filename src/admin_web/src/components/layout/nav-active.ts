@@ -18,9 +18,9 @@ export function checkIsActive(
     href === item.url || // /endpint?search=param
     path === item.url || // endpoint
     !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
-    // child pages without their own nav item (e.g. /rooms/history → Rooms),
+    // child pages without their own nav item (e.g. /places/history → Rooms),
     // unless a *more specific* sibling claims the path (e.g. under
-    // /inventory/history/counts, History wins over Stock). Only a longer url
+    // /orders/live, Live wins over Orders). Only a longer url
     // may cancel this one: a shorter one is the parent of both and would
     // otherwise leave neither entry active.
     (typeof item.url === 'string' &&
@@ -40,15 +40,27 @@ export function checkIsActive(
       })) ||
     (mainNav &&
       href.split('/')[1] !== '' &&
-      href.split('/')[1] === item?.url?.split('/')[1])
+      href.split('/')[1] === item?.url?.split('/')[1]) ||
+    // the entry's other tabs, and paths given to it (Attendance → Employees)
+    otherPaths(item).some((url) => path === url || path.startsWith(`${url}/`))
   )
+}
+
+/** Paths beyond its own url that belong to an entry: its tabs, its `match` */
+function otherPaths(item: NavItem): string[] {
+  if (item.items) return []
+  return [
+    ...(item.tabs ?? []).map((tab) => String(tab.url)),
+    ...(item.match ?? []),
+  ]
 }
 
 /**
  * Where a path sits in the navigation, for the top bar's breadcrumbs: the
  * group's title and the page's, both translation keys. The entry with the
- * longest url the path is under wins (/inventory/history/counts is History,
- * not Stock); the dashboard only for "/".
+ * longest url (its own, a tab's or a `match`) the path is under wins
+ * (/inventory/history/counts is Stock, through its History tab); the
+ * dashboard only for "/".
  */
 export function navTrail(
   pathname: string,
@@ -64,14 +76,16 @@ export function navTrail(
       item.items ? item.items : [item]
     )
     for (const entry of entries) {
-      const url = typeof entry.url === 'string' ? entry.url : null
-      if (!url) continue
-      const matches =
-        url === '/'
-          ? pathname === '/'
-          : pathname === url || pathname.startsWith(`${url}/`)
-      if (matches && (!best || url.length > best.length)) {
-        best = { group: group.title, page: entry.title, length: url.length }
+      const own = typeof entry.url === 'string' ? entry.url : null
+      if (!own) continue
+      for (const url of [own, ...otherPaths(entry as NavItem)]) {
+        const matches =
+          url === '/'
+            ? pathname === '/'
+            : pathname === url || pathname.startsWith(`${url}/`)
+        if (matches && (!best || url.length > best.length)) {
+          best = { group: group.title, page: entry.title, length: url.length }
+        }
       }
     }
   }

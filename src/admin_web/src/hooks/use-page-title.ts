@@ -30,7 +30,18 @@ export function usePageTitle() {
       ...sidebarData.navGroups.flatMap((group) =>
         group.items.flatMap((item) =>
           item.url
-            ? [{ url: String(item.url), title: item.title }]
+            ? [
+                { url: String(item.url), title: item.title },
+                // A tab is named for itself, a detail page for its entry
+                ...(item.tabs ?? []).map((tab) => ({
+                  url: String(tab.url),
+                  title: tab.title,
+                })),
+                ...(item.match ?? []).map((url) => ({
+                  url,
+                  title: item.title,
+                })),
+              ]
             : (item.items ?? []).map((sub) => ({
                 url: String(sub.url),
                 title: sub.title,

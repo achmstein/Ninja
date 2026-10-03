@@ -30,6 +30,7 @@ import { Stat, StatStrip } from '@/components/stat-strip'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { formatQuantity, formatSignedQuantity } from './format'
 import { getReportColumns } from './report-columns'
+import { StockTabs } from './stock-tabs'
 
 const route = getRouteApi('/_authenticated/inventory/reports')
 
@@ -111,7 +112,8 @@ export function Reports() {
   return (
     <>
       <Main>
-        <PageHeader title={t('inventoryReports')}>
+        <PageHeader title={t('inventoryStock')}>
+          <StockTabs value='reports' />
           <div className='flex flex-wrap items-center gap-2'>
             <DateRangePicker
               search={search}
