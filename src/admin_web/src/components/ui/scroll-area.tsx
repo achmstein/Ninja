@@ -6,12 +6,15 @@ interface ScrollAreaProps extends React.ComponentProps<
   typeof ScrollAreaPrimitive.Root
 > {
   orientation?: 'vertical' | 'horizontal'
+  /** Padding that scrolls with the content (room after the last item) */
+  viewportClassName?: string
 }
 
 function ScrollArea({
   className,
   children,
   orientation = 'vertical',
+  viewportClassName,
   ...props
 }: ScrollAreaProps) {
   return (
@@ -24,7 +27,8 @@ function ScrollArea({
         data-slot='scroll-area-viewport'
         className={cn(
           'focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1',
-          orientation === 'horizontal' && 'overflow-x-auto!'
+          orientation === 'horizontal' && 'overflow-x-auto!',
+          viewportClassName
         )}
       >
         {children}

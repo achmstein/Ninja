@@ -4,6 +4,7 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Search, UserRound, Users } from 'lucide-react'
 import { getGuests } from '@/api/ordering'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -29,11 +30,10 @@ import {
 import { CustomerPanel } from './components/customer-panel'
 import { CustomerStats } from './components/customer-stats'
 import { GuestPanel } from './components/guest-panel'
+import { allowedFilter, type CustomerFilter } from './filter'
 import { customersKeys, useCustomerCount } from './hooks/use-customers'
 import { customersService } from './services/customers-service'
 import { getCustomerDisplayName } from './types'
-import { useFeatures } from '@/lib/brand'
-import { allowedFilter, type CustomerFilter } from './filter'
 
 const route = getRouteApi('/_authenticated/customers/')
 
@@ -344,7 +344,7 @@ export function Customers() {
               onRetry={() => listQuery.refetch()}
             />
           ) : (
-            <ScrollArea className='-mx-3 h-full p-3'>
+            <ScrollArea className='-mx-3 h-full' viewportClassName='p-3 pb-10'>
               {listQuery.isLoading ? (
                 [...Array(8)].map((_, i) => (
                   <Skeleton key={i} className='mb-2 h-14 rounded-md' />

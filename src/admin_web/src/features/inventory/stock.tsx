@@ -268,7 +268,10 @@ export function Stock() {
                     onRetry={() => levelsQuery.refetch()}
                   />
                 ) : (
-                  <ScrollArea className='-mx-3 h-full p-3'>
+                  <ScrollArea
+                    className='-mx-3 h-full'
+                    viewportClassName='p-3 pb-10'
+                  >
                     {levelsQuery.isLoading ? (
                       [...Array(8)].map((_, i) => (
                         <Skeleton key={i} className='mb-2 h-14 rounded-md' />
@@ -500,7 +503,7 @@ function CountMode({
         </Button>
       </div>
 
-      <ScrollArea className='-mx-3 h-full p-3'>
+      <ScrollArea className='-mx-3 h-full' viewportClassName='p-3 pb-10'>
         <ul className='divide-y'>
           {levels.map((level) => {
             const id = String(level.stockItemId)
