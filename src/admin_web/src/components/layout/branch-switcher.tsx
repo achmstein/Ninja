@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useBranchStore } from '@/stores/branch-store'
+import { useBrandName } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import {
@@ -18,8 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useBrandName } from '@/lib/brand'
-import { BrandMark } from '@/components/brand-mark'
+import { LogoSlot } from './logo-slot'
 
 /**
  * The sidebar header, in the shadcn-admin team-switcher shape: the business's
@@ -65,15 +65,20 @@ export function BranchSwitcher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branches, branchId, switchable])
 
+  // The business's logo, whatever its shape (components/layout/logo-slot.tsx); the branch under it when
+  // there is more than one to switch between
   const tile = (
-    <>
-      <BrandMark className='size-8 text-base' />
-      <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{businessName || label}</span>
-        {/* One branch: the business is the place, and its branch says nothing more */}
-        {businessName && switchable && <span className='truncate text-xs'>{label}</span>}
-      </div>
-    </>
+    <div className='grid min-w-0 flex-1 gap-0.5 text-start text-sm leading-tight'>
+      <LogoSlot
+        className='group-data-[collapsible=icon]:[&>span:last-child]:hidden'
+        nameClassName={businessName ? undefined : 'hidden'}
+      />
+      {businessName && switchable && (
+        <span className='text-muted-foreground truncate ps-10 text-xs group-data-[collapsible=icon]:hidden'>
+          {label}
+        </span>
+      )}
+    </div>
   )
 
   if (!switchable) {

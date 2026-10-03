@@ -50,7 +50,12 @@ export function NavGroup({ title, items }: NavGroupProps) {
 
   return (
     <SidebarGroup>
-      {title && <SidebarGroupLabel>{t(title)}</SidebarGroupLabel>}
+      {title && (
+        // A console's section heading: small, spaced capitals, quiet
+        <SidebarGroupLabel className='text-sidebar-foreground/55 text-[11px] font-semibold tracking-wider uppercase'>
+          {t(title)}
+        </SidebarGroupLabel>
+      )}
       <SidebarMenu>
         {items.map((item) => {
           const key = `${item.title}-${item.url}`

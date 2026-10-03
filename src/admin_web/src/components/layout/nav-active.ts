@@ -1,3 +1,4 @@
+import { type TranslationKey } from '@/lib/i18n'
 import { type NavItem } from './types'
 
 /**
@@ -41,4 +42,38 @@ export function checkIsActive(
       href.split('/')[1] !== '' &&
       href.split('/')[1] === item?.url?.split('/')[1])
   )
+}
+
+/**
+ * Where a path sits in the navigation, for the top bar's breadcrumbs: the
+ * group's title and the page's, both translation keys. The entry with the
+ * longest url the path is under wins (/inventory/history/counts is History,
+ * not Stock); the dashboard only for "/".
+ */
+export function navTrail(
+  pathname: string,
+  groups: { title: TranslationKey; items: NavItem[] }[]
+): { group: TranslationKey | null; page: TranslationKey } | null {
+  let best: {
+    group: TranslationKey
+    page: TranslationKey
+    length: number
+  } | null = null
+  for (const group of groups) {
+    const entries = group.items.flatMap((item) =>
+      item.items ? item.items : [item]
+    )
+    for (const entry of entries) {
+      const url = typeof entry.url === 'string' ? entry.url : null
+      if (!url) continue
+      const matches =
+        url === '/'
+          ? pathname === '/'
+          : pathname === url || pathname.startsWith(`${url}/`)
+      if (matches && (!best || url.length > best.length)) {
+        best = { group: group.title, page: entry.title, length: url.length }
+      }
+    }
+  }
+  return best ? { group: best.group, page: best.page } : null
 }

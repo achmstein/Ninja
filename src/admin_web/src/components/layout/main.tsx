@@ -19,6 +19,9 @@ export function Main({ fixed, className, fluid, ...props }: MainProps) {
       className={cn(
         'flex flex-col gap-6 px-4 py-6',
 
+        // On a phone the tab bar sits over the bottom: the last of the page clears it
+        'max-md:pb-[calc(6rem+env(safe-area-inset-bottom))]',
+
         // If layout is fixed, make the main container flex and grow
         fixed && 'min-h-0 grow overflow-hidden',
 

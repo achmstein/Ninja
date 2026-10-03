@@ -4,7 +4,12 @@ import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getOpenReservationsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { entitledTo, useBrand, useFeatures, useIsCloudKitchen } from '@/lib/brand'
+import {
+  entitledTo,
+  useBrand,
+  useFeatures,
+  useIsCloudKitchen,
+} from '@/lib/brand'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -13,13 +18,13 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { serviceRequestsService } from '@/features/requests/service'
+import { PoweredBy } from '@/components/ninja-wordmark'
 import { isOpenReservation } from '@/features/places/status'
+import { serviceRequestsService } from '@/features/requests/service'
 import { BranchSwitcher } from './branch-switcher'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
-import { PoweredBy } from '@/components/ninja-wordmark'
 import { type NavItem } from './types'
 
 export function AppSidebar() {
@@ -51,7 +56,9 @@ export function AppSidebar() {
     enabled: features.reservations,
     refetchInterval: 60_000,
   })
-  const openReservations = features.reservations ? reservations.filter(isOpenReservation).length : 0
+  const openReservations = features.reservations
+    ? reservations.filter(isOpenReservation).length
+    : 0
 
   const badges: Record<string, number> = {
     '/orders': pendingOrders.length,

@@ -3,14 +3,15 @@ import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
-import { useRefreshPush } from '@/features/push/use-push'
 import { useAdminNotifications } from '@/hooks/use-admin-notifications'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { BranchGate } from '@/components/branch-gate'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
+import { TabBar } from '@/components/layout/tab-bar'
 import { SkipToMain } from '@/components/skip-to-main'
+import { useRefreshPush } from '@/features/push/use-push'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -51,6 +52,8 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
             <Header />
             <BranchGate>{children ?? <Outlet />}</BranchGate>
           </SidebarInset>
+          {/* A phone's way around: the daily places at the thumb, More for the rest */}
+          <TabBar />
         </SidebarProvider>
       </LayoutProvider>
     </SearchProvider>
