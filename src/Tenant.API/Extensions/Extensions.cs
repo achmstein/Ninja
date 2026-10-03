@@ -17,6 +17,8 @@ public static class Extensions
         builder.Services.AddMigration<TenantContext, TenantContextSeed>();
 
         builder.Services.AddScoped<BranchSettingsService>();
+        // A branch's short Maps link is followed to the map it opens, to read where the branch is
+        builder.Services.AddHttpClient(Apis.BranchApi.MapLinkClient, http => http.Timeout = TimeSpan.FromSeconds(5));
         builder.Services.AddSingleton<TenantCountry>();
 
         builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));

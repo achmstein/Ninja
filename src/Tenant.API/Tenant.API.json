@@ -753,6 +753,24 @@
           "requireSignInForTableOrders": {
             "type": "boolean",
             "default": false
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -821,6 +839,12 @@
           "isReservationsEnabled": {
             "type": "boolean",
             "default": true
+          },
+          "location": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1486,6 +1510,12 @@
             "type": [
               "null",
               "boolean"
+            ]
+          },
+          "location": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }

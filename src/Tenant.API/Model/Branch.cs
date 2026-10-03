@@ -31,4 +31,11 @@ public class Branch
     /// become a problem. Ordering enforces it from its projection.
     /// </summary>
     public bool RequireSignInForTableOrders { get; set; }
+
+    /// <summary>
+    /// Where the branch is, for a customer's nearest branch and the way there;
+    /// set from its Google Maps link. Both or neither.
+    /// </summary>
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

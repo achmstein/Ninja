@@ -54,7 +54,7 @@ public static class BranchApi
             .AsNoTracking()
             .Where(b => b.IsActive)
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders))
+            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -65,7 +65,7 @@ public static class BranchApi
         var branches = await context.Branches
             .AsNoTracking()
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders))
+            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -75,10 +75,19 @@ public static class BranchApi
         TenantContext context,
         BranchSettingsService settings,
         TenantCountry country,
-        CreateBranchRequest request)
+        IHttpClientFactory http,
+        CreateBranchRequest request,
+        CancellationToken ct)
     {
         if (request.Name is null || request.Name.IsEmpty)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
+
+        GeoPoint? point = null;
+        if (!string.IsNullOrWhiteSpace(request.Location))
+        {
+            point = await MapLocation.ResolveAsync(request.Location, http.CreateClient(MapLinkClient), ct);
+            if (point is null) return LocationNotRead();
+        }
 
         var branch = new Model.Branch
         {
@@ -91,7 +100,9 @@ public static class BranchApi
             DisplayOrder = request.DisplayOrder,
             DayStartTime = request.DayStartTime != null ? TimeOnly.Parse(request.DayStartTime) : new TimeOnly(6, 0),
             IsOrderingEnabled = request.IsOrderingEnabled,
-            IsReservationsEnabled = request.IsReservationsEnabled
+            IsReservationsEnabled = request.IsReservationsEnabled,
+            Latitude = point?.Latitude,
+            Longitude = point?.Longitude
         };
 
         context.Branches.Add(branch);
@@ -99,7 +110,7 @@ public static class BranchApi
         // Ordering, Spaces and Notification learn of a branch only through its settings event
         await settings.PublishNewAsync(branch);
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
         return TypedResults.Created($"/api/branches/{branch.Id}", response);
     }
 
@@ -108,7 +119,9 @@ public static class BranchApi
         BranchSettingsService settings,
         [Description("The branch ID")] int id,
         TenantCountry country,
-        UpdateBranchRequest request)
+        IHttpClientFactory http,
+        UpdateBranchRequest request,
+        CancellationToken ct)
     {
         if (request.Name is null || request.Name.IsEmpty)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
@@ -126,12 +139,41 @@ public static class BranchApi
         branch.DisplayOrder = request.DisplayOrder;
         if (request.DayStartTime != null) branch.DayStartTime = TimeOnly.Parse(request.DayStartTime);
 
+        // Null leaves where it is; empty takes it off the map; anything else must name a point
+        if (request.Location is { } location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                branch.Latitude = null;
+                branch.Longitude = null;
+            }
+            else if (await MapLocation.ResolveAsync(location, http.CreateClient(MapLinkClient), ct) is { } point)
+            {
+                branch.Latitude = point.Latitude;
+                branch.Longitude = point.Longitude;
+            }
+            else
+            {
+                return LocationNotRead();
+            }
+        }
+
         // The flags ride the same save; the service announces the change
         await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders);
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
         return TypedResults.Ok(response);
     }
+
+    /// <summary>The client that follows a short Maps link to the map it opens.</summary>
+    public const string MapLinkClient = "map-links";
+
+    private static BadRequest<ProblemDetails> LocationNotRead() =>
+        TypedResults.BadRequest<ProblemDetails>(new()
+        {
+            Title = "Location not read",
+            Detail = "Paste the branch's Google Maps link (Share → Copy link) or its coordinates, like 30.0444, 31.2357.",
+        });
 
     public static async Task<Results<Ok<BranchResponse>, NotFound>> UpdateBranchSettings(
         BranchSettingsService settings,
@@ -142,19 +184,20 @@ public static class BranchApi
         if (branch == null)
             return TypedResults.NotFound();
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
         return TypedResults.Ok(response);
     }
 
 }
 
 /// <param name="DayStartTime">When the branch's day turns over; a day runs from it to the same time the next day.</param>
+/// <param name="Latitude">Where the branch is, with Longitude; null until its location is set.</param>
 /// <param name="DayEndTime">Always the same as DayStartTime, a whole day: kept for the apps already installed, which read a day from a start and an end and take an end at its start as a full day round.</param>
-public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false);
+public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null);
 
-public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true);
+public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null);
 
-public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null);
+public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null);
 
 public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null);
 
