@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Plus, Truck } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { type SupplierView } from '@/api/finance'
 import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
@@ -33,6 +34,7 @@ import { ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { Section } from '@/components/section'
+import { FormFillButton } from '@/features/assist/form-fill-button'
 import { AccountsTabs } from './accounts-tabs'
 import { LedgerList } from './components/ledger-list'
 import { sourceLabel, SUPPLIER_ENTRY, supplierEntryLabel } from './format'
@@ -192,17 +194,25 @@ function SupplierSheet({
 }) {
   const t = useT()
   const open = isNew || supplier !== null
+  // The form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
   return (
     <EntitySheet
       open={open}
       onOpenChange={(next) => !next && onClose()}
       title={isNew ? t('addSupplier') : (supplier?.name ?? '')}
+      headerAction={<div ref={setFillSlot} className='contents' />}
       flush
     >
       {isNew ? (
         <Section title={t('details')}>
-          <SupplierForm key='new' supplier={null} onSaved={onClose} />
+          <SupplierForm
+            key='new'
+            supplier={null}
+            onSaved={onClose}
+            fillSlot={fillSlot}
+          />
         </Section>
       ) : supplier ? (
         <>
@@ -211,6 +221,7 @@ function SupplierSheet({
               key={String(supplier.id)}
               supplier={supplier}
               onSaved={() => {}}
+              fillSlot={fillSlot}
             />
           </Section>
           <Section title={t('account')}>
@@ -225,9 +236,12 @@ function SupplierSheet({
 function SupplierForm({
   supplier,
   onSaved,
+  fillSlot,
 }: {
   supplier: SupplierView | null
   onSaved: () => void
+  /** Where the sheet's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
 }) {
   const t = useT()
   const { saveSupplier, isPending } = useFinanceActions()
@@ -254,6 +268,31 @@ function SupplierForm({
 
   return (
     <form id='supplier-form' onSubmit={submit} className='space-y-4'>
+      {/* What it supplies, told from its name; never a phone */}
+      {fillSlot &&
+        createPortal(
+          <FormFillButton
+            form='a supplier'
+            fields={[
+              // The name is only ever what was typed: context, never filled
+              ...(name.trim()
+                ? [
+                    {
+                      key: 'name',
+                      label: 'Name',
+                      type: 'text' as const,
+                      value: name,
+                    },
+                  ]
+                : []),
+              { key: 'notes', label: 'Note', type: 'long', value: notes },
+            ]}
+            onFilled={(filled) => {
+              if (filled.notes && !notes.trim()) setNotes(filled.notes)
+            }}
+          />,
+          fillSlot
+        )}
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='sup-name'>{t('name')}</Label>

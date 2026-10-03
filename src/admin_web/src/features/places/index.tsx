@@ -221,7 +221,7 @@ export function PlacesManagement() {
                   if (group.length === 0) return null
                   return (
                     <div key={kind} className='mb-3'>
-                      <h2 className='text-muted-foreground px-2 pb-1 text-xs font-semibold tracking-wide uppercase'>
+                      <h2 className='text-muted-foreground px-2 pb-1 text-xs font-medium'>
                         {t(key)}
                       </h2>
                       {group.map((place) => {

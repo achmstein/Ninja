@@ -21,6 +21,7 @@ import {
   DataTable,
   dataTableFeatures,
 } from '@/components/data-table'
+import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
@@ -240,47 +241,51 @@ export function PromoCodesManagement() {
           <MenuTabs value='offers' />
         </PageHeader>
 
-        <DataTable
-          table={table}
-          isLoading={promosQuery.isLoading}
-          emptyMessage={t('noPromoCodes')}
-          onRowClick={(row) => {
-            setEditing(row.original)
-            setDialogOpen(true)
-          }}
-          mobileRow={({ original: p }) => (
-            <div className='flex items-center gap-3'>
-              <ListRow
-                className='flex-1'
-                title={
-                  <span className='flex items-center gap-2'>
-                    <span className='font-mono font-semibold'>{p.code}</span>
-                    {stateOf(p)}
-                  </span>
-                }
-                meta={
-                  <>
-                    <span className='tabular-nums'>{discountOf(p)}</span>
-                    <Dot />
-                    <span className='tabular-nums'>{windowOf(p)}</span>
-                  </>
-                }
-                trailing={
-                  <span className='tabular-nums'>
-                    {Number(p.uses)}
-                    {p.maxUses != null && (
-                      <span className='text-muted-foreground font-normal'>
-                        {' '}
-                        / {Number(p.maxUses)}
-                      </span>
-                    )}
-                  </span>
-                }
-              />
-              {activeSwitch(p)}
-            </div>
-          )}
-        />
+        {promosQuery.isError ? (
+          <ErrorState error={promosQuery.error} onRetry={promosQuery.refetch} />
+        ) : (
+          <DataTable
+            table={table}
+            isLoading={promosQuery.isLoading}
+            emptyMessage={t('noPromoCodes')}
+            onRowClick={(row) => {
+              setEditing(row.original)
+              setDialogOpen(true)
+            }}
+            mobileRow={({ original: p }) => (
+              <div className='flex items-center gap-3'>
+                <ListRow
+                  className='flex-1'
+                  title={
+                    <span className='flex items-center gap-2'>
+                      <span className='font-mono font-semibold'>{p.code}</span>
+                      {stateOf(p)}
+                    </span>
+                  }
+                  meta={
+                    <>
+                      <span className='tabular-nums'>{discountOf(p)}</span>
+                      <Dot />
+                      <span className='tabular-nums'>{windowOf(p)}</span>
+                    </>
+                  }
+                  trailing={
+                    <span className='tabular-nums'>
+                      {Number(p.uses)}
+                      {p.maxUses != null && (
+                        <span className='text-muted-foreground font-normal'>
+                          {' '}
+                          / {Number(p.maxUses)}
+                        </span>
+                      )}
+                    </span>
+                  }
+                />
+                {activeSwitch(p)}
+              </div>
+            )}
+          />
+        )}
       </Main>
 
       <PromoDialog

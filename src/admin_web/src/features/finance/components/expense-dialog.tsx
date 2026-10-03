@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Paperclip, Sparkles, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { formatDay } from '@/lib/business-day'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -20,6 +21,8 @@ import { AiButton } from '@/components/ai-button'
 import { DatePicker } from '@/components/date-picker'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid } from '@/components/field'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import { type FillField } from '@/features/assist/use-form-fill'
 import { PAID_FROM, paidFromLabel } from '../format'
 import { categoriesQueryOptions, partnersQueryOptions } from '../queries'
 import { pickedReceipt, RECEIPT_ACCEPT } from '../receipts'
@@ -40,14 +43,19 @@ export function ExpenseDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  // The form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
   return (
     <EntitySheet
       open={open}
       onOpenChange={onOpenChange}
       title={t('addExpense')}
+      headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed on open so each opening starts clean */}
-      {open && <ExpenseForm onDone={() => onOpenChange(false)} />}
+      {open && (
+        <ExpenseForm onDone={() => onOpenChange(false)} fillSlot={fillSlot} />
+      )}
     </EntitySheet>
   )
 }
@@ -55,7 +63,14 @@ export function ExpenseDialog({
 /** The fields the assistant may fill in from the bill */
 type BillField = 'date' | 'amount' | 'category' | 'vendor' | 'note'
 
-function ExpenseForm({ onDone }: { onDone: () => void }) {
+function ExpenseForm({
+  onDone,
+  fillSlot,
+}: {
+  onDone: () => void
+  /** Where the sheet's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
+}) {
   const t = useT()
   const localized = useLocalized()
   const { recordExpense, attachReceipt, isPending } = useFinanceActions()
@@ -76,6 +91,8 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
   const [receipt, setReceipt] = useState<File | null>(null)
   /** What the assistant filled in and the user has not touched since: shown tinted */
   const [suggested, setSuggested] = useState<Set<BillField>>(new Set())
+  // Whether those came from the bill (its own hint) or "Fill in with AI"
+  const [fromBill, setFromBill] = useState(false)
 
   const fromPartner = Number(paidFrom) === PAID_FROM.partner
   const canSubmit =
@@ -119,12 +136,60 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
       filled.add('note')
     }
     setSuggested(filled)
+    setFromBill(filled.size > 0)
 
     if (filled.size === 0 && proposal.warnings.length === 0) {
       toast.info(t('billNothingToFill'))
     }
     for (const warning of proposal.warnings) toast.warning(warning)
     if (proposal.notes) toast.warning(proposal.notes)
+  }
+
+  // The category told from the vendor and the note; the amount, when typed,
+  // is only a hint, and the date and the amount are never filled
+  const fillFields: FillField[] = [
+    {
+      key: 'category',
+      label: 'Expense category',
+      type: 'choice',
+      value: categoryId,
+      options: (categories.data ?? []).map((c) => ({
+        value: String(c.id),
+        label: localized(c.name),
+      })),
+    },
+    { key: 'vendor', label: 'Paid to', type: 'text', value: vendor },
+    { key: 'note', label: 'Note', type: 'long', value: note },
+    ...(amount.trim()
+      ? [
+          {
+            key: 'amount',
+            label: 'Amount',
+            type: 'number' as const,
+            value: amount,
+          },
+        ]
+      : []),
+  ]
+
+  const applyFill = (filled: Record<string, string>) => {
+    const wrote = new Set<BillField>()
+    const known = (categories.data ?? []).some(
+      (c) => String(c.id) === filled.category
+    )
+    if (filled.category && known && categoryId === '') {
+      setCategoryId(filled.category)
+      wrote.add('category')
+    }
+    if (filled.vendor && vendor.trim() === '') {
+      setVendor(filled.vendor)
+      wrote.add('vendor')
+    }
+    if (filled.note && note.trim() === '') {
+      setNote(filled.note)
+      wrote.add('note')
+    }
+    setSuggested((prev) => new Set([...prev, ...wrote]))
   }
 
   const submit = async (e: React.FormEvent) => {
@@ -154,6 +219,15 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form id='expense-form' onSubmit={submit} className='space-y-4'>
+      {fillSlot &&
+        createPortal(
+          <FormFillButton
+            form='an expense of a caf� or restaurant'
+            fields={fillFields}
+            onFilled={applyFill}
+          />,
+          fillSlot
+        )}
       <FieldGrid>
         <Field label={t('date')} htmlFor='expense-date'>
           <DatePicker
@@ -297,7 +371,7 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               </span>
             )}
           </div>
-          {suggested.size > 0 && (
+          {fromBill && suggested.size > 0 && (
             <p className='text-primary flex items-center gap-1 text-xs'>
               <Sparkles className='size-3' aria-hidden />
               {t('billFilledIn')}

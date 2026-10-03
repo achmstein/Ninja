@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import { type CatalogTypeDto } from '@/api/catalog'
 import {
   createCategoryMutation,
@@ -23,8 +24,14 @@ import {
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
+  type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import {
+  localizedFields,
+  mergeLocalized,
+} from '@/features/assist/use-form-fill'
 import { LOCALIZE_CATEGORY } from '@/features/assist/use-localize-assist'
 import { useNameAssist } from '@/features/assist/use-name-assist'
 
@@ -41,20 +48,24 @@ export function CategoryDialog({
 }: CategoryDialogProps) {
   const t = useT()
   const isEditing = !!category
+  // The form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-md'>
-        <DialogHeader>
+        <DialogHeader className='flex-row items-center justify-between gap-3 pe-8'>
           <DialogTitle>
             {isEditing ? t('editCategory') : t('addCategory')}
           </DialogTitle>
+          <div ref={setFillSlot} className='contents' />
         </DialogHeader>
         {/* Keyed so form state resets per category; closing unmounts it */}
         <CategoryForm
           key={String(category?.id ?? 'new')}
           category={category}
           onOpenChange={onOpenChange}
+          fillSlot={fillSlot}
         />
       </DialogContent>
     </Dialog>
@@ -64,9 +75,12 @@ export function CategoryDialog({
 function CategoryForm({
   category,
   onOpenChange,
+  fillSlot,
 }: {
   category: CatalogTypeDto | null
   onOpenChange: (open: boolean) => void
+  /** Where the dialog's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
 }) {
   const t = useT()
   const queryClient = useQueryClient()
@@ -77,6 +91,24 @@ function CategoryForm({
   )
   const [error, setError] = useState('')
   const nameAssist = useNameAssist(LOCALIZE_CATEGORY, name, setName)
+  /** Name languages "Fill in with AI" wrote and nobody has edited since */
+  const [nameFilled, setNameFilled] = useState<Partial<Record<Lang, boolean>>>(
+    {}
+  )
+
+  const applyFill = (filled: Record<string, string>) => {
+    const next = mergeLocalized('name', name, filled)
+    const wrote = (['en', 'ar'] as const).filter(
+      (lang) => next[lang] !== name[lang]
+    )
+    if (wrote.length === 0) return
+    setName((prev) => mergeLocalized('name', prev, filled))
+    setNameFilled((prev) => ({
+      ...prev,
+      ...Object.fromEntries(wrote.map((lang) => [lang, true])),
+    }))
+    nameAssist.setLang(wrote[0])
+  }
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
@@ -132,15 +164,30 @@ function CategoryForm({
   return (
     <LocalizedFields lang={nameAssist.lang} onLangChange={nameAssist.setLang}>
       <form onSubmit={handleSubmit} className='space-y-4'>
+        {fillSlot &&
+          createPortal(
+            <FormFillButton
+              form='a menu category'
+              fields={localizedFields('name', 'Name', name)}
+              onFilled={applyFill}
+            />,
+            fillSlot
+          )}
         <LocalizedInput
           id='category-name'
           label={t('name')}
           value={name}
-          onChange={nameAssist.onChange}
+          onChange={(value, lang) => {
+            nameAssist.onChange(value, lang)
+            setNameFilled((prev) => ({ ...prev, [lang]: false }))
+          }}
           error={error ?? undefined}
           autoFocus
           assist={nameAssist.slot}
-          suggested={nameAssist.suggested}
+          suggested={{
+            en: nameAssist.suggested.en || nameFilled.en,
+            ar: nameAssist.suggested.ar || nameFilled.ar,
+          }}
         />
 
         <DialogFooter>

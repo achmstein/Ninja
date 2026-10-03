@@ -11,6 +11,7 @@ import {
   Printer,
   Trash2,
 } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import {
   type KitchenStationView,
@@ -46,6 +47,11 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import {
+  localizedFields,
+  mergeLocalized,
+} from '@/features/assist/use-form-fill'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {
@@ -73,6 +79,8 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   const [editing, setEditing] = useState<KitchenStationView | 'new' | null>(
     null
   )
+  // The station form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
   const stationsQuery = useQuery({
     ...getKitchenStationsOptions({
@@ -162,6 +170,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
         </span>
       }
       subtitle={editing == null ? t('kitchenStationsHint') : undefined}
+      headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {editing != null ? (
         <StationForm
@@ -172,6 +181,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
           connectors={connectors}
           categoryName={categoryName}
           onDone={() => setEditing(null)}
+          fillSlot={fillSlot}
         />
       ) : stationsQuery.isLoading ? (
         <div className='space-y-2'>
@@ -282,6 +292,7 @@ function StationForm({
   connectors,
   categoryName,
   onDone,
+  fillSlot,
 }: {
   branchId: number
   station: KitchenStationView | null
@@ -289,6 +300,8 @@ function StationForm({
   connectors: PrintConnectorView[]
   categoryName: Map<number, string>
   onDone: () => void
+  /** Where the sheet's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -429,10 +442,39 @@ function StationForm({
   }
 
   const categories = [...categoryName.entries()]
+  const makes = categoryIds
+    .map((id) => categoryName.get(id))
+    .filter(Boolean)
+    .join(', ')
 
   return (
     <LocalizedFields>
       <form id='station-form' onSubmit={handleSubmit} className='space-y-4'>
+        {/* Its name, in the other language or told from what it makes */}
+        {fillSlot &&
+          createPortal(
+            <FormFillButton
+              form='a kitchen station (where part of an order is made)'
+              fields={[
+                ...localizedFields('name', 'Name', name),
+                // What it makes is only a hint, never filled
+                ...(makes
+                  ? [
+                      {
+                        key: 'makes',
+                        label: 'Menu categories it makes',
+                        type: 'text' as const,
+                        value: makes,
+                      },
+                    ]
+                  : []),
+              ]}
+              onFilled={(filled) =>
+                setName((prev) => mergeLocalized('name', prev, filled))
+              }
+            />,
+            fillSlot
+          )}
         <LocalizedInput
           id='station-name'
           label={t('name')}

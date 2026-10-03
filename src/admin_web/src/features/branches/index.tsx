@@ -21,6 +21,7 @@ import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { ErrorState } from '@/components/error-state'
 import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
@@ -45,7 +46,8 @@ export function BranchesManagement() {
     null
   )
 
-  const { data: branches = [], isLoading } = useQuery(getAllBranchesOptions())
+  const branchesQuery = useQuery(getAllBranchesOptions())
+  const { data: branches = [], isLoading } = branchesQuery
 
   const updateSettings = useMutation({
     ...updateBranchSettingsMutation(),
@@ -85,7 +87,12 @@ export function BranchesManagement() {
             </Button>
           }
         />
-        {isLoading ? (
+        {branchesQuery.isError ? (
+          <ErrorState
+            error={branchesQuery.error}
+            onRetry={branchesQuery.refetch}
+          />
+        ) : isLoading ? (
           <div className='grid gap-4 md:grid-cols-2'>
             {[...Array(2)].map((_, i) => (
               <Skeleton key={i} className='h-56' />

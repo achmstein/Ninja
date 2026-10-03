@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { type StockItemView } from '@/api/inventory'
 import { bilingual, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -20,8 +21,15 @@ import {
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
+  type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import {
+  localizedFields,
+  mergeLocalized,
+  type FillField,
+} from '@/features/assist/use-form-fill'
 import { LOCALIZE_STOCK_ITEM } from '@/features/assist/use-localize-assist'
 import { useNameAssist } from '@/features/assist/use-name-assist'
 import { CUSTOM_UNIT, UNITS, unitLabel } from '../format'
@@ -40,21 +48,34 @@ export function StockItemDialog({
 }: StockItemDialogProps) {
   const t = useT()
   const isEditing = !!item
+  // The form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
   return (
     <EntitySheet
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? t('editStockItem') : t('addStockItem')}
+      headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed so form state resets per item; closing unmounts and resets */}
       <StockItemForm
         key={String(item?.id ?? 'new')}
         item={item}
         onOpenChange={onOpenChange}
+        fillSlot={fillSlot}
       />
     </EntitySheet>
   )
+}
+
+// The units as the assistant reads them
+const UNIT_NAMES: Record<(typeof UNITS)[number], string> = {
+  pcs: 'pieces',
+  g: 'grams',
+  ml: 'millilitres',
+  kg: 'kilograms',
+  l: 'litres',
 }
 
 type FormState = {
@@ -69,9 +90,12 @@ type FormState = {
 function StockItemForm({
   item,
   onOpenChange,
+  fillSlot,
 }: {
   item: StockItemView | null
   onOpenChange: (open: boolean) => void
+  /** Where the sheet's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
 }) {
   const t = useT()
   const { createItem, updateItem, isPending } = useInventoryActions()
@@ -89,6 +113,66 @@ function StockItemForm({
   const nameAssist = useNameAssist(LOCALIZE_STOCK_ITEM, form.name, (update) =>
     setForm((prev) => ({ ...prev, name: update(prev.name) }))
   )
+  // A new item's unit starts as pieces; until it is picked, the assistant
+  // may pick the fitting one from the name
+  const [unitPicked, setUnitPicked] = useState(!!item)
+  /** Name languages "Fill in with AI" wrote and nobody has edited since */
+  const [nameFilled, setNameFilled] = useState<Partial<Record<Lang, boolean>>>(
+    {}
+  )
+
+  const fillFields: FillField[] = [
+    ...localizedFields('name', 'Name', form.name),
+    {
+      key: 'unit',
+      label: 'Unit it is counted in',
+      type: 'choice',
+      value: unitPicked ? form.unitChoice : null,
+      options: UNITS.map((value) => ({ value, label: UNIT_NAMES[value] })),
+    },
+    ...(form.unitChoice === CUSTOM_UNIT
+      ? [
+          {
+            key: 'customUnit',
+            label: 'Unit it is counted in',
+            type: 'text' as const,
+            value: form.customUnit,
+          },
+        ]
+      : []),
+    // The pack's name only once there is a pack: its size is never guessed
+    ...(form.packSize
+      ? localizedFields('packName', 'What a pack is called', form.packName)
+      : []),
+  ]
+
+  const applyFill = (filled: Record<string, string>) => {
+    const name = mergeLocalized('name', form.name, filled)
+    const wrote = (['en', 'ar'] as const).filter(
+      (lang) => name[lang] !== form.name[lang]
+    )
+    const unit = filled.unit
+    setForm((prev) => ({
+      ...prev,
+      name: mergeLocalized('name', prev.name, filled),
+      unitChoice:
+        !unitPicked && unit && (UNITS as readonly string[]).includes(unit)
+          ? unit
+          : prev.unitChoice,
+      customUnit: prev.customUnit.trim()
+        ? prev.customUnit
+        : (filled.customUnit ?? prev.customUnit),
+      packName: mergeLocalized('packName', prev.packName, filled),
+    }))
+    if (unit) setUnitPicked(true)
+    if (wrote.length > 0) {
+      setNameFilled((prev) => ({
+        ...prev,
+        ...Object.fromEntries(wrote.map((lang) => [lang, true])),
+      }))
+      nameAssist.setLang(wrote[0])
+    }
+  }
 
   const unit =
     form.unitChoice === CUSTOM_UNIT ? form.customUnit.trim() : form.unitChoice
@@ -129,22 +213,40 @@ function StockItemForm({
   return (
     <LocalizedFields lang={nameAssist.lang} onLangChange={nameAssist.setLang}>
       <form id='stock-item-form' onSubmit={handleSubmit} className='space-y-4'>
+        {fillSlot &&
+          createPortal(
+            <FormFillButton
+              form='a stock item (an ingredient or supply a café keeps)'
+              fields={fillFields}
+              onFilled={applyFill}
+            />,
+            fillSlot
+          )}
         <LocalizedInput
           id='stock-item-name'
           label={t('name')}
           value={form.name}
-          onChange={nameAssist.onChange}
+          onChange={(value, lang) => {
+            nameAssist.onChange(value, lang)
+            setNameFilled((prev) => ({ ...prev, [lang]: false }))
+          }}
           error={errors.name}
           autoFocus
           assist={nameAssist.slot}
-          suggested={nameAssist.suggested}
+          suggested={{
+            en: nameAssist.suggested.en || nameFilled.en,
+            ar: nameAssist.suggested.ar || nameFilled.ar,
+          }}
         />
 
         <FieldGrid>
           <Field label={t('unit')} htmlFor='unit' error={errors.unit}>
             <Select
               value={form.unitChoice}
-              onValueChange={(value) => setForm({ ...form, unitChoice: value })}
+              onValueChange={(value) => {
+                setForm({ ...form, unitChoice: value })
+                setUnitPicked(true)
+              }}
             >
               <SelectTrigger id='unit'>
                 <SelectValue />

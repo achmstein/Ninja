@@ -31,6 +31,11 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import {
+  localizedFields,
+  mergeLocalized,
+} from '@/features/assist/use-form-fill'
 import { PLACE_ROOM, placeKindKey, placeKinds, tariffOptions } from '../status'
 import { problemDetail } from '../use-places'
 import { PlaceKindIcon } from './place-kind-icon'
@@ -298,6 +303,33 @@ export function PlaceDialog({
           )}
           {t(isEditing ? 'editPlace' : 'newPlace')}
         </span>
+      }
+      headerAction={
+        // Its name in the other language and a line about it, told from
+        // the kind and what is typed; never a rate
+        <FormFillButton
+          form='a place in a café or restaurant (a room, a table or a station)'
+          fields={[
+            {
+              key: 'kind',
+              label: 'Kind',
+              type: 'choice',
+              value: String(kind),
+              options: placeKinds.map(({ kind: value }) => ({
+                value: String(value),
+                label: t(placeKindKey[value]),
+              })),
+            },
+            ...localizedFields('name', 'Name', name),
+            ...localizedFields('description', 'Description', description, true),
+          ]}
+          onFilled={(filled) => {
+            setName((prev) => mergeLocalized('name', prev, filled))
+            setDescription((prev) =>
+              mergeLocalized('description', prev, filled)
+            )
+          }}
+        />
       }
       actions={
         <>

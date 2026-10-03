@@ -15,6 +15,7 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { EntityAvatar } from '@/components/entity-avatar'
+import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
@@ -203,23 +204,27 @@ export function StaffManagement() {
           }
         />
 
-        <DataTable
-          table={table}
-          isLoading={staffQuery.isLoading}
-          emptyMessage={t('noAdminsFound')}
-          mobileRow={({ original: user }) => (
-            <div className='flex items-center gap-2'>
-              <ListRow
-                className={cn('flex-1', !user.enabled && 'opacity-60')}
-                leading={<EntityAvatar name={getCustomerDisplayName(user)} />}
-                title={getCustomerDisplayName(user)}
-                meta={rolesOf(user)}
-              />
-              {enabledSwitch(user)}
-              {actionsOf(user)}
-            </div>
-          )}
-        />
+        {staffQuery.isError ? (
+          <ErrorState error={staffQuery.error} onRetry={staffQuery.refetch} />
+        ) : (
+          <DataTable
+            table={table}
+            isLoading={staffQuery.isLoading}
+            emptyMessage={t('noAdminsFound')}
+            mobileRow={({ original: user }) => (
+              <div className='flex items-center gap-2'>
+                <ListRow
+                  className={cn('flex-1', !user.enabled && 'opacity-60')}
+                  leading={<EntityAvatar name={getCustomerDisplayName(user)} />}
+                  title={getCustomerDisplayName(user)}
+                  meta={rolesOf(user)}
+                />
+                {enabledSwitch(user)}
+                {actionsOf(user)}
+              </div>
+            )}
+          />
+        )}
       </Main>
 
       <AddStaffDialog open={addOpen} onOpenChange={setAddOpen} />

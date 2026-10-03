@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { createPortal } from 'react-dom'
 import { type BranchResponse } from '@/api/tenant'
 import {
   createBranchMutation,
@@ -19,6 +20,11 @@ import {
   LocalizedInput,
   toLocalizedValue,
 } from '@/components/localized-input'
+import { FormFillButton } from '@/features/assist/form-fill-button'
+import {
+  localizedFields,
+  mergeLocalized,
+} from '@/features/assist/use-form-fill'
 
 interface BranchDialogProps {
   open: boolean
@@ -33,18 +39,22 @@ export function BranchDialog({
 }: BranchDialogProps) {
   const t = useT()
   const isEditing = !!branch
+  // The form owns its fields; its "Fill in with AI" is drawn into the header
+  const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
   return (
     <EntitySheet
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? t('editBranch') : t('createBranch')}
+      headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed so form state resets per branch; closing unmounts it */}
       <BranchForm
         key={String(branch?.id ?? 'new')}
         branch={branch}
         onOpenChange={onOpenChange}
+        fillSlot={fillSlot}
       />
     </EntitySheet>
   )
@@ -53,9 +63,12 @@ export function BranchDialog({
 function BranchForm({
   branch,
   onOpenChange,
+  fillSlot,
 }: {
   branch: BranchResponse | null
   onOpenChange: (open: boolean) => void
+  /** Where the sheet's header takes the form's "Fill in with AI" */
+  fillSlot: HTMLElement | null
 }) {
   const t = useT()
   const cloudKitchen = useIsCloudKitchen()
@@ -156,6 +169,54 @@ function BranchForm({
 
   return (
     <form id='branch-form' onSubmit={handleSubmit} className='space-y-4'>
+      {/* The other language of its name, address and receipt footer; never
+          a phone, a tax number or a time */}
+      {fillSlot &&
+        createPortal(
+          <FormFillButton
+            form='a branch of a caf� or restaurant'
+            fields={[
+              ...localizedFields('name', 'Name', form.name),
+              {
+                key: 'address.en',
+                label: 'Address (English)',
+                type: 'text',
+                value: form.addressEn,
+                language: 'en',
+              },
+              {
+                key: 'address.ar',
+                label: 'Address (Arabic)',
+                type: 'text',
+                value: form.addressAr,
+                language: 'ar',
+              },
+              ...localizedFields(
+                'receiptFooter',
+                'Line at the foot of the receipt',
+                form.receiptFooter
+              ),
+            ]}
+            onFilled={(filled) =>
+              setForm((prev) => ({
+                ...prev,
+                name: mergeLocalized('name', prev.name, filled),
+                addressEn: prev.addressEn.trim()
+                  ? prev.addressEn
+                  : (filled['address.en'] ?? prev.addressEn),
+                addressAr: prev.addressAr.trim()
+                  ? prev.addressAr
+                  : (filled['address.ar'] ?? prev.addressAr),
+                receiptFooter: mergeLocalized(
+                  'receiptFooter',
+                  prev.receiptFooter,
+                  filled
+                ),
+              }))
+            }
+          />,
+          fillSlot
+        )}
       <LocalizedInput
         id='branch-name'
         label={t('name')}
