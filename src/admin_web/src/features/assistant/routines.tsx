@@ -9,7 +9,7 @@ import {
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import { SettingRow, SettingsCard } from '@/components/kit'
+import { SettingsCard } from '@/components/kit'
 
 /** The assistant's MCP prompts: Claude lists them under / and the + menu by these names. */
 const ROUTINES: {
@@ -62,25 +62,34 @@ export function RoutinesCard() {
       description={t('assistantRoutinesHint')}
     >
       {/* No command name: each chat app names prompts its own way; they show by title */}
-      {ROUTINES.map(({ prompt, icon, title, about, ask }) => (
-        <SettingRow
-          key={prompt}
-          icon={icon}
-          title={t(title)}
-          description={t(about)}
-          control={
+      <div className='grid gap-3 p-4 sm:grid-cols-2'>
+        {ROUTINES.map(({ prompt, icon: Icon, title, about, ask }) => (
+          <div
+            key={prompt}
+            className='bg-background flex flex-col gap-3 rounded-xl border p-4'
+          >
+            <div className='flex items-center gap-3'>
+              <span className='bg-muted grid size-9 shrink-0 place-items-center rounded-lg'>
+                <Icon className='text-muted-foreground size-4' />
+              </span>
+              <span className='min-w-0 flex-1 text-sm font-medium'>
+                {t(title)}
+              </span>
+            </div>
+            <p className='text-muted-foreground flex-1 text-sm'>{t(about)}</p>
             <Button
               type='button'
               size='sm'
               variant='outline'
+              className='self-start'
               onClick={() => copyAsk(t(ask))}
             >
               <Copy />
               {t('assistantRoutineCopy')}
             </Button>
-          }
-        />
-      ))}
+          </div>
+        ))}
+      </div>
       <p className='text-muted-foreground px-5 py-3 text-xs'>
         {t('assistantRoutinesBranch')}
       </p>

@@ -286,7 +286,7 @@ const webExtras = {
   pushBlocked: { en: "Notifications blocked by the browser", ar: "المتصفح يحظر الإشعارات" },
   // The till's confirm as an identity check
   guestFirstOrderHere: { en: "First order here", ar: "أول طلب هنا" },
-  guestOrdersBefore: { en: "{count} orders here before", ar: "{count} طلبات هنا من قبل" },
+  guestOrdersBefore: { plural: "count", en: {"=1":"1 order here before","other":"{count} orders here before"}, ar: {"one":"طلب واحد هنا من قبل","two":"طلبان هنا من قبل","few":"{count} طلبات هنا من قبل","many":"{count} طلبًا هنا من قبل","other":"{count} طلب هنا من قبل"} },
   nobodyAtTheTable: { en: "Nobody at the table", ar: "لا أحد على الطاولة" },
   nobodyAtTheTableQuestion: { en: "Nobody at the table?", ar: "لا أحد على الطاولة؟" },
   nobodyAtTheTableDesc: { en: "The order is cancelled and this phone can't order here until tomorrow.", ar: "سيُلغى الطلب ولن يتمكن هذا الهاتف من الطلب هنا حتى الغد." },
@@ -315,7 +315,7 @@ const webExtras = {
   tableCleared: { en: "Table cleared", ar: "تم إخلاء الطاولة" },
   failedToClearTable: { en: "Failed to clear the table", ar: "تعذّر إخلاء الطاولة" },
   noShow: { en: "No-show", ar: "لم يحضر" },
-  partyOf: { en: "Party of {count}", ar: "{count} أفراد" },
+  partyOf: { plural: "count", en: {"other":"Party of {count}"}, ar: {"one":"فرد واحد","two":"فردان","few":"{count} أفراد","many":"{count} فردًا","other":"{count} فرد"} },
   roundTimeTo: { en: "Round time to", ar: "تقريب الوقت" },
   minutesShort: { en: "{count} min", ar: "{count} د" },
   // Stock workbench (inventory master-detail)
@@ -342,8 +342,8 @@ const webExtras = {
   allTypes: { en: "All types", ar: "كل الأنواع" },
   result: { en: "Result", ar: "النتيجة" },
   countOffSummary: { en: "{off} of {total} off", ar: "{off} من {total} مختلف" },
-  countAllMatched: { en: "All {total} matched", ar: "جميع الـ {total} مطابقة" },
-  showMatchedLines: { en: "Show {count} matched lines", ar: "اعرض {count} سطرًا مطابقًا" },
+  countAllMatched: { plural: "total", en: {"=1":"Matched","other":"All {total} matched"}, ar: {"one":"مطابق","two":"الاثنان مطابقان","other":"جميع الـ {total} مطابقة"} },
+  showMatchedLines: { plural: "count", en: {"=1":"Show 1 matched line","other":"Show {count} matched lines"}, ar: {"one":"اعرض السطر المطابق","two":"اعرض السطرين المطابقين","few":"اعرض {count} سطور مطابقة","many":"اعرض {count} سطرًا مطابقًا","other":"اعرض {count} سطر مطابق"} },
   hideMatchedLines: { en: "Hide matched lines", ar: "أخفِ السطور المطابقة" },
   print: { en: "Print", ar: "طباعة" },
   tillReport: { en: "Report", ar: "التقرير" },
@@ -424,7 +424,7 @@ const webExtras = {
   // (Arabic: دقيقة / دقيقتين / دقائق by CLDR category)
   minutesAgo: { plural: "minutes", en: {"other":"{minutes}m ago"}, ar: {"one":"منذ دقيقة","two":"منذ دقيقتين","few":"منذ {minutes} دقائق","other":"منذ {minutes} دقيقة"} },
   hoursAgo: { plural: "hours", en: {"other":"{hours}h ago"}, ar: {"one":"منذ ساعة","two":"منذ ساعتين","few":"منذ {hours} ساعات","other":"منذ {hours} ساعة"} },
-  orderWaitingToast: { en: "Order #{orderId} has been waiting {minutes} min", ar: "الطلب #{orderId} ينتظر منذ {minutes} دقيقة" },
+  orderWaitingToast: { plural: "minutes", en: {"other":"Order #{orderId} has been waiting {minutes} min"}, ar: {"one":"الطلب #{orderId} ينتظر منذ دقيقة","two":"الطلب #{orderId} ينتظر منذ دقيقتين","few":"الطلب #{orderId} ينتظر منذ {minutes} دقائق","other":"الطلب #{orderId} ينتظر منذ {minutes} دقيقة"} },
 
   // Navigation
   navToday: { en: "Today", ar: "اليوم" },
@@ -453,7 +453,7 @@ const webExtras = {
   reserved: { en: "Reserved", ar: "محجوزة" },
   underMaintenance: { en: "Under maintenance", ar: "قيد الصيانة" },
   billedHours: { en: "Billed hours", ar: "الساعات المحتسبة" },
-  billedHoursFormat: { en: "{hours}h", ar: "{hours} ساعة" },
+  billedHoursFormat: { plural: "hours", en: {"other":"{hours}h"}, ar: {"one":"ساعة","two":"ساعتان","few":"{hours} ساعات","other":"{hours} ساعة"} },
   keepPlaying: { en: "Keep playing", ar: "متابعة اللعب" },
   keepIt: { en: "Keep it", ar: "الإبقاء عليه" },
   switchToModeQuestion: { en: "Switch to {mode} mode?", ar: "التحويل إلى وضع {mode}؟" },
@@ -596,10 +596,10 @@ const webExtras = {
   sendToAllCustomers: { en: "Send to all customers", ar: "أرسل إلى جميع العملاء" },
   sentSection: { en: "Sent", ar: "المُرسَلة" },
   nothingSentYet: { en: "Nothing sent yet.", ar: "لم يُرسَل شيء بعد." },
-  announcementSentTo: { en: "Announcement sent to {count} devices", ar: "تم إرسال الإعلان إلى {count} جهاز" },
+  announcementSentTo: { plural: "count", en: {"=1":"Announcement sent to 1 device","other":"Announcement sent to {count} devices"}, ar: {"zero":"لم يصل الإعلان إلى أي جهاز","one":"تم إرسال الإعلان إلى جهاز واحد","two":"تم إرسال الإعلان إلى جهازين","few":"تم إرسال الإعلان إلى {count} أجهزة","many":"تم إرسال الإعلان إلى {count} جهازًا","other":"تم إرسال الإعلان إلى {count} جهاز"} },
   failedToSendAnnouncement: { en: "Failed to send announcement", ar: "تعذّر إرسال الإعلان" },
   byAuthor: { en: "by {name}", ar: "بواسطة {name}" },
-  devicesCount: { en: "{count} devices", ar: "{count} جهاز" },
+  devicesCount: { plural: "count", en: {"=1":"1 device","other":"{count} devices"}, ar: {"zero":"لا أجهزة","one":"جهاز واحد","two":"جهازان","few":"{count} أجهزة","many":"{count} جهازًا","other":"{count} جهاز"} },
 
   // Menu extras
   category: { en: "Category", ar: "القسم" },
@@ -696,7 +696,7 @@ const webExtras = {
 
   // Loyalty
   lifetimePoints: { en: "Lifetime Points", ar: "إجمالي النقاط" },
-  pointsToTier: { en: "{points} points to {tier}", ar: "متبقٍّ {points} نقطة للوصول إلى {tier}" },
+  pointsToTier: { plural: "count", en: {"=1":"1 point to {tier}","other":"{points} points to {tier}"}, ar: {"one":"متبقٍّ نقطة واحدة للوصول إلى {tier}","two":"متبقٍّ نقطتان للوصول إلى {tier}","few":"متبقٍّ {points} نقاط للوصول إلى {tier}","other":"متبقٍّ {points} نقطة للوصول إلى {tier}"} },
   eligibleForTier: { en: "Eligible for {tier}!", ar: "مؤهل لـ {tier}!" },
   transactionTypeEarned: { en: "Earned", ar: "مكتسبة" },
   pointsAmount: { en: "Points Amount", ar: "عدد النقاط" },
@@ -722,7 +722,7 @@ const webExtras = {
   results: { en: "Results", ar: "النتائج" },
 
   // Customers table
-  customersCount: { en: "{count} customers", ar: "{count} عميل" },
+  customersCount: { plural: "count", en: {"=1":"1 customer","other":"{count} customers"}, ar: {"one":"عميل واحد","two":"عميلان","few":"{count} عملاء","many":"{count} عميلًا","other":"{count} عميل"} },
   previousPage: { en: "Go to previous page", ar: "الصفحة السابقة" },
   nextPage: { en: "Go to next page", ar: "الصفحة التالية" },
   // Service requests
@@ -740,7 +740,7 @@ const webExtras = {
   noResultsFound: { en: "No results found.", ar: "لا توجد نتائج." },
   ordersEntity: { en: "orders", ar: "طلبات" },
   deleteOrdersQuestion: { en: "Delete Selected Orders?", ar: "حذف الطلبات المحددة؟" },
-  ordersDeleted: { en: "{count} orders deleted", ar: "تم حذف {count} طلبات" },
+  ordersDeleted: { plural: "count", en: {"=1":"1 order deleted","other":"{count} orders deleted"}, ar: {"one":"تم حذف طلب واحد","two":"تم حذف طلبين","few":"تم حذف {count} طلبات","many":"تم حذف {count} طلبًا","other":"تم حذف {count} طلب"} },
   failedToDeleteOrders: { en: "Could not delete some orders. Only cancelled orders can be deleted.", ar: "تعذّر حذف بعض الطلبات. يمكن حذف الطلبات الملغاة فقط." },
 
   // Toast titles (the pill headline; the message expands below it)
@@ -1040,7 +1040,7 @@ const webExtras = {
   talabatSaved: { en: "Talabat settings saved", ar: "تم حفظ إعدادات طلبات" },
   talabatSaveFailed: { en: "Couldn't save Talabat settings", ar: "تعذّر حفظ إعدادات طلبات" },
   talabatPreview: { en: "What Talabat sees", ar: "ما تراه طلبات" },
-  talabatPreviewCounts: { en: "{dishes} dishes, {options} options in {categories} categories", ar: "{dishes} صنفًا، {options} خيارًا في {categories} فئات" },
+  talabatPreviewCounts: { en: "{dishes}, {options} in {categories}", ar: "{dishes}، {options} في {categories}" },
   talabatPreviewShow: { en: "Show what is sent", ar: "عرض ما يُرسل" },
   talabatPreviewHide: { en: "Hide", ar: "إخفاء" },
   liveOrders: { en: "Live orders", ar: "الطلبات المباشرة" },
@@ -1526,6 +1526,47 @@ const webExtras = {
   deactivateBranchConfirm: { en: "Deactivate {name}?", ar: "إيقاف {name}؟" },
   deactivateBranchHint: { en: "You can activate it again at any time.", ar: "يمكنك تفعيله مرة أخرى في أي وقت." },
   branchNotSet: { en: "Not set", ar: "غير محدد" },
+  // Counts said as people say them, one form per number (owner: plurals everywhere)
+  pointsCount: { plural: "count", en: {"=1":"1 point","other":"{points} points"}, ar: {"one":"نقطة واحدة","two":"نقطتان","few":"{points} نقاط","other":"{points} نقطة"} },
+  pointsUnit: { plural: "count", en: {"=1":"point","other":"points"}, ar: {"few":"نقاط","other":"نقطة"} },
+  delayedCount: { plural: "count", en: {"other":"{count} delayed"}, ar: {"one":"طلب واحد متأخر","two":"طلبان متأخران","few":"{count} طلبات متأخرة","many":"{count} طلبًا متأخرًا","other":"{count} طلب متأخر"} },
+  linesCount: { plural: "count", en: {"=1":"1 item","other":"{count} items"}, ar: {"zero":"لا أصناف","one":"صنف واحد","two":"صنفان","few":"{count} أصناف","many":"{count} صنفًا","other":"{count} صنف"} },
+  voidsCount: { plural: "count", en: {"=1":"1 void","other":"{count} voids"}, ar: {"one":"إلغاء واحد","two":"إلغاءان","few":"{count} إلغاءات","many":"{count} إلغاءً","other":"{count} إلغاء"} },
+  dishesCount: { plural: "count", en: {"=1":"1 dish","other":"{count} dishes"}, ar: {"zero":"لا أصناف","one":"صنف واحد","two":"صنفان","few":"{count} أصناف","many":"{count} صنفًا","other":"{count} صنف"} },
+  menuOptionsCount: { plural: "count", en: {"=1":"1 option","other":"{count} options"}, ar: {"zero":"لا خيارات","one":"خيار واحد","two":"خياران","few":"{count} خيارات","many":"{count} خيارًا","other":"{count} خيار"} },
+  categoriesCount: { plural: "count", en: {"=1":"1 category","other":"{count} categories"}, ar: {"zero":"لا فئات","one":"فئة واحدة","two":"فئتان","few":"{count} فئات","many":"{count} فئة","other":"{count} فئة"} },
+  // The generated single-form ARB plurals, with every Arabic form
+  guestOrderCount: { plural: "count", en: {"=1":"1 order","other":"{count} orders"}, ar: {"zero":"لا طلبات","one":"طلب واحد","two":"طلبان","few":"{count} طلبات","many":"{count} طلبًا","other":"{count} طلب"} },
+  viewAllOrdersCount: { plural: "count", en: {"=1":"View the order","other":"View all {count} orders"}, ar: {"one":"عرض الطلب","two":"عرض الطلبين","other":"عرض جميع الطلبات ({count})"} },
+  itemCount: { plural: "count", en: {"=1":"1 item","other":"{count} items"}, ar: {"zero":"لا أصناف","one":"صنف واحد","two":"صنفان","few":"{count} أصناف","many":"{count} صنفًا","other":"{count} صنف"} },
+  optionsCount: { plural: "count", en: {"=1":"1 option","other":"{count} options"}, ar: {"zero":"لا خيارات","one":"خيار واحد","two":"خياران","few":"{count} خيارات","many":"{count} خيارًا","other":"{count} خيار"} },
+  // The assistant page: pick the app, then its steps
+  assistantTabConnect: { en: "Connect", ar: "الربط" },
+  assistantTabRoutines: { en: "Routines", ar: "المهام" },
+  assistantPickApp: { en: "Which app do you use?", ar: "أي تطبيق تستخدم؟" },
+  assistantClaudeWhereShort: { en: "Web, desktop and phone", ar: "الويب وسطح المكتب والموبايل" },
+  assistantChatGptWhereShort: { en: "Plans with custom connectors", ar: "باقات تدعم الموصلات المخصصة" },
+  assistantStepsTitle: { en: "Connect {app}", ar: "اربطه بـ {app}" },
+  assistantStepClaude1: { en: "Open Settings → Connectors", ar: "افتح Settings ← Connectors" },
+  assistantStepClaude2: { en: "Add custom connector, name it “{name}” and paste:", ar: "اختر Add custom connector، وسمّه «{name}»، والصق:" },
+  assistantStepClaude3: { en: "Choose Connect and sign in as the owner", ar: "اختر Connect وسجّل الدخول بحساب المالك" },
+  assistantStepClaude4: { en: "Switch it on in a new chat, and ask", ar: "فعّله في محادثة جديدة، واسأل" },
+  assistantStepChatGpt1: { en: "Open Settings → Connectors, turn on Developer mode", ar: "افتح Settings ← Connectors، وفعّل Developer mode" },
+  assistantStepChatGpt2: { en: "Choose Create, name it “{name}”, pick OAuth and paste:", ar: "اختر Create، وسمّه «{name}»، واختر OAuth، والصق:" },
+  assistantStepChatGpt3: { en: "Sign in as the owner and allow access", ar: "سجّل الدخول بحساب المالك واسمح بالوصول" },
+  assistantStepChatGpt4: { en: "Add it from the + menu in a new chat, and ask", ar: "أضِفه من قائمة + في محادثة جديدة، واسأل" },
+  assistantClaudeCodeToggle: { en: "Using Claude Code in a terminal?", ar: "تستخدم Claude Code من الطرفية؟" },
+  assistantTryTitle: { en: "Then try asking", ar: "ثم جرّب أن تسأل" },
+  assistantAskAbout: { en: "Ask about:", ar: "اسأله عن:" },
+  // The apps page: one app at a time
+  appsTabTill: { en: "Till", ar: "الكاشير" },
+  appsTabKitchen: { en: "Kitchen display", ar: "شاشة المطبخ" },
+  appsTabPrinter: { en: "Printer", ar: "الطابعة" },
+  appsStepInstall: { en: "Install the app", ar: "ثبّت التطبيق" },
+  appsScanToConnect: { en: "Open the app and scan this to connect it", ar: "افتح التطبيق وامسح هذا الرمز لربطه" },
+  appsConnectorShort: { en: "Prints kitchen tickets from a Windows PC", ar: "يطبع تذاكر المطبخ من كمبيوتر بويندوز" },
+  appsConnectorInstall: { en: "Install it on the PC next to the printer", ar: "ثبّته على الكمبيوتر المجاور للطابعة" },
+  appsConnectorPairStep: { en: "Pair it with the branch's kitchen", ar: "اربطه بمطبخ الفرع" },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }
