@@ -23,7 +23,11 @@ import {
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { formatEgp } from '@/lib/money'
+import { cn } from '@/lib/utils'
+import { Dot, ListRow } from '@/components/list-row'
 import { Stat, StatStrip } from '@/components/stat-strip'
+import { StatusChip } from '@/components/status-chip'
 import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
 import {
   ItemSheet,
@@ -201,6 +205,50 @@ export function MenuCost() {
         table={table}
         isLoading={loading}
         emptyMessage={t('noTrackedItems')}
+        onRowClick={(row) =>
+          setSheet({ mode: 'edit', itemId: row.original.catalogItemId })
+        }
+        mobileRow={({ original: r }) => (
+          <ListRow
+            title={localized(r.name) || '—'}
+            meta={
+              <>
+                <span className='tabular-nums'>
+                  {t('price')} {formatEgp(r.price)}
+                </span>
+                <Dot />
+                <span className='tabular-nums'>
+                  {t('costPerSaleHeader')} {formatEgp(r.cost)}
+                </span>
+                {r.status === 'incomplete' && (
+                  <StatusChip tone='warning'>
+                    {t('costIncomplete', { count: r.uncosted })}
+                  </StatusChip>
+                )}
+              </>
+            }
+            trailing={
+              <span
+                className={cn(
+                  r.status === 'over' && 'text-destructive',
+                  r.status === 'ok' && 'text-success'
+                )}
+              >
+                {r.foodCost != null ? `${r.foodCost}%` : '—'}
+              </span>
+            }
+            trailingMeta={
+              <span
+                className={cn(
+                  'text-xs tabular-nums',
+                  r.margin < 0 ? 'text-destructive' : 'text-muted-foreground'
+                )}
+              >
+                {t('margin')} {formatEgp(r.margin)}
+              </span>
+            }
+          />
+        )}
       />
 
       <DataTablePagination table={table} />

@@ -24,9 +24,11 @@ import {
 import { DateRangePicker } from '@/components/date-range-picker'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
+import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { useTillWindow } from '@/features/till/use-till-window'
+import { formatQuantity, formatSignedQuantity } from './format'
 import { getReportColumns } from './report-columns'
 
 const route = getRouteApi('/_authenticated/inventory/reports')
@@ -197,6 +199,55 @@ export function Reports() {
           table={table}
           isLoading={report.isPending}
           emptyMessage={t('noReportRows')}
+          mobileRow={({ original: r }) => {
+            // What a phone is opened for: what went missing against what should have been used
+            const missing = toNumber(r.countVariance)
+            return (
+              <ListRow
+                title={localized(r.name) || '—'}
+                meta={
+                  <>
+                    <span className='tabular-nums'>
+                      {t('theoreticalUsage')}{' '}
+                      {formatQuantity(toNumber(r.theoretical), r.unit, t)}
+                    </span>
+                    {toNumber(r.wasted) > 0 && (
+                      <>
+                        <Dot />
+                        <span className='tabular-nums'>
+                          {t('waste')}{' '}
+                          {formatQuantity(toNumber(r.wasted), r.unit, t)}
+                        </span>
+                      </>
+                    )}
+                  </>
+                }
+                trailing={
+                  missing === 0 ? (
+                    <span className='text-muted-foreground'>—</span>
+                  ) : (
+                    <span className={cn(missing < 0 && 'text-destructive')}>
+                      {formatSignedQuantity(missing, r.unit, t)}
+                    </span>
+                  )
+                }
+                trailingMeta={
+                  missing !== 0 ? (
+                    <span
+                      className={cn(
+                        'text-xs tabular-nums',
+                        missing < 0
+                          ? 'text-destructive/80'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      {formatEgp(r.countVarianceValue)}
+                    </span>
+                  ) : null
+                }
+              />
+            )
+          }}
         />
 
         <DataTablePagination table={table} />
