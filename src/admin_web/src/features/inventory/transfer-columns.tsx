@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { type TransferView } from '@/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { createAppColumnHelper } from '@/components/data-table'
+import { When } from '@/components/when'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
@@ -14,27 +15,13 @@ type TransferColumnsContext = {
 
 const columnHelper = createAppColumnHelper<TransferView>()
 
-/** Transfers, newest first: when, which way, how many lines, who sent them. */
-export function getTransferColumns({
-  t,
-  locale,
-  branchName,
-}: TransferColumnsContext) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
+/** Transfers, newest first: when, which way, how many lines, and any note. */
+export function getTransferColumns({ t, branchName }: TransferColumnsContext) {
   return columnHelper.columns([
     columnHelper.accessor('sentAt', {
-      meta: { align: 'end' },
       id: 'sentAt',
       header: t('sentAt'),
-      cell: (info) => (
-        <span className='tabular-nums'>
-          {dateTime.format(new Date(info.getValue()))}
-        </span>
-      ),
+      cell: (info) => <When value={info.getValue()} />,
     }),
     columnHelper.display({
       id: 'route',
@@ -55,16 +42,11 @@ export function getTransferColumns({
         <div className='text-end tabular-nums'>{info.getValue()}</div>
       ),
     }),
-    columnHelper.accessor('sentBy', {
-      id: 'sentBy',
-      header: t('sentBy'),
-      cell: (info) => info.getValue() || '—',
-    }),
     columnHelper.accessor('note', {
       id: 'note',
       header: t('note'),
       cell: (info) => (
-        <span className='text-muted-foreground'>{info.getValue() || '—'}</span>
+        <span className='text-muted-foreground'>{info.getValue()}</span>
       ),
     }),
   ])

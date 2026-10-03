@@ -1,7 +1,8 @@
-import { useLocale, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { sourceLabel } from '../format'
+import { When } from '@/components/when'
+import { FINANCE_SOURCE, sourceLabel } from '../format'
 
 type LedgerLine = {
   id: number | string
@@ -15,7 +16,8 @@ type LedgerLine = {
 
 /**
  * An account's lines, newest first, each with its label, note, day and
- * where it came from, and the signed amount on the end.
+ * where it came from (the till, a receipt, a repeat; a line keyed in by
+ * hand says nothing more), and the signed amount on the end.
  */
 export function LedgerList({
   lines,
@@ -25,8 +27,6 @@ export function LedgerList({
   emptyMessage: string
 }) {
   const t = useT()
-  const locale = useLocale()
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
 
   if (lines.length === 0) {
     return <p className='text-muted-foreground text-sm'>{emptyMessage}</p>
@@ -36,6 +36,10 @@ export function LedgerList({
     <ul className='divide-y text-sm'>
       {lines.map((line) => {
         const signed = toNumber(line.signed)
+        const from =
+          toNumber(line.source) === FINANCE_SOURCE.manual
+            ? ''
+            : sourceLabel(line.source, line.recordedBy, t)
         return (
           <li
             key={String(line.id)}
@@ -52,8 +56,8 @@ export function LedgerList({
                 )}
               </div>
               <div className='text-muted-foreground text-xs'>
-                {dateFormat.format(new Date(line.date))} ·{' '}
-                {sourceLabel(line.source, line.recordedBy, t)}
+                <When value={line.date} mode='date' />
+                {from && ` · ${from}`}
               </div>
             </div>
             <span

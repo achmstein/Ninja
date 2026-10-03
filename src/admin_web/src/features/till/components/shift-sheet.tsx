@@ -1,6 +1,7 @@
 import { type ShiftView } from '@/api/sales'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { formatWhen } from '@/lib/when'
 import { EntitySheet } from '@/components/entity-sheet'
 import { StatusChip } from '@/components/status-chip'
 import { ShiftReport } from './shift-report'
@@ -14,10 +15,6 @@ type ShiftSheetProps = {
 export function ShiftSheet({ shift, onOpenChange }: ShiftSheetProps) {
   const t = useT()
   const locale = useLocale()
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
   const closed = shift?.status === 'Closed'
 
   return (
@@ -34,7 +31,7 @@ export function ShiftSheet({ shift, onOpenChange }: ShiftSheetProps) {
       }
       subtitle={
         shift?.openedAt
-          ? `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}${shift.openedBy ? ` · ${shift.openedBy}` : ''}`
+          ? `${t('openedAt')} ${formatWhen(shift.openedAt, 'dateTime', locale, t)}${shift.openedBy ? ` · ${shift.openedBy}` : ''}`
           : undefined
       }
     >

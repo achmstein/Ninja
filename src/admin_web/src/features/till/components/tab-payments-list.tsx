@@ -37,8 +37,7 @@ type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
 /**
  * Who paid against their tab and how much, grouped by day: the customer
- * (with the slip and time under them), how, and the amount with who took it
- * under it.
+ * (with the slip and time under them), how, and the amount.
  */
 function getTabPaymentColumns({ t }: { t: Translate }) {
   return columnHelper.columns([
@@ -47,7 +46,7 @@ function getTabPaymentColumns({ t }: { t: Translate }) {
       header: t('customer'),
       cell: (info) => (
         <div className='flex flex-col leading-tight'>
-          <span className='font-medium'>{info.getValue() || '—'}</span>
+          <span className='font-medium'>{info.getValue() || t('guest')}</span>
           <span className='text-muted-foreground text-xs tabular-nums'>
             #{toNumber(info.row.original.number)} ·{' '}
             <When value={info.row.original.recordedAt} mode='time' />
@@ -64,33 +63,27 @@ function getTabPaymentColumns({ t }: { t: Translate }) {
       meta: { align: 'end' },
       id: 'amount',
       header: t('amount'),
-      cell: (info) => (
-        <Money
-          value={info.getValue()}
-          strong
-          sub={info.row.original.recordedBy || undefined}
-        />
-      ),
+      cell: (info) => <Money value={info.getValue()} strong />,
     }),
   ])
 }
 
-function TabPaymentListRow({ row }: { row: AppRow<TabPaymentView> }) {
+function TabPaymentListRow({
+  row,
+  t,
+}: {
+  row: AppRow<TabPaymentView>
+  t: Translate
+}) {
   const slip = row.original
   return (
     <ListRow
-      title={slip.customerName || '—'}
+      title={slip.customerName || t('guest')}
       meta={
         <>
           <span className='tabular-nums'>#{toNumber(slip.number)}</span>
           <Dot />
           <When value={slip.recordedAt} mode='time' />
-          {slip.recordedBy && (
-            <>
-              <Dot />
-              <span className='truncate'>{slip.recordedBy}</span>
-            </>
-          )}
         </>
       }
       trailing={<Money value={slip.amount} strong />}
@@ -176,7 +169,7 @@ export function TabPaymentsList() {
               key: (row) => dayKey(row.recordedAt),
               label: (key) => dayHeading(key, locale, t),
             }}
-            mobileRow={(row) => <TabPaymentListRow row={row} />}
+            mobileRow={(row) => <TabPaymentListRow row={row} t={t} />}
           />
           <DataTablePagination table={table} />
         </>

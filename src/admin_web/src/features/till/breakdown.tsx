@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
+import { Bar, BarChart, Cell, XAxis } from 'recharts'
 import type { LocalizedText } from '@/api/catalog'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { Bar, BarChart, Cell, XAxis } from 'recharts'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { formatEgp, toNumber } from '@/lib/money'
 import {
   Card,
   CardContent,
@@ -20,13 +21,12 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
+import { Skeleton } from '@/components/ui/skeleton'
 import { EntityAvatar } from '@/components/entity-avatar'
+import { ErrorState } from '@/components/error-state'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { RankedList } from '@/components/ranked-list'
-import { formatEgp, toNumber } from '@/lib/money'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ErrorState } from '@/components/error-state'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
 
@@ -64,15 +64,23 @@ export function TillBreakdown() {
   // The category is Catalog's, joined here: Sales names the item on each
   // line, the menu says which category it is in. A line from before the
   // stamp, or an item no longer on the menu, counts as uncategorised.
-  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const items = useQuery(
+    listItemsOptions({ query: { 'api-version': API_VERSION } })
+  )
   const byCategory = useMemo(() => {
     const category = new Map<number, LocalizedText | undefined>()
     for (const item of items.data ?? []) {
       category.set(toNumber(item.id), item.catalogTypeName ?? undefined)
     }
-    const groups = new Map<string, { name: LocalizedText | undefined; qty: number; amount: number }>()
+    const groups = new Map<
+      string,
+      { name: LocalizedText | undefined; qty: number; amount: number }
+    >()
     for (const row of report.data?.byItem ?? []) {
-      const name = row.catalogItemId != null ? category.get(toNumber(row.catalogItemId)) : undefined
+      const name =
+        row.catalogItemId != null
+          ? category.get(toNumber(row.catalogItemId))
+          : undefined
       const key = name ? localized(name) : ''
       const group = groups.get(key) ?? { name, qty: 0, amount: 0 }
       group.qty += toNumber(row.qty)
@@ -158,7 +166,7 @@ export function TillBreakdown() {
                             <>
                               <Dot />
                               <span className='text-destructive tabular-nums'>
-                                {t('voids')} {toNumber(c.voids)}
+                                {t('voidsCount', { count: toNumber(c.voids) })}
                               </span>
                             </>
                           )}
@@ -250,7 +258,10 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
       </CardHeader>
       <CardContent className='px-2 sm:px-6'>
         <ChartContainer config={config} className='aspect-auto h-36 w-full'>
-          <BarChart data={rows} margin={{ top: 4, left: 0, right: 0, bottom: 0 }}>
+          <BarChart
+            data={rows}
+            margin={{ top: 4, left: 0, right: 0, bottom: 0 }}
+          >
             <XAxis
               dataKey='label'
               tickLine={false}

@@ -27,15 +27,17 @@ import {
   getPlaceReservationHistoryOptions,
   getPlaceStayHistoryOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
-import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useCustomerOrigin, useFeatures } from '@/lib/brand'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'
 import { toast } from '@/lib/toast'
+import { dayHeading, dayKey, formatWhen } from '@/lib/when'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { When } from '@/components/when'
 import { CustomerSearchDialog } from '@/features/accounts/components/customer-search-dialog'
 import type { KeycloakUser } from '@/features/accounts/types'
 import { PendingOrderCard } from '@/features/orders/components/pending-order-card'
@@ -392,10 +394,7 @@ export function PlaceDetailPanel({
                 {seated.seatedAt && (
                   <p className='text-muted-foreground text-sm tabular-nums'>
                     {t('seatedSince', {
-                      time: new Date(seated.seatedAt).toLocaleTimeString(locale, {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      }),
+                      time: formatWhen(seated.seatedAt, 'time', locale, t),
                     })}
                   </p>
                 )}
@@ -593,20 +592,15 @@ export function PlaceDetailPanel({
                     >
                       <div className='w-20 shrink-0'>
                         <div className='font-medium'>
-                          {start
-                            ? new Date(start).toLocaleDateString(locale, {
-                                month: 'short',
-                                day: 'numeric',
-                              })
-                            : '—'}
+                          {start && dayHeading(dayKey(start), locale, t)}
                         </div>
-                        <div className='text-muted-foreground text-xs'>
-                          {start &&
-                            new Date(start).toLocaleTimeString(locale, {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
-                        </div>
+                        {start && (
+                          <When
+                            value={start}
+                            mode='time'
+                            className='text-muted-foreground block text-xs'
+                          />
+                        )}
                       </div>
                       <span
                         className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
@@ -653,77 +647,73 @@ export function PlaceDetailPanel({
           </div>
         )}
         {/* Past reservations */}
-        {features.reservations && (place.reservable || pastReservations.length > 0) && (
-          <div className='border-t p-4'>
-            <h3 className='pb-1 text-sm font-medium'>
-              {t('reservationHistory')}
-            </h3>
-            {reservationsQuery.isLoading ? (
-              <p className='text-muted-foreground py-4 text-sm'>
-                {t('loading')}
-              </p>
-            ) : pastReservations.length === 0 ? (
-              <p className='text-muted-foreground py-4 text-sm'>
-                {t('noReservationsYet')}
-              </p>
-            ) : (
-              <>
-                {pastReservations.map((item) => {
-                  const when = item.for ?? item.createdAt
-                  return (
-                    <div
-                      key={String(item.id)}
-                      className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
-                    >
-                      <div className='w-20 shrink-0'>
-                        <div className='font-medium'>
-                          {when
-                            ? new Date(when).toLocaleDateString(locale, {
-                                month: 'short',
-                                day: 'numeric',
-                              })
-                            : '—'}
-                        </div>
-                        <div className='text-muted-foreground text-xs'>
-                          {when &&
-                            new Date(when).toLocaleTimeString(locale, {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
-                        </div>
-                      </div>
-                      <span
-                        className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
+        {features.reservations &&
+          (place.reservable || pastReservations.length > 0) && (
+            <div className='border-t p-4'>
+              <h3 className='pb-1 text-sm font-medium'>
+                {t('reservationHistory')}
+              </h3>
+              {reservationsQuery.isLoading ? (
+                <p className='text-muted-foreground py-4 text-sm'>
+                  {t('loading')}
+                </p>
+              ) : pastReservations.length === 0 ? (
+                <p className='text-muted-foreground py-4 text-sm'>
+                  {t('noReservationsYet')}
+                </p>
+              ) : (
+                <>
+                  {pastReservations.map((item) => {
+                    const when = item.for ?? item.createdAt
+                    return (
+                      <div
+                        key={String(item.id)}
+                        className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
                       >
-                        {item.customerName || t('walkIn')}
-                        {item.partySize ? (
-                          <span className='text-muted-foreground'>
-                            {' '}
-                            · {t('partyOf', { count: item.partySize })}
-                          </span>
-                        ) : null}
-                      </span>
-                      <ReservationOutcome reservation={item} />
-                    </div>
-                  )
-                })}
-                {pastReservations.length >= reservationLimit && (
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='mt-2 w-full'
-                    disabled={reservationsQuery.isFetching}
-                    onClick={() =>
-                      setReservationLimit((limit) => limit + HISTORY_PAGE)
-                    }
-                  >
-                    {t('loadMore')}
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        )}
+                        <div className='w-20 shrink-0'>
+                          <div className='font-medium'>
+                            {when && dayHeading(dayKey(when), locale, t)}
+                          </div>
+                          {when && (
+                            <When
+                              value={when}
+                              mode='time'
+                              className='text-muted-foreground block text-xs'
+                            />
+                          )}
+                        </div>
+                        <span
+                          className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
+                        >
+                          {item.customerName || t('walkIn')}
+                          {item.partySize ? (
+                            <span className='text-muted-foreground'>
+                              {' '}
+                              · {t('partyOf', { count: item.partySize })}
+                            </span>
+                          ) : null}
+                        </span>
+                        <ReservationOutcome reservation={item} />
+                      </div>
+                    )
+                  })}
+                  {pastReservations.length >= reservationLimit && (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='mt-2 w-full'
+                      disabled={reservationsQuery.isFetching}
+                      onClick={() =>
+                        setReservationLimit((limit) => limit + HISTORY_PAGE)
+                      }
+                    >
+                      {t('loadMore')}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
       </ScrollArea>
 
       <CustomerSearchDialog

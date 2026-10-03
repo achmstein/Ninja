@@ -126,7 +126,9 @@ export function getOrdersColumns({
         const place = localized(info.row.original.placeName)
         return (
           <div className='flex max-w-56 flex-col leading-tight'>
-            <span className='truncate'>{info.getValue() || '—'}</span>
+            <span className='truncate'>
+              {info.getValue() || t('guestBadge')}
+            </span>
             {place && (
               <span className='text-muted-foreground truncate text-xs'>
                 {place}

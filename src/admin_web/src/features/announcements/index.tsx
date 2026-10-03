@@ -103,12 +103,7 @@ export function AnnouncementsManagement() {
               className='items-start px-4 py-3'
               title={announcement.title}
               meta={
-                <>
-                  <span className='line-clamp-2 w-full'>
-                    {announcement.body}
-                  </span>
-                  <span>{t('byAuthor', { name: announcement.sentBy })}</span>
-                </>
+                <span className='line-clamp-2 w-full'>{announcement.body}</span>
               }
               trailing={<When value={announcement.sentAt} />}
               trailingMeta={

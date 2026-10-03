@@ -9,6 +9,7 @@ import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { type RangeKey } from '@/lib/search-schemas'
 import { cn } from '@/lib/utils'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/combobox'
@@ -74,12 +75,6 @@ export function Movements() {
     enabled: ready,
   })
 
-  const day = new Intl.DateTimeFormat(locale, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
   const columns = useMemo(
     () => getMovementColumns({ t, localized, locale }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,8 +171,8 @@ export function Movements() {
         <DataTable
           table={table}
           groupBy={{
-            key: (row) => row.recordedAt.slice(0, 10),
-            label: (_, first) => day.format(new Date(first.recordedAt)),
+            key: (row) => dayKey(row.recordedAt),
+            label: (key) => dayHeading(key, locale, t),
           }}
           isLoading={query.isLoading}
           emptyMessage={t('noStockMovements')}
@@ -185,7 +180,7 @@ export function Movements() {
             const quantity = toNumber(m.quantity)
             return (
               <ListRow
-                title={localized(m.stockItemName) || '—'}
+                title={localized(m.stockItemName)}
                 meta={
                   <>
                     <MovementTypeBadge type={m.type} />

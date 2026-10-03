@@ -14,6 +14,7 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   Select,
@@ -31,10 +32,9 @@ import {
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
+import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
-import { dayHeading, dayKey } from '@/lib/when'
-import { PageHeader } from '@/components/page-header'
 import {
   comparePlaces,
   formatDuration,
@@ -150,7 +150,7 @@ export function StayHistory() {
           cell: ({ row }) => (
             <div className='flex flex-col leading-tight'>
               <span className='font-medium'>
-                {localized(row.original.placeName) || '—'}
+                {localized(row.original.placeName)}
               </span>
               <span className='text-muted-foreground text-xs'>
                 {row.original.customerName || t('walkIn')}

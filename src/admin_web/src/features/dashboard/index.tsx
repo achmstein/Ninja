@@ -197,6 +197,11 @@ export function Dashboard() {
     })
   }
 
+  // What the dashboard has to show depends on what the business runs
+  const hasFourth = !cloudKitchen || features.inventory
+  const showFloor =
+    !cloudKitchen && (features.timeBilling || features.reservations)
+
   return (
     <Main>
       <PageHeader
@@ -230,8 +235,17 @@ export function Dashboard() {
         )}
       </PageHeader>
 
-      {/* Every card the same height, whatever its foot line says */}
-      <Stagger className='grid auto-rows-fr grid-cols-2 gap-3 lg:grid-cols-4'>
+      {/* Every card the same height, whatever its foot line says; as many
+          columns as there are cards on a desk, the odd last one full width on
+          a phone, so a feature that is off leaves no hole */}
+      <Stagger
+        className={cn(
+          'grid auto-rows-fr grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2',
+          hasFourth
+            ? 'lg:grid-cols-4'
+            : 'lg:grid-cols-3 lg:[&>*:last-child:nth-child(odd)]:col-span-1'
+        )}
+      >
         <StaggerItem>
           <KpiCard
             label={t('netSales')}
@@ -278,48 +292,52 @@ export function Dashboard() {
             to='/orders/live'
           />
         </StaggerItem>
-        <StaggerItem>
-          {cloudKitchen ? (
-            features.inventory && (
+        {/* The fourth is about the places or the stock: a business with neither has three */}
+        {hasFourth && (
+          <StaggerItem>
+            {cloudKitchen ? (
+              features.inventory && (
+                <KpiCard
+                  label={t('lowStockTitle')}
+                  value={lowCount}
+                  tone={lowCount > 0 ? 'warning' : 'default'}
+                  loading={lowStockQuery.isPending}
+                  to='/inventory'
+                  search={{ low: true }}
+                />
+              )
+            ) : features.timeBilling ? (
               <KpiCard
-                label={t('lowStockTitle')}
-                value={lowCount}
-                tone={lowCount > 0 ? 'warning' : 'default'}
-                loading={lowStockQuery.isPending}
-                to='/inventory'
-                search={{ low: true }}
+                label={t('placesInUse')}
+                value={t('ofTotal', {
+                  count: running.length,
+                  total: timedInService,
+                })}
+                footer={
+                  t('tablesInUse') +
+                  ': ' +
+                  t('ofTotal', { count: busyTables, total: activeTables })
+                }
+                loading={floor.isPending}
+                to='/places'
               />
-            )
-          ) : features.timeBilling ? (
-            <KpiCard
-              label={t('placesInUse')}
-              value={t('ofTotal', {
-                count: running.length,
-                total: timedInService,
-              })}
-              footer={
-                t('tablesInUse') +
-                ': ' +
-                t('ofTotal', { count: busyTables, total: activeTables })
-              }
-              loading={floor.isPending}
-              to='/places'
-            />
-          ) : (
-            <KpiCard
-              label={t('tablesInUse')}
-              value={t('ofTotal', { count: busyTables, total: activeTables })}
-              loading={floor.isPending}
-              to='/places'
-            />
-          )}
-        </StaggerItem>
+            ) : (
+              <KpiCard
+                label={t('tablesInUse')}
+                value={t('ofTotal', { count: busyTables, total: activeTables })}
+                loading={floor.isPending}
+                to='/places'
+              />
+            )}
+          </StaggerItem>
+        )}
       </Stagger>
 
       <SalesChart />
 
-      <div className='grid gap-4 lg:grid-cols-2'>
-        {!cloudKitchen && (features.timeBilling || features.reservations) && (
+      {/* Side by side only when there are two; the till alone takes the width */}
+      <div className={cn('grid gap-4', showFloor && 'lg:grid-cols-2')}>
+        {showFloor && (
           <Card>
             <CardContent>
               <LiveFloor

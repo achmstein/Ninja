@@ -23,7 +23,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { QueueCard } from '@/components/queue-card'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
-import { PlatformBadge, PlatformHandover } from './platform-badge'
 import {
   formatEgp,
   orderSourceKeys,
@@ -31,6 +30,7 @@ import {
   relativeTime,
   urgencyTextClass,
 } from '../status'
+import { PlatformBadge, PlatformHandover } from './platform-badge'
 
 type PendingOrderCardProps = {
   summary: OrderSummary
@@ -85,10 +85,12 @@ export function PendingOrderCard({
           <span className='text-lg font-semibold'>#{summary.orderNumber}</span>
           {summary.platform ? (
             <PlatformBadge platform={summary.platform} />
-          ) : sourceKey && (
-            <Badge variant='outline' className='h-5 px-1.5 text-[11px]'>
-              {t(sourceKey)}
-            </Badge>
+          ) : (
+            sourceKey && (
+              <Badge variant='outline' className='h-5 px-1.5 text-[11px]'>
+                {t(sourceKey)}
+              </Badge>
+            )
           )}
         </div>
         <span className={`text-xs ${urgencyTextClass(urgency)}`}>
@@ -188,8 +190,12 @@ export function PendingOrderCard({
         {loyaltyDiscount > 0 && (
           <div className='text-muted-foreground flex justify-between'>
             <span>
-              {t('loyaltyDiscount')} ({Number(summary.pointsToRedeem ?? 0)}{' '}
-              {t('points')})
+              {t('loyaltyDiscount')} (
+              {t('pointsCount', {
+                count: Number(summary.pointsToRedeem ?? 0),
+                points: Number(summary.pointsToRedeem ?? 0),
+              })}
+              )
             </span>
             <span className='tabular-nums'>−{formatEgp(loyaltyDiscount)}</span>
           </div>

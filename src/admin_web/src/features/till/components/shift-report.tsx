@@ -2,9 +2,11 @@ import { type ShiftView } from '@/api/sales'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { formatWhen } from '@/lib/when'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Stat, StatStrip } from '@/components/stat-strip'
+import { When } from '@/components/when'
 import { tenderLabelKey } from './tender'
 import { TenderBadge } from './tender-badge'
 
@@ -40,12 +42,8 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const t = useT()
   const locale = useLocale()
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
   const formatAt = (value: string | null | undefined) =>
-    value ? dateTime.format(new Date(value)) : ''
+    value ? formatWhen(value, 'dateTime', locale, t) : ''
 
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
@@ -204,11 +202,11 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   >
                     <div className='flex min-w-0 items-center gap-2'>
                       <TenderBadge tender={payment.tender} />
-                      <span className='text-muted-foreground truncate text-xs'>
-                        {[payment.customerName, payment.recordedBy]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </span>
+                      {payment.customerName && (
+                        <span className='text-muted-foreground truncate text-xs'>
+                          {payment.customerName}
+                        </span>
+                      )}
                     </div>
                     <span className='font-medium tabular-nums'>
                       {formatEgp(payment.amount)}
@@ -239,12 +237,12 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   <div className='min-w-0'>
                     <div className='truncate'>{movement.reason}</div>
                     <div className='text-muted-foreground truncate text-xs'>
-                      {t(isOut ? 'payOut' : 'payIn')} · {movement.recordedBy}
+                      {t(isOut ? 'payOut' : 'payIn')}
                       {movement.recordedAt && (
-                        <span className='tabular-nums'>
-                          {' '}
-                          · {dateTime.format(new Date(movement.recordedAt))}
-                        </span>
+                        <>
+                          {' · '}
+                          <When value={movement.recordedAt} mode='time' />
+                        </>
                       )}
                     </div>
                   </div>

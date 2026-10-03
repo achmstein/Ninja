@@ -12,6 +12,7 @@ import type { TalabatStatusView } from '@/api/catalog/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { formatWhen } from '@/lib/when'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -130,7 +131,7 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
   }
 
   const when = (value?: string | null) =>
-    value ? new Date(value).toLocaleString(locale) : null
+    value ? formatWhen(value, 'relative', locale, t) : null
   const pending = Number(status.pending ?? 0)
   const changedSinceSent =
     status.menuChangedAt &&
@@ -297,7 +298,11 @@ function MenuPreview({ branchId }: { branchId: number }) {
         <div className='min-w-0'>
           <div className='text-sm font-medium'>{t('talabatPreview')}</div>
           <div className='text-muted-foreground mt-0.5 text-sm'>
-            {t('talabatPreviewCounts', { dishes, options, categories })}
+            {t('talabatPreviewCounts', {
+              dishes: t('dishesCount', { count: dishes }),
+              options: t('menuOptionsCount', { count: options }),
+              categories: t('categoriesCount', { count: categories }),
+            })}
           </div>
         </div>
         <Button

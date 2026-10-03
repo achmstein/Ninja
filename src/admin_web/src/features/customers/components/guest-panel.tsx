@@ -9,11 +9,14 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { whatsAppLink } from '@/lib/phone'
+import { formatWhen } from '@/lib/when'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
+import { InfoTip } from '@/components/info-tip'
+import { When } from '@/components/when'
 import { OrderDetailsSheet } from '@/features/orders/components/order-details-sheet'
 import {
   formatEgp,
@@ -67,7 +70,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
   const name = summary?.name || t('guestBadge')
   const phone = summary?.phone ?? undefined
   const date = (value?: string) =>
-    value ? new Date(value).toLocaleDateString(locale) : '—'
+    value ? formatWhen(value, 'date', locale, t) : ''
 
   return (
     <div className='flex h-full flex-col'>
@@ -90,6 +93,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
           <div className='flex items-center gap-2'>
             <h2 className='truncate text-sm font-semibold'>{name}</h2>
             <Badge variant='outline'>{t('guestBadge')}</Badge>
+            <InfoTip>{t('guestNoAccount')}</InfoTip>
           </div>
           {phone && (
             <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
@@ -146,8 +150,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
         )}
 
         <section className='space-y-2 p-4'>
-          <p className='text-muted-foreground text-xs'>{t('guestNoAccount')}</p>
-          <h3 className='pt-2 text-sm font-medium'>{t('orders')}</h3>
+          <h3 className='text-sm font-medium'>{t('orders')}</h3>
           {orders.isError ? (
             <ErrorState error={orders.error} onRetry={() => orders.refetch()} />
           ) : orders.isLoading ? (
@@ -177,9 +180,12 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
                         <span className='font-medium' dir='ltr'>
                           #{order.orderNumber}
                         </span>
-                        <span className='text-muted-foreground text-xs'>
-                          {date(order.date)}
-                        </span>
+                        {order.date && (
+                          <When
+                            value={order.date}
+                            className='text-muted-foreground text-xs'
+                          />
+                        )}
                       </div>
                       <div className='flex shrink-0 items-center gap-2'>
                         {status && (

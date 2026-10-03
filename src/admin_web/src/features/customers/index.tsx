@@ -7,6 +7,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { formatWhen } from '@/lib/when'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -157,7 +158,10 @@ export function Customers() {
             className='text-xs font-medium tabular-nums'
             style={{ color: tierColors[member.currentTier] }}
           >
-            {member.pointsBalance.toLocaleString(locale)} {t('points')}
+            {t('pointsCount', {
+              count: member.pointsBalance,
+              points: member.pointsBalance.toLocaleString(locale),
+            })}
           </span>
         )
       }
@@ -171,10 +175,7 @@ export function Customers() {
         .map((a) => ({
           id: a.customerId,
           name: a.customerName || t('unknownCustomer'),
-          sub:
-            t('lastActivity') +
-            ' ' +
-            new Date(a.updatedAt).toLocaleDateString(locale),
+          sub: `${t('lastActivity')} ${formatWhen(a.updatedAt, 'relative', locale, t)}`,
           figure: (
             <span className='text-destructive font-medium tabular-nums'>
               {formatEgp(a.balance)}
@@ -189,8 +190,12 @@ export function Customers() {
         guest: true,
         sub: (
           <>
-            {g.phone && <span dir='ltr'>{g.phone}</span>}
-            {' · '}
+            {g.phone && (
+              <>
+                <span dir='ltr'>{g.phone}</span>
+                {' · '}
+              </>
+            )}
             {t('guestOrderCount', { count: Number(g.orderCount ?? 0) })}
             {' · '}
             {relativeTime(g.lastOrderAt, nowMs, t, locale)}

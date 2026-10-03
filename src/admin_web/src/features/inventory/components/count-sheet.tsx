@@ -6,6 +6,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -42,14 +43,10 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
     enabled: countId != null,
   })
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
   const meta = count
     ? [
-        `${dateTime.format(new Date(count.countedAt))} · ${count.countedBy}`,
+        formatWhen(count.countedAt, 'dateTime', locale, t),
+        count.countedBy,
         count.note,
       ]
         .filter(Boolean)

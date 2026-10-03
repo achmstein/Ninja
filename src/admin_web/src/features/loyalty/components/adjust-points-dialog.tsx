@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { InfoTip } from '@/components/info-tip'
 import { useAdjustPoints } from '../hooks/use-loyalty'
 
 interface AdjustPointsDialogProps {
@@ -87,7 +88,10 @@ export function AdjustPointsDialog({
                   {t('currentBalance')}
                 </span>
                 <span className='font-medium'>
-                  {currentBalance.toLocaleString(locale)} {t('points')}
+                  {t('pointsCount', {
+                    count: currentBalance,
+                    points: currentBalance.toLocaleString(locale),
+                  })}
                 </span>
               </div>
               {pointsValue !== 0 && (
@@ -101,8 +105,11 @@ export function AdjustPointsDialog({
                         pointsValue > 0 ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
-                      {pointsValue > 0 ? '+' : ''}
-                      {pointsValue.toLocaleString(locale)} {t('points')}
+                      {pointsValue > 0 ? '+' : '−'}
+                      {t('pointsCount', {
+                        count: Math.abs(pointsValue),
+                        points: Math.abs(pointsValue).toLocaleString(locale),
+                      })}
                     </span>
                   </div>
                   <div className='mt-2 flex justify-between border-t pt-2 text-sm'>
@@ -110,7 +117,10 @@ export function AdjustPointsDialog({
                       {t('newBalance')}
                     </span>
                     <span className='font-bold'>
-                      {newBalance.toLocaleString(locale)} {t('points')}
+                      {t('pointsCount', {
+                        count: newBalance,
+                        points: newBalance.toLocaleString(locale),
+                      })}
                     </span>
                   </div>
                 </>
@@ -118,7 +128,10 @@ export function AdjustPointsDialog({
             </div>
 
             <div className='grid gap-2'>
-              <Label htmlFor='points'>{t('pointsAmount')}</Label>
+              <div className='flex items-center gap-1'>
+                <Label htmlFor='points'>{t('pointsAmount')}</Label>
+                <InfoTip>{t('usePositiveToAdd')}</InfoTip>
+              </div>
               <Input
                 id='points'
                 type='number'
@@ -127,9 +140,6 @@ export function AdjustPointsDialog({
                 onChange={(e) => setPoints(e.target.value)}
                 required
               />
-              <p className='text-muted-foreground text-xs'>
-                {t('usePositiveToAdd')}
-              </p>
             </div>
 
             <div className='grid gap-2'>

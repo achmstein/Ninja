@@ -585,12 +585,10 @@ function StationForm({
           </div>
         )}
 
-        <Field label={t('stationCategories')}>
-          {station?.isDefault && (
-            <p className='text-muted-foreground text-xs'>
-              {t('defaultStationHint')}
-            </p>
-          )}
+        <Field
+          label={t('stationCategories')}
+          hint={station?.isDefault ? t('defaultStationHint') : undefined}
+        >
           <div className='grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-lg border p-3'>
             {categories.map(([id, label]) => {
               const owner = takenBy.get(id)

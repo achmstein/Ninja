@@ -204,8 +204,12 @@ export function OrderDetailsSheet({
             {Number(order.loyaltyDiscount ?? 0) > 0 && (
               <div className='text-muted-foreground flex justify-between'>
                 <span>
-                  {t('loyaltyDiscount')} ({Number(order.pointsToRedeem ?? 0)}{' '}
-                  {t('points')})
+                  {t('loyaltyDiscount')} (
+                  {t('pointsCount', {
+                    count: Number(order.pointsToRedeem ?? 0),
+                    points: Number(order.pointsToRedeem ?? 0),
+                  })}
+                  )
                 </span>
                 <span className='tabular-nums'>
                   −{formatEgp(order.loyaltyDiscount)}

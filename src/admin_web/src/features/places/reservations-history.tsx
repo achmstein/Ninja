@@ -146,27 +146,18 @@ export function ReservationHistory() {
                   </span>
                 ) : null}
               </span>
-              <span className='text-muted-foreground text-xs'>
-                {localized(row.original.placeName) || '—'}
-              </span>
+              {localized(row.original.placeName) && (
+                <span className='text-muted-foreground text-xs'>
+                  {localized(row.original.placeName)}
+                </span>
+              )}
             </div>
           ),
         }),
         columnHelper.accessor((row) => forOf(row) ?? '', {
           id: 'for',
           header: t('reservedFor'),
-          cell: ({ row }) => (
-            <div className='flex flex-col leading-tight'>
-              <When value={forOf(row.original)} mode='time' />
-              {/* Booked ahead: when it was made, quietly */}
-              {row.original.for && row.original.createdAt && (
-                <span className='text-muted-foreground text-xs'>
-                  {t('madeAt')}{' '}
-                  <When value={row.original.createdAt} mode='dateTime' />
-                </span>
-              )}
-            </div>
-          ),
+          cell: ({ row }) => <When value={forOf(row.original)} mode='time' />,
         }),
         columnHelper.display({
           id: 'outcome',

@@ -4,6 +4,7 @@ import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { createAppColumnHelper } from '@/components/data-table'
+import { When } from '@/components/when'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
@@ -19,22 +20,12 @@ const columnHelper = createAppColumnHelper<StockCountView>()
  * it comes right after the date: how many lines were off, or a check when
  * everything matched.
  */
-export function getCountColumns({ t, locale }: CountColumnsContext) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
+export function getCountColumns({ t }: CountColumnsContext) {
   return columnHelper.columns([
     columnHelper.accessor('countedAt', {
-      meta: { align: 'end' },
       id: 'countedAt',
       header: t('countedAt'),
-      cell: (info) => (
-        <span className='tabular-nums'>
-          {dateTime.format(new Date(info.getValue()))}
-        </span>
-      ),
+      cell: (info) => <When value={info.getValue()} />,
     }),
     columnHelper.accessor((row) => toNumber(row.linesOff), {
       meta: { align: 'end' },
@@ -62,18 +53,11 @@ export function getCountColumns({ t, locale }: CountColumnsContext) {
         )
       },
     }),
-    columnHelper.accessor('countedBy', {
-      id: 'countedBy',
-      header: t('countedBy'),
-      cell: (info) => (
-        <span className='text-muted-foreground'>{info.getValue() || '—'}</span>
-      ),
-    }),
     columnHelper.accessor('note', {
       id: 'note',
       header: t('note'),
       cell: (info) => (
-        <span className='text-muted-foreground'>{info.getValue() || '—'}</span>
+        <span className='text-muted-foreground'>{info.getValue()}</span>
       ),
     }),
   ])

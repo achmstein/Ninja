@@ -4,6 +4,7 @@ import { getTransferOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { formatWhen } from '@/lib/when'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity } from '../format'
@@ -32,11 +33,6 @@ export function TransferSheet({
     enabled: transferId != null,
   })
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
   return (
     <EntitySheet
       open={transferId != null}
@@ -44,7 +40,7 @@ export function TransferSheet({
       title={t('transferHash', { id: toNumber(transfer?.id ?? transferId) })}
       subtitle={
         transfer
-          ? `${dateTime.format(new Date(transfer.sentAt))} · ${transfer.sentBy}`
+          ? formatWhen(transfer.sentAt, 'dateTime', locale, t)
           : undefined
       }
     >

@@ -21,7 +21,6 @@ import { ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
-import { When } from '@/components/when'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
@@ -139,9 +138,11 @@ export function StaffManagement() {
                 <span className='truncate font-medium'>
                   {getCustomerDisplayName(row.original)}
                 </span>
-                <span className='text-muted-foreground truncate text-xs'>
-                  {row.original.email || '—'}
-                </span>
+                {row.original.email && (
+                  <span className='text-muted-foreground truncate text-xs'>
+                    {row.original.email}
+                  </span>
+                )}
               </div>
             </div>
           ),
@@ -151,14 +152,6 @@ export function StaffManagement() {
           header: t('roles'),
           cell: ({ row }) => (
             <div className='flex flex-wrap gap-1'>{rolesOf(row.original)}</div>
-          ),
-        }),
-        columnHelper.display({
-          id: 'joined',
-          header: t('joined'),
-          meta: { emphasis: 'muted' },
-          cell: ({ row }) => (
-            <When value={row.original.createdTimestamp} mode='date' />
           ),
         }),
         columnHelper.display({

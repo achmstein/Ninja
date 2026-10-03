@@ -1,7 +1,8 @@
 import { ArrowDownRight, ArrowUpRight, Clock, RefreshCw } from 'lucide-react'
+import { type TranslationKey, useLocale, useT } from '@/lib/i18n'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type TranslationKey, useLocale, useT } from '@/lib/i18n'
+import { When } from '@/components/when'
 import type { PointsTransaction } from '../types'
 
 interface LoyaltyTransactionListProps {
@@ -41,30 +42,6 @@ export function LoyaltyTransactionList({
     return key ? t(key) : type
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-    if (diffDays === 0) {
-      return date.toLocaleTimeString(locale, {
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    }
-    if (diffDays === 1) {
-      return t('yesterday')
-    }
-    if (diffDays < 7) {
-      return t('daysAgo', { days: diffDays })
-    }
-    return date.toLocaleDateString(locale, {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
   if (isLoading) {
     return (
       <div className='space-y-3'>
@@ -92,7 +69,7 @@ export function LoyaltyTransactionList({
     return (
       <div className='space-y-3'>
         <h4 className='text-sm font-medium'>{t('history')}</h4>
-        <div className='flex flex-col items-center gap-2 rounded-lg border border-dashed p-6 text-muted-foreground'>
+        <div className='text-muted-foreground flex flex-col items-center gap-2 rounded-lg border border-dashed p-6'>
           <Clock className='h-8 w-8' />
           <p className='text-sm'>{t('noTransactionsYet')}</p>
         </div>
@@ -110,36 +87,34 @@ export function LoyaltyTransactionList({
               key={transaction.id}
               className='flex items-center gap-3 rounded-lg border p-3'
             >
-              <div className='flex h-8 w-8 items-center justify-center rounded-full bg-muted'>
+              <div className='bg-muted flex h-8 w-8 items-center justify-center rounded-full'>
                 {getTransactionIcon(transaction.type, transaction.points)}
               </div>
-              <div className='flex-1 min-w-0'>
+              <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-2'>
                   <span className='text-sm font-medium'>
                     {getTransactionLabel(transaction.type)}
                   </span>
-                  {transaction.referenceId && (
-                    <span className='text-xs text-muted-foreground'>
-                      #{transaction.referenceId.slice(0, 8)}
-                    </span>
-                  )}
                 </div>
-                <p className='text-xs text-muted-foreground truncate'>
-                  {transaction.description}
-                </p>
+                {transaction.description && (
+                  <p className='text-muted-foreground truncate text-xs'>
+                    {transaction.description}
+                  </p>
+                )}
               </div>
-              <div className='text-right'>
+              <div className='text-end'>
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-sm font-medium tabular-nums ${
                     transaction.points > 0 ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
                   {transaction.points > 0 ? '+' : ''}
                   {transaction.points.toLocaleString(locale)}
                 </span>
-                <p className='text-xs text-muted-foreground'>
-                  {formatDate(transaction.createdAt)}
-                </p>
+                <When
+                  value={transaction.createdAt}
+                  className='text-muted-foreground block text-xs'
+                />
               </div>
             </div>
           ))}

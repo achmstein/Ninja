@@ -12,7 +12,6 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import {
   useLanguage,
-  useLocale,
   useT,
   type TranslateParams,
   type TranslationKey,
@@ -28,6 +27,7 @@ import {
   type AppRow,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
+import { InfoTip } from '@/components/info-tip'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { Stat } from '@/components/stat-strip'
@@ -82,9 +82,11 @@ function getShiftColumns({ t }: { t: Translate }) {
               <ShiftSpan shift={info.row.original} />
             </span>
           </span>
-          <span className='text-muted-foreground text-xs'>
-            {shiftPeople(info.row.original) || '—'}
-          </span>
+          {shiftPeople(info.row.original) && (
+            <span className='text-muted-foreground text-xs'>
+              {shiftPeople(info.row.original)}
+            </span>
+          )}
         </div>
       ),
     }),
@@ -150,7 +152,6 @@ function ShiftListRow({ row, t }: { row: AppRow<ShiftView>; t: Translate }) {
  */
 export function TillShifts() {
   const t = useT()
-  const locale = useLocale()
   const language = useLanguage((s) => s.language)
   const search = route.useSearch()
   const navigate = route.useNavigate()
@@ -208,11 +209,6 @@ export function TillShifts() {
       search: (prev) => ({ ...prev, page: next <= 1 ? undefined : next }),
     })
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
   return (
     <>
       <TillPage
@@ -246,8 +242,11 @@ export function TillShifts() {
                   value={formatEgp(shift.expectedInDrawer)}
                 />
                 <p className='text-muted-foreground text-sm'>
-                  {shift.openedAt &&
-                    `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}`}
+                  {shift.openedAt && (
+                    <>
+                      {t('openedAt')} <When value={shift.openedAt} />
+                    </>
+                  )}
                   {shift.openedBy && ` · ${shift.openedBy}`}
                   {' · '}
                   {t('posTicketsCount', {
@@ -262,8 +261,9 @@ export function TillShifts() {
               </Button>
             </div>
           ) : noOpenShift ? (
-            <p className='text-muted-foreground text-sm'>
-              {t('noShiftOpen')} {t('noShiftOpenHint')}
+            <p className='text-muted-foreground flex items-center gap-1 text-sm'>
+              {t('noShiftOpen')}
+              <InfoTip>{t('noShiftOpenHint')}</InfoTip>
             </p>
           ) : (
             <ErrorState

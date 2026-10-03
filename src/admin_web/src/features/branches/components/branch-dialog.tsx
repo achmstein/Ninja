@@ -269,7 +269,11 @@ function BranchForm({
       />
 
       {/* One time, when the day turns over: a day runs from it round to it, so nothing falls outside one */}
-      <Field label={t('dayStartTime')} htmlFor='dayStart'>
+      <Field
+        label={t('dayStartTime')}
+        htmlFor='dayStart'
+        hint={t('dayStartTimeHint')}
+      >
         <Input
           id='dayStart'
           type='time'
@@ -277,7 +281,6 @@ function BranchForm({
           value={form.dayStartTime}
           onChange={(e) => setForm({ ...form, dayStartTime: e.target.value })}
         />
-        <p className='text-muted-foreground text-xs'>{t('dayStartTimeHint')}</p>
       </Field>
 
       {isEditing && (

@@ -15,6 +15,7 @@ import {
   type TranslationKey,
 } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -23,7 +24,6 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
-import { dayHeading, dayKey } from '@/lib/when'
 import {
   getHistoryColumns,
   getOpenColumns,
@@ -230,7 +230,12 @@ export function TicketsList({
                 label: (key) => dayHeading(key, locale, t),
               }}
               mobileRow={(row) => (
-                <HistoryListRow row={row} t={t} localized={localized} />
+                <HistoryListRow
+                  row={row}
+                  t={t}
+                  localized={localized}
+                  voided={tab === 'voided'}
+                />
               )}
             />
             <DataTablePagination table={historyTable} />

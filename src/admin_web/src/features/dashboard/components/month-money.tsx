@@ -54,24 +54,29 @@ export function MonthMoney() {
     amount: number
     hint?: string
     to?: LinkProps['to']
+    /** The feature behind it is on, or it has something in it anyway */
+    shown: boolean
   }[] = [
     {
       label: t('costOfGoods'),
       amount: costs,
       hint: share(costs),
       to: features.inventory ? '/inventory/reports' : undefined,
+      shown: features.inventory || costs > 0,
     },
     {
       label: t('labourCost'),
       amount: toNumber(p?.labour),
       hint: share(toNumber(p?.labour)),
       to: features.payroll ? '/payroll/payslips' : undefined,
+      shown: features.payroll || toNumber(p?.labour) > 0,
     },
     {
       label: t('operatingExpenses'),
       amount: toNumber(p?.expenses),
       hint: share(toNumber(p?.expenses)),
       to: '/finance/expenses',
+      shown: true,
     },
   ]
 
@@ -105,37 +110,39 @@ export function MonthMoney() {
             <span className='flex-1 text-sm font-medium'>{t('netSales')}</span>
             <Money value={sales} strong className='text-base' />
           </Link>
-          {rows.map((row) => {
-            const body = (
-              <>
-                <span className='min-w-0 flex-1'>
-                  <span className='text-muted-foreground block text-sm'>
-                    {row.label}
-                  </span>
-                  {row.hint && (
-                    <span className='text-muted-foreground/80 block text-xs'>
-                      {row.hint}
+          {rows
+            .filter((row) => row.shown)
+            .map((row) => {
+              const body = (
+                <>
+                  <span className='min-w-0 flex-1'>
+                    <span className='text-muted-foreground block text-sm'>
+                      {row.label}
                     </span>
-                  )}
-                </span>
-                <Money value={-row.amount} dashZero className='text-sm' />
-              </>
-            )
-            return row.to ? (
-              <Link
-                key={row.label}
-                to={row.to}
-                search={{ month: monthKey }}
-                className={line}
-              >
-                {body}
-              </Link>
-            ) : (
-              <div key={row.label} className={line}>
-                {body}
-              </div>
-            )
-          })}
+                    {row.hint && (
+                      <span className='text-muted-foreground/80 block text-xs'>
+                        {row.hint}
+                      </span>
+                    )}
+                  </span>
+                  <Money value={-row.amount} dashZero className='text-sm' />
+                </>
+              )
+              return row.to ? (
+                <Link
+                  key={row.label}
+                  to={row.to}
+                  search={{ month: monthKey }}
+                  className={line}
+                >
+                  {body}
+                </Link>
+              ) : (
+                <div key={row.label} className={line}>
+                  {body}
+                </div>
+              )
+            })}
           <Link
             to='/finance/profit'
             search={{ month: monthKey }}

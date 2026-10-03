@@ -102,17 +102,18 @@ export function Transfers() {
               }
               meta={
                 <>
-                  <When value={x.sentAt} mode='dateTime' />
-                  <Dot />
-                  <span>{x.sentBy}</span>
+                  <When value={x.sentAt} />
+                  {x.note && (
+                    <>
+                      <Dot />
+                      <span className='truncate'>{x.note}</span>
+                    </>
+                  )}
                 </>
               }
               trailing={
-                <span className='tabular-nums'>
-                  {x.lines.length}{' '}
-                  <span className='text-muted-foreground font-normal'>
-                    {t('lines')}
-                  </span>
+                <span className='text-muted-foreground tabular-nums'>
+                  {t('linesCount', { count: x.lines.length })}
                 </span>
               }
             />

@@ -18,12 +18,12 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { whatsAppLink } from '@/lib/phone'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { Section } from '@/components/section'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
+import { Section } from '@/components/section'
+import { When } from '@/components/when'
 import { AddChargeDialog } from '@/features/accounts/components/add-charge-dialog'
 import { RecordPaymentDialog } from '@/features/accounts/components/record-payment-dialog'
 import { accountsService } from '@/features/accounts/services/accounts-service'
@@ -65,7 +67,6 @@ import {
   getCustomerInitials,
   type Customer,
 } from '../types'
-import { useFeatures } from '@/lib/brand'
 import { AddedAtCounterBadge } from './counter-customer'
 import { useSendAppLink } from './use-send-app-link'
 
@@ -160,9 +161,7 @@ function CustomerHub({
             <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
               {[customer.phoneNumber, customer.email]
                 .filter(Boolean)
-                .join(' · ') ||
-                customer.username ||
-                '—'}
+                .join(' · ') || customer.username}
               {/* The customer on WhatsApp, from the owner's own account */}
               {customer.phoneNumber && (
                 <a
@@ -240,7 +239,6 @@ function CustomerHub({
   )
 }
 
-
 const tierPointsRequired: Record<LoyaltyTier, number> = {
   bronze: 0,
   silver: 1000,
@@ -287,11 +285,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             disabled={enrol.isPending}
             onClick={() => enrol.mutate(customer.id)}
           >
-            {enrol.isPending ? (
-              <Spinner />
-            ) : (
-              <Plus />
-            )}
+            {enrol.isPending ? <Spinner /> : <Plus />}
             {t('enrolInLoyalty')}
           </Button>
         </div>
@@ -333,7 +327,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
           <div className='text-3xl font-semibold tracking-tight tabular-nums'>
             {member.pointsBalance.toLocaleString(locale)}
             <span className='text-muted-foreground ms-2 text-sm font-normal'>
-              {t('points')}
+              {t('pointsUnit', { count: member.pointsBalance })}
             </span>
           </div>
           <div className='text-muted-foreground text-xs tabular-nums'>
@@ -364,6 +358,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
           <p className='text-muted-foreground text-xs tabular-nums'>
             {nextPoints - member.lifetimePoints > 0
               ? t('pointsToTier', {
+                  count: nextPoints - member.lifetimePoints,
                   points: (nextPoints - member.lifetimePoints).toLocaleString(
                     locale
                   ),
@@ -396,7 +391,6 @@ function LoyaltySection({ customer }: { customer: Customer }) {
 /** The tab: balance as the hero, charge or pay, the ledger with a running balance */
 function TabSection({ customer }: { customer: Customer }) {
   const t = useT()
-  const locale = useLocale()
   const [chargeOpen, setChargeOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
 
@@ -422,13 +416,6 @@ function TabSection({ customer }: { customer: Customer }) {
     }, [])
     return withRunning.reverse()
   }, [account.data])
-
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
 
   const label = (tx: AccountTransaction) => {
     if (tx.source === 'posReceipt' && tx.sourceNumber != null)
@@ -488,16 +475,11 @@ function TabSection({ customer }: { customer: Customer }) {
             <ul className='divide-y text-sm'>
               {ledger.map(({ tx, running }) => (
                 <li key={tx.id} className='flex items-center gap-3 py-2'>
-                  <span className='text-muted-foreground w-24 shrink-0 text-xs tabular-nums'>
-                    {dateTime.format(new Date(tx.createdAt))}
-                  </span>
-                  <span className='min-w-0 flex-1 truncate'>
-                    {label(tx)}
-                    <span className='text-muted-foreground text-xs'>
-                      {' · '}
-                      {t('byName', { name: tx.recordedBy })}
-                    </span>
-                  </span>
+                  <When
+                    value={tx.createdAt}
+                    className='text-muted-foreground w-24 shrink-0 text-xs'
+                  />
+                  <span className='min-w-0 flex-1 truncate'>{label(tx)}</span>
                   <span
                     className={cn(
                       'shrink-0 font-medium tabular-nums',
@@ -592,7 +574,6 @@ function RecentOrders({
   name: string
 }) {
   const t = useT()
-  const locale = useLocale()
   const orders = useQuery(
     getOrdersByUserIdOptions({
       path: { userId: customerId },
@@ -634,11 +615,12 @@ function RecentOrders({
                   <span className='font-medium' dir='ltr'>
                     #{order.orderNumber}
                   </span>
-                  <span className='text-muted-foreground text-xs'>
-                    {order.date
-                      ? new Date(order.date).toLocaleDateString(locale)
-                      : '—'}
-                  </span>
+                  {order.date && (
+                    <When
+                      value={order.date}
+                      className='text-muted-foreground text-xs'
+                    />
+                  )}
                 </div>
                 <div className='flex shrink-0 items-center gap-2'>
                   {status && (

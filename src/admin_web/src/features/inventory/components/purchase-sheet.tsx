@@ -4,6 +4,7 @@ import { getPurchaseOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
+import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -43,11 +44,6 @@ export function PurchaseSheet({
     enabled: purchaseId != null,
   })
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
   return (
     <EntitySheet
       open={purchaseId != null}
@@ -76,15 +72,14 @@ export function PurchaseSheet({
         </div>
       ) : (
         <>
-          {/* The invoice head: who, which invoice, when, who took it in */}
-          <dl className='grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4'>
+          {/* The invoice head: who, which invoice, when */}
+          <dl className='grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3'>
             <Field label={t('supplier')} value={purchase.supplier} />
             <Field label={t('invoiceRef')} value={purchase.invoiceRef} />
             <Field
               label={t('receivedAt')}
-              value={dateTime.format(new Date(purchase.receivedAt))}
+              value={formatWhen(purchase.receivedAt, 'dateTime', locale, t)}
             />
-            <Field label={t('receivedBy')} value={purchase.receivedBy} />
           </dl>
 
           <Table>
@@ -136,10 +131,11 @@ function Field({
   label: string
   value: string | null | undefined
 }) {
+  if (!value) return null
   return (
     <div className='min-w-0'>
       <dt className='text-muted-foreground text-xs'>{label}</dt>
-      <dd className='truncate font-medium'>{value || '—'}</dd>
+      <dd className='truncate font-medium'>{value}</dd>
     </div>
   )
 }

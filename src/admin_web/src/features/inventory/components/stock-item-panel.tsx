@@ -20,7 +20,7 @@ import {
   getStockItemCostsOptions,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -38,8 +38,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { When } from '@/components/when'
 import {
-  actorLabel,
   costChange,
   formatQuantity,
   formatSignedQuantity,
@@ -138,11 +138,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
         <div className='flex flex-none items-center gap-2'>
           {!level.isActive && (
             <Button onClick={() => setActive(true)} disabled={isPending}>
-              {isPending ? (
-                <Spinner />
-              ) : (
-                <ArchiveRestore />
-              )}
+              {isPending ? <Spinner /> : <ArchiveRestore />}
               {t('restoreItem')}
             </Button>
           )}
@@ -401,16 +397,11 @@ function CostHistory({
   unit: string
 }) {
   const t = useT()
-  const locale = useLocale()
   const query = useQuery(
     getStockItemCostsOptions({
       path: { id: stockItemId },
       query: { 'api-version': API_VERSION, take: 12 },
     })
-  )
-  const day = useMemo(
-    () => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }),
-    [locale]
   )
   const rows = query.data ?? []
   if (query.isLoading) return null
@@ -430,9 +421,11 @@ function CostHistory({
               key={`${r.at}-${String(r.purchaseId ?? i)}`}
               className='flex items-center gap-3 py-1.5'
             >
-              <span className='text-muted-foreground w-16 shrink-0 text-xs tabular-nums'>
-                {day.format(new Date(r.at))}
-              </span>
+              <When
+                value={r.at}
+                mode='date'
+                className='text-muted-foreground w-16 shrink-0 text-xs'
+              />
               <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
                 {r.supplier || t('noSupplier')}
                 {' · '}
@@ -469,7 +462,6 @@ function CostHistory({
 
 function Movements({ stockItemId }: { stockItemId: number }) {
   const t = useT()
-  const locale = useLocale()
   const query = useInfiniteQuery({
     queryKey: [{ _id: 'getStockMovements', stockItemId, infinite: true }],
     queryFn: async ({ pageParam, signal }) => {
@@ -491,16 +483,6 @@ function Movements({ stockItemId }: { stockItemId: number }) {
         ? pages.length
         : undefined,
   })
-  const dateTime = useMemo(
-    () =>
-      new Intl.DateTimeFormat(locale, {
-        day: 'numeric',
-        month: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
-      }),
-    [locale]
-  )
   const rows = query.data?.pages.flatMap((page) => page.items) ?? []
   const total = toNumber(query.data?.pages[0]?.totalCount)
 
@@ -546,13 +528,13 @@ function Movements({ stockItemId }: { stockItemId: number }) {
             const qty = toNumber(m.quantity)
             return (
               <li key={String(m.id)} className='flex items-center gap-3 py-2'>
-                <span className='text-muted-foreground w-24 shrink-0 text-xs tabular-nums'>
-                  {dateTime.format(new Date(m.recordedAt))}
-                </span>
+                <When
+                  value={m.recordedAt}
+                  className='text-muted-foreground w-24 shrink-0 text-xs'
+                />
                 <MovementTypeBadge type={m.type} />
                 <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
                   {m.reason || referenceLabel(m.reference, t)}
-                  {m.recordedBy && ` · ${actorLabel(m.recordedBy, t)}`}
                 </span>
                 <span
                   className={cn(

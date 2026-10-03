@@ -6,6 +6,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { formatWhen } from '@/lib/when'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/empty-state'
@@ -81,7 +82,6 @@ function LineRow({ line }: { line: TicketLineView }) {
               − {formatEgp(discount)} ({t('discount')})
             </span>
           )}
-          {line.addedBy && <span> · {line.addedBy}</span>}
           {line.orderId != null && (
             <span> · {t('orderNumber', { id: toNumber(line.orderId) })}</span>
           )}
@@ -142,12 +142,8 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
     enabled: ticketId != null,
   })
 
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
   const formatAt = (value: string | null | undefined) =>
-    value ? dateTime.format(new Date(value)) : ''
+    value ? formatWhen(value, 'dateTime', locale, t) : ''
 
   const isSettled = ticket?.status === 'Settled'
   // Keyed on voidedAt rather than the status string so a voided ticket
@@ -177,9 +173,6 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
         ticket.settledAt
           ? `${t('settledAtLabel')} ${formatAt(ticket.settledAt)}${ticket.settledBy ? ` · ${ticket.settledBy}` : ''}`
           : `${t('openedAt')} ${formatAt(ticket.openedAt)}`,
-        ticket.shiftId != null
-          ? t('shiftNumber', { id: toNumber(ticket.shiftId) })
-          : null,
         ticket.guestPhone ?? null,
       ]
         .filter(Boolean)
@@ -190,14 +183,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
     <EntitySheet
       open={ticketId != null}
       onOpenChange={onOpenChange}
-      title={
-        <span className='flex min-w-0 items-baseline gap-2'>
-          <span className='truncate'>{title}</span>
-          <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
-            #{toNumber(ticket?.id ?? ticketId)}
-          </span>
-        </span>
-      }
+      title={<span className='block truncate'>{title}</span>}
       status={
         statusKey && (
           <StatusChip tone={isVoided ? 'danger' : isSettled ? 'muted' : 'info'}>
@@ -357,11 +343,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                     <div className='flex min-w-0 items-center gap-2'>
                       <TenderBadge tender={payment.tender} />
                       <span className='text-muted-foreground truncate text-xs'>
-                        {[
-                          payment.customerName,
-                          payment.recordedBy,
-                          formatAt(payment.recordedAt),
-                        ]
+                        {[payment.customerName, formatAt(payment.recordedAt)]
                           .filter(Boolean)
                           .join(' · ')}
                       </span>

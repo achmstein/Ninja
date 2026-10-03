@@ -3,8 +3,9 @@ import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { createAppColumnHelper } from '@/components/data-table'
+import { When } from '@/components/when'
 import { MovementTypeBadge } from './components/movement-type-badge'
-import { formatSignedQuantity, actorLabel, referenceLabel } from './format'
+import { formatSignedQuantity, referenceLabel } from './format'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 type Localized = (
@@ -20,34 +21,28 @@ type MovementColumnsContext = {
 const columnHelper = createAppColumnHelper<MovementView>()
 
 /**
- * The stock ledger, read under day headings: the time, what moved, why,
- * and who posted it. Six columns; the reference, reason and actor share
- * one cell so the eye lands on item and quantity.
+ * The stock ledger, read under day headings: the time, what moved and
+ * why. Six columns; the reference and reason share one cell so the eye
+ * lands on item and quantity.
  */
-export function getMovementColumns({
-  t,
-  localized,
-  locale,
-}: MovementColumnsContext) {
-  const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
-
+export function getMovementColumns({ t, localized }: MovementColumnsContext) {
   return columnHelper.columns([
     columnHelper.accessor('recordedAt', {
       id: 'recordedAt',
       header: t('time'),
       cell: (info) => (
-        <span className='text-muted-foreground tabular-nums'>
-          {time.format(new Date(info.getValue()))}
-        </span>
+        <When
+          value={info.getValue()}
+          mode='time'
+          className='text-muted-foreground'
+        />
       ),
       meta: { className: 'w-[88px]' },
     }),
     columnHelper.accessor((row) => localized(row.stockItemName), {
       id: 'item',
       header: t('stockItem'),
-      cell: (info) => (
-        <span className='font-medium'>{info.getValue() || '—'}</span>
-      ),
+      cell: (info) => <span className='font-medium'>{info.getValue()}</span>,
     }),
     columnHelper.accessor('type', {
       id: 'type',
@@ -85,24 +80,17 @@ export function getMovementColumns({
     }),
     columnHelper.accessor(
       (row) =>
-        [
-          row.reason,
-          referenceLabel(row.reference, t),
-          actorLabel(row.recordedBy, t),
-        ]
+        [row.reason, referenceLabel(row.reference, t)]
           .filter(Boolean)
           .join(' '),
       {
         id: 'details',
         header: t('details'),
         cell: ({ row }) => {
-          const { reason, reference, recordedBy } = row.original
-          const what = reason || referenceLabel(reference, t)
-          const who = actorLabel(recordedBy, t)
+          const { reason, reference } = row.original
           return (
             <span className='text-muted-foreground'>
-              {what || '—'}
-              {who && <span className='text-xs'> · {who}</span>}
+              {reason || referenceLabel(reference, t)}
             </span>
           )
         },

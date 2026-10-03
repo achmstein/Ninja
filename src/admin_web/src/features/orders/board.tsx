@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { LiveTabs } from './components/live-tabs'
 import { PendingOrderCard } from './components/pending-order-card'
 import { PlatformRejectReasonPicker } from './components/platform-badge'
 import {
@@ -21,7 +22,6 @@ import {
   orderUrgency,
   type OrderPlace,
 } from './status'
-import { LiveTabs } from './components/live-tabs'
 import { useOrderActions } from './use-order-actions'
 
 const route = getRouteApi('/_authenticated/orders/live')
@@ -107,7 +107,7 @@ export function OrdersBoard() {
               {delayedCount > 0 && (
                 <Badge variant='danger' className='h-6 gap-1 tabular-nums'>
                   <Clock className='h-3 w-3' />
-                  {delayedCount} {t('delayed')}
+                  {t('delayedCount', { count: delayedCount })}
                 </Badge>
               )}
             </>

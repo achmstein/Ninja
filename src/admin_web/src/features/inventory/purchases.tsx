@@ -83,10 +83,10 @@ export function Purchases() {
           onRowClick={(row) => setSelectedId(toNumber(row.original.id))}
           mobileRow={({ original: p }) => (
             <ListRow
-              title={p.supplier || '—'}
+              title={p.supplier || t('noSupplier')}
               meta={
                 <>
-                  <When value={p.receivedAt} mode='dateTime' />
+                  <When value={p.receivedAt} />
                   {p.invoiceRef && (
                     <>
                       <Dot />
@@ -95,7 +95,7 @@ export function Purchases() {
                   )}
                   <Dot />
                   <span className='tabular-nums'>
-                    {p.lines.length} {t('lines')}
+                    {t('linesCount', { count: p.lines.length })}
                   </span>
                 </>
               }

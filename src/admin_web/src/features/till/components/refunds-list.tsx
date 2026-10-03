@@ -40,11 +40,11 @@ type Translate = (key: TranslationKey, params?: TranslateParams) => string
 function Reason({ refund, t }: { refund: RefundSummary; t: Translate }) {
   return (
     <span className='flex min-w-0 flex-col leading-tight'>
-      <span className='line-clamp-2 whitespace-normal'>
-        {refund.reason || '—'}
-      </span>
+      {refund.reason && (
+        <span className='line-clamp-2 whitespace-normal'>{refund.reason}</span>
+      )}
       <span className='text-muted-foreground truncate text-xs'>
-        {t('receiptHash')} {toNumber(refund.receiptNumber)}
+        {t('receiptNumber', { number: toNumber(refund.receiptNumber) })}
         {refund.customerName && ` · ${refund.customerName}`}
       </span>
     </span>
@@ -57,7 +57,7 @@ function Amount({ refund, t }: { refund: RefundSummary; t: Translate }) {
       value={-toNumber(refund.amount)}
       tone='negative'
       strong
-      sub={`${toNumber(refund.lineCount)} ${t('lines')}`}
+      sub={t('linesCount', { count: toNumber(refund.lineCount) })}
     />
   )
 }
@@ -97,7 +97,7 @@ function getRefundColumns({ t }: { t: Translate }) {
       id: 'by',
       header: t('byColumn'),
       meta: { emphasis: 'muted' },
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('tender', {
       id: 'tender',
@@ -124,7 +124,12 @@ function RefundListRow({
   const refund = row.original
   return (
     <ListRow
-      title={<span className='whitespace-normal'>{refund.reason || '—'}</span>}
+      title={
+        <span className='whitespace-normal'>
+          {refund.reason ||
+            t('receiptNumber', { number: toNumber(refund.receiptNumber) })}
+        </span>
+      }
       meta={
         <>
           <span className='tabular-nums'>#{toNumber(refund.number)}</span>

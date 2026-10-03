@@ -2,6 +2,7 @@ import { type PurchaseView } from '@/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { createAppColumnHelper } from '@/components/data-table'
+import { When } from '@/components/when'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
@@ -13,36 +14,22 @@ type PurchaseColumnsContext = {
 const columnHelper = createAppColumnHelper<PurchaseView>()
 
 /** Deliveries, newest first: when, from whom, how many lines, the bill. */
-export function getPurchaseColumns({ t, locale }: PurchaseColumnsContext) {
-  const dateTime = new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
+export function getPurchaseColumns({ t }: PurchaseColumnsContext) {
   return columnHelper.columns([
     columnHelper.accessor('receivedAt', {
-      meta: { align: 'end' },
       id: 'receivedAt',
       header: t('receivedAt'),
-      cell: (info) => (
-        <span className='tabular-nums'>
-          {dateTime.format(new Date(info.getValue()))}
-        </span>
-      ),
+      cell: (info) => <When value={info.getValue()} />,
     }),
     columnHelper.accessor('supplier', {
       id: 'supplier',
       header: t('supplier'),
-      cell: (info) => (
-        <span className='font-medium'>
-          {info.getValue() || <span className='text-muted-foreground'>—</span>}
-        </span>
-      ),
+      cell: (info) => <span className='font-medium'>{info.getValue()}</span>,
     }),
     columnHelper.accessor('invoiceRef', {
       id: 'invoiceRef',
       header: t('invoiceRef'),
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => info.getValue(),
     }),
     columnHelper.accessor((row) => row.lines.length, {
       meta: { align: 'end' },
@@ -61,11 +48,6 @@ export function getPurchaseColumns({ t, locale }: PurchaseColumnsContext) {
           {formatEgp(info.getValue())}
         </div>
       ),
-    }),
-    columnHelper.accessor('receivedBy', {
-      id: 'receivedBy',
-      header: t('receivedBy'),
-      cell: (info) => info.getValue() || '—',
     }),
   ])
 }

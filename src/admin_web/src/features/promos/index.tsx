@@ -13,6 +13,7 @@ import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -69,7 +70,7 @@ export function PromoCodesManagement() {
     onError: () => toast.error(t('failedToSavePromo')),
   })
 
-  const day = (iso: string) => new Date(iso).toLocaleDateString(locale)
+  const day = (iso: string) => formatWhen(iso, 'date', locale, t)
   // The window ends when the day after its last day begins; show the last day
   const lastDay = (endsAt: string) => {
     const end = new Date(endsAt)

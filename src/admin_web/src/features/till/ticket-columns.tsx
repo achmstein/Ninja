@@ -57,8 +57,9 @@ function BillTotal({
 
 /**
  * Settled or voided bills, grouped by day so a row needs only its time:
- * the receipt and when, where and what kind, who closed it, and the bill
- * with any refund under it.
+ * the receipt and when, where and what kind, and the bill with any refund
+ * under it. Who closed it shows only for a voided bill, where it is the
+ * point; who settled one is bookkeeping.
  */
 export function getHistoryColumns({
   t,
@@ -73,9 +74,11 @@ export function getHistoryColumns({
         const value = info.getValue()
         return (
           <div className='flex flex-col leading-tight'>
-            <span className='font-medium tabular-nums'>
-              {value != null ? `#${toNumber(value)}` : '—'}
-            </span>
+            {value != null && (
+              <span className='font-medium tabular-nums'>
+                #{toNumber(value)}
+              </span>
+            )}
             <When
               value={info.row.original.closedAt}
               mode='time'
@@ -90,17 +93,21 @@ export function getHistoryColumns({
       header: t('place'),
       cell: (info) => (
         <div className='flex items-center gap-2'>
-          <span className='max-w-56 truncate'>{info.getValue() || '—'}</span>
+          <span className='max-w-56 truncate'>{info.getValue()}</span>
           <TypeBadge type={info.row.original.type} />
         </div>
       ),
     }),
-    historyHelper.accessor('closedBy', {
-      id: 'closedBy',
-      header: t(voided ? 'voidedBy' : 'settledBy'),
-      meta: { emphasis: 'muted' },
-      cell: (info) => info.getValue() || '—',
-    }),
+    ...(voided
+      ? [
+          historyHelper.accessor('closedBy', {
+            id: 'closedBy',
+            header: t('voidedBy'),
+            meta: { emphasis: 'muted' },
+            cell: (info) => info.getValue(),
+          }),
+        ]
+      : []),
     historyHelper.accessor('total', {
       id: 'total',
       meta: { align: 'end' },
@@ -121,25 +128,29 @@ export function HistoryListRow({
   row,
   t,
   localized,
+  voided = false,
 }: {
   row: AppRow<TicketHistoryRow>
   t: Translate
   localized: Localized
+  voided?: boolean
 }) {
   const bill = row.original
   return (
     <ListRow
-      title={ticketTitle(bill, localized, t) || '—'}
+      title={ticketTitle(bill, localized, t)}
       meta={
         <>
           {bill.receiptNumber != null && (
-            <span className='tabular-nums'>
-              #{toNumber(bill.receiptNumber)}
-            </span>
+            <>
+              <span className='tabular-nums'>
+                #{toNumber(bill.receiptNumber)}
+              </span>
+              <Dot />
+            </>
           )}
-          <Dot />
           <When value={bill.closedAt} mode='time' />
-          {bill.closedBy && (
+          {voided && bill.closedBy && (
             <>
               <Dot />
               <span className='truncate'>{bill.closedBy}</span>
@@ -173,7 +184,7 @@ function Idle({
   )
   return (
     <span className={cn('tabular-nums', urgencyTextClass(urgency))}>
-      {relativeTime(value ?? undefined, nowMs, t, locale) || '—'}
+      {relativeTime(value ?? undefined, nowMs, t, locale)}
     </span>
   )
 }
@@ -232,7 +243,9 @@ export function getOpenColumns({
         <Money
           value={info.getValue()}
           strong
-          sub={`${toNumber(info.row.original.lineCount)} ${t('lines')}`}
+          sub={t('linesCount', {
+            count: toNumber(info.row.original.lineCount),
+          })}
         />
       ),
     }),

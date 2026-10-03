@@ -18,6 +18,7 @@ import {
   type TranslationKey,
 } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
+import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -31,7 +32,6 @@ import { ErrorState } from '@/components/error-state'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { When } from '@/components/when'
-import { dayHeading, dayKey } from '@/lib/when'
 import { useTillWindow } from '../use-till-window'
 import { TENDERS, tendersFor } from './tender'
 import { TenderBadge } from './tender-badge'
@@ -50,8 +50,7 @@ type Localized = (
 
 /**
  * Four things a payment says, grouped by day so a row needs only its time:
- * the receipt and when, where and who paid, how, and how much. Who took it
- * is a quiet line under the amount.
+ * the receipt and when, where and who paid, how, and how much.
  */
 function getPaymentColumns({
   t,
@@ -68,9 +67,11 @@ function getPaymentColumns({
         const value = info.getValue()
         return (
           <div className='flex flex-col leading-tight'>
-            <span className='font-medium tabular-nums'>
-              {value != null ? `#${toNumber(value)}` : '—'}
-            </span>
+            {value != null && (
+              <span className='font-medium tabular-nums'>
+                #{toNumber(value)}
+              </span>
+            )}
             <When
               value={info.row.original.recordedAt}
               mode='time'
@@ -85,7 +86,7 @@ function getPaymentColumns({
       header: t('place'),
       cell: (info) => (
         <div className='flex max-w-64 flex-col leading-tight'>
-          <span className='truncate'>{info.getValue() || '—'}</span>
+          <span className='truncate'>{info.getValue()}</span>
           {info.row.original.customerName && (
             <span className='text-muted-foreground truncate text-xs'>
               {info.row.original.customerName}
@@ -103,13 +104,7 @@ function getPaymentColumns({
       meta: { align: 'end' },
       id: 'amount',
       header: t('amount'),
-      cell: (info) => (
-        <Money
-          value={info.getValue()}
-          strong
-          sub={info.row.original.recordedBy || undefined}
-        />
-      ),
+      cell: (info) => <Money value={info.getValue()} strong />,
     }),
   ])
 }
@@ -127,7 +122,7 @@ function PaymentListRow({
   const payment = row.original
   return (
     <ListRow
-      title={ticketTitle(payment, localized, t) || '—'}
+      title={ticketTitle(payment, localized, t)}
       meta={
         <>
           {payment.receiptNumber != null && (
@@ -256,17 +251,19 @@ export function PaymentsList() {
           <ToggleGroupItem value='all' className='px-3'>
             {t('allTenders')}
           </ToggleGroupItem>
-          {tendersFor(features.onlinePayments, tender?.name === 'Online', true).map(
-            (item) => (
-              <ToggleGroupItem
-                key={item.value}
-                value={String(item.value)}
-                className='px-3'
-              >
-                {t(item.labelKey)}
-              </ToggleGroupItem>
-            )
-          )}
+          {tendersFor(
+            features.onlinePayments,
+            tender?.name === 'Online',
+            true
+          ).map((item) => (
+            <ToggleGroupItem
+              key={item.value}
+              value={String(item.value)}
+              className='px-3'
+            >
+              {t(item.labelKey)}
+            </ToggleGroupItem>
+          ))}
         </ToggleGroup>
 
         {tabPaymentsByTender && toNumber(tabPaymentsByTender.count) > 0 && (

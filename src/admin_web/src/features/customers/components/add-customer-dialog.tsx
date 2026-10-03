@@ -310,7 +310,10 @@ function MatchCard({
           {[
             customer.phoneNumber,
             loyalty.data
-              ? `${loyalty.data.pointsBalance.toLocaleString(locale)} ${t('points')}`
+              ? t('pointsCount', {
+                  count: loyalty.data.pointsBalance,
+                  points: loyalty.data.pointsBalance.toLocaleString(locale),
+                })
               : null,
           ]
             .filter(Boolean)

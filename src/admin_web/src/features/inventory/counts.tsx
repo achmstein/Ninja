@@ -12,7 +12,7 @@ import {
   DataTablePagination,
   dataTableFeatures,
 } from '@/components/data-table'
-import { Dot, ListRow } from '@/components/list-row'
+import { ListRow } from '@/components/list-row'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { CountSheet } from './components/count-sheet'
@@ -86,17 +86,11 @@ export function StockCounts() {
             const total = toNumber(c.linesCounted)
             return (
               <ListRow
-                title={<When value={c.countedAt} mode='dateTime' />}
+                title={<When value={c.countedAt} />}
                 meta={
-                  <>
-                    <span>{c.countedBy}</span>
-                    {c.note && (
-                      <>
-                        <Dot />
-                        <span className='truncate'>{c.note}</span>
-                      </>
-                    )}
-                  </>
+                  c.note ? (
+                    <span className='truncate'>{c.note}</span>
+                  ) : undefined
                 }
                 trailingMeta={
                   <StatusChip tone={off > 0 ? 'danger' : 'success'}>
