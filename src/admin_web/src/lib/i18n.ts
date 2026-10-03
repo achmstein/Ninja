@@ -1507,6 +1507,25 @@ const webExtras = {
   owedToThem: { en: "Owed to them", ar: "مستحق له" },
   theyOwe: { en: "They owe", ar: "عليه" },
   noEmployeesHint: { en: "Add the people who work here and how they are paid; their payslips are made from it.", ar: "أضف من يعملون هنا وطريقة دفع أجورهم؛ تُنشأ كشوفهم منها." },
+  // Branches: the list, one branch's sheet
+  searchBranchesPlaceholder: { en: "Search by name, area or phone", ar: "ابحث بالاسم أو المنطقة أو الهاتف" },
+  noBranchesYet: { en: "No branches yet", ar: "لا توجد فروع بعد" },
+  noBranchesYetHint: { en: "Add your first branch to start selling there.", ar: "أضف أول فرع لتبدأ البيع فيه." },
+  branchTakingOrders: { en: "Taking orders", ar: "يستقبل الطلبات" },
+  branchOrdersPaused: { en: "QR orders off", ar: "طلبات QR متوقفة" },
+  branchSignInForTables: { en: "Sign-in for tables", ar: "تسجيل دخول للطاولات" },
+  branchDayStartsAt: { en: "Day starts {time}", ar: "اليوم يبدأ {time}" },
+  branchStationsCount: { plural: "count", en: {"one":"{count} station","other":"{count} stations"}, ar: {"one":"محطة واحدة","two":"محطتان","few":"{count} محطات","other":"{count} محطة"} },
+  branchNoStations: { en: "None yet", ar: "لا شيء بعد" },
+  branchSectionOrdering: { en: "Ordering", ar: "الطلبات" },
+  branchSectionKitchen: { en: "Kitchen", ar: "المطبخ" },
+  branchSectionReceipts: { en: "Receipts and pricing", ar: "الإيصالات والتسعير" },
+  branchSignInHint: { en: "A guest can still look at the menu; ordering from a table needs an account.", ar: "يمكن للضيف تصفح المنيو؛ لكن الطلب من الطاولة يحتاج حسابًا." },
+  activateBranch: { en: "Activate", ar: "تفعيل" },
+  deactivateBranch: { en: "Deactivate", ar: "إيقاف" },
+  deactivateBranchConfirm: { en: "Deactivate {name}?", ar: "إيقاف {name}؟" },
+  deactivateBranchHint: { en: "You can activate it again at any time.", ar: "يمكنك تفعيله مرة أخرى في أي وقت." },
+  branchNotSet: { en: "Not set", ar: "غير محدد" },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

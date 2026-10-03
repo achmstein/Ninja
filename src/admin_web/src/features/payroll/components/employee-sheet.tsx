@@ -8,8 +8,8 @@ import { getEmployeeOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
-import { useLocalized, useT } from '@/lib/i18n'
-import { formatEgp, toNumber } from '@/lib/money'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,7 +32,7 @@ import { Section } from '@/components/section'
 import { customersService } from '@/features/customers/services/customers-service'
 import { getCustomerDisplayName } from '@/features/customers/types'
 import { AddStaffDialog } from '@/features/staff/components/add-staff-dialog'
-import { PAY_SCHEME, payLabel, schemeLabel } from '../format'
+import { PAY_SCHEME, payLabel, readableDay, schemeLabel } from '../format'
 import { usePayrollActions } from '../use-payroll-actions'
 import { LedgerSection } from './ledger-section'
 
@@ -379,6 +379,7 @@ export function EmployeeForm({
 
 export function PayTermsSection({ employee }: { employee: EmployeeView }) {
   const t = useT()
+  const locale = useLocale()
   const auth = useAuth()
   // Changing pay is the owner's call; a manager sees it, not the button
   const owner = isOwner(auth.user)
@@ -498,7 +499,11 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
               key={terms.effectiveFrom}
               className='flex justify-between py-1 tabular-nums'
             >
-              <span>{t('fromDate', { date: terms.effectiveFrom })}</span>
+              <span>
+                {t('fromDate', {
+                  date: readableDay(terms.effectiveFrom, locale, t),
+                })}
+              </span>
               <span>{payLabel(terms, t)}</span>
             </li>
           ))}
@@ -520,6 +525,7 @@ export function EmploymentSection({
   inSheet?: boolean
 }) {
   const t = useT()
+  const locale = useLocale()
   const { leave, rehire, isPending } = usePayrollActions()
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [date, setDate] = useState(formatDay(new Date()))
@@ -538,12 +544,10 @@ export function EmploymentSection({
     <div className='flex flex-wrap items-center justify-between gap-2 text-sm'>
       <span className='text-muted-foreground'>
         {employee.isActive
-          ? t('workingSince', { date: employee.startedOn })
-          : t('leftOn', { date: employee.endedOn ?? '' })}
-        {' · '}
-        {toNumber(employee.balance) < 0
-          ? `${formatEgp(-toNumber(employee.balance))} ${t('owesShort')}`
-          : `${formatEgp(employee.balance)} ${t('owedShort')}`}
+          ? t('workingSince', {
+              date: readableDay(employee.startedOn, locale, t),
+            })
+          : t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}
       </span>
       {inSheet ? (
         <SheetActions side='start'>

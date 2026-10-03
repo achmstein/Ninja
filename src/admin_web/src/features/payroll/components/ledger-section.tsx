@@ -19,12 +19,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
+import { ErrorState } from '@/components/error-state'
+import { Money } from '@/components/money'
 import {
-  formatSignedEgp,
   LEDGER_SOURCE,
   LEDGER_TYPE,
   ledgerTypeLabel,
   MANUAL_LEDGER_TYPES,
+  readableDay,
 } from '../format'
 import { ledgerQueryOptions } from '../queries'
 import { usePayrollActions } from '../use-payroll-actions'
@@ -32,9 +34,17 @@ import { usePayrollActions } from '../use-payroll-actions'
 /**
  * What the business owes this person, line by line, newest first, and a form
  * to key in an advance, a payment, a bonus or a deduction. Earnings only
- * ever come from a payslip.
+ * ever come from a payslip. Each line says what it was, when, and why;
+ * who keyed it in is not the owner's question.
  */
-export function LedgerSection({ employee }: { employee: EmployeeView }) {
+export function LedgerSection({
+  employee,
+  showBalance = true,
+}: {
+  employee: EmployeeView
+  /** Off where the page already shows what they are owed */
+  showBalance?: boolean
+}) {
   const t = useT()
   const locale = useLocale()
   const employeeId = toNumber(employee.id)
@@ -46,8 +56,6 @@ export function LedgerSection({ employee }: { employee: EmployeeView }) {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(formatDay(new Date()))
   const [note, setNote] = useState('')
-
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,19 +79,23 @@ export function LedgerSection({ employee }: { employee: EmployeeView }) {
   return (
     <div className='space-y-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
-        <div>
-          <div className='text-muted-foreground text-xs'>
-            {balance < 0 ? t('owes') : t('owed')}
+        {showBalance ? (
+          <div>
+            <div className='text-muted-foreground text-xs'>
+              {balance < 0 ? t('theyOwe') : t('owedToThem')}
+            </div>
+            <div
+              className={cn(
+                'text-lg font-semibold tabular-nums',
+                balance < 0 && 'text-destructive'
+              )}
+            >
+              {formatEgp(Math.abs(balance))}
+            </div>
           </div>
-          <div
-            className={cn(
-              'text-lg font-semibold tabular-nums',
-              balance < 0 && 'text-destructive'
-            )}
-          >
-            {formatEgp(Math.abs(balance))}
-          </div>
-        </div>
+        ) : (
+          <span />
+        )}
         {!adding && (
           <Button
             type='button'
@@ -172,44 +184,44 @@ export function LedgerSection({ employee }: { employee: EmployeeView }) {
         </form>
       )}
 
-      {ledger.isLoading ? (
+      {ledger.isError ? (
+        <ErrorState
+          size='section'
+          error={ledger.error}
+          onRetry={ledger.refetch}
+        />
+      ) : ledger.isLoading ? (
         <Skeleton className='h-24' />
       ) : (ledger.data?.entries.length ?? 0) === 0 ? (
         <p className='text-muted-foreground text-sm'>{t('ledgerEmpty')}</p>
       ) : (
-        <ul className='divide-y text-sm'>
+        <ul className='divide-border/60 divide-y text-sm'>
           {ledger.data!.entries.map((entry) => {
             const signed = toNumber(entry.signed)
             return (
               <li
                 key={String(entry.id)}
-                className='flex items-start justify-between gap-3 py-2'
+                className='flex items-start justify-between gap-3 py-2.5'
               >
                 <div className='min-w-0'>
                   <div className='font-medium'>
                     {ledgerTypeLabel(entry.type, t)}
-                    {entry.note && (
-                      <span className='text-muted-foreground font-normal'>
-                        {' '}
-                        · {entry.note}
-                      </span>
-                    )}
                   </div>
-                  <div className='text-muted-foreground text-xs'>
-                    {dateFormat.format(new Date(entry.date))} ·{' '}
-                    {toNumber(entry.source) === LEDGER_SOURCE.tillPayOut
-                      ? t('fromTill')
-                      : entry.recordedBy}
+                  <div className='text-muted-foreground mt-0.5 text-xs'>
+                    {readableDay(entry.date, locale, t)}
+                    {entry.note && ` · ${entry.note}`}
+                    {toNumber(entry.source) === LEDGER_SOURCE.tillPayOut &&
+                      ` · ${t('fromTill')}`}
                   </div>
                 </div>
-                <span
+                <Money
+                  value={signed}
+                  signed
                   className={cn(
-                    'shrink-0 tabular-nums',
-                    signed > 0 ? 'text-success' : 'text-muted-foreground'
+                    'shrink-0',
+                    signed < 0 && 'text-muted-foreground'
                   )}
-                >
-                  {formatSignedEgp(signed)}
-                </span>
+                />
               </li>
             )
           })}

@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { KeyRound, UserPlus, Users } from 'lucide-react'
+import { UserPlus, Users } from 'lucide-react'
 import { type EmployeeView } from '@/api/payroll'
-import { useT } from '@/lib/i18n'
+import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,54 +17,53 @@ import {
 import { EmptyState } from '@/components/empty-state'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
+import { MetricStrip, MetricTile } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
+import { CountUp } from '@/components/motion'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { EmployeeSheet } from './components/employee-sheet'
-import { payLabel } from './format'
+import { payLabel, readableDay } from './format'
 import { PayrollTabs } from './payroll-tabs'
 import { employeesQueryOptions } from './queries'
 
 const route = getRouteApi('/_authenticated/payroll/employees')
 const columnHelper = createAppColumnHelper<EmployeeView>()
 
-/** What the business owes them; what they owe (an advance past their pay) in red */
+/**
+ * What they are owed now, if anything: the amount with a quiet "owed" under
+ * it, or what they owe (an advance past their pay) in red. Nothing when
+ * they are square.
+ */
 function Owed({ balance }: { balance: EmployeeView['balance'] }) {
   const t = useT()
   const n = toNumber(balance)
+  if (n === 0) return null
   return n < 0 ? (
-    <span className='text-destructive tabular-nums'>
-      {t('owesShort')} {formatEgp(-n)}
-    </span>
+    <Money value={-n} tone='negative' sub={t('owesShort')} />
   ) : (
-    <Money value={n} strong={n > 0} dashZero />
+    <Money value={n} strong sub={t('owedShort')} />
   )
 }
 
-function EmployeeChips({ employee }: { employee: EmployeeView }) {
+/** "Left 3 Oct", for someone no longer on the register */
+function LeftChip({ employee }: { employee: EmployeeView }) {
   const t = useT()
+  const locale = useLocale()
+  if (employee.isActive) return null
   return (
-    <>
-      {employee.userId && (
-        <StatusChip tone='muted' icon={KeyRound}>
-          {t('hasLogin')}
-        </StatusChip>
-      )}
-      {!employee.isActive && (
-        <StatusChip tone='muted'>
-          {t('leftOn', { date: employee.endedOn ?? '' })}
-        </StatusChip>
-      )}
-    </>
+    <StatusChip tone='muted'>
+      {t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}
+    </StatusChip>
   )
 }
 
 /**
- * The register: everyone who works at the branch, with their pay and what
- * they are owed. A row opens the employee's sheet; a login is a badge, not
- * a requirement — a runner has none.
+ * The register: who works at the branch, how each is paid in words, and
+ * what each is owed now. A row opens the person's page; people who left
+ * are behind the switch.
  */
 export function Employees() {
   const t = useT()
@@ -74,6 +73,12 @@ export function Employees() {
   const goTo = useNavigate()
 
   const employees = useQuery(employeesQueryOptions(showInactive))
+  const rows = employees.data ?? []
+  const active = rows.filter((e) => e.isActive)
+  const owedToStaff = rows.reduce(
+    (sum, e) => sum + Math.max(0, toNumber(e.balance)),
+    0
+  )
 
   const open = (employee?: number, isNew?: boolean) =>
     navigate({
@@ -96,18 +101,22 @@ export function Employees() {
                 !row.original.isActive && 'opacity-60'
               )}
             >
-              <EntityAvatar name={row.original.name ?? ''} />
-              <div className='flex flex-col leading-tight'>
-                <span className='font-medium'>{row.original.name}</span>
-                <span className='text-muted-foreground text-xs'>
-                  {row.original.jobTitle || '—'}
+              <EntityAvatar name={row.original.name} />
+              <div className='flex min-w-0 flex-col leading-tight'>
+                <span className='flex items-center gap-2 font-medium'>
+                  {row.original.name}
+                  <LeftChip employee={row.original} />
                 </span>
+                {row.original.jobTitle && (
+                  <span className='text-muted-foreground text-xs'>
+                    {row.original.jobTitle}
+                  </span>
+                )}
               </div>
             </div>
           ),
         }),
         columnHelper.display({
-          meta: { align: 'end' },
           id: 'pay',
           header: t('pay'),
           cell: ({ row }) => (
@@ -119,17 +128,8 @@ export function Employees() {
         columnHelper.accessor((row) => toNumber(row.balance), {
           meta: { align: 'end' },
           id: 'balance',
-          header: t('owed'),
+          header: t('owedToThem'),
           cell: ({ row }) => <Owed balance={row.original.balance} />,
-        }),
-        columnHelper.display({
-          id: 'status',
-          header: '',
-          cell: ({ row }) => (
-            <div className='flex gap-1'>
-              <EmployeeChips employee={row.original} />
-            </div>
-          ),
         }),
       ]),
     [t]
@@ -137,7 +137,7 @@ export function Employees() {
 
   const table = useTable({
     features: dataTableFeatures,
-    data: employees.data ?? [],
+    data: rows,
     columns,
     getRowId: (row) => String(row.id),
     enableSorting: false,
@@ -178,10 +178,11 @@ export function Employees() {
 
         {employees.isError ? (
           <ErrorState error={employees.error} onRetry={employees.refetch} />
-        ) : !employees.isLoading && (employees.data?.length ?? 0) === 0 ? (
+        ) : !employees.isLoading && rows.length === 0 ? (
           <EmptyState
             icon={Users}
             title={t('noEmployees')}
+            description={t('noEmployeesHint')}
             action={
               <Button onClick={() => open(undefined, true)}>
                 <UserPlus />
@@ -190,34 +191,54 @@ export function Employees() {
             }
           />
         ) : (
-          <DataTable
-            table={table}
-            isLoading={employees.isLoading}
-            onRowClick={(row) =>
-              goTo({
-                to: '/payroll/employee/$employeeId',
-                params: { employeeId: String(toNumber(row.original.id)) },
-              })
-            }
-            mobileRow={({ original: e }) => (
-              <ListRow
-                className={cn(!e.isActive && 'opacity-60')}
-                leading={<EntityAvatar name={e.name ?? ''} />}
-                title={e.name}
-                meta={
-                  <>
-                    {e.jobTitle && <span>{e.jobTitle}</span>}
-                    {e.jobTitle && <Dot />}
-                    <span className='tabular-nums'>
-                      {payLabel(e.currentTerms, t)}
-                    </span>
-                    <EmployeeChips employee={e} />
-                  </>
-                }
-                trailing={<Owed balance={e.balance} />}
+          <>
+            {/* Who works here, and what the business owes them all now */}
+            <MetricStrip>
+              <MetricTile
+                label={t('workingHereCount')}
+                loading={employees.isLoading}
+                value={<CountUp value={active.length} />}
               />
-            )}
-          />
+              <MetricTile
+                label={t('owedToStaff')}
+                loading={employees.isLoading}
+                value={<CountUp value={owedToStaff} format={formatEgp} />}
+              />
+            </MetricStrip>
+
+            <DataTable
+              table={table}
+              isLoading={employees.isLoading}
+              onRowClick={(row) =>
+                goTo({
+                  to: '/payroll/employee/$employeeId',
+                  params: { employeeId: String(toNumber(row.original.id)) },
+                })
+              }
+              mobileRow={({ original: e }) => (
+                <ListRow
+                  className={cn(!e.isActive && 'opacity-60')}
+                  leading={<EntityAvatar name={e.name} />}
+                  title={e.name}
+                  meta={
+                    <>
+                      {e.jobTitle && (
+                        <>
+                          <span>{e.jobTitle}</span>
+                          <Dot />
+                        </>
+                      )}
+                      <span className='tabular-nums'>
+                        {payLabel(e.currentTerms, t)}
+                      </span>
+                      <LeftChip employee={e} />
+                    </>
+                  }
+                  trailing={<Owed balance={e.balance} />}
+                />
+              )}
+            />
+          </>
         )}
       </Main>
 

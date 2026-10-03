@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getEmployeeOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
+import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,7 +18,7 @@ import {
   PayTermsSection,
 } from './components/employee-sheet'
 import { LedgerSection } from './components/ledger-section'
-import { payLabel } from './format'
+import { payLabel, readableDay } from './format'
 
 /**
  * One employee as a page of their own, where the work on them is done: who
@@ -29,6 +29,7 @@ import { payLabel } from './format'
  */
 export function EmployeePage({ employeeId }: { employeeId: number }) {
   const t = useT()
+  const locale = useLocale()
   const employee = useQuery(
     getEmployeeOptions({
       path: { id: employeeId },
@@ -56,7 +57,7 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
         badge={
           e && !e.isActive ? (
             <StatusChip tone='muted'>
-              {t('leftOn', { date: e.endedOn ?? '' })}
+              {t('leftOn', { date: readableDay(e.endedOn, locale, t) })}
             </StatusChip>
           ) : undefined
         }
@@ -73,15 +74,12 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
         <>
           <MetricStrip>
             <MetricTile
-              label={t('owed')}
+              label={balance < 0 ? t('theyOwe') : t('owedToThem')}
               value={
-                balance < 0 ? (
-                  <span className='text-destructive'>
-                    {t('owesShort')} <Money value={-balance} />
-                  </span>
-                ) : (
-                  <Money value={balance} />
-                )
+                <Money
+                  value={Math.abs(balance)}
+                  tone={balance < 0 ? 'negative' : 'none'}
+                />
               }
             />
             <MetricTile label={t('pay')} value={payLabel(e.currentTerms, t)} />
@@ -93,7 +91,11 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
                 <CardTitle>{t('details')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <EmployeeForm key={String(e.id)} employee={e} onSaved={() => {}} />
+                <EmployeeForm
+                  key={String(e.id)}
+                  employee={e}
+                  onSaved={() => {}}
+                />
               </CardContent>
             </Card>
             <div className='grid gap-4'>
@@ -121,7 +123,7 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
               <CardTitle>{t('ledger')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <LedgerSection employee={e} />
+              <LedgerSection employee={e} showBalance={false} />
             </CardContent>
           </Card>
         </>
