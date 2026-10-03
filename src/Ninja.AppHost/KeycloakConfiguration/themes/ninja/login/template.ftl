@@ -97,6 +97,26 @@
             link.setAttribute("role", "link");
             link.setAttribute("aria-disabled", "true");
         });
+        // A form is sent once. Each page's code works one time: a second send (a double tap, the keyboard's Go and a
+        // tap) arrives after the first has moved the sign-in on, and Keycloak answers it "Page has expired". The
+        // buttons are not disabled (a disabled button drops its name, and some pages tell submit from cancel by it);
+        // the second send is simply not made, and a page brought back from the browser's cache sends again
+        document.addEventListener("submit", (event) => {
+            const form = event.target;
+            if (form.dataset.sent) {
+                event.preventDefault();
+                return;
+            }
+            form.dataset.sent = "1";
+            form.setAttribute("aria-busy", "true");
+        });
+        window.addEventListener("pageshow", (event) => {
+            if (!event.persisted) return;
+            document.querySelectorAll("form[data-sent]").forEach((form) => {
+                delete form.dataset.sent;
+                form.removeAttribute("aria-busy");
+            });
+        });
     </script>
     <#if authenticationSession??>
         <script type="module">
