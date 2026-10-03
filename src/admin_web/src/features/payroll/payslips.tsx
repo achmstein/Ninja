@@ -1,18 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import {
-  Banknote,
-  FileText,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react'
+import { Banknote, FileText, RefreshCw, Trash2 } from 'lucide-react'
 import { type PayslipView } from '@/api/payroll'
 import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,19 +24,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
+import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { InfoTip } from '@/components/info-tip'
+import { AttentionBanner, MetricStrip, MetricTile } from '@/components/kit'
 import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/page-header'
-import { EntityAvatar } from '@/components/entity-avatar'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { MonthSwitcher } from '@/components/month-switcher'
+import { CountUp } from '@/components/motion'
+import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
-import { Stat, StatStrip } from '@/components/stat-strip'
 import { StatusChip } from '@/components/status-chip'
-import { formatWhen } from '@/lib/when'
 import { monthRange, PAY_SCHEME, PAYSLIP_STATUS, schemeLabel } from './format'
 import { payslipsQueryOptions } from './queries'
 import { usePayrollActions } from './use-payroll-actions'
@@ -108,6 +104,10 @@ export function Payslips() {
     })
 
   const rows = payslips.data ?? []
+  const toPay = rows.filter(
+    (p) =>
+      toNumber(p.status) === PAYSLIP_STATUS.draft && toNumber(p.remaining) > 0
+  )
   const totalDue = rows
     .filter((p) => toNumber(p.status) === PAYSLIP_STATUS.draft)
     .reduce((sum, p) => sum + Math.max(0, toNumber(p.remaining)), 0)
@@ -197,15 +197,41 @@ export function Payslips() {
         </PageHeader>
 
         {rows.length > 0 && (
-          <StatStrip>
-            <Stat label={t('earnedTotal')} value={formatEgp(totalEarned)} />
-            <Stat
-              label={t('dueTotal')}
-              value={formatEgp(totalDue)}
-              tone={totalDue > 0 ? 'warning' : 'default'}
-            />
-            <Stat label={t('paidTotal')} value={formatEgp(totalPaid)} />
-          </StatStrip>
+          <>
+            {/* The pay run: who is still to be paid this month, and how much */}
+            {toPay.length > 0 && (
+              <AttentionBanner tone='info'>
+                {t('payRunLine', {
+                  count: toPay.length,
+                  amount: formatEgp(totalDue),
+                })}
+              </AttentionBanner>
+            )}
+            <MetricStrip>
+              <MetricTile
+                label={t('earnedTotal')}
+                value={<CountUp value={totalEarned} format={formatEgp} />}
+              />
+              <MetricTile
+                label={t('dueTotal')}
+                value={
+                  <span
+                    className={
+                      totalDue > 0
+                        ? 'text-warning-foreground dark:text-warning'
+                        : undefined
+                    }
+                  >
+                    <CountUp value={totalDue} format={formatEgp} />
+                  </span>
+                }
+              />
+              <MetricTile
+                label={t('paidTotal')}
+                value={<CountUp value={totalPaid} format={formatEgp} />}
+              />
+            </MetricStrip>
+          </>
         )}
 
         {payslips.isError ? (
@@ -283,7 +309,9 @@ export function Payslips() {
                     }
                     trailing={
                       <Money
-                        value={paid ? (p.paidAmount ?? p.remaining) : p.remaining}
+                        value={
+                          paid ? (p.paidAmount ?? p.remaining) : p.remaining
+                        }
                         strong
                       />
                     }

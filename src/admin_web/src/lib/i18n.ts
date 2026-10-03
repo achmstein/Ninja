@@ -525,6 +525,14 @@ const webExtras = {
   accountsNav: { en: "Suppliers & partners", ar: "الموردون والشركاء" },
   dishesTab: { en: "Dishes", ar: "الأصناف" },
   offersTab: { en: "Offers & codes", ar: "العروض والأكواد" },
+  payRunLine: { plural: "count", en: {"one":"{count} person still to pay this month: {amount}","other":"{count} people still to pay this month: {amount}"}, ar: {"one":"شخص واحد لم يُدفع له هذا الشهر: {amount}","two":"شخصان لم يُدفع لهما هذا الشهر: {amount}","few":"{count} أشخاص لم يُدفع لهم هذا الشهر: {amount}","other":"{count} شخصًا لم يُدفع لهم هذا الشهر: {amount}"} },
+  branchesDescription: { en: "How each branch works: what customers can do from the QR menu, when its day starts, its receipts and its kitchen.", ar: "كيف يعمل كل فرع: ما يفعله العملاء من قائمة QR، ومتى يبدأ يومه، وإيصالاته ومطبخه." },
+  orderingEnabledHint: { en: "Customers order from their table; orders wait for staff to confirm.", ar: "يطلب العملاء من طاولتهم؛ وتنتظر الطلبات تأكيد الموظفين." },
+  reservationsEnabledHint: { en: "Customers can hold or book a table or room from the menu.", ar: "يمكن للعملاء حجز طاولة أو غرفة من القائمة." },
+  dayStartsHint: { en: "Reports, bills and \"today\" run from this hour to the same hour the next day.", ar: "التقارير والفواتير و\"اليوم\" تبدأ من هذه الساعة حتى نفس الساعة في اليوم التالي." },
+  receiptPricingHint: { en: "VAT and service charge on every bill.", ar: "ضريبة القيمة المضافة وخدمة على كل فاتورة." },
+  kitchenStationsHint: { en: "Where each dish is prepared, and its printer.", ar: "أين يُحضَّر كل صنف وطابعته." },
+  branchDetailsHint: { en: "Name, address, phone, tax number and the day's start.", ar: "الاسم والعنوان والهاتف والرقم الضريبي وبداية اليوم." },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)

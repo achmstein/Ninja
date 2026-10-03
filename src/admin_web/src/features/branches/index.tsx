@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChefHat, MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
+import {
+  CalendarCheck,
+  ChefHat,
+  ChevronRight,
+  Clock,
+  Pencil,
+  Plus,
+  QrCode,
+  Receipt,
+} from 'lucide-react'
 import { type BranchResponse } from '@/api/tenant'
 import {
   getAllBranchesOptions,
@@ -9,14 +18,13 @@ import {
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { StatusChip } from '@/components/status-chip'
 import { BranchDialog } from './components/branch-dialog'
 import { KitchenDialog } from './components/kitchen-dialog'
 import { PricingDialog } from './components/pricing-dialog'
@@ -63,6 +71,7 @@ export function BranchesManagement() {
       <Main>
         <PageHeader
           title={t('branches')}
+          description={t('branchesDescription')}
           actions={
             <Button
               size='sm'
@@ -83,102 +92,90 @@ export function BranchesManagement() {
             ))}
           </div>
         ) : (
-          <div className='grid gap-4 md:grid-cols-2'>
+          <div className='grid gap-4'>
             {branches.map((branch) => (
-              <Card key={String(branch.id)}>
-                <CardContent className='flex flex-col gap-4 pt-6'>
-                  <div className='flex items-start justify-between'>
-                    <div>
-                      <div className='flex items-center gap-2'>
-                        <h3 className='text-sm font-medium'>
-                          {localized(branch.name)}
-                        </h3>
-                        <Badge
-                          variant={branch.isActive ? 'default' : 'secondary'}
-                        >
-                          {branch.isActive ? t('active') : t('inactive')}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className='flex items-center'>
-                      {features.kds && (
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          aria-label={t('kitchenStations')}
-                          onClick={() => setKitchenBranch(branch)}
-                        >
-                          <ChefHat className='h-4 w-4' />
-                        </Button>
-                      )}
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        aria-label={t('receiptPricing')}
-                        onClick={() => setPricingBranch(branch)}
-                      >
-                        <Receipt className='h-4 w-4' />
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        aria-label={t('editBranch')}
-                        onClick={() => {
-                          setEditingBranch(branch)
-                          setDialogOpen(true)
-                        }}
-                      >
-                        <Pencil className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className='text-muted-foreground space-y-1 text-sm'>
-                    {localized(branch.address) && (
-                      <div className='flex items-center gap-2'>
-                        <MapPin className='h-4 w-4' />
-                        {localized(branch.address)}
-                      </div>
-                    )}
-                    {branch.phone && (
-                      <div className='flex items-center gap-2'>
-                        <Phone className='h-4 w-4' />
-                        {branch.phone}
-                      </div>
-                    )}
-                    <div>
-                      {t('dayStartTime')} {branch.dayStartTime?.slice(0, 5)}
-                    </div>
-                  </div>
-
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div className='flex items-center justify-between rounded-lg border p-3'>
-                      <Label className='text-sm'>{t('orderingEnabled')}</Label>
+              // A branch as a console lays out a resource's settings: who it
+              // is at the top, then each setting a row with its control
+              <SettingsCard
+                key={String(branch.id)}
+                title={
+                  <span className='flex items-center gap-2'>
+                    {localized(branch.name)}
+                    <StatusChip tone={branch.isActive ? 'success' : 'muted'}>
+                      {branch.isActive ? t('active') : t('inactive')}
+                    </StatusChip>
+                  </span>
+                }
+                description={
+                  [localized(branch.address), branch.phone]
+                    .filter(Boolean)
+                    .join(' · ') || undefined
+                }
+              >
+                <SettingRow
+                  icon={QrCode}
+                  title={t('orderingEnabled')}
+                  description={t('orderingEnabledHint')}
+                  control={
+                    <Switch
+                      checked={branch.isOrderingEnabled}
+                      disabled={updateSettings.isPending}
+                      onCheckedChange={(v) =>
+                        toggleSetting(branch, 'isOrderingEnabled', v)
+                      }
+                    />
+                  }
+                />
+                {features.reservations && (
+                  <SettingRow
+                    icon={CalendarCheck}
+                    title={t('reservationsEnabled')}
+                    description={t('reservationsEnabledHint')}
+                    control={
                       <Switch
-                        checked={branch.isOrderingEnabled}
+                        checked={branch.isReservationsEnabled}
                         disabled={updateSettings.isPending}
                         onCheckedChange={(v) =>
-                          toggleSetting(branch, 'isOrderingEnabled', v)
+                          toggleSetting(branch, 'isReservationsEnabled', v)
                         }
                       />
-                    </div>
-                    {features.reservations && (
-                      <div className='flex items-center justify-between rounded-lg border p-3'>
-                        <Label className='text-sm'>
-                          {t('reservationsEnabled')}
-                        </Label>
-                        <Switch
-                          checked={branch.isReservationsEnabled}
-                          disabled={updateSettings.isPending}
-                          onCheckedChange={(v) =>
-                            toggleSetting(branch, 'isReservationsEnabled', v)
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    }
+                  />
+                )}
+                <SettingRow
+                  icon={Clock}
+                  title={t('dayStartTime')}
+                  description={t('dayStartsHint')}
+                  control={
+                    <span className='bg-muted rounded-md px-2.5 py-1 font-mono text-sm tabular-nums'>
+                      {branch.dayStartTime?.slice(0, 5)}
+                    </span>
+                  }
+                />
+                <RowButton
+                  icon={Receipt}
+                  title={t('receiptPricing')}
+                  description={t('receiptPricingHint')}
+                  onClick={() => setPricingBranch(branch)}
+                />
+                {features.kds && (
+                  <RowButton
+                    icon={ChefHat}
+                    title={t('kitchenStations')}
+                    description={t('kitchenStationsHint')}
+                    onClick={() => setKitchenBranch(branch)}
+                  />
+                )}
+                <RowButton
+                  icon={Pencil}
+                  title={t('editBranch')}
+                  description={t('branchDetailsHint')}
+                  onClick={() => {
+                    setEditingBranch(branch)
+                    setDialogOpen(true)
+                  }}
+                />
+              </SettingsCard>
             ))}
           </div>
         )}
@@ -207,5 +204,35 @@ export function BranchesManagement() {
         branch={editingBranch}
       />
     </>
+  )
+}
+
+/** A setting kept in its own dialog: the whole row opens it */
+function RowButton({
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: React.ReactNode
+  description: React.ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      type='button'
+      onClick={onClick}
+      className='hover:bg-muted/40 block w-full text-start transition-colors'
+    >
+      <SettingRow
+        icon={icon}
+        title={title}
+        description={description}
+        control={
+          <ChevronRight className='text-muted-foreground size-4 rtl:rotate-180' />
+        }
+      />
+    </button>
   )
 }
