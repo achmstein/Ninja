@@ -5,6 +5,7 @@ import {
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
+import { formatWhen } from '@/lib/when'
 import { urgencyFor, type Urgency } from '@/components/queue-card'
 
 export { urgencyTextClass } from '@/components/queue-card'
@@ -87,14 +88,19 @@ export function orderPlace(order: {
 // Localized currency suffix (EGP / ج.م). Callers all live inside components
 // that re-render on language change, so reading the store here stays fresh.
 /** A price in the business's currency: `12.50 EGP` / `12.50 ج.م`. */
-export function formatEgp(value: number | string | undefined | null): string {
+export function formatEgp(
+  value: number | string | undefined | null,
+  signed = false
+): string {
   return formatMoney(
     value,
     useCurrency.getState().code,
-    useLanguage.getState().language
+    useLanguage.getState().language,
+    signed
   )
 }
 
+/** How long ago, said the admin's one way (lib/when.ts): "5m ago", "Yesterday 14:32", "Fri 3 Oct" */
 export function relativeTime(
   value: string | undefined,
   nowMs: number,
@@ -102,13 +108,7 @@ export function relativeTime(
   locale: string
 ): string {
   if (!value) return ''
-  const minutes = Math.round((nowMs - new Date(value).getTime()) / 60_000)
-  if (minutes < 1) return t('justNow')
-  if (minutes < 60) return t('minutesAgo', { minutes })
-  const hours = Math.round(minutes / 60)
-  return hours < 24
-    ? t('hoursAgo', { hours })
-    : new Date(value).toLocaleDateString(locale)
+  return formatWhen(value, 'relative', locale, t, new Date(nowMs))
 }
 
 // KDS-style aging, matched to the backend reminder escalation (drinks move

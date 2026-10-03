@@ -28,7 +28,10 @@ export const CURRENCY_LABELS: Record<string, { en: string; ar: string }> = {
 export const DEFAULT_CURRENCY = 'EGP'
 
 /** The tenant's currency (ISO 4217), set by the brand when it loads; pounds until then. */
-export const useCurrency = create<{ code: string; set: (code: string) => void }>()((set) => ({
+export const useCurrency = create<{
+  code: string
+  set: (code: string) => void
+}>()((set) => ({
   code: DEFAULT_CURRENCY,
   set: (code) => set({ code: code || DEFAULT_CURRENCY }),
 }))
@@ -37,10 +40,28 @@ export function currencyLabel(code: string, language: 'en' | 'ar'): string {
   return CURRENCY_LABELS[code]?.[language] ?? code
 }
 
-/** Two decimals and the currency's label in the reader's language, the shape every app prints. */
-export function formatMoney(value: number | string | null | undefined, code: string, language: 'en' | 'ar'): string {
-  const n = typeof value === 'string' ? Number(value) : (value ?? 0)
-  return `${(Number.isFinite(n) ? n : 0).toFixed(2)} ${currencyLabel(code, language)}`
+const AMOUNT = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+/**
+ * Two decimals grouped in thousands (10,820.00) and the currency's label in
+ * the reader's language, the shape every app prints. Figures stay western,
+ * a loss takes a true minus, and the figure is held left to right so in an
+ * Arabic line the minus stays before it (−10,481.35 ج.م).
+ */
+export function formatMoney(
+  value: number | string | null | undefined,
+  code: string,
+  language: 'en' | 'ar',
+  /** A + before a gain, inside the figure so it stays with it */
+  signed = false
+): string {
+  const raw = typeof value === 'string' ? Number(value) : (value ?? 0)
+  const n = Number.isFinite(raw) ? raw : 0
+  const figure = `${n < 0 ? '−' : signed && n > 0 ? '+' : ''}${AMOUNT.format(Math.abs(n))}`
+  return `⁦${figure}⁩ ${currencyLabel(code, language)}`
 }
 
 /** The label alone ("EGP" / "ج.م"), for a price input's unit. */

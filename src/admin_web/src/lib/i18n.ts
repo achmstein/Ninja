@@ -1394,6 +1394,8 @@ const webExtras = {
   trackCount: { plural: "count", en: {"=0":"Track","=1":"Track 1 item","other":"Track {count} items"}, ar: {"zero":"تتبّع","one":"تتبّع صنفًا واحدًا","two":"تتبّع صنفين","few":"تتبّع {count} أصناف","many":"تتبّع {count} صنفًا","other":"تتبّع {count} صنف"} },
   // Menu list: which items the storeroom tracks
   soldAsUnitBadge: { en: "Sold as a unit", ar: "يُباع كوحدة" },
+  ofSales: { en: "{share} of sales", ar: "{share} من المبيعات" },
+  marginOfSales: { en: "Margin {share}", ar: "هامش {share}" },
   usesIngredientsBadge: { en: "Recipe · food cost %", ar: "وصفة · نسبة التكلفة" },
   trackedUnitWhy: { en: "Each one sold takes one from this branch's stock.", ar: "كل واحد يُباع يُخصم واحدًا من مخزون هذا الفرع." },
   trackedRecipeTitle: { en: "Made from a recipe", ar: "يُحضَّر من وصفة" },

@@ -29,10 +29,7 @@ export function Money({
   className?: string
 }) {
   const n = toNumber(value)
-  const text =
-    dashZero && n === 0
-      ? '—'
-      : `${signed && n > 0 ? '+' : ''}${n < 0 ? '−' : ''}${formatEgp(Math.abs(n))}`
+  const text = dashZero && n === 0 ? '—' : formatEgp(n, signed)
   const colour =
     tone === 'negative' || (tone === 'auto' && n < 0)
       ? 'text-destructive'

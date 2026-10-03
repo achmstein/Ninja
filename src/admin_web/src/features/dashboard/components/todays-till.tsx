@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { type RangeReport } from '@/api/sales'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { SegmentedBar } from '@/components/segmented-bar'
@@ -75,7 +76,7 @@ export function TodaysTill({
     {
       key: 'refunds',
       label: t('refundsTotal'),
-      value: `−${formatEgp(report?.refunds)}`,
+      value: formatEgp(-toNumber(report?.refunds)),
       amount: Number(report?.refunds ?? 0),
       hint: t('posTicketsCount', { count: Number(report?.refundCount ?? 0) }),
       to: '/till',
@@ -106,9 +107,7 @@ export function TodaysTill({
     })
   }
   const lines = allLines.filter(
-    (line) =>
-      (line.key !== 'tabPayments' || features.tabs) &&
-      line.amount !== 0
+    (line) => (line.key !== 'tabPayments' || features.tabs) && line.amount !== 0
   )
 
   return (
