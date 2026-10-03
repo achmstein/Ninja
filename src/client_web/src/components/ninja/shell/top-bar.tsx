@@ -34,11 +34,15 @@ export function NinjaTopBar({
 }) {
   // The island is up in the chips' corner (the order's status, or a message for a moment)
   const pill = useIsland((s) => s.busy)
+  // The logo, and under it the branch whose menu this is (when there is more than one to switch between)
   const brand = (
-    <Link to='/' className='flex min-w-0 items-center gap-2'>
-      {/* However tall the business made its logo, it keeps room above and below it in the bar */}
-      <BrandWordmark className='max-h-[calc(var(--bar-h)-1.25rem)] max-w-[50vw]' />
-    </Link>
+    <div className='group/brand flex min-w-0 flex-col items-start gap-0.5'>
+      <Link to='/' className='flex min-w-0 items-center gap-2'>
+        {/* However tall the business made its logo, it keeps room above and below it in the bar; a little less with the branch under it */}
+        <BrandWordmark className='max-h-[calc(var(--bar-h)-1.25rem)] max-w-[50vw] group-has-[[data-branch-line]]/brand:max-h-[calc(var(--bar-h)-2.75rem)]' />
+      </Link>
+      {chips && <BranchSwitcher variant='line' />}
+    </div>
   )
   return (
     <motion.div
@@ -58,8 +62,7 @@ export function NinjaTopBar({
           aria-hidden={pill || undefined}
         >
           {/* Where the customer is (the table, the branch they are at) the dock's row says; here, while they are at
-              none, the way to scan a table's or a room's code, and the switch of branch */}
-          <BranchSwitcher />
+              none, the way to scan a table's or a room's code; the branch is under the logo */}
           <ScanCodeButton />
         </motion.div>
       )}
