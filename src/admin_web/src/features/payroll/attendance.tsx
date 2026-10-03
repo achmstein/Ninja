@@ -189,35 +189,38 @@ export function Attendance() {
           </InfoTip>
         }
         actions={
-          rows.length > 0 ? (
-            <div className='flex gap-2'>
-              <Toggle
-                variant='outline'
-                pressed={overtimeMode}
-                onPressedChange={setOvertimeMode}
-                aria-label={t('overtimeMode')}
-                title={t('overtimeModeHint')}
-              >
-                <Clock className='me-2 h-4 w-4' />
-                {t('overtime')}
-              </Toggle>
-              {todayInMonth && (
-                <Button size='sm' variant='outline' onClick={everyoneToday}>
-                  <CalendarCheck className='me-2 h-4 w-4' />
-                  {t('everyonePresentToday')}
-                </Button>
-              )}
-            </div>
+          rows.length > 0 && todayInMonth ? (
+            <Button size='sm' variant='outline' onClick={everyoneToday}>
+              <CalendarCheck className='me-2 h-4 w-4' />
+              {t('everyonePresentToday')}
+            </Button>
           ) : null
         }
       >
         <PayrollTabs value='attendance' />
-        <MonthSwitcher
-          monthKey={monthKey}
-          onChange={(next) =>
-            navigate({ search: (prev) => ({ ...prev, month: next }) })
-          }
-        />
+        {/* Which month, and whether the grid takes overtime hours or marks */}
+        <div className='flex flex-wrap items-center gap-2'>
+          <MonthSwitcher
+            monthKey={monthKey}
+            onChange={(next) =>
+              navigate({ search: (prev) => ({ ...prev, month: next }) })
+            }
+          />
+          {rows.length > 0 && (
+            <Toggle
+              variant='outline'
+              size='sm'
+              className='ms-auto'
+              pressed={overtimeMode}
+              onPressedChange={setOvertimeMode}
+              aria-label={t('overtimeMode')}
+              title={t('overtimeModeHint')}
+            >
+              <Clock className='me-2 h-4 w-4' />
+              {t('overtime')}
+            </Toggle>
+          )}
+        </div>
       </PageHeader>
 
       {employees.isError ? (

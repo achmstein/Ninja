@@ -313,99 +313,128 @@ export function MenuManagement() {
       <MenuPage
         actions={
           <>
-            <ToggleGroup
-              type='single'
-              variant='outline'
-              size='sm'
-              value={photos ? 'photos' : 'list'}
-              onValueChange={(value) =>
-                value &&
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    view: value === 'photos' ? 'photos' : undefined,
-                  }),
-                })
-              }
-              aria-label={t('menuView')}
-            >
-              <ToggleGroupItem value='list' aria-label={t('menuViewList')}>
-                <List className='size-4' />
-              </ToggleGroupItem>
-              <ToggleGroupItem value='photos' aria-label={t('menuViewPhotos')}>
-                <LayoutGrid className='size-4' />
-              </ToggleGroupItem>
-            </ToggleGroup>
-            {scan.available && (
-              <>
-                <Button
-                  variant='outline'
-                  disabled={scan.isScanning}
-                  onClick={() => scanInputRef.current?.click()}
-                >
-                  {scan.isScanning ? (
-                    <Spinner className='me-2' />
-                  ) : (
-                    <ScanLine className='me-2 h-4 w-4' />
-                  )}
-                  {scan.isScanning ? t('readingMenu') : t('scanMenu')}
-                </Button>
-                {/* No `capture`: the native chooser offers the camera and
-                    the gallery, and a menu often arrives as a photo */}
-                <input
-                  ref={scanInputRef}
-                  type='file'
-                  accept={MENU_SCAN_ACCEPT}
-                  multiple
-                  className='hidden'
-                  onChange={(e) => {
-                    const files = [...(e.target.files ?? [])]
-                    e.target.value = ''
-                    void scan.scanFiles(files)
-                  }}
-                />
-              </>
-            )}
-            {features.inventory && (
-              <Button variant='outline' onClick={() => setTrackOpen(true)}>
-                <CookingPot className='me-2 h-4 w-4' />
-                {t('trackItems')}
-                {untracked.length > 0 && (
-                  <Badge variant='secondary' className='ms-2 tabular-nums'>
-                    {untracked.length}
-                  </Badge>
-                )}
+            {/* A scan takes a while: it says so where it was started */}
+            {scan.isScanning && (
+              <Button variant='outline' disabled>
+                <Spinner className='me-2' />
+                {t('readingMenu')}
               </Button>
             )}
-            <Button
-              variant='outline'
-              onClick={() => setCategoryDialog({ category: null })}
-            >
-              <Tag className='me-2 h-4 w-4' />
-              {t('addCategory')}
-            </Button>
             <Button onClick={() => newItem()}>
               <Plus className='me-2 h-4 w-4' />
               {t('addItem')}
             </Button>
+            {/* One button for the page; the rest is behind More */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='relative size-9'
+                  aria-label={t('moreActions')}
+                >
+                  <MoreHorizontal className='h-4 w-4' />
+                  {features.inventory && untracked.length > 0 && (
+                    <span className='bg-primary absolute -end-0.5 -top-0.5 size-2 rounded-full' />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={() => setCategoryDialog({ category: null })}
+                >
+                  <Tag className='h-4 w-4' />
+                  {t('addCategory')}
+                </DropdownMenuItem>
+                {scan.available && (
+                  <DropdownMenuItem
+                    disabled={scan.isScanning}
+                    onClick={() => scanInputRef.current?.click()}
+                  >
+                    <ScanLine className='h-4 w-4' />
+                    {t('scanMenu')}
+                  </DropdownMenuItem>
+                )}
+                {features.inventory && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setTrackOpen(true)}>
+                      <CookingPot className='h-4 w-4' />
+                      {t('trackItems')}
+                      {untracked.length > 0 && (
+                        <Badge
+                          variant='secondary'
+                          className='ms-auto tabular-nums'
+                        >
+                          {untracked.length}
+                        </Badge>
+                      )}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       >
-        <div className='relative w-full sm:w-80'>
-          <Search className='text-muted-foreground pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2' />
-          <Input
-            value={search.q ?? ''}
-            onChange={(e) =>
+        {/* No `capture`: the native chooser offers the camera and the
+            gallery, and a menu often arrives as a photo */}
+        {scan.available && (
+          <input
+            ref={scanInputRef}
+            type='file'
+            accept={MENU_SCAN_ACCEPT}
+            multiple
+            className='hidden'
+            onChange={(e) => {
+              const files = [...(e.target.files ?? [])]
+              e.target.value = ''
+              void scan.scanFiles(files)
+            }}
+          />
+        )}
+        {/* Finding and viewing: the search, and list or photos beside it */}
+        <div className='flex items-center gap-2'>
+          <div className='relative min-w-0 flex-1 sm:w-80 sm:flex-none'>
+            <Search className='text-muted-foreground pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2' />
+            <Input
+              value={search.q ?? ''}
+              onChange={(e) =>
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    q: e.target.value || undefined,
+                  }),
+                })
+              }
+              placeholder={t('searchItemsPlaceholder')}
+              className='h-9 ps-8'
+            />
+          </div>
+          <ToggleGroup
+            type='single'
+            variant='outline'
+            size='sm'
+            className='ms-auto'
+            value={photos ? 'photos' : 'list'}
+            onValueChange={(value) =>
+              value &&
               navigate({
                 search: (prev) => ({
                   ...prev,
-                  q: e.target.value || undefined,
+                  view: value === 'photos' ? 'photos' : undefined,
                 }),
               })
             }
-            placeholder={t('searchItemsPlaceholder')}
-            className='h-9 ps-8'
-          />
+            aria-label={t('menuView')}
+          >
+            <ToggleGroupItem value='list' aria-label={t('menuViewList')}>
+              <List className='size-4' />
+            </ToggleGroupItem>
+            <ToggleGroupItem value='photos' aria-label={t('menuViewPhotos')}>
+              <LayoutGrid className='size-4' />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         {itemsQuery.isError || categoriesQuery.isError ? (

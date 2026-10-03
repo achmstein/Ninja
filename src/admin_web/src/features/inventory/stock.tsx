@@ -117,27 +117,8 @@ export function Stock() {
           title={t('inventoryStock')}
           actions={
             <>
-              {branches.length > 1 && (
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => setTransferOpen(true)}
-                  disabled={counting}
-                >
-                  <ArrowLeftRight className='me-2 h-4 w-4' />
-                  {t('transferStock')}
-                </Button>
-              )}
-              <Button
-                size='sm'
-                variant={counting ? 'secondary' : 'outline'}
-                onClick={() => setCounting((c) => !c)}
-                aria-pressed={counting}
-              >
-                <ClipboardCheck className='me-2 h-4 w-4' />
-                {t('countStock')}
-              </Button>
-              {/* One Receive for the page; starts on the open item when there is one */}
+              {/* One Receive for the page, starting on the open item when
+                  there is one; the rest is behind More */}
               <Button
                 size='sm'
                 onClick={() =>
@@ -162,6 +143,24 @@ export function Stock() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end'>
+                  {/* A count has its own Cancel and Save on the page */}
+                  <DropdownMenuItem
+                    disabled={counting}
+                    onClick={() => setCounting(true)}
+                  >
+                    <ClipboardCheck className='h-4 w-4' />
+                    {t('countStock')}
+                  </DropdownMenuItem>
+                  {branches.length > 1 && (
+                    <DropdownMenuItem
+                      disabled={counting}
+                      onClick={() => setTransferOpen(true)}
+                    >
+                      <ArrowLeftRight className='h-4 w-4' />
+                      {t('transferStock')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setNewItemOpen(true)}>
                     <Plus className='h-4 w-4' />
                     {t('newStockItem')}
