@@ -174,4 +174,45 @@ public class MenuProposalValidatorTest
         Assert.AreEqual("كركديه", items[1].Name.Ar, "a name in the other script is kept rather than lost");
         Assert.IsTrue(proposal.Warnings.Any(w => w.Contains("no English name")), string.Join("; ", proposal.Warnings));
     }
+
+    [TestMethod]
+    public void Options_left_in_brackets_after_a_name_become_a_choice_at_its_price()
+    {
+        var extraction = new MenuExtraction(
+            [
+                new ExtractedCategory("Desserts", "حلويات", 0,
+                [
+                    Item("Volcano (Lotus / Nutella / Mango)", "بركان (لوتس / نوتيلا / مانجو)", 85),
+                    Item("Espresso (Double)", "إسبريسو (دبل)", 40),
+                ]),
+            ],
+            "");
+
+        var items = MenuProposalValidator.Validate(extraction, Categories, Items).Categories[0].Items;
+
+        var volcano = items[0];
+        Assert.AreEqual("Volcano", volcano.Name.En);
+        Assert.AreEqual("بركان", volcano.Name.Ar);
+        Assert.AreEqual(85m, volcano.Price);
+        Assert.IsNotNull(volcano.Choice);
+        CollectionAssert.AreEqual(new[] { "Lotus", "Nutella", "Mango" }, volcano.Choice.Options.Select(o => o.Name.En).ToArray());
+        CollectionAssert.AreEqual(new[] { "لوتس", "نوتيلا", "مانجو" }, volcano.Choice.Options.Select(o => o.Name.Ar).ToArray());
+        Assert.IsTrue(volcano.Choice.Options.All(o => o.Price == 85m), "one price for every option");
+
+        // One thing in brackets is part of the name
+        Assert.AreEqual("Espresso (Double)", items[1].Name.En);
+        Assert.IsNull(items[1].Choice);
+    }
+
+    [TestMethod]
+    public void Options_in_one_language_only_name_the_choice_in_that_language()
+    {
+        var item = MenuProposalValidator.SplitPrintedChoices(Item("Volcano", "بركان (لوتس، نوتيلا، مانجو)", 85));
+
+        Assert.AreEqual("بركان", item.NameAr);
+        Assert.AreEqual("Volcano", item.NameEn);
+        Assert.HasCount(3, item.Choices);
+        Assert.AreEqual("نوتيلا", item.Choices[1].NameAr);
+        Assert.AreEqual("", item.Choices[1].NameEn);
+    }
 }

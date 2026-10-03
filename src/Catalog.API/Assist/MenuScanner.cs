@@ -235,6 +235,11 @@ public sealed class MenuScanner(INinjaAgentFactory factory, ILogger<MenuScanner>
           "Serving" / "التقديم"); choices lists every option (nameEn, nameAr, price) with its own full printed price,
           the smallest included, named after the column header or the printed label. One price: choiceEn and
           choiceAr are "" and choices is [].
+        - Options listed with the item's name at one price, in brackets or split by slashes or commas ("Volcano
+          (Lotus / Nutella / Mango)", "بركان (لوتس / نوتيلا / مانجو)", "Milkshake: vanilla, chocolate, strawberry")
+          are a choice, never part of the name: nameEn / nameAr is the dish alone ("Volcano" / "بركان");
+          choiceEn / choiceAr name what varies ("Flavour" / "النكهة", "Type" / "النوع"); choices lists each option
+          with the item's price.
         - descriptionEn / descriptionAr: the printed description or ingredients under the item, in the business's
           languages; "" when nothing is printed. Never invent one.
         - Headings, footers, phone numbers, addresses, delivery fees and slogans are not items.

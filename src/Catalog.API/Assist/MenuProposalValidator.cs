@@ -54,7 +54,7 @@ public static partial class MenuProposalValidator
             typeId ??= Lookup(categoryByName, name);
 
             var lines = new List<ProposedItem>();
-            foreach (var (item, n) in (category.Items ?? []).Select((x, i) => (x, i + 1)))
+            foreach (var (printedItem, n) in (category.Items ?? []).Select((x, i) => (x, i + 1)))
             {
                 if (total == MaxItems)
                 {
@@ -62,6 +62,7 @@ public static partial class MenuProposalValidator
                     break;
                 }
 
+                var item = SplitPrintedChoices(printedItem);
                 var itemName = Name(item.NameEn, item.NameAr, languages);
                 var where = $"{label}, line {n}";
                 if (itemName.IsEmpty)
@@ -125,6 +126,67 @@ public static partial class MenuProposalValidator
         var notes = AIJson.Clean(extraction.Notes, 200);
         return new MenuProposal(proposed, warnings, notes.Length == 0 ? null : notes);
     }
+
+    /// <summary>
+    /// Choices the model left in the name: "Volcano (Lotus / Nutella / Mango)",
+    /// "بركان (لوتس / نوتيلا / مانجو)", the options of one dish at one price,
+    /// listed in brackets after it. The dish is the name before the brackets;
+    /// each option is a choice at the dish's price, named "Type" / "النوع"
+    /// unless the model named the group. Only when the item has no choices of
+    /// its own and the brackets hold two or more parts: "Espresso (Double)"
+    /// stays as printed.
+    /// </summary>
+    internal static ExtractedItem SplitPrintedChoices(ExtractedItem item)
+    {
+        if (item.Choices is { Count: > 0 })
+            return item;
+        var en = BracketedOptions(item.NameEn);
+        var ar = BracketedOptions(item.NameAr);
+        if (en is null && ar is null)
+            return item;
+
+        // Both sides split into as many: paired. Otherwise the side that split (the longer, if both did)
+        // names the options, and the other language is left for the owner to fill in
+        var enOptions = en?.Options;
+        var arOptions = ar?.Options;
+        var paired = enOptions is not null && arOptions is not null && enOptions.Length == arOptions.Length;
+        var arLeads = !paired && (arOptions?.Length ?? 0) >= (enOptions?.Length ?? 0);
+        var lead = paired || !arLeads ? enOptions! : arOptions!;
+        var options = lead.Select((option, i) => new ExtractedChoiceOption(
+            paired ? enOptions![i] : arLeads ? "" : option,
+            paired ? arOptions![i] : arLeads ? option : "",
+            item.Price)).ToList();
+
+        return item with
+        {
+            NameEn = en?.Head ?? item.NameEn,
+            NameAr = ar?.Head ?? item.NameAr,
+            ChoiceEn = string.IsNullOrWhiteSpace(item.ChoiceEn) ? "Type" : item.ChoiceEn,
+            ChoiceAr = string.IsNullOrWhiteSpace(item.ChoiceAr) ? "النوع" : item.ChoiceAr,
+            Choices = options,
+        };
+    }
+
+    private static (string Head, string[] Options)? BracketedOptions(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+        var match = BracketedList().Match(name.Trim());
+        if (!match.Success)
+            return null;
+        var options = OptionSeparator().Split(match.Groups["list"].Value)
+            .Select(o => o.Trim())
+            .Where(o => o.Length > 0)
+            .ToArray();
+        var head = match.Groups["head"].Value.Trim();
+        return options.Length >= 2 && head.Length > 0 ? (head, options) : null;
+    }
+
+    [GeneratedRegex(@"^(?<head>[^()\[\]]+?)\s*[(\[]\s*(?<list>[^()\[\]]+?)\s*[)\]]$")]
+    private static partial Regex BracketedList();
+
+    [GeneratedRegex(@"\s*[/،,|]\s*|\s+(?:or|أو|او)\s+")]
+    private static partial Regex OptionSeparator();
 
     /// <summary>
     /// The printed choices, cleaned: named, priced, no two alike, cheapest
