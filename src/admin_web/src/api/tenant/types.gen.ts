@@ -25,6 +25,8 @@ export type BranchResponse = {
     isOrderingEnabled: boolean;
     isReservationsEnabled: boolean;
     requireSignInForTableOrders?: boolean;
+    latitude?: null | number | string;
+    longitude?: null | number | string;
 };
 
 export type CreateBranchRequest = {
@@ -37,6 +39,7 @@ export type CreateBranchRequest = {
     dayStartTime?: null | string;
     isOrderingEnabled?: boolean;
     isReservationsEnabled?: boolean;
+    location?: null | string;
 };
 
 export type IFormFile = Blob | File;
@@ -172,6 +175,7 @@ export type UpdateBranchRequest = {
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
     requireSignInForTableOrders?: null | boolean;
+    location?: null | string;
 };
 
 export type UpdateBranchSettingsRequest = {

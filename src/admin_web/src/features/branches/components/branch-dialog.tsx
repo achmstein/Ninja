@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { MapPin } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { type BranchResponse } from '@/api/tenant'
 import {
@@ -86,7 +88,14 @@ function BranchForm({
     dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '06:00',
     isActive: branch?.isActive ?? true,
     requireSignInForTableOrders: branch?.requireSignInForTableOrders ?? false,
+    // A pasted Maps link; empty keeps where the branch is
+    location: '',
+    clearLocation: false,
   })
+  const pinned =
+    branch?.latitude != null && branch?.longitude != null && !form.clearLocation
+      ? `${branch.latitude},${branch.longitude}`
+      : null
   const [error, setError] = useState('')
 
   const onSuccess = () => {
@@ -98,16 +107,25 @@ function BranchForm({
     onOpenChange(false)
   }
 
+  // A link that names no point says how to copy the right one
+  const onError = (error: unknown) =>
+    isAxiosError(error) &&
+    error.response?.status === 400 &&
+    (error.response.data as { title?: string } | undefined)?.title ===
+      'Location not read'
+      ? toast.error(t('locationNotRead'))
+      : toast.error(t('failedToSaveBranch'))
+
   const createBranch = useMutation({
     ...createBranchMutation(),
     onSuccess,
-    onError: () => toast.error(t('failedToSaveBranch')),
+    onError,
   })
 
   const updateBranch = useMutation({
     ...updateBranchMutation(),
     onSuccess,
-    onError: () => toast.error(t('failedToSaveBranch')),
+    onError,
   })
 
   const isSaving = createBranch.isPending || updateBranch.isPending
@@ -135,6 +153,7 @@ function BranchForm({
         ? fromLocalizedValue(form.receiptFooter)
         : null
     const dayStartTime = `${form.dayStartTime}:00`
+    const location = form.clearLocation ? '' : form.location.trim() || null
 
     if (isEditing) {
       updateBranch.mutate({
@@ -151,6 +170,7 @@ function BranchForm({
           isOrderingEnabled: branch.isOrderingEnabled,
           isReservationsEnabled: branch.isReservationsEnabled,
           requireSignInForTableOrders: form.requireSignInForTableOrders,
+          location,
         },
       })
     } else {
@@ -162,6 +182,7 @@ function BranchForm({
           taxNumber,
           receiptFooter,
           dayStartTime,
+          location,
         },
       })
     }
@@ -250,6 +271,50 @@ function BranchForm({
           type='tel'
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+        />
+      </Field>
+
+      {/* Where it is, for a customer's nearest branch and the way there */}
+      <Field
+        label={t('branchLocation')}
+        htmlFor='branchLocation'
+        hint={t('branchLocationHint')}
+        end={
+          pinned ? (
+            <span className='flex items-center gap-3 text-xs'>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${pinned}`}
+                target='_blank'
+                rel='noreferrer'
+                className='text-primary inline-flex items-center gap-1 underline-offset-4 hover:underline'
+              >
+                <MapPin className='size-3.5' />
+                {t('onTheMap')}
+              </a>
+              <button
+                type='button'
+                className='text-destructive hover:underline'
+                onClick={() =>
+                  setForm({ ...form, clearLocation: true, location: '' })
+                }
+              >
+                {t('remove')}
+              </button>
+            </span>
+          ) : null
+        }
+      >
+        <Input
+          id='branchLocation'
+          inputMode='url'
+          dir='ltr'
+          placeholder={
+            pinned ? t('branchLocationReplace') : 'https://maps.app.goo.gl/…'
+          }
+          value={form.location}
+          onChange={(e) =>
+            setForm({ ...form, location: e.target.value, clearLocation: false })
+          }
         />
       </Field>
 

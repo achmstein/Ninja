@@ -1395,6 +1395,11 @@ const webExtras = {
   // Menu list: which items the storeroom tracks
   soldAsUnitBadge: { en: "Sold as a unit", ar: "يُباع كوحدة" },
   ofSales: { en: "{share} of sales", ar: "{share} من المبيعات" },
+  branchLocation: { en: "Location", ar: "الموقع" },
+  branchLocationHint: { en: "Paste the branch's Google Maps link (Share → Copy link) or its coordinates. Customers see the nearest branch and get directions to it.", ar: "الصق رابط الفرع على خرائط Google (مشاركة ← نسخ الرابط) أو إحداثياته. يرى العملاء أقرب فرع ويحصلون على الاتجاهات إليه." },
+  branchLocationReplace: { en: "Paste a new link to move it", ar: "الصق رابطًا جديدًا لتغييره" },
+  onTheMap: { en: "On the map", ar: "على الخريطة" },
+  locationNotRead: { en: "That link has no location. In Google Maps, open the branch, tap Share, then Copy link.", ar: "هذا الرابط بلا موقع. افتح الفرع في خرائط Google، ثم مشاركة، ثم نسخ الرابط." },
   marginOfSales: { en: "Margin {share}", ar: "هامش {share}" },
   usesIngredientsBadge: { en: "Recipe · food cost %", ar: "وصفة · نسبة التكلفة" },
   trackedUnitWhy: { en: "Each one sold takes one from this branch's stock.", ar: "كل واحد يُباع يُخصم واحدًا من مخزون هذا الفرع." },
