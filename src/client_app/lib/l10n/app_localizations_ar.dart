@@ -1584,7 +1584,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get close => 'إغلاق';
 
   @override
-  String get menu => 'القائمة';
+  String get menu => 'المنيو';
 
   @override
   String get yourRoom => 'غرفتك';
@@ -1619,7 +1619,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get settings => 'الإعدادات';
 
   @override
-  String get searchMenu => 'ابحث في القائمة...';
+  String get searchMenu => 'ابحث في المنيو...';
 
   @override
   String get noDishesFound => 'لا توجد أصناف بهذا الاسم';
@@ -1629,7 +1629,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String failedToLoadMenu(String error) {
-    return 'تعذّر تحميل القائمة: $error';
+    return 'تعذّر تحميل المنيو: $error';
   }
 
   @override
@@ -1852,7 +1852,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String get browseMenu => 'تصفح القائمة';
+  String get browseMenu => 'تصفح المنيو';
 
   @override
   String get joinOurLoyaltyProgram => 'انضم إلى برنامج الولاء';
@@ -2436,7 +2436,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String get ninjaWholeMenu => 'القائمة كاملة';
+  String get ninjaWholeMenu => 'المنيو كامل';
 
   @override
   String get ninjaBackToCards => 'العودة إلى البطاقات';
@@ -2586,7 +2586,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get ninjaPlacesStations => 'الألعاب';
 
   @override
-  String get itemNotFound => 'هذا الصنف غير موجود في القائمة';
+  String get itemNotFound => 'هذا الصنف غير موجود في المنيو';
 
   @override
   String get ninjaHintTray => 'اسحب للأعلى لعرض طلبك';
