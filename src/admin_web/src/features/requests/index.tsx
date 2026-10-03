@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { LiveTabs } from '@/features/orders/components/live-tabs'
 import {
   QueueCard,
   urgencyFor,
@@ -114,7 +115,8 @@ export function ServiceRequests() {
   return (
     <Main>
       <PageHeader
-        title={t('requests')}
+        title={t('liveNav')}
+        description={t('liveDescription')}
         badge={
           all.length > 0 && (
             <Badge variant='destructive' className='h-6 tabular-nums'>
@@ -123,6 +125,7 @@ export function ServiceRequests() {
           )
         }
       >
+        <LiveTabs value='calls' />
         {types.length > 1 && (
           <ToggleGroup
             type='single'

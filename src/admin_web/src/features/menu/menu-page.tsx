@@ -1,6 +1,7 @@
 import { useT } from '@/lib/i18n'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { MenuTabs } from './menu-tabs'
 
 type MenuPageProps = {
   actions?: React.ReactNode
@@ -17,7 +18,9 @@ export function MenuPage({ actions, fixed, children }: MenuPageProps) {
   const t = useT()
   return (
     <Main fixed={fixed}>
-      <PageHeader title={t('menu')} actions={actions} />
+      <PageHeader title={t('menu')} actions={actions}>
+        <MenuTabs value='dishes' />
+      </PageHeader>
       {children}
     </Main>
   )

@@ -519,6 +519,12 @@ const webExtras = {
   howNetIsMade: { en: "How net is made", ar: "كيف يُحسب الصافي" },
   againstPeriodBefore: { en: "against the period before", ar: "مقارنة بالفترة السابقة" },
   whereTheMoneyWent: { en: "Where the money went", ar: "أين ذهبت الأموال" },
+  liveNav: { en: "Live", ar: "مباشر" },
+  liveDescription: { en: "What needs someone right now: orders to confirm and tables calling.", ar: "ما يحتاج أحدًا الآن: طلبات للتأكيد وطاولات تنادي." },
+  waiterCalls: { en: "Waiter calls", ar: "نداءات الطاولات" },
+  accountsNav: { en: "Suppliers & partners", ar: "الموردون والشركاء" },
+  dishesTab: { en: "Dishes", ar: "الأصناف" },
+  offersTab: { en: "Offers & codes", ar: "العروض والأكواد" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)

@@ -21,6 +21,7 @@ import {
   orderUrgency,
   type OrderPlace,
 } from './status'
+import { LiveTabs } from './components/live-tabs'
 import { useOrderActions } from './use-order-actions'
 
 const route = getRouteApi('/_authenticated/orders/live')
@@ -96,8 +97,8 @@ export function OrdersBoard() {
     <>
       <Main>
         <PageHeader
-          title={t('liveOrders')}
-          back={{ to: '/orders' }}
+          title={t('liveNav')}
+          description={t('liveDescription')}
           badge={
             <>
               {pending.length > 0 && (
@@ -112,6 +113,7 @@ export function OrdersBoard() {
             </>
           }
         >
+          <LiveTabs value='orders' />
           {showFilter && (
             <div className='flex flex-wrap items-center gap-2'>
               <ToggleGroup

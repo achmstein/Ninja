@@ -36,6 +36,7 @@ import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { AccountsTabs } from './accounts-tabs'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
@@ -82,14 +83,16 @@ export function Partners() {
     <>
       <Main>
         <PageHeader
-          title={t('navFinancePartners')}
+          title={t('accountsNav')}
           actions={
             <Button size='sm' onClick={() => setAdding(true)}>
               <Plus className='me-2 h-4 w-4' />
               {t('addPartner')}
             </Button>
           }
-        />
+        >
+          <AccountsTabs value='partners' />
+        </PageHeader>
 
         {partners.isError ? (
           <ErrorState error={partners.error} onRetry={partners.refetch} />

@@ -61,9 +61,8 @@ export function AppSidebar() {
     : 0
 
   const badges: Record<string, number> = {
-    '/orders': pendingOrders.length,
+    '/orders/live': pendingOrders.length + serviceRequests.length,
     '/places': openReservations,
-    '/requests': serviceRequests.length,
   }
 
   const withBadge = <T extends { url?: string }>(item: T): T => {

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
   BookOpen,
-  ClipboardList,
+  Radio,
   LayoutDashboard,
   Menu as MenuIcon,
   ReceiptText,
@@ -16,7 +16,7 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { ActiveMarker } from '@/components/motion'
 
 type Tab = {
-  to: '/' | '/orders' | '/till' | '/menu'
+  to: '/' | '/orders/live' | '/till' | '/menu'
   label: TranslationKey
   icon: LucideIcon
 }
@@ -24,15 +24,16 @@ type Tab = {
 /** The places an owner goes every day; the rest is behind More */
 const TABS: Tab[] = [
   { to: '/', label: 'overview', icon: LayoutDashboard },
-  { to: '/orders', label: 'orders', icon: ClipboardList },
+  { to: '/orders/live', label: 'liveNav', icon: Radio },
   { to: '/till', label: 'navTill', icon: ReceiptText },
   { to: '/menu', label: 'menuItems', icon: BookOpen },
 ]
 
 function isActive(pathname: string, to: Tab['to']) {
-  return to === '/'
-    ? pathname === '/'
-    : pathname === to || pathname.startsWith(`${to}/`)
+  if (to === '/') return pathname === '/'
+  if (to === '/orders/live')
+    return pathname.startsWith('/orders') || pathname.startsWith('/requests')
+  return pathname === to || pathname.startsWith(`${to}/`)
 }
 
 /**
@@ -63,7 +64,7 @@ export function TabBar() {
       <div className='mx-auto flex max-w-md items-center gap-1'>
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.to)
-          const count = tab.to === '/orders' ? pending.length : 0
+          const count = tab.to === '/orders/live' ? pending.length : 0
           return (
             <Link
               key={tab.to}

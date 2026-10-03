@@ -26,6 +26,7 @@ import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
+import { MenuTabs } from '@/features/menu/menu-tabs'
 import { PromoDialog } from './components/promo-dialog'
 import { PROMO_KIND } from './promo-kind'
 
@@ -222,7 +223,7 @@ export function PromoCodesManagement() {
     <>
       <Main>
         <PageHeader
-          title={t('promoCodes')}
+          title={t('menu')}
           actions={
             <Button
               size='sm'
@@ -235,7 +236,9 @@ export function PromoCodesManagement() {
               {t('newPromoCode')}
             </Button>
           }
-        />
+        >
+          <MenuTabs value='offers' />
+        </PageHeader>
 
         <DataTable
           table={table}

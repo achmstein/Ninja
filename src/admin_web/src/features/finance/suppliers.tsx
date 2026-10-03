@@ -33,6 +33,7 @@ import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { AccountsTabs } from './accounts-tabs'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
@@ -75,7 +76,7 @@ export function Suppliers() {
     <>
       <Main>
         <PageHeader
-          title={t('navFinanceSuppliers')}
+          title={t('accountsNav')}
           badge={
             totalOwed > 0 ? (
               <span className='text-muted-foreground text-sm tabular-nums'>
@@ -104,6 +105,7 @@ export function Suppliers() {
             />
             {t('showRetired')}
           </label>
+          <AccountsTabs value='suppliers' />
         </PageHeader>
 
         {suppliers.isError ? (

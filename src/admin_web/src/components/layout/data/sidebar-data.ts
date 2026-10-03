@@ -6,12 +6,11 @@ import {
   ChefHat,
   ClipboardList,
   Coffee,
-  ConciergeBell,
+  Radio,
   Contact,
   CreditCard,
   Bike,
   Armchair,
-  Handshake,
   History,
   LayoutDashboard,
   Megaphone,
@@ -21,7 +20,6 @@ import {
   ShieldCheck,
   Sparkles,
   TabletSmartphone,
-  Ticket,
   TrendingUp,
   Truck,
   Users,
@@ -39,6 +37,8 @@ export const sidebarData: SidebarData = {
       title: 'navOperations',
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
+        // Everything that needs someone now: orders to confirm and tables calling, as two tabs
+        { title: 'liveNav', url: '/orders/live', icon: Radio },
         { title: 'orders', url: '/orders', icon: ClipboardList },
         // Rooms & Tables is every business's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
         {
@@ -47,18 +47,12 @@ export const sidebarData: SidebarData = {
           icon: Armchair,
           needsPlaces: true,
         },
-        // A waiter call or a bill request comes from any table's scan page, whatever the plan
-        {
-          title: 'requests',
-          url: '/requests',
-          icon: ConciergeBell,
-          needsPlaces: true,
-        },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },
     {
       title: 'navCatalog',
+      // The dishes, and the offers and codes on them, as tabs of one page
       items: [{ title: 'menuItems', url: '/menu', icon: Coffee }],
     },
     {
@@ -117,18 +111,11 @@ export const sidebarData: SidebarData = {
           url: '/finance/expenses',
           icon: Receipt,
         },
+        // Who the business owes and who shares its profit: suppliers and partners as tabs of one page
         {
-          title: 'navFinanceSuppliers',
+          title: 'accountsNav',
           url: '/finance/suppliers',
           icon: Truck,
-        },
-        // The owners' own: who they are, what they hold, whether the
-        // month made money
-        {
-          title: 'navFinancePartners',
-          url: '/finance/partners',
-          icon: Handshake,
-          ownerOnly: true,
         },
         {
           title: 'navFinanceProfit',
@@ -142,7 +129,6 @@ export const sidebarData: SidebarData = {
       title: 'navCustomers',
       items: [
         { title: 'customers', url: '/customers', icon: Users },
-        { title: 'promoCodes', url: '/promos', icon: Ticket },
         { title: 'announcements', url: '/notifications', icon: Megaphone },
       ],
     },
