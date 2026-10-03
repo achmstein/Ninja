@@ -20,6 +20,8 @@ public static class Extensions
         builder.AddAIServices();
         builder.Services.AddSingleton<MenuLocalizer>();
         builder.Services.AddFakeAgentScript(MenuLocalizer.AgentKey, MenuLocalizerFake.Respond);
+        builder.Services.AddSingleton<FormFiller>();
+        builder.Services.AddFakeAgentScript(FormFiller.AgentKey, FormFillerFake.Respond);
         builder.Services.AddSingleton<CustomizationSuggester>();
         builder.Services.AddFakeAgentScript(CustomizationSuggester.AgentKey, CustomizationSuggesterFake.Respond);
         builder.Services.AddSingleton<MenuScanner>();

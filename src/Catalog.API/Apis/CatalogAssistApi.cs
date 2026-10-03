@@ -25,6 +25,14 @@ public static class CatalogAssistApi
             .RequireAuthorization("Admin")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
+        api.MapPost("/assist/fill", FillForm)
+            .WithName("FillForm")
+            .WithSummary("Fill in a form's empty fields")
+            .WithDescription("Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).")
+            .WithTags("Assist")
+            .RequireAuthorization("Admin")
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
+
         api.MapPost("/assist/customizations", SuggestCustomizations)
             .WithName("SuggestCustomizations")
             .WithSummary("Propose customization groups for a menu item")
@@ -99,6 +107,28 @@ public static class CatalogAssistApi
         try
         {
             return TypedResults.Ok(await localizer.LocalizeAsync(request, categories, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
+
+    public static async Task<Results<Ok<FillFormResponse>, BadRequest<ProblemDetails>, ProblemHttpResult>> FillForm(
+        FillFormRequest request,
+        [FromServices] FormFiller filler,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        if (!filler.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        if (FormFillPostProcessor.Validate(request) is { } error)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
+
+        try
+        {
+            return TypedResults.Ok(await filler.FillAsync(request, ct));
         }
         catch (AIException ex)
         {
