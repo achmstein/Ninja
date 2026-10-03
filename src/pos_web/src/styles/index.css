@@ -43,11 +43,12 @@
     font-family: 'Alexandria', 'Inter', system-ui, sans-serif;
   }
 
-  /* Prevent focus zoom on mobile devices */
+  /* Prevent focus zoom on mobile devices. Not a read-only field (an amount
+     typed on the keypad): no keyboard opens on it, and it keeps its size */
   @media screen and (max-width: 767px) {
-    input,
+    input:not([readonly]),
     select,
-    textarea {
+    textarea:not([readonly]) {
       font-size: 16px !important;
     }
   }

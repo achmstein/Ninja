@@ -21,7 +21,7 @@ class AmountEntry extends StatelessWidget {
         Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         Container(
-          height: 56,
+          height: 68,
           alignment: AlignmentDirectional.centerEnd,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
@@ -32,7 +32,7 @@ class AmountEntry extends StatelessWidget {
             textDirection: TextDirection.ltr,
             child: Text(
               value.isEmpty ? '0' : value,
-              style: theme.typography.xl2.copyWith(
+              style: theme.typography.xl4.copyWith(
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
                 color: value.isEmpty ? theme.colors.mutedForeground : null,

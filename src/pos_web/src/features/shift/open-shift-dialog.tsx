@@ -82,7 +82,7 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
             value={amountStr}
             placeholder='0'
             dir='ltr'
-            className='h-14 text-end text-2xl font-bold tabular-nums'
+            className='h-16 text-end text-4xl font-bold tabular-nums'
           />
         </div>
 
