@@ -5,18 +5,27 @@ import type { LocalizedText } from '@/api/catalog'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { Bar, BarChart, Cell, XAxis } from 'recharts'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import { formatEgp, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+import { EntityAvatar } from '@/components/entity-avatar'
+import { Dot, ListRow } from '@/components/list-row'
+import { Money } from '@/components/money'
+import { RankedList } from '@/components/ranked-list'
+import { formatEgp, toNumber } from '@/lib/money'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
@@ -29,7 +38,8 @@ const SUNDAY = Date.UTC(2023, 0, 1)
 /**
  * The window cut four ways: when the money came in (hour, weekday), who
  * took it, and what sold. Hours and weekdays are in this browser's clock,
- * which is the business's. No chart library: a bar is a div.
+ * which is the business's. Charts where a shape says it (when), lists
+ * where names do (who, what).
  */
 export function TillBreakdown() {
   const t = useT()
@@ -75,6 +85,9 @@ export function TillBreakdown() {
   const data = report.data
   const loading = !dayWindow || report.isPending
   const weekday = new Intl.DateTimeFormat(locale, { weekday: 'short' })
+  // "8 PM" / "٨ م": the hour as the business says it, not a bare number
+  const hour = new Intl.DateTimeFormat(locale, { hour: 'numeric' })
+  const hourLabel = (h: number) => hour.format(new Date(2000, 0, 1, h))
 
   return (
     <TillPage
@@ -94,156 +107,190 @@ export function TillBreakdown() {
           <Skeleton className='h-64' />
         </div>
       ) : (
-        <div className='grid gap-6'>
-          <Bars
-            title={t('byHour')}
-            rows={(data.byHour ?? []).map((h) => ({
-              label: String(toNumber(h.hour)),
-              count: toNumber(h.count),
-              net: toNumber(h.net),
-            }))}
-          />
-          <Bars
-            title={t('byWeekday')}
-            rows={(data.byWeekday ?? []).map((d) => ({
-              label: weekday.format(
-                new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)
-              ),
-              count: toNumber(d.count),
-              net: toNumber(d.net),
-            }))}
-          />
-          <section className='grid gap-2'>
-            <h2 className='text-sm font-semibold'>{t('byCashier')}</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('cashier')}</TableHead>
-                  <TableHead className='text-end'>{t('tillTickets')}</TableHead>
-                  <TableHead className='text-end'>{t('net')}</TableHead>
-                  <TableHead className='text-end'>{t('discount')}</TableHead>
-                  <TableHead className='text-end'>{t('voids')}</TableHead>
-                  <TableHead className='text-end'>{t('tillRefunds')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+        <div className='grid gap-4'>
+          <div className='grid gap-4 lg:grid-cols-2'>
+            <Bars
+              title={t('byHour')}
+              rows={(data.byHour ?? []).map((h) => ({
+                label: hourLabel(toNumber(h.hour)),
+                count: toNumber(h.count),
+                net: toNumber(h.net),
+              }))}
+            />
+            <Bars
+              title={t('byWeekday')}
+              rows={(data.byWeekday ?? []).map((d) => ({
+                label: weekday.format(
+                  new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)
+                ),
+                count: toNumber(d.count),
+                net: toNumber(d.net),
+              }))}
+            />
+          </div>
+
+          <Card className='gap-3'>
+            <CardHeader>
+              <CardTitle>{t('byCashier')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className='divide-y'>
                 {(data.byCashier ?? []).map((c) => (
-                  <TableRow key={c.name}>
-                    <TableCell>{c.name || '—'}</TableCell>
-                    <Num>{toNumber(c.count)}</Num>
-                    <Num>{formatEgp(c.net)}</Num>
-                    <Num muted={toNumber(c.discounts) === 0}>
-                      {formatEgp(c.discounts)}
-                    </Num>
-                    <Num muted={toNumber(c.voids) === 0}>
-                      {toNumber(c.voids)}
-                    </Num>
-                    <Num muted={toNumber(c.refunds) === 0}>
-                      {formatEgp(c.refunds)}
-                    </Num>
-                  </TableRow>
+                  <li key={c.name} className='py-2.5'>
+                    <ListRow
+                      leading={<EntityAvatar name={c.name || '—'} />}
+                      title={c.name || '—'}
+                      meta={
+                        <>
+                          <span className='tabular-nums'>
+                            {t('posTicketsCount', { count: toNumber(c.count) })}
+                          </span>
+                          {/* What a reviewer looks for, only when there is any */}
+                          {toNumber(c.discounts) > 0 && (
+                            <>
+                              <Dot />
+                              <span className='tabular-nums'>
+                                {t('discount')} {formatEgp(c.discounts)}
+                              </span>
+                            </>
+                          )}
+                          {toNumber(c.voids) > 0 && (
+                            <>
+                              <Dot />
+                              <span className='text-destructive tabular-nums'>
+                                {t('voids')} {toNumber(c.voids)}
+                              </span>
+                            </>
+                          )}
+                          {toNumber(c.refunds) > 0 && (
+                            <>
+                              <Dot />
+                              <span className='text-destructive tabular-nums'>
+                                {t('tillRefunds')} {formatEgp(c.refunds)}
+                              </span>
+                            </>
+                          )}
+                        </>
+                      }
+                      trailing={<Money value={c.net} strong />}
+                    />
+                  </li>
                 ))}
-              </TableBody>
-            </Table>
-          </section>
-          <section className='grid gap-2'>
-            <h2 className='text-sm font-semibold'>{t('byCategory')}</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('category')}</TableHead>
-                  <TableHead className='text-end'>{t('qty')}</TableHead>
-                  <TableHead className='text-end'>{t('net')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {byCategory.map((c, index) => (
-                  <TableRow key={index}>
-                    <TableCell className={cn(!c.name && 'text-muted-foreground')}>
-                      {c.name ? localized(c.name) : t('uncategorised')}
-                    </TableCell>
-                    <Num>{c.qty}</Num>
-                    <Num>{formatEgp(c.amount)}</Num>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </section>
-          <section className='grid gap-2'>
-            <h2 className='text-sm font-semibold'>{t('byItem')}</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('item')}</TableHead>
-                  <TableHead className='text-end'>{t('qty')}</TableHead>
-                  <TableHead className='text-end'>{t('tillTickets')}</TableHead>
-                  <TableHead className='text-end'>{t('net')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(data.byItem ?? []).map((i, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{localized(i.description)}</TableCell>
-                    <Num>{toNumber(i.qty)}</Num>
-                    <Num>{toNumber(i.tickets)}</Num>
-                    <Num>{formatEgp(i.amount)}</Num>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </section>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <div className='grid gap-4 lg:grid-cols-2'>
+            <Card className='gap-3'>
+              <CardHeader>
+                <CardTitle>{t('byCategory')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RankedList
+                  items={byCategory.map((c, index) => ({
+                    key: String(index),
+                    label: c.name ? localized(c.name) : t('uncategorised'),
+                    value: c.amount,
+                    display: formatEgp(c.amount),
+                    hint: `${c.qty}×`,
+                  }))}
+                />
+              </CardContent>
+            </Card>
+            <Card className='gap-3'>
+              <CardHeader>
+                <CardTitle>{t('byItem')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RankedList
+                  items={[...(data.byItem ?? [])]
+                    .sort((a, b) => toNumber(b.amount) - toNumber(a.amount))
+                    .map((i, index) => ({
+                      key: String(index),
+                      label: localized(i.description),
+                      value: toNumber(i.amount),
+                      display: formatEgp(i.amount),
+                      hint: `${toNumber(i.qty)}×`,
+                    }))}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </TillPage>
   )
 }
 
-function Num({
-  children,
-  muted,
-}: {
-  children: React.ReactNode
-  muted?: boolean
-}) {
-  return (
-    <TableCell
-      className={cn('text-end tabular-nums', muted && 'text-muted-foreground')}
-    >
-      {children}
-    </TableCell>
-  )
-}
-
 type Bar = { label: string; count: number; net: number }
 
-/** One bar per bucket, the tallest filling the height; the value on hover. */
+/**
+ * When the money came in, as a bar chart: a bar a bucket, the busiest at
+ * full strength and named under the title, the rest softer; tapped or
+ * hovered, a bar says its takings and its bills.
+ */
 function Bars({ title, rows }: { title: string; rows: Bar[] }) {
-  const max = Math.max(0, ...rows.map((r) => r.net))
+  const t = useT()
+  const peak = rows.reduce<Bar | null>(
+    (best, r) => (r.net > (best?.net ?? 0) ? r : best),
+    null
+  )
+  const config = {
+    net: { label: t('net'), color: 'var(--chart-1)' },
+  } satisfies ChartConfig
   return (
-    <section className='grid gap-2'>
-      <h2 className='text-sm font-semibold'>{title}</h2>
-      <div className='flex h-28 items-end gap-1'>
-        {rows.map((r) => (
-          <div
-            key={r.label}
-            className='flex min-w-0 flex-1 flex-col items-center justify-end gap-1 self-stretch'
-            title={`${formatEgp(r.net)} · ${r.count}`}
-          >
-            <div
-              className={cn(
-                'w-full rounded-sm',
-                r.net > 0 ? 'bg-primary' : 'bg-muted'
-              )}
-              style={{
-                height: `${max > 0 ? Math.max((r.net / max) * 100, r.net > 0 ? 3 : 2) : 2}%`,
-              }}
+    <Card className='gap-2'>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        {peak && (
+          <CardDescription>
+            {t('busiestAt', { when: peak.label })}
+          </CardDescription>
+        )}
+      </CardHeader>
+      <CardContent className='px-2 sm:px-6'>
+        <ChartContainer config={config} className='aspect-auto h-36 w-full'>
+          <BarChart data={rows} margin={{ top: 4, left: 0, right: 0, bottom: 0 }}>
+            <XAxis
+              dataKey='label'
+              tickLine={false}
+              axisLine={false}
+              tickMargin={6}
+              minTickGap={4}
+              fontSize={10}
             />
-            <span className='text-muted-foreground truncate text-[10px] tabular-nums'>
-              {r.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </section>
+            <ChartTooltip
+              cursor={{ fill: 'var(--muted)', opacity: 0.5 }}
+              content={
+                <ChartTooltipContent
+                  hideIndicator
+                  formatter={(value, _name, item) => (
+                    <div className='flex w-full justify-between gap-4'>
+                      <span className='font-medium tabular-nums'>
+                        {formatEgp(Number(value))}
+                      </span>
+                      <span className='text-muted-foreground tabular-nums'>
+                        {t('posTicketsCount', {
+                          count: Number(item.payload?.count ?? 0),
+                        })}
+                      </span>
+                    </div>
+                  )}
+                />
+              }
+            />
+            <Bar dataKey='net' radius={[3, 3, 0, 0]}>
+              {rows.map((r) => (
+                <Cell
+                  key={r.label}
+                  fill='var(--color-net)'
+                  fillOpacity={r === peak ? 1 : 0.45}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   )
 }
