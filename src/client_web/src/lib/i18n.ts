@@ -1,680 +1,565 @@
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { arStandard } from "./i18n.ar-standard";
-import { formatMoney, formatMoneyWhole, useCurrency } from "@/lib/currency";
-import { preview } from "@/lib/preview";
-import { openingLanguage } from "@/lib/opening-language";
-import type { LocalizedText } from "@/api/catalog";
-import { messages, messagesArStandard, type Message } from "./i18n.gen";
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { arStandard } from './i18n.ar-standard'
+import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
+import { preview } from '@/lib/preview'
+import { openingLanguage } from '@/lib/opening-language'
+import type { LocalizedText } from '@/api/catalog'
+import { messages, messagesArStandard, type Message } from './i18n.gen'
 
-export type Language = "en" | "ar";
+export type Language = 'en' | 'ar'
 
 // Strings that only exist on the web (the mobile app has no equivalent —
 // e.g. it is always authenticated, so it never asks visitors to sign in).
 const webExtras = {
-  all: { en: "All", ar: "الكل" },
-  unavailable: { en: "Unavailable", ar: "غير متاح" },
-  soldOut: { en: "Sold out", ar: "خلص" },
-  quantity: { en: "Quantity", ar: "الكمية" },
-  items: { en: "Items", ar: "الأصناف" },
+  all: { en: 'All', ar: 'الكل' },
+  unavailable: { en: 'Unavailable', ar: 'غير متاح' },
+  soldOut: { en: 'Sold out', ar: 'خلص' },
+  quantity: { en: 'Quantity', ar: 'الكمية' },
+  items: { en: 'Items', ar: 'الأصناف' },
   itemCount: {
-    plural: "count",
-    en: { "=1": "1 item", other: "{count} items" },
-    ar: { "=1": "صنف واحد", "=2": "صنفين", other: "{count} أصناف" },
+    plural: 'count',
+    en: { '=1': '1 item', other: '{count} items' },
+    ar: { '=1': 'صنف واحد', '=2': 'صنفين', other: '{count} أصناف' },
   },
-  loading: { en: "Loading...", ar: "ثواني..." },
-  pointsBalance: { en: "Points balance", ar: "رصيد النقط" },
+  loading: { en: 'Loading...', ar: 'ثواني...' },
+  pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
   // Ordering again while the last order is still with the till (a guest has one at a time)
-  orderStillWaiting: {
-    en: "Your last order is still waiting for the counter. It will be confirmed shortly.",
-    ar: "طلبك اللي فات لسه مستني الكاشير يأكده، ثواني ويتأكد.",
-  },
+  orderStillWaiting: { en: 'Your last order is still waiting for the counter. It will be confirmed shortly.', ar: 'طلبك اللي فات لسه مستني الكاشير يأكده، ثواني ويتأكد.' },
   // The You page's card for a visitor, the same card the Book page asks with
-  youSignInTitle: {
-    en: "Sign in or create an account",
-    ar: "سجّل دخول أو اعمل حساب",
-  },
+  youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {
-    en: "Sign in to see your orders and points",
-    ar: "سجل دخول عشان تشوف طلباتك ونقطك",
+    en: 'Sign in to see your orders and points',
+    ar: 'سجل دخول عشان تشوف طلباتك ونقطك',
   },
   // Guest checkout: web only. The mobile app always signs in first, so these
   // have no ARB counterpart to share.
-  orderAsGuest: { en: "Order as guest", ar: "اطلب كزائر" },
-  signInInstead: { en: "Sign in instead", ar: "أو سجل دخول" },
+  orderAsGuest: { en: 'Order as guest', ar: 'اطلب كزائر' },
+  signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
   // The guest sheet's other ways in, side by side under the details
-  google: { en: "Google", ar: "جوجل" },
-  apple: { en: "Apple", ar: "أبل" },
-  createNewAccount: { en: "Create an account", ar: "اعمل حساب جديد" },
+  google: { en: 'Google', ar: 'جوجل' },
+  apple: { en: 'Apple', ar: 'أبل' },
+  createNewAccount: { en: 'Create an account', ar: 'اعمل حساب جديد' },
   // The profile of someone who ordered as a guest: who they gave, and that it is not an account
-  orderingAsGuest: { en: "You're ordering as a guest", ar: "انت بتطلب كزائر" },
+  orderingAsGuest: { en: "You're ordering as a guest", ar: 'انت بتطلب كزائر' },
   guestSignInPrompt: {
-    en: "Sign in to keep your orders and earn points",
-    ar: "سجل دخول عشان تحتفظ بطلباتك وتجمع نقط",
+    en: 'Sign in to keep your orders and earn points',
+    ar: 'سجل دخول عشان تحتفظ بطلباتك وتجمع نقط',
   },
   // Shown when a guest has no table: ordering without one means ordering
   // ahead, which needs an account
   tableOrdersNeedAccount: {
-    en: "Ordering to a table here needs an account. Sign in to order.",
-    ar: "الطلب على الترابيزة هنا محتاج حساب. سجل دخول عشان تطلب.",
+    en: 'Ordering to a table here needs an account. Sign in to order.',
+    ar: 'الطلب على الترابيزة هنا محتاج حساب. سجل دخول عشان تطلب.',
   },
   scanTableToOrder: {
-    en: "Scan the QR code on your table to order",
-    ar: "امسح الكود اللي على الترابيزة عشان تطلب",
+    en: 'Scan the QR code on your table to order',
+    ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
   // The in-app scanner: an installed app cannot be reached by the phone's camera
   // A demo business's pretend checkout (online payments without a payment account)
   demoCheckoutTitle: {
-    en: "Demo payment",
-    ar: "دفع تجريبي",
+    en: 'Demo payment',
+    ar: 'دفع تجريبي',
   },
   demoCheckoutNote: {
-    en: "Online payments are only being tried out here. No card is charged and no money moves.",
-    ar: "الدفع من الترابيزة هنا لسه تجريبي. مفيش كارت هيتسحب منه ولا فلوس هتتحول.",
+    en: 'Online payments are only being tried out here. No card is charged and no money moves.',
+    ar: 'الدفع من الترابيزة هنا لسه تجريبي. مفيش كارت هيتسحب منه ولا فلوس هتتحول.',
   },
   demoPay: {
-    en: "Pay (demo)",
-    ar: "ادفع (تجربة)",
+    en: 'Pay (demo)',
+    ar: 'ادفع (تجربة)',
   },
   demoDecline: {
-    en: "Decline",
-    ar: "ارفض",
+    en: 'Decline',
+    ar: 'ارفض',
   },
-  demoBanner: {
-    en: "Demo checkout: no real card is charged",
-    ar: "دفع تجريبي: مفيش كارت حقيقي هيتسحب منه",
-  },
-  demoSecureCheckout: { en: "Secure checkout", ar: "دفع آمن" },
-  demoPayTo: { en: "Paying", ar: "بتدفع لـ" },
-  demoTotal: { en: "Total", ar: "الإجمالي" },
-  demoCardNumber: { en: "Card number", ar: "رقم الكارت" },
-  demoExpiry: { en: "Expiry", ar: "تاريخ الانتهاء" },
-  demoNameOnCard: { en: "Name on card", ar: "الاسم على الكارت" },
-  demoTestApproved: { en: "Test card, approved:", ar: "كارت تجربة، مقبول:" },
-  demoTestDeclined: { en: "Test card, declined:", ar: "كارت تجربة، مرفوض:" },
-  demoUseTestCard: { en: "Use the test card", ar: "استخدم كارت التجربة" },
-  demoWalletNumber: { en: "Wallet phone number", ar: "رقم المحفظة" },
-  demoWalletHint: {
-    en: "Any Egyptian mobile number works in the demo.",
-    ar: "أي رقم موبايل مصري ينفع في التجربة.",
-  },
-  demoWalletError: {
-    en: "Enter an 11-digit mobile number starting with 01.",
-    ar: "اكتب رقم موبايل ١١ رقم يبدأ بـ 01.",
-  },
-  demoCardError_number: {
-    en: "Enter the 16-digit card number.",
-    ar: "اكتب رقم الكارت الـ ١٦ رقم.",
-  },
-  demoCardError_expiry: {
-    en: "Enter a valid expiry date (MM/YY).",
-    ar: "اكتب تاريخ انتهاء صحيح (MM/YY).",
-  },
-  demoCardError_cvc: {
-    en: "Enter the 3-digit CVC.",
-    ar: "اكتب الـ CVC من ٣ أرقام.",
-  },
-  demoCardError_name: {
-    en: "Enter the name on the card.",
-    ar: "اكتب الاسم اللي على الكارت.",
-  },
-  demoProcessing: { en: "Processing…", ar: "جاري الدفع…" },
-  demoCancelReturn: { en: "Cancel and return", ar: "إلغاء والرجوع" },
-  demoFooter: {
-    en: "Demo payment page · no money moves",
-    ar: "صفحة دفع تجريبية · مفيش فلوس بتتحول",
-  },
-  continuePayment: { en: "Continue", ar: "كمّل" },
-  cancelPayment: { en: "Cancel", ar: "إلغاء" },
-  cancelPaymentFailed: {
-    en: "Could not cancel the payment. Try again.",
-    ar: "معرفناش نلغي الدفع. جرّب تاني.",
-  },
+  demoBanner: { en: 'Demo checkout: no real card is charged', ar: 'دفع تجريبي: مفيش كارت حقيقي هيتسحب منه' },
+  demoSecureCheckout: { en: 'Secure checkout', ar: 'دفع آمن' },
+  demoPayTo: { en: 'Paying', ar: 'بتدفع لـ' },
+  demoTotal: { en: 'Total', ar: 'الإجمالي' },
+  demoCardNumber: { en: 'Card number', ar: 'رقم الكارت' },
+  demoExpiry: { en: 'Expiry', ar: 'تاريخ الانتهاء' },
+  demoNameOnCard: { en: 'Name on card', ar: 'الاسم على الكارت' },
+  demoTestApproved: { en: 'Test card, approved:', ar: 'كارت تجربة، مقبول:' },
+  demoTestDeclined: { en: 'Test card, declined:', ar: 'كارت تجربة، مرفوض:' },
+  demoUseTestCard: { en: 'Use the test card', ar: 'استخدم كارت التجربة' },
+  demoWalletNumber: { en: 'Wallet phone number', ar: 'رقم المحفظة' },
+  demoWalletHint: { en: 'Any Egyptian mobile number works in the demo.', ar: 'أي رقم موبايل مصري ينفع في التجربة.' },
+  demoWalletError: { en: 'Enter an 11-digit mobile number starting with 01.', ar: 'اكتب رقم موبايل ١١ رقم يبدأ بـ 01.' },
+  demoCardError_number: { en: 'Enter the 16-digit card number.', ar: 'اكتب رقم الكارت الـ ١٦ رقم.' },
+  demoCardError_expiry: { en: 'Enter a valid expiry date (MM/YY).', ar: 'اكتب تاريخ انتهاء صحيح (MM/YY).' },
+  demoCardError_cvc: { en: 'Enter the 3-digit CVC.', ar: 'اكتب الـ CVC من ٣ أرقام.' },
+  demoCardError_name: { en: 'Enter the name on the card.', ar: 'اكتب الاسم اللي على الكارت.' },
+  demoProcessing: { en: 'Processing…', ar: 'جاري الدفع…' },
+  demoCancelReturn: { en: 'Cancel and return', ar: 'إلغاء والرجوع' },
+  demoFooter: { en: 'Demo payment page · no money moves', ar: 'صفحة دفع تجريبية · مفيش فلوس بتتحول' },
+  continuePayment: { en: 'Continue', ar: 'كمّل' },
+  cancelPayment: { en: 'Cancel', ar: 'إلغاء' },
+  cancelPaymentFailed: { en: 'Could not cancel the payment. Try again.', ar: 'معرفناش نلغي الدفع. جرّب تاني.' },
   demoPaymentsBadge: {
-    en: "Demo: no money moves",
-    ar: "تجربة: مفيش فلوس بتتحول",
+    en: 'Demo: no money moves',
+    ar: 'تجربة: مفيش فلوس بتتحول',
   },
   // The About dialog's line under the version
   poweredBy: {
-    en: "Powered by",
-    ar: "بيشتغل على",
+    en: 'Powered by',
+    ar: 'بيشتغل على',
   },
   // A confirmed order on its way onto the bill (Sales adds it a moment later)
   addingToBill: {
-    en: "Confirmed, adding to your bill",
-    ar: "اتأكد، بيتضاف على حسابك",
+    en: 'Confirmed, adding to your bill',
+    ar: 'اتأكد، بيتضاف على حسابك',
   },
   scanTable: {
-    en: "Scan table",
-    ar: "امسح الترابيزة",
+    en: 'Scan table',
+    ar: 'امسح الترابيزة',
   },
   scanTableHint: {
-    en: "Point the camera at the QR code on your table",
-    ar: "وجّه الكاميرا على الكود اللي على الترابيزة",
+    en: 'Point the camera at the QR code on your table',
+    ar: 'وجّه الكاميرا على الكود اللي على الترابيزة',
   },
   cameraBlocked: {
     en: "The camera isn't available. Allow it for this app in your phone's settings, or scan the code with the phone's camera.",
-    ar: "الكاميرا مش متاحة. اسمح بيها للتطبيق من إعدادات الموبايل، أو امسح الكود بكاميرا الموبايل.",
+    ar: 'الكاميرا مش متاحة. اسمح بيها للتطبيق من إعدادات الموبايل، أو امسح الكود بكاميرا الموبايل.',
   },
   // A business that takes guests' orders from anywhere: one without a table is
   // collected at the counter
   guestOrderToCollect: {
     en: "No table: you'll collect your order at the counter",
-    ar: "من غير ترابيزة: هتستلم طلبك من الكاشير",
+    ar: 'من غير ترابيزة: هتستلم طلبك من الكاشير',
   },
   // A cloud kitchen: no table to scan, so the order is collected, and a
   // guest the kitchen does not take signs in to order ahead
   orderToCollect: {
     en: "You'll collect your order at the counter",
-    ar: "هتستلم طلبك من الكاشير",
+    ar: 'هتستلم طلبك من الكاشير',
   },
   signInToOrderPickup: {
-    en: "Sign in to order ahead and collect it at the counter",
-    ar: "سجل دخول عشان تطلب وتستلم من الكاشير",
+    en: 'Sign in to order ahead and collect it at the counter',
+    ar: 'سجل دخول عشان تطلب وتستلم من الكاشير',
   },
   signInForBills: {
-    en: "Sign in to see your bills, or order as a guest",
-    ar: "سجل دخول عشان تشوف حسابك، أو اطلب كزائر",
+    en: 'Sign in to see your bills, or order as a guest',
+    ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كزائر',
   },
-  continueWithGoogle: { en: "Continue with Google", ar: "جوجل" },
-  continueWithApple: { en: "Continue with Apple", ar: "أبل" },
-  continueWithEmail: { en: "Continue with email", ar: "الإيميل" },
-  leaveTable: { en: "Leave table", ar: "سيب الترابيزة" },
+  continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
+  continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
+  continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },
+  leaveTable: { en: 'Leave table', ar: 'سيب الترابيزة' },
   // The table behind its chip (docs/visit-tab.html). Web first; these move
   // into the ARB files when the mobile app gets the same sheet.
-  atTableQuestion: { en: "At a table?", ar: "قاعد على ترابيزة؟" },
+  atTableQuestion: { en: 'At a table?', ar: 'قاعد على ترابيزة؟' },
   atTableScanHint: {
-    en: "Scan the code on it to order and call a waiter",
-    ar: "امسح الكود اللي عليها عشان تطلب وتنادي الويتر",
+    en: 'Scan the code on it to order and call a waiter',
+    ar: 'امسح الكود اللي عليها عشان تطلب وتنادي الويتر',
   },
-  orderFromMenu: { en: "Order from the menu", ar: "اطلب من المنيو" },
-  sinceTime: { en: "since {time}", ar: "من {time}" },
-  sent: { en: "Sent", ar: "اتبعت" },
+  orderFromMenu: { en: 'Order from the menu', ar: 'اطلب من المنيو' },
+  sinceTime: { en: 'since {time}', ar: 'من {time}' },
+  sent: { en: 'Sent', ar: 'اتبعت' },
   // The request answering back (phase 3): sent → on the way → done
-  onTheWay: { en: "On the way", ar: "جايلك" },
-  onTheWayBy: { en: "{name} is on the way", ar: "{name} جايلك" },
-  tapToCancel: { en: "Tap to cancel", ar: "دوس للإلغاء" },
-  requestCancelled: { en: "Request cancelled", ar: "الطلب اتلغى" },
+  onTheWay: { en: 'On the way', ar: 'جايلك' },
+  onTheWayBy: { en: '{name} is on the way', ar: '{name} جايلك' },
+  tapToCancel: { en: 'Tap to cancel', ar: 'دوس للإلغاء' },
+  requestCancelled: { en: 'Request cancelled', ar: 'الطلب اتلغى' },
   requestAlreadyPickedUp: {
-    en: "Someone is already on the way",
-    ar: "في حد جايلك خلاص",
+    en: 'Someone is already on the way',
+    ar: 'في حد جايلك خلاص',
   },
   // The clock card's members, and a shared bill's lines
-  you: { en: "You", ar: "انت" },
+  you: { en: 'You', ar: 'انت' },
   // The profile tab and page: "You", the way Reddit names it
-  youTab: { en: "You", ar: "أنت" },
+  youTab: { en: 'You', ar: 'أنت' },
   // The house account says "balance" and "on your tab", never "account",
   // so it never reads like the bills tab (الحساب)
-  yourBalance: { en: "Your balance", ar: "رصيدك" },
+  yourBalance: { en: 'Your balance', ar: 'رصيدك' },
   // A table carried over from an earlier session is asked about, not assumed
-  stillAtTable: { en: "Still at {name}?", ar: "لسه على {name}؟" },
-  yesStillHere: { en: "Yes, I'm here", ar: "أيوه، أنا هنا" },
-  noLeftTable: { en: "No, I left", ar: "لأ، مشيت" },
+  stillAtTable: { en: 'Still at {name}?', ar: 'لسه على {name}؟' },
+  yesStillHere: { en: "Yes, I'm here", ar: 'أيوه، أنا هنا' },
+  noLeftTable: { en: 'No, I left', ar: 'لأ، مشيت' },
   // Switching branch while seated is leaving the table, and says so
   switchBranchLeavesTable: {
     en: "You're at {name}. Switching branch leaves it.",
-    ar: "انت على {name}. لو غيرت الفرع هتسيبها.",
+    ar: 'انت على {name}. لو غيرت الفرع هتسيبها.',
   },
-  stayAtTable: { en: "Stay", ar: "خليك" },
-  leaveAndSwitch: { en: "Leave and switch", ar: "سيبها وغيّر" },
+  stayAtTable: { en: 'Stay', ar: 'خليك' },
+  leaveAndSwitch: { en: 'Leave and switch', ar: 'سيبها وغيّر' },
   confirmTableFirst: {
-    en: "Tell us if you are still at the table first",
-    ar: "قولنا الأول إنت لسه على الترابيزة ولا لأ",
+    en: 'Tell us if you are still at the table first',
+    ar: 'قولنا الأول إنت لسه على الترابيزة ولا لأ',
   },
   // Order status arriving over SignalR. Wording matches the push notifications
   // the mobile app receives for the same events (NotificationMessages.cs), so
   // a customer with both does not read two different sentences.
   orderConfirmedToast: {
-    en: "Your order #{orderId} has been confirmed",
-    ar: "الأوردر بتاعك #{orderId} اتأكد",
+    en: 'Your order #{orderId} has been confirmed',
+    ar: 'الأوردر بتاعك #{orderId} اتأكد',
   },
   orderCancelledToast: {
-    en: "Your order #{orderId} has been cancelled",
-    ar: "الأوردر بتاعك #{orderId} اتلغى",
+    en: 'Your order #{orderId} has been cancelled',
+    ar: 'الأوردر بتاعك #{orderId} اتلغى',
   },
   // Toast titles (the pill headline; the message expands below it)
-  toastSuccess: { en: "Success", ar: "تم بنجاح" },
-  toastError: { en: "Something went wrong", ar: "في حاجة غلط" },
-  toastInfo: { en: "Heads up", ar: "خد بالك" },
-  toastWarning: { en: "Warning", ar: "تنبيه" },
+  toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
+  toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },
+  toastInfo: { en: 'Heads up', ar: 'خد بالك' },
+  toastWarning: { en: 'Warning', ar: 'تنبيه' },
   // Installing the PWA — web only by definition
-  installApp: { en: "Install app", ar: "نزّل الابلكيشن" },
+  installApp: { en: 'Install app', ar: 'نزّل الابلكيشن' },
   installAppTitle: {
-    en: "Get the {name} app",
-    ar: "نزّل ابلكيشن {name}",
+    en: 'Get the {name} app',
+    ar: 'نزّل ابلكيشن {name}',
   },
   installAppSubtitle: {
-    en: "Order faster, right from your home screen",
-    ar: "اطلب أسرع من الشاشة الرئيسية على طول",
+    en: 'Order faster, right from your home screen',
+    ar: 'اطلب أسرع من الشاشة الرئيسية على طول',
   },
-  installed: { en: "Installed", ar: "اتنزّل" },
-  gotIt: { en: "Got it", ar: "تمام" },
-  install: { en: "Install", ar: "تنزيل" },
-  howTo: { en: "How?", ar: "إزاي؟" },
-  notNow: { en: "Not now", ar: "مش دلوقتي" },
-  installBrand: { en: "Install {name}", ar: "نزّل {name}" },
+  installed: { en: 'Installed', ar: 'اتنزّل' },
+  gotIt: { en: 'Got it', ar: 'تمام' },
+  install: { en: 'Install', ar: 'تنزيل' },
+  howTo: { en: 'How?', ar: 'إزاي؟' },
+  notNow: { en: 'Not now', ar: 'مش دلوقتي' },
+  installBrand: { en: 'Install {name}', ar: 'نزّل {name}' },
   installIosStepShare: {
-    en: "Tap Share in Safari (on newer iPhones it is under ⋯ in the address bar)",
-    ar: "دوس على زرار المشاركة (Share) في سفاري (في الأيفونات الجديدة هتلاقيه تحت ⋯ جنب العنوان)",
+    en: 'Tap Share in Safari (on newer iPhones it is under ⋯ in the address bar)',
+    ar: 'دوس على زرار المشاركة (Share) في سفاري (في الأيفونات الجديدة هتلاقيه تحت ⋯ جنب العنوان)',
   },
   installIosStepAdd: {
-    en: "Choose “Add to Home Screen” (scroll down if you do not see it)",
-    ar: "اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)، ولو مش ظاهر انزل لتحت",
+    en: 'Choose “Add to Home Screen” (scroll down if you do not see it)',
+    ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)، ولو مش ظاهر انزل لتحت',
   },
   installIosStepConfirm: {
-    en: "Tap “Add” at the top: the app is on your home screen",
-    ar: "دوس «Add» فوق، والتطبيق هيبقى على الشاشة الرئيسية",
+    en: 'Tap “Add” at the top: the app is on your home screen',
+    ar: 'دوس «Add» فوق، والتطبيق هيبقى على الشاشة الرئيسية',
   },
   // Claiming the account the business added at the counter: the web-only
   // claim* strings; the rest come from the ARB files, shared with the app
   claimDoneHint: {
-    en: "Sign in with {email} to see your points and orders.",
-    ar: "سجل دخول بـ {email} عشان تشوف نقطك وطلباتك.",
+    en: 'Sign in with {email} to see your points and orders.',
+    ar: 'سجل دخول بـ {email} عشان تشوف نقطك وطلباتك.',
   },
   claimSignedInNote: {
     en: "You're signed in with another account. Creating this one signs you out of it.",
-    ar: "انت داخل بحساب تاني. لما تعمل الحساب ده هتخرج منه.",
+    ar: 'انت داخل بحساب تاني. لما تعمل الحساب ده هتخرج منه.',
   },
-  showPassword: { en: "Show password", ar: "اظهر الباسورد" },
-  hidePassword: { en: "Hide password", ar: "اخفي الباسورد" },
+  showPassword: { en: 'Show password', ar: 'اظهر الباسورد' },
+  hidePassword: { en: 'Hide password', ar: 'اخفي الباسورد' },
   // Online payments: the guest pays all or part of the table's bill from here
-  payFully: { en: "Pay fully", ar: "ادفع الحساب كله" },
-  splitBill: { en: "Split bill", ar: "قسّم الحساب" },
-  payTheBill: { en: "Pay the bill", ar: "ادفع الحساب" },
-  paidSoFar: { en: "Paid so far", ar: "اتدفع لحد دلوقتي" },
-  remainingToPay: { en: "Remaining", ar: "الباقي" },
-  payWholeBill: { en: "Whole bill", ar: "الحساب كله" },
-  payYourItems: { en: "Your items", ar: "اللي طلبته" },
-  divideEqually: { en: "Divide equally", ar: "بالتساوي" },
-  customAmount: { en: "Custom", ar: "مبلغ تختاره" },
-  seatsAtTable: { en: "Seats at the table", ar: "الكراسي على الترابيزة" },
-  addSeat: { en: "Add a person", ar: "زوّد واحد" },
-  removeSeat: { en: "Remove a person", ar: "شيل واحد" },
-  perPerson: { en: "per person", ar: "للفرد" },
-  seatYou: { en: "You", ar: "انت" },
-  seatFree: { en: "Person {n}", ar: "شخص {n}" },
-  seatYours: { en: "Person {n}, you pay for them", ar: "شخص {n}، هتدفع عنه" },
-  seatPaid: { en: "Already paid", ar: "اتدفع" },
+  payFully: { en: 'Pay fully', ar: 'ادفع الحساب كله' },
+  splitBill: { en: 'Split bill', ar: 'قسّم الحساب' },
+  payTheBill: { en: 'Pay the bill', ar: 'ادفع الحساب' },
+  paidSoFar: { en: 'Paid so far', ar: 'اتدفع لحد دلوقتي' },
+  remainingToPay: { en: 'Remaining', ar: 'الباقي' },
+  payWholeBill: { en: 'Whole bill', ar: 'الحساب كله' },
+  payYourItems: { en: 'Your items', ar: 'اللي طلبته' },
+  divideEqually: { en: 'Divide equally', ar: 'بالتساوي' },
+  customAmount: { en: 'Custom', ar: 'مبلغ تختاره' },
+  seatsAtTable: { en: 'Seats at the table', ar: 'الكراسي على الترابيزة' },
+  addSeat: { en: 'Add a person', ar: 'زوّد واحد' },
+  removeSeat: { en: 'Remove a person', ar: 'شيل واحد' },
+  perPerson: { en: 'per person', ar: 'للفرد' },
+  seatYou: { en: 'You', ar: 'انت' },
+  seatFree: { en: 'Person {n}', ar: 'شخص {n}' },
+  seatYours: { en: 'Person {n}, you pay for them', ar: 'شخص {n}، هتدفع عنه' },
+  seatPaid: { en: 'Already paid', ar: 'اتدفع' },
   seatsHint: {
     en: "Tap everyone you're paying for. Who has paid is an estimate.",
-    ar: "دوس على كل اللي هتدفع عنهم. اللي دفعوا تقدير من الفلوس.",
+    ar: 'دوس على كل اللي هتدفع عنهم. اللي دفعوا تقدير من الفلوس.',
   },
-  youPayForSeats: {
-    en: "You pay for {parts} of {of}",
-    ar: "هتدفع عن {parts} من {of}",
-  },
-  leftAfterYou: {
-    en: "Left for the table after you: {amount}",
-    ar: "الباقي على الترابيزة بعدك: {amount}",
-  },
-  splitMath: {
-    en: "{total} ÷ {n} = {each} each",
-    ar: "{total} ÷ {n} = {each} للفرد",
-  },
+  youPayForSeats: { en: 'You pay for {parts} of {of}', ar: 'هتدفع عن {parts} من {of}' },
+  leftAfterYou: { en: 'Left for the table after you: {amount}', ar: 'الباقي على الترابيزة بعدك: {amount}' },
+  splitMath: { en: '{total} ÷ {n} = {each} each', ar: '{total} ÷ {n} = {each} للفرد' },
   peopleAtTable: {
-    plural: "count",
-    en: { other: "{count} people at the table" },
-    ar: {
-      "=11": "{count} شخص على الترابيزة",
-      "=12": "{count} شخص على الترابيزة",
-      other: "{count} أشخاص على الترابيزة",
-    },
+    plural: 'count',
+    en: { other: '{count} people at the table' },
+    ar: { '=11': '{count} شخص على الترابيزة', '=12': '{count} شخص على الترابيزة', other: '{count} أشخاص على الترابيزة' },
   },
   peopleUnit: {
-    plural: "count",
-    en: { "=1": "person", other: "people" },
-    ar: { "=11": "شخص", "=12": "شخص", other: "أشخاص" },
+    plural: 'count',
+    en: { '=1': 'person', other: 'people' },
+    ar: { '=11': 'شخص', '=12': 'شخص', other: 'أشخاص' },
   },
-  onTheTable: { en: "at the table", ar: "على الترابيزة" },
-  personPaid: { en: "Paid", ar: "دفع" },
-  personPaying: { en: "Paying", ar: "بيدفع" },
-  whoYouPayFor: { en: "Who are you paying for?", ar: "هتدفع عن مين؟" },
-  pickItemsToPay: {
-    en: "Pick what you're paying for",
-    ar: "اختار اللي هتدفعه",
-  },
-  lineBeingPaid: { en: "Being paid", ar: "بيتدفع" },
-  lineTaken: { en: "Taken", ar: "محجوز" },
-  chooseAmount: { en: "Choose an amount", ar: "اختار المبلغ" },
-  amountToPay: { en: "Amount to pay", ar: "المبلغ اللي هتدفعه" },
-  tapToType: { en: "Tap to type", ar: "دوس واكتب" },
+  onTheTable: { en: 'at the table', ar: 'على الترابيزة' },
+  personPaid: { en: 'Paid', ar: 'دفع' },
+  personPaying: { en: 'Paying', ar: 'بيدفع' },
+  whoYouPayFor: { en: 'Who are you paying for?', ar: 'هتدفع عن مين؟' },
+  pickItemsToPay: { en: "Pick what you're paying for", ar: 'اختار اللي هتدفعه' },
+  lineBeingPaid: { en: 'Being paid', ar: 'بيتدفع' },
+  lineTaken: { en: 'Taken', ar: 'محجوز' },
+  chooseAmount: { en: 'Choose an amount', ar: 'اختار المبلغ' },
+  amountToPay: { en: 'Amount to pay', ar: 'المبلغ اللي هتدفعه' },
+  tapToType: { en: 'Tap to type', ar: 'دوس واكتب' },
   customAmountClamped: {
     en: "Only {amount} is left, so that's your amount",
-    ar: "الباقي {amount} بس، فخليناه ده المبلغ",
+    ar: 'الباقي {amount} بس، فخليناه ده المبلغ',
   },
-  yourShare: { en: "Your share", ar: "نصيبك" },
-  onlinePaymentFee: { en: "Online payment fee", ar: "رسوم الدفع أونلاين" },
-  youPay: { en: "You pay", ar: "هتدفع" },
-  payerNameLabel: { en: "Your name", ar: "اسمك" },
+  yourShare: { en: 'Your share', ar: 'نصيبك' },
+  onlinePaymentFee: { en: 'Online payment fee', ar: 'رسوم الدفع أونلاين' },
+  youPay: { en: 'You pay', ar: 'هتدفع' },
+  payerNameLabel: { en: 'Your name', ar: 'اسمك' },
   payerNameHint: {
-    en: "So the table sees who paid (optional)",
-    ar: "عشان اللي معاك يعرفوا مين دفع (اختياري)",
+    en: 'So the table sees who paid (optional)',
+    ar: 'عشان اللي معاك يعرفوا مين دفع (اختياري)',
   },
-  payAmount: { en: "Pay {amount}", ar: "ادفع {amount}" },
-  payerGuest: { en: "Guest", ar: "زائر" },
-  shareBeingPaid: { en: "Paying…", ar: "بيدفع…" },
-  payWallet: { en: "Mobile wallet", ar: "محفظة موبايل" },
+  payAmount: { en: 'Pay {amount}', ar: 'ادفع {amount}' },
+  payerGuest: { en: 'Guest', ar: 'زائر' },
+  shareBeingPaid: { en: 'Paying…', ar: 'بيدفع…' },
+  payWallet: { en: 'Mobile wallet', ar: 'محفظة موبايل' },
   paySecureNote: {
     en: "You'll pay on a secure payment page",
-    ar: "هتدفع في صفحة دفع آمنة",
+    ar: 'هتدفع في صفحة دفع آمنة',
   },
   payFailedToStart: {
     en: "Couldn't start the payment. Try again.",
-    ar: "الدفع مبدأش. جرب تاني.",
+    ar: 'الدفع مبدأش. جرب تاني.',
   },
-  payWhyOff: {
-    en: "Paying from your phone isn't on here",
-    ar: "الدفع من الموبايل مش متاح هنا",
-  },
-  payWhyNotSetUp: {
-    en: "Paying from your phone isn't set up yet",
-    ar: "الدفع من الموبايل لسه مش جاهز",
-  },
-  payWhyClosed: { en: "This bill is closed", ar: "الحساب ده اتقفل" },
+  payWhyOff: { en: "Paying from your phone isn't on here", ar: 'الدفع من الموبايل مش متاح هنا' },
+  payWhyNotSetUp: { en: "Paying from your phone isn't set up yet", ar: 'الدفع من الموبايل لسه مش جاهز' },
+  payWhyClosed: { en: 'This bill is closed', ar: 'الحساب ده اتقفل' },
   payWhyClockRunning: {
-    en: "The clock is still running. Ask the staff to stop it, then pay.",
-    ar: "العداد لسه شغال. اطلب من الكاشير يوقفه وبعدين ادفع.",
+    en: 'The clock is still running. Ask the staff to stop it, then pay.',
+    ar: 'العداد لسه شغال. اطلب من الكاشير يوقفه وبعدين ادفع.',
   },
-  payWhyEmpty: {
-    en: "Nothing on the bill yet",
-    ar: "مفيش حاجة على الحساب لسه",
-  },
-  payWhyPaid: { en: "The bill is paid", ar: "الحساب اتدفع" },
+  payWhyEmpty: { en: 'Nothing on the bill yet', ar: 'مفيش حاجة على الحساب لسه' },
+  payWhyPaid: { en: 'The bill is paid', ar: 'الحساب اتدفع' },
   payWhyBeingPaid: {
-    en: "Someone is paying the rest right now",
-    ar: "في حد بيدفع الباقي دلوقتي",
+    en: 'Someone is paying the rest right now',
+    ar: 'في حد بيدفع الباقي دلوقتي',
   },
-  confirmingPayment: { en: "Confirming your payment…", ar: "بنأكد الدفع…" },
-  paymentPaid: { en: "Payment received", ar: "الدفع وصل" },
-  paymentPaidThanks: { en: "Thank you!", ar: "شكرًا!" },
-  paymentFailed: { en: "The payment didn't go through", ar: "الدفع ماتمش" },
-  paymentExpired: { en: "The payment timed out", ar: "وقت الدفع خلص" },
-  paymentRefunded: { en: "This payment was refunded", ar: "الفلوس دي رجعتلك" },
+  confirmingPayment: { en: 'Confirming your payment…', ar: 'بنأكد الدفع…' },
+  paymentPaid: { en: 'Payment received', ar: 'الدفع وصل' },
+  paymentPaidThanks: { en: 'Thank you!', ar: 'شكرًا!' },
+  paymentFailed: { en: "The payment didn't go through", ar: 'الدفع ماتمش' },
+  paymentExpired: { en: 'The payment timed out', ar: 'وقت الدفع خلص' },
+  paymentRefunded: { en: 'This payment was refunded', ar: 'الفلوس دي رجعتلك' },
   paymentStillConfirming: {
     en: "We're still confirming this payment. Check your bill in a minute.",
-    ar: "لسه بنأكد الدفع. بص على حسابك كمان دقيقة.",
+    ar: 'لسه بنأكد الدفع. بص على حسابك كمان دقيقة.',
   },
-  paymentNotFound: {
-    en: "We couldn't find this payment",
-    ar: "مش لاقيين الدفعة دي",
-  },
-  billClosedNote: { en: "The bill is closed", ar: "الحساب اتقفل" },
-  charged: { en: "Charged", ar: "اتخصم" },
-  tryAgain: { en: "Try again", ar: "جرب تاني" },
-  backToBills: { en: "Back to bills", ar: "ارجع للحساب" },
+  paymentNotFound: { en: "We couldn't find this payment", ar: 'مش لاقيين الدفعة دي' },
+  billClosedNote: { en: 'The bill is closed', ar: 'الحساب اتقفل' },
+  charged: { en: 'Charged', ar: 'اتخصم' },
+  tryAgain: { en: 'Try again', ar: 'جرب تاني' },
+  backToBills: { en: 'Back to bills', ar: 'ارجع للحساب' },
   // The Ninja style (components/ninja)
-  ninjaWholeMenu: { en: "Whole menu", ar: "المنيو كله" },
-  ninjaAddNote: { en: "Add a note", ar: "ضيف ملاحظة" },
+  ninjaWholeMenu: { en: 'Whole menu', ar: 'المنيو كله' },
+  ninjaAddNote: { en: 'Add a note', ar: 'ضيف ملاحظة' },
   // The options, one question at a time
-  ninjaOptional: { en: "Optional", ar: "اختياري" },
-  ninjaNext: { en: "Next", ar: "التالي" },
-  ninjaSkip: { en: "Skip", ar: "تخطّى" },
-  ninjaChoose: { en: "Choose {name}", ar: "اختار {name}" },
-  ninjaPrevious: { en: "Previous question", ar: "السؤال اللي فات" },
-  ninjaLess: { en: "One less", ar: "واحد أقل" },
-  ninjaMore: { en: "One more", ar: "واحد كمان" },
-  ninjaRemove: { en: "Remove", ar: "شيله" },
+  ninjaOptional: { en: 'Optional', ar: 'اختياري' },
+  ninjaNext: { en: 'Next', ar: 'التالي' },
+  ninjaSkip: { en: 'Skip', ar: 'تخطّى' },
+  ninjaChoose: { en: 'Choose {name}', ar: 'اختار {name}' },
+  ninjaPrevious: { en: 'Previous question', ar: 'السؤال اللي فات' },
+  ninjaLess: { en: 'One less', ar: 'واحد أقل' },
+  ninjaMore: { en: 'One more', ar: 'واحد كمان' },
+  ninjaRemove: { en: 'Remove', ar: 'شيله' },
   // The dock's way to the order: a tap opens it to look over, and Place order sends it
-  ninjaOrder: { en: "Order", ar: "اطلب" },
-  ninjaSending: { en: "Sending", ar: "بيتبعت" },
-  ninjaEmptyTray: {
-    en: "Your order is empty. Tap a dish to add it.",
-    ar: "طلبك فاضي. دوس على صنف تضيفه.",
-  },
-  ninjaYourOrder: { en: "Your order", ar: "طلبك" },
-  ninjaMoreAtCheckout: {
-    en: "Note, promo or points",
-    ar: "ملاحظة أو كود أو نقط",
-  },
-  ninjaAdded: { en: "{name} added", ar: "اتضاف {name}" },
-  ninjaHintHoldAdd: { en: "Hold to add", ar: "دوس وضيف" },
-  ninjaHintTray: { en: "Drag up to see your order", ar: "اسحب لفوق تشوف طلبك" },
-  ninjaHintSwipe: {
-    en: "Swipe up for more, sideways for other categories",
-    ar: "اسحب لفوق للمزيد، وللجنب لباقي الأقسام",
-  },
-  ninjaHintZoom: {
-    en: "Pinch or tap the grid to see everything",
-    ar: "اقرص أو دوس على المربعات تشوف كل حاجة",
-  },
-  ninjaRemoved: { en: "{name} removed", ar: "اتشال {name}" },
-  ninjaUndo: { en: "Undo", ar: "رجّعه" },
-  ninjaUpNext: { en: "Up next", ar: "اللي بعده" },
-  ninjaSoldOut: { en: "{name} is sold out right now", ar: "{name} خلص دلوقتي" },
+  ninjaOrder: { en: 'Order', ar: 'اطلب' },
+  ninjaSending: { en: 'Sending', ar: 'بيتبعت' },
+  ninjaEmptyTray: { en: 'Your order is empty. Tap a dish to add it.', ar: 'طلبك فاضي. دوس على صنف تضيفه.' },
+  ninjaYourOrder: { en: 'Your order', ar: 'طلبك' },
+  ninjaMoreAtCheckout: { en: 'Note, promo or points', ar: 'ملاحظة أو كود أو نقط' },
+  ninjaAdded: { en: '{name} added', ar: 'اتضاف {name}' },
+  ninjaHintHoldAdd: { en: 'Hold to add', ar: 'دوس وضيف' },
+  ninjaHintTray: { en: 'Drag up to see your order', ar: 'اسحب لفوق تشوف طلبك' },
+  ninjaHintSwipe: { en: 'Swipe up for more, sideways for other categories', ar: 'اسحب لفوق للمزيد، وللجنب لباقي الأقسام' },
+  ninjaHintZoom: { en: 'Pinch or tap the grid to see everything', ar: 'اقرص أو دوس على المربعات تشوف كل حاجة' },
+  ninjaRemoved: { en: '{name} removed', ar: 'اتشال {name}' },
+  ninjaUndo: { en: 'Undo', ar: 'رجّعه' },
+  ninjaUpNext: { en: 'Up next', ar: 'اللي بعده' },
+  ninjaSoldOut: { en: '{name} is sold out right now', ar: '{name} خلص دلوقتي' },
   // Book (places)
   bookFreeNow: {
-    plural: "count",
-    en: {
-      "=0": "Nothing free right now",
-      "=1": "1 free now",
-      other: "{count} free now",
-    },
-    ar: {
-      "=0": "مفيش حاجة فاضية دلوقتي",
-      "=1": "واحدة فاضية دلوقتي",
-      "=2": "اتنين فاضيين دلوقتي",
-      other: "{count} فاضيين دلوقتي",
-    },
+    plural: 'count',
+    en: { '=0': 'Nothing free right now', '=1': '1 free now', other: '{count} free now' },
+    ar: { '=0': 'مفيش حاجة فاضية دلوقتي', '=1': 'واحدة فاضية دلوقتي', '=2': 'اتنين فاضيين دلوقتي', other: '{count} فاضيين دلوقتي' },
   },
-  bookClockRunning: { en: "Clock running", ar: "العداد شغال" },
-  bookStartAt: { en: "Start at", ar: "ابدأ بـ" },
-  ninjaHeldFor: { en: "Held for you", ar: "محجوزة ليك" },
-  ninjaHoldWalkOver: {
-    en: "Walk over and show this at the counter",
-    ar: "تعالى ووري ده للكاشير",
-  },
-  ninjaHoldFor: { en: "For {time}", ar: "الساعة {time}" },
-  ninjaHoldRanOut: {
-    en: "Your hold ran out. {name} may still have it for you.",
-    ar: "وقت الحجز خلص. ممكن {name} لسه ماسكهالك.",
-  },
-  ninjaHoldLeft: { en: "{time} left to arrive", ar: "فاضل {time} توصل" },
+  bookClockRunning: { en: 'Clock running', ar: 'العداد شغال' },
+  bookStartAt: { en: 'Start at', ar: 'ابدأ بـ' },
+  ninjaHeldFor: { en: 'Held for you', ar: 'محجوزة ليك' },
+  ninjaHoldWalkOver: { en: 'Walk over and show this at the counter', ar: 'تعالى ووري ده للكاشير' },
+  ninjaHoldFor: { en: 'For {time}', ar: 'الساعة {time}' },
+  ninjaHoldRanOut: { en: 'Your hold ran out. {name} may still have it for you.', ar: 'وقت الحجز خلص. ممكن {name} لسه ماسكهالك.' },
+  ninjaHoldLeft: { en: '{time} left to arrive', ar: 'فاضل {time} توصل' },
   // Bills: each bill a stack of its rounds
   ninjaRoundCount: {
-    plural: "count",
-    en: { "=1": "1 round", other: "{count} rounds" },
-    ar: { "=1": "طلب واحد", "=2": "طلبين", other: "{count} طلبات" },
+    plural: 'count',
+    en: { '=1': '1 round', other: '{count} rounds' },
+    ar: { '=1': 'طلب واحد', '=2': 'طلبين', other: '{count} طلبات' },
   },
-  ninjaOpenBill: { en: "Receipt", ar: "الإيصال" },
-  ninjaEarlierBills: { en: "Earlier bills", ar: "الحسابات اللي فاتت" },
-  ninjaYourBills: { en: "Your bills", ar: "حساباتك" },
+  ninjaOpenBill: { en: 'Receipt', ar: 'الإيصال' },
+  ninjaEarlierBills: { en: 'Earlier bills', ar: 'الحسابات اللي فاتت' },
+  ninjaYourBills: { en: 'Your bills', ar: 'حساباتك' },
   ninjaMonthVisits: {
-    plural: "count",
-    en: { "=1": "1 visit", other: "{count} visits" },
-    ar: { "=1": "زيارة واحدة", "=2": "زيارتين", other: "{count} زيارات" },
+    plural: 'count',
+    en: { '=1': '1 visit', other: '{count} visits' },
+    ar: { '=1': 'زيارة واحدة', '=2': 'زيارتين', other: '{count} زيارات' },
   },
-  ninjaBillOpen: { en: "Your bill", ar: "حسابك" },
-  ninjaTableOpen: { en: "Your table", ar: "ترابيزتك" },
-  ninjaRoomOpen: { en: "Your room", ar: "أوضتك" },
-  ninjaRateNow: { en: "Your rate now", ar: "سعرك دلوقتي" },
-  ninjaThisMonth: { en: "this month", ar: "الشهر ده" },
-  ninjaPlayedWith: { en: "With", ar: "مع" },
-  ninjaBackToCards: { en: "Back to the cards", ar: "ارجع للكروت" },
-  ninjaUseAllPoints: { en: "Use all", ar: "استخدمهم كلهم" },
-  ninjaScanCode: { en: "Scan the code", ar: "امسح الكود" },
-  ninjaScanCodeHint: {
-    en: "The code on your table or your room",
-    ar: "الكود اللي على ترابيزتك أو أوضتك",
-  },
-  ninjaPointsOf: { en: "of {balance}", ar: "من {balance}" },
-  ninjaRateOnceSwitched: {
-    en: "{price} once the staff switch it",
-    ar: "{price} من أول ما يحوّلوها",
-  },
-  ninjaSwitchingTo: { en: "Switching to {option}", ar: "بنحوّلها لـ {option}" },
-  ninjaStaffSwitching: {
-    en: "The staff are switching it",
-    ar: "الموظفين بيحوّلوها",
-  },
-  ninjaYoureIn: { en: "You're in {name}", ar: "انت في {name}" },
-  ninjaOtherPlaces: { en: "Other places", ar: "أماكن تانية" },
-  ninjaHideReceipt: { en: "Hide the receipt", ar: "اخفي الإيصال" },
-  ninjaBillPrev: { en: "Previous bill", ar: "الحساب اللي قبله" },
-  ninjaBillNext: { en: "Next bill", ar: "الحساب اللي بعده" },
+  ninjaBillOpen: { en: 'Your bill', ar: 'حسابك' },
+  ninjaTableOpen: { en: 'Your table', ar: 'ترابيزتك' },
+  ninjaRoomOpen: { en: 'Your room', ar: 'أوضتك' },
+  ninjaRateNow: { en: 'Your rate now', ar: 'سعرك دلوقتي' },
+  ninjaThisMonth: { en: 'this month', ar: 'الشهر ده' },
+  ninjaPlayedWith: { en: 'With', ar: 'مع' },
+  ninjaBackToCards: { en: 'Back to the cards', ar: 'ارجع للكروت' },
+  ninjaUseAllPoints: { en: 'Use all', ar: 'استخدمهم كلهم' },
+  ninjaScanCode: { en: 'Scan the code', ar: 'امسح الكود' },
+  ninjaScanCodeHint: { en: 'The code on your table or your room', ar: 'الكود اللي على ترابيزتك أو أوضتك' },
+  ninjaPointsOf: { en: 'of {balance}', ar: 'من {balance}' },
+  ninjaRateOnceSwitched: { en: '{price} once the staff switch it', ar: '{price} من أول ما يحوّلوها' },
+  ninjaSwitchingTo: { en: 'Switching to {option}', ar: 'بنحوّلها لـ {option}' },
+  ninjaStaffSwitching: { en: 'The staff are switching it', ar: 'الموظفين بيحوّلوها' },
+  ninjaYoureIn: { en: "You're in {name}", ar: 'انت في {name}' },
+  ninjaOtherPlaces: { en: 'Other places', ar: 'أماكن تانية' },
+  ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
+  ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
+  ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },
   // The branch: fixed while the customer is there; switching empties the order
-  ninjaSwitchBranchWithOrder: {
-    en: "Switch to {name}? Your order will be emptied.",
-    ar: "تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.",
-  },
-  ninjaSwitchBranch: { en: "Switch", ar: "غيّر" },
-  ninjaKeepOrder: { en: "Keep my order", ar: "خلّي طلبي" },
+  ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
+  ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },
+  ninjaKeepOrder: { en: 'Keep my order', ar: 'خلّي طلبي' },
   // Cart and pay
-  payModeItems: { en: "My items", ar: "حاجاتي" },
-  payModeEqual: { en: "Equally", ar: "بالتساوي" },
-  payModeCustom: { en: "Amount", ar: "مبلغ" },
-  itemNotFound: {
-    en: "This item isn't on the menu",
-    ar: "الصنف ده مش في المنيو",
-  },
-} satisfies Record<string, Message>;
+  payModeItems: { en: 'My items', ar: 'حاجاتي' },
+  payModeEqual: { en: 'Equally', ar: 'بالتساوي' },
+  payModeCustom: { en: 'Amount', ar: 'مبلغ' },
+  itemNotFound: { en: "This item isn't on the menu", ar: 'الصنف ده مش في المنيو' },
+} satisfies Record<string, Message>
 
-const dictionary = { ...messages, ...webExtras };
+const dictionary = { ...messages, ...webExtras }
 
-export type TranslationKey = keyof typeof dictionary;
+export type TranslationKey = keyof typeof dictionary
 
 type LanguageState = {
-  language: Language;
+  language: Language
   /** The customer picked the language on the settings page; the business's default never overrides that */
-  chosen: boolean;
-  setLanguage: (language: Language) => void;
+  chosen: boolean
+  setLanguage: (language: Language) => void
   /** The business's brand is known: its only language, else its default unless the customer chose */
-  followBusiness: (
-    locale:
-      | { language?: string | null; contentLanguages?: string | null }
-      | null
-      | undefined,
-  ) => Language;
-};
+  followBusiness: (locale: { language?: string | null; contentLanguages?: string | null } | null | undefined) => Language
+}
 
 /** Under the control panel's preview the choice lives in memory only, so the frame never changes a real visitor's language */
 const memoryStorage = (() => {
-  const store = new Map<string, string>();
+  const store = new Map<string, string>()
   return {
     getItem: (name: string) => store.get(name) ?? null,
     setItem: (name: string, value: string) => void store.set(name, value),
     removeItem: (name: string) => void store.delete(name),
-  };
-})();
+  }
+})()
 
 export const useLanguage = create<LanguageState>()(
   persist(
     (set, get) => ({
-      language: preview.language ?? "ar",
+      language: preview.language ?? 'ar',
       chosen: false,
       setLanguage: (language) => {
-        applyDirection(language);
-        set({ language, chosen: true });
+        applyDirection(language)
+        set({ language, chosen: true })
       },
       followBusiness: (locale) => {
-        const { language: current, chosen } = get();
+        const { language: current, chosen } = get()
         const language = openingLanguage({
           contentLanguages: locale?.contentLanguages,
           businessDefault: locale?.language,
           chosen: chosen ? current : null,
           previewLanguage: preview.language,
-        });
+        })
         if (language !== current) {
-          applyDirection(language);
-          set({ language });
+          applyDirection(language)
+          set({ language })
         }
-        return language;
+        return language
       },
     }),
     {
-      name: "ninja-language",
-      storage: createJSONStorage(() =>
-        preview.active ? memoryStorage : localStorage,
-      ),
+      name: 'ninja-language',
+      storage: createJSONStorage(() => (preview.active ? memoryStorage : localStorage)),
       onRehydrateStorage: () => (state) => {
-        applyDirection(state?.language ?? preview.language ?? "ar");
+        applyDirection(state?.language ?? preview.language ?? 'ar')
       },
-    },
-  ),
-);
+    }
+  )
+)
 
 function applyDirection(language: Language) {
-  document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-  document.documentElement.lang = language;
+  document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+  document.documentElement.lang = language
 }
 
-export type TranslateParams = Record<string, string | number>;
+export type TranslateParams = Record<string, string | number>
 
 /**
  * Which Arabic the business speaks, from its brand: the dictionary's own Arabic
  * is Egyptian; Modern Standard lives in ./i18n.ar-standard and wins when
  * the business chose it.
  */
-export const useArabicStyle = create<{
-  standard: boolean;
-  set: (style: string | null | undefined) => void;
-}>()((set) => ({
-  standard: false,
-  set: (style) => set({ standard: style === "standard" }),
-}));
+export const useArabicStyle = create<{ standard: boolean; set: (style: string | null | undefined) => void }>()(
+  (set) => ({
+    standard: false,
+    set: (style) => set({ standard: style === 'standard' }),
+  })
+)
 
 function standardArabic(key: string, language: Language) {
-  return language === "ar" && useArabicStyle.getState().standard
-    ? (arStandard[key] ??
-        (messagesArStandard as Record<string, string | Record<string, string>>)[
-          key
-        ])
-    : undefined;
+  return language === 'ar' && useArabicStyle.getState().standard
+    ? (arStandard[key] ?? (messagesArStandard as Record<string, string | Record<string, string>>)[key])
+    : undefined
 }
 
 function format(
   entry: Message,
   language: Language,
   params?: TranslateParams,
-  key?: string,
+  key?: string
 ): string {
-  const standard = key ? standardArabic(key, language) : undefined;
-  let template: string;
-  if ("plural" in entry) {
-    const count = Number(params?.[entry.plural] ?? 0);
-    const forms = typeof standard === "object" ? standard : entry[language];
-    template = forms[`=${count}`] ?? forms.other ?? "";
+  const standard = key ? standardArabic(key, language) : undefined
+  let template: string
+  if ('plural' in entry) {
+    const count = Number(params?.[entry.plural] ?? 0)
+    const forms = typeof standard === 'object' ? standard : entry[language]
+    template = forms[`=${count}`] ?? forms.other ?? ''
   } else {
-    template =
-      (typeof standard === "string" ? standard : entry[language]) || entry.en;
+    template = (typeof standard === 'string' ? standard : entry[language]) || entry.en
   }
-  if (!params) return template;
+  if (!params) return template
   return template.replace(/\{(\w+)\}/g, (whole, name) =>
-    name in params ? String(params[name]) : whole,
-  );
+    name in params ? String(params[name]) : whole
+  )
 }
 
 export function useT() {
-  const language = useLanguage((s) => s.language);
+  const language = useLanguage((s) => s.language)
   // Re-render when the business's Arabic arrives with its brand
-  useArabicStyle((s) => s.standard);
+  useArabicStyle((s) => s.standard)
   return (key: TranslationKey, params?: TranslateParams) =>
-    format(dictionary[key], language, params, key);
+    format(dictionary[key], language, params, key)
 }
 
 // For code living outside the React tree (the toast adapter)
 export function translate(
   key: TranslationKey,
-  params?: TranslateParams,
+  params?: TranslateParams
 ): string {
-  return format(dictionary[key], useLanguage.getState().language, params, key);
+  return format(dictionary[key], useLanguage.getState().language, params, key)
 }
 
 // A price in the tenant's currency, matching the mobile app ("12.00 EGP" / "12.00 ج.م"),
 // with its rate form ("12 EGP") and its discount form ("-12.00 EGP")
 export function usePrice() {
-  const language = useLanguage((s) => s.language);
-  const currency = useCurrency((s) => s.code);
-  type Value = number | string | null | undefined;
-  const price = (value: Value) => formatMoney(value, currency, language);
+  const language = useLanguage((s) => s.language)
+  const currency = useCurrency((s) => s.code)
+  type Value = number | string | null | undefined
+  const price = (value: Value) => formatMoney(value, currency, language)
   return Object.assign(price, {
     whole: (value: Value) => formatMoneyWhole(value, currency, language),
     discount: (value: Value) => `-${price(value)}`,
-  });
+  })
 }
 
 // Picks the right side of a LocalizedText for the active language
 export function useLocalized() {
-  const language = useLanguage((s) => s.language);
+  const language = useLanguage((s) => s.language)
   return (text: LocalizedText | null | undefined): string =>
-    (language === "ar" ? text?.ar : text?.en) || text?.en || text?.ar || "";
+    (language === 'ar' ? text?.ar : text?.en) || text?.en || text?.ar || ''
 }

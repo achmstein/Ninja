@@ -30,12 +30,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
  * there are dishes in the order, since the other branch's menu is not this
  * one's and the order is emptied.
  */
-export function BranchSwitcher({
-  variant = 'pill',
-}: {
-  /** line: a small line under the logo, so the bar's end keeps only its buttons */
-  variant?: 'pill' | 'line'
-} = {}) {
+export function BranchSwitcher() {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -78,30 +73,16 @@ export function BranchSwitcher({
 
   return (
     <>
-      {variant === 'line' ? (
-        // Under the logo: which branch's menu this is, a tap from the others
-        <button
-          type='button'
-          data-branch-line=''
-          onClick={() => setOpen(true)}
-          className='text-muted-foreground active:text-foreground flex max-w-[50vw] items-center gap-1 text-caption font-medium transition-colors'
-        >
-          <MapPin className='size-3.5 shrink-0' />
-          <span className='truncate'>{localized(activeBranch?.name)}</span>
-          <ChevronDown className='size-3 shrink-0 opacity-60' />
-        </button>
-      ) : (
-        // A pill in the bar
-        <button
-          type='button'
-          onClick={() => setOpen(true)}
-          className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-note font-semibold transition-colors'
-        >
-          <MapPin className='size-4 shrink-0' />
-          <span className='truncate'>{localized(activeBranch?.name)}</span>
-          <ChevronDown className='size-3.5 shrink-0 opacity-60' />
-        </button>
-      )}
+      {/* A pill in the bar, like the scan button beside it */}
+      <button
+        type='button'
+        onClick={() => setOpen(true)}
+        className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-note font-semibold transition-colors'
+      >
+        <MapPin className='size-4 shrink-0' />
+        <span className='truncate'>{localized(activeBranch?.name)}</span>
+        <ChevronDown className='size-3.5 shrink-0 opacity-60' />
+      </button>
 
       {/* The branches as a sheet from the bottom, the one looked at lit */}
       <Sheet open={open} onOpenChange={setOpen}>

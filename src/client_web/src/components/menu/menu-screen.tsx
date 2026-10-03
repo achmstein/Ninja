@@ -419,6 +419,8 @@ export function MenuScreen({ menu }: HomeProps) {
                       list={list}
                       // The business's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
                       title={classic ? t('menu') : undefined}
+                      // The classic menu's search sits on its title's line, leaving the bar to the branch and the scan
+                      titleAction={classic ? <MenuSearch sections={menu.sections} onOpen={openDish} /> : undefined}
                       onScroller={setGridScroller}
                       notice={notice}
                     />
@@ -458,7 +460,7 @@ export function MenuScreen({ menu }: HomeProps) {
             ref={bar}
             className='absolute inset-x-0 top-0'
             style={{ y: barY }}
-            end={<MenuSearch sections={menu.sections} onOpen={openDish} />}
+            end={classic ? undefined : <MenuSearch sections={menu.sections} onOpen={openDish} />}
             start={
               mode === 'grid' && !classic ? (
                 <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>

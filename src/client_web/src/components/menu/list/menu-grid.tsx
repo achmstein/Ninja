@@ -35,6 +35,7 @@ export const MenuGrid = memo(function MenuGrid({
   onSection,
   list,
   title,
+  titleAction,
   onScroller,
   notice,
 }: {
@@ -52,6 +53,8 @@ export const MenuGrid = memo(function MenuGrid({
   list?: MenuList
   /** The page's large title over the business's own menu, as every tab has one */
   title?: string
+  /** On the title's line, at its end (the menu's search) */
+  titleAction?: ReactNode
   /** Its scrolling box, handed up while it is on screen, so the chrome around it can follow its scroll */
   onScroller?: (el: HTMLDivElement | null) => void
   /** A word over the whole menu (ordering paused), the first thing in it and scrolling away with it */
@@ -168,7 +171,7 @@ export const MenuGrid = memo(function MenuGrid({
       // The room under the top bar is every page's: the bar, then the same gap to what comes first
       className='no-scrollbar h-full overflow-y-auto overscroll-y-contain px-4 pt-[calc(var(--bar-h)+var(--page-top))] pb-6 [touch-action:pan-y]'
     >
-      {title && <PageTitle title={title} scrollY={scrollY} className='mb-5' />}
+      {title && <PageTitle title={title} action={titleAction} scrollY={scrollY} className='mb-5' />}
       {notice && <div className='mb-5'>{notice}</div>}
       {categories.map((col, index) => (
         <section
