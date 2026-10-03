@@ -96,12 +96,8 @@ export function BranchSwitcher({
       <LogoSlot
         className='group-data-[collapsible=icon]:[&>span:last-child]:hidden'
         nameClassName={businessName ? undefined : 'hidden'}
+        subtitle={businessName && switchable ? label : undefined}
       />
-      {businessName && switchable && (
-        <span className='text-muted-foreground truncate ps-10 text-xs group-data-[collapsible=icon]:hidden'>
-          {label}
-        </span>
-      )}
     </div>
   )
 

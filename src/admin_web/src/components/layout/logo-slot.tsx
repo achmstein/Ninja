@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
@@ -23,9 +23,12 @@ function shapeOf(width: number, height: number): Shape {
  */
 export function LogoSlot({
   showName = true,
+  subtitle,
   className,
   nameClassName,
 }: {
+  /** A line tight under the name (the branch), beside the mark */
+  subtitle?: ReactNode
   /** Off where the slot is a small icon (the collapsed rail) */
   showName?: boolean
   className?: string
@@ -40,8 +43,20 @@ export function LogoSlot({
     null
   const [shape, setShape] = useState<Shape>('mark')
 
-  const nameText = showName && name && (
-    <span className={cn('truncate font-semibold', nameClassName)}>{name}</span>
+  const sub = subtitle && (
+    <span className='text-muted-foreground truncate text-xs font-normal'>
+      {subtitle}
+    </span>
+  )
+  const nameText = showName && (name || sub) && (
+    <span className='flex min-w-0 flex-col leading-tight'>
+      {name && (
+        <span className={cn('truncate font-semibold', nameClassName)}>
+          {name}
+        </span>
+      )}
+      {sub}
+    </span>
   )
 
   if (!logo) {
@@ -79,8 +94,11 @@ export function LogoSlot({
       ) : (
         img
       )}
-      {/* A wordmark already says the name */}
-      {shape !== 'wide' && nameText}
+      {/* A wordmark already says the name; the line under it stays */}
+      {shape !== 'wide'
+        ? nameText
+        : showName &&
+          sub && <span className='flex min-w-0 flex-col'>{sub}</span>}
     </span>
   )
 }
