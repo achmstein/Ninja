@@ -328,6 +328,16 @@ export function Stock() {
                                       })
                                     : t('noReorderLevel')}
                               </div>
+                              {/* How much is left against the reorder level, at a glance:
+                                  full at three times it, red at or under it, amber within twice it */}
+                              {level.isActive &&
+                                level.reorderLevel != null &&
+                                toNumber(level.reorderLevel) > 0 && (
+                                  <StockGauge
+                                    onHand={toNumber(level.onHand)}
+                                    reorderAt={toNumber(level.reorderLevel)}
+                                  />
+                                )}
                             </div>
                             <div className='shrink-0 text-end'>
                               <div
@@ -540,6 +550,33 @@ function CountMode({
           <EmptyState compact icon={Boxes} title={t('noResults')} />
         )}
       </ScrollArea>
+    </div>
+  )
+}
+
+function StockGauge({
+  onHand,
+  reorderAt,
+}: {
+  onHand: number
+  reorderAt: number
+}) {
+  const share = Math.max(0, Math.min(1, onHand / (reorderAt * 3)))
+  const tone =
+    onHand <= reorderAt
+      ? 'bg-destructive'
+      : onHand <= reorderAt * 2
+        ? 'bg-warning'
+        : 'bg-success'
+  return (
+    <div className='bg-muted mt-1.5 h-1 w-full max-w-40 overflow-hidden rounded-full'>
+      <div
+        className={cn(
+          'h-full rounded-full transition-[width] duration-500',
+          tone
+        )}
+        style={{ width: `${Math.max(share * 100, onHand > 0 ? 4 : 0)}%` }}
+      />
     </div>
   )
 }

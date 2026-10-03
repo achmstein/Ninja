@@ -27,6 +27,8 @@ import {
   Search,
   Tag,
   Trash2,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
 import {
@@ -60,6 +62,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
@@ -107,6 +110,7 @@ export function MenuManagement() {
   const navigate = route.useNavigate()
   const queryClient = useQueryClient()
 
+  const photos = search.view === 'photos'
   const [sheet, setSheet] = useState<ItemSheetState>(null)
   const [deleteItem, setDeleteItem] = useState<CatalogItemDto | null>(null)
   const [categoryDialog, setCategoryDialog] = useState<{
@@ -309,6 +313,29 @@ export function MenuManagement() {
       <MenuPage
         actions={
           <>
+            <ToggleGroup
+              type='single'
+              variant='outline'
+              size='sm'
+              value={photos ? 'photos' : 'list'}
+              onValueChange={(value) =>
+                value &&
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    view: value === 'photos' ? 'photos' : undefined,
+                  }),
+                })
+              }
+              aria-label={t('menuView')}
+            >
+              <ToggleGroupItem value='list' aria-label={t('menuViewList')}>
+                <List className='size-4' />
+              </ToggleGroupItem>
+              <ToggleGroupItem value='photos' aria-label={t('menuViewPhotos')}>
+                <LayoutGrid className='size-4' />
+              </ToggleGroupItem>
+            </ToggleGroup>
             {scan.available && (
               <>
                 <Button
@@ -544,6 +571,19 @@ export function MenuManagement() {
                             <p className='text-muted-foreground py-4 text-sm'>
                               {t('emptyCategory')}
                             </p>
+                          ) : photos ? (
+                            <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4'>
+                              {section.items.map((item) => (
+                                <MenuCard
+                                  key={toNumber(item.id)}
+                                  item={item}
+                                  onOpen={() => openItem(item)}
+                                  onAvailable={(checked) =>
+                                    setAvailable(item, checked)
+                                  }
+                                />
+                              ))}
+                            </div>
                           ) : (
                             <DndContext
                               sensors={sensors}
@@ -775,5 +815,90 @@ function MenuRow({
         </>
       )}
     </Sortable>
+  )
+}
+
+/**
+ * A dish as customers see it, for the photos view: its photo (the offer's
+ * saving on it), its name and price, and its availability switch on the
+ * card. Unavailable, it fades; the card opens the dish.
+ */
+function MenuCard({
+  item,
+  onOpen,
+  onAvailable,
+}: {
+  item: CatalogItemDto
+  onOpen: () => void
+  onAvailable: (checked: boolean) => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const onOffer =
+    !!item.isOnOffer &&
+    item.offerPrice != null &&
+    toNumber(item.offerPrice) < toNumber(item.price)
+  const saving = onOffer
+    ? Math.round((1 - toNumber(item.offerPrice) / toNumber(item.price)) * 100)
+    : 0
+  return (
+    <div
+      className={cn(
+        'bg-card group overflow-hidden rounded-xl shadow-sm transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md',
+        !item.isAvailable && 'opacity-60'
+      )}
+    >
+      <button
+        type='button'
+        onClick={onOpen}
+        className='relative block aspect-[4/3] w-full overflow-hidden text-start'
+      >
+        <ImageWithFallback
+          src={
+            item.pictureUri
+              ? itemPictureUrl(item.id, item.pictureUri, 320)
+              : null
+          }
+          className='size-full'
+          fallbackIcon={<Coffee className='text-muted-foreground size-6' />}
+        />
+        {saving > 0 && (
+          <span className='absolute start-2 top-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm'>
+            −{saving}%
+          </span>
+        )}
+        {item.isOutOfStock && (
+          <span className='absolute end-2 top-2'>
+            <Badge variant='danger'>{t('outOfStock')}</Badge>
+          </span>
+        )}
+      </button>
+      <div className='flex items-center gap-2 p-3'>
+        <button
+          type='button'
+          onClick={onOpen}
+          className='min-w-0 flex-1 text-start'
+        >
+          <div className='truncate text-sm font-medium'>
+            {localized(item.name) || '—'}
+          </div>
+          <div className='flex items-baseline gap-1.5 text-sm tabular-nums'>
+            <span className={cn('font-semibold', onOffer && 'text-orange-600')}>
+              {formatEgp(onOffer ? item.offerPrice : item.price)}
+            </span>
+            {onOffer && (
+              <span className='text-muted-foreground text-xs line-through'>
+                {formatEgp(item.price)}
+              </span>
+            )}
+          </div>
+        </button>
+        <Switch
+          checked={!!item.isAvailable}
+          onCheckedChange={onAvailable}
+          aria-label={`${t('availability')}: ${localized(item.name)}`}
+        />
+      </div>
+    </div>
   )
 }

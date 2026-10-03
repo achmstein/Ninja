@@ -534,6 +534,9 @@ const webExtras = {
   kitchenStationsHint: { en: "Where each dish is prepared, and its printer.", ar: "أين يُحضَّر كل صنف وطابعته." },
   branchDetailsHint: { en: "Name, address, phone, tax number and the day's start.", ar: "الاسم والعنوان والهاتف والرقم الضريبي وبداية اليوم." },
   vsLastMonth: { en: "vs last month", ar: "عن الشهر الماضي" },
+  menuView: { en: "How the menu is shown", ar: "طريقة عرض القائمة" },
+  menuViewList: { en: "List", ar: "قائمة" },
+  menuViewPhotos: { en: "Photos", ar: "صور" },
   studioNoImageModel: { en: "Dish photos are not set up yet: the platform has no image model.", ar: "صور الأصناف غير مفعّلة بعد: لا يوجد نموذج صور على المنصة." },
 
   // Dashboard POS sales (current business day, from Sales.API)
