@@ -12,18 +12,19 @@ import type { TalabatStatusView } from '@/api/catalog/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { ErrorState } from '@/components/error-state'
+import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { When } from '@/components/when'
 
 const talabatQuery = { query: { 'api-version': API_VERSION } }
 const logo = `${import.meta.env.BASE_URL}platforms/talabat.svg`
@@ -42,7 +43,10 @@ const REFUSAL_KINDS: Record<string, TranslationKey> = {
  */
 export function TalabatSettingsPage() {
   const t = useT()
-  const query = useQuery({ ...getTalabatOptions(talabatQuery), refetchInterval: 15_000 })
+  const query = useQuery({
+    ...getTalabatOptions(talabatQuery),
+    refetchInterval: 15_000,
+  })
   const status = query.data
 
   return (
@@ -68,7 +72,7 @@ export function TalabatSettingsPage() {
       ) : status ? (
         <TalabatSettings status={status} />
       ) : (
-        <Skeleton className='h-[32rem] w-full' />
+        <Skeleton className='h-[32rem] w-full rounded-xl' />
       )}
     </Main>
   )
@@ -115,7 +119,9 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
         })
       }
       toast.success(t('talabatSendQueued'))
-      await queryClient.invalidateQueries({ queryKey: getTalabatQueryKey(talabatQuery) })
+      await queryClient.invalidateQueries({
+        queryKey: getTalabatQueryKey(talabatQuery),
+      })
     } catch {
       toast.error(t('talabatSendFailed'))
     } finally {
@@ -128,7 +134,10 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
   const pending = Number(status.pending ?? 0)
   const changedSinceSent =
     status.menuChangedAt &&
-    (!status.menuSentAt || new Date(status.menuChangedAt) > new Date(status.menuSentAt))
+    (!status.menuSentAt ||
+      new Date(status.menuChangedAt) > new Date(status.menuSentAt))
+  const waiting = Boolean(changedSinceSent) && onTalabat.length > 0
+  const menuNotes = status.lastMenuResult || waiting || pending > 0
 
   return (
     <div className='space-y-6'>
@@ -141,123 +150,123 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
       )}
 
       {/* Where the business sells on Talabat */}
-      <Card>
-        <CardContent className='space-y-4 pt-6'>
-          <div className='space-y-1'>
-            <h2 className='font-semibold'>{t('talabatBranches')}</h2>
-            <p className='text-muted-foreground text-xs'>{t('talabatBranchesHint')}</p>
-          </div>
-          {branchesLoading ? (
+      <SettingsCard
+        title={t('talabatBranches')}
+        description={t('talabatBranchesHint')}
+      >
+        {branchesLoading ? (
+          <div className='px-5 py-4'>
             <Skeleton className='h-20 w-full' />
-          ) : (
-            <div className='divide-y rounded-lg border'>
-              {branches.map((branch) => {
-                const id = Number(branch.id)
-                return (
-                  <div key={id} className='flex items-center justify-between p-3'>
-                    <Label htmlFor={`talabat-branch-${id}`} className='text-sm'>
-                      {localized(branch.name)}
-                    </Label>
-                    <Switch
-                      id={`talabat-branch-${id}`}
-                      checked={onTalabat.includes(id)}
-                      disabled={save.isPending}
-                      onCheckedChange={(on) => toggleBranch(id, on)}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          )}
-          <div className='flex items-start justify-between gap-4 rounded-lg border p-3'>
-            <div className='space-y-1'>
-              <Label htmlFor='talabat-sync-open-close' className='text-sm'>
-                {t('talabatSyncOpenClose')}
-              </Label>
-              <p className='text-muted-foreground text-xs'>{t('talabatSyncOpenCloseHint')}</p>
-            </div>
+          </div>
+        ) : (
+          branches.map((branch) => {
+            const id = Number(branch.id)
+            return (
+              <SettingRow
+                key={id}
+                title={localized(branch.name)}
+                control={
+                  <Switch
+                    aria-label={localized(branch.name)}
+                    checked={onTalabat.includes(id)}
+                    disabled={save.isPending}
+                    onCheckedChange={(on) => toggleBranch(id, on)}
+                  />
+                }
+              />
+            )
+          })
+        )}
+        <SettingRow
+          title={t('talabatSyncOpenClose')}
+          description={t('talabatSyncOpenCloseHint')}
+          control={
             <Switch
-              id='talabat-sync-open-close'
+              aria-label={t('talabatSyncOpenClose')}
               checked={status.syncOpenClose}
               disabled={save.isPending}
               onCheckedChange={(on) => saveWith(onTalabat, on)}
             />
-          </div>
-        </CardContent>
-      </Card>
+          }
+        />
+      </SettingsCard>
 
       {/* The menu Talabat shows */}
-      <Card>
-        <CardContent className='space-y-4 pt-6'>
-          <div className='flex items-start justify-between gap-4'>
-            <div className='space-y-1'>
-              <h2 className='font-semibold'>{t('talabatMenu')}</h2>
-              <p className='text-muted-foreground text-xs'>{t('talabatMenuHint')}</p>
-            </div>
+      <SettingsCard title={t('talabatMenu')} description={t('talabatMenuHint')}>
+        <SettingRow
+          title={
+            status.menuSentAt
+              ? t('talabatMenuSent', { time: when(status.menuSentAt)! })
+              : t('talabatMenuNeverSent')
+          }
+          description={
+            menuNotes ? (
+              <span className='grid gap-0.5'>
+                {status.lastMenuResult && (
+                  <span>
+                    {t('talabatMenuResult', { result: status.lastMenuResult })}
+                  </span>
+                )}
+                {waiting && <span>{t('talabatMenuWaiting')}</span>}
+                {pending > 0 && (
+                  <span>{t('talabatPending', { count: pending })}</span>
+                )}
+              </span>
+            ) : undefined
+          }
+          control={
             <Button
               type='button'
               variant='outline'
               disabled={sending || onTalabat.length === 0 || !status.connected}
               onClick={sendNow}
             >
-              <Send className='size-4' />
+              {sending ? <Spinner /> : <Send className='rtl:-scale-x-100' />}
               {t('talabatSendNow')}
             </Button>
-          </div>
-          <div className='space-y-1 text-sm'>
-            <p>
-              {status.menuSentAt
-                ? t('talabatMenuSent', { time: when(status.menuSentAt)! })
-                : t('talabatMenuNeverSent')}
-            </p>
-            {status.lastMenuResult && (
-              <p className='text-muted-foreground'>
-                {t('talabatMenuResult', { result: status.lastMenuResult })}
-              </p>
-            )}
-            {changedSinceSent && onTalabat.length > 0 && (
-              <p className='text-muted-foreground'>{t('talabatMenuWaiting')}</p>
-            )}
-            {pending > 0 && (
-              <p className='text-muted-foreground'>{t('talabatPending', { count: pending })}</p>
-            )}
-          </div>
-          {onTalabat[0] != null && <MenuPreview branchId={onTalabat[0]} />}
-        </CardContent>
-      </Card>
+          }
+        />
+        {onTalabat[0] != null && <MenuPreview branchId={onTalabat[0]} />}
+      </SettingsCard>
 
       {/* What Talabat turned down */}
       {status.failed.length > 0 && (
-        <Card>
-          <CardContent className='space-y-3 pt-6'>
-            <h2 className='font-semibold'>{t('talabatRefusals')}</h2>
-            <div className='divide-y rounded-lg border text-sm'>
-              {status.failed.map((f, i) => {
-                const kind = REFUSAL_KINDS[f.kind]
-                const branch = branches.find((b) => Number(b.id) === Number(f.branchId))
-                return (
-                  <div key={i} className='space-y-0.5 p-3'>
-                    <div className='flex flex-wrap items-center gap-2'>
-                      <Badge variant='outline'>{kind ? t(kind) : f.kind}</Badge>
-                      {branch && <span>{localized(branch.name)}</span>}
-                      {f.code && (
-                        <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
-                          {f.code}
-                        </span>
-                      )}
-                      <span className='text-muted-foreground ms-auto text-xs'>{when(f.at)}</span>
-                    </div>
-                    {f.error && (
-                      <p className='text-muted-foreground break-all font-mono text-xs' dir='ltr'>
-                        {f.error}
-                      </p>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <SettingsCard title={t('talabatRefusals')}>
+          {status.failed.map((f, i) => {
+            const kind = REFUSAL_KINDS[f.kind]
+            const branch = branches.find(
+              (b) => Number(b.id) === Number(f.branchId)
+            )
+            return (
+              <div key={i} className='space-y-1 px-5 py-3 text-sm'>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <Badge variant='outline'>{kind ? t(kind) : f.kind}</Badge>
+                  {branch && <span>{localized(branch.name)}</span>}
+                  {f.code && (
+                    <span
+                      className='text-muted-foreground font-mono text-xs'
+                      dir='ltr'
+                    >
+                      {f.code}
+                    </span>
+                  )}
+                  <When
+                    value={f.at}
+                    className='text-muted-foreground ms-auto text-xs'
+                  />
+                </div>
+                {f.error && (
+                  <p
+                    className='text-muted-foreground font-mono text-xs break-all'
+                    dir='ltr'
+                  >
+                    {f.error}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+        </SettingsCard>
       )}
     </div>
   )
@@ -272,7 +281,9 @@ function MenuPreview({ branchId }: { branchId: number }) {
   const preview = useQuery(
     previewTalabatMenuOptions({ ...talabatQuery, path: { branchId } })
   )
-  const items = (preview.data as { items?: Record<string, CatalogItem> } | undefined)?.items
+  const items = (
+    preview.data as { items?: Record<string, CatalogItem> } | undefined
+  )?.items
   if (!items) return null
 
   const all = Object.entries(items)
@@ -281,22 +292,29 @@ function MenuPreview({ branchId }: { branchId: number }) {
   const categories = all.filter(([, item]) => item.type === 'Category').length
 
   return (
-    <div className='space-y-2 rounded-lg border p-3'>
-      <div className='flex items-center justify-between gap-2'>
-        <div className='text-sm'>
-          <span className='font-medium'>{t('talabatPreview')}</span>
-          <span className='text-muted-foreground'>
-            {' · '}
+    <div className='space-y-3 px-5 py-4'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <div className='min-w-0'>
+          <div className='text-sm font-medium'>{t('talabatPreview')}</div>
+          <div className='text-muted-foreground mt-0.5 text-sm'>
             {t('talabatPreviewCounts', { dishes, options, categories })}
-          </span>
+          </div>
         </div>
-        <Button type='button' variant='ghost' size='sm' onClick={() => setOpen((v) => !v)}>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          onClick={() => setOpen((v) => !v)}
+        >
           {open ? t('talabatPreviewHide') : t('talabatPreviewShow')}
-          <ChevronDown className={open ? 'size-4 rotate-180' : 'size-4'} />
+          <ChevronDown className={open ? 'rotate-180' : undefined} />
         </Button>
       </div>
       {open && (
-        <pre dir='ltr' className='bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs'>
+        <pre
+          dir='ltr'
+          className='bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs'
+        >
           {JSON.stringify(preview.data, null, 2)}
         </pre>
       )}

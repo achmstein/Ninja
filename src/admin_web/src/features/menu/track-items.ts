@@ -5,12 +5,12 @@ import {
   type ProposedRecipeLine,
   type RecipesProposal,
 } from '@/api/inventory'
-import { toNumber } from '@/lib/money'
 import {
   primaryText,
   toLocalizedValue,
   type LocalizedValue,
-} from '@/components/localized-input'
+} from '@/lib/localized-value'
+import { toNumber } from '@/lib/money'
 import {
   draftKey,
   validateDraft,

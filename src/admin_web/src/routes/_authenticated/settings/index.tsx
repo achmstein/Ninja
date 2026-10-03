@@ -8,12 +8,10 @@ export const Route = createFileRoute('/_authenticated/settings/')({
 
 function SettingsPage() {
   return (
-    <>
-      <Main>
-        <div className='mx-auto w-full max-w-2xl'>
-          <SettingsProfile />
-        </div>
-      </Main>
-    </>
+    <Main>
+      <div className='mx-auto w-full max-w-2xl'>
+        <SettingsProfile />
+      </div>
+    </Main>
   )
 }

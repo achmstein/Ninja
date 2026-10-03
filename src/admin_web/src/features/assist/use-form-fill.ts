@@ -3,8 +3,8 @@ import { type FormField } from '@/api/catalog'
 import { fillFormMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
+import { type LocalizedValue } from '@/lib/localized-value'
 import { toast } from '@/lib/toast'
-import { type LocalizedValue } from '@/components/localized-input'
 import { assistErrorMessage, useAssistStore } from './errors'
 
 // Wire values of Catalog's FormFieldType (the enum has no string converter)

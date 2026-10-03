@@ -1,11 +1,11 @@
-import { Copy, Download, Printer, Smartphone } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { Copy, Download, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
@@ -62,112 +62,120 @@ export function AppsPage() {
 
       <div className='grid gap-4 sm:grid-cols-2'>
         {apps.map((app) => (
-          <Card key={app.key}>
-            <CardContent className='flex h-full flex-col gap-3 pt-6'>
-              <div className='flex items-center gap-3'>
-                <img src={app.icon} alt='' className='size-10 rounded-lg' />
-                <div className='text-base font-semibold'>{app.title}</div>
-              </div>
-              <p className='text-muted-foreground text-sm'>{app.about}</p>
-              {/* Scanned with the tablet's camera, it opens the download straight away: nothing to type */}
-              {appsUrl && (
-                <div className='bg-muted/50 flex items-center gap-3 rounded-lg border p-3'>
-                  <div className='shrink-0 rounded-md bg-white p-1.5'>
-                    <QRCodeSVG
-                      value={absoluteUrl(`${appsUrl}/${app.file}`)}
-                      size={88}
-                      level='M'
-                      marginSize={0}
-                      bgColor='#ffffff'
-                      fgColor='#000000'
-                    />
-                  </div>
-                  <p className='text-muted-foreground text-xs'>{t('appsScanToDownload')}</p>
+          <SettingsCard
+            key={app.key}
+            className='flex flex-col'
+            title={
+              <span className='flex items-center gap-3'>
+                <img src={app.icon} alt='' className='size-9 rounded-lg' />
+                {app.title}
+              </span>
+            }
+            description={app.about}
+          >
+            {/* Scanned with the tablet's camera, it opens the download straight away: nothing to type */}
+            {appsUrl && (
+              <div className='flex items-center gap-4 px-5 py-4'>
+                <div className='shrink-0 rounded-md border bg-white p-1.5'>
+                  <QRCodeSVG
+                    value={absoluteUrl(`${appsUrl}/${app.file}`)}
+                    size={88}
+                    level='M'
+                    marginSize={0}
+                    bgColor='#ffffff'
+                    fgColor='#000000'
+                  />
                 </div>
-              )}
-              <div className='mt-auto flex flex-wrap gap-2 pt-2'>
-                {appsUrl ? (
-                  <Button asChild>
-                    <a href={`${appsUrl}/${app.file}`}>
-                      <Download className='size-4' />
-                      {t('appsDownloadAndroid')}
-                    </a>
-                  </Button>
-                ) : (
-                  <Button disabled title={t('appsNotPublishedHere')}>
-                    <Download className='size-4' />
+                <p className='text-muted-foreground text-sm'>
+                  {t('appsScanToDownload')}
+                </p>
+              </div>
+            )}
+            <div className='flex flex-wrap gap-2 px-5 py-4'>
+              {appsUrl ? (
+                <Button asChild>
+                  <a href={`${appsUrl}/${app.file}`}>
+                    <Download />
                     {t('appsDownloadAndroid')}
-                  </Button>
-                )}
-                <Button variant='outline' asChild>
-                  <a href={staffOrigin(app.key)} target='_blank' rel='noreferrer'>
-                    {t('appsOpenWeb')}
                   </a>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <Button disabled title={t('appsNotPublishedHere')}>
+                  <Download />
+                  {t('appsDownloadAndroid')}
+                </Button>
+              )}
+              <Button variant='outline' asChild>
+                <a href={staffOrigin(app.key)} target='_blank' rel='noreferrer'>
+                  {t('appsOpenWeb')}
+                </a>
+              </Button>
+            </div>
+          </SettingsCard>
         ))}
       </div>
 
       {/* The kitchen's printer on a Windows PC: a download here, a pairing link from the branch's kitchen */}
       {features.kds && (
-        <Card>
-          <CardContent className='flex flex-col gap-3 pt-6'>
-            <div className='flex items-center gap-3'>
-              <div className='bg-muted grid size-10 place-items-center rounded-lg'>
-                <Printer className='size-5' />
-              </div>
-              <div className='text-base font-semibold'>{t('appsConnectorTitle')}</div>
-            </div>
-            <p className='text-muted-foreground text-sm'>{t('appsConnectorAbout')}</p>
-            <div className='flex flex-wrap gap-2 pt-2'>
-              {appsUrl ? (
-                <Button asChild>
-                  <a href={`${appsUrl}/${CONNECTOR_FILE}`}>
-                    <Download className='size-4' />
+        <SettingsCard>
+          <SettingRow
+            icon={Printer}
+            title={t('appsConnectorTitle')}
+            description={t('appsConnectorAbout')}
+            control={
+              <div className='flex flex-wrap gap-2'>
+                {appsUrl ? (
+                  <Button asChild>
+                    <a href={`${appsUrl}/${CONNECTOR_FILE}`}>
+                      <Download />
+                      {t('appsDownloadWindows')}
+                    </a>
+                  </Button>
+                ) : (
+                  <Button disabled title={t('appsNotPublishedHere')}>
+                    <Download />
                     {t('appsDownloadWindows')}
-                  </a>
+                  </Button>
+                )}
+                <Button variant='outline' asChild>
+                  <Link to='/branches'>{t('appsConnectorPair')}</Link>
                 </Button>
-              ) : (
-                <Button disabled title={t('appsNotPublishedHere')}>
-                  <Download className='size-4' />
-                  {t('appsDownloadWindows')}
-                </Button>
-              )}
-              <Button variant='outline' asChild>
-                <Link to='/branches'>{t('appsConnectorPair')}</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            }
+          />
+        </SettingsCard>
       )}
 
       {/* The connect code: the app scans it (or the staff type the address) once, on first open */}
-      <Card>
-        <CardContent className='flex flex-col gap-6 pt-6 sm:flex-row sm:items-center'>
-          <div className='mx-auto shrink-0 rounded-xl border bg-white p-3'>
-            <QRCodeSVG value={apiUrl} size={168} level='M' marginSize={1} bgColor='#ffffff' fgColor='#000000' />
+      <SettingsCard
+        title={t('appsConnectTitle')}
+        description={t('appsConnectHint')}
+      >
+        <div className='flex flex-col gap-5 px-5 py-4 sm:flex-row sm:items-center'>
+          <div className='mx-auto shrink-0 rounded-xl border bg-white p-3 sm:mx-0'>
+            <QRCodeSVG
+              value={apiUrl}
+              size={168}
+              level='M'
+              marginSize={1}
+              bgColor='#ffffff'
+              fgColor='#000000'
+            />
           </div>
           <div className='min-w-0 flex-1 space-y-3'>
-            <div className='flex items-center gap-2 text-base font-semibold'>
-              <Smartphone className='size-4' />
-              {t('appsConnectTitle')}
-            </div>
-            <p className='text-muted-foreground text-sm'>{t('appsConnectHint')}</p>
             <div className='flex flex-wrap items-center gap-2'>
               <code className='bg-muted rounded-md px-2 py-1 text-sm' dir='ltr'>
                 {apiUrl.replace(/^https?:\/\//, '')}
               </code>
               <Button variant='ghost' size='sm' onClick={copyAddress}>
-                <Copy className='size-4' />
+                <Copy />
                 {t('copy')}
               </Button>
             </div>
-            <p className='text-muted-foreground text-xs'>{t('appsIosHint')}</p>
+            <p className='text-muted-foreground text-sm'>{t('appsIosHint')}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SettingsCard>
     </Main>
   )
 }

@@ -14,13 +14,14 @@ import { toast } from '@/lib/toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ErrorState } from '@/components/error-state'
+import { Field, FieldGrid } from '@/components/field'
+import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
@@ -60,11 +61,21 @@ export function PaymentSettingsPage() {
   const t = useT()
   const query = useQuery(getPaymentSettingsOptions(settingsQuery))
   const settings = query.data
+  const provider = settings?.provider || 'Paymob'
 
   return (
     <Main>
       <PageHeader
-        title={t('onlinePaymentsNav')}
+        // The provider by its own mark, as Talabat's page wears Talabat's
+        title={
+          provider === 'Paymob' ? (
+            <span className='flex items-center gap-3'>
+              <img src={paymobLogo} alt='Paymob' className='h-6 w-auto' />
+            </span>
+          ) : (
+            <span dir='ltr'>{provider}</span>
+          )
+        }
         description={t('paySettingsDescription')}
         badge={
           settings &&
@@ -83,7 +94,7 @@ export function PaymentSettingsPage() {
         // Re-seeded from every save: the secrets go back to "kept"
         <SettingsForm key={query.dataUpdatedAt} settings={settings} />
       ) : (
-        <Skeleton className='h-[40rem] w-full' />
+        <Skeleton className='h-[40rem] w-full rounded-xl' />
       )}
     </Main>
   )
@@ -149,34 +160,22 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
       )}
 
       {/* The business's own account at the provider */}
-      <Card>
-        <CardContent className='space-y-5 pt-6'>
-          <h2 className='font-semibold'>{t('payAccount')}</h2>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label>{t('payProvider')}</Label>
-              {/* The provider by its mark (Paymob's own wordmark), where its name sat in a field nobody could change */}
-              <div className='flex h-9 items-center'>
-                {(settings.provider || 'Paymob') === 'Paymob' ? (
-                  <img src={paymobLogo} alt='Paymob' className='h-6 w-auto' />
-                ) : (
-                  <span dir='ltr'>{settings.provider}</span>
-                )}
-              </div>
-            </div>
-            <div className='space-y-1.5'>
-              <Label htmlFor='pay-currency'>{t('payCurrency')}</Label>
-              <Input
-                id='pay-currency'
-                value={form.currency}
-                maxLength={3}
-                dir='ltr'
-                className='uppercase'
-                onChange={(e) => set('currency', e.target.value)}
-              />
-            </div>
-          </div>
-
+      <SettingsCard title={t('payAccount')}>
+        <SettingRow
+          title={t('payCurrency')}
+          control={
+            <Input
+              id='pay-currency'
+              aria-label={t('payCurrency')}
+              value={form.currency}
+              maxLength={3}
+              dir='ltr'
+              className='w-24 uppercase'
+              onChange={(e) => set('currency', e.target.value)}
+            />
+          }
+        />
+        <div className='grid gap-4 px-5 py-4'>
           <SecretField
             id='pay-secret-key'
             label={t('paySecretKey')}
@@ -186,8 +185,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
             onChange={(edit) => set('secretKey', edit)}
             disabled={secretsLocked}
           />
-          <div className='space-y-1.5'>
-            <Label htmlFor='pay-public-key'>{t('payPublicKey')}</Label>
+          <Field label={t('payPublicKey')} htmlFor='pay-public-key'>
             <Input
               id='pay-public-key'
               value={form.publicKey}
@@ -195,7 +193,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
               autoComplete='off'
               onChange={(e) => set('publicKey', e.target.value)}
             />
-          </div>
+          </Field>
           <SecretField
             id='pay-hmac'
             label={t('payHmacSecret')}
@@ -204,38 +202,40 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
             onChange={(edit) => set('hmacSecret', edit)}
             disabled={secretsLocked}
           />
-
-          <div className='space-y-2'>
-            <Label>{t('payIntegrations')}</Label>
-            <p className='text-muted-foreground text-xs'>
+        </div>
+        <div className='grid gap-3 px-5 py-4'>
+          <div>
+            <div className='text-sm font-medium'>{t('payIntegrations')}</div>
+            <p className='text-muted-foreground mt-0.5 text-sm'>
               {t('payIntegrationsHint')}
             </p>
-            <div className='grid gap-4 sm:grid-cols-3'>
-              {(
-                [
-                  ['cardIntegrationId', 'payIntegrationCard'],
-                  ['walletIntegrationId', 'payIntegrationWallet'],
-                  ['applePayIntegrationId', 'payIntegrationApplePay'],
-                ] as const
-              ).map(([key, label]) => (
-                <div key={key} className='space-y-1.5'>
-                  <Label htmlFor={`pay-${key}`} className='text-xs'>
-                    {t(label)}
-                  </Label>
-                  <Input
-                    id={`pay-${key}`}
-                    value={form[key]}
-                    inputMode='numeric'
-                    dir='ltr'
-                    onChange={(e) => set(key, e.target.value)}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
-
-          <div className='space-y-1.5'>
-            <Label htmlFor='pay-callback'>{t('payCallbackUrl')}</Label>
+          <FieldGrid cols={3}>
+            {(
+              [
+                ['cardIntegrationId', 'payIntegrationCard'],
+                ['walletIntegrationId', 'payIntegrationWallet'],
+                ['applePayIntegrationId', 'payIntegrationApplePay'],
+              ] as const
+            ).map(([key, label]) => (
+              <Field key={key} label={t(label)} htmlFor={`pay-${key}`}>
+                <Input
+                  id={`pay-${key}`}
+                  value={form[key]}
+                  inputMode='numeric'
+                  dir='ltr'
+                  onChange={(e) => set(key, e.target.value)}
+                />
+              </Field>
+            ))}
+          </FieldGrid>
+        </div>
+        <div className='px-5 py-4'>
+          <Field
+            label={t('payCallbackUrl')}
+            htmlFor='pay-callback'
+            hint={t('payCallbackHint')}
+          >
             <div className='flex gap-2'>
               <Input
                 id='pay-callback'
@@ -245,27 +245,18 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
                 className='font-mono text-xs'
                 onFocus={(e) => e.target.select()}
               />
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                onClick={copyCallback}
-              >
-                <Copy className='size-4' />
+              <Button type='button' variant='outline' onClick={copyCallback}>
+                <Copy />
                 {t('copy')}
               </Button>
             </div>
-            <p className='text-muted-foreground text-xs'>
-              {t('payCallbackHint')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </Field>
+        </div>
+      </SettingsCard>
 
       {/* The provider's fee */}
-      <Card>
-        <CardContent className='space-y-4 pt-6'>
-          <h2 className='font-semibold'>{t('payFee')}</h2>
+      <SettingsCard title={t('payFee')}>
+        <div className='grid gap-2 px-5 py-4'>
           <ToggleGroup
             type='single'
             variant='outline'
@@ -280,75 +271,69 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
               {t('payFeeGuest')}
             </ToggleGroupItem>
           </ToggleGroup>
-          <p className='text-muted-foreground text-xs'>
+          <p className='text-muted-foreground text-sm'>
             {form.feeMode === FEE_GUEST
               ? t('payFeeGuestHint')
               : t('payFeeBusinessHint')}
           </p>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label htmlFor='pay-fee-percent'>{t('payFeePercent')}</Label>
-              <Input
-                id='pay-fee-percent'
-                value={form.feePercent}
-                inputMode='decimal'
-                dir='ltr'
-                onChange={(e) => set('feePercent', e.target.value)}
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <Label htmlFor='pay-fee-fixed'>{t('payFeeFixed')}</Label>
-              <Input
-                id='pay-fee-fixed'
-                value={form.feeFixed}
-                inputMode='decimal'
-                dir='ltr'
-                onChange={(e) => set('feeFixed', e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <FieldGrid className='px-5 py-4'>
+          <Field label={t('payFeePercent')} htmlFor='pay-fee-percent'>
+            <Input
+              id='pay-fee-percent'
+              value={form.feePercent}
+              inputMode='decimal'
+              dir='ltr'
+              onChange={(e) => set('feePercent', e.target.value)}
+            />
+          </Field>
+          <Field label={t('payFeeFixed')} htmlFor='pay-fee-fixed'>
+            <Input
+              id='pay-fee-fixed'
+              value={form.feeFixed}
+              inputMode='decimal'
+              dir='ltr'
+              onChange={(e) => set('feeFixed', e.target.value)}
+            />
+          </Field>
+        </FieldGrid>
+      </SettingsCard>
 
       {/* What guests see on their phones */}
-      <Card>
-        <CardContent className='space-y-5 pt-6'>
-          <div className='space-y-2'>
-            <Label>{t('paySplitModes')}</Label>
-            <p className='text-muted-foreground text-xs'>
-              {t('paySplitModesHint')}
-            </p>
-            <div className='divide-y rounded-lg border'>
-              {(
-                [
-                  ['allowItems', 'paySplitItems'],
-                  ['allowEqual', 'paySplitEqual'],
-                  ['allowCustom', 'paySplitCustom'],
-                ] as const
-              ).map(([key, label]) => (
-                <div
-                  key={key}
-                  className='flex items-center justify-between p-3'
-                >
-                  <Label htmlFor={`pay-${key}`} className='text-sm'>
-                    {t(label)}
-                  </Label>
-                  <Switch
-                    id={`pay-${key}`}
-                    checked={form[key]}
-                    onCheckedChange={(v) => set(key, v)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SettingsCard
+        title={t('paySplitModes')}
+        description={t('paySplitModesHint')}
+      >
+        {(
+          [
+            ['allowItems', 'paySplitItems'],
+            ['allowEqual', 'paySplitEqual'],
+            ['allowCustom', 'paySplitCustom'],
+          ] as const
+        ).map(([key, label]) => (
+          <SettingRow
+            key={key}
+            title={t(label)}
+            control={
+              <Switch
+                id={`pay-${key}`}
+                aria-label={t(label)}
+                checked={form[key]}
+                onCheckedChange={(v) => set(key, v)}
+              />
+            }
+          />
+        ))}
+      </SettingsCard>
 
-      {problem && <p className='text-destructive text-sm'>{problem}</p>}
-      <div className='flex justify-end'>
+      {/* One Save for the whole page: the three cards are one settings form */}
+      <div className='flex flex-wrap items-center justify-end gap-3'>
+        {problem && (
+          <p className='text-destructive me-auto text-sm'>{problem}</p>
+        )}
         <Button type='submit' disabled={save.isPending}>
-          {save.isPending ? t('saving') : t('save')}
+          {save.isPending && <Spinner />}
+          {t('save')}
         </Button>
       </div>
     </form>
@@ -380,8 +365,7 @@ function SecretField({
   const typing = !isSet || edit.mode === 'replace'
 
   return (
-    <div className='space-y-1.5'>
-      <Label htmlFor={id}>{label}</Label>
+    <Field label={label} htmlFor={typing ? id : undefined}>
       {typing ? (
         <div className='flex gap-2'>
           <Input
@@ -400,7 +384,6 @@ function SecretField({
             <Button
               type='button'
               variant='ghost'
-              size='sm'
               onClick={() => onChange({ mode: 'keep' })}
             >
               {t('cancel')}
@@ -408,7 +391,7 @@ function SecretField({
           )}
         </div>
       ) : edit.mode === 'remove' ? (
-        <div className='flex items-center justify-between gap-2 rounded-md border border-dashed px-3 py-2 text-sm'>
+        <div className='flex items-center justify-between gap-2 rounded-md border border-dashed px-3 py-1.5 text-sm'>
           <span className='text-destructive'>{t('payWillRemove')}</span>
           <Button
             type='button'
@@ -452,6 +435,6 @@ function SecretField({
           </span>
         </div>
       )}
-    </div>
+    </Field>
   )
 }

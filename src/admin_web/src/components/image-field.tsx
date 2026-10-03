@@ -25,6 +25,7 @@ export function ImageField({
   onRemove,
   assist,
   removeLabel,
+  contain,
 }: {
   label?: ReactNode
   /** One line under the actions: the size it wants, where it shows */
@@ -39,6 +40,8 @@ export function ImageField({
   /** An AiButton that makes the picture */
   assist?: ReactNode
   removeLabel?: string
+  /** A logo shows whole, never cropped; a photo fills its tile */
+  contain?: boolean
 }) {
   const t = useT()
   const input = useRef<HTMLInputElement>(null)
@@ -64,7 +67,9 @@ export function ImageField({
             alt=''
             className={cn(
               'h-full w-full',
-              shape === 'wide' ? 'object-contain p-1' : 'object-cover'
+              shape === 'wide' || contain
+                ? 'object-contain p-1'
+                : 'object-cover'
             )}
           />
         ) : (

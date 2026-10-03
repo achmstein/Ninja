@@ -3,13 +3,13 @@ import {
   type MenuProposal,
   type ProposedChoice,
 } from '@/api/catalog'
-import { toNumber } from '@/lib/money'
 import {
   fromLocalizedValue,
   isBlank,
   type LocalizedValue,
   toLocalizedValue,
-} from '@/components/localized-input'
+} from '@/lib/localized-value'
+import { toNumber } from '@/lib/money'
 
 /** Where a proposed section's items go: an existing category's id, or a new one */
 export const NEW_CATEGORY = 'new'

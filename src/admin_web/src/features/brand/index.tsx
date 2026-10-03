@@ -1,7 +1,7 @@
-import { type ReactNode, useMemo, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ImagePlus, Info, Lock, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ChevronDown, Lock, X } from 'lucide-react'
 import { type TenantFeatures, type TenantThemeDto } from '@/api/tenant'
 import {
   deleteTenantImageMutation,
@@ -17,26 +17,30 @@ import {
   type Brand,
 } from '@/lib/brand'
 import {
+  ARABIC_FONT_CATALOG,
+  ARABIC_FONTS,
+  ensureFontPreviews,
+  knownFont,
+  LATIN_FONT_CATALOG,
+  LATIN_FONTS,
+  type BrandFont,
+} from '@/lib/brand-fonts'
+import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
+import { RADII } from '@/lib/brand-theme'
+import {
   contentLanguagesOf,
   type ContentLanguages,
 } from '@/lib/content-languages'
-import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
-import { ARABIC_FONT_CATALOG, ARABIC_FONTS, ensureFontPreviews, knownFont, LATIN_FONT_CATALOG, LATIN_FONTS, type BrandFont } from '@/lib/brand-fonts'
-import { RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -46,7 +50,18 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { ContrastNotice } from '@/components/brand/contrast-notice'
+import { FontOptions } from '@/components/brand/font-options'
+import { LivePreview } from '@/components/brand/live-preview'
+import { useLogoCleanup } from '@/components/brand/logo-cleanup'
+import {
+  PreviewToggles,
+  usePreviewState,
+  type PreviewDraft,
+} from '@/components/brand/phone-preview'
+import { Field, FieldGrid, SwitchRow } from '@/components/field'
+import { ImageField } from '@/components/image-field'
+import { SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import {
   LocalizedInput,
@@ -56,13 +71,13 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
-import { ContrastNotice } from '@/components/brand/contrast-notice'
-import { LivePreview } from '@/components/brand/live-preview'
-import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
-import { FontOptions } from '@/components/brand/font-options'
-import { useLogoCleanup } from '@/components/brand/logo-cleanup'
 
-const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean; addon?: boolean }[] = [
+const FEATURE_ROWS: {
+  key: keyof TenantFeatures
+  label: TranslationKey
+  needsPlaces?: boolean
+  addon?: boolean
+}[] = [
   // Both hang off a place: a cloud kitchen, with none, is not offered them
   { key: 'reservations', label: 'featureReservations', needsPlaces: true },
   { key: 'timeBilling', label: 'featureTimeBilling', needsPlaces: true },
@@ -140,15 +155,25 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkSurface: t.dark?.surface ?? '',
   slab: t.slab === 'neutral' ? 'neutral' : '',
   // Rows are what a business gets when it chooses nothing, so a saved 'row' reads as that
-  menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(t.layout?.menuItem ?? '') ? (t.layout?.menuItem ?? '') : '',
+  menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(
+    t.layout?.menuItem ?? ''
+  )
+    ? (t.layout?.menuItem ?? '')
+    : '',
   // Cards are what a business gets when it chooses nothing, so a saved 'cards' reads as that
-  places: ['list', 'grid'].includes(t.layout?.places ?? '') ? (t.layout?.places ?? '') : '',
+  places: ['list', 'grid'].includes(t.layout?.places ?? '')
+    ? (t.layout?.places ?? '')
+    : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
 
 const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
-  const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
+  const dark = {
+    primary: orNull(f.darkPrimary),
+    accent: orNull(f.darkAccent),
+    surface: orNull(f.darkSurface),
+  }
   return {
     accent: orNull(f.accent),
     surface: orNull(f.surface),
@@ -164,7 +189,15 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     // The parts the business picks for now: the menu's style and the Book tab's
     layout:
       f.menuItem || f.places
-        ? { menuItem: f.menuItem || null, categories: null, header: null, buttons: null, surface: null, density: null, places: f.places || null }
+        ? {
+            menuItem: f.menuItem || null,
+            categories: null,
+            header: null,
+            buttons: null,
+            surface: null,
+            density: null,
+            places: f.places || null,
+          }
         : null,
   }
 }
@@ -191,7 +224,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const t = useT()
   const queryClient = useQueryClient()
 
-  const [arabicStyle, setArabicStyle] = useState<string>(brand.locale.arabicStyle ?? 'egyptian')
+  const [arabicStyle, setArabicStyle] = useState<string>(
+    brand.locale.arabicStyle ?? 'egyptian'
+  )
   const [contentLanguages, setContentLanguages] = useState<ContentLanguages>(
     contentLanguagesOf(brand.locale.contentLanguages)
   )
@@ -201,7 +236,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<TenantFeatures>(brand.features)
   const cloudKitchen = useIsCloudKitchen()
-  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(brand.guestOrdersAnywhere ?? false)
+  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(
+    brand.guestOrdersAnywhere ?? false
+  )
   const [error, setError] = useState<string | null>(null)
 
   const put = (next: Brand) => queryClient.setQueryData(brandQueryKey(), next)
@@ -244,17 +281,33 @@ function BrandForm({ brand }: { brand: Brand }) {
     (uploadImage.isPending && uploadImage.variables?.path.slot) ||
     (deleteImage.isPending && deleteImage.variables?.path.slot) ||
     logoCleanup.busySlot
-  const imageSlot = ({ slot, label, hint }: { slot: ImageSlot; label: TranslationKey; hint?: TranslationKey }) => (
-    <ImageSlotField
+  // A mark is square, a wordmark wide, the cover a cropped photo; an SVG is
+  // drawn as a PNG before it is uploaded, and a photo is never a vector
+  const imageSlot = ({
+    slot,
+    label,
+    hint,
+  }: {
+    slot: ImageSlot
+    label: TranslationKey
+    hint?: TranslationKey
+  }) => (
+    <ImageField
       key={slot}
       label={t(label)}
       hint={hint && t(hint)}
       src={imageOf(brand, slot)?.url ?? null}
-      square={isMark(slot)}
-      photo={isPhoto(slot)}
+      shape={isPhoto(slot) ? 'photo' : isMark(slot) ? 'square' : 'wide'}
+      contain={!isPhoto(slot)}
+      accept={
+        isPhoto(slot)
+          ? undefined
+          : 'image/png,image/jpeg,image/webp,image/svg+xml'
+      }
       busy={busySlot === slot}
-      onUpload={(file) => logoCleanup.pick(slot, file)}
+      onFile={(file) => logoCleanup.pick(slot, file)}
       onRemove={() => deleteImage.mutate({ path: { slot } })}
+      removeLabel={t('removeLogo')}
     />
   )
 
@@ -301,42 +354,59 @@ function BrandForm({ brand }: { brand: Brand }) {
     [brand]
   )
   const dirty =
-    JSON.stringify({ name: draft.name, primaryColor: draft.primaryColor, theme: draft.theme }) !==
-    JSON.stringify(savedDraft)
+    JSON.stringify({
+      name: draft.name,
+      primaryColor: draft.primaryColor,
+      theme: draft.theme,
+    }) !== JSON.stringify(savedDraft)
 
   return (
     <form onSubmit={handleSubmit}>
       <div className='grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]'>
-        <Card>
-          <CardContent className='space-y-6 pt-6'>
-            <LocalizedInput
-              id='brand-name'
-              label={t('name')}
-              value={name}
-              onChange={setName}
-              error={error ?? undefined}
-            />
+        <div className='grid min-w-0 content-start gap-6'>
+          {/* Who the business is: its name and its marks */}
+          <SettingsCard title={t('brandIdentity')}>
+            <div className='grid gap-6 px-5 py-4'>
+              <LocalizedInput
+                id='brand-name'
+                label={t('name')}
+                value={name}
+                onChange={setName}
+                error={error ?? undefined}
+              />
+              <div className='grid gap-6 sm:grid-cols-2'>
+                {MAIN_SLOTS.map(imageSlot)}
+              </div>
+              {/* Only the banner header shows it */}
+              {imageSlot({
+                slot: 'cover',
+                label: 'brandCover',
+                hint: 'brandCoverHint',
+              })}
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='group -ms-2'
+                  >
+                    <ChevronDown className='transition-transform group-data-[state=open]:rotate-180' />
+                    {t('brandVariants')}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className='grid gap-6 pt-4 sm:grid-cols-2'>
+                  {VARIANT_SLOTS.map(imageSlot)}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          </SettingsCard>
+          {logoCleanup.dialog}
 
-            <div className='grid gap-6 sm:grid-cols-2'>{MAIN_SLOTS.map(imageSlot)}</div>
-            {/* Only the banner header shows it */}
-            {imageSlot({ slot: 'cover', label: 'brandCover', hint: 'brandCoverHint' })}
-
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button type='button' variant='ghost' size='sm' className='-ms-2 group'>
-                  <ChevronDown className='me-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180' />
-                  {t('brandVariants')}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className='grid gap-6 pt-4 sm:grid-cols-2'>
-                {VARIANT_SLOTS.map(imageSlot)}
-              </CollapsibleContent>
-            </Collapsible>
-            {logoCleanup.dialog}
-
-            <div className='space-y-3'>
-              <Label>{t('brandTheme')}</Label>
-              <div className='grid items-start gap-3 sm:grid-cols-2'>
+          {/* How the customer app looks */}
+          <SettingsCard title={t('brandTheme')}>
+            <div className='grid gap-4 px-5 py-4'>
+              <FieldGrid className='items-start'>
                 <ColorField
                   id='brand-color'
                   label={t('brandColor')}
@@ -359,13 +429,11 @@ function BrandForm({ brand }: { brand: Brand }) {
                   fallback='#ffffff'
                   hint={t('surfaceColorHint')}
                 />
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-radius' className='text-xs'>
-                      {t('cornerRadius')}
-                    </Label>
-                    <FieldHint>{t('cornerRadiusHint')}</FieldHint>
-                  </div>
+                <Field
+                  label={t('cornerRadius')}
+                  htmlFor='brand-radius'
+                  hint={t('cornerRadiusHint')}
+                >
                   <Select
                     value={theme.radius || NONE}
                     onValueChange={(v) =>
@@ -384,15 +452,18 @@ function BrandForm({ brand }: { brand: Brand }) {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-dock' className='text-xs'>
-                      {t('dockColour')}
-                    </Label>
-                    <FieldHint>{t('dockColourHint')}</FieldHint>
-                  </div>
-                  <Select value={theme.slab || NONE} onValueChange={(v) => setTheme({ ...theme, slab: v === NONE ? '' : v })}>
+                </Field>
+                <Field
+                  label={t('dockColour')}
+                  htmlFor='brand-dock'
+                  hint={t('dockColourHint')}
+                >
+                  <Select
+                    value={theme.slab || NONE}
+                    onValueChange={(v) =>
+                      setTheme({ ...theme, slab: v === NONE ? '' : v })
+                    }
+                  >
                     <SelectTrigger id='brand-dock' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
@@ -401,115 +472,152 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='neutral'>{t('dockBlack')}</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-menu' className='text-xs'>
-                      {t('menuLayout')}
-                    </Label>
-                    <FieldHint>{t('menuLayoutHint')}</FieldHint>
-                  </div>
-                  <Select value={theme.menuItem || NONE} onValueChange={(v) => setTheme({ ...theme, menuItem: v === NONE ? '' : v })}>
+                </Field>
+                <Field
+                  label={t('menuLayout')}
+                  htmlFor='brand-menu'
+                  hint={t('menuLayoutHint')}
+                >
+                  <Select
+                    value={theme.menuItem || NONE}
+                    onValueChange={(v) =>
+                      setTheme({ ...theme, menuItem: v === NONE ? '' : v })
+                    }
+                  >
                     <SelectTrigger id='brand-menu' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>{t('menuLayoutClassic')}</SelectItem>
-                      <SelectItem value='card'>{t('menuLayoutGrid')}</SelectItem>
-                      <SelectItem value='compact'>{t('menuLayoutCompact')}</SelectItem>
-                      <SelectItem value='hero'>{t('menuLayoutMagazine')}</SelectItem>
-                      <SelectItem value='deck'>{t('menuLayoutCards')}</SelectItem>
-                      <SelectItem value='tiles'>{t('menuLayoutTiles')}</SelectItem>
+                      <SelectItem value={NONE}>
+                        {t('menuLayoutClassic')}
+                      </SelectItem>
+                      <SelectItem value='card'>
+                        {t('menuLayoutGrid')}
+                      </SelectItem>
+                      <SelectItem value='compact'>
+                        {t('menuLayoutCompact')}
+                      </SelectItem>
+                      <SelectItem value='hero'>
+                        {t('menuLayoutMagazine')}
+                      </SelectItem>
+                      <SelectItem value='deck'>
+                        {t('menuLayoutCards')}
+                      </SelectItem>
+                      <SelectItem value='tiles'>
+                        {t('menuLayoutTiles')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
                 {/* The Book tab is there only where places are booked or timed */}
                 {(features.reservations || features.timeBilling) && (
-                  <div className='space-y-1.5'>
-                    <div className='flex items-center gap-1'>
-                      <Label htmlFor='brand-places' className='text-xs'>
-                        {t('placesLayout')}
-                      </Label>
-                      <FieldHint>{t('placesLayoutHint')}</FieldHint>
-                    </div>
-                    <Select value={theme.places || NONE} onValueChange={(v) => setTheme({ ...theme, places: v === NONE ? '' : v })}>
+                  <Field
+                    label={t('placesLayout')}
+                    htmlFor='brand-places'
+                    hint={t('placesLayoutHint')}
+                  >
+                    <Select
+                      value={theme.places || NONE}
+                      onValueChange={(v) =>
+                        setTheme({ ...theme, places: v === NONE ? '' : v })
+                      }
+                    >
                       <SelectTrigger id='brand-places' className='w-full'>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NONE}>{t('placesLayoutCards')}</SelectItem>
-                        <SelectItem value='list'>{t('placesLayoutList')}</SelectItem>
-                        <SelectItem value='grid'>{t('placesLayoutGrid')}</SelectItem>
+                        <SelectItem value={NONE}>
+                          {t('placesLayoutCards')}
+                        </SelectItem>
+                        <SelectItem value='list'>
+                          {t('placesLayoutList')}
+                        </SelectItem>
+                        <SelectItem value='grid'>
+                          {t('placesLayoutGrid')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Field>
                 )}
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-mode' className='text-xs'>
-                      {t('startingTheme')}
-                    </Label>
-                    <FieldHint>{t('startingThemeHint')}</FieldHint>
-                  </div>
+                <Field
+                  label={t('startingTheme')}
+                  htmlFor='brand-mode'
+                  hint={t('startingThemeHint')}
+                >
                   <Select
                     value={theme.mode || NONE}
-                    onValueChange={(v) => setTheme({ ...theme, mode: v === NONE ? '' : v })}
+                    onValueChange={(v) =>
+                      setTheme({ ...theme, mode: v === NONE ? '' : v })
+                    }
                   >
                     <SelectTrigger id='brand-mode' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={NONE}>{t('followDevice')}</SelectItem>
-                      <SelectItem value='light'>{t('themeLightOption')}</SelectItem>
-                      <SelectItem value='dark'>{t('themeDarkOption')}</SelectItem>
+                      <SelectItem value='light'>
+                        {t('themeLightOption')}
+                      </SelectItem>
+                      <SelectItem value='dark'>
+                        {t('themeDarkOption')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-arabic' className='text-xs'>
-                      {t('arabicStyleLabel')}
-                    </Label>
-                    <FieldHint>{t('arabicStyleLabelHint')}</FieldHint>
-                  </div>
+                </Field>
+                <Field
+                  label={t('arabicStyleLabel')}
+                  htmlFor='brand-arabic'
+                  hint={t('arabicStyleLabelHint')}
+                >
                   <Select value={arabicStyle} onValueChange={setArabicStyle}>
                     <SelectTrigger id='brand-arabic' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='standard'>{t('arabicStandardOption')}</SelectItem>
-                      <SelectItem value='egyptian'>{t('arabicEgyptianOption')}</SelectItem>
+                      <SelectItem value='standard'>
+                        {t('arabicStandardOption')}
+                      </SelectItem>
+                      <SelectItem value='egyptian'>
+                        {t('arabicEgyptianOption')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-content-languages' className='text-xs'>
-                      {t('contentLanguagesLabel')}
-                    </Label>
-                    <FieldHint>{t('contentLanguagesHint')}</FieldHint>
-                  </div>
+                </Field>
+                <Field
+                  label={t('contentLanguagesLabel')}
+                  htmlFor='brand-content-languages'
+                  hint={t('contentLanguagesHint')}
+                >
                   <Select
                     value={contentLanguages}
-                    onValueChange={(value) => setContentLanguages(value as ContentLanguages)}
+                    onValueChange={(value) =>
+                      setContentLanguages(value as ContentLanguages)
+                    }
                   >
-                    <SelectTrigger id='brand-content-languages' className='w-full'>
+                    <SelectTrigger
+                      id='brand-content-languages'
+                      className='w-full'
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='both'>{t('contentLanguagesBoth')}</SelectItem>
-                      <SelectItem value='ar'>{t('contentLanguagesAr')}</SelectItem>
-                      <SelectItem value='en'>{t('contentLanguagesEn')}</SelectItem>
+                      <SelectItem value='both'>
+                        {t('contentLanguagesBoth')}
+                      </SelectItem>
+                      <SelectItem value='ar'>
+                        {t('contentLanguagesAr')}
+                      </SelectItem>
+                      <SelectItem value='en'>
+                        {t('contentLanguagesEn')}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className='space-y-1.5'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='brand-header' className='text-xs'>
-                      {t('headerSize')}
-                    </Label>
-                    <FieldHint>{t('headerSizeHint')}</FieldHint>
-                  </div>
+                </Field>
+                <Field
+                  label={t('headerSize')}
+                  htmlFor='brand-header'
+                  hint={t('headerSizeHint')}
+                >
                   <Select
                     value={theme.headerSize || NONE}
                     onValueChange={(v) =>
@@ -526,7 +634,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                       <SelectItem value='lg'>{t('headerLg')}</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
                 <FontSelect
                   id='brand-font-latin'
                   label={t('fontLatin')}
@@ -541,120 +649,128 @@ function BrandForm({ brand }: { brand: Brand }) {
                   onChange={(fontArabic) => setTheme({ ...theme, fontArabic })}
                   fonts={ARABIC_FONT_CATALOG}
                 />
-              </div>
-              <Collapsible defaultOpen={Boolean(theme.darkPrimary || theme.darkAccent || theme.darkSurface)}>
+              </FieldGrid>
+              <Collapsible
+                defaultOpen={Boolean(
+                  theme.darkPrimary || theme.darkAccent || theme.darkSurface
+                )}
+              >
                 <CollapsibleTrigger asChild>
-                  <Button type='button' variant='ghost' size='sm' className='-ms-2 group'>
-                    <ChevronDown className='me-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180' />
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='group -ms-2'
+                  >
+                    <ChevronDown className='transition-transform group-data-[state=open]:rotate-180' />
                     {t('darkScheme')}
                   </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className='grid gap-3 pt-3 sm:grid-cols-3'>
-                  <ColorField
-                    id='brand-dark-primary'
-                    label={t('brandColor')}
-                    value={theme.darkPrimary}
-                    onChange={(darkPrimary) => setTheme({ ...theme, darkPrimary })}
-                    placeholder={t('derived')}
-                  />
-                  <ColorField
-                    id='brand-dark-accent'
-                    label={t('accentColor')}
-                    value={theme.darkAccent}
-                    onChange={(darkAccent) => setTheme({ ...theme, darkAccent })}
-                    placeholder={t('derived')}
-                  />
-                  <ColorField
-                    id='brand-dark-surface'
-                    label={t('surfaceColor')}
-                    value={theme.darkSurface}
-                    onChange={(darkSurface) => setTheme({ ...theme, darkSurface })}
-                    fallback='#111111'
-                    placeholder={t('derived')}
-                  />
+                <CollapsibleContent className='pt-3'>
+                  <FieldGrid cols={3} className='items-start'>
+                    <ColorField
+                      id='brand-dark-primary'
+                      label={t('brandColor')}
+                      value={theme.darkPrimary}
+                      onChange={(darkPrimary) =>
+                        setTheme({ ...theme, darkPrimary })
+                      }
+                      placeholder={t('derived')}
+                    />
+                    <ColorField
+                      id='brand-dark-accent'
+                      label={t('accentColor')}
+                      value={theme.darkAccent}
+                      onChange={(darkAccent) =>
+                        setTheme({ ...theme, darkAccent })
+                      }
+                      placeholder={t('derived')}
+                    />
+                    <ColorField
+                      id='brand-dark-surface'
+                      label={t('surfaceColor')}
+                      value={theme.darkSurface}
+                      onChange={(darkSurface) =>
+                        setTheme({ ...theme, darkSurface })
+                      }
+                      fallback='#111111'
+                      placeholder={t('derived')}
+                    />
+                  </FieldGrid>
                 </CollapsibleContent>
               </Collapsible>
-              <ContrastNotice input={{ primaryColor: orNull(color), theme: fromThemeForm(theme) }} />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='brand-customer-url'>{t('customerUrl')}</Label>
-              <Input
-                id='brand-customer-url'
-                type='url'
-                value={customerUrl}
-                onChange={(e) => setCustomerUrl(e.target.value)}
-                placeholder={defaultCustomerOrigin()}
-                dir='ltr'
+              <ContrastNotice
+                input={{
+                  primaryColor: orNull(color),
+                  theme: fromThemeForm(theme),
+                }}
               />
             </div>
+          </SettingsCard>
 
-            <div className='space-y-2'>
-              <Label>{t('features')}</Label>
-              <div className='divide-y rounded-lg border'>
-                {FEATURE_ROWS.filter(
-                  (row) =>
-                    (!row.needsPlaces || !cloudKitchen) &&
-                    (!row.addon || brand.entitlements?.[row.key] === true)
-                ).map((row) => {
-                  // What the plan allows: a module outside it stays off, and says why
-                  const entitled = brand.entitlements?.[row.key] ?? true
-                  return (
-                    <div
-                      key={row.key}
-                      className='flex items-center justify-between p-3'
-                    >
-                      <Label htmlFor={`feature-${row.key}`} className='flex items-center gap-2 text-sm'>
-                        {t(row.label)}
-                        {!entitled && (
-                          <span className='text-muted-foreground flex items-center gap-1 text-xs'>
-                            <Lock className='size-3.5' />
-                            {t('notInPlan')}
-                          </span>
-                        )}
-                      </Label>
-                      <Switch
-                        id={`feature-${row.key}`}
-                        checked={entitled && features[row.key]}
-                        disabled={!entitled}
-                        onCheckedChange={(v) =>
-                          setFeatures({ ...features, [row.key]: v })
-                        }
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* The business's, not a branch's: every branch takes guests' orders the same way, and it changes live */}
-            <div className='space-y-2'>
-              <Label>{t('guestOrdering')}</Label>
-              <div className='flex items-start justify-between gap-4 rounded-lg border p-3'>
-                <div className='grid gap-1'>
-                  <div className='flex items-center gap-1'>
-                    <Label htmlFor='guest-orders-anywhere' className='text-sm'>
-                      {t('guestOrdersAnywhere')}
-                    </Label>
-                    <FieldHint>{t('guestOrdersAnywhereHint')}</FieldHint>
-                  </div>
-                </div>
-                <Switch
-                  id='guest-orders-anywhere'
-                  checked={guestOrdersAnywhere}
-                  onCheckedChange={setGuestOrdersAnywhere}
+          {/* Where and how guests order. The business's, not a branch's: every branch takes guests' orders the same way, and it changes live */}
+          <SettingsCard title={t('guestOrdering')}>
+            <div className='px-5 py-4'>
+              <Field label={t('customerUrl')} htmlFor='brand-customer-url'>
+                <Input
+                  id='brand-customer-url'
+                  type='url'
+                  value={customerUrl}
+                  onChange={(e) => setCustomerUrl(e.target.value)}
+                  placeholder={defaultCustomerOrigin()}
+                  dir='ltr'
                 />
-              </div>
+              </Field>
             </div>
+            <SwitchRow
+              className='px-5 py-4'
+              title={t('guestOrdersAnywhere')}
+              description={t('guestOrdersAnywhereHint')}
+              checked={guestOrdersAnywhere}
+              onCheckedChange={setGuestOrdersAnywhere}
+            />
+          </SettingsCard>
 
-            <div className='flex justify-end'>
-              <Button type='submit' disabled={update.isPending}>
-                {update.isPending && <Spinner />}
-                {t('save')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Which parts of the platform are on */}
+          <SettingsCard title={t('features')}>
+            {FEATURE_ROWS.filter(
+              (row) =>
+                (!row.needsPlaces || !cloudKitchen) &&
+                (!row.addon || brand.entitlements?.[row.key] === true)
+            ).map((row) => {
+              // What the plan allows: a module outside it stays off, and says why
+              const entitled = brand.entitlements?.[row.key] ?? true
+              return (
+                <SwitchRow
+                  key={row.key}
+                  className='px-5 py-4'
+                  title={t(row.label)}
+                  description={
+                    entitled ? undefined : (
+                      <span className='flex items-center gap-1'>
+                        <Lock className='size-3.5' />
+                        {t('notInPlan')}
+                      </span>
+                    )
+                  }
+                  checked={Boolean(entitled && features[row.key])}
+                  disabled={!entitled}
+                  onCheckedChange={(v) =>
+                    setFeatures({ ...features, [row.key]: v })
+                  }
+                />
+              )
+            })}
+          </SettingsCard>
+
+          {/* One Save for the whole brand: the cards are one form, the preview shows the draft */}
+          <div className='flex justify-end'>
+            <Button type='submit' disabled={update.isPending}>
+              {update.isPending && <Spinner />}
+              {t('save')}
+            </Button>
+          </div>
+        </div>
 
         <div className='flex flex-col items-center gap-3 lg:sticky lg:top-4 lg:self-start'>
           <div className='flex items-center gap-2'>
@@ -664,108 +780,24 @@ function BrandForm({ brand }: { brand: Brand }) {
               onLanguage={preview.setLanguage}
               onScheme={preview.setScheme}
             />
-            <Badge variant={dirty ? 'secondary' : 'outline'}>{t(dirty ? 'draft' : 'previewLive')}</Badge>
+            <Badge variant={dirty ? 'secondary' : 'outline'}>
+              {t(dirty ? 'draft' : 'previewLive')}
+            </Badge>
           </div>
           <LivePreview
             customerUrl={customerOrigin}
             version={brand.version}
             language={preview.language}
             scheme={preview.scheme}
-            draft={dirty ? { primaryColor: draft.primaryColor, theme: draft.theme } : null}
+            draft={
+              dirty
+                ? { primaryColor: draft.primaryColor, theme: draft.theme }
+                : null
+            }
           />
         </div>
       </div>
     </form>
-  )
-}
-
-/** One image slot: the picture (or an empty tile), upload, remove. */
-function ImageSlotField({
-  label,
-  hint,
-  src,
-  square,
-  photo,
-  busy,
-  onUpload,
-  onRemove,
-}: {
-  label: string
-  /** A line under the slot on the size it wants and where it shows */
-  hint?: string
-  src: string | null
-  square?: boolean
-  /** A photo is cropped to fill a wider tile */
-  photo?: boolean
-  busy: boolean
-  onUpload: (file: File) => void
-  onRemove: () => void
-}) {
-  const t = useT()
-  const input = useRef<HTMLInputElement>(null)
-  return (
-    <div className='space-y-2'>
-      <div className='flex items-center gap-1'>
-        <Label className='text-xs'>{label}</Label>
-        {hint && <FieldHint>{hint}</FieldHint>}
-      </div>
-      <div className='flex items-center gap-3'>
-        <button
-          type='button'
-          className={cn(
-            'bg-muted hover:bg-muted/80 flex h-20 shrink-0 items-center justify-center overflow-hidden rounded-md border',
-            square ? 'w-20' : photo ? 'w-52' : 'w-40'
-          )}
-          onClick={() => input.current?.click()}
-          disabled={busy}
-          aria-label={t('uploadLogo')}
-        >
-          {busy ? (
-            <Spinner />
-          ) : src ? (
-            <img src={src} alt='' className={cn('h-full w-full', photo ? 'object-cover' : 'object-contain p-1')} />
-          ) : (
-            <ImagePlus className='text-muted-foreground h-6 w-6' />
-          )}
-        </button>
-        <div className='flex flex-col gap-1'>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            disabled={busy}
-            onClick={() => input.current?.click()}
-          >
-            {t('uploadLogo')}
-          </Button>
-          {src && (
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              className='text-destructive'
-              disabled={busy}
-              onClick={onRemove}
-            >
-              <X className='size-3.5' />
-              {t('removeLogo')}
-            </Button>
-          )}
-        </div>
-        <input
-          ref={input}
-          type='file'
-          // An SVG is drawn as a PNG before it is uploaded; a photo is never a vector
-          accept={photo ? 'image/png,image/jpeg,image/webp' : 'image/png,image/jpeg,image/webp,image/svg+xml'}
-          className='hidden'
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) onUpload(file)
-            e.target.value = ''
-          }}
-        />
-      </div>
-    </div>
   )
 }
 
@@ -784,10 +816,7 @@ function FontSelect({
 }) {
   const t = useT()
   return (
-    <div className='space-y-1.5'>
-      <Label htmlFor={id} className='text-xs'>
-        {label}
-      </Label>
+    <Field label={label} htmlFor={id}>
       <Select
         value={value || NONE}
         onValueChange={(v) => onChange(v === NONE ? '' : v)}
@@ -801,7 +830,7 @@ function FontSelect({
           <FontOptions catalog={fonts} displayLabel={t('fontDisplayGroup')} />
         </SelectContent>
       </Select>
-    </div>
+    </Field>
   )
 }
 
@@ -821,30 +850,25 @@ function ColorField({
   fallback?: string
   /** What the empty field says; the default is the platform's own colour */
   placeholder?: string
-  /** A line under the field on what the colour reaches */
+  /** What the colour reaches, behind the label's ⓘ */
   hint?: string
 }) {
   const t = useT()
   return (
-    <div className='space-y-1.5'>
-      <div className='flex items-center gap-1'>
-        <Label htmlFor={id} className='text-xs'>
-          {label}
-        </Label>
-        {hint && <FieldHint>{hint}</FieldHint>}
-      </div>
+    <Field label={label} htmlFor={id} hint={hint}>
       <div className='flex items-center gap-2'>
         <input
           id={id}
           type='color'
           value={value || fallback}
           onChange={(e) => onChange(e.target.value)}
-          className='h-9 w-11 cursor-pointer rounded-md border bg-transparent p-1'
+          className='h-9 w-11 shrink-0 cursor-pointer rounded-md border bg-transparent p-1'
         />
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder ?? t('defaultOption')}
+          aria-label={label}
           className='font-mono'
           dir='ltr'
         />
@@ -857,35 +881,10 @@ function ColorField({
             aria-label={t('defaultOption')}
             onClick={() => onChange('')}
           >
-            <X className='h-3.5 w-3.5' />
+            <X />
           </Button>
         )}
       </div>
-    </div>
-  )
-}
-
-/**
- * What a field does, behind a small (i) beside its label: the preview shows
- * a change as it is made, so the words are there for whoever asks, not under
- * every field. A tap opens it, as a hover cannot on a phone.
- */
-function FieldHint({ children }: { children: ReactNode }) {
-  const t = useT()
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type='button'
-          aria-label={t('moreInfo')}
-          className='text-muted-foreground hover:text-foreground grid size-5 place-items-center rounded-full'
-        >
-          <Info className='size-3.5' />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align='start' className='text-muted-foreground w-64 p-3 text-xs leading-relaxed'>
-        {children}
-      </PopoverContent>
-    </Popover>
+    </Field>
   )
 }
