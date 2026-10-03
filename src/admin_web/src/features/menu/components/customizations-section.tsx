@@ -33,6 +33,10 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { AiButton } from '@/components/ai-button'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { EmptyState } from '@/components/empty-state'
+import { SheetActions } from '@/components/entity-sheet'
 import {
   isBlank,
   LocalizedFields,
@@ -51,7 +55,6 @@ import {
   type DraftGroup,
   type OptionRow,
 } from './customization-draft'
-import { ConfirmDialog } from '@/components/confirm-dialog'
 
 type CustomizationsSectionProps = {
   item: CatalogItemDto
@@ -242,11 +245,12 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
         ) : sortedGroups.length === 0 &&
           editing !== 'new' &&
           drafts.length === 0 ? (
-          <div className='text-muted-foreground flex flex-col items-center gap-2 py-6 text-center'>
-            <SlidersHorizontal className='h-8 w-8 opacity-30' />
-            <p className='text-sm font-medium'>{t('noCustomizations')}</p>
-            <p className='text-xs'>{t('addCustomizationsHint')}</p>
-          </div>
+          <EmptyState
+            compact
+            icon={SlidersHorizontal}
+            title={t('noCustomizations')}
+            description={t('addCustomizationsHint')}
+          />
         ) : (
           <div className='flex flex-col'>
             {sortedGroups.map((group, index) => {
@@ -497,21 +501,14 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               {t('addCustomization')}
             </Button>
             {assist.available && (
-              <Button
-                type='button'
-                variant='outline'
-                className='text-primary hover:text-primary border-dashed'
-                title={t('assistSuggestCustomizations')}
-                disabled={assist.isPending || addingDraft != null}
+              <AiButton
+                className='h-9'
+                pending={assist.isPending}
+                disabled={addingDraft != null}
                 onClick={askAssistant}
               >
-                {assist.isPending ? (
-                  <Spinner />
-                ) : (
-                  <Sparkles />
-                )}
                 {t('assistSuggest')}
-              </Button>
+              </AiButton>
             )}
           </div>
         )}
@@ -804,10 +801,11 @@ function GroupEditor({
 
         {error && <p className='text-destructive text-xs'>{error}</p>}
 
-        <div className='flex justify-end gap-2 pt-1'>
+        {/* One group is open at a time, so its Cancel and Save take the sheet's footer */}
+        <SheetActions>
           <Button
             type='button'
-            variant='ghost'
+            variant='outline'
             size='sm'
             onClick={onDone}
             disabled={isSaving}
@@ -820,10 +818,10 @@ function GroupEditor({
             onClick={handleSubmit}
             disabled={isSaving}
           >
-            {isSaving && <Spinner className='size-3.5' />}
+            {isSaving && <Spinner />}
             {isEditing ? t('update') : t('add')}
           </Button>
-        </div>
+        </SheetActions>
       </div>
     </LocalizedFields>
   )

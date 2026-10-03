@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Coffee, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Coffee, Link2, X } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import { setItemPairingsMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
+import { EmptyState } from '@/components/empty-state'
+import { SheetActions } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { itemPictureUrl } from '../pictures'
 
@@ -87,9 +89,12 @@ function PairingsForm({
       </p>
 
       {ids.length === 0 ? (
-        <p className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-sm'>
-          {t('noPairings')}
-        </p>
+        <EmptyState
+          compact
+          icon={Link2}
+          title={t('noPairings')}
+          className='border border-dashed'
+        />
       ) : (
         <ol className='divide-y rounded-md border'>
           {ids.map((id, index) => {
@@ -177,7 +182,7 @@ function PairingsForm({
         />
       )}
 
-      <div className='flex justify-end'>
+      <SheetActions>
         <Button
           type='button'
           size='sm'
@@ -193,7 +198,7 @@ function PairingsForm({
           {save.isPending && <Spinner />}
           {t('save')}
         </Button>
-      </div>
+      </SheetActions>
     </div>
   )
 }

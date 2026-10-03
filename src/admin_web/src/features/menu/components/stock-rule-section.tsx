@@ -36,21 +36,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { AiButton } from '@/components/ai-button'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { EmptyState } from '@/components/empty-state'
+import { SheetActions } from '@/components/entity-sheet'
 import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
 import { formatQuantity } from '@/features/inventory/format'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
@@ -147,19 +142,9 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getStockItems' }] })
   }
   const proposeButton = assistAvailable && (
-    <Button
-      type='button'
-      variant='outline'
-      disabled={propose.isPending}
-      onClick={askAssistant}
-    >
-      {propose.isPending ? (
-        <Spinner />
-      ) : (
-        <Sparkles />
-      )}
+    <AiButton pending={propose.isPending} onClick={askAssistant}>
       {t('proposeRecipe')}
-    </Button>
+    </AiButton>
   )
   const reviewSheet = proposal && (
     <RecipeReviewSheet
@@ -203,42 +188,39 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   if (!recipe) {
     return (
       <>
-        <Empty className='border border-dashed'>
-          <EmptyHeader>
-            <EmptyMedia variant='icon'>
-              <Package />
-            </EmptyMedia>
-            <EmptyTitle>{t('notTrackedHint')}</EmptyTitle>
-            <EmptyDescription>{t('notTrackedDescription')}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent className='flex-row flex-wrap justify-center'>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={isPending}
-              onClick={() =>
-                trackByUnit(catalogItemId, {
-                  en: item.name?.en ?? null,
-                  ar: item.name?.ar ?? null,
-                }).catch(() => {
-                  // toasted by useInventoryActions
-                })
-              }
-            >
-              {isPending ? (
-                <Spinner />
-              ) : (
-                <Package />
-              )}
-              {t('sellAsUnit')}
-            </Button>
-            <Button type='button' onClick={() => setEditing(true)}>
-              <CookingPot />
-              {t('usesIngredients')}
-            </Button>
-            {proposeButton}
-          </EmptyContent>
-        </Empty>
+        <EmptyState
+          compact
+          className='border border-dashed'
+          icon={Package}
+          title={t('notTrackedHint')}
+          description={t('notTrackedDescription')}
+          action={
+            <div className='flex flex-wrap justify-center gap-2'>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={isPending}
+                onClick={() =>
+                  trackByUnit(catalogItemId, {
+                    en: item.name?.en ?? null,
+                    ar: item.name?.ar ?? null,
+                  }).catch(() => {
+                    // toasted by useInventoryActions
+                  })
+                }
+              >
+                {isPending ? <Spinner /> : <Package />}
+                {t('sellAsUnit')}
+              </Button>
+              <Button type='button' size='sm' onClick={() => setEditing(true)}>
+                <CookingPot />
+                {t('usesIngredients')}
+              </Button>
+              {proposeButton}
+            </div>
+          }
+        />
         {reviewSheet}
       </>
     )
@@ -333,6 +315,9 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   )
 }
 
+/** The footer's Save sits outside the recipe form and submits it by this id */
+const RECIPE_FORM_ID = 'recipe-editor-form'
+
 /** The slots editor with save and cancel, and the preview over the draft as it is being typed */
 function RecipeEditorForm({
   catalogItemId,
@@ -392,7 +377,7 @@ function RecipeEditorForm({
   const preview = draftLines(draft)
 
   return (
-    <form onSubmit={save} className='space-y-4'>
+    <form id={RECIPE_FORM_ID} onSubmit={save} className='space-y-4'>
       <RecipeBuilder
         draft={draft}
         onChange={setDraft}
@@ -402,15 +387,21 @@ function RecipeEditorForm({
 
       <DeductionPreview lines={preview} menu={menu} stock={stock} />
 
-      <div className='flex justify-end gap-2'>
+      {/* In the sheet's footer; `form` ties Save back to this form */}
+      <SheetActions>
         <Button type='button' variant='outline' size='sm' onClick={onDone}>
           {t('cancel')}
         </Button>
-        <Button type='submit' size='sm' disabled={isPending}>
+        <Button
+          type='submit'
+          form={RECIPE_FORM_ID}
+          size='sm'
+          disabled={isPending}
+        >
           {isPending && <Spinner />}
           {t('save')}
         </Button>
-      </div>
+      </SheetActions>
     </form>
   )
 }

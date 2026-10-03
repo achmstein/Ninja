@@ -15,10 +15,14 @@ import { toast } from '@/lib/toast'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid } from '@/components/field'
+
+/** The footer's Save sits outside the form and submits it by this id */
+const FORM_ID = 'branch-override-form'
 
 type BranchOverrideSectionProps = {
   item: CatalogItemDto
@@ -161,12 +165,12 @@ function OverrideForm({
   }
 
   return (
-    <form onSubmit={save} className='space-y-3'>
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='override-price'>
-            {t('priceAtBranch')} ({currency})
-          </Label>
+    <form id={FORM_ID} onSubmit={save}>
+      <FieldGrid>
+        <Field
+          label={`${t('priceAtBranch')} (${currency})`}
+          htmlFor='override-price'
+        >
           <Input
             id='override-price'
             type='number'
@@ -176,16 +180,18 @@ function OverrideForm({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
-        </div>
-        <div className='space-y-2'>
-          <div className='flex h-[14px] items-center justify-between'>
-            <Label htmlFor='override-offer'>{t('offerAtBranch')}</Label>
+        </Field>
+        <Field
+          label={t('offerAtBranch')}
+          htmlFor='override-offer'
+          end={
             <Switch
               id='override-offer'
               checked={onOffer}
               onCheckedChange={setOnOffer}
             />
-          </div>
+          }
+        >
           <Input
             type='number'
             step='0.01'
@@ -196,9 +202,9 @@ function OverrideForm({
             value={offerPrice}
             onChange={(e) => setOfferPrice(e.target.value)}
           />
-        </div>
-      </div>
-      <div className='flex justify-end gap-2'>
+        </Field>
+      </FieldGrid>
+      <SheetActions>
         {hasOverride && (
           <Button
             type='button'
@@ -216,11 +222,16 @@ function OverrideForm({
             {t('clearOverride')}
           </Button>
         )}
-        <Button type='submit' size='sm' disabled={!dirty || isPending}>
+        <Button
+          type='submit'
+          form={FORM_ID}
+          size='sm'
+          disabled={!dirty || isPending}
+        >
           {isPending && <Spinner />}
           {t('save')}
         </Button>
-      </div>
+      </SheetActions>
     </form>
   )
 }

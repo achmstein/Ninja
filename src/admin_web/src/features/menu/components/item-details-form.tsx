@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ImagePlus, Sparkles, X } from 'lucide-react'
+import { Sparkles, X } from 'lucide-react'
 import {
   type CatalogItemDto,
   type CatalogTypeDto,
@@ -22,7 +22,6 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -31,7 +30,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
+import { AiButton } from '@/components/ai-button'
+import { SheetActions } from '@/components/entity-sheet'
+import { Field, FieldGrid, SwitchGroup, SwitchRow } from '@/components/field'
+import { ImageField } from '@/components/image-field'
 import {
   fromLocalizedValue,
   isBlank,
@@ -50,13 +52,13 @@ import {
   useLocalizeAssist,
 } from '@/features/assist/use-localize-assist'
 import { itemPictureUrl } from '../pictures'
-import { PhotoStudio } from './photo-studio'
 import {
   bodyFromDraft,
   DraftCard,
   fromProposal,
   type DraftGroup,
 } from './customization-draft'
+import { PhotoStudio } from './photo-studio'
 
 /** What the assistant filled in and the user has not edited since */
 type Suggested = {
@@ -91,6 +93,9 @@ type FormState = {
 }
 
 const languages: Lang[] = ['en', 'ar']
+
+/** The footer's Save sits outside the form and submits it by this id */
+const FORM_ID = 'item-details-form'
 
 /**
  * The form with what the assistant filled in — only into fields still
@@ -160,7 +165,6 @@ export function ItemDetailsForm({
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const isEditing = !!item
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [studioOpen, setStudioOpen] = useState(false)
 
   const base = item?.base ?? item
@@ -410,108 +414,57 @@ export function ItemDetailsForm({
     onSaved(itemId)
   }
 
+  const nameForStudio = !!(form.name.en?.trim() || form.name.ar?.trim())
+
   return (
     <LocalizedFields lang={lang} onLangChange={setLang}>
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        <div className='flex items-center gap-4'>
-          <button
-            type='button'
-            className='bg-muted hover:bg-muted/80 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border'
-            onClick={() => fileInputRef.current?.click()}
-            aria-label={
-              preview ? t('clickToReplacePhoto') : t('clickToAddPhoto')
-            }
-          >
-            {preview ? (
-              <img
-                src={preview}
-                alt=''
-                className='h-full w-full object-cover'
-              />
-            ) : (
-              <ImagePlus className='text-muted-foreground h-6 w-6' />
-            )}
-          </button>
-          <div className='text-muted-foreground min-w-0 text-sm'>
-            {preview ? t('clickToReplacePhoto') : t('clickToAddPhoto')}
-            <br />
-            {t('photoHint')}
-            {assist.available && (
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                className='text-primary hover:text-primary mt-2 me-2'
-                disabled={!form.name.en?.trim() && !form.name.ar?.trim()}
-                title={
-                  !form.name.en?.trim() && !form.name.ar?.trim()
-                    ? t('studioNameFirst')
-                    : undefined
-                }
+      <form id={FORM_ID} onSubmit={handleSubmit} className='space-y-5'>
+        <ImageField
+          src={preview}
+          hint={t('photoHint')}
+          shape='square'
+          removeLabel={t('removePhoto')}
+          onFile={(file) =>
+            setPicture({ kind: 'file', file, url: URL.createObjectURL(file) })
+          }
+          onRemove={() =>
+            setPicture(
+              picture.kind === 'file' ? { kind: 'keep' } : { kind: 'remove' }
+            )
+          }
+          assist={
+            assist.available && (
+              <AiButton
                 onClick={() => setStudioOpen(true)}
+                disabled={!nameForStudio}
+                why={t('studioNameFirst')}
               >
-                <Sparkles className='size-3.5' />
                 {t('studioOpen')}
-              </Button>
-            )}
-            {preview && (
-              <Button
-                type='button'
-                variant='link'
-                size='sm'
-                className='text-destructive h-auto px-0 pt-1'
-                onClick={() =>
-                  setPicture(
-                    picture.kind === 'file'
-                      ? { kind: 'keep' }
-                      : { kind: 'remove' }
-                  )
-                }
-              >
-                <X className='size-3.5' />
-                {t('removePhoto')}
-              </Button>
-            )}
-          </div>
-          {studioOpen && (
-            <PhotoStudio
-              open={studioOpen}
-              onOpenChange={setStudioOpen}
-              dish={{
-                nameEn: form.name.en?.trim() || undefined,
-                nameAr: form.name.ar?.trim() || undefined,
-                description:
-                  form.description.en?.trim() ||
-                  form.description.ar?.trim() ||
-                  undefined,
-                category: (() => {
-                  const category = categories.find(
-                    (c) => Number(c.id) === form.catalogTypeId
-                  )
-                  return category?.name?.en || category?.name?.ar || undefined
-                })(),
-              }}
-              onUse={(file, url) => setPicture({ kind: 'file', file, url })}
-            />
-          )}
-          <input
-            ref={fileInputRef}
-            type='file'
-            accept='image/png,image/jpeg,image/webp'
-            className='hidden'
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                setPicture({
-                  kind: 'file',
-                  file,
-                  url: URL.createObjectURL(file),
-                })
-              }
-              e.target.value = ''
+              </AiButton>
+            )
+          }
+        />
+        {studioOpen && (
+          <PhotoStudio
+            open={studioOpen}
+            onOpenChange={setStudioOpen}
+            dish={{
+              nameEn: form.name.en?.trim() || undefined,
+              nameAr: form.name.ar?.trim() || undefined,
+              description:
+                form.description.en?.trim() ||
+                form.description.ar?.trim() ||
+                undefined,
+              category: (() => {
+                const category = categories.find(
+                  (c) => Number(c.id) === form.catalogTypeId
+                )
+                return category?.name?.en || category?.name?.ar || undefined
+              })(),
             }}
+            onUse={(file, url) => setPicture({ kind: 'file', file, url })}
           />
-        </div>
+        )}
 
         <LocalizedInput
           id='item-name'
@@ -526,30 +479,17 @@ export function ItemDetailsForm({
           }}
           error={errors.name}
           suggested={suggested.name}
+          assist={
+            assist.available
+              ? {
+                  label: fillBlocker ? t(fillBlocker) : t('assistFillIn'),
+                  disabled: !!fillBlocker,
+                  pending: filling,
+                  onClick: fillWithAssistant,
+                }
+              : undefined
+          }
         />
-
-        {assist.available && (
-          <div className='flex flex-wrap items-center gap-x-3 gap-y-1'>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              className='text-primary hover:text-primary'
-              disabled={!!fillBlocker || filling}
-              onClick={fillWithAssistant}
-            >
-              {filling ? (
-                <Spinner />
-              ) : (
-                <Sparkles />
-              )}
-              {t('assistFillIn')}
-            </Button>
-            {fillBlocker && (
-              <p className='text-muted-foreground text-xs'>{t(fillBlocker)}</p>
-            )}
-          </div>
-        )}
 
         <LocalizedInput
           id='item-description'
@@ -566,11 +506,12 @@ export function ItemDetailsForm({
           multiline
         />
 
-        <div className='grid grid-cols-3 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='item-price'>
-              {t('price')} ({currency})
-            </Label>
+        <FieldGrid cols={3}>
+          <Field
+            label={`${t('price')} (${currency})`}
+            htmlFor='item-price'
+            error={errors.price}
+          >
             <Input
               id='item-price'
               type='number'
@@ -579,12 +520,8 @@ export function ItemDetailsForm({
               value={form.price}
               onChange={(e) => set('price', e.target.value)}
             />
-            {errors.price && (
-              <p className='text-destructive text-sm'>{errors.price}</p>
-            )}
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='item-category'>{t('category')}</Label>
+          </Field>
+          <Field label={t('category')} htmlFor='item-category'>
             <Select
               value={String(form.catalogTypeId)}
               onValueChange={(value) => {
@@ -596,6 +533,7 @@ export function ItemDetailsForm({
               <SelectTrigger
                 id='item-category'
                 className={cn(
+                  'w-full',
                   suggested.category && 'border-primary ring-primary/20 ring-2'
                 )}
                 title={
@@ -618,9 +556,8 @@ export function ItemDetailsForm({
                 {t('assistCategorySuggested')}
               </p>
             )}
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='item-prep'>{t('prepTimeShort')}</Label>
+          </Field>
+          <Field label={t('prepTimeShort')} htmlFor='item-prep'>
             <Input
               id='item-prep'
               type='number'
@@ -629,98 +566,90 @@ export function ItemDetailsForm({
               value={form.preparationTimeMinutes}
               onChange={(e) => set('preparationTimeMinutes', e.target.value)}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGrid>
 
-        <div className='flex items-center justify-between'>
-          <Label htmlFor='item-popular' className='text-sm'>
-            {t('popular')}
-          </Label>
-          <Switch
-            id='item-popular'
+        <SwitchGroup>
+          <SwitchRow
+            title={t('popular')}
             checked={form.isPopular}
             onCheckedChange={(checked) => set('isPopular', checked)}
           />
-        </div>
-
-        <div className='space-y-3'>
-          <div className='flex items-center justify-between gap-4'>
-            <Label htmlFor='item-offer' className='text-sm'>
-              {t('itemOnOffer')}
-            </Label>
-            <Switch
-              id='item-offer'
+          <div className='space-y-4'>
+            <SwitchRow
+              title={t('itemOnOffer')}
               checked={form.isOnOffer}
               onCheckedChange={(checked) => set('isOnOffer', checked)}
             />
+            {form.isOnOffer && (
+              <div className='space-y-3'>
+                <Field
+                  label={`${t('offerPrice')} (${currency})`}
+                  htmlFor='item-offerPrice'
+                  error={errors.offerPrice}
+                >
+                  <Input
+                    id='item-offerPrice'
+                    type='number'
+                    step='0.01'
+                    min='0'
+                    className='w-40'
+                    value={form.offerPrice}
+                    onChange={(e) => set('offerPrice', e.target.value)}
+                  />
+                </Field>
+                {/* When: any weekday off means the offer sleeps that day; the
+                    hours are optional and may run past midnight */}
+                <div className='flex flex-wrap gap-1'>
+                  {WEEKDAYS.map((day) => {
+                    const bit = 1 << day
+                    const on =
+                      form.offerWeekdays === 0 ||
+                      (form.offerWeekdays & bit) !== 0
+                    return (
+                      <Button
+                        key={day}
+                        type='button'
+                        size='sm'
+                        variant={on ? 'secondary' : 'outline'}
+                        className='h-8 w-11 px-0 text-xs'
+                        onClick={() => {
+                          const all = 127
+                          const current =
+                            form.offerWeekdays === 0 ? all : form.offerWeekdays
+                          const next = current ^ bit
+                          set(
+                            'offerWeekdays',
+                            next === all || next === 0 ? 0 : next
+                          )
+                        }}
+                      >
+                        {weekdayName(day)}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Input
+                    type='time'
+                    className='w-32'
+                    aria-label={t('offerFrom')}
+                    value={form.offerFrom}
+                    onChange={(e) => set('offerFrom', e.target.value)}
+                  />
+                  <span className='text-muted-foreground text-xs'>–</span>
+                  <Input
+                    type='time'
+                    className='w-32'
+                    aria-label={t('offerTo')}
+                    value={form.offerTo}
+                    onChange={(e) => set('offerTo', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          {form.isOnOffer && (
-            <div className='space-y-2'>
-              <Label htmlFor='item-offerPrice'>
-                {t('offerPrice')} ({currency})
-              </Label>
-              <Input
-                id='item-offerPrice'
-                type='number'
-                step='0.01'
-                min='0'
-                className='w-40'
-                value={form.offerPrice}
-                onChange={(e) => set('offerPrice', e.target.value)}
-              />
-              {errors.offerPrice && (
-                <p className='text-destructive text-sm'>{errors.offerPrice}</p>
-              )}
-              {/* When: any weekday off means the offer sleeps that day; the
-                  hours are optional and may run past midnight */}
-              <div className='flex flex-wrap gap-1'>
-                {WEEKDAYS.map((day) => {
-                  const bit = 1 << day
-                  const on =
-                    form.offerWeekdays === 0 || (form.offerWeekdays & bit) !== 0
-                  return (
-                    <Button
-                      key={day}
-                      type='button'
-                      size='sm'
-                      variant={on ? 'secondary' : 'outline'}
-                      className='h-8 w-11 px-0 text-xs'
-                      onClick={() => {
-                        const all = 127
-                        const current =
-                          form.offerWeekdays === 0 ? all : form.offerWeekdays
-                        const next = current ^ bit
-                        set(
-                          'offerWeekdays',
-                          next === all || next === 0 ? 0 : next
-                        )
-                      }}
-                    >
-                      {weekdayName(day)}
-                    </Button>
-                  )
-                })}
-              </div>
-              <div className='flex items-center gap-2'>
-                <Input
-                  type='time'
-                  className='w-32'
-                  aria-label={t('offerFrom')}
-                  value={form.offerFrom}
-                  onChange={(e) => set('offerFrom', e.target.value)}
-                />
-                <span className='text-muted-foreground text-xs'>–</span>
-                <Input
-                  type='time'
-                  className='w-32'
-                  aria-label={t('offerTo')}
-                  value={form.offerTo}
-                  onChange={(e) => set('offerTo', e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        </SwitchGroup>
 
         {proposals.length > 0 && (
           <div className='border-primary/30 bg-primary/5 space-y-3 rounded-lg border p-3'>
@@ -762,17 +691,23 @@ export function ItemDetailsForm({
           </div>
         )}
 
-        <div className='flex justify-end gap-2'>
+        {/* In the sheet's footer; `form` ties Save back to this form */}
+        <SheetActions>
           {onCancel && (
-            <Button type='button' variant='outline' onClick={onCancel}>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={onCancel}
+            >
               {t('cancel')}
             </Button>
           )}
-          <Button type='submit' disabled={isSaving}>
+          <Button type='submit' form={FORM_ID} size='sm' disabled={isSaving}>
             {isSaving && <Spinner />}
             {isEditing ? t('save') : t('addItem')}
           </Button>
-        </div>
+        </SheetActions>
       </form>
     </LocalizedFields>
   )
