@@ -128,6 +128,41 @@ export type DrawDishPhotoRequest = {
     note: null | string;
 };
 
+export type FilledValue = {
+    key: string;
+    value: string;
+};
+
+export type FillFormRequest = {
+    /**
+     * What the form makes, in plain words
+     */
+    form: string;
+    fields: Array<FormField>;
+    languages?: null | string;
+};
+
+export type FillFormResponse = {
+    values: Array<FilledValue>;
+    warnings: Array<string>;
+};
+
+export type FormField = {
+    key: string;
+    label: string;
+    type: FormFieldType;
+    value?: null | string;
+    options?: null | Array<FormFieldOption>;
+    language?: null | string;
+};
+
+export type FormFieldOption = {
+    value: string;
+    label: string;
+};
+
+export type FormFieldType = number;
+
 export type IFormFile = Blob | File;
 
 export type IFormFileCollection = Array<IFormFile>;
@@ -449,6 +484,44 @@ export type LocalizeMenuTextResponses = {
 };
 
 export type LocalizeMenuTextResponse = LocalizeMenuTextResponses[keyof LocalizeMenuTextResponses];
+
+export type FillFormData = {
+    body: FillFormRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/fill';
+};
+
+export type FillFormErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type FillFormError = FillFormErrors[keyof FillFormErrors];
+
+export type FillFormResponses = {
+    /**
+     * OK
+     */
+    200: FillFormResponse;
+};
+
+export type FillFormResponse2 = FillFormResponses[keyof FillFormResponses];
 
 export type SuggestCustomizationsData = {
     body: SuggestCustomizationsRequest;

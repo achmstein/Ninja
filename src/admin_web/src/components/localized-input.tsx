@@ -14,6 +14,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  localizedFields,
+  mergeLocalized,
+  useFormFill,
+} from '@/features/assist/use-form-fill'
 
 export type Lang = 'en' | 'ar'
 
@@ -144,8 +149,12 @@ type LocalizedInputProps = {
   value: LocalizedValue
   /** The whole value, plus which language was just typed */
   onChange: (value: LocalizedValue, lang: Lang) => void
-  /** Sparkle button before the language switch */
-  assist?: AssistSlot
+  /**
+   * Sparkle button before the language switch. Left out, the field offers
+   * its own while one language is typed and the other is empty: the
+   * assistant writes the other side. `false` turns that off.
+   */
+  assist?: AssistSlot | false
   /** Languages the assistant filled in and the user has not touched yet */
   suggested?: Partial<Record<Lang, boolean>>
   id?: string
@@ -194,6 +203,41 @@ export function LocalizedInput({
   const [lang, setLang] = useLang()
   const only = useOnlyLang()
 
+  // The field's own assistant: the other language of what is typed
+  const formFill = useFormFill()
+  const [ownSuggested, setOwnSuggested] = useState<
+    Partial<Record<Lang, boolean>>
+  >({})
+  const hasEn = value.en.trim() !== ''
+  const hasAr = value.ar.trim() !== ''
+  const missing: Lang | null =
+    hasEn && !hasAr ? 'ar' : hasAr && !hasEn ? 'en' : null
+  const named =
+    typeof label === 'string' ? label : (ariaLabel ?? t('assistOtherLanguage'))
+  const ownAssist: AssistSlot | undefined =
+    assist === undefined && !only && !disabled && missing && formFill.available
+      ? {
+          label: t('assistOtherLanguage'),
+          pending: formFill.isPending,
+          onClick: async () => {
+            try {
+              const filled = await formFill.fill(
+                named,
+                localizedFields('text', named, value, multiline)
+              )
+              const merged = mergeLocalized('text', value, filled)
+              if (merged[missing] === value[missing]) return
+              onChange(merged, missing)
+              setOwnSuggested((prev) => ({ ...prev, [missing]: true }))
+              setLang(missing)
+            } catch {
+              // useFormFill has said what went wrong
+            }
+          },
+        }
+      : undefined
+  const slot = assist === false ? undefined : (assist ?? ownAssist)
+
   const control = {
     id: fieldId,
     value: value[lang],
@@ -203,10 +247,14 @@ export function LocalizedInput({
     autoFocus,
     disabled,
     'aria-invalid': !!error || undefined,
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      onChange({ ...value, [lang]: e.target.value }, lang),
+    onChange: (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+      setOwnSuggested((prev) => ({ ...prev, [lang]: false }))
+      onChange({ ...value, [lang]: e.target.value }, lang)
+    },
   }
-  const isSuggested = !!suggested?.[lang]
+  const isSuggested = !!suggested?.[lang] || !!ownSuggested[lang]
 
   const languageSwitch = only ? null : (
     <ToggleGroup
@@ -220,25 +268,25 @@ export function LocalizedInput({
       <LangItem
         lang='en'
         filled={value.en.trim() !== ''}
-        suggested={!!suggested?.en}
+        suggested={!!suggested?.en || !!ownSuggested.en}
       />
       <LangItem
         lang='ar'
         filled={value.ar.trim() !== ''}
-        suggested={!!suggested?.ar}
+        suggested={!!suggested?.ar || !!ownSuggested.ar}
       />
     </ToggleGroup>
   )
 
-  const assistButton = assist && (
+  const assistButton = slot && (
     <InputGroupButton
-      aria-label={assist.label}
-      title={assist.label}
-      disabled={assist.disabled || assist.pending}
-      onClick={assist.onClick}
+      aria-label={slot.label}
+      title={slot.label}
+      disabled={slot.disabled || slot.pending}
+      onClick={slot.onClick}
       className='text-primary'
     >
-      {assist.pending ? <Spinner /> : <Sparkles />}
+      {slot.pending ? <Spinner /> : <Sparkles />}
     </InputGroupButton>
   )
 

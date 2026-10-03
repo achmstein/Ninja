@@ -1293,6 +1293,10 @@ const webExtras = {
   assistFillIn: { en: "Fill in with AI", ar: "أكمل بالذكاء الاصطناعي" },
   assistNeedsName: { en: "Type the name first", ar: "اكتب الاسم أولًا" },
   assistNothingMissing: { en: "Nothing is missing", ar: "لا يوجد شيء ناقص" },
+  assistTypeSomethingFirst: { en: "Type something first: the rest is filled in from it", ar: "اكتب شيئًا أولًا: يُكمَل الباقي منه" },
+  assistOtherLanguage: { en: "Write the other language with AI", ar: "اكتب اللغة الأخرى بالذكاء الاصطناعي" },
+  assistFilledCount: { plural: "count", en: { one: "Filled in 1 field: check it before saving", other: "Filled in {count} fields: check them before saving" }, ar: { zero: "لم يُكمَل أي حقل", one: "أُكمل حقل واحد: راجعه قبل الحفظ", two: "أُكمل حقلان: راجعهما قبل الحفظ", few: "أُكملت {count} حقول: راجعها قبل الحفظ", other: "أُكمل {count} حقلًا: راجعها قبل الحفظ" } },
+  assistFilledNone: { en: "Nothing more to fill in from what is typed", ar: "لا شيء آخر يمكن إكماله مما كُتب" },
   assistProposedCustomizations: { en: "Proposed by the assistant", ar: "مقترح من مساعد نينجا" },
   itemSavedCustomizationsFailed: { en: "Saved without its option groups", ar: "تم الحفظ بدون مجموعات الخيارات" },
   // AI assistant: customization groups
@@ -1457,6 +1461,12 @@ const webExtras = {
   rangeStartsAt: { en: "Starts", ar: "يبدأ" },
   rangeEndsAt: { en: "Ends", ar: "ينتهي" },
   rangeHoursHint: { en: "Each day runs from the start time to the end time, past midnight when the end is earlier", ar: "يمتد كل يوم من وقت البداية إلى وقت النهاية، ويعبر منتصف الليل إن كانت النهاية أبكر" },
+  // Settings pages on the admin's one settings layout (profile, brand, announcements)
+  profilePreferences: { en: "Preferences", ar: "التفضيلات" },
+  profileSignOutHint: { en: "Sign out of the admin on this device.", ar: "سجّل الخروج من لوحة الإدارة على هذا الجهاز." },
+  brandIdentity: { en: "Name and logo", ar: "الاسم والشعار" },
+  newAnnouncement: { en: "New announcement", ar: "إعلان جديد" },
+  announcementsDescription: { en: "Send a message to every customer's phone at once.", ar: "أرسل رسالة إلى هواتف كل العملاء دفعة واحدة." },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }
