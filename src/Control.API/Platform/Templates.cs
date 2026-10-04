@@ -510,6 +510,11 @@ public static partial class Templates
                     // A demo tries online payments with pretend payments until it has a Paymob account; a customer never can
                     if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
                     break;
+                case "notification" when !string.IsNullOrWhiteSpace(platform.FirebaseCredentialsPath):
+                    // Push: the platform's Firebase account, read where the service looks for it
+                    sb.AppendLine("    volumes:");
+                    sb.AppendLine($"      - \"{platform.FirebaseCredentialsPath}:/app/firebase-credentials.json:ro\"");
+                    break;
                 case "ordering" when platform.Talabat.Configured:
                     // Talabat: what the business does with its orders goes back through the platform's relay, which holds Ninja's account
                     AppendTalabatRelay(sb, slug, platform);

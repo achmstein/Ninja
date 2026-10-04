@@ -133,6 +133,8 @@ services:
       Platform__Social__Google__ClientSecret: ${SOCIAL_GOOGLE_CLIENT_SECRET:-}
       Platform__Social__Apple__ClientId: ${SOCIAL_APPLE_CLIENT_ID:-}
       Platform__Social__Apple__ClientSecret: ${SOCIAL_APPLE_CLIENT_SECRET:-}
+      # The Firebase service account on the host, mounted read-only into every stack's notification service
+      Platform__FirebaseCredentialsPath: ${FIREBASE_CREDENTIALS_PATH:-}
       # Ninja's Talabat (Delivery Hero POS) integration, one account for every café; empty leaves it off
       Platform__Talabat__MiddlewareUrl: ${TALABAT_MIDDLEWARE_URL:-}
       Platform__Talabat__Username: ${TALABAT_USERNAME:-}

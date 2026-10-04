@@ -101,9 +101,37 @@ public static class NotificationMessages
     public static LocalizedText ShiftClosedBody(ShiftClosedIntegrationEvent shift) =>
         new(Digest(shift, "en"), Digest(shift, "ar"));
 
+    public static readonly LocalizedText NewDeliveryTitle = new("New delivery", "توصيلة جديدة");
+    public static LocalizedText NewDeliveryBody(int orderId, string? address) =>
+        string.IsNullOrWhiteSpace(address)
+            ? new($"Order #{orderId} is yours to deliver", $"طلب #{orderId} عليك توصيله")
+            : new($"Order #{orderId} to {address}", $"طلب #{orderId} إلى {address}");
+
+    public static readonly LocalizedText DeliveryTakenBackTitle = new("Delivery taken back", "التوصيلة اتسحبت");
+    public static LocalizedText DeliveryTakenBackBody(int orderId) =>
+        new($"Order #{orderId} was given to someone else", $"طلب #{orderId} اتحول لمندوب تاني");
+
     // -----------------------------------------------------------------
     // To the customer: their order, their table, their reservation
     // -----------------------------------------------------------------
+
+    public static readonly CustomerText OrderOnTheWayTitle =
+        new("On its way", "الأوردر في الطريق", "الطلب في الطريق");
+    public static CustomerText OrderOnTheWayBody(int orderId, string? riderName) =>
+        string.IsNullOrWhiteSpace(riderName)
+            ? new($"Your order #{orderId} is on its way to you",
+                $"الأوردر بتاعك #{orderId} في الطريق ليك",
+                $"طلبك #{orderId} في الطريق إليك")
+            : new($"{riderName} is on the way with your order #{orderId}",
+                $"{riderName} في الطريق ليك بالأوردر #{orderId}",
+                $"{riderName} في الطريق إليك بطلبك #{orderId}");
+
+    public static readonly CustomerText OrderDeliveredTitle =
+        new("Delivered", "الأوردر وصل", "تم التوصيل");
+    public static CustomerText OrderDeliveredBody(int orderId) =>
+        new($"Your order #{orderId} was delivered. Enjoy!",
+            $"الأوردر بتاعك #{orderId} وصل. بالهنا والشفا!",
+            $"تم توصيل طلبك #{orderId}. بالهناء والشفاء!");
 
     public static readonly CustomerText RoomAvailableTitle =
         new("Room Available!", "أوضة فاضية!", "غرفة متاحة!");

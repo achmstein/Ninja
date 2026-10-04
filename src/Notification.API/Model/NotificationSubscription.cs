@@ -19,5 +19,8 @@ public enum SubscriptionType
     ServiceRequests = 3,
     AdminReservationNotification = 4,
     UserOrderNotification = 5,
-    UserSessionNotification = 6
+    UserSessionNotification = 6,
+
+    /// <summary>A rider's phone: deliveries given to them, and taken back.</summary>
+    RiderDeliveries = 7
 }

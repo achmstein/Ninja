@@ -81,6 +81,20 @@ public static class NotificationApi
             .WithDescription("Unregister device from order status notifications")
             .WithTags("Subscriptions");
 
+        // A rider's phone: the deliveries given to them
+        api.MapPost("/subscriptions/rider-deliveries", SubscribeToRiderDeliveries)
+            .WithName("SubscribeToRiderDeliveries")
+            .WithSummary("Subscribe to rider delivery notifications")
+            .WithDescription("Register the rider app to get a push when a delivery is given to the rider, or taken back (Rider only)")
+            .WithTags("Subscriptions")
+            .RequireAuthorization("Rider");
+
+        api.MapDelete("/subscriptions/rider-deliveries", UnsubscribeFromRiderDeliveries)
+            .WithName("UnsubscribeFromRiderDeliveries")
+            .WithSummary("Unsubscribe from rider delivery notifications")
+            .WithTags("Subscriptions")
+            .RequireAuthorization("Rider");
+
         // User session notification endpoints (for customers)
         api.MapPost("/subscriptions/user-sessions", SubscribeToUserSessionNotifications)
             .WithName("SubscribeToUserSessionNotifications")
@@ -529,6 +543,56 @@ public static class NotificationApi
         await context.SaveChangesAsync();
 
         return TypedResults.NoContent();
+    }
+
+    // Rider delivery handlers: one phone per rider, the latest one signed in
+    public static async Task<Results<Ok<SubscriptionResponse>, Created<SubscriptionResponse>>> SubscribeToRiderDeliveries(
+        NotificationContext context,
+        ClaimsPrincipal user,
+        SubscribeRequest request)
+    {
+        var userId = user.GetUserId()!;
+
+        var existing = await context.Subscriptions
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.Type == SubscriptionType.RiderDeliveries);
+
+        if (existing != null)
+        {
+            existing.FcmToken = request.FcmToken;
+            existing.PreferredLanguage = request.PreferredLanguage ?? "en";
+            existing.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+            return TypedResults.Ok(new SubscriptionResponse(existing.Id, existing.Type, existing.CreatedAt));
+        }
+
+        var subscription = new NotificationSubscription
+        {
+            UserId = userId,
+            FcmToken = request.FcmToken,
+            Type = SubscriptionType.RiderDeliveries,
+            PreferredLanguage = request.PreferredLanguage ?? "en",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Subscriptions.Add(subscription);
+        await context.SaveChangesAsync();
+
+        return TypedResults.Created(
+            "/api/notifications/subscriptions/rider-deliveries",
+            new SubscriptionResponse(subscription.Id, subscription.Type, subscription.CreatedAt));
+    }
+
+    public static async Task<Results<NoContent, NotFound>> UnsubscribeFromRiderDeliveries(
+        NotificationContext context,
+        ClaimsPrincipal user)
+    {
+        var userId = user.GetUserId()!;
+
+        var deleted = await context.Subscriptions
+            .Where(s => s.UserId == userId && s.Type == SubscriptionType.RiderDeliveries)
+            .ExecuteDeleteAsync();
+
+        return deleted > 0 ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 
     // User session notification handlers

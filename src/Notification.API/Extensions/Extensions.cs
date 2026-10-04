@@ -56,6 +56,7 @@ public static class Extensions
             .AddSubscription<SessionPaidIntegrationEvent, SessionPaidIntegrationEventHandler>()
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
             .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
+            .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
             .AddSubscription<KitchenTicketQueuedIntegrationEvent, KitchenTicketQueuedIntegrationEventHandler>()
             .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>()
             // A bill paid or voided ends the sitting at its place, for every phone that scanned it
@@ -69,6 +70,7 @@ public static class Extensions
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderReadyChangedIntegrationEvent))]
+[JsonSerializable(typeof(OrderDeliveryChangedIntegrationEvent))]
 [JsonSerializable(typeof(KitchenTicketQueuedIntegrationEvent))]
 [JsonSerializable(typeof(PlaceBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToSubmittedIntegrationEvent))]

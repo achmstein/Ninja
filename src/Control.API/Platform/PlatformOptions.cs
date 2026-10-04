@@ -85,6 +85,13 @@ public sealed class PlatformOptions
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
 
+    /// <summary>
+    /// The Firebase service account on the host (one project for every app),
+    /// mounted read-only into each stack's notification service so it can push
+    /// to riders, customers and staff. Empty leaves their pushes only logged.
+    /// </summary>
+    public string FirebaseCredentialsPath { get; set; } = "";
+
     /// <summary>Ninja's Talabat integration: one account for every business, used through the relay; empty leaves it off.</summary>
     public TalabatOptions Talabat { get; set; } = new();
 
