@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/shift.dart';
 import '../services/shifts_service.dart';
 import '../services/till_picks_service.dart';

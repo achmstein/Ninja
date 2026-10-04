@@ -1,6 +1,6 @@
 import 'dart:ui' show Locale;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/brand/tenant_brand.dart';
+import 'package:ninja_app_core/brand/tenant_brand.dart';
 import 'package:pos_app/core/models/money.dart';
 
 void main() {

@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:pos_app/core/router/app_router.dart';
-import 'package:pos_app/core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:pos_app/l10n/app_localizations.dart';
 
 Widget _app(Locale locale, AppThemeMode mode) => MaterialApp(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
-import 'package:pos_app/core/motion/motion.dart';
-import 'package:pos_app/core/theme/app_theme.dart';
+import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 Widget _host(Widget child, {double width = 400, bool reduce = false}) => MaterialApp(
       builder: (context, app) => MediaQuery(

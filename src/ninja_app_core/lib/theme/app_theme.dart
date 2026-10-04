@@ -97,10 +97,17 @@ class ThemeState {
   }
 }
 
-/// Theme notifier with persistence. Dark by default, like the kitchen display: a
-/// kitchen board is glanced at across a bright room, and dark reads best.
+/// Theme notifier with persistence. Until someone chooses, the business's
+/// starting theme, else the app's own ([NinjaAppConfig.defaultThemeMode]): dark
+/// for a board glanced at across a bright room, the device's for a till.
 class ThemeNotifier extends Notifier<ThemeState> {
   static String get _themeKey => '${NinjaCore.config.appKey}_app_theme_mode';
+
+  /// What the app starts in when neither the person nor the business has said
+  static AppThemeMode get _appDefault => AppThemeMode.values.firstWhere(
+        (e) => e.name == NinjaCore.config.defaultThemeMode,
+        orElse: () => AppThemeMode.dark,
+      );
 
   /// The person picked light or dark themselves; the business's default no longer applies
   bool _chosen = false;
@@ -112,13 +119,13 @@ class ThemeNotifier extends Notifier<ThemeState> {
       if (!_chosen) state = state.copyWith(themeMode: _businessDefault(mode));
     });
     _loadTheme();
-    return const ThemeState();
+    return ThemeState(themeMode: _appDefault);
   }
 
   AppThemeMode _businessDefault(String? mode) => switch (mode) {
         'light' => AppThemeMode.light,
         'dark' => AppThemeMode.dark,
-        _ => AppThemeMode.dark,
+        _ => _appDefault,
       };
 
   Future<void> _loadTheme() async {
@@ -131,7 +138,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
       if (savedTheme != null) {
         mode = AppThemeMode.values.firstWhere(
           (e) => e.name == savedTheme,
-          orElse: () => AppThemeMode.dark,
+          orElse: () => _appDefault,
         );
       }
 

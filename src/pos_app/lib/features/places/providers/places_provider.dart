@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
 

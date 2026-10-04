@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/online_payment.dart';
 import '../../tickets/models/ticket_detail.dart';

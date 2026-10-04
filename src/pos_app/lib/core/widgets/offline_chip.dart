@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
-import '../network/network_status.dart';
+import 'package:ninja_app_core/network/network_status.dart';
 import '../offline/offline_queue.dart';
 import '../offline/offline_sale.dart';
-import '../theme/app_theme.dart';
-import '../theme/text_styles.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 
 /// Header chip for the one state the cashier must know about: the network
 /// is down (sales are kept on the till), sales are being sent now that it

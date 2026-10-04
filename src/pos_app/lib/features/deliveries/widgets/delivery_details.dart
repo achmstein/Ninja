@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/money.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';

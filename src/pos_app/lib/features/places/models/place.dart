@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// What a place is, for icons and words. What it *does* comes from its
 /// tariff (a timed place has one), not from its kind.

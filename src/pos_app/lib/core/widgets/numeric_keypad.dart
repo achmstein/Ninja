@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import '../theme/text_styles.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 
 const _maxLength = 9;
 

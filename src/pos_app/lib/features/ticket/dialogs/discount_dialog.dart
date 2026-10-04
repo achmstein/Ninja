@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';

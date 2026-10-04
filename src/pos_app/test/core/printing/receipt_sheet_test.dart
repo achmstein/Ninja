@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:pos_app/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/core/models/money.dart';
 import 'package:ninja_printing/ninja_printing.dart';
 import 'package:pos_app/features/receipt/receipt_sheet.dart';

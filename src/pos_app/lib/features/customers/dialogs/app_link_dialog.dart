@@ -6,7 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/dates.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/toast_helpers.dart';

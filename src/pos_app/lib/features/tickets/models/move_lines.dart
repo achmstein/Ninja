@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'enums.dart';
 
 /// Where selected lines can go: an open bill, a new counter tab, a free

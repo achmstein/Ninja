@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
-import 'app_text.dart';
+import 'package:ninja_app_core/widgets/app_text.dart';
 
 /// Standard screen padding for all screens
 const kScreenPadding = EdgeInsets.all(16);

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';

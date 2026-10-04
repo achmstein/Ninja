@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
-import '../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 /// Paper width in printer dots: 72 mm at 203 dpi, the printable width of
 /// every 80 mm thermal printer. Sheets are laid out at this size 1:1.

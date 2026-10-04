@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// Order status - values must match backend OrderStatus enum
 /// Note: Backend returns status as string, not int

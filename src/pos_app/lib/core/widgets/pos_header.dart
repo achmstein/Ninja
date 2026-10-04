@@ -4,9 +4,9 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
-import '../providers/locale_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../features/shifts/widgets/shift_chip.dart';
-import '../theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'branch_switcher.dart';
 import 'offline_chip.dart';
 

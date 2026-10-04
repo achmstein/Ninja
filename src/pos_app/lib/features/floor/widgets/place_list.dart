@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import '../../../core/models/localized_text.dart';
-import '../../../core/motion/motion.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/heading.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../places/models/place.dart';
 import '../../tickets/models/ticket_summary.dart';

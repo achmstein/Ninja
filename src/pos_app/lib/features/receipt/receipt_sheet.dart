@@ -1,4 +1,4 @@
-import '../../core/models/branch.dart';
+import 'package:ninja_app_core/models/branch.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../core/models/money.dart';

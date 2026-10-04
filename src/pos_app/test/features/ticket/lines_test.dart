@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/features/ticket/lines.dart';
 import 'package:pos_app/features/tickets/models/ticket_detail.dart';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
-import '../providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'kitchen_printer_banner.dart';
 import 'no_branch_screen.dart';
 import 'pos_header.dart';

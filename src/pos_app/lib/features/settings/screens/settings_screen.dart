@@ -6,19 +6,19 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
-import '../../../core/network/network_status.dart';
+import 'package:ninja_app_core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
 import '../../../core/printing/kitchen_printing.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import '../../../core/services/kiosk_service.dart';
-import '../../../core/services/update_service.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/services/update_service.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
 import '../../../core/widgets/pos_toast.dart';
-import '../../../core/widgets/settings_list.dart';
+import 'package:ninja_app_core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Per-till settings, as the till lists everything else: this device (the

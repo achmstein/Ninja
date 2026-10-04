@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../core/network/network_status.dart';
+import 'package:ninja_app_core/network/network_status.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The stable code an Ordering refusal carries (ProblemDetails `code`), if any

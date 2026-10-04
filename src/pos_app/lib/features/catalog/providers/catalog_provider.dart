@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/catalog_item.dart';
 import '../services/catalog_service.dart';
 

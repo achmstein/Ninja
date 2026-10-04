@@ -39,6 +39,14 @@ class NinjaAppConfig {
   /// The session is ending: close what belongs to it (the realtime hub)
   final Future<void> Function(Ref ref)? onSigningOut;
 
+  /// Where the chosen language is kept; null is `<appKey>_app_locale`. An app
+  /// that kept it under another key before the core keeps reading that one.
+  final String? localeKey;
+
+  /// The theme for someone who has not chosen one and whose business says
+  /// nothing (`system`, `light` or `dark`)
+  final String defaultThemeMode;
+
   const NinjaAppConfig({
     required this.appKey,
     required this.clientId,
@@ -49,6 +57,8 @@ class NinjaAppConfig {
     this.signOutStepTimeout,
     this.onSignedIn,
     this.onSigningOut,
+    this.localeKey,
+    this.defaultThemeMode = 'dark',
   });
 }
 

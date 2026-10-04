@@ -27,12 +27,13 @@ import '../../features/tickets/models/ticket_summary.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../../features/tickets/services/online_payments_service.dart';
 import '../../features/tickets/models/online_payment.dart';
+import 'package:ninja_app_core/brand/brand_service.dart';
+import 'package:ninja_app_core/brand/tenant_brand.dart';
+import 'package:ninja_app_core/models/branch.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/services/branch_service.dart';
 import '../auth/auth_service.dart';
-import '../brand/brand_service.dart';
-import '../brand/tenant_brand.dart';
-import '../models/branch.dart';
-import '../models/localized_text.dart';
-import '../services/branch_service.dart';
+import '../services/branch_settings_service.dart';
 
 /// Design-time mode: `flutter run --dart-define=POS_DEMO=true`.
 ///
@@ -58,6 +59,7 @@ final demoOverrides = [
   authServiceProvider.overrideWith(_DemoAuthService.new),
   tenantRepositoryProvider.overrideWithValue(_DemoTenantRepository()),
   branchRepositoryProvider.overrideWithValue(_DemoBranchRepository()),
+  branchSettingsRepositoryProvider.overrideWithValue(_DemoBranchSettingsRepository()),
   ticketsRepositoryProvider.overrideWithValue(_demoTickets),
   onlinePaymentsRepositoryProvider.overrideWithValue(_DemoOnlinePaymentsRepository()),
   catalogRepositoryProvider.overrideWithValue(_DemoCatalogRepository()),
@@ -75,7 +77,7 @@ class _DemoAuthService extends AuthService {
   AuthState build() => const AuthState(
         isInitializing: false,
         isAuthenticated: true,
-        isPosUser: true,
+        mayUseApp: true,
         isOwner: true,
         userId: 'demo',
         name: 'Demo Cashier',
@@ -116,10 +118,13 @@ class _DemoBranchRepository implements BranchRepository {
           displayOrder: 1,
         ),
       ];
+}
 
+/// The demo's switches flip nowhere: the branch answers as it was
+class _DemoBranchSettingsRepository implements BranchSettingsRepository {
   @override
   Future<Branch> updateBranchSettings(int id, Map<String, dynamic> data) async =>
-      (await getBranches()).firstWhere((b) => b.id == id);
+      (await _DemoBranchRepository().getBranches()).firstWhere((b) => b.id == id);
 }
 
 /// Nobody pays from their phone in the demo business

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'app_text.dart';
+import 'package:ninja_app_core/widgets/app_text.dart';
 
 void showSuccessToast(BuildContext context, String message) {
   showFToast(

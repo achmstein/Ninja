@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import '../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'models/place.dart';
 
 /// `hh:mm:ss`, never negative

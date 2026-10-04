@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../brand/brand_provider.dart';
-import '../providers/locale_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 
 /// Generated API number fields arrive as `number | string` (the backend
 /// serializes decimals loosely), so every money helper accepts both.

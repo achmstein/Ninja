@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/money.dart';
-import '../../../core/providers/locale_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../models/sale_line.dart';
 
 /// One line of the running sale: name, options, note, and the quantity

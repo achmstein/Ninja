@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
 import '../printing/kitchen_printing.dart';
-import '../theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 /// A strip under the header while kitchen tickets wait past a minute for
 /// their printer: which station, and what the printer said. A till that

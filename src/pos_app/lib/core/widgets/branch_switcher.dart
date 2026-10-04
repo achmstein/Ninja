@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
 import '../brand/brand_mark.dart';
-import '../models/localized_text.dart';
-import '../providers/branch_provider.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 
 /// Header branch switcher, same contract as pos_web's: the business's mark and
 /// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the

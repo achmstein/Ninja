@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import '../../../core/models/localized_text.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../models/place.dart';
 
 /// Segmented picker over a tariff's rate options — the Single/Multi toggle

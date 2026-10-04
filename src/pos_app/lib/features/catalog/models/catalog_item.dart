@@ -1,5 +1,5 @@
 import '../../../core/config/app_config.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 
 /// A sellable item as the catalog lists it (`CatalogItemDto`). The pad shows

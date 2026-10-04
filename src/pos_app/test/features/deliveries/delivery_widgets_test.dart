@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
-import 'package:pos_app/core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:pos_app/features/deliveries/models/delivery_order.dart';
 import 'package:pos_app/features/deliveries/widgets/deliveries_strip.dart';
 import 'package:pos_app/features/deliveries/widgets/delivery_dialog.dart';

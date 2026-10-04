@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
 
-String get _localeKey => '${NinjaCore.config.appKey}_app_locale';
+String get _localeKey => NinjaCore.config.localeKey ?? '${NinjaCore.config.appKey}_app_locale';
 
 /// Cached initial locale loaded before app starts
 Locale? _initialLocale;
 
 /// Call this before runApp() to preload the saved locale. [override] wins
-/// over the saved one (the demo's `KDS_DEMO_LOCALE`).
+/// over the saved one (an app's demo locale, `<APP>_DEMO_LOCALE`).
 Future<void> initializeLocale({String? override}) async {
   final prefs = await SharedPreferences.getInstance();
   final savedLocale = override?.isNotEmpty == true ? override : prefs.getString(_localeKey);
@@ -28,7 +28,7 @@ Future<void> persistLocale(Locale locale) async {
 }
 
 /// Provider for managing the app's locale/language setting. Direction
-/// follows the language (no separate setting), as on kds_web.
+/// follows the language (no separate setting), as on the web apps.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(() {
   return LocaleNotifier();
 });

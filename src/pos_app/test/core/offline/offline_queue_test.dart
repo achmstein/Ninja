@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/network/network_status.dart';
+import 'package:ninja_app_core/network/network_status.dart';
 import 'package:pos_app/core/offline/offline_queue.dart';
 import 'package:pos_app/core/offline/offline_sale.dart';
 import 'package:pos_app/features/orders/models/order.dart';

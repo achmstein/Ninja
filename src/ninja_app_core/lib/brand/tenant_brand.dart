@@ -18,9 +18,10 @@ class TenantFeatures {
   /// it says nothing).
   final bool onlinePayments;
 
-  /// The business's own delivery, the whole of this app: an add-on it buys.
-  /// On until the brand says otherwise, and when a stack older than the
-  /// switch says nothing (it delivered before delivery was sold on its own).
+  /// The business's own delivery: the till's board, taking a delivery over the
+  /// phone, and the whole of the rider app. An add-on it buys; on until the
+  /// brand says otherwise, and when a stack older than the switch says nothing
+  /// (it delivered before delivery was sold on its own).
   final bool delivery;
 
   const TenantFeatures({
@@ -67,35 +68,118 @@ class TenantFeatures {
       };
 }
 
-/// The tenant this build runs for: name, one brand color, a logo and the
-/// feature switches (`GET /api/tenant`). Cached between runs, so the app
-/// paints the right brand before the network answers.
+/// Where the tenant trades: what its prices are counted in, what its
+/// clock says and which language its customers read first. Tenant one's
+/// values stand in until the brand is known.
+class TenantLocale {
+  /// ISO 3166-1 alpha-2
+  final String country;
+
+  /// ISO 4217
+  final String currency;
+
+  /// IANA
+  final String timeZone;
+
+  /// `ar` or `en`
+  final String language;
+
+  const TenantLocale({
+    this.country = 'EG',
+    this.currency = 'EGP',
+    this.timeZone = 'Africa/Cairo',
+    this.language = 'ar',
+  });
+
+  static const egypt = TenantLocale();
+
+  static TenantLocale parse(Object? json) {
+    if (json is! Map<String, dynamic>) return egypt;
+    String read(String key, String fallback) {
+      final value = (json[key] as String?)?.trim();
+      return value == null || value.isEmpty ? fallback : value;
+    }
+
+    return TenantLocale(
+      country: read('country', egypt.country).toUpperCase(),
+      currency: read('currency', egypt.currency).toUpperCase(),
+      timeZone: read('timeZone', egypt.timeZone),
+      language: read('language', egypt.language).toLowerCase(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'country': country,
+        'currency': currency,
+        'timeZone': timeZone,
+        'language': language,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantLocale &&
+          other.country == country &&
+          other.currency == currency &&
+          other.timeZone == timeZone &&
+          other.language == language;
+
+  @override
+  int get hashCode => Object.hash(country, currency, timeZone, language);
+}
+
+/// The tenant this build runs for: name, one brand color, a logo, its locale
+/// and the feature switches (`GET /api/tenant`). Cached between runs, so the
+/// app paints the right brand before the network answers.
 class TenantBrand {
   final LocalizedText name;
 
   /// `#rrggbb`, or null when the tenant keeps the neutral palette
   final String? primaryColorHex;
 
-  /// Absolute URL of the uploaded logo, or null when there is none
+  /// Absolute URL of the uploaded mark, or null when there is none
   final String? logoUrl;
-  final TenantFeatures features;
-  final int version;
 
-  /// `light` or `dark` for a display nobody has set; null keeps the app's own default
+  /// Absolute URL of the English wide logo, the one paper prints
+  final String? wordmarkUrl;
+  final TenantLocale locale;
+
+  /// `light` or `dark` for someone who has not chosen; null keeps the app's own default
   final String? defaultThemeMode;
+  final TenantFeatures features;
 
-  /// ISO 4217: what the business's money is counted in
-  final String currency;
+  /// The kind of place the business was created as (`coffee_shop`,
+  /// `cloud_kitchen`, ...); null from a stack that does not say
+  final String? businessType;
+
+  /// Where customers open the menu (`https://…`, no trailing slash); null
+  /// when provisioning has not said. The app link a counter customer
+  /// claims their account with points there.
+  final String? customerUrl;
+  final int version;
 
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
     this.logoUrl,
-    this.features = TenantFeatures.all,
-    this.version = 0,
+    this.wordmarkUrl,
+    this.locale = TenantLocale.egypt,
     this.defaultThemeMode,
-    this.currency = 'EGP',
+    this.features = TenantFeatures.all,
+    this.businessType,
+    this.customerUrl,
+    this.version = 0,
   });
+
+  /// ISO 4217: what the business's money is counted in
+  String get currency => locale.currency;
+
+  /// A cloud kitchen has no tables to open or seat: its orders are counter
+  /// bills and app orders, never a floor
+  bool get isCloudKitchen => businessType == 'cloud_kitchen';
+
+  /// What a receipt prints at the top: the wide logo, else the mark, else nothing (the name stands in)
+  String? get receiptImageUrl => wordmarkUrl ?? logoUrl;
 
   /// What shows until anything is known: a neutral name, no color, no logo,
   /// every feature on
@@ -104,40 +188,57 @@ class TenantBrand {
   /// The API's shape; relative URLs are relative to [baseUrl]
   factory TenantBrand.fromApi(Map<String, dynamic> json, {required String baseUrl}) {
     final logo = json['logoUrl'] as String?;
+    final wordmarks = json['wordmarks'];
+    final wordmark = wordmarks is Map<String, dynamic> && wordmarks['en'] is Map<String, dynamic>
+        ? (wordmarks['en'] as Map<String, dynamic>)['url'] as String?
+        : null;
+    String? absolute(String? url) => url == null ? null : (url.startsWith('http') ? url : '$baseUrl$url');
     return TenantBrand(
       name: LocalizedText.parse(json['name']),
       primaryColorHex: _hex(json['primaryColor'] as String?),
-      logoUrl: logo == null ? null : (logo.startsWith('http') ? logo : '$baseUrl$logo'),
+      logoUrl: absolute(logo),
+      wordmarkUrl: absolute(wordmark),
+      locale: TenantLocale.parse(json['locale']),
+      defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
+      businessType: json['businessType'] as String?,
+      customerUrl: _origin(json['customerUrl']),
       version: (json['version'] as num?)?.toInt() ?? 0,
-      defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
-      currency: _currency(json['locale'] is Map ? (json['locale'] as Map)['currency'] : null),
     );
   }
 
-  /// The cached shape (what [toJson] wrote)
+  /// The cached shape (what [toJson] wrote). A cache from before the locale
+  /// was kept whole says only `currency`; it still counts.
   factory TenantBrand.fromJson(Map<String, dynamic> json) => TenantBrand(
         name: LocalizedText.parse(json['name']),
         primaryColorHex: _hex(json['primaryColor'] as String?),
         logoUrl: json['logoUrl'] as String?,
+        wordmarkUrl: json['wordmarkUrl'] as String?,
+        locale: json['locale'] is Map<String, dynamic>
+            ? TenantLocale.parse(json['locale'])
+            : TenantLocale(currency: _currency(json['currency'])),
+        defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : json['defaultThemeMode']),
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
+        businessType: json['businessType'] as String?,
+        customerUrl: _origin(json['customerUrl']),
         version: (json['version'] as num?)?.toInt() ?? 0,
-        defaultThemeMode: _mode(json['defaultThemeMode']),
-        currency: _currency(json['currency']),
       );
 
   Map<String, dynamic> toJson() => {
         'name': name.toJson(),
         'primaryColor': primaryColorHex,
         'logoUrl': logoUrl,
-        'features': features.toJson(),
-        'version': version,
+        'wordmarkUrl': wordmarkUrl,
+        'locale': locale.toJson(),
         'defaultThemeMode': defaultThemeMode,
-        'currency': currency,
+        'features': features.toJson(),
+        'businessType': businessType,
+        'customerUrl': customerUrl,
+        'version': version,
       };
 
   Color? get primaryColor {
@@ -161,7 +262,15 @@ class TenantBrand {
   }
 }
 
-/// `light` or `dark`, anything else leaves the default
+/// An absolute http(s) origin without its trailing slash, else null
+String? _origin(Object? value) {
+  if (value is! String) return null;
+  final v = value.trim();
+  if (!v.startsWith('http://') && !v.startsWith('https://')) return null;
+  return v.endsWith('/') ? v.substring(0, v.length - 1) : v;
+}
+
+/// `light` or `dark`, anything else leaves the app's own default
 String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;
 
 /// A currency code, or the platform's first market's when none is said

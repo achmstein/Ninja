@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'enums.dart';
 
 /// `POST /api/tickets`: open a counter tab or a table's bill by hand. A

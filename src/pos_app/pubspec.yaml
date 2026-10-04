@@ -12,6 +12,10 @@ dependencies:
   # ESC/POS printing, shared with the kitchen display
   ninja_printing:
     path: ../ninja_printing
+  # What the platform's Android apps share: connecting, signing in, the API
+  # client, the hub, the brand, the branch, self-update, motion, a few widgets
+  ninja_app_core:
+    path: ../ninja_app_core
   flutter_localizations:
     sdk: flutter
 

@@ -9,7 +9,7 @@ import '../../features/tickets/models/settle.dart';
 import '../../features/tickets/providers/tickets_provider.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../config/app_config.dart';
-import '../network/network_status.dart';
+import 'package:ninja_app_core/network/network_status.dart';
 import 'offline_sale.dart';
 
 const _salesKey = 'pos.offline.sales';

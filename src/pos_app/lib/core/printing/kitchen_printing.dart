@@ -7,9 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../l10n/app_localizations.dart';
 import '../network/api_client.dart';
-import '../providers/branch_provider.dart';
-import '../providers/locale_provider.dart';
-import '../theme/app_theme.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 const _enabledKey = 'pos.kitchen.print';
 const _deviceKey = 'pos.device.id';

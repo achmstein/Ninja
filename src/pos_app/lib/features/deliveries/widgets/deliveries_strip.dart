@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/money.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/status.dart';

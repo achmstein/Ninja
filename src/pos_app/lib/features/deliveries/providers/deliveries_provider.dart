@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../orders/services/order_service.dart';
 import '../../tickets/providers/tickets_provider.dart';
