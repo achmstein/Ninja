@@ -14,7 +14,7 @@ namespace Ninja.Sales.FunctionalTests;
 [TestClass]
 public sealed class DeliveryScenarios
 {
-    private static int _nextOrder = 950_000;
+    private static int _nextOrder = 970_000;
 
     private static OrderStatusChangedToConfirmedIntegrationEvent Delivered(int orderId, string buyer = "user-delivery")
         => new(
