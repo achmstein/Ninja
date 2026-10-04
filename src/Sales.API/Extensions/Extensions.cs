@@ -82,6 +82,8 @@ public static class Extensions
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
             .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
+            // A rider's cash handed in at the till settles the delivery's bill
+            .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
             // Whether guests may pay online: Sales keeps its own copy of the switch
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
@@ -95,6 +97,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
+[JsonSerializable(typeof(OrderDeliveryChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]

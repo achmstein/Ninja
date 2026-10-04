@@ -45,7 +45,9 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     /// <summary>The platform's code for the order, the one its rider asks for.</summary>
     string? PlatformCode = null,
     /// <summary>The platform pays the business for it: its bill settles at once, to the platform.</summary>
-    bool PlatformSettles = false) : IntegrationEvent;
+    bool PlatformSettles = false,
+    /// <summary>The business's own rider delivers it, for this fee: a bill of its own with the fee as a line. Null when not delivered.</summary>
+    decimal? DeliveryFee = null) : IntegrationEvent;
 
 public record OrderConfirmedItem(
     int ProductId,

@@ -11,4 +11,7 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     public string BuyerIdentityGuid { get; init; } = default!;
     public decimal OrderTotal { get; init; }
     public int PointsToRedeem { get; init; }
+
+    /// <summary>The delivery fee inside <see cref="OrderTotal"/>; no points are earned on it.</summary>
+    public decimal? DeliveryFee { get; init; }
 }

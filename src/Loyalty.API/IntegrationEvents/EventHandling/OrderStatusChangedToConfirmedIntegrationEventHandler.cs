@@ -81,7 +81,8 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         // Calculate points to award with tier multiplier
         var tierMultiplier = GetTierMultiplier(account.CurrentTier);
-        var pointsToAward = PointsToAward(@event.OrderTotal, account.CurrentTier);
+        // Points are for what was eaten, not for the ride over
+        var pointsToAward = PointsToAward(@event.OrderTotal - (@event.DeliveryFee ?? 0), account.CurrentTier);
 
         if (pointsToAward > 0)
         {

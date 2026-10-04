@@ -88,6 +88,13 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public bool PlatformSettles { get; init; }
 
+    /// <summary>
+    /// The business's own rider delivers it, for this fee — already in
+    /// <see cref="OrderTotal"/>; Sales bills it as its own line on a bill of
+    /// the delivery's own. Null on every order not delivered.
+    /// </summary>
+    public decimal? DeliveryFee { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

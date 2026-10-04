@@ -75,6 +75,20 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             catalogItemId: i.ProductId,
             suggestion: i.Suggestion)).ToList();
 
+        // The delivery is part of the order: its fee rides with the order's
+        // lines, so it is billed, refunded and moved along with them
+        if (@event.DeliveryFee is decimal fee && fee > 0)
+        {
+            lines.Add(new TicketLine(
+                TicketLineSource.Order,
+                DeliveryFeeLine,
+                qty: 1,
+                unitPrice: fee,
+                customerName: lineCustomer,
+                customerId: lineCustomerId,
+                guestId: @event.GuestId));
+        }
+
         ticket.AppendOrder(
             @event.OrderId,
             lines,
@@ -94,6 +108,9 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             await SettleToPlatformAsync(@event, ticket);
         }
     }
+
+    /// <summary>How the delivery fee reads on the bill.</summary>
+    public static readonly LocalizedText DeliveryFeeLine = new() { En = "Delivery fee", Ar = "رسوم التوصيل" };
 
     /// <summary>The name a settle to a platform is recorded under, beside a cashier's.</summary>
     public const string PlatformSettledBy = "talabat";
@@ -131,6 +148,13 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (@event.Platform is { } platform)
         {
             return ticketRepository.Add(Ticket.OpenForPlatform(@event.BranchId, platform, @event.PlatformCode));
+        }
+
+        // The business's own delivery is its own sale too: paid at the door,
+        // in cash the rider brings back, so never joined to a tab
+        if (@event.DeliveryFee is not null)
+        {
+            return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, DeliveryLabel(@event)));
         }
 
         // The cashier rang this up against a bill that is already on the
@@ -210,4 +234,10 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, @event.CustomerName));
     }
+
+    /// <summary>A delivery's bill is named for it: the order, and whom it goes to.</summary>
+    private static string DeliveryLabel(OrderStatusChangedToConfirmedIntegrationEvent @event)
+        => string.IsNullOrWhiteSpace(@event.CustomerName)
+            ? $"🛵 #{@event.OrderId}"
+            : $"🛵 #{@event.OrderId} · {@event.CustomerName}";
 }
