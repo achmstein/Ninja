@@ -402,11 +402,15 @@ export const getMyDeliveries = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * The rider left with it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
  */
 export const markDeliveryOut = <ThrowOnError extends boolean = false>(options: Options<MarkDeliveryOutData, ThrowOnError>): RequestResult<MarkDeliveryOutResponses, MarkDeliveryOutErrors, ThrowOnError> => (options.client ?? client).put<MarkDeliveryOutResponses, MarkDeliveryOutErrors, ThrowOnError>({ url: '/api/orders/{orderId}/delivery/out', ...options });
 
 /**
  * The customer has it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
  */
 export const markDeliveryDelivered = <ThrowOnError extends boolean = false>(options: Options<MarkDeliveryDeliveredData, ThrowOnError>): RequestResult<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError> => (options.client ?? client).put<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError>({ url: '/api/orders/{orderId}/delivery/delivered', ...options });
 

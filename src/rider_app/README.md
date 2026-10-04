@@ -53,7 +53,13 @@ would, from its address or the code on the admin's Apps page.
 
 ## Icons
 
-The launcher icon and splash are the kitchen's for now, on a teal tile
-(`#0D9488`) instead of ember. `src/scripts/generate-app-icons.mjs` should
-draw the rider's own (`ninja | Rider` lockup), then
+The launcher icon is the platform's N on a teal tile (`#0D9488`, so a
+rider's phone shows its own at a glance), and the splash the `ninja | RIDER`
+lockup. Both come from `src/scripts/generate-app-icons.mjs`, then
 `dart run flutter_launcher_icons && dart run flutter_native_splash:create`.
+
+## Delivery is an add-on
+
+A business buys delivery from the platform. Where it has not (or the owner
+switched it off), the app says the business does not deliver and asks for
+nothing.

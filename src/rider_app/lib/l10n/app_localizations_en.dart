@@ -231,6 +231,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navigate => 'Navigate';
 
   @override
+  String get notDelivering => 'This business doesn\'t deliver';
+
+  @override
+  String get notDeliveringHint =>
+      'Delivery isn\'t part of its subscription, or it\'s switched off. Ask the owner.';
+
+  @override
   String get noPin =>
       'No pin: Maps looks for the address. Call if you can\'t find the door.';
 

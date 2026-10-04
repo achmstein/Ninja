@@ -560,6 +560,7 @@ const dictionary = {
   featurePayroll: "Payroll",
   featureKds: "Kitchen display",
   featureOnlinePayments: "Online payments",
+  featureDelivery: "Delivery",
   brandSaved: "Brand saved",
   brandSaveFailed: "The brand was not saved",
   brandNotRunning: "The brand lives on the stack; start it to edit",

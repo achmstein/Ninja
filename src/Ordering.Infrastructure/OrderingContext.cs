@@ -27,6 +27,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<PlatformUpdate> PlatformUpdates { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
     public DbSet<RiderStatus> RiderStatuses { get; set; }
+    public DbSet<TenantFeatures> TenantFeatures { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -64,6 +65,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new PlatformUpdateEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CustomerAddressEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RiderStatusEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

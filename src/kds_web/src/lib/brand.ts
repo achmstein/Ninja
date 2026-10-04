@@ -32,6 +32,7 @@ export const ALL_FEATURES: TenantFeatures = {
   payroll: true,
   kds: true,
   onlinePayments: true,
+  delivery: true,
 }
 
 export const brandQueryOptions = () => ({

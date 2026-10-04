@@ -29,9 +29,49 @@ public sealed class SubscriptionTests
     {
         CollectionAssert.AreEquivalent(new[] { Module.Kds }, PlanCatalog.Included(TenantPlan.Free).ToArray());
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
-        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments])));
-        CollectionAssert.AreEqual(new[] { Module.OnlinePayments }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments, Module.Delivery])));
+        CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+    }
+
+    [TestMethod]
+    public void Delivery_is_an_addon_on_every_plan_and_starts_on_where_it_was_bought()
+    {
+        foreach (var plan in Enum.GetValues<TenantPlan>())
+        {
+            Assert.DoesNotContain(Module.Delivery, PlanCatalog.Included(plan), $"{plan} does not include delivery");
+            Assert.Contains(Module.Delivery, PlanCatalog.AddonsAvailable(plan), $"{plan} can buy delivery");
+            Assert.Contains(Module.Delivery, PlanCatalog.Entitlements(plan, [Module.Delivery], TenantKind.Customer), $"{plan} with the add-on has it");
+        }
+        Assert.Contains(Module.Delivery, PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo), "a demo has everything");
+        foreach (var type in Enum.GetValues<BusinessType>())
+        {
+            Assert.Contains(Module.Delivery, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with delivery on once bought");
+            Assert.DoesNotContain(Module.Delivery, BusinessProfiles.Starting(type, PlanCatalog.Included(TenantPlan.Pro)), $"{type} never starts with delivery it did not buy");
+        }
+    }
+
+    [TestMethod]
+    public void The_gateway_blocks_the_delivery_paths_without_the_addon_and_leaves_orders_alone()
+    {
+        var tenant = Customer(TenantPlan.Pro);
+        var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
+        foreach (var path in new[] { "/api/orders/delivery/{*any}", "/api/orders/addresses", "/api/orders/deliveries/{*any}", "/api/orders/riders", "/api/orders/{id}/delivery/{*any}" })
+        {
+            var route = Regex.Match(yaml, $@"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""{Regex.Escape(path)}""").Groups[1].Value;
+            Assert.IsFalse(string.IsNullOrEmpty(route), $"{path} is blocked");
+            Assert.Contains($"{route}__CLUSTERID: \"tenant\"", yaml);
+            Assert.Contains($"{route}__TRANSFORMS__1__Set: \"delivery\"", yaml);
+        }
+        // Placing and reading orders stays with Ordering
+        var orders = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/orders/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{orders}__CLUSTERID: \"ordering\"", yaml);
+
+        // Bought: nothing of delivery's is blocked
+        var bought = Customer(TenantPlan.Pro, Module.Delivery);
+        yaml = Templates.Compose(bought, TenantHosts.For(bought, Platform), Platform);
+        Assert.DoesNotContain("/api/orders/riders", yaml);
+        Assert.DoesNotContain("/api/orders/{id}/delivery/{*any}", yaml);
     }
 
     [TestMethod]
@@ -77,8 +117,8 @@ public sealed class SubscriptionTests
         Assert.Contains($"{callback}__ORDER: \"-2\"", yaml);
         Assert.DoesNotContain($"{callback}__MATCH__QUERYPARAMETERS", yaml, "the provider sends no api-version");
 
-        // Bought: the payment routes go to Sales and nothing is blocked
-        var bought = Customer(TenantPlan.Pro, Module.OnlinePayments);
+        // Bought (with delivery, Pro's other add-on): the payment routes go to Sales and nothing is blocked
+        var bought = Customer(TenantPlan.Pro, Module.OnlinePayments, Module.Delivery);
         yaml = Templates.Compose(bought, TenantHosts.For(bought, Platform), Platform);
         payments = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/sales/payments/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{payments}__CLUSTERID: \"sales\"", yaml);
@@ -109,7 +149,8 @@ public sealed class SubscriptionTests
         Assert.IsTrue(features["timeBilling"]!.GetValue<bool>(), "camelCase, the way System.Text.Json spells Tenant.API's record");
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
         Assert.IsFalse(features["onlinePayments"]!.GetValue<bool>(), "an add-on on every plan");
-        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments" }, features.Select(f => f.Key).ToArray());
+        Assert.IsFalse(features["delivery"]!.GetValue<bool>(), "an add-on on every plan");
+        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments", "delivery" }, features.Select(f => f.Key).ToArray());
     }
 
     [TestMethod]
@@ -207,7 +248,7 @@ public sealed class SubscriptionTests
     {
         var demo = Customer(TenantPlan.Free);
         demo.Kind = TenantKind.Demo;
-        foreach (var tenant in new[] { Customer(TenantPlan.Pro, Module.OnlinePayments), demo })
+        foreach (var tenant in new[] { Customer(TenantPlan.Pro, Module.OnlinePayments, Module.Delivery), demo })
         {
             var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
             Assert.DoesNotContain("module-off", yaml);

@@ -234,8 +234,8 @@ function ProfilePage() {
             {canChangeBranch && (
               <TileButton icon={MapPin} label={t('ninjaBranch')} value={localized(branch?.name)} onClick={() => setBranchesOpen(true)} />
             )}
-            {/* Where a delivery goes, kept on the account: only where some branch delivers */}
-            {signedIn && branches.some((b) => b.isDeliveryEnabled) && (
+            {/* Where a delivery goes, kept on the account: only where the business and some branch deliver */}
+            {signedIn && features.delivery && branches.some((b) => b.isDeliveryEnabled) && (
               <TileButton icon={House} label={t('myAddresses')} onClick={() => setAddressesOpen(true)} />
             )}
             <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />

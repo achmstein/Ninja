@@ -443,8 +443,9 @@ export function Floor() {
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
-        {/* Deliveries out: waiting for a rider, with one, or their cash to take in */}
-        <DeliveriesStrip />
+        {/* Deliveries out: waiting for a rider, with one, or their cash to take
+            in; only where the business delivers (an add-on) */}
+        {features.delivery && <DeliveriesStrip />}
 
         {features.reservations && !cloudKitchen && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>

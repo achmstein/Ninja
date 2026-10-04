@@ -24,9 +24,11 @@ public static class BusinessProfiles
     private static readonly IReadOnlyDictionary<BusinessType, IReadOnlySet<Module>> StartingOn = new Dictionary<BusinessType, IReadOnlySet<Module>>
     {
         // Counter service: nobody books a table or pays by the hour
-        [BusinessType.CoffeeShop] = new HashSet<Module> { Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
+        // Delivery starts on wherever it was bought: the branches still each
+        // need a place on the map and an area before anyone can order to a door
+        [BusinessType.CoffeeShop] = new HashSet<Module> { Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
         // Tables are booked, a kitchen cooks; nothing runs on a clock
-        [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
+        [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
         // Rooms and consoles by the hour, booked ahead, snacks from a small kitchen.
         // Online payments starts off everywhere: it needs the business's own payment
         // account keys before a guest can use it, so the owner turns it on
@@ -35,7 +37,7 @@ public static class BusinessProfiles
         // A kitchen and a counter: nobody sits, so nothing is booked or timed.
         // Tabs are for regulars at a counter they come back to, not a hatch
         // they collect from once; the rest runs any kitchen
-        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Loyalty, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds },
+        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Loyalty, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
     };
 
     private static readonly IReadOnlyDictionary<BusinessType, IReadOnlySet<Module>> Suggested = new Dictionary<BusinessType, IReadOnlySet<Module>>
@@ -44,8 +46,9 @@ public static class BusinessProfiles
         [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Kds, Module.Inventory },
         [BusinessType.GameStation] = new HashSet<Module> { Module.TimeBilling, Module.Reservations },
         [BusinessType.Other] = new HashSet<Module>(),
-        // Everything is cooked to order, off stock, and repeat customers are the business
-        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Kds, Module.Inventory, Module.Loyalty },
+        // Everything is cooked to order, off stock, and repeat customers are the
+        // business; and it all leaves by delivery
+        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Kds, Module.Inventory, Module.Loyalty, Module.Delivery },
     };
 
     /// <summary>The switches a fresh stack starts with: what the business wants, within what is entitled.</summary>

@@ -26,6 +26,13 @@ public interface IBranchSettingsQueries
     /// orders does not stop the till taking one over the phone.
     /// </summary>
     Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false);
+
+    /// <summary>
+    /// Whether the business delivers at all: delivery bought, and not switched
+    /// off by the owner. Fail-open: a stack that has never said delivers as
+    /// each branch is set.
+    /// </summary>
+    Task<bool> IsDeliveryOnAsync();
 }
 
 /// <summary>Where a branch delivers from, how far, and what it asks.</summary>

@@ -98,6 +98,9 @@ internal static class Extensions
         // The business's own settings, the same way: one row that every branch reads
         eventBus.AddSubscription<TenantSettingsChangedIntegrationEvent, TenantSettingsChangedIntegrationEventHandler>();
 
+        // The business's switches: whether it delivers at all (bought, and on)
+        eventBus.AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>();
+
         // Spaces' places, projected locally: an order names a place and a
         // deactivated one is refused without a call across services
         eventBus.AddSubscription<PlaceUpdatedIntegrationEvent, PlaceUpdatedIntegrationEventHandler>();

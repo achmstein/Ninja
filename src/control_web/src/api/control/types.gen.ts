@@ -98,6 +98,7 @@ export type BrandFeatures = {
     payroll: boolean;
     kds: boolean;
     onlinePayments?: boolean;
+    delivery?: boolean;
 };
 
 export type BrandIcons = {
@@ -349,7 +350,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments';
+export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery';
 
 export type OperatorInvitedResponse = {
     id: string;

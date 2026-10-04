@@ -228,6 +228,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navigate => 'الطريق';
 
   @override
+  String get notDelivering => 'النشاط ده مش بيوصّل';
+
+  @override
+  String get notDeliveringHint =>
+      'التوصيل مش ضمن الاشتراك، أو مقفول. اسأل صاحب النشاط.';
+
+  @override
   String get noPin =>
       'من غير لوكيشن: الخريطة بتدوّر بالعنوان. اتصل لو مش لاقي الباب.';
 

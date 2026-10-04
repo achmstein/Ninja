@@ -38,6 +38,7 @@ import {
   useTillDeliveryQuote,
 } from '@/features/deliveries/delivery-dialog'
 import { stayRoster } from '@/features/places/status'
+import { useFeatures } from '@/lib/brand'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { API_VERSION, apiClient } from '@/lib/api-client'
@@ -229,8 +230,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // A walk-in sale can go out with a rider instead, where the branch
   // delivers; a round on an open bill never does
   const [deliveryOpen, setDeliveryOpen] = useState(false)
-  const deliveryTerms = useTillDeliveryQuote('', !addingToTicket).data
-  const canDeliver = !addingToTicket && deliveryTerms?.delivers === true
+  const features = useFeatures()
+  // Not asked at all where the business does not deliver (an add-on)
+  const deliveryTerms = useTillDeliveryQuote(
+    '',
+    !addingToTicket && features.delivery,
+  ).data
+  const canDeliver =
+    !addingToTicket && features.delivery && deliveryTerms?.delivers === true
   const delivering = canDeliver && delivery !== null
   const deliveryFee = delivering ? toNumber(deliveryTerms?.fee) : 0
 

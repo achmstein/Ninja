@@ -18,6 +18,11 @@ class TenantFeatures {
   /// it says nothing).
   final bool onlinePayments;
 
+  /// The business's own delivery, the whole of this app: an add-on it buys.
+  /// On until the brand says otherwise, and when a stack older than the
+  /// switch says nothing (it delivered before delivery was sold on its own).
+  final bool delivery;
+
   const TenantFeatures({
     this.reservations = true,
     this.timeBilling = true,
@@ -28,6 +33,7 @@ class TenantFeatures {
     this.payroll = true,
     this.kds = true,
     this.onlinePayments = false,
+    this.delivery = true,
   });
 
   static const all = TenantFeatures();
@@ -44,6 +50,7 @@ class TenantFeatures {
         kds: json['kds'] as bool? ?? true,
         // A cache from before the rename says "payAtTable"
         onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
+        delivery: json['delivery'] as bool? ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -56,6 +63,7 @@ class TenantFeatures {
         'payroll': payroll,
         'kds': kds,
         'onlinePayments': onlinePayments,
+        'delivery': delivery,
       };
 }
 

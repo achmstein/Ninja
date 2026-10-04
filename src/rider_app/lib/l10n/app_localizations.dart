@@ -506,6 +506,18 @@ abstract class AppLocalizations {
   /// **'Navigate'**
   String get navigate;
 
+  /// No description provided for @notDelivering.
+  ///
+  /// In en, this message translates to:
+  /// **'This business doesn\'t deliver'**
+  String get notDelivering;
+
+  /// No description provided for @notDeliveringHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery isn\'t part of its subscription, or it\'s switched off. Ask the owner.'**
+  String get notDeliveringHint;
+
   /// Under an address the till took over the phone without a shared location
   ///
   /// In en, this message translates to:

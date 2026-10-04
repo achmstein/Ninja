@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAllBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -51,6 +52,7 @@ export function AddStaffDialog({
 }: AddStaffDialogProps) {
   const t = useT()
   const localized = useLocalized()
+  const features = useFeatures()
   const queryClient = useQueryClient()
   const [name, setName] = useState(defaults?.name ?? '')
   const [email, setEmail] = useState('')
@@ -91,9 +93,11 @@ export function AddStaffDialog({
       if (userId && onCreated) onCreated(userId)
       toast.success(
         t(
-          role === 'Cashier' || role === 'Kitchen' || role === 'Rider'
-            ? 'cashierCreatedSuccess'
-            : makeOwner
+          role === 'Rider'
+            ? 'riderCreatedSuccess'
+            : role === 'Cashier' || role === 'Kitchen'
+              ? 'cashierCreatedSuccess'
+              : makeOwner
               ? 'ownerCreatedSuccess'
               : 'adminCreatedSuccess'
         )
@@ -170,7 +174,10 @@ export function AddStaffDialog({
                 <SelectItem value='Admin'>{t('adminRole')}</SelectItem>
                 <SelectItem value='Cashier'>{t('cashierRole')}</SelectItem>
                 <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
-                <SelectItem value='Rider'>{t('riderRole')}</SelectItem>
+                {/* Riders only where the business delivers (an add-on) */}
+                {features.delivery && (
+                  <SelectItem value='Rider'>{t('riderRole')}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </Field>

@@ -169,38 +169,44 @@ export function BranchSheet({
         )}
       </Group>
 
-      <Group label={t('branchSectionDelivery')}>
-        <ToggleRow
-          icon={Bike}
-          title={t('deliveryEnabled')}
-          hint={
-            located && radiusKm > 0
-              ? t('deliveryEnabledHint')
-              : t('deliveryNeedsLocation')
-          }
-          checked={branch.isDeliveryEnabled ?? false}
-          disabled={savingSettings || !located || radiusKm <= 0}
-          onChange={(v) => onToggle('isDeliveryEnabled', v)}
-        />
-        <OpenRow
-          icon={Ruler}
-          title={t('deliverySettings')}
-          value={
-            radiusKm > 0
-              ? [
-                  t('deliveryWithinKm', { km: radiusKm }),
-                  fee > 0 ? formatEgp(fee) : t('deliveryFree'),
-                  minimum > 0
-                    ? t('deliveryMinimumShort', { amount: formatEgp(minimum) })
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              : t('branchNotSet')
-          }
-          onClick={onDelivery}
-        />
-      </Group>
+      {/* Delivery is an add-on: a business that has not bought it (or
+          switched it off) is not asked where its branches deliver */}
+      {features.delivery && (
+        <Group label={t('branchSectionDelivery')}>
+          <ToggleRow
+            icon={Bike}
+            title={t('deliveryEnabled')}
+            hint={
+              located && radiusKm > 0
+                ? t('deliveryEnabledHint')
+                : t('deliveryNeedsLocation')
+            }
+            checked={branch.isDeliveryEnabled ?? false}
+            disabled={savingSettings || !located || radiusKm <= 0}
+            onChange={(v) => onToggle('isDeliveryEnabled', v)}
+          />
+          <OpenRow
+            icon={Ruler}
+            title={t('deliverySettings')}
+            value={
+              radiusKm > 0
+                ? [
+                    t('deliveryWithinKm', { km: radiusKm }),
+                    fee > 0 ? formatEgp(fee) : t('deliveryFree'),
+                    minimum > 0
+                      ? t('deliveryMinimumShort', {
+                          amount: formatEgp(minimum),
+                        })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                : t('branchNotSet')
+            }
+            onClick={onDelivery}
+          />
+        </Group>
+      )}
 
       {features.kds && (
         <Group label={t('branchSectionKitchen')}>

@@ -20,8 +20,18 @@ public class BranchSettingsQueries(OrderingContext context) : IBranchSettingsQue
         return row?.RequireSignInForTableOrders ?? false;
     }
 
+    public async Task<bool> IsDeliveryOnAsync() =>
+        await context.TenantFeatures
+            .AsNoTracking()
+            .Where(f => f.Id == TenantFeatures.SingletonId)
+            .Select(f => (bool?)f.Delivery)
+            .FirstOrDefaultAsync() ?? true;
+
     public async Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false)
     {
+        // Not bought, or switched off: no branch delivers, whatever it was set to
+        if (!await IsDeliveryOnAsync()) return null;
+
         var row = await context.BranchSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.BranchId == branchId);

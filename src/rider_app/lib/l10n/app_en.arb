@@ -99,6 +99,8 @@
   "floor": "Floor",
   "apartment": "Apt",
   "navigate": "Navigate",
+  "notDelivering": "This business doesn't deliver",
+  "notDeliveringHint": "Delivery isn't part of its subscription, or it's switched off. Ask the owner.",
   "noPin": "No pin: Maps looks for the address. Call if you can't find the door.",
   "@noPin": {
     "description": "Under an address the till took over the phone without a shared location"

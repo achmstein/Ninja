@@ -68,7 +68,7 @@ public sealed class SubscriptionScenarios
 
         var subscription = await api.SubscriptionAsync(slug);
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, subscription.Entitlements);
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments }, subscription.AddonsAvailable);
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery }, subscription.AddonsAvailable);
         Assert.IsTrue(ControlPlane.Factory.Shell.Commands.Any(c => c.Contains($"compose -p ninja-{slug} up -d --remove-orphans")), "the containers that left the plan go as orphans");
     }
 

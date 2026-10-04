@@ -207,6 +207,7 @@ const webExtras = {
   featurePayroll: { en: "Payroll", ar: "الرواتب" },
   featureKds: { en: "Kitchen display", ar: "شاشة المطبخ" },
   featureOnlinePayments: { en: "Online payments", ar: "الدفع أونلاين" },
+  featureDelivery: { en: "Delivery", ar: "التوصيل" },
   brandWordmarkEn: { en: "Wide logo", ar: "الشعار العريض" },
   brandLogoDark: { en: "Logo, dark mode", ar: "الشعار للوضع الداكن" },
   brandWordmarkEnDark: { en: "Wide logo, dark mode", ar: "الشعار العريض للوضع الداكن" },
@@ -419,6 +420,7 @@ const webExtras = {
   addStaff: { en: "Add staff", ar: "أضف موظفًا" },
   branchesUpdated: { en: "Branches updated", ar: "تم تحديث الفروع" },
   cashierCreatedSuccess: { en: "Cashier account created", ar: "تم إنشاء حساب الكاشير" },
+  riderCreatedSuccess: { en: "Rider account created", ar: "تم إنشاء حساب المندوب" },
   initialBranches: { en: "Branches", ar: "الفروع" },
   // Orders board (KDS-style aging)
   delayed: { en: "Delayed", ar: "متأخر" },

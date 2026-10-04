@@ -4128,6 +4128,10 @@
           "onlinePayments": {
             "type": "boolean",
             "default": false
+          },
+          "delivery": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5387,7 +5391,8 @@
           "Finance",
           "Payroll",
           "Kds",
-          "OnlinePayments"
+          "OnlinePayments",
+          "Delivery"
         ]
       },
       "OperatorInvitedResponse": {

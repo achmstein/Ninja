@@ -6,8 +6,8 @@ namespace Ninja.Tenant.UnitTests;
 [TestClass]
 public sealed class TenantEntitlementsTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true);
-    private static readonly TenantFeatures NoInventory = new(true, true, true, true, false, true, true, true, true);
+    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true);
+    private static readonly TenantFeatures NoInventory = AllOn with { Inventory = false };
 
     [TestMethod]
     public void A_fresh_tenant_is_entitled_to_everything_and_has_everything_on_but_pay_at_table()
@@ -30,6 +30,28 @@ public sealed class TenantEntitlementsTests
         Assert.IsFalse(tenant.OnlinePaymentsEnabled, "the plan no longer allows it");
         tenant.ApplyFeatures(AllOn);
         Assert.IsFalse(tenant.OnlinePaymentsEnabled, "an owner never turns on what is not bought");
+    }
+
+    [TestMethod]
+    public void Delivery_starts_on_goes_off_with_the_plan_and_a_caller_that_does_not_know_it_leaves_it_off()
+    {
+        var tenant = new API.Model.Tenant();
+        Assert.IsTrue(tenant.DeliveryEnabled, "the dev host and a stack nobody told keep delivering");
+
+        // Not bought: off, and the owner cannot turn it back on
+        tenant.ApplyEntitlements(AllOn with { Delivery = false });
+        Assert.IsFalse(tenant.DeliveryEnabled);
+        tenant.ApplyFeatures(AllOn);
+        Assert.IsFalse(tenant.DeliveryEnabled, "an owner never turns on what is not bought");
+
+        // Bought again: on when the owner says so
+        tenant.ApplyEntitlements(AllOn);
+        tenant.ApplyFeatures(AllOn);
+        Assert.IsTrue(tenant.DeliveryEnabled);
+
+        // An admin older than delivery sends nine switches: delivery goes off, as online payments did
+        tenant.ApplyFeatures(new TenantFeatures(true, true, true, true, true, true, true, true, true));
+        Assert.IsFalse(tenant.DeliveryEnabled);
     }
 
     [TestMethod]

@@ -247,7 +247,8 @@ public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
 /// <param name="OnlinePayments">Last and defaulted: a stack older than online payments does not send it.</param>
-public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false);
+/// <param name="Delivery">Last and defaulted: a stack older than delivery does not send it.</param>
+public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false);
 
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
 /// <param name="ContentLanguages">both, ar or en; null leaves the stack's (a stack older than the setting sends none).</param>

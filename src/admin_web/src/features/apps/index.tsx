@@ -50,7 +50,9 @@ export function AppsPage() {
   const [selected, setSelected] = useState<AppKey>('pos')
   // The rider app is for a business whose branches deliver with their own riders
   const branchesQuery = useQuery(getAllBranchesOptions())
-  const delivers = (branchesQuery.data ?? []).some((b) => b.isDeliveryEnabled)
+  const delivers =
+    features.delivery &&
+    (branchesQuery.data ?? []).some((b) => b.isDeliveryEnabled)
 
   // Each app's launcher icon (the platform's N mark on its own tile), the one a tablet shows once installed
   const tablets = [

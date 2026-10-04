@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context'
 import type { CustomerAddressView, DeliveryView } from '@/api/ordering'
 import { getDeliveryQuoteOptions, getMyAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useSelectedBranch } from '@/lib/branch'
 import type { OrderDestination } from '@/lib/order-destination'
 import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
@@ -38,8 +39,10 @@ export type DeliveryState = {
 
 export function useDelivery(destination: OrderDestination, subtotal: number): DeliveryState {
   const branch = useSelectedBranch()
+  const delivers = useFeatures().delivery === true
   const { wanted, address, setWanted, setAddress } = useDeliveryStore()
-  const offered = !destination && branch?.isDeliveryEnabled === true && branch.isOrderingEnabled !== false
+  // The business delivers (an add-on it bought, and on), and so does this branch
+  const offered = delivers && !destination && branch?.isDeliveryEnabled === true && branch.isOrderingEnabled !== false
   const active = offered && wanted
 
   const quoteQuery = useQuery({
@@ -87,9 +90,10 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
 /** A signed-in customer's saved addresses, latest first; none for a guest */
 export function useMyAddresses() {
   const auth = useAuth()
+  const delivers = useFeatures().delivery === true
   return useQuery({
     ...getMyAddressesOptions({ query: { 'api-version': API_VERSION } }),
-    enabled: auth.isAuthenticated,
+    enabled: auth.isAuthenticated && delivers,
   })
 }
 

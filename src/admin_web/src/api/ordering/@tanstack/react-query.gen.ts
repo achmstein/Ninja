@@ -712,6 +712,8 @@ export const getMyDeliveriesOptions = (options: Options<GetMyDeliveriesData>) =>
 
 /**
  * The rider left with it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
  */
 export const markDeliveryOutMutation = (options?: Partial<Options<MarkDeliveryOutData>>): UseMutationOptions<MarkDeliveryOutResponse, AxiosError<MarkDeliveryOutError>, Options<MarkDeliveryOutData>> => {
     const mutationOptions: UseMutationOptions<MarkDeliveryOutResponse, AxiosError<MarkDeliveryOutError>, Options<MarkDeliveryOutData>> = {
@@ -729,6 +731,8 @@ export const markDeliveryOutMutation = (options?: Partial<Options<MarkDeliveryOu
 
 /**
  * The customer has it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
  */
 export const markDeliveryDeliveredMutation = (options?: Partial<Options<MarkDeliveryDeliveredData>>): UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<MarkDeliveryDeliveredError>, Options<MarkDeliveryDeliveredData>> => {
     const mutationOptions: UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<MarkDeliveryDeliveredError>, Options<MarkDeliveryDeliveredData>> = {

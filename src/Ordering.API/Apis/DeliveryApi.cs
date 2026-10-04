@@ -11,6 +11,11 @@ public static class DeliveryApi
 {
     public static RouteGroupBuilder MapDeliveryRoutes(this RouteGroupBuilder orders)
     {
+        // Every route but the quote answers 402 while the business does not
+        // deliver (not bought, or switched off), as the gateway does on a stack
+        // whose plan leaves it out; the quote says "does not deliver" instead
+        var gated = orders.MapGroup(string.Empty).AddEndpointFilter(DeliveryOnAsync);
+
         // The tray asks before the customer orders: the branch's answer for this pin
         orders.MapGet("/delivery/quote", GetDeliveryQuoteAsync)
             .WithName("GetDeliveryQuote")
@@ -18,83 +23,83 @@ public static class DeliveryApi
             .WithDescription("For the branch in X-Branch-Id: whether it delivers right now, whether the point is within its radius, how far it is, the fee and the minimum order. The order itself is held to the same answer.")
             .AllowAnonymous();
 
-        orders.MapGet("/addresses", GetAddressesAsync)
+        gated.MapGet("/addresses", GetAddressesAsync)
             .WithName("GetMyAddresses")
             .WithSummary("The signed-in customer's saved delivery addresses, latest first");
 
-        orders.MapPost("/addresses", SaveAddressAsync)
+        gated.MapPost("/addresses", SaveAddressAsync)
             .WithName("AddMyAddress")
             .WithSummary("Save a delivery address for the signed-in customer");
 
-        orders.MapPut("/addresses/{addressId:int}", UpdateAddressAsync)
+        gated.MapPut("/addresses/{addressId:int}", UpdateAddressAsync)
             .WithName("UpdateMyAddress")
             .WithSummary("Change one of the signed-in customer's saved addresses");
 
-        orders.MapDelete("/addresses/{addressId:int}", DeleteAddressAsync)
+        gated.MapDelete("/addresses/{addressId:int}", DeleteAddressAsync)
             .WithName("DeleteMyAddress")
             .WithSummary("Forget one of the signed-in customer's saved addresses");
 
         // The till taking a delivery over the phone
-        orders.MapGet("/delivery/till-quote", GetTillDeliveryQuoteAsync)
+        gated.MapGet("/delivery/till-quote", GetTillDeliveryQuoteAsync)
             .WithName("GetTillDeliveryQuote")
             .WithSummary("What a delivery the till takes over the phone asks, with or without a pin (staff)")
             .WithDescription("The branch's fee, minimum and radius even while customers' orders are paused. With a location the caller shared (a Google Maps link, short or long, or coordinates), the pin read from it, how far it is and whether it is within the radius. Without one, InRange is true: the cashier knows the streets.")
             .RequireAuthorization("Pos");
 
-        orders.MapGet("/delivery/known-addresses", GetKnownAddressesAsync)
+        gated.MapGet("/delivery/known-addresses", GetKnownAddressesAsync)
             .WithName("GetKnownDeliveryAddresses")
             .WithSummary("Where a caller has asked to be delivered before (staff)")
             .WithDescription("A customer account's saved addresses, then the addresses earlier deliveries went to, for that account or that phone number; latest first, each address once.")
             .RequireAuthorization("Pos");
 
         // The till: the branch's deliveries, its riders, and who takes what
-        orders.MapGet("/deliveries", GetDeliveriesAsync)
+        gated.MapGet("/deliveries", GetDeliveriesAsync)
             .WithName("GetDeliveries")
             .WithSummary("The branch's deliveries today, for the till's board (staff)")
             .WithDescription("Confirmed delivery orders not yet settled, and those settled in the last day: waiting for a rider, with a rider, delivered with the cash still out.")
             .RequireAuthorization("Pos");
 
-        orders.MapGet("/riders", GetRidersAsync)
+        gated.MapGet("/riders", GetRidersAsync)
             .WithName("GetRiders")
             .WithSummary("The branch's riders, on duty first (staff)")
             .WithDescription("Every rider whose app has been opened at the branch, with whether they are on duty, when the app was last heard from, and how many deliveries they have out.")
             .RequireAuthorization("Pos");
 
-        orders.MapPut("/{orderId:int}/delivery/rider", AssignRiderAsync)
+        gated.MapPut("/{orderId:int}/delivery/rider", AssignRiderAsync)
             .WithName("AssignDeliveryRider")
             .WithSummary("Give a delivery to a rider, or to another before it leaves (staff)")
             .RequireAuthorization("Pos");
 
-        orders.MapDelete("/{orderId:int}/delivery/rider", UnassignRiderAsync)
+        gated.MapDelete("/{orderId:int}/delivery/rider", UnassignRiderAsync)
             .WithName("UnassignDeliveryRider")
             .WithSummary("Take a delivery back from its rider before it leaves (staff)")
             .RequireAuthorization("Pos");
 
-        orders.MapPut("/{orderId:int}/delivery/cash-in", CashInAsync)
+        gated.MapPut("/{orderId:int}/delivery/cash-in", CashInAsync)
             .WithName("HandInDeliveryCash")
             .WithSummary("The rider handed the cash in: the bill is settled in cash (staff)")
             .RequireAuthorization("Pos");
 
         // The rider app
-        orders.MapGet("/deliveries/mine", GetMyDeliveriesAsync)
+        gated.MapGet("/deliveries/mine", GetMyDeliveriesAsync)
             .WithName("GetMyDeliveries")
             .WithSummary("The deliveries given to the signed-in rider")
             .WithDescription("Those not yet delivered, then those delivered in the last day.")
             .RequireAuthorization("Rider");
 
-        orders.MapPut("/{orderId:int}/delivery/out", MarkOutAsync)
+        gated.MapPut("/{orderId:int}/delivery/out", MarkOutAsync)
             .WithName("MarkDeliveryOut")
             .WithSummary("The rider left with it")
             .WithDescription("Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.")
             .RequireAuthorization("DeliveryProgress");
 
-        orders.MapPut("/{orderId:int}/delivery/delivered", MarkDeliveredAsync)
+        gated.MapPut("/{orderId:int}/delivery/delivered", MarkDeliveredAsync)
             .WithName("MarkDeliveryDelivered")
             .WithSummary("The customer has it")
             .WithDescription("Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.")
             .RequireAuthorization("DeliveryProgress");
 
-        orders.MapPut("/riders/me", SetMyRiderStatusAsync)
+        gated.MapPut("/riders/me", SetMyRiderStatusAsync)
             .WithName("SetMyRiderStatus")
             .WithSummary("The rider is on duty or off, at the branch in X-Branch-Id")
             .WithDescription("Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to.")
@@ -117,6 +122,18 @@ public static class DeliveryApi
 
         var distance = Geo.DistanceMeters(terms.Latitude, terms.Longitude, latitude, longitude);
         return TypedResults.Ok(new DeliveryQuote(true, distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm));
+    }
+
+    private static async ValueTask<object?> DeliveryOnAsync(EndpointFilterInvocationContext invocation, EndpointFilterDelegate next)
+    {
+        var features = invocation.HttpContext.RequestServices.GetRequiredService<IBranchSettingsQueries>();
+        if (await features.IsDeliveryOnAsync()) return await next(invocation);
+        return TypedResults.Problem(
+            title: "Module not in plan",
+            detail: "This business does not deliver.",
+            type: "module-off",
+            statusCode: StatusCodes.Status402PaymentRequired,
+            extensions: new Dictionary<string, object?> { ["module"] = "delivery" });
     }
 
     /// <summary>The client that follows a shared short map link to the map it opens.</summary>

@@ -89,6 +89,7 @@ const FEATURE_ROWS: {
   { key: 'kds', label: 'featureKds' },
   // An add-on on every plan: not offered at all until it is bought
   { key: 'onlinePayments', label: 'featureOnlinePayments', addon: true },
+  { key: 'delivery', label: 'featureDelivery', addon: true },
 ]
 
 /** The two slots every business fills and the cover photo, then the four variants behind a disclosure. */

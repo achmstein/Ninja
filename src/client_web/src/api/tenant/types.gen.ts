@@ -79,6 +79,7 @@ export type TenantFeatures = {
     payroll: boolean;
     kds: boolean;
     onlinePayments?: boolean;
+    delivery?: boolean;
 };
 
 export type TenantIcons = {

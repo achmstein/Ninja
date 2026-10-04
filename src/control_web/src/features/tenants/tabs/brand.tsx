@@ -91,6 +91,7 @@ const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
   { key: 'payroll', label: 'featurePayroll' },
   { key: 'kds', label: 'featureKds' },
   { key: 'onlinePayments', label: 'featureOnlinePayments' },
+  { key: 'delivery', label: 'featureDelivery' },
 ]
 
 const withScheme = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`)

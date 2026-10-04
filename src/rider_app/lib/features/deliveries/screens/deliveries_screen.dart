@@ -21,6 +21,11 @@ class DeliveriesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
+    // Delivery is an add-on: a business that has not bought it (or switched
+    // it off) has nothing for a rider, and its deliveries are not asked for
+    if (!ref.watch(featuresProvider.select((f) => f.delivery))) {
+      return _Message(icon: FIcons.bike, title: l10n.notDelivering, body: l10n.notDeliveringHint);
+    }
     final day = ref.watch(deliveriesProvider);
     final onDuty = ref.watch(dutyProvider);
     final currency = ref.watch(brandProvider.select((b) => b.currency));

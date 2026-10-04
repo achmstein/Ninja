@@ -3,7 +3,7 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What a business can be sold: the nine switches Tenant.API keeps, as modules.</summary>
+/// <summary>What a business can be sold: the switches Tenant.API keeps, as modules.</summary>
 public enum Module
 {
     /// <summary>Booking a place ahead or holding it on the way: any place the owner opens to it, with or without a clock.</summary>
@@ -18,6 +18,12 @@ public enum Module
     Kds,
     /// <summary>Guests pay or split the bill online, through the business's own Paymob account. An add-on on every plan.</summary>
     OnlinePayments,
+    /// <summary>
+    /// The business's own delivery: customers order to their door, the till
+    /// takes deliveries over the phone, its riders carry them in the rider
+    /// app and bring the cash back. An add-on on every plan.
+    /// </summary>
+    Delivery,
 }
 
 /// <summary>
@@ -51,8 +57,10 @@ public static class PlanCatalog
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
         [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
-        // Online payments goes through the business's own payment account: bought on its own, whatever the plan
-        [TenantPlan.Pro] = All.Except([Module.OnlinePayments]).ToHashSet(),
+        // Online payments goes through the business's own payment account, and
+        // delivery is a business of its own (riders, an area, a fee): each is
+        // bought on its own, whatever the plan
+        [TenantPlan.Pro] = All.Except([Module.OnlinePayments, Module.Delivery]).ToHashSet(),
     };
 
     /// <summary>
@@ -79,6 +87,15 @@ public static class PlanCatalog
         (Module.OnlinePayments, "/api/sales/payments/{*any}"),
         (Module.OnlinePayments, "/api/tickets/{id}/pay"),
         (Module.OnlinePayments, "/api/tickets/{id}/pay/{*any}"),
+        // Ordering keeps /api/orders itself: only its delivery paths are the module's
+        (Module.Delivery, "/api/orders/delivery/{*any}"),
+        (Module.Delivery, "/api/orders/addresses"),
+        (Module.Delivery, "/api/orders/addresses/{*any}"),
+        (Module.Delivery, "/api/orders/deliveries"),
+        (Module.Delivery, "/api/orders/deliveries/{*any}"),
+        (Module.Delivery, "/api/orders/riders"),
+        (Module.Delivery, "/api/orders/riders/{*any}"),
+        (Module.Delivery, "/api/orders/{id}/delivery/{*any}"),
     ];
 
     /// <summary>
@@ -94,7 +111,7 @@ public static class PlanCatalog
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
 
-    /// <summary>What may be bought on top of the plan: anything it does not include (only online payments on Pro).</summary>
+    /// <summary>What may be bought on top of the plan: anything it does not include (online payments and delivery on Pro).</summary>
     public static IReadOnlySet<Module> AddonsAvailable(TenantPlan plan) => All.Except(Included(plan)).ToHashSet();
 
     /// <summary>Included plus add-ons; everything for a demo.</summary>

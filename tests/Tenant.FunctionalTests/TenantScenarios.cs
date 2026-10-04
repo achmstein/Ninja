@@ -30,9 +30,9 @@ public record TenantView(LocalizedView Name, string? PrimaryColor, string? Custo
 
 public record LocaleView(string Country, string Currency, string TimeZone, string Language, string? ContentLanguages);
 public record LocalizedView(string En, string? Ar);
-public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false)
+public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false)
 {
-    public static FeaturesView All => new(true, true, true, true, true, true, true, true, true);
+    public static FeaturesView All => new(true, true, true, true, true, true, true, true, true, true);
 }
 
 /// <summary>

@@ -4,7 +4,7 @@ using Ninja.EventBus.Events;
 namespace Ninja.Tenant.API.IntegrationEvents;
 
 /// <summary>
-/// The nine switches as they stand after the brand or the plan changed:
+/// The switches as they stand after the brand or the plan changed:
 /// what is on, within what the plan allows. A service that owns part of a
 /// module keeps its own copy and refuses what is off, so a control the UI
 /// hides is not one a hand-made request can still use.
@@ -18,8 +18,9 @@ public record TenantFeaturesChangedIntegrationEvent(
     bool Finance,
     bool Payroll,
     bool Kds,
-    bool OnlinePayments = false) : IntegrationEvent
+    bool OnlinePayments = false,
+    bool Delivery = false) : IntegrationEvent
 {
     public static TenantFeaturesChangedIntegrationEvent From(TenantFeatures f)
-        => new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments);
+        => new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments, f.Delivery);
 }

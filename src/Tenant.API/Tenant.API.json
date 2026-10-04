@@ -1035,6 +1035,10 @@
           "onlinePayments": {
             "type": "boolean",
             "default": false
+          },
+          "delivery": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

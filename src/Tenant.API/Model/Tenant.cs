@@ -110,6 +110,13 @@ public class Tenant
     public bool OnlinePaymentsEnabled { get; set; }
 
     /// <summary>
+    /// The business's own delivery: ordering to a door, the till's phone
+    /// orders, the riders. On once bought; each branch still needs its place
+    /// on the map and an area before it delivers.
+    /// </summary>
+    public bool DeliveryEnabled { get; set; } = true;
+
+    /// <summary>
     /// What the business's plan allows, set by the control plane: an owner may
     /// switch an entitled module off, never an unentitled one on. All on by
     /// default, so a stack nobody has told otherwise (the dev host, a stack
@@ -133,9 +140,11 @@ public class Tenant
 
     public bool OnlinePaymentsEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled);
+    public bool DeliveryEntitled { get; set; } = true;
 
-    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled, DeliveryEnabled);
+
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled, DeliveryEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
@@ -150,6 +159,7 @@ public class Tenant
         PayrollEnabled = f.Payroll;
         KdsEnabled = f.Kds;
         OnlinePaymentsEnabled = f.OnlinePayments;
+        DeliveryEnabled = f.Delivery;
     }
 
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
@@ -164,6 +174,7 @@ public class Tenant
         PayrollEntitled = entitled.Payroll;
         KdsEntitled = entitled.Kds;
         OnlinePaymentsEntitled = entitled.OnlinePayments;
+        DeliveryEntitled = entitled.Delivery;
         ApplyFeatures(Features);
     }
 
@@ -342,15 +353,16 @@ public class TenantThemeDark
     public string? Surface { get; set; }
 }
 
-/// <summary>The nine switches, as the surfaces read them and as the plan allows them.</summary>
+/// <summary>The switches, as the surfaces read them and as the plan allows them.</summary>
 /// <param name="OnlinePayments">Last and defaulted: a caller older than online payments does not send it, and it stays off.</param>
-public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false)
+/// <param name="Delivery">Last and defaulted: a caller older than delivery does not send it, and it stays off.</param>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
         Reservations && entitled.Reservations, TimeBilling && entitled.TimeBilling, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs,
         Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds,
-        OnlinePayments && entitled.OnlinePayments);
+        OnlinePayments && entitled.OnlinePayments, Delivery && entitled.Delivery);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

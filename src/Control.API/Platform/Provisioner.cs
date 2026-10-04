@@ -638,6 +638,9 @@ public sealed class Provisioner(
             }, ct);
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
+            // The new image may know a module the old one did not (its switch starts as the
+            // migration left it): the plan says at once whether this business has it
+            await EntitlementsStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);
 
             tenant.Status = TenantStatus.Running;

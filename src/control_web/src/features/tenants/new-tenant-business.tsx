@@ -30,7 +30,7 @@ const LOOK: Record<BusinessType, { icon: LucideIcon; label: TranslationKey; abou
 export const SUGGESTED_MODULES: Record<BusinessType, ModuleName[]> = {
   CoffeeShop: ['Loyalty', 'Kds'],
   Restaurant: ['Reservations', 'Kds', 'Inventory'],
-  CloudKitchen: ['Loyalty', 'Inventory', 'Kds'],
+  CloudKitchen: ['Loyalty', 'Inventory', 'Kds', 'Delivery'],
   GameStation: ['TimeBilling', 'Reservations'],
   Other: [],
 }

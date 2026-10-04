@@ -62,8 +62,10 @@ const lockup = async ({ ink, line, muted }, label) => {
   const name = await text(`<span foreground="${ink}">ninja</span>`, 'Original Surfer', 'OriginalSurfer-Regular.ttf', 48);
   // Pango units (1/1024) of a point at 72 dpi, so at `dp` times that
   const tracking = Math.round(14 * 0.2 * dp * 1024);
+  // A hair space first: the tracking can start the first letter left of the canvas, cutting its stem (the R of
+  // RIDER lost its own); the trim takes the space off again
   const caps = await text(
-    `<span foreground="${muted}" weight="500" letter_spacing="${tracking}">${label}</span>`,
+    `<span foreground="${muted}" weight="500" letter_spacing="${tracking}"> ${label}</span>`,
     'Inter', 'Inter-Medium.ttf', 14);
   const rule = { width: 1 * dp, height: 28 * dp };
   const gap = 16 * dp;
