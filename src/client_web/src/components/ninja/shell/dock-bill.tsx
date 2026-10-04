@@ -31,6 +31,7 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = {
   preparing: ChefHat,
   onTheWay: Bike,
   delivered: House,
+  notDelivered: X,
   paid: ReceiptText,
   cancelled: X,
 }

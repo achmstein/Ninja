@@ -1,16 +1,32 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// Where a delivery has got to, as the server says it
-enum DeliveryStage { waiting, assigned, onTheWay, delivered }
+enum DeliveryStage {
+  waiting,
+  assigned,
+  onTheWay,
+  delivered,
 
-DeliveryStage _stage(Object? value) => switch (value) {
-      'Assigned' => DeliveryStage.assigned,
-      'OnTheWay' => DeliveryStage.onTheWay,
-      'Delivered' => DeliveryStage.delivered,
-      _ => DeliveryStage.waiting,
-    };
+  /// The rider could not hand it over (nobody at the door, refused): the bag goes back to the branch
+  failed,
+
+  /// The bag is back at the branch; nothing left for the rider
+  returned;
+
+  /// The server's spelling of a stage; anything unknown is one still waiting
+  static DeliveryStage parse(Object? value) => switch (value) {
+        'Assigned' => assigned,
+        'OnTheWay' => onTheWay,
+        'Delivered' => delivered,
+        'Failed' => failed,
+        'Returned' => returned,
+        _ => waiting,
+      };
+}
 
 double _num(Object? value) => value is num ? value.toDouble() : double.tryParse('${value ?? ''}') ?? 0;
+
+double? _numOrNull(Object? value) => value == null ? null : _num(value);
 
 DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toUtc() : null;
 
@@ -39,6 +55,7 @@ class DeliveryLine {
 /// A delivery given to this rider: whom it is for, where it goes, what is in
 /// the bag, what to collect at the door, and where it has got to.
 class DeliveryOrder {
+  /// The order's id, which is also the number the till and the customer see
   final int orderNumber;
   final DateTime? confirmedAt;
 
@@ -65,8 +82,14 @@ class DeliveryOrder {
   final DateTime? outAt;
   final DateTime? deliveredAt;
 
+  /// Why it could not be handed over, as the rider said it
+  final String? failureReason;
+
   /// The till took this delivery's cash from the rider
   final DateTime? cashHandedInAt;
+
+  /// What the till counted in from the rider for it
+  final double? cashCollected;
 
   const DeliveryOrder({
     required this.orderNumber,
@@ -87,7 +110,9 @@ class DeliveryOrder {
     this.directions,
     this.outAt,
     this.deliveredAt,
+    this.failureReason,
     this.cashHandedInAt,
+    this.cashCollected,
   });
 
   factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
@@ -102,18 +127,20 @@ class DeliveryOrder {
       lines: [
         for (final line in (json['items'] as List? ?? const [])) DeliveryLine.fromJson((line as Map).cast<String, dynamic>()),
       ],
-      latitude: d['latitude'] == null ? null : _num(d['latitude']),
-      longitude: d['longitude'] == null ? null : _num(d['longitude']),
+      latitude: _numOrNull(d['latitude']),
+      longitude: _numOrNull(d['longitude']),
       address: _text(d['address']) ?? '',
       building: _text(d['building']),
       floor: _text(d['floor']),
       apartment: _text(d['apartment']),
       directions: _text(d['directions']),
       phone: _text(d['phone']) ?? '',
-      stage: _stage(d['stage']),
+      stage: DeliveryStage.parse(d['stage']),
       outAt: _time(d['outAt']),
       deliveredAt: _time(d['deliveredAt']),
+      failureReason: _text(d['failureReason']),
       cashHandedInAt: _time(d['cashHandedInAt']),
+      cashCollected: _numOrNull(d['cashCollected']),
     );
   }
 
@@ -121,17 +148,23 @@ class DeliveryOrder {
 
   bool get isOut => stage == DeliveryStage.onTheWay;
 
+  bool get isFailed => stage == DeliveryStage.failed;
+
+  /// Nothing left for the rider: handed over, or the bag is back at the branch
+  bool get isDone => stage == DeliveryStage.delivered || stage == DeliveryStage.returned;
+
   /// Delivered, and its cash still in the rider's pocket
   bool get cashInHand => isDelivered && cashHandedInAt == null;
 
-  /// The address on one line, the street first: "Tahrir St · Bldg 12, Floor 3, Apt 7"
-  String addressLine({required String building, required String floor, required String apartment}) {
+  /// The address on one line, the street first: "Tahrir St · Bldg 12, Floor 3, Apt 7".
+  /// [separator] is the language's list comma (", " or "، "), from the app's strings.
+  String addressLine({required String building, required String floor, required String apartment, required String separator}) {
     final parts = [
       if (this.building != null) '$building ${this.building}',
       if (this.floor != null) '$floor ${this.floor}',
       if (this.apartment != null) '$apartment ${this.apartment}',
     ];
-    return parts.isEmpty ? address : '$address · ${parts.join('، ')}';
+    return parts.isEmpty ? address : '$address · ${parts.join(separator)}';
   }
 
   /// Whether the customer pinned the door, or only said where it is
@@ -142,11 +175,13 @@ class DeliveryOrder {
   Uri get directionsUri => Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=${hasPin ? '$latitude,$longitude' : Uri.encodeQueryComponent(address)}');
 
-  Uri get phoneUri => Uri(scheme: 'tel', path: phone);
+  /// The customer's number to dial: only what a dialler reads (digits, a leading +)
+  Uri get phoneUri => Uri(scheme: 'tel', path: phone.replaceAll(RegExp(r'[^0-9+]'), ''));
 }
 
-/// The rider's day: what is still to go (oldest first), and what was
-/// delivered (latest first), with the cash still to hand in at the till.
+/// The rider's day: what is still theirs to do (oldest first: to deliver, or
+/// a bag to bring back), and what is done (latest first), with the cash still
+/// to hand in at the till.
 class RiderDay {
   final List<DeliveryOrder> toGo;
   final List<DeliveryOrder> delivered;
@@ -154,15 +189,18 @@ class RiderDay {
   const RiderDay({this.toGo = const [], this.delivered = const []});
 
   factory RiderDay.of(Iterable<DeliveryOrder> orders) {
-    final toGo = orders.where((o) => !o.isDelivered).toList()
+    final toGo = orders.where((o) => !o.isDone).toList()
       ..sort((a, b) => (a.confirmedAt ?? DateTime(0)).compareTo(b.confirmedAt ?? DateTime(0)));
-    final delivered = orders.where((o) => o.isDelivered).toList()
-      ..sort((a, b) => (b.deliveredAt ?? DateTime(0)).compareTo(a.deliveredAt ?? DateTime(0)));
+    final delivered = orders.where((o) => o.isDone).toList()
+      ..sort((a, b) => (b.deliveredAt ?? b.outAt ?? DateTime(0)).compareTo(a.deliveredAt ?? a.outAt ?? DateTime(0)));
     return RiderDay(toGo: toGo, delivered: delivered);
   }
 
   /// Cash collected at doors and not yet handed in
   double get cashInHand => delivered.where((o) => o.cashInHand).fold(0, (sum, o) => sum + o.total);
+
+  /// A delivery is on the road: an update must not interrupt the rider
+  bool get anyOut => toGo.any((o) => o.isOut);
 
   bool get isEmpty => toGo.isEmpty && delivered.isEmpty;
 }

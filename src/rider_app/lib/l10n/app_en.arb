@@ -99,6 +99,48 @@
   "floor": "Floor",
   "apartment": "Apt",
   "navigate": "Navigate",
+  "riderAppTitle": "{business} Rider",
+  "@riderAppTitle": {
+    "placeholders": {
+      "business": {
+        "type": "String"
+      }
+    }
+  },
+  "connectInsecure": "This address isn't secure (no https). Ask the owner for the business's https address.",
+  "signInInBrowser": "You'll sign in on the business's own page, then come back here.",
+  "listSeparator": ", ",
+  "@listSeparator": {
+    "description": "Between the parts of an address on one line (building, floor, apartment)"
+  },
+  "listMayBeOld": "Couldn't refresh since {time}. This list may be old.",
+  "@listMayBeOld": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dutyNotChanged": "The till didn't get that",
+  "errorOffline": "No connection. Try again in a moment.",
+  "errorConflict": "Someone else changed this delivery. The list is up to date now.",
+  "errorNotYours": "This delivery isn't yours any more.",
+  "errorNotOutYet": "Tap On the way first.",
+  "errorAlreadyOut": "It already left.",
+  "errorAlreadyDone": "This delivery is already done.",
+  "errorNotConfirmed": "The till hasn't confirmed this order yet.",
+  "couldNotOpenMaps": "Couldn't open Maps",
+  "couldNotOpenDialer": "Couldn't open the phone",
+  "couldNotDeliver": "Couldn't deliver",
+  "couldNotDeliverTitle": "Why couldn't you deliver it?",
+  "couldNotDeliverHint": "Bring the bag back to the branch. The till takes it from there.",
+  "failReasonNoAnswer": "Nobody answered",
+  "failReasonRefused": "The customer refused it",
+  "failReasonWrongAddress": "Couldn't find the address",
+  "failReasonOther": "Something else",
+  "bringItBack": "Bring it back to the branch",
+  "bringItBackHint": "Nothing to collect. Hand the bag to the till.",
+  "returnedToBranch": "Back at the branch",
   "notDelivering": "This business doesn't deliver",
   "notDeliveringHint": "Delivery isn't part of its subscription, or it's switched off. Ask the owner.",
   "noPin": "No pin: Maps looks for the address. Call if you can't find the door.",

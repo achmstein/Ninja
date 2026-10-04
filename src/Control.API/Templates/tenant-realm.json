@@ -75,8 +75,9 @@
   "accessTokenLifespanForImplicitFlow": 7200,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 7776000,
-  "offlineSessionIdleTimeout": 0,
-  "offlineSessionMaxLifespan": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": true,
+  "offlineSessionMaxLifespan": 7776000,
   "roles": {
     "realm": [
       {
@@ -390,9 +391,7 @@
       "protocol": "openid-connect",
       "redirectUris": [
         "com.ninja.{{slug}}.client://callback",
-        "com.ninja.{{slug}}.client://*",
-        "http://localhost/*",
-        "http://10.0.2.2/*"
+        "com.ninja.{{slug}}.client://*"
       ],
       "defaultClientScopes": [
         "openid",
@@ -623,9 +622,7 @@
       "protocol": "openid-connect",
       "redirectUris": [
         "com.ninja.pos://callback",
-        "com.ninja.pos://*",
-        "http://localhost/*",
-        "http://10.0.2.2/*"
+        "com.ninja.pos://*"
       ],
       "defaultClientScopes": [
         "openid",
@@ -668,9 +665,7 @@
       "protocol": "openid-connect",
       "redirectUris": [
         "com.ninja.kds://callback",
-        "com.ninja.kds://*",
-        "http://localhost/*",
-        "http://10.0.2.2/*"
+        "com.ninja.kds://*"
       ],
       "defaultClientScopes": [
         "openid",
@@ -710,10 +705,7 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
-        "com.ninja.rider://callback",
-        "com.ninja.rider://*",
-        "http://localhost/*",
-        "http://10.0.2.2/*"
+        "com.ninja.rider://callback"
       ],
       "defaultClientScopes": [
         "openid",

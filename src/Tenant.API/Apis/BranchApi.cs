@@ -88,7 +88,7 @@ public static class BranchApi
         GeoPoint? point = null;
         if (!string.IsNullOrWhiteSpace(request.Location))
         {
-            point = await MapLocation.ResolveAsync(request.Location, http.CreateClient(MapLinkClient), ct);
+            point = await MapLocation.ResolveAsync(request.Location, http.CreateClient(MapLocation.ClientName), ct);
             if (point is null) return LocationNotRead();
         }
 
@@ -160,7 +160,7 @@ public static class BranchApi
                 branch.Latitude = null;
                 branch.Longitude = null;
             }
-            else if (await MapLocation.ResolveAsync(location, http.CreateClient(MapLinkClient), ct) is { } point)
+            else if (await MapLocation.ResolveAsync(location, http.CreateClient(MapLocation.ClientName), ct) is { } point)
             {
                 branch.Latitude = point.Latitude;
                 branch.Longitude = point.Longitude;
@@ -171,15 +171,21 @@ public static class BranchApi
             }
         }
 
+        // A delivering branch keeps somewhere to measure from and somewhere to stop: taking either
+        // away is refused, as switching delivery on without them is (UpdateBranchSettings)
+        if ((request.IsDeliveryEnabled ?? branch.IsDeliveryEnabled) && !branch.CanDeliver)
+            return TypedResults.BadRequest<ProblemDetails>(new()
+            {
+                Title = "Delivery not set",
+                Detail = "A branch that delivers needs its location and how far it delivers. Turn delivery off first.",
+            });
+
         // The flags ride the same save; the service announces the change
         await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled);
 
         var response = BranchResponse.From(branch);
         return TypedResults.Ok(response);
     }
-
-    /// <summary>The client that follows a short Maps link to the map it opens.</summary>
-    public const string MapLinkClient = "map-links";
 
     private static BadRequest<ProblemDetails> LocationNotRead() =>
         TypedResults.BadRequest<ProblemDetails>(new()

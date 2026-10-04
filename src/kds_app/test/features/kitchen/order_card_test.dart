@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
-import 'package:kds_app/core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:kds_app/features/kitchen/models/kitchen_order.dart';
 import 'package:kds_app/features/kitchen/widgets/order_card.dart';
 import 'package:kds_app/l10n/app_localizations.dart';

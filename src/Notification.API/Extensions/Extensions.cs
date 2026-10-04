@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ninja.Notification.API.Localization;
 using Ninja.Notification.API.IntegrationEvents.EventHandling;
 using Ninja.Notification.API.IntegrationEvents.Events;
@@ -23,6 +24,9 @@ public static class Extensions
 
         // Which Arabic this business speaks, stamped beside the rest of its locale
         builder.Services.AddSingleton<TenantArabic>();
+
+        // The clock the handlers stamp with (tests set their own)
+        builder.Services.TryAddSingleton(TimeProvider.System);
 
         // Add FCM service
         builder.Services.AddSingleton<IFcmService, FcmService>();
@@ -63,7 +67,9 @@ public static class Extensions
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
             .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>()
             // The day's digest: the Z figures to the admin devices when the till closes
-            .AddSubscription<ShiftClosedIntegrationEvent, ShiftClosedIntegrationEventHandler>();
+            .AddSubscription<ShiftClosedIntegrationEvent, ShiftClosedIntegrationEventHandler>()
+            // A rider switched off or gone: their phone stops ringing with deliveries
+            .AddSubscription<StaffAccountChangedIntegrationEvent, StaffAccountChangedIntegrationEventHandler>();
     }
 }
 
@@ -92,6 +98,7 @@ public static class Extensions
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemAvailabilityChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]
+[JsonSerializable(typeof(StaffAccountChangedIntegrationEvent))]
 public partial class NotificationIntegrationEventContext : JsonSerializerContext
 {
 }

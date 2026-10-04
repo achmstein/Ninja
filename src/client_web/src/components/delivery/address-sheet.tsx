@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Plus, Trash2 } from 'lucide-react'
 import {
@@ -8,11 +8,13 @@ import {
   updateMyAddressMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { usePhoneRule } from '@/lib/brand'
+import { labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
+import { useBrand, usePhoneRule } from '@/lib/brand'
 import { useSelectedBranch } from '@/lib/branch'
 import { addressBody, addressLine, fromSaved, useMyAddresses } from '@/lib/delivery'
 import { pointOf, useMyLocation, type LatLng } from '@/lib/geo'
-import { useT } from '@/lib/i18n'
+import { useLanguage, useT } from '@/lib/i18n'
+import { problemMessage } from '@/lib/problem'
 import { getMyProfile } from '@/lib/services/identity'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -23,8 +25,12 @@ import { pillAction } from '@/components/ui/ninja-sheet'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { MapPicker } from './map-pin'
 
-/** Where the map opens when nothing better is known: the middle of Cairo */
-const FALLBACK: LatLng = { lat: 30.0444, lng: 31.2357 }
+/** Where the map opens when neither the customer nor the branch is placed: the middle of the business's country */
+const COUNTRY_CENTRES: Record<string, LatLng> = {
+  EG: { lat: 30.0444, lng: 31.2357 },
+  SA: { lat: 24.7136, lng: 46.6753 },
+  AE: { lat: 25.2048, lng: 55.2708 },
+}
 
 /**
  * Where the order is brought: the customer's addresses (saved on their
@@ -43,11 +49,14 @@ export function AddressSheet({
   manage?: boolean
 }) {
   const t = useT()
+  const language = useLanguage((s) => s.language)
   const auth = useAuth()
   const { address: chosen, setAddress } = useDeliveryStore()
   const { data: saved = [], isLoading } = useMyAddresses()
   // The form, for a new address or one being changed; null shows the list
   const [editing, setEditing] = useState<DeliveryAddress | 'new' | null>(null)
+  const words = { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') }
+  const labels = { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }
 
   // A guest has only the device's one; a customer with none goes straight to adding one
   const list: DeliveryAddress[] = auth.isAuthenticated ? saved.map(fromSaved) : chosen ? [chosen] : []
@@ -72,10 +81,11 @@ export function AddressSheet({
         </SheetHeader>
         {form ? (
           <AddressForm
+            key={form === 'new' ? 'new' : (form.id ?? 'device')}
             initial={form === 'new' ? null : form}
             onDone={(address) => {
               if (!manage) {
-                setAddress(address)
+                if (address) setAddress(address)
                 onOpenChange(false)
               } else {
                 setEditing(null)
@@ -93,7 +103,7 @@ export function AddressSheet({
                 const on = !manage && chosen != null && sameAddress(chosen, address)
                 return (
                   <button
-                    key={address.id ?? 'device'}
+                    key={address.id ?? `device-${address.latitude},${address.longitude}`}
                     type='button'
                     onClick={() => {
                       if (manage) {
@@ -103,16 +113,15 @@ export function AddressSheet({
                       setAddress(address)
                       onOpenChange(false)
                     }}
+                    aria-pressed={on}
                     className={cn('flex min-h-16 items-center gap-3 rounded-[1.25rem] px-4 py-3 text-start', on && 'bg-muted')}
                   >
                     <span className='bg-muted grid size-10 shrink-0 place-items-center rounded-full'>
-                      <LabelIcon label={address.label} />
+                      <LabelIcon kind={labelKind(address.label)} />
                     </span>
                     <span className='flex min-w-0 flex-1 flex-col'>
-                      <span className='truncate text-body font-semibold'>{address.label || address.address}</span>
-                      <span className='text-muted-foreground line-clamp-2 text-caption'>
-                        {addressLine(address, { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') })}
-                      </span>
+                      <span className='truncate text-body font-semibold'>{shownLabel(address.label, labels) || address.address}</span>
+                      <span className='text-muted-foreground line-clamp-2 text-caption'>{addressLine(address, words, language)}</span>
                     </span>
                     {on ? <Check className='size-5 shrink-0' /> : manage && <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />}
                   </button>
@@ -141,36 +150,42 @@ function sameAddress(a: DeliveryAddress, b: DeliveryAddress) {
   return a.id != null ? a.id === b.id : a.latitude === b.latitude && a.longitude === b.longitude && a.address === b.address
 }
 
-function LabelIcon({ label }: { label?: string | null }) {
-  const t = useT()
-  if (label && label === t('deliveryLabelHome')) return <Home className='size-5' />
-  if (label && label === t('deliveryLabelWork')) return <Briefcase className='size-5' />
+function LabelIcon({ kind }: { kind: LabelKind }) {
+  if (kind === 'home') return <Home className='size-5' />
+  if (kind === 'work') return <Briefcase className='size-5' />
   return <MapPin className='size-5' />
 }
 
 /**
  * One address: the map first (move it until the pin is on the door), then
- * the words a rider needs. A signed-in customer's is saved on their account;
- * a guest's stays on the device. Removing one is at the foot of its form.
+ * the words a rider needs. A new one is saved only once its pin was put
+ * somewhere (moved, or found by "use my location"): the map's starting point
+ * is the branch, and a rider sent there finds nobody. A signed-in customer's
+ * is saved on their account; a guest's stays on the device. Removing one is
+ * at the foot of its form, asked once more.
  */
-function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onDone: (address: DeliveryAddress) => void }) {
+function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onDone: (address: DeliveryAddress | null) => void }) {
   const t = useT()
   const auth = useAuth()
   const queryClient = useQueryClient()
   const branch = useSelectedBranch()
+  const country = useBrand()?.locale.country ?? 'EG'
   const phoneRule = usePhoneRule((s) => s.pattern)
   const guestPhone = useGuestStore((s) => s.contact?.phone ?? '')
   const location = useMyLocation(initial == null)
 
   const [point, setPoint] = useState<LatLng>(() =>
-    initial ? { lat: initial.latitude, lng: initial.longitude } : (location.here ?? pointOf(branch) ?? FALLBACK)
+    initial ? { lat: initial.latitude, lng: initial.longitude } : (location.here ?? pointOf(branch) ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG),
   )
+  // The pin was put on a door: an address being changed already was; a new one once moved or located
+  const [pinned, setPinned] = useState(initial != null || location.here != null)
   // The map flies once to where the customer is, the first time that is known
   const [flyTo, setFlyTo] = useState<LatLng | null>(null)
   const [flew, setFlew] = useState(initial != null)
   if (!flew && location.here) {
     setFlew(true)
     setFlyTo(location.here)
+    setPinned(true)
   }
 
   const [street, setStreet] = useState(initial?.address ?? '')
@@ -178,24 +193,20 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const [floor, setFloor] = useState(initial?.floor ?? '')
   const [apartment, setApartment] = useState(initial?.apartment ?? '')
   const [directions, setDirections] = useState(initial?.directions ?? '')
-  const [phone, setPhone] = useState(initial?.phone ?? guestPhone)
-  const [label, setLabel] = useState(initial?.label ?? '')
+  // What the customer typed; until then their own number (a guest's checkout one, or the account's)
+  const [typedPhone, setPhone] = useState<string | null>(initial?.phone ?? (guestPhone || null))
+  const [kind, setKind] = useState<LabelKind>(labelKind(initial?.label))
+  const [labelText, setLabelText] = useState(labelKind(initial?.label) === 'other' ? (initial?.label ?? '') : '')
   const [tried, setTried] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
-  // A signed-in customer's own number, when the form starts without one
-  useEffect(() => {
-    if (!auth.isAuthenticated || phone) return
-    let cancelled = false
-    getMyProfile()
-      .then((profile) => {
-        if (!cancelled && profile?.phoneNumber) setPhone((current) => current || profile.phoneNumber!.trim())
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, as the form opens
-  }, [auth.isAuthenticated])
+  const profile = useQuery({
+    queryKey: ['myProfile'],
+    queryFn: getMyProfile,
+    enabled: auth.isAuthenticated && typedPhone == null,
+    staleTime: 5 * 60_000,
+  })
+  const phone = typedPhone ?? profile.data?.phoneNumber?.trim() ?? ''
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyAddresses' }] })
   const add = useMutation({ ...addMyAddressMutation(), onSuccess: refresh })
@@ -205,13 +216,14 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
 
   const phoneOk = phoneRule.test(phone.trim().replace(/[\s-]/g, ''))
   const streetOk = street.trim().length > 0
+  const problem = !pinned ? t('deliveryNeedPin') : !streetOk ? t('deliveryNeedStreet') : !phoneOk ? t('deliveryNeedPhone') : null
 
   const save = async () => {
     setTried(true)
-    if (!streetOk || !phoneOk) return
+    if (problem) return
     const address: DeliveryAddress = {
       id: initial?.id,
-      label: label.trim() || null,
+      label: storedLabel(kind, labelText),
       latitude: point.lat,
       longitude: point.lng,
       address: street.trim(),
@@ -233,8 +245,8 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           : await add.mutateAsync({ body, query: { 'api-version': API_VERSION } })
       toast.success(t('deliveryAddressSaved'))
       onDone(fromSaved(savedAddress))
-    } catch {
-      toast.error(t('deliveryAddressNotSaved'))
+    } catch (error) {
+      toast.error(problemMessage(error, t, 'deliveryAddressNotSaved'))
     }
   }
 
@@ -245,9 +257,11 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       const { address, setAddress } = useDeliveryStore.getState()
       if (address?.id === initial.id) setAddress(null)
       toast.success(t('deliveryAddressRemoved'))
-      onDone(initial)
-    } catch {
-      toast.error(t('deliveryAddressNotSaved'))
+      onDone(null)
+    } catch (error) {
+      toast.error(problemMessage(error, t, 'deliveryAddressNotRemoved'))
+    } finally {
+      setRemoving(false)
     }
   }
 
@@ -260,7 +274,15 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       }}
     >
       <div className='relative'>
-        <MapPicker start={point} to={flyTo} onSettle={setPoint} className='h-56' />
+        <MapPicker
+          start={point}
+          to={flyTo}
+          onSettle={(settled, byUser) => {
+            setPoint(settled)
+            if (byUser) setPinned(true)
+          }}
+          className='h-56'
+        />
         {location.canLocate && (
           <button
             type='button'
@@ -268,14 +290,16 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               setFlew(false)
               location.locate()
             }}
-            className='bg-background text-foreground absolute end-2 bottom-2 grid size-10 place-items-center rounded-full shadow-md'
+            className='bg-background text-foreground absolute end-2 bottom-2 grid size-11 place-items-center rounded-full shadow-md'
             aria-label={t('useMyLocation')}
           >
             {location.locating ? <Loader2 className='size-4 animate-spin' /> : <LocateFixed className='size-4' />}
           </button>
         )}
       </div>
-      <p className='text-muted-foreground -mt-1 px-1 text-caption'>{t('deliveryMovePin')}</p>
+      <p className={cn('-mt-1 px-1 text-caption', tried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
+        {tried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
+      </p>
 
       <Input
         value={street}
@@ -283,18 +307,21 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         placeholder={t('deliveryStreet')}
         aria-label={t('deliveryStreet')}
         aria-invalid={tried && !streetOk}
+        aria-describedby={tried && problem ? 'address-problem' : undefined}
+        maxLength={300}
         autoComplete='street-address'
       />
       <div className='grid grid-cols-3 gap-2'>
-        <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder={t('deliveryBuilding')} aria-label={t('deliveryBuilding')} />
-        <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' />
-        <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} />
+        <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder={t('deliveryBuilding')} aria-label={t('deliveryBuilding')} maxLength={100} />
+        <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' maxLength={50} />
+        <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} maxLength={50} />
       </div>
       <Input
         value={directions}
         onChange={(e) => setDirections(e.target.value)}
         placeholder={t('deliveryDirectionsHint')}
         aria-label={t('deliveryDirections')}
+        maxLength={500}
       />
       <Input
         value={phone}
@@ -302,33 +329,41 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         placeholder={t('deliveryPhone')}
         aria-label={t('deliveryPhone')}
         aria-invalid={tried && !phoneOk}
+        aria-describedby={tried && problem ? 'address-problem' : undefined}
         type='tel'
         inputMode='tel'
         autoComplete='tel'
         dir='ltr'
       />
-      {tried && (!streetOk || !phoneOk) && (
-        <p className='text-destructive px-1 text-caption'>{!streetOk ? t('deliveryNeedStreet') : t('deliveryNeedPhone')}</p>
+      {tried && problem && (
+        <p id='address-problem' role='alert' className='text-destructive px-1 text-caption'>
+          {problem}
+        </p>
       )}
 
       {auth.isAuthenticated && (
-        <div className='flex flex-wrap items-center gap-2'>
-          {[t('deliveryLabelHome'), t('deliveryLabelWork')].map((word) => (
+        <div className='flex flex-wrap items-center gap-2' role='group' aria-label={t('deliveryLabel')}>
+          {(['home', 'work'] as const).map((k) => (
             <button
-              key={word}
+              key={k}
               type='button'
-              onClick={() => setLabel(label === word ? '' : word)}
-              className={cn('h-9 rounded-full px-4 text-note font-semibold', label === word ? 'bg-primary text-primary-foreground' : 'bg-muted')}
+              aria-pressed={kind === k}
+              onClick={() => setKind(kind === k ? 'other' : k)}
+              className={cn('h-11 rounded-full px-4 text-note font-semibold', kind === k ? 'bg-primary text-primary-foreground' : 'bg-muted')}
             >
-              {word}
+              {k === 'home' ? t('deliveryLabelHome') : t('deliveryLabelWork')}
             </button>
           ))}
           <Input
-            value={label === t('deliveryLabelHome') || label === t('deliveryLabelWork') ? '' : label}
-            onChange={(e) => setLabel(e.target.value)}
+            value={kind === 'other' ? labelText : ''}
+            onChange={(e) => {
+              setKind('other')
+              setLabelText(e.target.value)
+            }}
             placeholder={t('deliveryLabel')}
             aria-label={t('deliveryLabel')}
-            className='h-9 flex-1 rounded-full'
+            className='h-11 flex-1 rounded-full'
+            maxLength={40}
           />
         </div>
       )}
@@ -337,17 +372,34 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className='size-4' strokeWidth={3} />}
         {t('deliverySaveAddress')}
       </button>
-      {initial?.id != null && (
-        <button
-          type='button'
-          onClick={() => void forget()}
-          disabled={remove.isPending}
-          className='text-destructive flex h-11 items-center justify-center gap-2 text-note font-semibold'
-        >
-          <Trash2 className='size-4' />
-          {t('deliveryRemoveAddress')}
-        </button>
-      )}
+      {initial?.id != null &&
+        (removing ? (
+          <div className='flex flex-col gap-2' role='group' aria-label={t('deliveryRemoveConfirm')}>
+            <p className='text-center text-note font-semibold'>{t('deliveryRemoveConfirm')}</p>
+            <div className='grid grid-cols-2 gap-2'>
+              <button type='button' onClick={() => setRemoving(false)} className='bg-muted h-11 rounded-full text-note font-semibold'>
+                {t('deliveryKeep')}
+              </button>
+              <button
+                type='button'
+                onClick={() => void forget()}
+                disabled={remove.isPending}
+                className='bg-destructive h-11 rounded-full text-note font-semibold text-white'
+              >
+                {t('deliveryRemoveYes')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type='button'
+            onClick={() => setRemoving(true)}
+            className='text-destructive flex h-11 items-center justify-center gap-2 text-note font-semibold'
+          >
+            <Trash2 className='size-4' />
+            {t('deliveryRemoveAddress')}
+          </button>
+        ))}
     </form>
   )
 }

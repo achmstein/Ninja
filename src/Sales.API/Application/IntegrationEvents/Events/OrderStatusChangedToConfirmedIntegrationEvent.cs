@@ -47,7 +47,9 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     /// <summary>The platform pays the business for it: its bill settles at once, to the platform.</summary>
     bool PlatformSettles = false,
     /// <summary>The business's own rider delivers it, for this fee: a bill of its own with the fee as a line. Null when not delivered.</summary>
-    decimal? DeliveryFee = null) : IntegrationEvent;
+    decimal? DeliveryFee = null,
+    /// <summary>The business's own rider delivers it. False from an Ordering older than the flag, when <see cref="DeliveryFee"/> says it.</summary>
+    bool IsDelivery = false) : IntegrationEvent;
 
 public record OrderConfirmedItem(
     int ProductId,

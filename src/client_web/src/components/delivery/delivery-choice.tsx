@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
 import { Bike, ChevronRight, Loader2, MapPin, ShoppingBag, Store } from 'lucide-react'
+import { shownLabel } from '@/lib/address-line'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { addressLine, type DeliveryState } from '@/lib/delivery'
 import { distanceMeters, pointOf, useDistance } from '@/lib/geo'
-import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useBranchSwitch } from '@/lib/use-branch-switch'
 import { cn } from '@/lib/utils'
 import { AddressSheet } from './address-sheet'
@@ -21,13 +22,30 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryState; cloudKitchen: boolean }) {
   const t = useT()
   const price = usePrice()
+  const language = useLanguage((s) => s.language)
   const [sheetOpen, setSheetOpen] = useState(false)
   const { address } = delivery
+  const modes = ['pickup', 'delivery'] as const
+  const words = { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') }
+
+  // A radio group: one stop for Tab, the arrows move between the two (and choose), as a native one does
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return
+    e.preventDefault()
+    const next = !delivery.active
+    delivery.setWanted(next)
+    e.currentTarget.querySelector<HTMLButtonElement>(`[data-mode='${next ? 'delivery' : 'pickup'}']`)?.focus()
+  }
 
   return (
     <div className='flex flex-col gap-2'>
-      <div role='radiogroup' className='bg-background/10 relative grid grid-cols-2 rounded-full p-1'>
-        {(['pickup', 'delivery'] as const).map((mode) => {
+      <div
+        role='radiogroup'
+        aria-label={t('deliveryModeLabel')}
+        onKeyDown={onKeyDown}
+        className='bg-background/10 relative grid grid-cols-2 rounded-full p-1'
+      >
+        {modes.map((mode) => {
           const on = (mode === 'delivery') === delivery.active
           const Icon = mode === 'delivery' ? Bike : cloudKitchen ? ShoppingBag : Store
           return (
@@ -35,7 +53,9 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               key={mode}
               type='button'
               role='radio'
+              data-mode={mode}
               aria-checked={on}
+              tabIndex={on ? 0 : -1}
               onClick={() => delivery.setWanted(mode === 'delivery')}
               className='relative flex h-10 items-center justify-center gap-2 rounded-full text-note font-semibold'
             >
@@ -67,10 +87,10 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
             <span className='min-w-0 flex-1'>
               {address ? (
                 <>
-                  <span className='block truncate text-note font-semibold'>{address.label || address.address}</span>
-                  <span className='block truncate text-caption opacity-70'>
-                    {addressLine(address, { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') })}
+                  <span className='block truncate text-note font-semibold'>
+                    {shownLabel(address.label, { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }) || address.address}
                   </span>
+                  <span className='block truncate text-caption opacity-70'>{addressLine(address, words, language)}</span>
                 </>
               ) : (
                 <span className='block text-note font-semibold'>{t('deliveryAddAddress')}</span>
@@ -84,6 +104,14 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               <span className='flex items-center gap-2 opacity-70'>
                 <Loader2 className='size-3.5 animate-spin' />
                 {t('deliveryChecking')}
+              </span>
+            )}
+            {delivery.problem === 'quoteFailed' && (
+              <span className='flex items-center gap-3 font-semibold text-amber-300' role='status'>
+                {t('deliveryQuoteFailed')}
+                <button type='button' onClick={delivery.retryQuote} className='min-h-11 underline underline-offset-4'>
+                  {t('deliveryRetry')}
+                </button>
               </span>
             )}
             {delivery.problem === 'range' && <OutOfRange delivery={delivery} />}

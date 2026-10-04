@@ -1,5 +1,6 @@
 #nullable enable
 using Ninja.EventBus.Abstractions;
+using Ninja.Sales.API.Application.Deliveries;
 using Ninja.Sales.API.Application.Commands;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
@@ -19,6 +20,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     ITicketRepository ticketRepository,
     SalesTransaction transaction,
     IMediator mediator,
+    DeliveryCashier cashier,
     ILogger<OrderStatusChangedToConfirmedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStatusChangedToConfirmedIntegrationEvent>
 {
@@ -107,7 +109,20 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         {
             await SettleToPlatformAsync(@event, ticket);
         }
+
+        // The rider's cash may have come in before the bill did: it settles the bill now
+        if (IsDelivery(@event))
+        {
+            await cashier.BillLandedAsync(@event.OrderId, ticket);
+        }
     }
+
+    /// <summary>
+    /// The business's own delivery. Ordering says so outright; one older than that is read by its
+    /// fee, which a delivery always carries (zero when free). Kept one release, then the flag alone.
+    /// </summary>
+    private static bool IsDelivery(OrderStatusChangedToConfirmedIntegrationEvent @event) =>
+        @event.Platform is null && (@event.IsDelivery || @event.DeliveryFee is not null);
 
     /// <summary>How the delivery fee reads on the bill.</summary>
     public static readonly LocalizedText DeliveryFeeLine = new() { En = "Delivery fee", Ar = "رسوم التوصيل" };
@@ -152,7 +167,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         // The business's own delivery is its own sale too: paid at the door,
         // in cash the rider brings back, so never joined to a tab
-        if (@event.DeliveryFee is not null)
+        if (IsDelivery(@event))
         {
             return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, DeliveryLabel(@event)));
         }
@@ -235,9 +250,12 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, @event.CustomerName));
     }
 
-    /// <summary>A delivery's bill is named for it: the order, and whom it goes to.</summary>
+    /// <summary>
+    /// A delivery's bill is named for it: the order, and whom it goes to. Plain text, in no
+    /// language: it is printed on receipts, and a thermal printer has no scooter to draw.
+    /// </summary>
     private static string DeliveryLabel(OrderStatusChangedToConfirmedIntegrationEvent @event)
         => string.IsNullOrWhiteSpace(@event.CustomerName)
-            ? $"🛵 #{@event.OrderId}"
-            : $"🛵 #{@event.OrderId} · {@event.CustomerName}";
+            ? $"#{@event.OrderId}"
+            : $"#{@event.OrderId} · {@event.CustomerName}";
 }

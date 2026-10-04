@@ -162,9 +162,36 @@ public class Tenant
         DeliveryEnabled = f.Delivery;
     }
 
+    /// <summary>
+    /// The switches the owner sent, each left as it is when it is not sent: an
+    /// admin older than a switch never turns it off by not knowing it. Then
+    /// clamped to what the plan allows.
+    /// </summary>
+    public void ApplyFeatures(FeatureSwitches? requested)
+    {
+        if (requested is null) return;
+        var now = Features;
+        ApplyFeatures(new TenantFeatures(
+            requested.Reservations ?? now.Reservations,
+            requested.TimeBilling ?? now.TimeBilling,
+            requested.Loyalty ?? now.Loyalty,
+            requested.Tabs ?? now.Tabs,
+            requested.Inventory ?? now.Inventory,
+            requested.Finance ?? now.Finance,
+            requested.Payroll ?? now.Payroll,
+            requested.Kds ?? now.Kds,
+            requested.OnlinePayments ?? now.OnlinePayments,
+            requested.Delivery ?? now.Delivery));
+    }
+
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
     public void ApplyEntitlements(TenantFeatures entitled)
     {
+        // Delivery starts on the moment it is bought (the branches still each
+        // need an area before anyone orders to a door); other modules wait for
+        // the owner, as they always have
+        if (!DeliveryEntitled && entitled.Delivery) DeliveryEnabled = true;
+
         ReservationsEntitled = entitled.Reservations;
         TimeBillingEntitled = entitled.TimeBilling;
         LoyaltyEntitled = entitled.Loyalty;
@@ -352,6 +379,14 @@ public class TenantThemeDark
     /// <summary>The dark page, kept dark.</summary>
     public string? Surface { get; set; }
 }
+
+/// <summary>
+/// The switches an owner asks for, any of them left out: one not sent stays as
+/// it is (<see cref="Tenant.ApplyFeatures(FeatureSwitches?)"/>).
+/// </summary>
+public record FeatureSwitches(
+    bool? Reservations = null, bool? TimeBilling = null, bool? Loyalty = null, bool? Tabs = null, bool? Inventory = null,
+    bool? Finance = null, bool? Payroll = null, bool? Kds = null, bool? OnlinePayments = null, bool? Delivery = null);
 
 /// <summary>The switches, as the surfaces read them and as the plan allows them.</summary>
 /// <param name="OnlinePayments">Last and defaulted: a caller older than online payments does not send it, and it stays off.</param>

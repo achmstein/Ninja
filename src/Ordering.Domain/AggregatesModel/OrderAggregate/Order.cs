@@ -277,7 +277,7 @@ public class Order
             if (Source == OrderSource.Talabat)
                 throw new OrderingDomainException("A platform's order is delivered by the platform.");
             if (HasDestination)
-                throw new OrderingDomainException("An order goes to a table or room, or is delivered — not both.");
+                throw new OrderingDomainException("An order goes to a table or room, or is delivered — not both.", DeliveryErrors.PlaceConflict);
             Delivery = delivery;
         }
 
@@ -452,6 +452,27 @@ public class Order
     }
 
     /// <summary>
+    /// A delivery held to the branch's minimum at the menu's prices, not the
+    /// app's: Catalog lowered a price and the order no longer comes to it, so
+    /// it is cancelled as a failed check would be.
+    /// </summary>
+    public void SetBelowDeliveryMinimum(decimal minimum)
+    {
+        if (OrderStatus != OrderStatus.AwaitingValidation)
+        {
+            throw new OrderingDomainException($"Cannot fail validation from status {OrderStatus}. Order must be in AwaitingValidation status.");
+        }
+
+        OrderStatus = OrderStatus.Cancelled;
+        Description = $"Order cancelled - delivery needs an order of at least {minimum:0.##} at the menu's prices.";
+        AddDomainEvent(new OrderCancelledDomainEvent(this));
+    }
+
+    /// <summary>What the items would come to at <paramref name="prices"/> (by line id); the lines' own where none is given.</summary>
+    public decimal GetItemsTotalAt(IReadOnlyDictionary<int, decimal>? prices) =>
+        _orderItems.Sum(o => o.Units * (prices is not null && prices.TryGetValue(o.Id, out var price) ? price : o.UnitPrice) - o.Discount);
+
+    /// <summary>
     /// Catalog turned lines down: the order is cancelled, saying why — the
     /// menu asks more than the app showed (<see cref="ValidationFailure.PriceChanged"/>),
     /// or items or options cannot be had. A Talabat order is refused to
@@ -605,9 +626,14 @@ public class Order
     /// </summary>
     public void SetCancelledStatus(string? platformReason = null)
     {
-        if (OrderStatus != OrderStatus.Submitted && OrderStatus != OrderStatus.AwaitingValidation)
+        // A confirmed delivery that could not be handed over, or came back,
+        // is cancelled by the till too, as long as no cash came in for it
+        var deliveryCameBack = OrderStatus == OrderStatus.Confirmed
+            && Delivery is { Stage: DeliveryStage.Failed or DeliveryStage.Returned, CashHandedInAt: null };
+
+        if (OrderStatus != OrderStatus.Submitted && OrderStatus != OrderStatus.AwaitingValidation && !deliveryCameBack)
         {
-            throw new OrderingDomainException($"Cannot cancel order from status {OrderStatus}. Only submitted or awaiting validation orders can be cancelled.");
+            throw new OrderingDomainException($"Cannot cancel order from status {OrderStatus}. Only submitted or awaiting validation orders, or a delivery that came back, can be cancelled.");
         }
 
         OrderStatus = OrderStatus.Cancelled;
@@ -707,23 +733,42 @@ public class Order
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
     }
 
-    /// <summary>
-    /// The rider handed the cash in at the till, which settles the bill with
-    /// it. A repeat is a no-op.
-    /// </summary>
-    public void MarkDeliveryCashHandedIn(DateTime? at = null)
+    /// <summary>It could not be handed over (nobody answered, refused). A repeat is a no-op.</summary>
+    public void MarkDeliveryFailed(string reason, DateTime? at = null)
     {
         var delivery = EnsureDelivering();
-        if (delivery.MarkCashHandedIn(at ?? DateTime.UtcNow))
+        if (delivery.MarkFailed(reason, at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>The rider brought it back to the branch. A repeat is a no-op.</summary>
+    public void MarkDeliveryReturned(DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.MarkReturned(at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>
+    /// The rider handed in what they collected at the till, which settles the
+    /// bill with it. A repeat is a no-op; a bill already settled another way
+    /// is refused, so the drawer is not counted twice.
+    /// </summary>
+    public void MarkDeliveryCashHandedIn(decimal amount, DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.CashHandedInAt is null && IsPaid)
+            throw new OrderingDomainException("The bill was settled already.", DeliveryErrors.AlreadySettled);
+        if (delivery.MarkCashHandedIn(amount, at ?? DateTime.UtcNow))
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, CashHandedIn: true));
     }
 
     private Delivery EnsureDelivering()
     {
         if (Delivery is null)
-            throw new OrderingDomainException("This order isn't delivered.");
+            throw new OrderingDomainException("This order isn't delivered.", DeliveryErrors.NotDelivery);
         if (OrderStatus != OrderStatus.Confirmed)
-            throw new OrderingDomainException("Only a confirmed order goes out for delivery.");
+            throw new OrderingDomainException("Only a confirmed order goes out for delivery.", DeliveryErrors.NotConfirmed);
         return Delivery;
     }
 

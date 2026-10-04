@@ -17,6 +17,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Field, FieldGrid } from '@/components/field'
+import {
+  parseDeliverySettings,
+  stopsDelivering,
+  type DeliverySettings,
+} from '../delivery-settings'
 
 interface DeliveryDialogProps {
   branch: BranchResponse | null
@@ -69,6 +74,12 @@ function DeliveryForm({
   const [radius, setRadius] = useState(asText(branch.deliveryRadiusKm))
   const [fee, setFee] = useState(asText(branch.deliveryFee))
   const [minimum, setMinimum] = useState(asText(branch.deliveryMinimumOrder))
+  const [tried, setTried] = useState(false)
+  // Clearing the radius of a branch that delivers stops it: asked once more
+  const [confirming, setConfirming] = useState(false)
+
+  const parsed = parseDeliverySettings({ radius, fee, minimum })
+  const errors = tried && !parsed.ok ? parsed.errors : {}
 
   const save = useMutation({
     ...updateBranchMutation(),
@@ -81,8 +92,18 @@ function DeliveryForm({
     onError: () => toast.error(t('failedToSaveBranch')),
   })
 
+  const submit = () => {
+    setTried(true)
+    if (!parsed.ok) return
+    if (!confirming && stopsDelivering(branch.isDeliveryEnabled, parsed.value)) {
+      setConfirming(true)
+      return
+    }
+    send(parsed.value)
+  }
+
   // The branch goes back as it is, with only how it delivers changed
-  const submit = () =>
+  const send = (value: DeliverySettings) =>
     save.mutate({
       path: { id: Number(branch.id) },
       body: {
@@ -94,9 +115,9 @@ function DeliveryForm({
         isActive: branch.isActive,
         displayOrder: branch.displayOrder,
         dayStartTime: branch.dayStartTime,
-        deliveryRadiusKm: Number(radius || 0),
-        deliveryFee: Number(fee || 0),
-        deliveryMinimumOrder: Number(minimum || 0),
+        deliveryRadiusKm: value.radius,
+        deliveryFee: value.fee,
+        deliveryMinimumOrder: value.minimum,
       },
     })
 
@@ -107,6 +128,11 @@ function DeliveryForm({
           label={t('deliveryRadiusKm')}
           htmlFor='delivery-radius'
           hint={t('deliveryRadiusHint')}
+          error={
+            errors.radius ? (
+              <span id='delivery-radius-error'>{t('deliveryRadiusInvalid')}</span>
+            ) : undefined
+          }
         >
           <Input
             id='delivery-radius'
@@ -116,13 +142,23 @@ function DeliveryForm({
             max={100}
             step='0.5'
             value={radius}
-            onChange={(e) => setRadius(e.target.value)}
+            aria-invalid={errors.radius || undefined}
+            aria-describedby={errors.radius ? 'delivery-radius-error' : undefined}
+            onChange={(e) => {
+              setRadius(e.target.value)
+              setConfirming(false)
+            }}
           />
         </Field>
         <FieldGrid>
           <Field
             label={`${t('deliveryFee')} (${currency})`}
             htmlFor='delivery-fee'
+            error={
+              errors.fee ? (
+                <span id='delivery-fee-error'>{t('deliveryAmountInvalid')}</span>
+              ) : undefined
+            }
           >
             <Input
               id='delivery-fee'
@@ -132,12 +168,21 @@ function DeliveryForm({
               step='1'
               placeholder='0'
               value={fee}
+              aria-invalid={errors.fee || undefined}
+              aria-describedby={errors.fee ? 'delivery-fee-error' : undefined}
               onChange={(e) => setFee(e.target.value)}
             />
           </Field>
           <Field
             label={`${t('deliveryMinimumOrder')} (${currency})`}
             htmlFor='delivery-minimum'
+            error={
+              errors.minimum ? (
+                <span id='delivery-minimum-error'>
+                  {t('deliveryAmountInvalid')}
+                </span>
+              ) : undefined
+            }
           >
             <Input
               id='delivery-minimum'
@@ -147,19 +192,35 @@ function DeliveryForm({
               step='1'
               placeholder='0'
               value={minimum}
+              aria-invalid={errors.minimum || undefined}
+              aria-describedby={
+                errors.minimum ? 'delivery-minimum-error' : undefined
+              }
               onChange={(e) => setMinimum(e.target.value)}
             />
           </Field>
         </FieldGrid>
+        {confirming && (
+          <p
+            role='alert'
+            className='rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400'
+          >
+            {t('deliveryClearRadiusConfirm')}
+          </p>
+        )}
       </div>
 
       <DialogFooter>
         <Button type='button' variant='outline' onClick={onClose}>
           {t('cancel')}
         </Button>
-        <Button onClick={submit} disabled={save.isPending}>
+        <Button
+          onClick={submit}
+          disabled={save.isPending}
+          variant={confirming ? 'destructive' : 'default'}
+        >
           {save.isPending && <Spinner />}
-          {t('save')}
+          {confirming ? t('deliveryStopDelivering') : t('save')}
         </Button>
       </DialogFooter>
     </>

@@ -22,6 +22,8 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings> PaymentSettings { get; set; }
     /// <summary>The business's switches Sales owns a part of (online payments), from Tenant.API's events.</summary>
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
+    /// <summary>The riders' cash for deliveries, waiting for its bill or recorded against it.</summary>
+    public DbSet<Projections.DeliveryCashIn> DeliveryCashIns { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -52,6 +54,7 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new OnlinePaymentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new DeliveryCashInEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

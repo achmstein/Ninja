@@ -127,6 +127,13 @@ describe('nextCheck', () => {
 describe('a delivery', () => {
   const delivered = (stage: string): PillOrder => ({ status: 'Confirmed', delivery: { stage } })
 
+  it('says so when it could not be delivered, and does not name the rider for it', () => {
+    expect(stageOf(delivered('Failed'))).toBe('notDelivered')
+    expect(stageOf(delivered('Returned'))).toBe('notDelivered')
+    const failed: PillOrder = { status: 'Confirmed', delivery: { stage: 'Failed', riderName: 'Emam' } }
+    expect(noteFor('notDelivered', failed, STAGE_LABEL)).toEqual({ words: PILL_WORDS.notDeliveredNote, rider: null })
+  })
+
   it('names the rider on its way, when the till said who took it', () => {
     const notes = STAGE_LABEL
     const withRider: PillOrder = { status: 'Confirmed', delivery: { stage: 'OnTheWay', riderName: ' Emam ' } }

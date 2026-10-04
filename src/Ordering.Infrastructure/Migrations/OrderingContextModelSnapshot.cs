@@ -561,13 +561,16 @@ namespace Ordering.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("DeliveryFee")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("DeliveryMinimumOrder")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal?>("DeliveryRadiusKm")
-                        .HasColumnType("numeric");
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)");
 
                     b.Property<bool>("IsDeliveryEnabled")
                         .HasColumnType("boolean");
@@ -785,6 +788,35 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("platformupdates", "ordering");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.RiderAccount", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.PrimitiveCollection<List<int>>("Branches")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRider")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("rideraccounts", "ordering");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.RiderStatus", b =>
                 {
                     b.Property<string>("UserId")
@@ -895,6 +927,10 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
 
+                            b1.Property<decimal?>("CashCollected")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
                             b1.Property<DateTime?>("CashHandedInAt")
                                 .HasColumnType("timestamp with time zone");
 
@@ -907,6 +943,13 @@ namespace Ordering.Infrastructure.Migrations
 
                             b1.Property<int?>("DistanceMeters")
                                 .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("FailedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("FailureReason")
+                                .HasMaxLength(300)
+                                .HasColumnType("character varying(300)");
 
                             b1.Property<decimal>("Fee")
                                 .HasPrecision(18, 2)
@@ -930,6 +973,9 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasMaxLength(30)
                                 .HasColumnType("character varying(30)");
 
+                            b1.Property<DateTime?>("ReturnedAt")
+                                .HasColumnType("timestamp with time zone");
+
                             b1.Property<string>("RiderName")
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)");
@@ -938,7 +984,13 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
 
+                            b1.Property<int>("Version")
+                                .IsConcurrencyToken()
+                                .HasColumnType("integer");
+
                             b1.HasKey("OrderId");
+
+                            b1.HasIndex("Phone");
 
                             b1.HasIndex("RiderUserId");
 

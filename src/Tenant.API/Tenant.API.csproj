@@ -34,6 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
     <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
+    <ProjectReference Include="..\IntegrationEventLogEF\IntegrationEventLogEF.csproj" />
   </ItemGroup>
 
   <ItemGroup>

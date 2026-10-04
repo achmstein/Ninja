@@ -5,7 +5,8 @@ import { useAuth } from 'react-oidc-context'
 import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useBrand } from '@/lib/brand'
+import { brandQueryKey, useBrand } from '@/lib/brand'
+import { isModuleOff, problemMessage } from '@/lib/problem'
 import { useSelectedBranch } from '@/lib/branch'
 import { cartTotal, useCart } from '@/lib/cart'
 import { useDelivery } from '@/lib/delivery'
@@ -94,12 +95,11 @@ export function usePlaceOrder({
         toast.info(t('orderStillWaiting'))
         return
       }
-      // An order the branch turned down says why (too far, too little, not delivering now, no table)
-      if (isAxiosError(error) && error.response?.status === 400 && typeof error.response.data === 'string' && error.response.data.trim()) {
-        toast.error(error.response.data)
-        return
-      }
-      toast.error(t('failedToPlaceOrder'))
+      // Delivery was switched off under the open order: the brand says so everywhere, and the tray drops it
+      if (isModuleOff(error)) queryClient.invalidateQueries({ queryKey: brandQueryKey() })
+      // An order the branch turned down says why (too far, too little, not delivering now, no table),
+      // in the customer's language from the code it was refused with
+      toast.error(problemMessage(error, t, 'failedToPlaceOrder'))
     },
   })
 

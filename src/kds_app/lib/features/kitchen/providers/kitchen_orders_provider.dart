@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/kitchen_order.dart';
 import '../services/kitchen_service.dart';
 import 'station_provider.dart';
-import '../../../core/network/server_clock.dart';
+import 'package:ninja_app_core/network/server_clock.dart';
 
 /// The kitchen's day: every confirmed order of the last 24 hours, oldest
 /// first, for the active branch (the X-Branch-Id header every request

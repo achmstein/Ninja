@@ -506,6 +506,156 @@ abstract class AppLocalizations {
   /// **'Navigate'**
   String get navigate;
 
+  /// No description provided for @riderAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{business} Rider'**
+  String riderAppTitle(String business);
+
+  /// No description provided for @connectInsecure.
+  ///
+  /// In en, this message translates to:
+  /// **'This address isn\'t secure (no https). Ask the owner for the business\'s https address.'**
+  String get connectInsecure;
+
+  /// No description provided for @signInInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll sign in on the business\'s own page, then come back here.'**
+  String get signInInBrowser;
+
+  /// Between the parts of an address on one line (building, floor, apartment)
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get listSeparator;
+
+  /// No description provided for @listMayBeOld.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh since {time}. This list may be old.'**
+  String listMayBeOld(String time);
+
+  /// No description provided for @dutyNotChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The till didn\'t get that'**
+  String get dutyNotChanged;
+
+  /// No description provided for @errorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Try again in a moment.'**
+  String get errorOffline;
+
+  /// No description provided for @errorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else changed this delivery. The list is up to date now.'**
+  String get errorConflict;
+
+  /// No description provided for @errorNotYours.
+  ///
+  /// In en, this message translates to:
+  /// **'This delivery isn\'t yours any more.'**
+  String get errorNotYours;
+
+  /// No description provided for @errorNotOutYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap On the way first.'**
+  String get errorNotOutYet;
+
+  /// No description provided for @errorAlreadyOut.
+  ///
+  /// In en, this message translates to:
+  /// **'It already left.'**
+  String get errorAlreadyOut;
+
+  /// No description provided for @errorAlreadyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'This delivery is already done.'**
+  String get errorAlreadyDone;
+
+  /// No description provided for @errorNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The till hasn\'t confirmed this order yet.'**
+  String get errorNotConfirmed;
+
+  /// No description provided for @couldNotOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Maps'**
+  String get couldNotOpenMaps;
+
+  /// No description provided for @couldNotOpenDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the phone'**
+  String get couldNotOpenDialer;
+
+  /// No description provided for @couldNotDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t deliver'**
+  String get couldNotDeliver;
+
+  /// No description provided for @couldNotDeliverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why couldn\'t you deliver it?'**
+  String get couldNotDeliverTitle;
+
+  /// No description provided for @couldNotDeliverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring the bag back to the branch. The till takes it from there.'**
+  String get couldNotDeliverHint;
+
+  /// No description provided for @failReasonNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody answered'**
+  String get failReasonNoAnswer;
+
+  /// No description provided for @failReasonRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer refused it'**
+  String get failReasonRefused;
+
+  /// No description provided for @failReasonWrongAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find the address'**
+  String get failReasonWrongAddress;
+
+  /// No description provided for @failReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get failReasonOther;
+
+  /// No description provided for @bringItBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring it back to the branch'**
+  String get bringItBack;
+
+  /// No description provided for @bringItBackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to collect. Hand the bag to the till.'**
+  String get bringItBackHint;
+
+  /// No description provided for @returnedToBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Back at the branch'**
+  String get returnedToBranch;
+
   /// No description provided for @notDelivering.
   ///
   /// In en, this message translates to:

@@ -1,3 +1,4 @@
+#nullable enable
 namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
@@ -10,7 +11,8 @@ namespace Ninja.Ordering.API.Application.Commands;
 /// </summary>
 public class SetOrderValidatedCommandHandler(
     IOrderRepository orderRepository,
-    ILogger<SetOrderValidatedCommandHandler> logger) : IRequestHandler<SetOrderValidatedCommand, bool>
+    ILogger<SetOrderValidatedCommandHandler> logger,
+    IBranchSettingsQueries? branchSettings = null) : IRequestHandler<SetOrderValidatedCommand, bool>
 {
     public async Task<bool> Handle(SetOrderValidatedCommand command, CancellationToken cancellationToken)
     {
@@ -25,6 +27,21 @@ public class SetOrderValidatedCommandHandler(
         if (order.OrderStatus != OrderStatus.AwaitingValidation)
         {
             logger.LogInformation("Order {OrderNumber} is already {Status}; a repeated validation is ignored", command.OrderNumber, order.OrderStatus);
+            return false;
+        }
+
+        // A customer's delivery was let through on the prices the app sent:
+        // held to the branch's minimum again at the menu's, it is turned down
+        // as a failed check would be when Catalog's prices bring it under
+        if (order.Delivery is not null
+            && order.Source is not (OrderSource.Pos or OrderSource.Talabat)
+            && branchSettings is not null
+            && await branchSettings.GetDeliveryTermsAsync(order.BranchId, evenWhilePaused: true) is { } terms
+            && order.GetItemsTotalAt(command.Prices) < terms.MinimumOrder)
+        {
+            logger.LogWarning("Order {OrderNumber} is under the delivery minimum at the menu's prices; cancelled", command.OrderNumber);
+            order.SetBelowDeliveryMinimum(terms.MinimumOrder);
+            await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
             return false;
         }
 

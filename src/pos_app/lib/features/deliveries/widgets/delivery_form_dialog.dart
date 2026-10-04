@@ -12,7 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_delivery.dart';
 import '../../sale/models/sale_line.dart';
 import '../models/delivery_order.dart';
-import '../services/delivery_service.dart';
+import '../providers/delivery_form_controller.dart';
 import 'delivery_details.dart';
 
 /// Enough digits to be worth asking whether the caller had deliveries before
@@ -61,31 +61,22 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   late final _directions = TextEditingController(text: widget.initial?.directions ?? '');
   late final _location = TextEditingController(text: widget.initial?.location ?? '');
 
-  TillDeliveryQuote? _quote;
-  bool _reading = false;
-  List<KnownAddress> _known = const [];
   bool _tried = false;
-  Timer? _locationDebounce;
-  Timer? _phoneDebounce;
-  String _lookedUpPhone = '';
 
   String get _country => ref.read(brandProvider).locale.country;
   bool get _hasAccount => (widget.customer?.id ?? '').isNotEmpty;
+  DeliveryFormController get _controller => ref.read(deliveryFormControllerProvider.notifier);
+
+  String get _lookupPhone => phoneDigitCount(_phone.text) >= _minPhoneDigits ? normalizePhone(_phone.text, _country) : '';
 
   @override
   void initState() {
     super.initState();
-    _readLocation();
-    _lookUpKnown();
-    _location.addListener(() {
-      _locationDebounce?.cancel();
-      setState(() => _reading = _location.text.trim().isNotEmpty);
-      _locationDebounce = Timer(const Duration(milliseconds: 400), _readLocation);
-    });
-    _phone.addListener(() {
-      _phoneDebounce?.cancel();
-      _phoneDebounce = Timer(const Duration(milliseconds: 400), _lookUpKnown);
-    });
+    // The terms (and any pin already pasted) at once, then on every new text
+    _controller.locationChanged(_location.text, debounce: Duration.zero);
+    unawaited(_controller.lookUpKnown(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
+    _location.addListener(() => _controller.locationChanged(_location.text));
+    _phone.addListener(() => _controller.phoneChanged(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
     // Once Save was tried, what is still missing is said as it is typed
     for (final c in [_name, _phone, _street]) {
       c.addListener(() {
@@ -96,44 +87,10 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
 
   @override
   void dispose() {
-    _locationDebounce?.cancel();
-    _phoneDebounce?.cancel();
     for (final c in [_name, _phone, _street, _building, _floor, _apartment, _directions, _location]) {
       c.dispose();
     }
     super.dispose();
-  }
-
-  /// The branch's terms, and the pin read from what was pasted (a short link is followed by Ordering)
-  Future<void> _readLocation() async {
-    final asked = _location.text.trim();
-    try {
-      final quote = await ref.read(deliveryRepositoryProvider).tillQuote(location: asked);
-      if (!mounted || _location.text.trim() != asked) return;
-      setState(() {
-        _quote = quote;
-        _reading = false;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _reading = false);
-    }
-  }
-
-  /// The caller's earlier addresses, by account or by the number typed
-  Future<void> _lookUpKnown() async {
-    final phone = phoneDigitCount(_phone.text) >= _minPhoneDigits ? normalizePhone(_phone.text, _country) : '';
-    if (!_hasAccount && phone.isEmpty) {
-      if (_known.isNotEmpty) setState(() => _known = const []);
-      return;
-    }
-    if (phone == _lookedUpPhone && _known.isNotEmpty) return;
-    _lookedUpPhone = phone;
-    try {
-      final known = await ref.read(deliveryRepositoryProvider).knownAddresses(customerUserId: widget.customer?.id, phone: phone);
-      if (mounted) setState(() => _known = known);
-    } catch (_) {
-      // Only a convenience: the cashier types the address
-    }
   }
 
   void _pickKnown(KnownAddress a) {
@@ -151,10 +108,11 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   bool get _streetOk => _street.text.trim().isNotEmpty;
   bool get _phoneOk => phoneDigitCount(_phone.text) >= _minPhoneDigits;
 
-  void _save() {
+  void _save(DeliveryFormState form) {
     setState(() => _tried = true);
-    if (!_nameOk || !_streetOk || !_phoneOk || _reading) return;
-    final pinned = _location.text.trim().isNotEmpty && (_quote?.pinned ?? false);
+    if (!_nameOk || !_streetOk || !_phoneOk || form.reading) return;
+    // The pin of the very text in the field, never one an earlier text answered
+    final pin = form.pinFor(_location.text);
     Navigator.of(context, rootNavigator: true).pop<DeliveryFormResult>((
       delivery: SaleDelivery(
         address: _street.text.trim(),
@@ -164,8 +122,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         apartment: _apartment.text.trim(),
         directions: _directions.text.trim(),
         location: _location.text.trim(),
-        latitude: pinned ? _quote!.latitude : null,
-        longitude: pinned ? _quote!.longitude : null,
+        latitude: pin?.latitude,
+        longitude: pin?.longitude,
       ),
       name: _hasAccount ? widget.customer!.name : _name.text.trim(),
     ));
@@ -177,9 +135,11 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     final l10n = AppLocalizations.of(context)!;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     final error = theme.typography.sm.copyWith(color: theme.colors.destructive);
-    final quote = _quote;
+    final form = ref.watch(deliveryFormControllerProvider);
+    final quote = form.quote;
+    final reading = form.reading;
     final pasted = _location.text.trim().isNotEmpty;
-    final pinned = pasted && (quote?.pinned ?? false);
+    final pinned = form.pinFor(_location.text) != null;
 
     Widget field(TextEditingController controller, String label,
             {String? hint, TextInputType? keyboard, TextDirection? direction, bool autofocus = false}) =>
@@ -216,7 +176,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           ],
           field(_phone, l10n.deliveryPhoneLabel, keyboard: TextInputType.phone, direction: TextDirection.ltr),
           errorText(!_phoneOk, l10n.deliveryPhoneInvalid),
-          if (_known.isNotEmpty) ...[
+          if (form.known.isNotEmpty) ...[
             const SizedBox(height: 12),
             Row(
               children: [
@@ -226,8 +186,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               ],
             ),
             const SizedBox(height: 6),
-            for (final a in _known)
+            for (final a in form.known)
               Padding(
+                key: ValueKey(a.identity),
                 padding: const EdgeInsets.only(bottom: 6),
                 child: FTappable(
                   onPress: () => setState(() => _pickKnown(a)),
@@ -262,7 +223,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                                   if ((a.building ?? '').isNotEmpty) '${l10n.deliveryBuilding} ${a.building}',
                                   if ((a.floor ?? '').isNotEmpty) '${l10n.deliveryFloor} ${a.floor}',
                                   if ((a.apartment ?? '').isNotEmpty) '${l10n.deliveryApartment} ${a.apartment}',
-                                ].join('، '),
+                                ].join(l10n.listSeparator),
                               ].join(' · '),
                               style: theme.typography.sm,
                             ),
@@ -296,10 +257,10 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           const SizedBox(height: 12),
           field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
           const SizedBox(height: 4),
-          if (_reading)
+          if (reading)
             Row(
               children: [
-                const SizedBox.square(dimension: 12, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox.square(dimension: 12, child: FCircularProgress()),
                 const SizedBox(width: 6),
                 Text(l10n.deliveryLocationReading, style: muted),
               ],
@@ -320,9 +281,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               ],
             )
           else
-            Text(l10n.deliveryLocationUnread, style: muted),
+            Text(form.quoteFailed ? l10n.deliveryLocationNotChecked : l10n.deliveryLocationUnread, style: muted),
           // Said, not refused: the cashier knows the streets and the regulars
-          if (quote != null && !_reading) ...[
+          if (quote != null && !reading) ...[
             const SizedBox(height: 12),
             if (pinned && !quote.inRange) _Warning(text: l10n.deliveryOutOfRange(_km(quote.radiusKm))),
             if (quote.minimumOrder > 0 && widget.itemsTotal < quote.minimumOrder)
@@ -339,7 +300,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           SizedBox(
             height: 52,
             child: FButton(
-              onPress: _reading ? null : _save,
+              onPress: reading ? null : () => _save(form),
               child: Text(l10n.deliverySave, style: theme.typography.lg.forButton),
             ),
           ),

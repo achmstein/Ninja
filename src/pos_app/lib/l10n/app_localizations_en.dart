@@ -1879,4 +1879,163 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deliveryPlaced =>
       'Delivery placed. Give it to a rider from Deliveries on the floor.';
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String get deliveryChange => 'Change the delivery';
+
+  @override
+  String get deliveryErrorOffline => 'No connection. Try again in a moment.';
+
+  @override
+  String get deliveryErrorNotDelivering =>
+      'This business doesn\'t deliver now.';
+
+  @override
+  String get deliveryErrorOutOfRange =>
+      'That address is outside the delivery area.';
+
+  @override
+  String get deliveryErrorBelowMinimum =>
+      'The order is under the delivery minimum.';
+
+  @override
+  String get deliveryErrorPlaceConflict =>
+      'A delivery goes on a bill of its own, not on a table or an open bill.';
+
+  @override
+  String get deliveryErrorTooLong =>
+      'Part of the address is too long. Shorten it.';
+
+  @override
+  String get deliveryErrorNotConfirmed =>
+      'Confirm the order before it goes out.';
+
+  @override
+  String get deliveryErrorNoRider => 'Give it to a rider first.';
+
+  @override
+  String get deliveryErrorAlreadyOut => 'It already left with its rider.';
+
+  @override
+  String get deliveryErrorNotOut => 'It hasn\'t left yet.';
+
+  @override
+  String get deliveryErrorNotDelivered => 'It hasn\'t been delivered yet.';
+
+  @override
+  String get deliveryErrorAlreadySettled => 'Its cash is already in.';
+
+  @override
+  String get deliveryErrorConflict =>
+      'Someone else changed this delivery. It\'s up to date now.';
+
+  @override
+  String get deliveryErrorUnknownRider =>
+      'That rider isn\'t one of this branch\'s riders.';
+
+  @override
+  String get deliveryErrorPaused =>
+      'This branch isn\'t taking orders right now.';
+
+  @override
+  String get failReasonNoAnswer => 'Nobody answered';
+
+  @override
+  String get failReasonRefused => 'The customer refused it';
+
+  @override
+  String get failReasonWrongAddress => 'Couldn\'t find the address';
+
+  @override
+  String get failReasonOther => 'Something else';
+
+  @override
+  String deliveryFailedBecause(String reason) {
+    return 'Not delivered: $reason';
+  }
+
+  @override
+  String get couldNotOpenMaps => 'Couldn\'t open Maps';
+
+  @override
+  String get couldNotOpenDialer => 'Couldn\'t open the phone';
+
+  @override
+  String deliveryDeliveredConfirm(String name) {
+    return 'Did $name get it?';
+  }
+
+  @override
+  String get deliveryMarkFailed => 'It couldn\'t be delivered';
+
+  @override
+  String get deliveryFailReasonTitle => 'Why couldn\'t it be delivered?';
+
+  @override
+  String get deliveryMarkReturned => 'The bag is back';
+
+  @override
+  String get deliveryCancelReturned => 'Cancel the order';
+
+  @override
+  String get deliveryCancelReturnedConfirm =>
+      'The bag is back and nobody will have it. Cancel the order?';
+
+  @override
+  String deliveryComingBack(String name) {
+    return 'Coming back with $name';
+  }
+
+  @override
+  String get deliveryBackAtBranch => 'Back at the branch';
+
+  @override
+  String deliveryCashCountTitle(String name) {
+    return 'Take the cash from $name';
+  }
+
+  @override
+  String deliveryCashBill(String amount) {
+    return 'The bill: $amount';
+  }
+
+  @override
+  String get deliveryCashCounted => 'Counted';
+
+  @override
+  String get deliveryCashInvalid => 'Type the amount counted';
+
+  @override
+  String get deliveryCashExact => 'Exactly the bill';
+
+  @override
+  String deliveryCashShort(String amount) {
+    return '$amount short';
+  }
+
+  @override
+  String deliveryCashOver(String amount) {
+    return '$amount over';
+  }
+
+  @override
+  String get deliveryCashTakeAction => 'Take it in';
+
+  @override
+  String get deliveryLocationNotChecked =>
+      'Couldn\'t check that location. The rider will go by the address.';
+
+  @override
+  String get deliveryTermsChecking => 'Checking the branch\'s delivery terms…';
+
+  @override
+  String get deliveryTermsUnknown =>
+      'Couldn\'t check delivery. Retry, or make it a counter sale.';
+
+  @override
+  String get deliveryNotOfferedNow =>
+      'This branch doesn\'t deliver now. Remove the delivery to charge.';
 }

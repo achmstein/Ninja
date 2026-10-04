@@ -111,6 +111,10 @@ public static class NotificationMessages
     public static LocalizedText DeliveryTakenBackBody(int orderId) =>
         new($"Order #{orderId} was given to someone else", $"طلب #{orderId} اتحول لمندوب تاني");
 
+    public static readonly LocalizedText DeliveryFailedTitle = new("Couldn't be delivered", "التوصيلة متسلمتش");
+    public static LocalizedText DeliveryFailedBody(int orderId) =>
+        new($"Order #{orderId} couldn't be delivered. Bring it back to the branch.", $"طلب #{orderId} متسلمش. رجّعه للفرع.");
+
     // -----------------------------------------------------------------
     // To the customer: their order, their table, their reservation
     // -----------------------------------------------------------------
@@ -125,6 +129,13 @@ public static class NotificationMessages
             : new($"{riderName} is on the way with your order #{orderId}",
                 $"{riderName} في الطريق ليك بالأوردر #{orderId}",
                 $"{riderName} في الطريق إليك بطلبك #{orderId}");
+
+    public static readonly CustomerText OrderNotDeliveredTitle =
+        new("Couldn't be delivered", "الأوردر متسلمش", "تعذر التوصيل");
+    public static CustomerText OrderNotDeliveredBody(int orderId) =>
+        new($"We couldn't deliver your order #{orderId}. The branch will call you.",
+            $"معرفناش نوصّل الأوردر بتاعك #{orderId}. الفرع هيكلمك.",
+            $"تعذر توصيل طلبك #{orderId}. سيتصل بك الفرع.");
 
     public static readonly CustomerText OrderDeliveredTitle =
         new("Delivered", "الأوردر وصل", "تم التوصيل");

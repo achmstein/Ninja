@@ -19,6 +19,9 @@ builder.Services.AddHttpClient("KeycloakAdmin", client =>
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 builder.Services.AddSingleton<KeycloakAdmin>();
+builder.Services.AddSingleton<StaffAccounts>();
+// Says every staff account once at start, so a service that keeps its own copy (riders, their phones) backfills
+builder.Services.AddHostedService<StaffAnnouncer>();
 builder.Services.AddSingleton<TenantCountry>();
 builder.Services.AddCounterCustomerRateLimits(builder.Configuration);
 
@@ -144,153 +147,31 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
 });
 
 // Register admin endpoint (owner only - protected)
-app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request, StaffAccounts staff, CancellationToken ct) =>
 {
     // A staff account is an Admin (back office), a Cashier (till, kitchen) or
     // a Kitchen display's own account (the board and its printers only), or
     // a Rider (the deliveries given to them, in the rider app); only an Admin
     // can also be an Owner
-    var role = string.IsNullOrWhiteSpace(request.Role) ? "Admin" : request.Role.Trim();
-    if (role is not ("Admin" or "Cashier" or "Kitchen" or "Rider"))
+    var role = string.IsNullOrWhiteSpace(request.Role) ? RoleNames.Admin : request.Role.Trim();
+    if (!RoleNames.Creatable.Contains(role))
     {
-        return Results.BadRequest(new { message = "role must be Admin, Cashier, Kitchen or Rider" });
+        return Results.BadRequest(new { message = $"role must be {string.Join(", ", RoleNames.Creatable[..^1])} or {RoleNames.Creatable[^1]}" });
     }
-    if (request.IsOwner && role != "Admin")
+    if (request.IsOwner && role != RoleNames.Admin)
     {
         return Results.BadRequest(new { message = "only an Admin can be made Owner" });
     }
-    var initialBranches = (request.BranchIds ?? []).Where(id => id > 0).Distinct().Order().Select(id => id.ToString()).ToArray();
+    var branches = (request.BranchIds ?? []).Where(id => id > 0).Distinct().Order().ToList();
 
-    var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
-    var realm = config["Keycloak:Realm"] ?? "chillax";
-    var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
-    var adminClientSecret = config["Keycloak:AdminClientSecret"];
-
-    var client = httpClientFactory.CreateClient("KeycloakAdmin");
-
-    // Get admin token using client credentials
-    var tokenEndpoint = $"{keycloakUrl}/protocol/openid-connect/token";
-    var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
+    // Made whole or not at all: see StaffAccounts.CreateAsync
+    return await staff.CreateAsync(request.Email, request.Password, request.Name, role, request.IsOwner, branches, ct) switch
     {
-        ["grant_type"] = "client_credentials",
-        ["client_id"] = adminClientId,
-        ["client_secret"] = adminClientSecret ?? ""
-    });
-
-    var tokenResponse = await client.PostAsync(tokenEndpoint, tokenRequest);
-    if (!tokenResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem("Failed to authenticate with identity provider", statusCode: 500);
-    }
-
-    var tokenJson = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>();
-    var accessToken = tokenJson.GetProperty("access_token").GetString();
-
-    var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-    // Create user via Admin REST API
-    var usersEndpoint = $"{adminUrl}/admin/realms/{realm}/users";
-
-    // Staff are added with one name, split at its first space
-    var (firstName, lastName) = PersonName.Of(null, null, request.Name);
-
-    var userPayload = new
-    {
-        username = request.Email,
-        email = request.Email,
-        firstName = firstName,
-        lastName = lastName,
-        enabled = true,
-        emailVerified = true,
-        requiredActions = Array.Empty<string>(),
-        // Branch membership lives on the user (see PUT users/{id}/branches)
-        attributes = new Dictionary<string, string[]> { ["branches"] = initialBranches },
-        credentials = new[]
-        {
-            new
-            {
-                type = "password",
-                value = request.Password,
-                temporary = false
-            }
-        }
+        StaffCreation.Created created => Results.Ok(new { message = "Staff account registered successfully", userId = created.UserId }),
+        StaffCreation.Taken => Results.Conflict(new { message = "Username or email already exists" }),
+        StaffCreation.Failed failed => Results.Problem(failed.Message, statusCode: failed.Status),
+        _ => Results.Problem("The staff account was not made", statusCode: 500),
     };
-
-    var createResponse = await client.PostAsJsonAsync(usersEndpoint, userPayload);
-
-    if (createResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
-    {
-        return Results.Conflict(new { message = "Username or email already exists" });
-    }
-
-    if (!createResponse.IsSuccessStatusCode && createResponse.StatusCode != System.Net.HttpStatusCode.Created)
-    {
-        var errorContent = await createResponse.Content.ReadAsStringAsync();
-        return Results.Problem($"Registration failed: {errorContent}", statusCode: (int)createResponse.StatusCode);
-    }
-
-    // Get user ID from Location header
-    var locationHeader = createResponse.Headers.Location?.ToString();
-    var userId = locationHeader?.Split('/').LastOrDefault();
-
-    if (string.IsNullOrEmpty(userId))
-    {
-        // Try to find user by email if Location header not available
-        var searchEndpoint = $"{adminUrl}/admin/realms/{realm}/users?email={Uri.EscapeDataString(request.Email)}&exact=true";
-        var searchResponse = await client.GetAsync(searchEndpoint);
-        if (searchResponse.IsSuccessStatusCode)
-        {
-            var users = await searchResponse.Content.ReadFromJsonAsync<List<KeycloakUser>>();
-            userId = users?.FirstOrDefault()?.Id;
-        }
-    }
-
-    if (string.IsNullOrEmpty(userId))
-    {
-        return Results.Problem("User created but failed to retrieve user ID for role assignment", statusCode: 500);
-    }
-
-    // Get the requested staff role
-    var rolesEndpoint = $"{adminUrl}/admin/realms/{realm}/roles/{role}";
-    var roleResponse = await client.GetAsync(rolesEndpoint);
-
-    if (!roleResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem($"{role} role not found in realm.", statusCode: 500);
-    }
-
-    var adminRole = await roleResponse.Content.ReadFromJsonAsync<KeycloakRole>();
-
-    // Build list of roles to assign
-    var rolesToAssign = new List<KeycloakRole> { adminRole! };
-
-    // If IsOwner requested, also fetch and assign Owner role
-    if (request.IsOwner)
-    {
-        var ownerRolesEndpoint = $"{adminUrl}/admin/realms/{realm}/roles/Owner";
-        var ownerRoleResponse = await client.GetAsync(ownerRolesEndpoint);
-
-        if (ownerRoleResponse.IsSuccessStatusCode)
-        {
-            var ownerRole = await ownerRoleResponse.Content.ReadFromJsonAsync<KeycloakRole>();
-            if (ownerRole != null) rolesToAssign.Add(ownerRole);
-        }
-    }
-
-    // Assign roles to user
-    var roleMappingEndpoint = $"{adminUrl}/admin/realms/{realm}/users/{userId}/role-mappings/realm";
-
-    var assignResponse = await client.PostAsJsonAsync(roleMappingEndpoint, rolesToAssign);
-
-    if (!assignResponse.IsSuccessStatusCode && assignResponse.StatusCode != System.Net.HttpStatusCode.NoContent)
-    {
-        var errorContent = await assignResponse.Content.ReadAsStringAsync();
-        return Results.Problem($"User created but role assignment failed: {errorContent}", statusCode: 500);
-    }
-
-    // The id lets the caller link the login to an employee record
-    return Results.Ok(new { message = "Staff account registered successfully", userId });
 }).RequireAuthorization("Owner");
 
 // List users endpoint (admin only)
@@ -545,7 +426,7 @@ app.MapPost("/api/identity/update-email", async (UpdateEmailRequest request, Htt
 }).RequireAuthorization();
 
 // Update name endpoint (authenticated user)
-app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus) =>
+app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, StaffAccounts staff) =>
 {
     var userId = httpContext.User.GetUserId();
     if (string.IsNullOrEmpty(userId))
@@ -612,6 +493,7 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
         await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, request.NewName!));
+        if (httpContext.User.GetRoles().Any(r => RoleNames.Staff.Contains(r))) await staff.AnnounceAsync(userId);
         return Results.Ok(new { message = "Name updated successfully" });
     }
 
@@ -725,7 +607,7 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
 }).RequireAuthorization();
 
 // Admin: Update customer profile (name + phone) endpoint
-app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateProfileRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country) =>
+app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateProfileRequest request, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country, StaffAccounts staff) =>
 {
     if (!PhoneInput.TryRead(request.PhoneNumber, country, out var phone, out var phoneProblem))
     {
@@ -806,6 +688,8 @@ app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateP
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
         await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, PersonName.Display(firstName, lastName)));
+        // A member of staff renamed: the riders' list and the like say the new name
+        await staff.AnnounceAsync(userId);
         return Results.Ok(new { message = "Profile updated successfully" });
     }
 
@@ -870,7 +754,7 @@ app.MapPut("/api/identity/users/{userId}/password", async (string userId, Change
 }).RequireAuthorization("Admin");
 
 // Delete account endpoint (authenticated user - soft delete by disabling)
-app.MapDelete("/api/identity/delete-account", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapDelete("/api/identity/delete-account", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, StaffAccounts staff) =>
 {
     var userId = httpContext.User.GetUserId();
     if (string.IsNullOrEmpty(userId))
@@ -932,6 +816,8 @@ app.MapDelete("/api/identity/delete-account", async (HttpContext httpContext, IH
     {
         // Revoke the sessions too, so existing tokens stop working now
         await client.PostAsync($"{userEndpoint}/logout", null);
+        // A member of staff gone: no more deliveries given to them, no more pushes to their phone
+        if (httpContext.User.GetRoles().Any(r => RoleNames.Staff.Contains(r))) await staff.AnnounceGoneAsync(userId);
         return Results.Ok(new { message = "Account deleted successfully" });
     }
 
@@ -945,7 +831,7 @@ app.MapDelete("/api/identity/delete-account", async (HttpContext httpContext, IH
 }).RequireAuthorization();
 
 // Admin: Toggle customer enabled/disabled
-app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, IHttpClientFactory httpClientFactory, IConfiguration config, StaffAccounts staff) =>
 {
     var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
     var realm = config["Keycloak:Realm"] ?? "chillax";
@@ -1010,6 +896,8 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
             await client.PostAsync(logoutEndpoint, null);
         }
 
+        // A rider switched off stops being given deliveries, and their phone stops ringing
+        await staff.AnnounceAsync(userId);
         return Results.Ok(new { enabled = newEnabled });
     }
 
@@ -1024,7 +912,7 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
 // forced logout. Ids are not validated against Tenant.API (services never
 // call each other): clients pick from the branch list, and an id that is no
 // branch never matches anything.
-app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBranchesRequest request, KeycloakAdmin keycloak) =>
+app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBranchesRequest request, KeycloakAdmin keycloak, StaffAccounts staff) =>
 {
     if (request.BranchIds is null || request.BranchIds.Any(id => id <= 0))
     {
@@ -1063,6 +951,7 @@ app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBra
         return Results.Problem($"Failed to update branches: {error}", statusCode: (int)response.StatusCode);
     }
 
+    await staff.AnnounceAsync(userId);
     return Results.Ok(new { branches = branchIds });
 }).RequireAuthorization("Owner");
 
@@ -1228,6 +1117,7 @@ class KeycloakRole
 
 // JSON serialization context for integration events
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(StaffAccountChangedIntegrationEvent))]
 partial class IdentityIntegrationEventContext : JsonSerializerContext
 {
 }

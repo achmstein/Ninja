@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../core/brand/brand_provider.dart';
-import '../../../core/motion/motion.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'package:ninja_app_core/motion/motion.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -14,7 +14,7 @@ import '../providers/station_provider.dart';
 import '../widgets/bump_exit.dart';
 import '../widgets/order_card.dart';
 import '../widgets/order_grid.dart';
-import '../../../core/network/server_clock.dart';
+import 'package:ninja_app_core/network/server_clock.dart';
 
 /// The kitchen board, as kds_web's Board: one grid of open orders, oldest
 /// first, as many across as the screen fits. Everything confirmed lands

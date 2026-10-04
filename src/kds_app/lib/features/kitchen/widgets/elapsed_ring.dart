@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
-import '../../../core/motion/motion.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../status.dart';
 
 /// How far an order is through its time, as a thin ring beside the clock:

@@ -905,6 +905,47 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("requests", "sales");
                 });
 
+            modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.DeliveryCashIn", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("BillTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Collected")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RiderName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("OrderId");
+
+                    b.HasIndex("BranchId", "ReceivedAt");
+
+                    b.ToTable("deliverycashins", "sales");
+                });
+
             modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.TenantFeatures", b =>
                 {
                     b.Property<int>("Id")

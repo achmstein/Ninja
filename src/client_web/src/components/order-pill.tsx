@@ -30,6 +30,7 @@ const ICONS: Record<PillStage, typeof Send> = {
   preparing: ChefHat,
   onTheWay: Bike,
   delivered: House,
+  notDelivered: X,
   paid: ReceiptText,
   cancelled: X,
 }
@@ -40,6 +41,7 @@ const NOTES = {
   preparing: PILL_WORDS.preparingNote,
   onTheWay: PILL_WORDS.onTheWayNote,
   delivered: PILL_WORDS.deliveredNote,
+  notDelivered: PILL_WORDS.notDeliveredNote,
   paid: PILL_WORDS.paidNote,
   cancelled: PILL_WORDS.cancelledNote,
 } as const
@@ -48,7 +50,7 @@ const NOTES = {
 const ANNOUNCE_MS = 4200
 
 /** The stages worth interrupting for (turned down, or a delivery at the door); the others only change the dock quietly */
-const LOUD: PillStage[] = ['cancelled', 'onTheWay', 'delivered']
+const LOUD: PillStage[] = ['cancelled', 'onTheWay', 'delivered', 'notDelivered']
 
 /** A stage in the island's colours: waiting on the business, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
@@ -57,6 +59,7 @@ const TYPES: Record<PillStage, IslandFace['type']> = {
   preparing: 'loading',
   onTheWay: 'loading',
   delivered: 'success',
+  notDelivered: 'error',
   paid: 'success',
   cancelled: 'error',
 }

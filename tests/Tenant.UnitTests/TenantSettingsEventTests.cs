@@ -9,6 +9,9 @@ using Ninja.Tenant.API.Services;
 using Ninja.EventBus.Abstractions;
 using Ninja.EventBus.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Ninja.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF.Services;
 
 namespace Ninja.Tenant.UnitTests;
 
@@ -20,15 +23,19 @@ namespace Ninja.Tenant.UnitTests;
 [TestClass]
 public sealed class TenantSettingsEventTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true);
+    private static readonly FeatureSwitches AllOn = new(true, true, true, true, true, true, true, true);
 
     private static (ServiceProvider Services, RecordingBus Bus) AStack()
     {
         var bus = new RecordingBus();
         var name = $"branch-{Guid.NewGuid()}";
         var services = new ServiceCollection()
-            .AddDbContext<TenantContext>(o => o.UseInMemoryDatabase(name))
+            // The in-memory store has no transactions; the outbox's is a no-op here
+            .AddDbContext<TenantContext>(o => o.UseInMemoryDatabase(name).ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)))
             .AddSingleton<IEventBus>(bus)
+            .AddSingleton<IIntegrationEventLogService, NoLog>()
+            .AddLogging()
+            .AddScoped<TenantEvents>()
             .BuildServiceProvider();
 
         using var scope = services.CreateScope();
@@ -46,7 +53,7 @@ public sealed class TenantSettingsEventTests
         await TenantApi.UpdateTenant(
             scope.ServiceProvider.GetRequiredService<TenantContext>(),
             new ConfigurationBuilder().Build(),
-            bus,
+            scope.ServiceProvider.GetRequiredService<TenantEvents>(),
             new UpdateTenantRequest(new LocalizedText("Chillax", null), null, null, AllOn, GuestOrdersAnywhere: guestOrdersAnywhere));
     }
 
@@ -88,6 +95,7 @@ public sealed class TenantSettingsEventTests
         var said = bus.Published.OfType<TenantSettingsChangedIntegrationEvent>().ToList();
         Assert.HasCount(2, said, "saying it again is harmless: the other side keeps the newest");
         Assert.IsTrue(said.All(e => e.GuestOrdersAnywhere));
+        Assert.HasCount(2, bus.Published.OfType<TenantFeaturesChangedIntegrationEvent>(), "the switches too, so a new copy (Ordering's delivery) gets its row");
     }
 
     [TestMethod]
@@ -95,7 +103,7 @@ public sealed class TenantSettingsEventTests
     {
         var (services, bus) = AStack();
         using var scope = services.CreateScope();
-        var settings = new BranchSettingsService(scope.ServiceProvider.GetRequiredService<TenantContext>(), bus, NullLogger<BranchSettingsService>.Instance);
+        var settings = new BranchSettingsService(scope.ServiceProvider.GetRequiredService<TenantContext>(), scope.ServiceProvider.GetRequiredService<TenantEvents>(), NullLogger<BranchSettingsService>.Instance);
 
         await settings.ApplyAsync(1, isOrderingEnabled: false, isReservationsEnabled: null);
 
@@ -103,6 +111,17 @@ public sealed class TenantSettingsEventTests
         Assert.AreEqual(1, said.BranchId);
         Assert.IsFalse(said.IsOrderingEnabled);
         Assert.IsNull(typeof(BranchSettingsChangedIntegrationEvent).GetProperty("GuestOrdersAnywhere"), "the business's setting has its own event");
+    }
+
+    /// <summary>The outbox, as far as these tests go: nothing kept, everything sent straight away.</summary>
+    private sealed class NoLog : IIntegrationEventLogService
+    {
+        public Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId) => Task.FromResult(Enumerable.Empty<IntegrationEventLogEntry>());
+        public Task<IEnumerable<IntegrationEventLogEntry>> RetrieveStuckEventLogsAsync(DateTime createdBefore, int maxAttempts) => Task.FromResult(Enumerable.Empty<IntegrationEventLogEntry>());
+        public Task SaveEventAsync(IntegrationEvent @event, Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction) => Task.CompletedTask;
+        public Task MarkEventAsPublishedAsync(Guid eventId) => Task.CompletedTask;
+        public Task MarkEventAsInProgressAsync(Guid eventId) => Task.CompletedTask;
+        public Task MarkEventAsFailedAsync(Guid eventId) => Task.CompletedTask;
     }
 
     private sealed class RecordingBus : IEventBus

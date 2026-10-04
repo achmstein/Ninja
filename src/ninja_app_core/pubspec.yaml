@@ -1,0 +1,25 @@
+name: ninja_app_core
+description: "What the platform's Android apps share: connecting to a business, signing in, the API client, the realtime hub, the brand, the branch, self-update, motion and a few widgets"
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  forui: ^0.19.0
+  flutter_riverpod: ^3.1.0
+  dio: ^5.4.0
+  path_provider: ^2.1.0
+  flutter_secure_storage: ^10.0.0
+  shared_preferences: ^2.2.2
+  uuid: ^4.3.3
+  signalr_netcore: ^1.3.7
+  audioplayers: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

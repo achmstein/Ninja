@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Bike,
   Loader2,
-  MapPin,
   Minus,
   Plus,
   Search,
@@ -33,12 +32,11 @@ import {
   ChooseCustomerButton,
   SelectedCustomer,
 } from '@/features/customer/selected-customer'
-import {
-  DeliveryDialog,
-  useTillDeliveryQuote,
-} from '@/features/deliveries/delivery-dialog'
+import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
+import { toPosDeliveryRequest } from './sale-delivery'
+import { SaleDeliverySummary } from './sale-delivery-summary'
+import { useSaleDelivery } from './use-sale-delivery'
 import { stayRoster } from '@/features/places/status'
-import { useFeatures } from '@/lib/brand'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { API_VERSION, apiClient } from '@/lib/api-client'
@@ -220,26 +218,15 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     setQuantity,
     setNote,
     setCustomer,
-    delivery,
-    setDelivery,
     setTarget,
     target,
     clear,
   } = useSale()
 
-  // A walk-in sale can go out with a rider instead, where the branch
-  // delivers; a round on an open bill never does
-  const [deliveryOpen, setDeliveryOpen] = useState(false)
-  const features = useFeatures()
-  // Not asked at all where the business does not deliver (an add-on)
-  const deliveryTerms = useTillDeliveryQuote(
-    '',
-    !addingToTicket && features.delivery,
-  ).data
-  const canDeliver =
-    !addingToTicket && features.delivery && deliveryTerms?.delivers === true
-  const delivering = canDeliver && delivery !== null
-  const deliveryFee = delivering ? toNumber(deliveryTerms?.fee) : 0
+  // A walk-in sale can go out with a rider instead (use-sale-delivery)
+  const saleDelivery = useSaleDelivery(addingToTicket)
+  const { delivery, delivering } = saleDelivery
+  const deliveryFee = saleDelivery.fee
 
   // Before paint, so the cashier never sees the previous destination's cart
   useLayoutEffect(() => {
@@ -557,9 +544,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   })
 
   const charge = () => {
+    // A delivery waits for its terms: it never goes out as a counter sale
+    if (delivering && saleDelivery.readiness !== 'ready') return
     // A rider needs a name at the door: taken off the sale, it is asked again
     if (delivering && !customer?.name.trim()) {
-      setDeliveryOpen(true)
+      saleDelivery.setFormOpen(true)
       return
     }
     // The blocking "sending" wait paints under an open sheet otherwise
@@ -578,7 +567,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       // The same items against a different bill are a different sale too
       ticket: ticketId ?? null,
       // And sent somewhere else, another sale again
-      delivery: delivering ? delivery : null,
+      delivery,
     })
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
@@ -627,19 +616,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         // server-side off the attached customer
         pointsToRedeem: 0,
         // Where it goes; the pin only when the caller shared one
-        delivery:
-          delivering && delivery
-            ? {
-                address: delivery.address,
-                phone: delivery.phone,
-                latitude: delivery.latitude,
-                longitude: delivery.longitude,
-                building: delivery.building.trim() || null,
-                floor: delivery.floor.trim() || null,
-                apartment: delivery.apartment.trim() || null,
-                directions: delivery.directions.trim() || null,
-              }
-            : null,
+        delivery: delivery ? toPosDeliveryRequest(delivery) : null,
       },
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
@@ -778,45 +755,26 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
           <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
         )}
-        {canDeliver &&
-          (delivering && delivery ? (
-            <div className='bg-muted mt-2 flex items-start gap-2 rounded-lg p-2.5 text-sm'>
-              <Bike className='text-muted-foreground mt-0.5 size-4 shrink-0' />
-              <button
-                type='button'
-                onClick={() => setDeliveryOpen(true)}
-                className='min-w-0 flex-1 text-start'
-                aria-label={t('deliveryChange')}
-              >
-                <span className='block truncate font-medium'>
-                  {[delivery.address, delivery.building].filter(Boolean).join(' · ')}
-                </span>
-                <span className='text-muted-foreground flex items-center gap-1 text-xs' dir='auto'>
-                  {delivery.latitude != null && <MapPin className='size-3' />}
-                  <span dir='ltr'>{delivery.phone}</span>
-                  {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
-                </span>
-              </button>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-9 shrink-0'
-                aria-label={t('deliveryNotADelivery')}
-                onClick={() => setDelivery(null)}
-              >
-                <X className='size-4' />
-              </Button>
-            </div>
-          ) : (
+        {delivery ? (
+          <SaleDeliverySummary
+            delivery={delivery}
+            readiness={saleDelivery.readiness}
+            onEdit={() => saleDelivery.setFormOpen(true)}
+            onRemove={saleDelivery.remove}
+            onRetry={saleDelivery.retry}
+          />
+        ) : (
+          saleDelivery.canOffer && (
             <Button
               variant='outline'
               className='mt-2 h-12 w-full gap-2 text-base'
-              onClick={() => setDeliveryOpen(true)}
+              onClick={() => saleDelivery.setFormOpen(true)}
             >
               <Bike className='size-5' />
               {t('deliverIt')}
             </Button>
-          ))}
+          )
+        )}
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
@@ -878,7 +836,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           size='lg'
           className='h-14 w-full justify-between px-5 text-lg'
           disabled={
-            lines.length === 0 || placeOrder.isPending || pending !== null
+            lines.length === 0 ||
+            placeOrder.isPending ||
+            pending !== null ||
+            // A delivery waits for its terms rather than going out as a counter sale
+            (delivering && saleDelivery.readiness !== 'ready')
           }
           onClick={charge}
         >
@@ -1066,21 +1028,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           setCustomizeItem(null)
         }}
       />
-      {canDeliver && (
-        <DeliveryDialog
-          open={deliveryOpen}
-          onOpenChange={setDeliveryOpen}
-          initial={delivery}
-          customer={customer}
-          itemsTotal={itemsTotal}
-          onSave={(saved, name) => {
-            setDelivery(saved)
-            // A caller off the street is known by the name they gave
-            if (!customer?.id) setCustomer({ id: null, name, phone: saved.phone })
-            setDeliveryOpen(false)
-          }}
-        />
-      )}
+      <PhoneDeliveryForm
+        open={saleDelivery.formOpen}
+        onOpenChange={saleDelivery.setFormOpen}
+        initial={delivery}
+        customer={customer}
+        itemsTotal={itemsTotal}
+        onSave={saleDelivery.save}
+      />
       <CustomerDialog
         open={customerOpen}
         onOpenChange={setCustomerOpen}

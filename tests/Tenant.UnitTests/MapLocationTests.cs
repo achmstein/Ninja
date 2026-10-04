@@ -49,5 +49,48 @@ public sealed class MapLocationTests
         Assert.IsTrue(MapLocation.IsShortLink("https://maps.app.goo.gl/AbCdEf123"));
         Assert.IsTrue(MapLocation.IsShortLink("https://goo.gl/maps/AbCdEf"));
         Assert.IsFalse(MapLocation.IsShortLink("https://example.com/maps/x"));
+        Assert.IsFalse(MapLocation.IsShortLink("http://maps.app.goo.gl/AbCdEf123"), "only over https");
+    }
+
+    [TestMethod]
+    public void A_hop_goes_only_to_google_over_https()
+    {
+        foreach (var ok in new[] { "https://www.google.com/maps/x", "https://maps.google.com.eg/x", "https://consent.google.co.uk/x", "https://google.ae/maps", "https://maps.app.goo.gl/x" })
+            Assert.IsTrue(MapLocation.IsGoogleHop(new Uri(ok)), ok);
+        foreach (var bad in new[] { "http://www.google.com/maps", "https://google.evil.de/x", "https://evil.com/google.com", "https://169.254.169.254/latest", "https://www.google.com:8443/x", "https://googl.com/x", "https://google.example.com/x" })
+            Assert.IsFalse(MapLocation.IsGoogleHop(new Uri(bad)), bad);
+    }
+
+    [TestMethod]
+    public async Task A_short_link_is_followed_hop_by_hop_and_never_off_google()
+    {
+        var hops = new Hops(
+            ("https://maps.app.goo.gl/AbC", "https://www.google.com/maps/place/x"),
+            ("https://www.google.com/maps/place/x", "https://www.google.com/maps/place/Tahrir/@30.0444,31.2357,17z"));
+        Assert.AreEqual(new GeoPoint(30.0444, 31.2357), await MapLocation.ResolveAsync("https://maps.app.goo.gl/AbC", new HttpClient(hops), default));
+
+        var astray = new Hops(("https://maps.app.goo.gl/Bad", "http://10.0.0.5/admin"));
+        Assert.IsNull(await MapLocation.ResolveAsync("https://maps.app.goo.gl/Bad", new HttpClient(astray), default));
+        CollectionAssert.AreEqual(new[] { "https://maps.app.goo.gl/Bad" }, astray.Asked, "the internal address is never fetched");
+
+        var loop = new Hops(("https://maps.app.goo.gl/Loop", "https://maps.app.goo.gl/Loop"));
+        Assert.IsNull(await MapLocation.ResolveAsync("https://maps.app.goo.gl/Loop", new HttpClient(loop), default));
+        Assert.HasCount(MapLocation.MaxHops, loop.Asked);
+    }
+
+    /// <summary>Answers each asked address with a redirect to the next, as a short link does.</summary>
+    private sealed class Hops(params (string From, string To)[] redirects) : HttpMessageHandler
+    {
+        public List<string> Asked { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            var url = request.RequestUri!.ToString();
+            Asked.Add(url);
+            var to = redirects.FirstOrDefault(r => r.From == url).To;
+            var response = new HttpResponseMessage(to is null ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.Found);
+            if (to is not null) response.Headers.Location = new Uri(to);
+            return Task.FromResult(response);
+        }
     }
 }

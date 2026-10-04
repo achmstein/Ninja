@@ -78,17 +78,25 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         // the fee, and the rider's progress; riders find theirs by the index
         orderConfiguration.OwnsOne(o => o.Delivery, d =>
         {
-            d.Property(x => x.Address).HasMaxLength(300).IsRequired();
-            d.Property(x => x.Building).HasMaxLength(100);
-            d.Property(x => x.Floor).HasMaxLength(50);
-            d.Property(x => x.Apartment).HasMaxLength(50);
-            d.Property(x => x.Directions).HasMaxLength(500);
-            d.Property(x => x.Phone).HasMaxLength(30).IsRequired();
+            // The lengths the aggregate holds an order to, so a long field is a 400, never a 500 here
+            d.Property(x => x.Address).HasMaxLength(DeliveryLimits.Address).IsRequired();
+            d.Property(x => x.Building).HasMaxLength(DeliveryLimits.Building);
+            d.Property(x => x.Floor).HasMaxLength(DeliveryLimits.Floor);
+            d.Property(x => x.Apartment).HasMaxLength(DeliveryLimits.Apartment);
+            d.Property(x => x.Directions).HasMaxLength(DeliveryLimits.Directions);
+            d.Property(x => x.Phone).HasMaxLength(DeliveryLimits.Phone).IsRequired();
             d.Property(x => x.Fee).HasPrecision(18, 2);
-            d.Property(x => x.RiderUserId).HasMaxLength(100);
-            d.Property(x => x.RiderName).HasMaxLength(200);
+            d.Property(x => x.CashCollected).HasPrecision(18, 2);
+            d.Property(x => x.RiderUserId).HasMaxLength(DeliveryLimits.RiderUserId);
+            d.Property(x => x.RiderName).HasMaxLength(DeliveryLimits.RiderName);
+            d.Property(x => x.FailureReason).HasMaxLength(DeliveryLimits.FailureReason);
+            // Two people moving the same delivery at once: the second is told, not lost
+            d.Property(x => x.Version).IsConcurrencyToken();
             d.Ignore(x => x.Stage);
+            d.Ignore(x => x.IsFinished);
             d.HasIndex(x => x.RiderUserId);
+            // The till finds a caller's earlier deliveries by the number they ring from
+            d.HasIndex(x => x.Phone);
         });
         orderConfiguration.Ignore(o => o.IsDelivery);
 

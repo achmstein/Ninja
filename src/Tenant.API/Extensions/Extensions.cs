@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using Ninja.Tenant.API.IntegrationEvents;
 using Ninja.Tenant.API.IntegrationEvents.EventHandling;
 using Ninja.Tenant.API.Services;
+using Ninja.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF.Services;
 
 namespace Ninja.Tenant.API.Extensions;
 
@@ -16,9 +18,14 @@ public static class Extensions
 
         builder.Services.AddMigration<TenantContext, TenantContextSeed>();
 
+        // The outbox: a change and its events saved together, sent straight after, and anything
+        // left unsent (the bus down, the process gone) sent by the relay
+        builder.Services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<TenantContext>>();
+        builder.Services.AddOutboxRelay();
+        builder.Services.AddScoped<TenantEvents>();
         builder.Services.AddScoped<BranchSettingsService>();
-        // A branch's short Maps link is followed to the map it opens, to read where the branch is
-        builder.Services.AddHttpClient(Apis.BranchApi.MapLinkClient, http => http.Timeout = TimeSpan.FromSeconds(5));
+        // A shared map link is followed hop by hop, to Google hosts only (see MapLocation)
+        builder.Services.AddMapLinkClient();
         builder.Services.AddSingleton<TenantCountry>();
 
         builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));

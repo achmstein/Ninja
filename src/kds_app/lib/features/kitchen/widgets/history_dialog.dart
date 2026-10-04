@@ -6,7 +6,7 @@ import '../models/kitchen_order.dart';
 import '../providers/kitchen_orders_provider.dart';
 import 'order_card.dart';
 import 'order_grid.dart';
-import '../../../core/network/server_clock.dart';
+import 'package:ninja_app_core/network/server_clock.dart';
 
 /// The day's finished orders, behind the clock icon in the header: newest
 /// first, the same card the board showed, for a "was that with oat milk?"

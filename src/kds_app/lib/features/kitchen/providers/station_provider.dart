@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/kitchen_station.dart';
 import '../services/kitchen_service.dart';
 

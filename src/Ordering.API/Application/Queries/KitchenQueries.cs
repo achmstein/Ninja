@@ -35,12 +35,6 @@ public record KitchenStationView
     };
 }
 
-/// <summary>The kitchen's words for where an order goes when it is not a place.</summary>
-public static class KitchenWords
-{
-    public static readonly LocalizedText Delivery = new() { En = "Delivery", Ar = "توصيل" };
-}
-
 /// <summary>
 /// A ticket waiting for a kitchen printer, with everything the print host
 /// needs to put it on paper: where the printer is and what goes on it.

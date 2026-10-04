@@ -75,7 +75,7 @@ public sealed class DeliveryScenarios
 
         var (status, body) = await PlaceAsync(customer, Order(NearLat, NearLng, 150));
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
-        Assert.Contains("isn't delivering", body);
+        Assert.Contains("delivery.not_delivering", body);
     }
 
     [TestMethod]
@@ -103,11 +103,11 @@ public sealed class DeliveryScenarios
 
         var (tooFar, farBody) = await PlaceAsync(customer, Order(FarLat, FarLng, 150));
         Assert.AreEqual(HttpStatusCode.BadRequest, tooFar);
-        Assert.Contains("outside", farBody);
+        Assert.Contains("delivery.out_of_range", farBody);
 
         var (tooSmall, smallBody) = await PlaceAsync(customer, Order(NearLat, NearLng, 60));
         Assert.AreEqual(HttpStatusCode.BadRequest, tooSmall);
-        Assert.Contains("at least 100", smallBody);
+        Assert.Contains("delivery.below_minimum", smallBody);
 
         var (ok, okBody) = await PlaceAsync(customer, Order(NearLat, NearLng, 150));
         Assert.AreEqual(HttpStatusCode.OK, ok, okBody);
@@ -223,7 +223,7 @@ public sealed class DeliveryScenarios
 
         var (noName, noNameBody) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone }, customerName: null));
         Assert.AreEqual(HttpStatusCode.BadRequest, noName);
-        Assert.Contains("customer's name", noNameBody);
+        Assert.Contains("delivery.name_required", noNameBody);
 
         var (onABill, _) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone }, ticketId: 1));
         Assert.AreEqual(HttpStatusCode.BadRequest, onABill, "a delivery is a bill of its own");
@@ -240,10 +240,111 @@ public sealed class DeliveryScenarios
         Assert.AreEqual(HttpStatusCode.BadRequest, notDelivering);
     }
 
+    /// <summary>A refusal as it came: the whole ProblemDetails, code and all</summary>
+    private static async Task<(HttpStatusCode Status, string Body)> ProblemAsync(Caller caller, HttpMethod method, string path, object? body = null)
+    {
+        using var response = await caller.RawAsync(method, path, body);
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>Identity's word that an account is one of the branch's riders, as the bus would bring it</summary>
+    private static async Task AnnounceRiderAsync(string userId, string name, int branch)
+    {
+        using var scope = Suite.Ordering.Services.CreateScope();
+        var handler = ActivatorUtilities.CreateInstance<StaffAccountChangedIntegrationEventHandler>(scope.ServiceProvider);
+        await handler.Handle(new StaffAccountChangedIntegrationEvent(userId, name, ["Rider"], [branch], true));
+    }
+
+    /// <summary>A delivery the kitchen has confirmed, straight into the database: the menu check is another service's</summary>
+    private static async Task<int> ConfirmedDeliveryAsync(decimal price = 60)
+    {
+        using var scope = Suite.Ordering.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>();
+        var order = new Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order(
+            string.Empty, string.Empty, Delivering, guestId: $"device-{Guid.NewGuid():N}", guestName: "Mona", guestPhone: "01001234567",
+            delivery: new Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Delivery(NearLat, NearLng, "Qasr El Nil St", "12", null, null, null, "01001234567", 20, 2000));
+        order.AddOrderItem(1, new() { En = "Family meal" }, price, 0, null, units: 2);
+        order.SetValidatedStatus();
+        order.SetConfirmedStatus();
+        order.ClearDomainEvents();
+        context.Orders.Add(order);
+        await context.SaveChangesAsync();
+        return order.Id;
+    }
+
+    [TestMethod]
+    public async Task A_delivery_goes_to_a_rider_out_of_the_door_and_its_cash_in_and_a_stale_move_is_told()
+    {
+        await DeliverFromTahrirAsync();
+        var riderId = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(riderId, "Ali Hassan", Delivering);
+        var id = await ConfirmedDeliveryAsync();
+        var till = Suite.Ordering.As(Persona.Cashier(Delivering), Delivering);
+        var rider = Suite.Ordering.As(Persona.Rider(Delivering, riderId), Delivering);
+
+        // The name is Ordering's record of the rider, not what the till sends
+        using (var given = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = riderId, riderName = "Not their name" }))
+        {
+            Assert.AreEqual(HttpStatusCode.NoContent, given.StatusCode, await given.Content.ReadAsStringAsync());
+        }
+
+        var (stranger, strangerBody) = await ProblemAsync(till, HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = "nobody-here" });
+        Assert.AreEqual(HttpStatusCode.BadRequest, stranger);
+        Assert.Contains("rider.unknown", strangerBody);
+
+        var (early, earlyBody) = await ProblemAsync(till, HttpMethod.Put, $"{Orders}/{id}/delivery/cash-in?{Version}", new { amount = 140 });
+        Assert.AreEqual(HttpStatusCode.Conflict, early, "not delivered yet");
+        Assert.Contains("delivery.not_delivered", earlyBody);
+
+        using (var left = await rider.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/out?{Version}"))
+            Assert.AreEqual(HttpStatusCode.NoContent, left.StatusCode, await left.Content.ReadAsStringAsync());
+        using (var arrived = await rider.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/delivered?{Version}"))
+            Assert.AreEqual(HttpStatusCode.NoContent, arrived.StatusCode, await arrived.Content.ReadAsStringAsync());
+
+        var otherRider = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(otherRider, "Omar", Delivering);
+        var (late, lateBody) = await ProblemAsync(till, HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = otherRider });
+        Assert.AreEqual(HttpStatusCode.Conflict, late, "it has left");
+        Assert.Contains("delivery.already_out", lateBody);
+
+        using (var cash = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/cash-in?{Version}", new { amount = 130 }))
+            Assert.AreEqual(HttpStatusCode.NoContent, cash.StatusCode, await cash.Content.ReadAsStringAsync());
+
+        var board = await till.GetAsync<List<BoardCard>>($"{Orders}/deliveries?{Version}");
+        var card = board.Single(o => o.OrderNumber == id);
+        Assert.AreEqual(140m, card.Total);
+        Assert.AreEqual(-10m, card.CashDifference, "ten short");
+        Assert.AreEqual("Ali Hassan", card.Delivery.RiderName);
+    }
+
+    [TestMethod]
+    public async Task Two_tills_moving_the_same_delivery_at_once_the_second_is_told()
+    {
+        await DeliverFromTahrirAsync();
+        var riderId = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(riderId, "Ali", Delivering);
+        var id = await ConfirmedDeliveryAsync();
+
+        using var first = Suite.Ordering.Services.CreateScope();
+        using var second = Suite.Ordering.Services.CreateScope();
+        var a = await first.ServiceProvider.GetRequiredService<Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.IOrderRepository>().GetAsync(id);
+        var secondRepository = second.ServiceProvider.GetRequiredService<Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.IOrderRepository>();
+        var b = await secondRepository.GetAsync(id);
+
+        a.AssignRider(riderId, "Ali");
+        await first.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>().SaveChangesAsync();
+
+        b.AssignRider("someone-else", "Omar");
+        await Assert.ThrowsExactlyAsync<Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException>(
+            () => second.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>().SaveChangesAsync());
+    }
+
     [TestMethod]
     public async Task A_rider_sees_their_own_deliveries_and_the_till_its_riders()
     {
-        var rider = Suite.Ordering.As(Persona.Rider(Delivering, $"rider-{Guid.NewGuid():N}"), Delivering);
+        var riderId = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(riderId, "Rider", Delivering);
+        var rider = Suite.Ordering.As(Persona.Rider(Delivering, riderId), Delivering);
 
         var status = await rider.PutAsync<RiderStatusView>($"{Orders}/riders/me?{Version}", new { onDuty = true });
         Assert.IsTrue(status.OnDuty);
@@ -286,6 +387,10 @@ public sealed class DeliveryScenarios
 }
 
 public record RiderStatusView(string UserId, string Name, bool OnDuty, int Out);
+
+public record BoardDelivery(string? RiderName, string Stage);
+
+public record BoardCard(int OrderNumber, decimal Total, decimal? CashDifference, BoardDelivery Delivery);
 
 public record TillQuoteView(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, double? Latitude, double? Longitude, bool LocationRead);
 

@@ -1,67 +1,80 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { DeliveryOrder } from '@/api/ordering/types.gen'
+import type { DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
 import {
   assignDeliveryRiderMutation,
+  cancelOrderMutation,
   getDeliveriesOptions,
   getRidersOptions,
+  getTillDeliveryQuoteOptions,
   handInDeliveryCashMutation,
   markDeliveryDeliveredMutation,
+  markDeliveryFailedMutation,
   markDeliveryOutMutation,
+  markDeliveryReturnedMutation,
   unassignDeliveryRiderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION, apiClient } from '@/lib/api-client'
-import { translate } from '@/lib/i18n'
+import { API_VERSION } from '@/lib/api-client'
+import { brandQueryKey } from '@/lib/brand'
+import { translate, type TranslationKey } from '@/lib/i18n'
+import { isModuleOff, problemCode, problemMessage } from '@/lib/problem'
 import { toast } from '@/lib/toast'
-import { useBranchStore } from '@/stores/branch-store'
-import { mergeRiders, type RiderAccount } from './riders'
+import { useDebounced } from '@/lib/use-debounced'
 
-export type DeliveryLane = 'waiting' | 'withRider' | 'cashDue' | 'done'
+export { laneOf, type DeliveryLane } from './delivery-format'
 
-/** Where a delivery stands for the till: nobody has it, a rider has it, its cash is still out, or settled */
-export function laneOf(order: DeliveryOrder): DeliveryLane {
-  const d = order.delivery
-  if (d?.cashHandedInAt || order.paidAt) return 'done'
-  if (d?.deliveredAt) return 'cashDue'
-  if (d?.riderUserId) return 'withRider'
-  return 'waiting'
-}
+/** A delivery on the board: an order that is one, its delivery never missing */
+export type BoardDelivery = DeliveryOrder & { delivery: DeliveryStaffView }
+
+const isDelivery = (order: DeliveryOrder): order is BoardDelivery => order.delivery != null
 
 /**
- * The branch's deliveries and its riders, live: the hub refetches both on
- * every move (use-pos-notifications), the poll only covers a dead socket.
+ * The branch's deliveries, live: the hub refetches them on every move
+ * (use-pos-notifications), the poll only covers a dead socket. They keep
+ * coming while delivery is switched off, so what is already out can finish.
  */
 export function useDeliveries() {
   const query = useQuery({
     ...getDeliveriesOptions({ query: { 'api-version': API_VERSION } }),
+    select: (orders) => orders.filter(isDelivery),
     refetchInterval: 20_000,
   })
   return { deliveries: query.data ?? [], isLoading: query.isLoading }
 }
 
-export type { TillRider } from './riders'
-
-/** The branch's riders for the picker: see mergeRiders */
+/**
+ * The branch's riders, on duty first, as Ordering knows them: every account
+ * given the branch in Staff (from Identity's events, never a call to it),
+ * with whether their app has checked in. The hub refetches on every move.
+ */
 export function useRiders(enabled: boolean) {
-  const branchId = useBranchStore((s) => s.branchId)
-  const heard = useQuery({
+  return useQuery({
     ...getRidersOptions({ query: { 'api-version': API_VERSION } }),
     enabled,
     refetchInterval: enabled ? 30_000 : false,
+    select: (riders: RiderView[]) => riders.filter((r): r is RiderView & { userId: string } => !!r.userId),
   })
-  const accounts = useQuery({
-    queryKey: ['riderAccounts'],
-    queryFn: async () => (await apiClient.get<RiderAccount[]>('/api/identity/users', { params: { role: 'Rider', max: 200 } })).data,
-    enabled,
-    staleTime: 60_000,
-  })
-  return {
-    // Ordering's answer is the one that matters; Identity's only adds to it
-    isLoading: heard.isLoading,
-    data: heard.data ? mergeRiders(heard.data, accounts.data ?? [], branchId) : undefined,
-  }
 }
 
-/** Giving a delivery to a rider, taking it back, and taking the rider's cash in */
+/**
+ * The branch's answer for a delivery the till takes over the phone: whether
+ * it delivers at all, its fee and minimum, and, for a location the caller
+ * shared, the pin read from it and how far that is. `location` is debounced
+ * so a paste reads once; the answer says which text it was for.
+ */
+export function useTillDeliveryQuote(location = '', enabled = true) {
+  const pasted = useDebounced(location.trim(), 400)
+  const query = useQuery({
+    ...getTillDeliveryQuoteOptions({
+      query: { 'api-version': API_VERSION, location: pasted || undefined },
+    }),
+    enabled,
+    staleTime: 60_000,
+    retry: (count, error) => !isModuleOff(error) && count < 2,
+  })
+  return { ...query, answeredFor: pasted, settled: pasted === location.trim() && !query.isFetching }
+}
+
+/** Every delivery step the till takes, each saying in the cashier's words what went wrong */
 export function useDeliveryActions() {
   const queryClient = useQueryClient()
   const refresh = () => {
@@ -70,32 +83,39 @@ export function useDeliveryActions() {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
   }
   const failed = (error: unknown) => {
-    const message = (error as { response?: { data?: unknown } })?.response?.data
-    toast.error(typeof message === 'string' && message ? message : translate('deliveryActionFailed'))
+    // Someone else moved it first: show where it is now, then say so
+    if (problemCode(error) === 'delivery.conflict') refresh()
+    // The plan or the owner switched delivery off: the brand says so everywhere
+    if (isModuleOff(error)) queryClient.invalidateQueries({ queryKey: brandQueryKey() })
+    toast.error(problemMessage(error, translate))
+  }
+  const done = (said?: TranslationKey) => () => {
+    refresh()
+    if (said) toast.success(translate(said))
   }
 
-  const assign = useMutation({ ...assignDeliveryRiderMutation(), onSuccess: refresh, onError: failed })
-  const unassign = useMutation({ ...unassignDeliveryRiderMutation(), onSuccess: refresh, onError: failed })
-  const cashIn = useMutation({
-    ...handInDeliveryCashMutation(),
-    onSuccess: () => {
-      refresh()
-      toast.success(translate('deliveryCashTaken'))
-    },
-    onError: failed,
-  })
+  const assign = useMutation({ ...assignDeliveryRiderMutation(), onSuccess: done(), onError: failed })
+  const unassign = useMutation({ ...unassignDeliveryRiderMutation(), onSuccess: done(), onError: failed })
+  const out = useMutation({ ...markDeliveryOutMutation(), onSuccess: done(), onError: failed })
+  const delivered = useMutation({ ...markDeliveryDeliveredMutation(), onSuccess: done(), onError: failed })
+  const fail = useMutation({ ...markDeliveryFailedMutation(), onSuccess: done(), onError: failed })
+  const returned = useMutation({ ...markDeliveryReturnedMutation(), onSuccess: done(), onError: failed })
+  const cashIn = useMutation({ ...handInDeliveryCashMutation(), onSuccess: done('deliveryCashTaken'), onError: failed })
+  const cancel = useMutation({ ...cancelOrderMutation(), onSuccess: done('orderCancelled'), onError: failed })
 
-  // Said for a rider whose phone cannot: it left, then it arrived
-  const out = useMutation({ ...markDeliveryOutMutation(), onSuccess: refresh, onError: failed })
-  const delivered = useMutation({ ...markDeliveryDeliveredMutation(), onSuccess: refresh, onError: failed })
-
+  const q = { 'api-version': API_VERSION }
   return {
-    assign: (orderId: number, riderUserId: string, riderName: string) =>
-      assign.mutate({ path: { orderId }, body: { riderUserId, riderName }, query: { 'api-version': API_VERSION } }),
-    unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
-    cashIn: (orderId: number) => cashIn.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
-    markOut: (orderId: number) => out.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
-    markDelivered: (orderId: number) => delivered.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
-    busy: assign.isPending || unassign.isPending || cashIn.isPending || out.isPending || delivered.isPending,
+    assign: (orderId: number, riderUserId: string) => assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
+    unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: q }),
+    markOut: (orderId: number) => out.mutate({ path: { orderId }, query: q }),
+    markDelivered: (orderId: number) => delivered.mutate({ path: { orderId }, query: q }),
+    markFailed: (orderId: number, reason: string) =>
+      fail.mutate({ path: { orderId }, body: { reason: reason.trim() || null }, query: q }),
+    markReturned: (orderId: number) => returned.mutate({ path: { orderId }, query: q }),
+    cashIn: (orderId: number, amount: number) => cashIn.mutate({ path: { orderId }, body: { amount }, query: q }),
+    // A delivery that failed or came back, its cash never in: the order goes, nothing is charged
+    cancel: (orderId: number) =>
+      cancel.mutate({ body: { orderNumber: orderId }, headers: { 'x-requestid': crypto.randomUUID() }, query: q }),
+    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel].some((m) => m.isPending),
   }
 }

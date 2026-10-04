@@ -14,4 +14,7 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     /// <summary>The delivery fee inside <see cref="OrderTotal"/>; no points are earned on it.</summary>
     public decimal? DeliveryFee { get; init; }
+
+    /// <summary>The business's own rider delivers it; false from an Ordering older than the flag. Points read the fee alone.</summary>
+    public bool IsDelivery { get; init; }
 }

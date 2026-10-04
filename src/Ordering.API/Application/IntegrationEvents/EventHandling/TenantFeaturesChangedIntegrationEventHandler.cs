@@ -11,7 +11,8 @@ namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class TenantFeaturesChangedIntegrationEventHandler(
     OrderingContext context,
-    ILogger<TenantFeaturesChangedIntegrationEventHandler> logger)
+    ILogger<TenantFeaturesChangedIntegrationEventHandler> logger,
+    Microsoft.Extensions.Caching.Memory.IMemoryCache? cache = null)
     : IIntegrationEventHandler<TenantFeaturesChangedIntegrationEvent>
 {
     public async Task Handle(TenantFeaturesChangedIntegrationEvent @event)
@@ -43,6 +44,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
         }
 
         await context.SaveChangesAsync();
+        cache?.Remove(BranchSettingsQueries.DeliveryOnCacheKey);
 
         logger.LogInformation("Tenant features projection: delivery {Delivery}", @event.Delivery);
     }

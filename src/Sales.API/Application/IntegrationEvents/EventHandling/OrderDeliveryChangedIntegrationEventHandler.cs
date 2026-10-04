@@ -1,56 +1,42 @@
 #nullable enable
 using Ninja.EventBus.Abstractions;
-using Ninja.Sales.API.Application.Commands;
+using Ninja.Sales.API.Application.Deliveries;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// The rider handed a delivery's cash in at the till: its bill settles in
-/// cash, for what it comes to, into the branch's drawer. Only a bill still
-/// open is settled — one the till already settled by hand (or a redelivered
-/// event) is left as it is.
+/// The rider handed a delivery's cash in at the till: its bill settles with
+/// it (see <see cref="DeliveryCashier"/>), or the cash waits for the bill, or
+/// a shortfall is recorded and the bill left open for the till.
 /// </summary>
 public class OrderDeliveryChangedIntegrationEventHandler(
     ITicketRepository ticketRepository,
     SalesTransaction transaction,
-    IMediator mediator,
+    DeliveryCashier cashier,
     ILogger<OrderDeliveryChangedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderDeliveryChangedIntegrationEvent>
 {
     /// <summary>The name a settle from a rider's cash is recorded under, beside a cashier's.</summary>
-    public const string RiderSettledBy = "rider";
+    public const string RiderSettledBy = DeliveryCashier.RiderSettledBy;
 
-    public Task Handle(OrderDeliveryChangedIntegrationEvent @event)
-        => @event.CashHandedIn
-            ? transaction.RunAsync(nameof(OrderDeliveryChangedIntegrationEvent), () => SettleAsync(@event))
-            : Task.CompletedTask;
-
-    private async Task SettleAsync(OrderDeliveryChangedIntegrationEvent @event)
+    public async Task Handle(OrderDeliveryChangedIntegrationEvent @event)
     {
-        var tickets = await ticketRepository.FindByOrderAsync(@event.OrderId);
-        var ticket = tickets.FirstOrDefault(t => t.Status == TicketStatus.Open);
-        if (ticket is null)
-        {
-            logger.LogInformation("Delivery {OrderId}: no open bill to settle (already settled, or not landed yet)", @event.OrderId);
-            return;
-        }
+        if (!@event.CashHandedIn) return;
 
-        var bill = ticket.GetBill(await ticketRepository.GetPricingRulesAsync(ticket.BranchId));
         try
         {
-            var settled = await mediator.Send(new SettleTicketCommand(
-                ticket.Id,
-                [new PaymentDto(PaymentTender.Cash, bill.Total)],
-                string.IsNullOrWhiteSpace(@event.RiderName) ? RiderSettledBy : @event.RiderName));
-
-            logger.LogInformation(
-                "Delivery {OrderId} settled in cash from its rider - ticket {TicketId}, receipt {Receipt}, {Total}",
-                @event.OrderId, ticket.Id, settled.ReceiptNumber, bill.Total);
+            await transaction.RunAsync(nameof(OrderDeliveryChangedIntegrationEvent), () => cashier.TakeInAsync(@event));
         }
-        catch (SalesDomainException ex)
+        catch (SalesDomainException ex) when (ex.InnerException is DbUpdateConcurrencyException)
         {
-            logger.LogWarning(ex, "Delivery {OrderId} could not settle from its rider's cash; ticket {TicketId} stays open for the till", @event.OrderId, ticket.Id);
+            // The till settled the same bill at the same moment and won: the bill is settled, which is
+            // all the cash was for. Anything else is a real failure and goes back to the bus
+            if ((await ticketRepository.FindByOrderAsync(@event.OrderId)).Any(t => t.Status == TicketStatus.Open))
+                throw;
+
+            logger.LogInformation("Delivery {OrderId}: the till settled its bill while the rider's cash came in", @event.OrderId);
+            await transaction.RunAsync(nameof(OrderDeliveryChangedIntegrationEvent), () => cashier.SettledAtTillAsync(@event));
         }
     }
 }

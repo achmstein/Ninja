@@ -166,11 +166,15 @@ public sealed class RabbitMQEventBus(
 
         try
         {
-            activity?.SetTag("message", message);
+            // What identifies the message, never what it says: bodies carry customers' addresses and
+            // phones, and traces and logs are kept and read far more widely than the data itself
+            var messageId = MessageId(message);
+            activity?.SetTag("messaging.message.id", messageId);
+            activity?.SetTag("messaging.message.body.size", eventArgs.Body.Length);
 
             if (message.Contains("throw-fake-exception", StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
+                throw new InvalidOperationException($"Fake exception requested by message {messageId}");
             }
 
             await ProcessEvent(eventName, message);
@@ -182,7 +186,8 @@ public sealed class RabbitMQEventBus(
             // (declared in DeclareQueueAsync, or the broker policy deploy.yml
             // sets for queues that predate it) parks it on dead-letters. An
             // error, not a warning: money events pass this way.
-            logger.LogError(ex, "Dead-lettering {EventName} from queue {Queue}: {Message}", eventName, _queueName, message);
+            logger.LogError(ex, "Dead-lettering {EventName} {MessageId} from queue {Queue} ({Size} bytes; the body stays on dead-letters)",
+                eventName, MessageId(message), _queueName, eventArgs.Body.Length);
 
             activity.SetExceptionTags(ex);
 
@@ -191,6 +196,22 @@ public sealed class RabbitMQEventBus(
         }
 
         await _consumerChannel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
+    }
+
+    /// <summary>The integration event's own id, read off the body, or "?" when it has none.</summary>
+    private static string MessageId(string message)
+    {
+        try
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(message);
+            foreach (var property in json.RootElement.EnumerateObject())
+                if (property.NameEquals("Id") || property.NameEquals("id")) return property.Value.ToString();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // Not JSON: nothing to read an id from
+        }
+        return "?";
     }
 
     private async Task ProcessEvent(string eventName, string message)

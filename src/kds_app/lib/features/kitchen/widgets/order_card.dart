@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import '../../../core/models/localized_text.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../status.dart';

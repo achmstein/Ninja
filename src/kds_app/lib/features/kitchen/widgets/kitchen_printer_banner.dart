@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import '../../../core/brand/brand_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../printing/kitchen_printing.dart';
 

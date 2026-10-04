@@ -93,7 +93,7 @@ public class TenantSettingsTest
 
         var result = await CreateGuestOrderAwayAsync(context, branchId: 1);
 
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
     }
 
     [TestMethod]
@@ -105,10 +105,10 @@ public class TenantSettingsTest
 
         var result = await CreateGuestOrderAwayAsync(context, branchId: 1);
 
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result, "no row reads as off, as it always has");
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result, "no row reads as off, as it always has");
     }
 
-    private static Task<Results<Ok, BadRequest<string>, Conflict<string>>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
+    private static Task<Results<Ok, ProblemHttpResult>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
     {
         var mediator = Substitute.For<IMediator>();
         mediator.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default).Returns(Task.FromResult(42));

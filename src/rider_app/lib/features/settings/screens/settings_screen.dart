@@ -5,13 +5,13 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/sign_out.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/providers/locale_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../../core/services/push_service.dart';
-import '../../../core/services/update_service.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/text_styles.dart';
+import 'package:ninja_app_core/services/update_service.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
-import '../../../core/widgets/settings_list.dart';
+import 'package:ninja_app_core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// The rider's settings: the app's language and look, whether the phone

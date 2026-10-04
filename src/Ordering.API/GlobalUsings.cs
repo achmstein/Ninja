@@ -10,6 +10,7 @@ global using Ninja.EventBus.Extensions;
 global using Ninja.IntegrationEventLogEF.Services;
 global using Ninja.Ordering.API.Application.Behaviors;
 global using Ninja.Ordering.API.Application.Commands;
+global using Ninja.Ordering.API.Application.Deliveries;
 global using Ninja.Ordering.API.Application.IntegrationEvents;
 global using Ninja.Ordering.API.Application.IntegrationEvents.Events;
 global using Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;

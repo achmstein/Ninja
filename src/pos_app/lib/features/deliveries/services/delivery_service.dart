@@ -4,36 +4,31 @@ import '../models/delivery_order.dart';
 
 /// The branch's own deliveries, as the till works them: the board, its
 /// riders, giving one to a rider and taking the cash in, standing in for a
-/// rider whose phone cannot say it left or arrived, and what a delivery
-/// taken over the phone asks.
+/// rider whose phone cannot say it left, arrived or did not, the bag back at
+/// the branch, and what a delivery taken over the phone asks. Ordering is the
+/// one service it talks to: who the branch's riders are is Ordering's to say.
 class DeliveryRepository {
   final ApiClient _orders;
-  final ApiClient _identity;
 
-  DeliveryRepository(this._orders, this._identity);
+  DeliveryRepository(this._orders);
 
   List<Map<String, dynamic>> _list(Object? data) =>
-      [for (final e in (data as List<dynamic>? ?? const [])) (e as Map).cast<String, dynamic>()];
+      [for (final e in (data as List<dynamic>? ?? const <dynamic>[])) (e as Map).cast<String, dynamic>()];
 
   Future<List<DeliveryOrder>> getDeliveries() async {
     final response = await _orders.get('deliveries');
     return [for (final e in _list(response.data)) DeliveryOrder.fromJson(e)];
   }
 
-  /// The riders whose app has checked in at the branch, on duty first
+  /// The branch's riders, on duty first, with those who have not opened the app yet
   Future<List<TillRider>> getRiders() async {
     final response = await _orders.get('riders');
     return [for (final e in _list(response.data)) TillRider.fromJson(e)];
   }
 
-  /// Every Rider account, with its branches: those not yet heard from join the picker
-  Future<List<RiderAccount>> getRiderAccounts() async {
-    final response = await _identity.get('users', queryParameters: {'role': 'Rider', 'max': 200});
-    return [for (final e in _list(response.data)) RiderAccount.fromJson(e)];
-  }
-
+  /// The server names the rider from its own list; the till says only which
   Future<void> assignRider(int orderId, TillRider rider) =>
-      _orders.put('$orderId/delivery/rider', data: {'riderUserId': rider.userId, 'riderName': rider.name});
+      _orders.put('$orderId/delivery/rider', data: {'riderUserId': rider.userId});
 
   Future<void> unassignRider(int orderId) => _orders.delete('$orderId/delivery/rider');
 
@@ -41,7 +36,14 @@ class DeliveryRepository {
 
   Future<void> markDelivered(int orderId) => _orders.put('$orderId/delivery/delivered');
 
-  Future<void> cashIn(int orderId) => _orders.put('$orderId/delivery/cash-in');
+  /// The rider could not hand it over; [reason] is a code (NoAnswer, Refused, WrongAddress, Other)
+  Future<void> markFailed(int orderId, String reason) => _orders.put('$orderId/delivery/failed', data: {'reason': reason});
+
+  /// The bag is back at the branch
+  Future<void> markReturned(int orderId) => _orders.put('$orderId/delivery/returned');
+
+  /// The rider handed in [amount] for it; the bill is settled with it
+  Future<void> cashIn(int orderId, double amount) => _orders.put('$orderId/delivery/cash-in', data: {'amount': amount});
 
   /// The branch's fee, minimum and radius for a delivery taken over the
   /// phone; with a pasted [location], the pin read from it and how far
@@ -63,5 +65,5 @@ class DeliveryRepository {
 }
 
 final deliveryRepositoryProvider = Provider<DeliveryRepository>(
-  (ref) => DeliveryRepository(ref.read(ordersApiProvider), ref.read(identityApiProvider)),
+  (ref) => DeliveryRepository(ref.read(ordersApiProvider)),
 );

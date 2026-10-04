@@ -5,7 +5,7 @@ using Ninja.EventBus.Abstractions;
 namespace Ninja.Tenant.API.Services;
 
 /// <summary>
-/// Says the business's own settings once each time the service starts, so a
+/// Says the business's own settings and its switches once each time the service starts, so a
 /// consumer that has never heard them — a stack upgraded from when they rode
 /// on every branch's event, a service whose copy was lost — has them without
 /// the owner touching a switch. Saying the same thing again changes nothing
@@ -48,6 +48,8 @@ public class TenantSettingsAnnouncer(
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Model.Tenant.SingletonId, ct);
 
         await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
+        // The switches too: a service whose copy is new (Ordering's delivery switch) gets its row
+        await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant));
 
         logger.LogInformation("Said the business's settings: guest orders anywhere {GuestOrdersAnywhere}", tenant.GuestOrdersAnywhere);
     }

@@ -429,7 +429,7 @@ public class OrdersWebApiTest
         var httpContext = new DefaultHttpContext
         {
             User = new ClaimsPrincipal(new ClaimsIdentity(
-                [new Claim("role", Roles.Admin)], "test", "name", "role"))
+                [new Claim("role", Ninja.ServiceDefaults.Authorization.Roles.Admin)], "test", "name", "role"))
         };
 
         // Act
@@ -447,7 +447,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(), guestId: null);
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -458,7 +458,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(guestName: " "));
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -474,7 +474,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(guestPhone: phone));
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -485,7 +485,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest() with { PointsToRedeem = 100 });
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -497,7 +497,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -548,7 +548,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert
-        Assert.IsInstanceOfType<Conflict<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -602,7 +602,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest());
 
         // Assert
-        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -695,7 +695,7 @@ public class OrdersWebApiTest
         // Egypt's is not, there
         var egyptian = await OrdersApi.CreateOrderAsync(
             Guid.NewGuid(), GuestRequest(guestPhone: "01012345678"), httpContext, riyadh);
-        Assert.IsInstanceOfType<BadRequest<string>>(egyptian.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(egyptian.Result);
     }
 
     /// <summary>The same number, judged by the business it is given to.</summary>
@@ -706,10 +706,10 @@ public class OrdersWebApiTest
         Assert.IsInstanceOfType<Ok>(result.Result);
 
         var saudiNumber = await CreateGuestOrderAsync(GuestRequest(guestPhone: "0512345678"));
-        Assert.IsInstanceOfType<BadRequest<string>>(saudiNumber.Result);
+        Assert.IsInstanceOfType<ProblemHttpResult>(saudiNumber.Result);
     }
 
-    private Task<Results<Ok, BadRequest<string>, Conflict<string>>> CreateGuestOrderAsync(
+    private Task<Results<Ok, ProblemHttpResult>> CreateGuestOrderAsync(
         CreateOrderRequest request,
         string? guestId = "11111111-1111-1111-1111-111111111111")
     {

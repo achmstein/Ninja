@@ -63,8 +63,9 @@ public record PlatformOrderView
 }
 
 /// <summary>
-/// The business's own delivery of an order, as the till, the rider and the
-/// customer read it: where it goes, what it adds, and where it has got to.
+/// The business's own delivery of an order, as the customer and the order
+/// lists read it: where it goes, what it adds, where it has got to and who
+/// has it, by name. Nothing internal: no account ids.
 /// </summary>
 public record DeliveryView
 {
@@ -80,13 +81,16 @@ public record DeliveryView
     public string Phone { get; init; } = string.Empty;
     public decimal Fee { get; init; }
     public int? DistanceMeters { get; init; }
-    /// <summary>"Waiting", "Assigned", "OnTheWay" or "Delivered".</summary>
+    /// <summary>"Waiting", "Assigned", "OnTheWay", "Delivered", "Failed" or "Returned".</summary>
     public string Stage { get; init; } = string.Empty;
-    public string? RiderUserId { get; init; }
     public string? RiderName { get; init; }
     public DateTime? AssignedAt { get; init; }
     public DateTime? OutAt { get; init; }
     public DateTime? DeliveredAt { get; init; }
+    /// <summary>It could not be handed over.</summary>
+    public DateTime? FailedAt { get; init; }
+    /// <summary>The rider brought it back to the branch.</summary>
+    public DateTime? ReturnedAt { get; init; }
     /// <summary>The till took the rider's cash, which settled the bill.</summary>
     public DateTime? CashHandedInAt { get; init; }
 
@@ -103,12 +107,40 @@ public record DeliveryView
         Fee = d.Fee,
         DistanceMeters = d.DistanceMeters,
         Stage = d.Stage.ToString(),
-        RiderUserId = d.RiderUserId,
         RiderName = d.RiderName,
         AssignedAt = d.AssignedAt,
         OutAt = d.OutAt,
         DeliveredAt = d.DeliveredAt,
+        FailedAt = d.FailedAt,
+        ReturnedAt = d.ReturnedAt,
         CashHandedInAt = d.CashHandedInAt,
+    };
+}
+
+/// <summary>
+/// A delivery as the till's board and the rider app read it: the customer's
+/// view, and what only staff need — whose account has it, why it failed,
+/// what cash came in, and its version.
+/// </summary>
+public record DeliveryStaffView : DeliveryView
+{
+    public string? RiderUserId { get; init; }
+    public string? FailureReason { get; init; }
+    /// <summary>What the rider handed in, as the till counted it.</summary>
+    public decimal? CashCollected { get; init; }
+    /// <summary>One more with every step; what the board has, to say it is behind.</summary>
+    public int Version { get; init; }
+
+    public DeliveryStaffView() { }
+
+    private DeliveryStaffView(DeliveryView view) : base(view) { }
+
+    public static DeliveryStaffView? ForStaff(Delivery? d) => d is null ? null : new DeliveryStaffView(From(d)!)
+    {
+        RiderUserId = d.RiderUserId,
+        FailureReason = d.FailureReason,
+        CashCollected = d.CashCollected,
+        Version = d.Version,
     };
 }
 

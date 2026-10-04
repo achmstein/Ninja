@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { digitCount } from '@/lib/phone'
 import { normalizeName } from '@/lib/names'
+import { useDebounced } from '@/lib/use-debounced'
 
 // Customers the till adds by name and phone (Identity.API's
 // CounterCustomersApi). No generated SDK: Identity proxies Keycloak and has
@@ -46,14 +46,6 @@ export const MIN_PHONE_DIGITS = 7
 export const MIN_NAME_LENGTH = 2
 const LOOKUP_DEBOUNCE_MS = 300
 
-function useDebounced<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const handle = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(handle)
-  }, [value, delayMs])
-  return debounced
-}
 
 /**
  * Who the till may already know, as the cashier types: the customer with

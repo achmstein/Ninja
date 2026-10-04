@@ -95,6 +95,12 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public decimal? DeliveryFee { get; init; }
 
+    /// <summary>
+    /// The business's own rider takes it to a door: said outright, so no
+    /// consumer reads it off <see cref="DeliveryFee"/> being there.
+    /// </summary>
+    public bool IsDelivery { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

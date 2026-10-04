@@ -62,6 +62,8 @@ public static class Extensions
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<SalesContext>>();
         services.AddTransient<ISalesIntegrationEventService, SalesIntegrationEventService>();
         services.AddScoped<SalesTransaction>();
+        // A rider's cash for a delivery, met with its bill whichever comes first
+        services.AddScoped<Ninja.Sales.API.Application.Deliveries.DeliveryCashier>();
 
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
@@ -84,6 +86,8 @@ public static class Extensions
             .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
             // A rider's cash handed in at the till settles the delivery's bill
             .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
+            // A delivery cancelled after it could not be handed over: its own bill is voided
+            .AddSubscription<OrderStatusChangedToCancelledIntegrationEvent, OrderStatusChangedToCancelledIntegrationEventHandler>()
             // Whether guests may pay online: Sales keeps its own copy of the switch
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
@@ -92,6 +96,7 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
+[JsonSerializable(typeof(OrderStatusChangedToCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]

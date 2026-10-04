@@ -231,6 +231,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navigate => 'Navigate';
 
   @override
+  String riderAppTitle(String business) {
+    return '$business Rider';
+  }
+
+  @override
+  String get connectInsecure =>
+      'This address isn\'t secure (no https). Ask the owner for the business\'s https address.';
+
+  @override
+  String get signInInBrowser =>
+      'You\'ll sign in on the business\'s own page, then come back here.';
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String listMayBeOld(String time) {
+    return 'Couldn\'t refresh since $time. This list may be old.';
+  }
+
+  @override
+  String get dutyNotChanged => 'The till didn\'t get that';
+
+  @override
+  String get errorOffline => 'No connection. Try again in a moment.';
+
+  @override
+  String get errorConflict =>
+      'Someone else changed this delivery. The list is up to date now.';
+
+  @override
+  String get errorNotYours => 'This delivery isn\'t yours any more.';
+
+  @override
+  String get errorNotOutYet => 'Tap On the way first.';
+
+  @override
+  String get errorAlreadyOut => 'It already left.';
+
+  @override
+  String get errorAlreadyDone => 'This delivery is already done.';
+
+  @override
+  String get errorNotConfirmed => 'The till hasn\'t confirmed this order yet.';
+
+  @override
+  String get couldNotOpenMaps => 'Couldn\'t open Maps';
+
+  @override
+  String get couldNotOpenDialer => 'Couldn\'t open the phone';
+
+  @override
+  String get couldNotDeliver => 'Couldn\'t deliver';
+
+  @override
+  String get couldNotDeliverTitle => 'Why couldn\'t you deliver it?';
+
+  @override
+  String get couldNotDeliverHint =>
+      'Bring the bag back to the branch. The till takes it from there.';
+
+  @override
+  String get failReasonNoAnswer => 'Nobody answered';
+
+  @override
+  String get failReasonRefused => 'The customer refused it';
+
+  @override
+  String get failReasonWrongAddress => 'Couldn\'t find the address';
+
+  @override
+  String get failReasonOther => 'Something else';
+
+  @override
+  String get bringItBack => 'Bring it back to the branch';
+
+  @override
+  String get bringItBackHint => 'Nothing to collect. Hand the bag to the till.';
+
+  @override
+  String get returnedToBranch => 'Back at the branch';
+
+  @override
   String get notDelivering => 'This business doesn\'t deliver';
 
   @override

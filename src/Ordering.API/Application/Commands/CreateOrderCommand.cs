@@ -124,8 +124,13 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public PlatformOrder? Platform { get; private set; }
 
+    /// <summary>
+    /// Where the order is delivered, as the app or the till sent it; the
+    /// handler holds it to the branch's terms (DeliveryPolicy) before the
+    /// order stands. Null for every order not delivered.
+    /// </summary>
     [DataMember]
-    public Delivery? Delivery { get; private set; }
+    public DeliveryDraft? Delivery { get; private set; }
 
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
@@ -165,7 +170,7 @@ public class CreateOrderCommand : IRequest<int>
         string? promoCode = null,
         bool guestOrdersAnywhere = false,
         PlatformOrder? platform = null,
-        Delivery? delivery = null)
+        DeliveryDraft? delivery = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         Platform = platform;

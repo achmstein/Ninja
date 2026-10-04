@@ -1,12 +1,17 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import type { CustomerAddressView, DeliveryView } from '@/api/ordering'
 import { getDeliveryQuoteOptions, getMyAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
 import { useFeatures } from '@/lib/brand'
 import { useSelectedBranch } from '@/lib/branch'
 import type { OrderDestination } from '@/lib/order-destination'
-import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
+import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
+
+/** What stands in the way of a delivery, for the tray to say */
+export type DeliveryProblem = 'address' | 'checking' | 'quoteFailed' | 'range' | 'minimum' | null
 
 /**
  * Where the order is going when it is brought: what the tray shows and
@@ -31,19 +36,65 @@ export type DeliveryState = {
   inRange: boolean
   /** Active, addressed, in range and enough: nothing stands in the way */
   ready: boolean
-  /** What stands in the way, for the tray to say */
-  problem: 'address' | 'range' | 'minimum' | 'checking' | null
+  problem: DeliveryProblem
+  /** Ask the branch again, after a quote that never came back */
+  retryQuote: () => void
   setWanted: (wanted: boolean) => void
   setAddress: (address: DeliveryAddress | null) => void
+}
+
+/**
+ * What stands in the way, in the order the customer meets it: no address, the
+ * branch still answering (or not answering at all), too far, too little.
+ * Pure, so it is tested apart from the queries.
+ */
+export function deliveryProblem(s: {
+  active: boolean
+  hasAddress: boolean
+  quoted: boolean
+  quoteFailed: boolean
+  inRange: boolean
+  short: number
+}): DeliveryProblem {
+  if (!s.active) return null
+  if (!s.hasAddress) return 'address'
+  if (s.quoteFailed) return 'quoteFailed'
+  if (!s.quoted) return 'checking'
+  if (!s.inRange) return 'range'
+  return s.short > 0 ? 'minimum' : null
+}
+
+/** Whose the delivery choice on this device is: the signed-in account, or the guest */
+export function useDeliveryOwner(): string {
+  const auth = useAuth()
+  return auth.isAuthenticated ? (auth.user?.profile.sub ?? GUEST_OWNER) : GUEST_OWNER
 }
 
 export function useDelivery(destination: OrderDestination, subtotal: number): DeliveryState {
   const branch = useSelectedBranch()
   const delivers = useFeatures().delivery === true
-  const { wanted, address, setWanted, setAddress } = useDeliveryStore()
+  const owner = useDeliveryOwner()
+  const store = useDeliveryStore()
+  const claim = useDeliveryStore((s) => s.claim)
+  const { data: saved } = useMyAddresses()
+
+  // The device changed hands (a sign-out, another account): the last one's address goes
+  useEffect(() => {
+    claim(owner)
+  }, [owner, claim])
+
+  // A signed-in customer's address is one of theirs, or none (removed elsewhere, or someone else's)
+  const ownersAddress =
+    store.owner === owner &&
+    store.address != null &&
+    (store.address.id == null || saved == null || saved.some((a) => Number(a.id) === store.address?.id))
+      ? store.address
+      : null
+
   // The business delivers (an add-on it bought, and on), and so does this branch
   const offered = delivers && !destination && branch?.isDeliveryEnabled === true && branch.isOrderingEnabled !== false
-  const active = offered && wanted
+  const active = offered && store.wanted
+  const address = ownersAddress
 
   const quoteQuery = useQuery({
     ...getDeliveryQuoteOptions({
@@ -58,18 +109,14 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   const fee = quoted ? Number(quote.fee) : 0
   const minimum = quoted ? Number(quote.minimumOrder) : 0
   const short = Math.max(0, minimum - subtotal)
-
-  const problem: DeliveryState['problem'] = !active
-    ? null
-    : !address
-      ? 'address'
-      : !quoted
-        ? 'checking'
-        : !inRange
-          ? 'range'
-          : short > 0
-            ? 'minimum'
-            : null
+  const problem = deliveryProblem({
+    active,
+    hasAddress: address != null,
+    quoted,
+    quoteFailed: quoteQuery.isError && !quoteQuery.isFetching,
+    inRange,
+    short,
+  })
 
   return {
     offered,
@@ -82,8 +129,9 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
     inRange,
     ready: active && problem == null,
     problem,
-    setWanted,
-    setAddress,
+    retryQuote: () => void quoteQuery.refetch(),
+    setWanted: store.setWanted,
+    setAddress: store.setAddress,
   }
 }
 
@@ -127,23 +175,24 @@ export function addressBody(address: DeliveryAddress) {
   }
 }
 
-/** The address on one line, the street first: "Tahrir St · Bldg 12, floor 3, apt 7" */
-export function addressLine(
-  address: Pick<DeliveryAddress, 'address' | 'building' | 'floor' | 'apartment'>,
-  words: { building: string; floor: string; apartment: string }
-): string {
-  const parts = [
-    address.building ? `${words.building} ${address.building}` : null,
-    address.floor ? `${words.floor} ${address.floor}` : null,
-    address.apartment ? `${words.apartment} ${address.apartment}` : null,
-  ].filter(Boolean)
-  return parts.length > 0 ? `${address.address} · ${parts.join('، ')}` : address.address
+/** The address on one line, the street first: "Tahrir St · Bldg 12, Floor 3, Apt 7" */
+export function addressLine(address: AddressParts, words: AddressWords, locale: string): string {
+  return formatAddressLine(address, words, locale)
 }
 
 /** Where a delivered order has got to, for the customer: from the order's delivery as the server sees it */
-export type DeliveryStage = 'Waiting' | 'Assigned' | 'OnTheWay' | 'Delivered'
+export type DeliveryStage = 'Waiting' | 'Assigned' | 'OnTheWay' | 'Delivered' | 'Failed' | 'Returned'
 
 export function deliveryStage(delivery: DeliveryView | null | undefined): DeliveryStage | null {
-  const stage = delivery?.stage
-  return stage === 'Waiting' || stage === 'Assigned' || stage === 'OnTheWay' || stage === 'Delivered' ? stage : null
+  switch (delivery?.stage) {
+    case 'Waiting':
+    case 'Assigned':
+    case 'OnTheWay':
+    case 'Delivered':
+    case 'Failed':
+    case 'Returned':
+      return delivery.stage
+    default:
+      return null
+  }
 }

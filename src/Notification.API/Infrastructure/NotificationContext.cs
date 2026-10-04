@@ -9,6 +9,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
     public DbSet<NotificationPreferences> Preferences => Set<NotificationPreferences>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<Place> Places => Set<Place>();
+    public DbSet<DeliveryNotice> DeliveryNotices => Set<DeliveryNotice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,21 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
 
             // Unique constraint: one subscription per user per type
             entity.HasIndex(e => new { e.UserId, e.Type }).IsUnique();
+
+            // A phone rings for one rider: whoever signed in on it last. Two riders sharing a phone
+            // must never both hear the other's deliveries (and the customers' addresses in them)
+            entity.HasIndex(e => new { e.FcmToken, e.Type })
+                .IsUnique()
+                .HasFilter($"\"Type\" = {(int)SubscriptionType.RiderDeliveries}")
+                .HasDatabaseName("IX_Subscriptions_FcmToken_Type_Rider");
+        });
+
+        // A delivery's last move told; keyed by Ordering's order id
+        modelBuilder.Entity<DeliveryNotice>(entity =>
+        {
+            entity.ToTable("DeliveryNotices");
+            entity.HasKey(e => e.OrderId);
+            entity.Property(e => e.OrderId).ValueGeneratedNever();
         });
 
         modelBuilder.Entity<ServiceRequest>(entity =>

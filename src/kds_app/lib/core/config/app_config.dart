@@ -1,65 +1,35 @@
-import 'tenant_connection.dart';
+import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ninja_app_core/config.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import '../demo/demo.dart';
+import '../services/signalr_service.dart';
 
-/// Application configuration for the kitchen display tablet app
-///
-/// Which business this app talks to is data, not code. One generic build goes
-/// to every business from the platform's download page; the first time it opens
-/// it asks for the business's address and keeps the [TenantConnection] it finds
-/// on the device. A build can still be pinned to one stack instead:
-/// `tenants/<slug>.json` at the repository root, passed as
-/// `--dart-define-from-file`, and then it never asks. Debug builds reach the
-/// Aspire AppHost on the dev machine when told the realm alone, since the
-/// code has no tenant of its own:
+/// Application configuration for the kitchen display tablet app. Which
+/// business it talks to and how it reaches it is the shared core's
+/// ([CoreEndpoints]); what is the kitchen's own is here, and handed to the
+/// core as [core] at start:
 ///
 ///   flutter run --dart-define=REALM=chillax
 ///
 /// or connect to it like a tablet would, at http://localhost:5000.
 class AppConfig {
-  static const bool _isRelease = bool.fromEnvironment('dart.vm.product');
-
-  static const String _apiUrl = String.fromEnvironment('API_URL');
-  static const String _authUrl = String.fromEnvironment('AUTH_URL');
-  static const String _realm = String.fromEnvironment('REALM');
-
   /// A build told its stack at build time never asks for one
-  static bool get isPinned => _apiUrl.isNotEmpty;
+  static bool get isPinned => CoreEndpoints.isPinned;
 
   /// The business this device was connected to, when the build is not pinned
-  static TenantConnection? get connection => TenantConnection.current.value;
+  static TenantConnection? get connection => CoreEndpoints.connection;
 
   /// Whether there is a stack to talk to. Until there is, the connect
   /// screen is the whole app.
-  static bool get isConnected => isPinned || connection != null || (!_isRelease && _realm.isNotEmpty);
+  static bool get isConnected => CoreEndpoints.isConnected;
 
-  // Everything goes through the mobile BFF (YARP).
-  // Debug: the Aspire AppHost on the dev machine, reached from the emulator
-  //   through `adb reverse tcp:5000 tcp:5000` and `adb reverse tcp:8080 tcp:8080`
-  //   (localhost on both sides keeps Keycloak's token issuer matching).
-  static String get bffBaseUrl {
-    if (_apiUrl.isNotEmpty) return _apiUrl;
-    if (connection case final connection?) return connection.apiUrl;
-    if (!_isRelease) return 'http://localhost:5000';
-    throw StateError('Not connected to a business: the connect screen comes first');
-  }
-
-  // API endpoints (through BFF) - trailing slash required for Dio path resolution
-  static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
-  static String get kitchenApiUrl => '$bffBaseUrl/api/kitchen/';
-  static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
-  /// The tenant's brand: one anonymous resource, no sub-paths
-  static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
-
-  /// The OpenID issuer to sign in against: the realm a pinned build was
-  /// given, else the one the business's API named when this device connected
-  /// (its own realm on the platform's auth host), else the AppHost's
-  /// Keycloak through adb reverse in debug. Never a default realm: the app
-  /// signs in against the business's, or against none.
-  static String get identityUrl {
-    if (_authUrl.isNotEmpty && _realm.isNotEmpty) return '$_authUrl/realms/$_realm';
-    if (connection?.authority case final authority?) return authority;
-    if (!_isRelease && _realm.isNotEmpty) return 'http://localhost:8080/realms/$_realm';
-    throw StateError('No realm to sign in against: the business\'s API did not name one');
-  }
+  static String get bffBaseUrl => CoreEndpoints.bffBaseUrl;
+  static String get ordersApiUrl => CoreEndpoints.ordersApiUrl;
+  static String get kitchenApiUrl => '${CoreEndpoints.bffBaseUrl}/api/kitchen/';
+  static String get branchesApiUrl => CoreEndpoints.branchesApiUrl;
+  static String get tenantApiUrl => CoreEndpoints.tenantApiUrl;
+  static String get identityUrl => CoreEndpoints.identityUrl;
 
   // OIDC configuration (Resource Owner Password Credentials, like pos_app).
   // offline_access on purpose: a wall-mounted tablet has no browser to
@@ -82,9 +52,8 @@ class AppConfig {
     'orders',
   ];
 
-  // Who may run the kitchen display — mirrors the backend "Pos" policy,
-  // the same gate kds_web applies
-  /// Who may run the kitchen display: the till's staff, or its own Kitchen account
+  /// Who may run the kitchen display — mirrors the backend "Pos" policy, the
+  /// same gate kds_web applies: the till's staff, or its own Kitchen account
   static const List<String> posRoles = ['Admin', 'Owner', 'Cashier', 'Kitchen'];
 
   // App info (the name comes from the tenant brand)
@@ -92,4 +61,27 @@ class AppConfig {
 
   // Poll fallback, mirroring kds_web (SignalR is the primary update path)
   static const Duration kitchenPoll = Duration(seconds: 20);
+
+  /// What the shared core needs to know about the kitchen display
+  static final NinjaAppConfig core = NinjaAppConfig(
+    appKey: 'kds',
+    clientId: clientId,
+    scopes: scopes,
+    allowedRoles: posRoles,
+    // A wall-mounted tablet signs in with a staff username and password
+    passwordSignIn: true,
+    // As it always has: the download page wherever the stack says, its
+    // checksum when the release gives one, and overnight silently on a
+    // kiosk tablet (device owner). Never in the design-time demo.
+    update: const UpdateConfig(
+      channel: 'com.ninja.kds/update',
+      file: 'ninja-kds',
+      enabled: !kDemoMode,
+      requireChecksum: false,
+      httpsOnly: false,
+      silentKioskInstall: true,
+    ),
+    onSignedIn: (Ref ref) => unawaited(ref.read(signalRServiceProvider).connect()),
+    onSigningOut: (Ref ref) => ref.read(signalRServiceProvider).disconnect(),
+  );
 }

@@ -1,13 +1,13 @@
 package com.ninja.rider
 
 import android.app.Activity
-import android.app.ActivityManager
 import android.app.PendingIntent
-import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -19,10 +19,11 @@ import java.security.MessageDigest
 
 /**
  * The rider app updating itself from the platform's download page. Dart finds and
- * downloads the new APK; this installs it through Android's PackageInstaller:
- * silently on a device provisioned as device owner, with
- * Android's own "update this app?" prompt everywhere else. Android refuses an
- * APK signed with another key, so only our own builds can replace the app.
+ * downloads the new APK; this checks it and installs it through Android's
+ * PackageInstaller, with Android's own "update this app?" prompt. Two checks come
+ * first, so a download is never installed on trust: its SHA-256 must be the one the
+ * page published (no checksum, no install), and it must be signed with the same
+ * certificate as the app already on the phone.
  */
 class AppUpdater(private val activity: Activity) : MethodChannel.MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -32,11 +33,11 @@ class AppUpdater(private val activity: Activity) : MethodChannel.MethodCallHandl
                 val build = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
                 result.success(mapOf("version" to (info.versionName ?: ""), "build" to build))
             }
-            "isDeviceOwner" -> result.success(isDeviceOwner())
             "install" -> {
                 val path = call.argument<String>("path")
                 val sha256 = call.argument<String>("sha256")
                 if (path == null) return result.error("install", "no path", null)
+                if (sha256.isNullOrBlank()) return result.error("install", "no checksum", null)
                 try {
                     result.success(install(File(path), sha256))
                 } catch (e: Exception) {
@@ -48,36 +49,28 @@ class AppUpdater(private val activity: Activity) : MethodChannel.MethodCallHandl
         }
     }
 
-    private fun isDeviceOwner(): Boolean {
-        val dpm = activity.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        return dpm.isDeviceOwnerApp(activity.packageName)
-    }
-
     /** "installing" once the session is committed; "needsPermission" when Android first wants "install unknown apps" allowed for us. */
-    private fun install(apk: File, sha256: String?): String {
+    private fun install(apk: File, sha256: String): String {
         if (!apk.exists()) throw IllegalStateException("the download is gone")
-        if (sha256 != null && !sha256.equals(digest(apk), ignoreCase = true)) {
+        if (!sha256.equals(digest(apk), ignoreCase = true)) {
             apk.delete()
             throw IllegalStateException("checksum mismatch")
         }
+        if (!signedLikeThisApp(apk)) {
+            apk.delete()
+            throw IllegalStateException("signature mismatch")
+        }
 
-        val owner = isDeviceOwner()
-        if (!owner && Build.VERSION.SDK_INT >= 26 && !activity.packageManager.canRequestPackageInstalls()) {
+        if (Build.VERSION.SDK_INT >= 26 && !activity.packageManager.canRequestPackageInstalls()) {
             activity.startActivity(
                 Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${activity.packageName}"))
             )
             return "needsPermission"
         }
-        // Screen pinning (no device owner) would hide Android's prompt; the app pins itself again on resume
-        if (!owner) {
-            val am = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            if (am.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE) activity.stopLockTask()
-        }
 
         val installer = activity.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(activity.packageName)
-            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         }
         val sessionId = installer.createSession(params)
         installer.openSession(sessionId).use { session ->
@@ -92,6 +85,36 @@ class AppUpdater(private val activity: Activity) : MethodChannel.MethodCallHandl
             session.commit(status.intentSender)
         }
         return "installing"
+    }
+
+    /** The download is our own package, signed with the certificate the installed app carries */
+    private fun signedLikeThisApp(apk: File): Boolean {
+        val pm = activity.packageManager
+        val archive = archiveInfo(pm, apk) ?: return false
+        if (archive.packageName != activity.packageName) return false
+        val installed = installedInfo(pm)
+        val theirs = certificates(archive)
+        val ours = certificates(installed)
+        return theirs.isNotEmpty() && theirs == ours
+    }
+
+    private fun archiveInfo(pm: PackageManager, apk: File): PackageInfo? =
+        if (Build.VERSION.SDK_INT >= 28) pm.getPackageArchiveInfo(apk.path, PackageManager.GET_SIGNING_CERTIFICATES)
+        else @Suppress("DEPRECATION") pm.getPackageArchiveInfo(apk.path, PackageManager.GET_SIGNATURES)
+
+    private fun installedInfo(pm: PackageManager): PackageInfo =
+        if (Build.VERSION.SDK_INT >= 28) pm.getPackageInfo(activity.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+        else @Suppress("DEPRECATION") pm.getPackageInfo(activity.packageName, PackageManager.GET_SIGNATURES)
+
+    /** The signing certificates as hex digests, in a set so their order does not matter */
+    private fun certificates(info: PackageInfo): Set<String> {
+        val signatures = if (Build.VERSION.SDK_INT >= 28) {
+            val signing = info.signingInfo ?: return emptySet()
+            if (signing.hasMultipleSigners()) signing.apkContentsSigners else signing.signingCertificateHistory
+        } else {
+            @Suppress("DEPRECATION") info.signatures
+        } ?: return emptySet()
+        return signatures.map { sig -> MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { "%02x".format(it) } }.toSet()
     }
 
     private fun digest(file: File): String {
@@ -127,7 +150,7 @@ class InstallStatusReceiver : BroadcastReceiver() {
     }
 }
 
-/** The app was just replaced by its update: open it again, so a till does not sit on the home screen. */
+/** The app was just replaced by its update: open it again, so the rider is back on their deliveries. */
 class UpdatedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
@@ -135,7 +158,7 @@ class UpdatedReceiver : BroadcastReceiver() {
         try {
             context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
-            // Android may refuse a start from the background without device-owner rights; the staff open it
+            // Android may refuse a start from the background; the rider opens it
             Log.w(AppUpdater.TAG, "could not reopen after the update", e)
         }
     }

@@ -39,7 +39,7 @@ dependencies:
   shimmer: ^3.0.0
 
   # Utils
-  intl: any
+  intl: ^0.20.2
   shared_preferences: ^2.2.2
   uuid: ^4.3.3
   collection: ^1.18.0
@@ -58,6 +58,10 @@ dependencies:
 
   # Native Splash
   flutter_native_splash: ^2.4.0
+  flutter_appauth: ^12.1.0
+  # What the platform's Android apps share (src/ninja_app_core)
+  ninja_app_core:
+    path: ../ninja_app_core
 
 dev_dependencies:
   flutter_test:

@@ -1,0 +1,19 @@
+# The shared core's analyzer: Flutter's recommended lints, plus the strict
+# type checks and the async rules that matter on a device out in the field
+# (a future nobody awaits, a context used after an await).
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    unawaited_futures: true
+    discarded_futures: false
+    use_build_context_synchronously: true
+    avoid_dynamic_calls: false
+    cancel_subscriptions: true
+    close_sinks: true

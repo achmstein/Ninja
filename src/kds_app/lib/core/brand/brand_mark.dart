@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
-import 'brand_provider.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
 
 /// The platform, as the vendor line names it. Every staff surface carries
 /// the business's own name and mark; the platform is a line at the foot of a

@@ -14,9 +14,9 @@
         android:required="false"/>
     <application
         android:label="ninja Rider"
-        android:name="${applicationName}"
+        android:name=".RiderApplication"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:networkSecurityConfig="${networkSecurityConfig}">
         <activity
             android:name=".MainActivity"
             android:exported="true"

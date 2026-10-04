@@ -80,7 +80,7 @@ public sealed class Provisioner(
                 if (await keycloak.RealmExistsAsync(realm, ct))
                 {
                     // Realms are never re-imported: what the template gained since this one was made is added by hand
-                    await keycloak.EnsureAssistantClientsAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
+                    await keycloak.EnsureRealmUpToDateAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
                     await keycloak.EnsureSocialProvidersAsync(realm, ct);
                     await SocialBrokersAsync(tenant, ct);
                     await keycloak.EnsureAccountConsoleAsync(realm, ct);
@@ -631,16 +631,16 @@ public sealed class Provisioner(
             {
                 var realm = TenantNaming.Realm(tenant.Slug);
                 if (!await keycloak.RealmExistsAsync(realm, ct)) return "no realm";
+                // Realms are never re-imported: the roles and clients the template gained since this
+                // one was made (a rider's role, the rider app) are added here, as in provisioning
+                await keycloak.EnsureRealmUpToDateAsync(realm, TenantHosts.For(tenant, Platform).ApiUrl, tenant.AssistantSecret, ct);
                 await keycloak.EnsureSocialProvidersAsync(realm, ct);
                 await SocialBrokersAsync(tenant, ct);
                 await keycloak.EnsureProfileFieldsAsync(realm, tenant.Country, ct);
-                return "social providers, name and phone fields ensured";
+                return "staff roles and clients, social providers, name and phone fields ensured";
             }, ct);
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
-            // The new image may know a module the old one did not (its switch starts as the
-            // migration left it): the plan says at once whether this business has it
-            await EntitlementsStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);
 
             tenant.Status = TenantStatus.Running;
@@ -659,6 +659,27 @@ public sealed class Provisioner(
             tenant.LastError = ex.Message;
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.upgrade.failed", tenant.Slug, new { runId, from, to = target, error = ex.Message }, ct, Source);
+            return;
+        }
+
+        // The new image may know a module the old one did not (its switch starts as the migration
+        // left it): the plan says at once whether this business has it. After the upgrade stands,
+        // never part of it: the new image has migrated its databases forward, so a stack that does not
+        // answer this one call must not be rolled back for it. It is tried again as its own job.
+        await EntitlementsAfterUpgradeAsync(tenant, runId, ct);
+    }
+
+    private async Task EntitlementsAfterUpgradeAsync(Tenant tenant, Guid runId, CancellationToken ct)
+    {
+        try
+        {
+            await EntitlementsStepAsync(tenant, runId, ct);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "{Slug}: entitlements not pushed after the upgrade; queued to try again", tenant.Slug);
+            await audit.WriteAsync("tenant.entitlements.deferred", tenant.Slug, new { runId, error = ex.Message }, ct, Source);
+            if (queue is not null) await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "entitlements"), ct);
         }
     }
 

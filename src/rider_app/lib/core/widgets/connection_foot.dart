@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
-import '../brand/brand_provider.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
 import '../config/app_config.dart';
-import '../config/tenant_connection.dart';
-import '../providers/branch_provider.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Under the sign-in form: which business this phone is connected to, and a

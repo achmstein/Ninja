@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app.dart' show rootNavigatorKey;
+import 'navigator_key.dart';
 import '../auth/auth_service.dart';
 import '../brand/brand_mark.dart';
 import '../../l10n/app_localizations.dart';

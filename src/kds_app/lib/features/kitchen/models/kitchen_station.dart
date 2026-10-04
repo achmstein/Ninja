@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'kitchen_order.dart';
 
 /// A kitchen station, as `GET /api/kitchen/stations` gives it: a place in

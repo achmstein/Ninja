@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
+import 'package:uuid/uuid.dart';
+import '../../orders/services/order_service.dart';
+import '../../tickets/providers/tickets_provider.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
 
-/// The branch's deliveries out, on the board's order: waiting for a rider,
-/// with one, delivered with the cash still out. Nothing at all where the
-/// business does not deliver (an add-on): no request, no poll. The hub's
-/// DeliveryChanged is the primary update path; the poll covers a dead socket.
+/// The branch's deliveries on the board's order: waiting for a rider, with
+/// one, coming back, back, delivered with the cash still out. Nothing at all
+/// where the business does not deliver (an add-on): no request, no poll. The
+/// hub's DeliveryChanged is the primary update path; the poll covers a dead socket.
 class DeliveriesNotifier extends AsyncNotifier<List<DeliveryOrder>> {
   Timer? _poll;
 
@@ -35,20 +38,11 @@ class DeliveriesNotifier extends AsyncNotifier<List<DeliveryOrder>> {
 
 final deliveriesProvider = AsyncNotifierProvider<DeliveriesNotifier, List<DeliveryOrder>>(DeliveriesNotifier.new);
 
-/// The rider picker: those whose app has checked in at the branch, then the
-/// branch's riders who have not opened it yet. Identity's list only adds to
-/// Ordering's; when it cannot be read the picker still has the first.
+/// The rider picker: every rider of the branch, as Ordering lists them (on
+/// duty first, then those not yet heard from)
 final tillRidersProvider = FutureProvider.autoDispose<List<TillRider>>((ref) async {
-  final branchId = ref.watch(selectedBranchIdProvider);
-  final repository = ref.read(deliveryRepositoryProvider);
-  final heard = await repository.getRiders();
-  List<RiderAccount> accounts;
-  try {
-    accounts = await repository.getRiderAccounts();
-  } catch (_) {
-    accounts = const [];
-  }
-  return mergeRiders(heard, accounts, branchId);
+  ref.watch(selectedBranchIdProvider);
+  return ref.read(deliveryRepositoryProvider).getRiders();
 });
 
 /// What a delivery taken over the phone asks, for the sale pad's button:
@@ -59,3 +53,41 @@ final tillDeliveryTermsProvider = FutureProvider.autoDispose<TillDeliveryQuote>(
   if (!ref.watch(featuresProvider.select((f) => f.delivery))) return const TillDeliveryQuote();
   return ref.read(deliveryRepositoryProvider).tillQuote();
 });
+
+/// The till's moves on a delivery: each one, then the board and the riders
+/// read again (and the open bills, for cash taken in or an order cancelled).
+/// Errors are rethrown for the screen to say, in the till's language.
+class DeliveryActions {
+  final Ref _ref;
+
+  DeliveryActions(this._ref);
+
+  DeliveryRepository get _repository => _ref.read(deliveryRepositoryProvider);
+
+  Future<void> _then(Future<void> Function() move, {bool bills = false}) async {
+    await move();
+    await _ref.read(deliveriesProvider.notifier).refresh();
+    _ref.invalidate(tillRidersProvider);
+    if (bills) await _ref.read(openTicketsProvider.notifier).refresh();
+  }
+
+  Future<void> assign(int orderId, TillRider rider) => _then(() => _repository.assignRider(orderId, rider));
+
+  Future<void> takeBack(int orderId) => _then(() => _repository.unassignRider(orderId));
+
+  Future<void> markOut(int orderId) => _then(() => _repository.markOut(orderId));
+
+  Future<void> markDelivered(int orderId) => _then(() => _repository.markDelivered(orderId));
+
+  Future<void> markFailed(int orderId, String reason) => _then(() => _repository.markFailed(orderId, reason));
+
+  Future<void> markReturned(int orderId) => _then(() => _repository.markReturned(orderId));
+
+  Future<void> cashIn(int orderId, double amount) => _then(() => _repository.cashIn(orderId, amount), bills: true);
+
+  /// The bag is back and nobody will have it: the order is called off
+  Future<void> cancelReturned(int orderId) =>
+      _then(() async => await _ref.read(orderRepositoryProvider).cancelOrder(orderId, requestId: const Uuid().v4()), bills: true);
+}
+
+final deliveryActionsProvider = Provider<DeliveryActions>(DeliveryActions.new);

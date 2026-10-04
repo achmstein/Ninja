@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Bike, Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { formatAddressLine } from '@/lib/address-line'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
@@ -145,18 +146,24 @@ export function OrderDetailsSheet({
             <div className='bg-muted/50 flex flex-col gap-1 rounded-lg p-3 text-sm'>
               <div className='flex items-center gap-2 font-medium'>
                 <Bike className='text-muted-foreground h-4 w-4' />
-                {[
-                  order.delivery.address,
-                  order.delivery.building &&
-                    `${t('deliveryBuildingShort')} ${order.delivery.building}`,
-                  order.delivery.floor &&
-                    `${t('deliveryFloorShort')} ${order.delivery.floor}`,
-                  order.delivery.apartment &&
-                    `${t('deliveryApartmentShort')} ${order.delivery.apartment}`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+                {formatAddressLine(
+                  order.delivery,
+                  {
+                    building: t('deliveryBuildingShort'),
+                    floor: t('deliveryFloorShort'),
+                    apartment: t('deliveryApartmentShort'),
+                  },
+                  locale
+                )}
               </div>
+              {/* It couldn't be delivered, or it came back: said in words */}
+              {(order.delivery.failedAt || order.delivery.returnedAt) && (
+                <div className='font-medium text-amber-700 dark:text-amber-400'>
+                  {order.delivery.returnedAt
+                    ? t('deliveryReturnedLabel')
+                    : t('deliveryFailedLabel')}
+                </div>
+              )}
               {order.delivery.directions && (
                 <div className='text-muted-foreground italic'>
                   "{order.delivery.directions}"

@@ -14,7 +14,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * remembers there is an order to follow.
  */
 
-export type PillStage = 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'paid' | 'cancelled'
+export type PillStage = 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'notDelivered' | 'paid' | 'cancelled'
 
 /** What the pill needs from an order (the Ordering OrderSummary shape) */
 export type PillOrder = {
@@ -45,6 +45,8 @@ export const LINGER_MS: Record<PillStage, number | null> = {
   preparing: null,
   onTheWay: null,
   delivered: 10_000,
+  // The rider couldn't find the door, or nobody answered: said, and held long enough to be read
+  notDelivered: 30_000,
   paid: 4_000,
   cancelled: 8_000,
 }
@@ -63,6 +65,7 @@ export function stageOf(order: PillOrder): PillStage {
   if (order.delivery && status === 'confirmed') {
     const stage = order.delivery.stage
     if (stage === 'Delivered') return 'delivered'
+    if (stage === 'Failed' || stage === 'Returned') return 'notDelivered'
     if (stage === 'OnTheWay') return 'onTheWay'
     return 'preparing'
   }
@@ -143,6 +146,7 @@ export const STAGE_ICON: Record<PillStage, 'send' | 'check' | 'chef' | 'bike' | 
   preparing: 'chef',
   onTheWay: 'bike',
   delivered: 'home',
+  notDelivered: 'x',
   paid: 'receipt',
   cancelled: 'x',
 }
@@ -156,6 +160,7 @@ export const STAGE_LABEL: Record<PillStage, Words> = {
   preparing: { en: 'Being made', ar: 'بيتجهز', arStandard: 'قيد التحضير' },
   onTheWay: { en: 'On its way', ar: 'في الطريق', arStandard: 'في الطريق' },
   delivered: { en: 'Delivered', ar: 'وصل', arStandard: 'تم التوصيل' },
+  notDelivered: { en: "Couldn't be delivered", ar: 'موصلش', arStandard: 'تعذّر التوصيل' },
   paid: { en: 'Paid', ar: 'اتدفع', arStandard: 'مدفوع' },
   cancelled: { en: 'Cancelled', ar: 'اتلغى', arStandard: 'أُلغي' },
 }
@@ -192,6 +197,11 @@ export const PILL_WORDS = {
     arStandard: '{rider} في الطريق إليك. ادفع له عند الباب.',
   },
   deliveredNote: { en: 'Delivered. Enjoy!', ar: 'وصل. بالهنا والشفا!', arStandard: 'تم التوصيل. بالهناء والشفاء!' },
+  notDeliveredNote: {
+    en: "The rider couldn't deliver it. {name} will be in touch.",
+    ar: 'المندوب مقدرش يوصّله. {name} هيكلمك.',
+    arStandard: 'لم يتمكن المندوب من توصيله. سيتواصل معك {name}.',
+  },
   cancelledNote: {
     en: '{name} could not take this order.',
     ar: '{name} مقدرش ياخد الطلب ده.',
@@ -202,6 +212,7 @@ export const PILL_WORDS = {
 /** What a stage says under its title: on its way, it names the rider when the till said who */
 export function noteFor(stage: PillStage, order: PillOrder | null, notes: Record<PillStage, Words>): { words: Words; rider: string | null } {
   const rider = order?.delivery?.riderName?.trim() || null
+  if (stage === 'notDelivered') return { words: PILL_WORDS.notDeliveredNote, rider: null }
   return stage === 'onTheWay' && rider ? { words: PILL_WORDS.onTheWayRiderNote, rider } : { words: notes[stage], rider: null }
 }
 

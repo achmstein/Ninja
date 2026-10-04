@@ -1,19 +1,19 @@
 using Ninja.Tenant.API.IntegrationEvents;
-using Ninja.EventBus.Abstractions;
 
 namespace Ninja.Tenant.API.Services;
 
 /// <summary>
 /// The one place a branch's operational flags change — from the settings
-/// endpoint (the admin app and the till's pause toggles) and from the shift
-/// events Sales publishes. Every change goes out as
-/// <see cref="BranchSettingsChangedIntegrationEvent"/> so Ordering, Spaces and
+/// endpoint (the admin app and the till's pause toggles), from the branch's
+/// own edit, and from the shift events Sales publishes. Every change goes out
+/// as <see cref="BranchSettingsChangedIntegrationEvent"/>, saved with it in
+/// the outbox (<see cref="TenantEvents"/>), so Ordering, Spaces and
 /// Notification keep their own copy of the flags (Ordering also of where the
-/// branch is and how it delivers).
+/// branch is and how it delivers) even when the bus was down at the time.
 /// </summary>
 public class BranchSettingsService(
     TenantContext context,
-    IEventBus eventBus,
+    TenantEvents events,
     ILogger<BranchSettingsService> logger)
 {
     /// <summary>
@@ -33,7 +33,7 @@ public class BranchSettingsService(
 
     /// <summary>
     /// Same on a branch the caller already loaded; whatever else is pending
-    /// on the context is saved in the same call.
+    /// on the context is saved in the same transaction as the event.
     /// </summary>
     public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null)
     {
@@ -41,28 +41,29 @@ public class BranchSettingsService(
         if (isReservationsEnabled != null) branch.IsReservationsEnabled = isReservationsEnabled.Value;
         if (requireSignInForTableOrders != null) branch.RequireSignInForTableOrders = requireSignInForTableOrders.Value;
         if (isDeliveryEnabled != null) branch.IsDeliveryEnabled = isDeliveryEnabled.Value;
-        // Delivering needs a place to measure from and a distance to stop at:
-        // taking either away turns delivery off rather than leaving it boundless
+        // Delivering needs a place to measure from and a distance to stop at. The
+        // endpoints refuse a change that would take either from a delivering
+        // branch; a shift event never touches them, so this only holds the line
         if (!branch.CanDeliver) branch.IsDeliveryEnabled = false;
 
-        await context.SaveChangesAsync();
+        await events.SaveAndPublishAsync(Changed(branch));
 
         logger.LogInformation(
-            "Branch {BranchId} settings: ordering {Ordering}, reservations {Reservations}",
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled);
-
-        await PublishAsync(branch);
+            "Branch {BranchId} settings: ordering {Ordering}, reservations {Reservations}, delivery {Delivery} within {RadiusKm} km, fee {Fee}, minimum {Minimum}",
+            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled,
+            branch.IsDeliveryEnabled, branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder);
     }
 
     /// <summary>
     /// A new branch's flags, as they start: until this goes out Ordering,
     /// Spaces and Notification have no row for the branch.
     /// </summary>
-    public Task PublishNewAsync(Model.Branch branch) => PublishAsync(branch);
+    public Task PublishNewAsync(Model.Branch branch) => events.SaveAndPublishAsync(Changed(branch));
 
-    private Task PublishAsync(Model.Branch branch)
-        => eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders,
-            branch.IsDeliveryEnabled, branch.Latitude, branch.Longitude,
-            branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder));
+    // Named in full: the contracts suite finds a publisher by `new XIntegrationEvent(`
+    private static BranchSettingsChangedIntegrationEvent Changed(Model.Branch branch) => new BranchSettingsChangedIntegrationEvent(
+        branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders,
+        branch.IsDeliveryEnabled, branch.Latitude, branch.Longitude,
+        branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder,
+        Version: DateTime.UtcNow.Ticks);
 }

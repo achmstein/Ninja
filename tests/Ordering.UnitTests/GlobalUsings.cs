@@ -6,6 +6,7 @@ global using System.Threading.Tasks;
 global using MediatR;
 global using Microsoft.AspNetCore.Mvc;
 global using Ninja.Ordering.API.Application.Commands;
+global using Ninja.Ordering.API.Application.Deliveries;
 global using Ninja.Ordering.API.Application.Models;
 global using Ninja.Ordering.API.Infrastructure.Services;
 global using Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;

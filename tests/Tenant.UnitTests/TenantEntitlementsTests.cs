@@ -44,14 +44,32 @@ public sealed class TenantEntitlementsTests
         tenant.ApplyFeatures(AllOn);
         Assert.IsFalse(tenant.DeliveryEnabled, "an owner never turns on what is not bought");
 
-        // Bought again: on when the owner says so
+        // Bought again: on at once, without the owner having to find the switch
         tenant.ApplyEntitlements(AllOn);
-        tenant.ApplyFeatures(AllOn);
+        Assert.IsTrue(tenant.DeliveryEnabled, "delivery starts on the moment it is bought");
+
+        // Kept bought: the owner's own off stays off at the next push
+        tenant.ApplyFeatures(new FeatureSwitches(Delivery: false));
+        tenant.ApplyEntitlements(AllOn);
+        Assert.IsFalse(tenant.DeliveryEnabled, "only newly bought turns it on");
+    }
+
+    [TestMethod]
+    public void A_switch_the_owner_did_not_send_stays_as_it_is()
+    {
+        var tenant = new API.Model.Tenant();
         Assert.IsTrue(tenant.DeliveryEnabled);
 
-        // An admin older than delivery sends nine switches: delivery goes off, as online payments did
-        tenant.ApplyFeatures(new TenantFeatures(true, true, true, true, true, true, true, true, true));
-        Assert.IsFalse(tenant.DeliveryEnabled);
+        // An admin older than delivery sends nine switches and not this one
+        tenant.ApplyFeatures(new FeatureSwitches(true, true, true, true, true, true, true, true, true));
+        Assert.IsTrue(tenant.DeliveryEnabled, "not knowing a switch never turns it off");
+
+        tenant.ApplyFeatures(new FeatureSwitches(Inventory: false));
+        Assert.IsFalse(tenant.InventoryEnabled);
+        Assert.IsTrue(tenant.FinanceEnabled, "the others as they were");
+
+        tenant.ApplyFeatures((FeatureSwitches?)null);
+        Assert.IsFalse(tenant.InventoryEnabled, "nothing sent changes nothing");
     }
 
     [TestMethod]

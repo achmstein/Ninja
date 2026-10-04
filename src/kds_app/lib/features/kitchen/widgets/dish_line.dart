@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
-import '../../../core/motion/motion.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 /// The dishes the cook has ticked off on this screen, as `order:line`.
 /// A working aid on this display only: nothing is sent, and Ready is still

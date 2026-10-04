@@ -72,7 +72,7 @@ public sealed class LifecycleScenarios
         Assert.AreEqual("v2", after.ImageTag);
         Assert.AreEqual("v1", after.PreviousImageTag, "the tag before, for a rollback");
         Assert.IsNotNull(after.UpgradeBackupId, "a backup before anything changed");
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps(after));
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "entitlements:Done" }, Steps(after));
         var yaml = Api.ComposeOnDisk(slug);
         Assert.Contains(":v2\"", yaml);
         Assert.DoesNotContain($"{slug}-inventory-api:", yaml, "an upgrade rewrites the compose from the plan");

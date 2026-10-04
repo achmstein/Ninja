@@ -49,7 +49,11 @@ export function AppsPage() {
   const appsUrl = brand?.appsUrl ?? null
   const [selected, setSelected] = useState<AppKey>('pos')
   // The rider app is for a business whose branches deliver with their own riders
-  const branchesQuery = useQuery(getAllBranchesOptions())
+  const branchesQuery = useQuery({
+    ...getAllBranchesOptions(),
+    // Only asked whether a branch delivers where the business does at all
+    enabled: features.delivery === true,
+  })
   const delivers =
     features.delivery &&
     (branchesQuery.data ?? []).some((b) => b.isDeliveryEnabled)

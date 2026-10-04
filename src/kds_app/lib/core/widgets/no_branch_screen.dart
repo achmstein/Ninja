@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
-import '../providers/branch_provider.dart';
-import '../theme/text_styles.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/text_styles.dart';
 
 /// Shown instead of the board when the signed-in account is assigned to no
 /// branch: membership travels in the token (the `branches` claim), and an

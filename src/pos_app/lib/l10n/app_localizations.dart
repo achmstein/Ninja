@@ -3409,6 +3409,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivery placed. Give it to a rider from Deliveries on the floor.'**
   String get deliveryPlaced;
+
+  /// Between the parts of an address on one line (building, floor, apartment)
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get listSeparator;
+
+  /// No description provided for @deliveryChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the delivery'**
+  String get deliveryChange;
+
+  /// No description provided for @deliveryErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Try again in a moment.'**
+  String get deliveryErrorOffline;
+
+  /// No description provided for @deliveryErrorNotDelivering.
+  ///
+  /// In en, this message translates to:
+  /// **'This business doesn\'t deliver now.'**
+  String get deliveryErrorNotDelivering;
+
+  /// No description provided for @deliveryErrorOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'That address is outside the delivery area.'**
+  String get deliveryErrorOutOfRange;
+
+  /// No description provided for @deliveryErrorBelowMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'The order is under the delivery minimum.'**
+  String get deliveryErrorBelowMinimum;
+
+  /// No description provided for @deliveryErrorPlaceConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'A delivery goes on a bill of its own, not on a table or an open bill.'**
+  String get deliveryErrorPlaceConflict;
+
+  /// No description provided for @deliveryErrorTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of the address is too long. Shorten it.'**
+  String get deliveryErrorTooLong;
+
+  /// No description provided for @deliveryErrorNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the order before it goes out.'**
+  String get deliveryErrorNotConfirmed;
+
+  /// No description provided for @deliveryErrorNoRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it to a rider first.'**
+  String get deliveryErrorNoRider;
+
+  /// No description provided for @deliveryErrorAlreadyOut.
+  ///
+  /// In en, this message translates to:
+  /// **'It already left with its rider.'**
+  String get deliveryErrorAlreadyOut;
+
+  /// No description provided for @deliveryErrorNotOut.
+  ///
+  /// In en, this message translates to:
+  /// **'It hasn\'t left yet.'**
+  String get deliveryErrorNotOut;
+
+  /// No description provided for @deliveryErrorNotDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'It hasn\'t been delivered yet.'**
+  String get deliveryErrorNotDelivered;
+
+  /// No description provided for @deliveryErrorAlreadySettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Its cash is already in.'**
+  String get deliveryErrorAlreadySettled;
+
+  /// No description provided for @deliveryErrorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else changed this delivery. It\'s up to date now.'**
+  String get deliveryErrorConflict;
+
+  /// No description provided for @deliveryErrorUnknownRider.
+  ///
+  /// In en, this message translates to:
+  /// **'That rider isn\'t one of this branch\'s riders.'**
+  String get deliveryErrorUnknownRider;
+
+  /// No description provided for @deliveryErrorPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'This branch isn\'t taking orders right now.'**
+  String get deliveryErrorPaused;
+
+  /// No description provided for @failReasonNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody answered'**
+  String get failReasonNoAnswer;
+
+  /// No description provided for @failReasonRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer refused it'**
+  String get failReasonRefused;
+
+  /// No description provided for @failReasonWrongAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find the address'**
+  String get failReasonWrongAddress;
+
+  /// No description provided for @failReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get failReasonOther;
+
+  /// No description provided for @deliveryFailedBecause.
+  ///
+  /// In en, this message translates to:
+  /// **'Not delivered: {reason}'**
+  String deliveryFailedBecause(String reason);
+
+  /// No description provided for @couldNotOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Maps'**
+  String get couldNotOpenMaps;
+
+  /// No description provided for @couldNotOpenDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the phone'**
+  String get couldNotOpenDialer;
+
+  /// No description provided for @deliveryDeliveredConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Did {name} get it?'**
+  String deliveryDeliveredConfirm(String name);
+
+  /// No description provided for @deliveryMarkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'It couldn\'t be delivered'**
+  String get deliveryMarkFailed;
+
+  /// No description provided for @deliveryFailReasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why couldn\'t it be delivered?'**
+  String get deliveryFailReasonTitle;
+
+  /// No description provided for @deliveryMarkReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'The bag is back'**
+  String get deliveryMarkReturned;
+
+  /// No description provided for @deliveryCancelReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the order'**
+  String get deliveryCancelReturned;
+
+  /// No description provided for @deliveryCancelReturnedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The bag is back and nobody will have it. Cancel the order?'**
+  String get deliveryCancelReturnedConfirm;
+
+  /// No description provided for @deliveryComingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming back with {name}'**
+  String deliveryComingBack(String name);
+
+  /// No description provided for @deliveryBackAtBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Back at the branch'**
+  String get deliveryBackAtBranch;
+
+  /// No description provided for @deliveryCashCountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take the cash from {name}'**
+  String deliveryCashCountTitle(String name);
+
+  /// No description provided for @deliveryCashBill.
+  ///
+  /// In en, this message translates to:
+  /// **'The bill: {amount}'**
+  String deliveryCashBill(String amount);
+
+  /// No description provided for @deliveryCashCounted.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get deliveryCashCounted;
+
+  /// No description provided for @deliveryCashInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the amount counted'**
+  String get deliveryCashInvalid;
+
+  /// No description provided for @deliveryCashExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exactly the bill'**
+  String get deliveryCashExact;
+
+  /// No description provided for @deliveryCashShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} short'**
+  String deliveryCashShort(String amount);
+
+  /// No description provided for @deliveryCashOver.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over'**
+  String deliveryCashOver(String amount);
+
+  /// No description provided for @deliveryCashTakeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it in'**
+  String get deliveryCashTakeAction;
+
+  /// No description provided for @deliveryLocationNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check that location. The rider will go by the address.'**
+  String get deliveryLocationNotChecked;
+
+  /// No description provided for @deliveryTermsChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the branch\'s delivery terms…'**
+  String get deliveryTermsChecking;
+
+  /// No description provided for @deliveryTermsUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check delivery. Retry, or make it a counter sale.'**
+  String get deliveryTermsUnknown;
+
+  /// No description provided for @deliveryNotOfferedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'This branch doesn\'t deliver now. Remove the delivery to charge.'**
+  String get deliveryNotOfferedNow;
 }
 
 class _AppLocalizationsDelegate

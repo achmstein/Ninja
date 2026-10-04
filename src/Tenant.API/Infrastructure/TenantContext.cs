@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Ninja.Tenant.API.Model;
 using Ninja.Tenant.API.Services;
+using Ninja.IntegrationEventLogEF;
 
 namespace Ninja.Tenant.API.Infrastructure;
 
@@ -13,6 +14,9 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // The outbox: events saved in the same transaction as the change they tell of
+        modelBuilder.UseIntegrationEventLogs();
+
         modelBuilder.Entity<Model.Branch>(entity =>
         {
             entity.HasKey(e => e.Id);

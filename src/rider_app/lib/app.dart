@@ -4,24 +4,21 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
-import 'core/brand/brand_provider.dart';
-import 'core/providers/branch_provider.dart';
-import 'core/providers/locale_provider.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'core/router/navigator_key.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
-import 'core/network/network_status.dart';
-import 'core/services/chime_service.dart';
+import 'package:ninja_app_core/network/network_status.dart';
+import 'package:ninja_app_core/services/chime_service.dart';
 import 'core/services/push_service.dart';
 import 'core/services/signalr_service.dart';
-import 'core/services/update_service.dart';
+import 'package:ninja_app_core/services/update_service.dart';
 import 'core/widgets/rider_toast.dart';
 import 'l10n/app_localizations.dart';
-import 'core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'core/auth/auth_service.dart';
 import 'features/deliveries/providers/deliveries_provider.dart';
-
-/// Global navigator key for dialogs shown from outside the widget tree
-final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class NinjaRiderApp extends ConsumerStatefulWidget {
   const NinjaRiderApp({super.key});
@@ -31,7 +28,7 @@ class NinjaRiderApp extends ConsumerStatefulWidget {
 }
 
 class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindingObserver {
-  final List<StreamSubscription> _subscriptions = [];
+  final List<StreamSubscription<Object?>> _subscriptions = [];
 
   @override
   void initState() {
@@ -78,11 +75,13 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
       ref.read(authServiceProvider.notifier).refreshToken();
       ref.read(signalRServiceProvider).reconnectIfNeeded();
       ref.read(brandProvider.notifier).refresh();
-      // Whatever was given or taken while the phone was in a pocket
-      _refresh();
+      // Whatever was given or taken while the phone was in a pocket, then polling again
+      ref.read(deliveriesProvider.notifier).resume();
       ref.read(dutyProvider.notifier).resume();
     } else if (state == AppLifecycleState.paused) {
-      ref.read(dutyProvider.notifier).pause();
+      // Maps is in front on the way to a door: stop polling a list nobody
+      // sees, but the rider stays on duty (only the switch takes them off)
+      ref.read(deliveriesProvider.notifier).pause();
     }
   }
 
@@ -90,12 +89,14 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
     await ref.read(authServiceProvider.notifier).initialize();
     FlutterNativeSplash.remove();
 
-    // New builds from the platform's download page
-    ref.read(updateProvider.notifier).start();
+    // New builds from the platform's download page; never offered while a delivery is out
+    final updates = ref.read(updateProvider.notifier);
+    updates.isBusy = () => ref.read(deliveriesProvider).value?.anyOut ?? false;
+    unawaited(updates.start());
 
     if (ref.read(authServiceProvider).isAuthenticated) {
       _connect();
-      ref.read(branchProvider.notifier).loadBranches();
+      unawaited(ref.read(branchProvider.notifier).loadBranches());
     }
   }
 
@@ -141,8 +142,11 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
       push.events.listen((event) {
         _refresh();
         if (event.opened) {
-          // Tapped in the shade: the list is where it is
-          GoRouter.of(rootNavigatorKey.currentContext!).go('/');
+          // Tapped in the shade: the list, with that delivery brought into view.
+          // Through the router, which exists even before any screen is mounted
+          // (a tap that opened the app from cold)
+          if (event.orderId > 0) ref.read(focusedDeliveryProvider.notifier).focus(event.orderId);
+          ref.read(routerProvider).go('/');
           return;
         }
         if (event.type == 'delivery_assigned') {
@@ -175,7 +179,10 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
 
     final brand = ref.watch(brandProvider).name;
     return MaterialApp.router(
-      title: brand.isEmpty ? 'Rider' : '${brand.primary} Rider',
+      onGenerateTitle: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return brand.isEmpty ? l10n.appName : l10n.riderAppTitle(brand.primary);
+      },
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

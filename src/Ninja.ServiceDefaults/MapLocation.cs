@@ -30,28 +30,74 @@ public static partial class MapLocation
         return null;
     }
 
-    /// <summary>True for a link that only redirects to the map (maps.app.goo.gl, goo.gl/maps).</summary>
+    /// <summary>The named client <see cref="ResolveAsync"/> is given: see <see cref="MapLinkClientExtensions.AddMapLinkClient"/>.</summary>
+    public const string ClientName = "map-links";
+
+    /// <summary>The most redirects a short link is followed through before it is given up on.</summary>
+    public const int MaxHops = 5;
+
+    /// <summary>True for a link that only redirects to the map (maps.app.goo.gl, goo.gl/maps), over https.</summary>
     public static bool IsShortLink(string? text) =>
         Uri.TryCreate(text?.Trim(), UriKind.Absolute, out var uri)
+        && uri.Scheme == Uri.UriSchemeHttps
         && (uri.Host.Equals("maps.app.goo.gl", StringComparison.OrdinalIgnoreCase)
             || (uri.Host.Equals("goo.gl", StringComparison.OrdinalIgnoreCase) && uri.AbsolutePath.StartsWith("/maps", StringComparison.OrdinalIgnoreCase)));
 
     /// <summary>
+    /// A hop a short link may take on its way to the map: https, to Google's
+    /// own hosts only (goo.gl, google.com and its country domains, their
+    /// subdomains). Whatever the pasted text says, the server never fetches
+    /// anything else, so a link cannot steer it at an internal address.
+    /// </summary>
+    public static bool IsGoogleHop(Uri uri)
+    {
+        if (uri.Scheme != Uri.UriSchemeHttps || !uri.IsDefaultPort) return false;
+        var host = uri.Host.ToLowerInvariant();
+        if (host is "goo.gl" or "maps.app.goo.gl") return true;
+        // google.com, google.ae, google.com.eg, google.co.uk and their subdomains (www., maps.,
+        // consent.); never google.<anything>.<tld>, which anyone could register under a tld
+        var labels = host.Split('.');
+        var at = Array.LastIndexOf(labels, "google");
+        if (at < 0) return false;
+        static bool Country(string l) => l.Length == 2 && l.All(char.IsAsciiLetterLower);
+        return labels[(at + 1)..] switch
+        {
+            ["com"] => true,
+            [var cc] => Country(cc),
+            ["com" or "co", var cc] => Country(cc),
+            _ => false,
+        };
+    }
+
+    /// <summary>
     /// The coordinates of what was pasted, following a short link to the map it
-    /// opens; null when there are none to read.
+    /// opens; null when there are none to read. Redirects are followed by hand,
+    /// at most <see cref="MaxHops"/>, each to a Google host
+    /// (<see cref="IsGoogleHop"/>); the client must not follow them itself.
     /// </summary>
     public static async Task<GeoPoint?> ResolveAsync(string? text, HttpClient http, CancellationToken ct)
     {
         if (Parse(text) is { } direct) return direct;
         if (!IsShortLink(text)) return null;
 
+        var next = new Uri(text!.Trim());
         try
         {
-            using var response = await http.GetAsync(text!.Trim(), HttpCompletionOption.ResponseHeadersRead, ct);
-            var final = response.RequestMessage?.RequestUri?.ToString();
-            return Parse(final);
+            for (var hop = 0; hop < MaxHops; hop++)
+            {
+                using var response = await http.GetAsync(next, HttpCompletionOption.ResponseHeadersRead, ct);
+                var location = response.Headers.Location;
+                if ((int)response.StatusCode is < 300 or >= 400 || location is null)
+                    return Parse(next.ToString());
+
+                next = location.IsAbsoluteUri ? location : new Uri(next, location);
+                // The map's own address usually names the point: read it rather than fetch it
+                if (Parse(next.ToString()) is { } point) return point;
+                if (!IsGoogleHop(next)) return null;
+            }
+            return null;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or UriFormatException)
         {
             return null;
         }

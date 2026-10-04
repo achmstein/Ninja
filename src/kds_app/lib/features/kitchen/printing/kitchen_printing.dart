@@ -6,11 +6,12 @@ import 'package:ninja_printing/ninja_printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/network/api_client.dart';
-import '../../../core/providers/branch_provider.dart';
-import '../../../core/providers/locale_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/network/api_client.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../services/kitchen_service.dart';
 
 const _enabledKey = 'kds.kitchen.print';
 const _deviceKey = 'kds.device.id';

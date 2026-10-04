@@ -114,6 +114,15 @@ class AppConfig {
 
   /// The deliveries board: the hub's DeliveryChanged is the primary path
   static const Duration deliveriesPoll = Duration(seconds: 20);
+
+  /// How often the deliveries board redraws its "since" times
+  static const Duration deliveriesClockTick = Duration(seconds: 30);
+
+  /// The phone-order form waits this long after typing stops before asking the server
+  static const Duration deliveryLookupDebounce = Duration(milliseconds: 400);
+
+  /// Shorter than this a distance reads in metres, longer in kilometres
+  static const int metresUntilKm = 950;
   static const Duration shiftChipPoll = Duration(seconds: 60);
   static const Duration shiftScreenPoll = Duration(seconds: 20);
   static const Duration ticketByOrderPoll = Duration(milliseconds: 600);

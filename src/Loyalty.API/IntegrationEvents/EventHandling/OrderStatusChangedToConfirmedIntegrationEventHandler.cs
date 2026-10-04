@@ -81,8 +81,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         // Calculate points to award with tier multiplier
         var tierMultiplier = GetTierMultiplier(account.CurrentTier);
-        // Points are for what was eaten, not for the ride over
-        var pointsToAward = PointsToAward(@event.OrderTotal - (@event.DeliveryFee ?? 0), account.CurrentTier);
+        var pointsToAward = PointsToAward(EarningTotal(@event), account.CurrentTier);
 
         if (pointsToAward > 0)
         {
@@ -99,6 +98,10 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         await context.SaveChangesAsync();
     }
+
+    /// <summary>What points are earned on: the order, less its delivery fee. Points are for what was eaten, not for the ride over.</summary>
+    public static decimal EarningTotal(OrderStatusChangedToConfirmedIntegrationEvent @event)
+        => Math.Max(0, @event.OrderTotal - (@event.DeliveryFee ?? 0));
 
     /// <summary>
     /// What an order earns: the base rate on its total, scaled by the tier.

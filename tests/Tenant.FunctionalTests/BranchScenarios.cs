@@ -17,6 +17,9 @@ public record BranchView(
     bool IsReservationsEnabled,
     bool RequireSignInForTableOrders);
 
+/// <summary>A branch as far as its delivery goes.</summary>
+public record DeliveryBranchView(int Id, bool IsDeliveryEnabled, decimal? DeliveryRadiusKm);
+
 /// <summary>
 /// The business's branches: the list every app reads, the owner's to add and
 /// edit, and the pause switches the till and the admin flip during a day.
@@ -95,6 +98,55 @@ public sealed class BranchScenarios
         // The owner works in all of them, so a branch that is not there reads as not there
         var (missing, _) = await Owner.RefusedAsync(HttpMethod.Patch, $"{Branches}/999999/settings", new { isOrderingEnabled = false });
         Assert.AreEqual(HttpStatusCode.NotFound, missing);
+    }
+
+    [TestMethod]
+    public async Task A_delivering_branch_keeps_its_place_and_area_and_a_bad_area_is_refused()
+    {
+        var created = await Owner.PostAsync<BranchView>(Branches, new
+        {
+            name = new { en = "Delivers", ar = "بيوصل" },
+            location = "30.0444, 31.2357",
+            deliveryRadiusKm = 5,
+            deliveryFee = 20,
+            isOrderingEnabled = true,
+        }, HttpStatusCode.Created);
+
+        // Switching delivery on without an area is refused, and with one it holds
+        var on = await Owner.SendAsync<DeliveryBranchView>(HttpMethod.Patch, $"{Branches}/{created.Id}/settings", new { isDeliveryEnabled = true }, HttpStatusCode.OK);
+        Assert.IsTrue(on.IsDeliveryEnabled);
+
+        // Taking the area away from a delivering branch is refused, as switching it on without one is
+        var (cleared, detail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Branches}/{created.Id}", new
+        {
+            name = new { en = "Delivers", ar = "بيوصل" },
+            isActive = true,
+            displayOrder = 0,
+            deliveryRadiusKm = 0,
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, cleared);
+        Assert.Contains("Turn delivery off first", detail);
+
+        // Off first, then the area may go
+        await Owner.SendAsync<DeliveryBranchView>(HttpMethod.Patch, $"{Branches}/{created.Id}/settings", new { isDeliveryEnabled = false }, HttpStatusCode.OK);
+        var plain = await Owner.PutAsync<DeliveryBranchView>($"{Branches}/{created.Id}", new
+        {
+            name = new { en = "Delivers", ar = "بيوصل" },
+            isActive = true,
+            displayOrder = 0,
+            deliveryRadiusKm = 0,
+        });
+        Assert.IsFalse(plain.IsDeliveryEnabled);
+
+        // An area or a fee that is not one never gets in
+        var (negative, _) = await Owner.RefusedAsync(HttpMethod.Put, $"{Branches}/{created.Id}", new
+        {
+            name = new { en = "Delivers", ar = "بيوصل" },
+            isActive = true,
+            displayOrder = 0,
+            deliveryFee = -1,
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, negative);
     }
 
     [TestMethod]

@@ -5,9 +5,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/brand/brand_mark.dart';
 import '../../core/config/app_config.dart';
-import '../../core/config/tenant_connection.dart';
-import '../../core/providers/locale_provider.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The wall before the app: until this phone knows which business it serves,
@@ -137,6 +137,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
         ConnectFailure.unreachable => l10n.connectUnreachable,
         ConnectFailure.notABusiness => l10n.connectNotABusiness,
         ConnectFailure.paused => l10n.connectPaused,
+        ConnectFailure.insecure => l10n.connectInsecure,
       };
 
   @override

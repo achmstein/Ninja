@@ -2,11 +2,11 @@ import '../../features/kitchen/models/kitchen_order.dart';
 import '../../features/kitchen/models/kitchen_station.dart';
 import '../../features/kitchen/services/kitchen_service.dart';
 import '../auth/auth_service.dart';
-import '../brand/brand_service.dart';
-import '../brand/tenant_brand.dart';
-import '../models/branch.dart';
-import '../models/localized_text.dart';
-import '../services/branch_service.dart';
+import 'package:ninja_app_core/brand/brand_service.dart';
+import 'package:ninja_app_core/brand/tenant_brand.dart';
+import 'package:ninja_app_core/models/branch.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/services/branch_service.dart';
 
 /// Design-time mode: `flutter run --dart-define=KDS_DEMO=true`.
 ///
@@ -37,7 +37,7 @@ class _DemoAuthService extends AuthService {
   AuthState build() => const AuthState(
         isInitializing: false,
         isAuthenticated: true,
-        isPosUser: true,
+        mayUseApp: true,
         isOwner: false,
         userId: 'demo',
         name: 'Demo Kitchen',

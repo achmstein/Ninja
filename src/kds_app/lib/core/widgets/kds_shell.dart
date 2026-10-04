@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
 import '../../features/kitchen/widgets/kitchen_printer_banner.dart';
-import '../providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'kds_header.dart';
 import 'no_branch_screen.dart';
 

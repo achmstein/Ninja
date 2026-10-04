@@ -19,8 +19,14 @@ public record TenantFeaturesChangedIntegrationEvent(
     bool Payroll,
     bool Kds,
     bool OnlinePayments = false,
-    bool Delivery = false) : IntegrationEvent
+    bool Delivery = false,
+    // When the switches were saved (ticks, UTC): a consumer keeps the newest it has seen
+    long Version = 0) : IntegrationEvent
 {
-    public static TenantFeaturesChangedIntegrationEvent From(TenantFeatures f)
-        => new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments, f.Delivery);
+    public static TenantFeaturesChangedIntegrationEvent From(Model.Tenant tenant)
+    {
+        var f = tenant.Features;
+        return new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments, f.Delivery,
+            tenant.UpdatedAt.UtcTicks);
+    }
 }

@@ -152,7 +152,7 @@ export function OrdersBoard() {
                 </ToggleGroupItem>
                 {counts.delivery > 0 && (
                   <ToggleGroupItem value='delivery' className='gap-1.5 px-3'>
-                    {t('branchSectionDelivery')}
+                    {t('boardLaneDelivery')}
                     <span className='text-muted-foreground tabular-nums'>
                       {counts.delivery}
                     </span>

@@ -27,6 +27,7 @@ public sealed class ProvisionerTests
     private Provisioner _provisioner = null!;
     private DryRunBrokerAdmin _broker = null!;
     private DryRunDatabaseAdmin _databases = null!;
+    private DryRunKeycloakAdmin _keycloak = null!;
     private Tenant _tenant = null!;
 
     private sealed class FailingStack : ITenantStack
@@ -41,7 +42,9 @@ public sealed class ProvisionerTests
         public JsonObject? SeededBrand { get; private set; }
         public Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct) { SeededBrand = brand; return Task.CompletedTask; }
         public Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct) => Task.FromResult<JsonObject?>(null);
-        public Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct) => Task.CompletedTask;
+        public bool RefuseEntitlements { get; set; }
+        public Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct) =>
+            RefuseEntitlements ? throw new HttpRequestException("the stack answered 503") : Task.CompletedTask;
         public List<string> ImportedMenus { get; } = [];
         public bool RefuseMenu { get; set; }
         public Task<string> ImportMenuAsync(Tenant tenant, string menu, CancellationToken ct)
@@ -94,7 +97,7 @@ public sealed class ProvisionerTests
         _provisioner = new Provisioner(_context, options, _box,
             _databases,
             _broker,
-            new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
+            _keycloak = new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             _stack, _audit, backups, NullLogger<Provisioner>.Instance);
 
         _tenant = new Tenant
@@ -307,7 +310,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual("v2", _tenant.ImageTag);
         AssertShape(ComposeOnDisk(), "loyalty", "accounts");
         // The new image hears what the plan allows, so a module it knows and the old one did not lands right
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "entitlements:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "entitlements:Done" }, Steps().ToList());
     }
 
     /// <summary>Up to Pro: every service is stamped and no queue is touched; down to Free: five go, with their queues.</summary>
@@ -393,7 +396,7 @@ public sealed class ProvisionerTests
     {
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
 
-        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "entitlements:Done", "broker-lockdown:Done" }, Steps().ToList());
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "carry:Done", "realm:Done", "stack:Done", "health:Done", "broker-lockdown:Done", "entitlements:Done" }, Steps().ToList());
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
         Assert.AreEqual("v2", _tenant.ImageTag);
         Assert.AreEqual("v1", _tenant.PreviousImageTag);
@@ -408,6 +411,33 @@ public sealed class ProvisionerTests
         var reused = _context.Steps.OrderByDescending(s => s.Id).First(s => s.Name == "backup");
         StringAssert.StartsWith(reused.Output, "reusing");
         Assert.AreEqual("v2", _tenant.PreviousImageTag);
+    }
+
+    [TestMethod]
+    public async Task An_upgrade_brings_a_realm_made_before_up_to_date()
+    {
+        // A realm made from an older template: no Rider role, no rider app
+        await _keycloak.CreateRealmAsync("{\"realm\":\"" + TenantNaming.Realm(_tenant.Slug) + "\"}", CancellationToken.None);
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        var realm = _context.Steps.Single(s => s.Name == "realm");
+        StringAssert.Contains(realm.Output, "staff roles and clients", "the roles and clients the template gained since are added on every upgrade");
+    }
+
+    [TestMethod]
+    public async Task An_upgrade_stands_when_the_stack_does_not_hear_its_entitlements()
+    {
+        _stack.RefuseEntitlements = true;
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        // Migrations are forward-only: the new image stays, the push is tried again on its own
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        Assert.AreEqual("v2", _tenant.ImageTag);
+        Assert.IsFalse(_audit.Entries.Any(e => e.Action.StartsWith("tenant.rollback")), "nothing rolled back");
+        Assert.IsTrue(_audit.Entries.Any(e => e.Action == "tenant.upgrade.done"));
+        Assert.IsTrue(_audit.Entries.Any(e => e.Action == "tenant.entitlements.deferred"));
     }
 
     /// <summary>

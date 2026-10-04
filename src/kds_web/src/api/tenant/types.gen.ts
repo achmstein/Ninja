@@ -49,6 +49,19 @@ export type CreateBranchRequest = {
     deliveryMinimumOrder?: number | string;
 };
 
+export type FeatureSwitches = {
+    reservations?: null | boolean;
+    timeBilling?: null | boolean;
+    loyalty?: null | boolean;
+    tabs?: null | boolean;
+    inventory?: null | boolean;
+    finance?: null | boolean;
+    payroll?: null | boolean;
+    kds?: null | boolean;
+    onlinePayments?: null | boolean;
+    delivery?: null | boolean;
+};
+
 export type IFormFile = Blob | File;
 
 export type LocalizedText = {
@@ -201,7 +214,7 @@ export type UpdateTenantRequest = {
     name: LocalizedText;
     primaryColor: null | string;
     customerUrl: null | string;
-    features: TenantFeatures;
+    features: null | FeatureSwitches;
     theme?: null | TenantThemeDto;
     locale?: null | TenantLocaleDto;
     businessType?: null | string;

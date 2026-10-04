@@ -102,7 +102,7 @@ public class DeliveryTest
         order.MarkDelivered();
         Assert.AreEqual(DeliveryStage.Delivered, order.Delivery.Stage);
 
-        order.MarkDeliveryCashHandedIn();
+        order.MarkDeliveryCashHandedIn(125);
         Assert.IsNotNull(order.Delivery.CashHandedInAt);
 
         var events = order.DomainEvents!.OfType<OrderDeliveryChangedDomainEvent>().ToList();
@@ -118,7 +118,7 @@ public class DeliveryTest
         Assert.ThrowsExactly<OrderingDomainException>(() => order.MarkOutForDelivery());
         order.AssignRider("rider-1", "Ali");
         Assert.ThrowsExactly<OrderingDomainException>(() => order.MarkDelivered());
-        Assert.ThrowsExactly<OrderingDomainException>(() => order.MarkDeliveryCashHandedIn());
+        Assert.ThrowsExactly<OrderingDomainException>(() => order.MarkDeliveryCashHandedIn(125));
     }
 
     [TestMethod]

@@ -63,4 +63,43 @@ public sealed class KeycloakAdmin(IHttpClientFactory httpClientFactory, IConfigu
     /// <summary>Revokes the user's sessions, so existing tokens stop working.</summary>
     public Task<HttpResponseMessage> LogoutUserAsync(HttpClient client, string userId) =>
         client.PostAsync($"{AdminUrl}/users/{userId}/logout", null);
+
+    /// <summary>A realm role's representation (what a role mapping is made of), or null when the realm has no such role.</summary>
+    public async Task<JsonObject?> GetRealmRoleAsync(HttpClient client, string name)
+    {
+        var response = await client.GetAsync($"{AdminUrl}/roles/{Uri.EscapeDataString(name)}");
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<JsonObject>();
+    }
+
+    /// <summary>The names of the realm roles the user holds directly.</summary>
+    public async Task<IReadOnlyList<string>> GetUserRealmRolesAsync(HttpClient client, string userId)
+    {
+        var response = await client.GetAsync($"{AdminUrl}/users/{userId}/role-mappings/realm");
+        response.EnsureSuccessStatusCode();
+        var roles = await response.Content.ReadFromJsonAsync<JsonArray>() ?? [];
+        return roles.Select(r => r?["name"]?.GetValue<string>()).OfType<string>().ToList();
+    }
+
+    public Task<HttpResponseMessage> AssignRealmRolesAsync(HttpClient client, string userId, IEnumerable<JsonObject> roles) =>
+        client.PostAsJsonAsync($"{AdminUrl}/users/{userId}/role-mappings/realm", new JsonArray(roles.Select(r => (JsonNode)r.DeepClone()).ToArray()));
+
+    public Task<HttpResponseMessage> CreateUserAsync(HttpClient client, object user) =>
+        client.PostAsJsonAsync($"{AdminUrl}/users", user);
+
+    public Task<HttpResponseMessage> DeleteUserAsync(HttpClient client, string userId) =>
+        client.DeleteAsync($"{AdminUrl}/users/{userId}");
+
+    /// <summary>The id of the user with exactly this email, or null.</summary>
+    public async Task<string?> FindUserIdByEmailAsync(HttpClient client, string email)
+    {
+        var response = await client.GetAsync($"{AdminUrl}/users?email={Uri.EscapeDataString(email)}&exact=true");
+        if (!response.IsSuccessStatusCode) return null;
+        var users = await response.Content.ReadFromJsonAsync<JsonArray>() ?? [];
+        return users.FirstOrDefault()?["id"]?.GetValue<string>();
+    }
 }

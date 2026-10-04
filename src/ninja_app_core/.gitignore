@@ -1,0 +1,5 @@
+.dart_tool/
+build/
+# A package leaves resolving to the apps that use it
+pubspec.lock
+.flutter-plugins-dependencies

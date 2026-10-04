@@ -28,6 +28,9 @@ dependencies:
   # HTTP Client
   dio: ^5.4.0
   # ESC/POS printing, shared with the till: a tablet can print the kitchen's tickets
+  # What the platform's Android apps share (src/ninja_app_core)
+  ninja_app_core:
+    path: ../ninja_app_core
   ninja_printing:
     path: ../ninja_printing
   # Where an update is downloaded before it is installed

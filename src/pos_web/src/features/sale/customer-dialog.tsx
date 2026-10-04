@@ -19,6 +19,7 @@ import { CustomerCard, type CardCustomer } from '@/features/customer/customer-ca
 import { NewCustomerDialog } from '@/features/customer/new-customer-dialog'
 import { customerName, type IdentityCustomer } from '@/features/customer/counter-customers'
 import type { SaleCustomer } from './cart'
+import { useDebounced } from '@/lib/use-debounced'
 
 // Keycloak user as the identity BFF route returns it. No generated SDK for
 // this endpoint (it proxies Keycloak, not one of our OpenAPI services), so
@@ -44,14 +45,6 @@ function displayName(user: IdentityUser): string {
 const SEARCH_DEBOUNCE_MS = 300
 const MIN_SEARCH_LENGTH = 2
 
-function useDebounced<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const handle = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(handle)
-  }, [value, delayMs])
-  return debounced
-}
 
 type CustomerDialogProps = {
   open: boolean

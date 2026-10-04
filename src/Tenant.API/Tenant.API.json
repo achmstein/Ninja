@@ -916,6 +916,71 @@
           }
         }
       },
+      "FeatureSwitches": {
+        "type": "object",
+        "properties": {
+          "reservations": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "timeBilling": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "tabs": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "inventory": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "finance": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "payroll": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "kds": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "onlinePayments": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "delivery": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "IFormFile": {
         "type": "string",
         "format": "binary"
@@ -1679,7 +1744,14 @@
             ]
           },
           "features": {
-            "$ref": "#/components/schemas/TenantFeatures"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FeatureSwitches"
+              }
+            ]
           },
           "theme": {
             "oneOf": [

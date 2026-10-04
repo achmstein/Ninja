@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/api_client.dart';
+import 'package:ninja_app_core/network/api_client.dart';
+import '../../../core/auth/auth_service.dart';
+import '../../../core/config/app_config.dart';
 import '../models/kitchen_order.dart';
 import '../models/kitchen_station.dart';
+
+/// The kitchen's stations and print queue: branch-scoped, like the board
+final kitchenApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.kitchenApiUrl, branchIdGetter: branchIdGetter(ref));
+});
 
 /// The calls the kitchen makes: its stations, the board, and Ready / Bring back.
 abstract class KitchenRepository {

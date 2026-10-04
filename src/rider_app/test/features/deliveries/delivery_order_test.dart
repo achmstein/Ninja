@@ -38,9 +38,30 @@ void main() {
       expect(order.apartment, isNull);
     });
 
-    test('says the address on one line, street first, leaving out what is missing', () {
+    test('says the address on one line, street first, leaving out what is missing, in the language\'s list comma', () {
       final order = DeliveryOrder.fromJson(_json());
-      expect(order.addressLine(building: 'Bldg', floor: 'Floor', apartment: 'Apt'), 'Tahrir St · Bldg 12، Floor 3');
+      expect(order.addressLine(building: 'Bldg', floor: 'Floor', apartment: 'Apt', separator: ', '), 'Tahrir St · Bldg 12, Floor 3');
+      expect(order.addressLine(building: 'عمارة', floor: 'دور', apartment: 'شقة', separator: '، '), 'Tahrir St · عمارة 12، دور 3');
+    });
+
+    test('reads the stages a delivery can end in, and keeps a bag to bring back on the rider\'s list', () {
+      expect(DeliveryStage.parse('Failed'), DeliveryStage.failed);
+      expect(DeliveryStage.parse('Returned'), DeliveryStage.returned);
+      final day = RiderDay.of([
+        DeliveryOrder.fromJson(_json(stage: 'Failed')),
+        DeliveryOrder.fromJson(_json(stage: 'Returned')),
+        DeliveryOrder.fromJson(_json(stage: 'OnTheWay')),
+      ]);
+      expect(day.toGo.map((o) => o.stage), containsAll([DeliveryStage.failed, DeliveryStage.onTheWay]));
+      expect(day.delivered.single.stage, DeliveryStage.returned);
+      expect(day.anyOut, isTrue);
+      expect(day.cashInHand, 0, reason: 'a returned bag carries no cash');
+    });
+
+    test('dials only what a dialer reads', () {
+      final json = _json();
+      (json['delivery'] as Map)['phone'] = '010 0123-4567';
+      expect(DeliveryOrder.fromJson(json).phoneUri.toString(), 'tel:01001234567');
     });
 
     test('leads to the door on Google Maps and calls the phone', () {

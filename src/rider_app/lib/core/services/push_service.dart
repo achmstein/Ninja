@@ -3,9 +3,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../network/api_client.dart';
-import '../providers/branch_provider.dart';
-import '../providers/locale_provider.dart';
+import 'package:ninja_app_core/network/api_client.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
+import '../auth/auth_service.dart';
+import '../config/app_config.dart';
+
+/// Notifications: the rider's push registration; the Rider policy wants the branch too
+final notificationsApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.notificationsApiUrl, branchIdGetter: branchIdGetter(ref));
+});
 
 /// A push that arrives while the app is closed: Android shows it from its
 /// notification part on the loud channel MainActivity made, and the list
@@ -40,7 +48,7 @@ class PushEvent {
 class PushService {
   final Ref _ref;
   final _events = StreamController<PushEvent>.broadcast();
-  final List<StreamSubscription> _subscriptions = [];
+  final List<StreamSubscription<Object?>> _subscriptions = [];
   bool _listening = false;
 
   PushService(this._ref);

@@ -115,8 +115,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
-                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
+                Total = (double)OrderTotals.Of(o),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -135,6 +134,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 SessionId = o.SessionId,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
+            .WithOrderTotals()
             .ToListAsync();
 
         return new PaginatedResult<OrderSummary>
@@ -228,8 +228,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
-                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
+                Total = (double)OrderTotals.Of(o),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -273,6 +272,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                     SpecialInstructions = oi.SpecialInstructions
                 }).ToList()
             })
+            .WithOrderTotals()
             .ToListAsync();
     }
 
@@ -327,8 +327,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
-                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
+                Total = (double)OrderTotals.Of(o),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -354,6 +353,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                     SpecialInstructions = oi.SpecialInstructions
                 }).ToList()
             })
+            .WithOrderTotals()
             .ToListAsync();
     }
 
@@ -446,8 +446,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
-                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
+                Total = (double)OrderTotals.Of(o),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -473,6 +472,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 GuestPhone = o.GuestPhone,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
+            .WithOrderTotals()
             .ToListAsync();
 
         return new PaginatedResult<OrderSummary>
@@ -517,7 +517,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 o.OrderDate,
                 o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Cancelled,
                 // The total the order list shows for the same order
-                Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)))
+                (double)OrderTotals.Of(o)))
+            .WithOrderTotals()
             .ToListAsync();
 
     public async Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes)
@@ -537,8 +538,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 o.OrderDate,
                 // Net of line discounts and the loyalty discount — revenue is
                 // what customers actually paid, not the sticker sum
-                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
+                Total = (double)OrderTotals.Of(o),
             })
+            .WithOrderTotals()
             .ToListAsync();
 
         // JS getTimezoneOffset is UTC − local, so local = UTC − offset

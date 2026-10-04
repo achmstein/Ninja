@@ -195,7 +195,12 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              delivery.line(building: l10n.deliveryBuilding, floor: l10n.deliveryFloor, apartment: l10n.deliveryApartment),
+                              delivery.line(
+                                building: l10n.deliveryBuilding,
+                                floor: l10n.deliveryFloor,
+                                apartment: l10n.deliveryApartment,
+                                separator: l10n.listSeparator,
+                              ),
                               style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),

@@ -7,6 +7,7 @@ using Ninja.Tenant.API.IntegrationEvents;
 using Ninja.Tenant.API.Model;
 using Ninja.Tenant.API.Services;
 using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
 
 namespace Ninja.Tenant.API.Apis;
 
@@ -95,7 +96,7 @@ public static partial class TenantApi
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UpdateTenant(
         TenantContext context,
         IConfiguration configuration,
-        IEventBus eventBus,
+        TenantEvents events,
         UpdateTenantRequest request)
     {
         if (request.Name is null || request.Name.IsEmpty)
@@ -140,11 +141,12 @@ public static partial class TenantApi
         // An owner may switch an entitled module off, never an unentitled one on
         tenant.ApplyFeatures(request.Features);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
-        await context.SaveChangesAsync();
-        // The services that own a module keep their own copy of the switches
-        await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
-        // The business's own settings travel on their own; Ordering keeps its copy
-        if (guestsChanged) await eventBus.PublishAsync(TenantSettingsChangedIntegrationEvent.From(tenant));
+        // The services that own a module keep their own copy of the switches, and the business's
+        // own settings travel on their own (Ordering keeps its copy): saved with the change, then sent
+        IntegrationEvent[] changed = guestsChanged
+            ? [TenantFeaturesChangedIntegrationEvent.From(tenant), TenantSettingsChangedIntegrationEvent.From(tenant)]
+            : [TenantFeaturesChangedIntegrationEvent.From(tenant)];
+        await events.SaveAndPublishAsync(changed);
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
@@ -176,13 +178,12 @@ public static partial class TenantApi
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
-    public static async Task<Ok<TenantResponse>> SetEntitlements(TenantContext context, IConfiguration configuration, IEventBus eventBus, TenantFeatures request)
+    public static async Task<Ok<TenantResponse>> SetEntitlements(TenantContext context, IConfiguration configuration, TenantEvents events, TenantFeatures request)
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Model.Tenant.SingletonId);
         tenant.ApplyEntitlements(request);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
-        await context.SaveChangesAsync();
-        await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
+        await events.SaveAndPublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant));
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
@@ -655,7 +656,8 @@ public record TenantResponse(
 
 /// <param name="BusinessType">What kind of place it is; the control plane says so, null leaves it.</param>
 /// <param name="GuestOrdersAnywhere">Whether a guest may order without being at a table; null leaves it.</param>
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null);
+/// <param name="Features">The switches the owner sets; one left out stays as it is.</param>
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, FeatureSwitches? Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

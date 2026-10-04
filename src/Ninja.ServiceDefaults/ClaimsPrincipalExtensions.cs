@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace Ninja.ServiceDefaults;
 
@@ -27,28 +27,28 @@ public static class ClaimsPrincipalExtensions
         principal.GetRoles().Contains(role, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>The roles the "Pos" policy accepts — whoever runs the till.</summary>
-    public static readonly string[] PosRoles = ["Admin", "Owner", "Cashier"];
+    public static readonly string[] PosRoles = [RoleNames.Admin, RoleNames.Owner, RoleNames.Cashier];
 
     /// <summary>
     /// The roles the "Kitchen" policy accepts: the till's, and a kitchen
     /// display's own account, which sees the board and the kitchen's
     /// printers and nothing with money on it.
     /// </summary>
-    public static readonly string[] KitchenRoles = [.. PosRoles, "Kitchen"];
+    public static readonly string[] KitchenRoles = [.. PosRoles, RoleNames.Kitchen];
 
     /// <summary>
     /// The roles the "Rider" policy accepts: a rider on their own account, and
     /// the admins who may stand in for one. A cashier assigns riders but is
     /// not one.
     /// </summary>
-    public static readonly string[] RiderRoles = ["Admin", "Owner", "Rider"];
+    public static readonly string[] RiderRoles = [RoleNames.Admin, RoleNames.Owner, RoleNames.Rider];
 
     /// <summary>
     /// The roles the "DeliveryProgress" policy accepts: a rider saying their
     /// delivery left or arrived, and the till saying it for them when their
     /// phone cannot (a flat battery, no app) — the cash still has to come in.
     /// </summary>
-    public static readonly string[] DeliveryProgressRoles = [.. RiderRoles, "Cashier"];
+    public static readonly string[] DeliveryProgressRoles = [.. RiderRoles, RoleNames.Cashier];
 
     // Reads the "role" claims directly: ClaimsPrincipal's own IsInRole would
     // win over the extension and look at the standard role claim type

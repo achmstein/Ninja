@@ -66,3 +66,41 @@ class SaleDelivery {
         longitude: (json['longitude'] as num?)?.toDouble(),
       );
 }
+
+/// Whether a sale holding a delivery can be charged as one. A delivery on the
+/// sale is never quietly dropped: while the branch's terms are unknown, could
+/// not be read, or no longer offer delivery, Charge waits and says why.
+enum DeliveryCharge {
+  /// No delivery on the sale (or a round on an open bill): an ordinary charge
+  none,
+
+  /// The branch delivers: it goes out with a rider
+  ready,
+
+  /// The branch's terms are still being read
+  checking,
+
+  /// The terms could not be read: retry, or remove the delivery
+  failed,
+
+  /// The business or the branch does not deliver now: remove the delivery to charge
+  notOffered,
+}
+
+DeliveryCharge deliveryCharge({
+  required bool hasDelivery,
+  required bool addingToTicket,
+  required bool featureOn,
+  required bool termsKnown,
+  required bool termsFailed,
+  required bool delivers,
+}) {
+  if (!hasDelivery || addingToTicket) return DeliveryCharge.none;
+  if (!featureOn) return DeliveryCharge.notOffered;
+  if (termsKnown) return delivers ? DeliveryCharge.ready : DeliveryCharge.notOffered;
+  return termsFailed ? DeliveryCharge.failed : DeliveryCharge.checking;
+}
+
+/// Charge waits for these
+bool deliveryBlocksCharge(DeliveryCharge charge) =>
+    charge == DeliveryCharge.checking || charge == DeliveryCharge.failed || charge == DeliveryCharge.notOffered;

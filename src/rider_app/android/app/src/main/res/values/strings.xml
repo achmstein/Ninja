@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The notification channel deliveries ring on (RiderApplication) -->
+    <string name="push_channel_name">Deliveries</string>
+    <string name="push_channel_description">A delivery given to you, or taken back</string>
+</resources>

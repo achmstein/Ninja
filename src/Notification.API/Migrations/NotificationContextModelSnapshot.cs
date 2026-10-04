@@ -58,6 +58,25 @@ namespace Ninja.Notification.API.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("Ninja.Notification.API.Model.DeliveryNotice", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("LastEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("LastVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("OrderId");
+
+                    b.ToTable("DeliveryNotices", (string)null);
+                });
+
             modelBuilder.Entity("Ninja.Notification.API.Model.NotificationPreferences", b =>
                 {
                     b.Property<int>("Id")
@@ -131,6 +150,11 @@ namespace Ninja.Notification.API.Migrations
                     b.HasIndex("Type");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("FcmToken", "Type")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Subscriptions_FcmToken_Type_Rider")
+                        .HasFilter("\"Type\" = 7");
 
                     b.HasIndex("UserId", "Type")
                         .IsUnique();

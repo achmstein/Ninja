@@ -162,6 +162,30 @@ class PlatformOrder {
   }
 }
 
+/// Where a delivery has got to, as the server says it
+enum DeliveryStage {
+  waiting,
+  assigned,
+  onTheWay,
+  delivered,
+
+  /// The rider could not hand it over: the bag is on its way back to the branch
+  failed,
+
+  /// The bag is back at the branch
+  returned;
+
+  /// The server's spelling of a stage; anything unknown is one still waiting
+  static DeliveryStage parse(Object? value) => switch (value) {
+        'Assigned' => assigned,
+        'OnTheWay' => onTheWay,
+        'Delivered' => delivered,
+        'Failed' => failed,
+        'Returned' => returned,
+        _ => waiting,
+      };
+}
+
 /// The business's own delivery of an order, as the counter reads it: where
 /// it goes, the number to call at the door, the fee, and who has it
 class OrderDelivery {
@@ -180,15 +204,20 @@ class OrderDelivery {
   /// Straight-line from the branch; null without a pin
   final int? distanceMeters;
 
-  /// 'Waiting', 'Assigned', 'OnTheWay' or 'Delivered'
-  final String stage;
+  final DeliveryStage stage;
   final String? riderUserId;
   final String? riderName;
   final DateTime? outAt;
   final DateTime? deliveredAt;
 
+  /// Why the rider could not hand it over (a code: NoAnswer, Refused, WrongAddress, Other)
+  final String? failureReason;
+
   /// The till took the rider's cash, which settled the bill
   final DateTime? cashHandedInAt;
+
+  /// What the till counted in from the rider for it
+  final double? cashCollected;
 
   const OrderDelivery({
     this.latitude,
@@ -201,39 +230,53 @@ class OrderDelivery {
     required this.phone,
     this.fee = 0,
     this.distanceMeters,
-    this.stage = 'Waiting',
+    this.stage = DeliveryStage.waiting,
     this.riderUserId,
     this.riderName,
     this.outAt,
     this.deliveredAt,
+    this.failureReason,
     this.cashHandedInAt,
+    this.cashCollected,
   });
 
   static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
   static double? _maybe(Object? v) => v == null ? null : _num(v);
-  static DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toLocal() : null;
+
+  /// Kept in UTC, the server's own; shown in the till's local time where it is drawn
+  static DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toUtc() : null;
+
+  static String? _text(Object? value) {
+    final text = value is String ? value.trim() : null;
+    return text == null || text.isEmpty ? null : text;
+  }
 
   static OrderDelivery? parse(Object? json) {
     if (json is! Map<String, dynamic>) return null;
     return OrderDelivery(
       latitude: _maybe(json['latitude']),
       longitude: _maybe(json['longitude']),
-      address: (json['address'] as String?) ?? '',
-      building: json['building'] as String?,
-      floor: json['floor'] as String?,
-      apartment: json['apartment'] as String?,
-      directions: json['directions'] as String?,
-      phone: (json['phone'] as String?) ?? '',
+      address: _text(json['address']) ?? '',
+      building: _text(json['building']),
+      floor: _text(json['floor']),
+      apartment: _text(json['apartment']),
+      directions: _text(json['directions']),
+      phone: _text(json['phone']) ?? '',
       fee: _num(json['fee']),
       distanceMeters: _maybe(json['distanceMeters'])?.round(),
-      stage: (json['stage'] as String?) ?? 'Waiting',
-      riderUserId: json['riderUserId'] as String?,
-      riderName: json['riderName'] as String?,
+      stage: DeliveryStage.parse(json['stage']),
+      riderUserId: _text(json['riderUserId']),
+      riderName: _text(json['riderName']),
       outAt: _time(json['outAt']),
       deliveredAt: _time(json['deliveredAt']),
+      failureReason: _text(json['failureReason']),
       cashHandedInAt: _time(json['cashHandedInAt']),
+      cashCollected: _maybe(json['cashCollected']),
     );
   }
+
+  /// The customer's number to dial: only what a dialler reads (digits, a leading +)
+  Uri get phoneUri => Uri(scheme: 'tel', path: phone.replaceAll(RegExp(r'[^0-9+]'), ''));
 
   bool get hasPin => latitude != null && longitude != null;
 
@@ -242,14 +285,15 @@ class OrderDelivery {
   Uri get directionsUri => Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=${hasPin ? '$latitude,$longitude' : Uri.encodeQueryComponent(address)}');
 
-  /// The address on one line, the street first
-  String line({required String building, required String floor, required String apartment}) {
+  /// The address on one line, the street first. [separator] is the
+  /// language's list comma (", " or "، "), from the app's strings.
+  String line({required String building, required String floor, required String apartment, required String separator}) {
     final parts = [
       if ((this.building ?? '').isNotEmpty) '$building ${this.building}',
       if ((this.floor ?? '').isNotEmpty) '$floor ${this.floor}',
       if ((this.apartment ?? '').isNotEmpty) '$apartment ${this.apartment}',
     ];
-    return parts.isEmpty ? address : '$address · ${parts.join('، ')}';
+    return parts.isEmpty ? address : '$address · ${parts.join(separator)}';
   }
 }
 

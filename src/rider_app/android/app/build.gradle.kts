@@ -43,6 +43,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // https only (release, profile); the debug build type allows the dev machine
+        manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security"
+        // The browser sign-in (flutter_appauth) comes back on com.ninja.rider://callback (AppConfig.redirectUri)
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.ninja.rider"
     }
 
     signingConfigs {
@@ -57,13 +61,29 @@ android {
     }
 
     buildTypes {
+        // Plain http only in a debug build, and only to the dev machine; anything else is https
+        getByName("debug") {
+            manifestPlaceholders["networkSecurityConfig"] = "@xml/debug_network_security"
+        }
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            // The first install fixes the key every later update must carry
+            // (the app updates itself, and Android refuses another key), so a
+            // release is never signed with the debug key by accident. A local
+            // try-out may ask for it: -PallowDebugSigning=true
+            signingConfig = when {
+                keystorePropertiesFile.exists() -> signingConfigs.getByName("release")
+                project.hasProperty("allowDebugSigning") -> signingConfigs.getByName("debug")
+                else -> null
             }
         }
+    }
+}
+
+// A release task without the release key fails here rather than producing an APK nobody can update
+gradle.taskGraph.whenReady {
+    val releasing = allTasks.any { it.project == project && it.name.contains("Release") && (it.name.startsWith("assemble") || it.name.startsWith("bundle")) }
+    if (releasing && !keystorePropertiesFile.exists() && !project.hasProperty("allowDebugSigning")) {
+        throw GradleException("No release key (android/key.properties): a rider app signed with the debug key could never be updated in place")
     }
 }
 

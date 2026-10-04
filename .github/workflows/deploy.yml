@@ -417,10 +417,14 @@ jobs:
             echo "=== Ensure realm roles exist ==="
             # Realm import only runs on a fresh volume; roles added to
             # chillax-realm.json later must be upserted here (idempotent)
-            docker exec "$CONTAINER" $KC create roles -r $REALM \
-              -s name=Cashier \
-              -s description="Cashier role - runs the POS (sales, tickets, shifts) without back-office access" 2>/dev/null && \
-              echo "  Created Cashier role" || echo "  Cashier role already exists"
+            # The same three roles and descriptions as Ninja.ServiceDefaults.Roles.RealmStaffRoles
+            ensure_role() {
+              docker exec "$CONTAINER" $KC create roles -r $REALM -s name="$1" -s description="$2" 2>/dev/null && \
+                echo "  Created $1 role" || echo "  $1 role already exists"
+            }
+            ensure_role Cashier "Cashier role - runs the POS (sales, tickets, shifts) without back-office access"
+            ensure_role Kitchen "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else"
+            ensure_role Rider "Rider role - delivers the branch's own orders: the deliveries assigned to them, on the way and delivered, nothing else"
 
             echo ""
             echo "=== Ensure the 'branches' client scope exists ==="
@@ -530,7 +534,7 @@ jobs:
             # so unlike the web clients they need direct access grants on and
             # an app-scheme redirect for the OIDC logout.
             ensure_native_client() {
-              NAME="$1"; SCHEME="$2"
+              NAME="$1"; SCHEME="$2"; SCOPES="${3:-[\"openid\",\"profile\",\"email\",\"roles\",\"orders\",\"catalog\",\"rooms\",\"spaces\",\"branches\"]}"; REDIRECTS="${4:-[\"$SCHEME://callback\",\"$SCHEME://*\"]}"
               CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
                 python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
               if [ -z "$CID" ]; then
@@ -539,9 +543,9 @@ jobs:
                   -s clientId="$NAME" -s enabled=true -s publicClient=true \
                   -s standardFlowEnabled=true -s directAccessGrantsEnabled=true \
                   -s protocol=openid-connect \
-                  -s "redirectUris=[\"$SCHEME://callback\",\"$SCHEME://*\"]" \
+                  -s "redirectUris=$REDIRECTS" \
                   -s 'attributes={"pkce.code.challenge.method":"S256"}' \
-                  -s 'defaultClientScopes=["openid","profile","email","roles","orders","catalog","rooms","spaces","branches"]' \
+                  -s "defaultClientScopes=$SCOPES" \
                   -s 'optionalClientScopes=["offline_access"]' && \
                   echo "  Created $NAME" || echo "  WARNING: failed to create $NAME"
                 CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
@@ -556,7 +560,9 @@ jobs:
             }
             ensure_native_client pos-app com.ninja.pos
             ensure_native_client kds-app com.ninja.kds
-            ensure_native_client rider-app com.ninja.rider
+            # The rider app as the tenant realm template has it (Control.API Templates/tenant-realm.json):
+            # its deliveries and branches only, and its one callback
+            ensure_native_client rider-app com.ninja.rider '["openid","profile","email","roles","orders","branches"]' '["com.ninja.rider://callback"]'
 
             echo ""
             echo "=== Attach the 'branches' scope to the staff clients ==="

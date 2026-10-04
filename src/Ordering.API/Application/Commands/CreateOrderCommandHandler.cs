@@ -1,3 +1,4 @@
+#nullable enable
 namespace Ninja.Ordering.API.Application.Commands;
 
 using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
@@ -10,15 +11,55 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
     private readonly IOrderRepository _orderRepository;
     private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
     private readonly ILogger<CreateOrderCommandHandler> _logger;
+    private readonly IDeliveryPolicy? _deliveryPolicy;
+    private readonly ICustomerAddressBook? _addressBook;
 
     public CreateOrderCommandHandler(
         IOrderingIntegrationEventService orderingIntegrationEventService,
         IOrderRepository orderRepository,
-        ILogger<CreateOrderCommandHandler> logger)
+        ILogger<CreateOrderCommandHandler> logger,
+        IDeliveryPolicy? deliveryPolicy = null,
+        ICustomerAddressBook? addressBook = null)
     {
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
         _orderingIntegrationEventService = orderingIntegrationEventService ?? throw new ArgumentNullException(nameof(orderingIntegrationEventService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _deliveryPolicy = deliveryPolicy;
+        _addressBook = addressBook;
+    }
+
+    /// <summary>
+    /// The delivery the order carries, held to the branch's terms: the
+    /// customer's to its area and minimum, the till's to neither (the cashier
+    /// knows the streets). A delivery goes on a bill of its own, never to a
+    /// place or an open bill, and the till names who it is for.
+    /// </summary>
+    private async Task<Delivery?> DeliveryOfAsync(CreateOrderCommand message, decimal itemsTotal)
+    {
+        if (message.Delivery is not { } draft)
+        {
+            return null;
+        }
+
+        var taker = message.Source == OrderSource.Pos ? DeliveryTaker.Till : DeliveryTaker.Customer;
+
+        if (message.PlaceId is not null || message.TicketId is not null)
+        {
+            throw new OrderingDomainException("A delivery goes on a bill of its own, not to a table or an open bill.", DeliveryErrors.PlaceConflict);
+        }
+
+        if (message.Replay)
+        {
+            throw new OrderingDomainException("A delivery can't be replayed: it hasn't left yet.", DeliveryErrors.PlaceConflict);
+        }
+
+        if (taker == DeliveryTaker.Till && string.IsNullOrWhiteSpace(message.UserId) && string.IsNullOrWhiteSpace(message.GuestName))
+        {
+            throw new OrderingDomainException("A delivery needs the customer's name.", DeliveryErrors.NameRequired);
+        }
+
+        var policy = _deliveryPolicy ?? throw new InvalidOperationException("No delivery policy to hold a delivery to.");
+        return await policy.BuildAsync(draft, message.BranchId, taker, message.GuestPhone, itemsTotal);
     }
 
     public async Task<int> Handle(CreateOrderCommand message, CancellationToken cancellationToken)
@@ -33,6 +74,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
         // docs/pos-plan.md).
         var itemsTotal = message.OrderItems.Sum(i => i.UnitPrice * i.Units - i.Discount);
         var loyaltyDiscount = Order.GetLoyaltyDiscountFor(message.PointsToRedeem, itemsTotal);
+        var delivery = await DeliveryOfAsync(message, itemsTotal);
 
         // Create the order (starts in AwaitingValidation status)
         var order = new Order(
@@ -55,16 +97,25 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             promoCode: message.PromoCode,
             guestOrdersAnywhere: message.GuestOrdersAnywhere,
             platform: message.Platform,
-            delivery: message.Delivery);
+            delivery: delivery);
 
         foreach (var item in message.OrderItems)
         {
             order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units, item.CustomizationsDescription, item.SpecialInstructions, item.OptionIds, item.Suggestion);
         }
 
-        _logger.LogInformation("Creating order - Order: {@Order}", order);
+        // Ids only: a delivery's address and phone stay out of the logs
+        _logger.LogInformation(
+            "Creating order at branch {BranchId} from {Source}, {Lines} lines, delivery {IsDelivery}",
+            order.BranchId, order.Source, order.OrderItems.Count, order.IsDelivery);
 
         _orderRepository.Add(order);
+
+        // A saved address used again comes first next time
+        if (message.Delivery is { } used && !string.IsNullOrEmpty(message.UserId) && _addressBook is not null)
+        {
+            await _addressBook.MarkUsedAsync(message.UserId, used);
+        }
 
         if (message.Replay)
         {

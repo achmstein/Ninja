@@ -162,7 +162,7 @@ jobs:
           # Push: the stacks mount it read-only; without it their pushes are only logged
           FIREBASE_CREDENTIALS_PATH=""
           if [ -n "$FIREBASE_CREDENTIALS_JSON" ]; then
-            printf '%s' "$FIREBASE_CREDENTIALS_JSON" > platform-artifacts/firebase-credentials.json
+            ( umask 077 && printf '%s' "$FIREBASE_CREDENTIALS_JSON" > platform-artifacts/firebase-credentials.json )
             FIREBASE_CREDENTIALS_PATH="$DEPLOY_DIR/firebase-credentials.json"
           fi
 
@@ -330,6 +330,18 @@ jobs:
 
             cd "$DEPLOY_DIR"
             chmod 600 .env
+            # The platform's Firebase key: readable by the .NET images' app user (uid 1654) that the
+            # notification services run as, by nobody else on the box. Every stack's notification service
+            # still mounts it; a platform push relay that held the key alone would end that
+            if [ -f firebase-credentials.json ]; then
+              if chown 1654:1654 firebase-credentials.json 2>/dev/null; then
+                chmod 400 firebase-credentials.json
+              else
+                # Not root: the services must still read it
+                chmod 644 firebase-credentials.json
+                echo "::warning::could not hand firebase-credentials.json to uid 1654; it is world-readable on the box"
+              fi
+            fi
             [ -f custom-domains.caddy ] || cp custom-domains.caddy.seed custom-domains.caddy
 
             # The web builds are bind-mounted into Caddy: sync INTO the folders,

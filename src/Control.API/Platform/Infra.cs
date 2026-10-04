@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
+using Ninja.ServiceDefaults;
 using Npgsql;
 
 namespace Ninja.Control.API.Platform;
@@ -54,13 +55,15 @@ public interface IKeycloakAdmin
     /// <summary>The realm's SMTP settings (Keycloak's smtpServer map, as JSON), so it can send its own password resets.</summary>
     Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct);
     /// <summary>
-    /// The owner's assistant in a realm that was created before there was one:
-    /// the mcp client scope with its audience and role mappings, the realm's
-    /// default scopes, the ninja-mcp and assistant-api clients and the anonymous
-    /// registration policies, all as the realm template declares them. Idempotent;
-    /// a realm created from the current template gets nothing new.
+    /// A realm made from an older template brought up to what this release
+    /// expects, as the realm template declares it: the staff roles added since
+    /// (Cashier, Kitchen, Rider), the owner's assistant (the mcp client scope with
+    /// its audience and role mappings, the realm's default scopes, the ninja-mcp
+    /// and assistant-api clients, the anonymous registration policies) and the
+    /// rider app's client. Idempotent; a realm created from the current template
+    /// gets nothing new. Run on provisioning and on every upgrade.
     /// </summary>
-    Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct);
+    Task EnsureRealmUpToDateAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct);
     /// <summary>
     /// The platform's shared Google and Apple providers in a tenant's realm,
     /// so the native apps can exchange a provider token for one of the realm's
@@ -419,6 +422,12 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
     public KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options)
         : this(new KeycloakAdminToken(httpClientFactory, options), httpClientFactory, options) { }
 
+    /// <summary>An offline session (a long sign-in) unused this long ends: 30 days, as the realm template says.</summary>
+    public const int OfflineSessionIdle = 30 * 24 * 60 * 60;
+
+    /// <summary>However used, an offline session ends after this long: 90 days, as the realm template says.</summary>
+    public const int OfflineSessionMax = 90 * 24 * 60 * 60;
+
     private string Base => admin.Base;
 
     private Task<HttpClient> AdminClientAsync(CancellationToken ct) => admin.ClientAsync(ct);
@@ -511,18 +520,14 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             throw new InvalidOperationException($"Keycloak refused the SMTP settings for {realm} ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
     }
 
-    public async Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
+    public async Task EnsureRealmUpToDateAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
     {
         var parts = Templates.AssistantRealmParts(apiUrl, assistantSecret);
         var client = await AdminClientAsync(ct);
         var admin = $"{Base}/admin/realms/{realm}";
 
-        // Roles the template gained after this realm was made: a kitchen display's own account, a rider's
-        foreach (var (role, description) in new[]
-        {
-            ("Kitchen", "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else"),
-            ("Rider", "Rider role - delivers the branch's own orders: the deliveries assigned to them, on the way and delivered, nothing else"),
-        })
+        // Roles the template gained after this realm was made: a cashier's, a kitchen display's own account, a rider's
+        foreach (var (role, description) in RoleNames.RealmStaffRoles)
         {
             using var found = await client.GetAsync($"{admin}/roles/{role}", ct);
             if (found.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -533,6 +538,20 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
                     ["description"] = description,
                 }, ct), $"the {role} role in {realm}", ct);
             }
+        }
+
+        // Offline sessions (the rider app's and the tills' week-long sign-ins) end: a lost phone's
+        // refresh token stops working after 30 idle days or 90 in all, as the template says.
+        // Only a realm still on Keycloak's "never" is changed; one an operator set stays as set
+        var current = await client.GetFromJsonAsync<JsonObject>(admin, ct);
+        if (current?["offlineSessionMaxLifespanEnabled"]?.GetValue<bool>() != true)
+        {
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync(admin, new JsonObject
+            {
+                ["offlineSessionIdleTimeout"] = OfflineSessionIdle,
+                ["offlineSessionMaxLifespanEnabled"] = true,
+                ["offlineSessionMaxLifespan"] = OfflineSessionMax,
+            }, ct), $"offline session limits in {realm}", ct);
         }
 
         // The mcp client scope, and its audience mapper kept on the current API host
@@ -969,11 +988,11 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     public Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct) => Task.FromResult<string?>($"dry-run-{email}");
     public Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct) => Task.FromResult(true);
     public Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct) { logger.LogInformation("(dry run) smtp on {Realm}", realm); return Task.CompletedTask; }
-    public Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
+    public Task EnsureRealmUpToDateAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
     {
         // The template must still yield the parts, so a broken realm file fails a dry run too
         var parts = Templates.AssistantRealmParts(apiUrl, assistantSecret);
-        logger.LogInformation("(dry run) assistant in {Realm}: mcp scope, {Clients} clients, {Policies} policies", realm, parts.Clients.Count, parts.Policies.Count);
+        logger.LogInformation("(dry run) realm {Realm} up to date: {Roles} staff roles, mcp scope, {Clients} clients, {Policies} policies", realm, RoleNames.RealmStaffRoles.Count, parts.Clients.Count, parts.Policies.Count);
         return Task.CompletedTask;
     }
     public Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)

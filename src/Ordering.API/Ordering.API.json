@@ -49,26 +49,6 @@
           "200": {
             "description": "OK"
           },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorized"
           },
@@ -210,16 +190,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PosOrderResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -1640,7 +1610,7 @@
           "Orders"
         ],
         "summary": "Whether the branch delivers to a point, and what it asks",
-        "description": "For the branch in X-Branch-Id: whether it delivers right now, whether the point is within its radius, how far it is, the fee and the minimum order. The order itself is held to the same answer.",
+        "description": "For the branch in X-Branch-Id: whether it delivers right now, whether the point is within its radius, how far it is, the fee and the minimum order. The order itself is held to the same answer. Rate limited.",
         "operationId": "GetDeliveryQuote",
         "parameters": [
           {
@@ -1687,6 +1657,552 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DeliveryQuote"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/deliveries": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The branch's deliveries, for the till's board (staff)",
+        "description": "Confirmed, not voided delivery orders from the last two days: those still open (cash not in, bill not settled), and those finished in the last day. At most a page's worth.",
+        "operationId": "GetDeliveries",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeliveryOrder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/riders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The branch's riders, on duty first (staff)",
+        "description": "Every enabled rider account given the branch, as Identity announced them, with whether their app has ever checked in (signedIn), whether they are on duty here, when the app was last heard from, and how many deliveries they have out.",
+        "operationId": "GetRiders",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RiderView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/rider": {
+      "delete": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Take a delivery back from its rider before it leaves (staff)",
+        "operationId": "UnassignDeliveryRider",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Give a delivery to a rider, or to another before it leaves (staff)",
+        "description": "The rider must be one of the branch's riders (code rider.unknown otherwise); their name is Ordering's own record of them.",
+        "operationId": "AssignDeliveryRider",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRiderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/cash-in": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The rider handed the cash in: the bill is settled in cash (staff)",
+        "description": "With the amount the till counted; the board shows it against the total.",
+        "operationId": "HandInDeliveryCash",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandInCashRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/returned": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The rider brought the order back to the branch (staff)",
+        "description": "After it failed, or instead of handing it over. The till may then cancel the order.",
+        "operationId": "MarkDeliveryReturned",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/deliveries/mine": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The deliveries given to the signed-in rider",
+        "description": "Those still to go, then those finished in the last day.",
+        "operationId": "GetMyDeliveries",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeliveryOrder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/out": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The rider left with it",
+        "description": "Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.",
+        "operationId": "MarkDeliveryOut",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/delivered": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The customer has it",
+        "description": "Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.",
+        "operationId": "MarkDeliveryDelivered",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/failed": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "It could not be handed over, and why",
+        "description": "Only on the way. Said by the rider, for a delivery given to them; or by the till for its rider.",
+        "operationId": "MarkDeliveryFailed",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DeliveryFailedRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/riders/me": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The rider is on duty or off, at the branch in X-Branch-Id",
+        "description": "Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to. Kept only for a rider's own account.",
+        "operationId": "SetMyRiderStatus",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiderView"
                 }
               }
             }
@@ -1786,16 +2302,6 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthorized"
           },
@@ -1858,19 +2364,6 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
           "401": {
             "description": "Unauthorized"
           },
@@ -1913,9 +2406,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found"
           },
           "401": {
             "description": "Unauthorized"
@@ -1985,7 +2475,7 @@
           "Orders"
         ],
         "summary": "Where a caller has asked to be delivered before (staff)",
-        "description": "A customer account's saved addresses, then the addresses earlier deliveries went to, for that account or that phone number; latest first, each address once.",
+        "description": "A customer account's saved addresses, then the addresses this branch's earlier deliveries went to, for that account or that phone number; latest first, each address once. Every read is logged by who asked; rate limited.",
         "operationId": "GetKnownDeliveryAddresses",
         "parameters": [
           {
@@ -2023,497 +2513,6 @@
                   "items": {
                     "$ref": "#/components/schemas/KnownAddressView"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/deliveries": {
-      "get": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The branch's deliveries today, for the till's board (staff)",
-        "description": "Confirmed delivery orders not yet settled, and those settled in the last day: waiting for a rider, with a rider, delivered with the cash still out.",
-        "operationId": "GetDeliveries",
-        "parameters": [
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DeliveryOrder"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/riders": {
-      "get": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The branch's riders, on duty first (staff)",
-        "description": "Every rider whose app has been opened at the branch, with whether they are on duty, when the app was last heard from, and how many deliveries they have out.",
-        "operationId": "GetRiders",
-        "parameters": [
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RiderView"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/{orderId}/delivery/rider": {
-      "put": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "Give a delivery to a rider, or to another before it leaves (staff)",
-        "operationId": "AssignDeliveryRider",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignRiderRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      },
-      "delete": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "Take a delivery back from its rider before it leaves (staff)",
-        "operationId": "UnassignDeliveryRider",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/{orderId}/delivery/cash-in": {
-      "put": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The rider handed the cash in: the bill is settled in cash (staff)",
-        "operationId": "HandInDeliveryCash",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/deliveries/mine": {
-      "get": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The deliveries given to the signed-in rider",
-        "description": "Those not yet delivered, then those delivered in the last day.",
-        "operationId": "GetMyDeliveries",
-        "parameters": [
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DeliveryOrder"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/{orderId}/delivery/out": {
-      "put": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The rider left with it",
-        "description": "Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.",
-        "operationId": "MarkDeliveryOut",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/{orderId}/delivery/delivered": {
-      "put": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The customer has it",
-        "description": "Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.",
-        "operationId": "MarkDeliveryDelivered",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/orders/riders/me": {
-      "put": {
-        "tags": [
-          "Orders"
-        ],
-        "summary": "The rider is on duty or off, at the branch in X-Branch-Id",
-        "description": "Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to.",
-        "operationId": "SetMyRiderStatus",
-        "parameters": [
-          {
-            "name": "api-version",
-            "in": "query",
-            "description": "The API version, in the format 'major.minor'.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "1.0"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RiderStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RiderView"
                 }
               }
             }
@@ -3526,8 +3525,7 @@
       },
       "AssignRiderRequest": {
         "required": [
-          "riderUserId",
-          "riderName"
+          "riderUserId"
         ],
         "type": "object",
         "properties": {
@@ -3535,7 +3533,10 @@
             "type": "string"
           },
           "riderName": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4080,6 +4081,17 @@
           }
         }
       },
+      "DeliveryFailedRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "DeliveryOrder": {
         "type": "object",
         "properties": {
@@ -4129,8 +4141,17 @@
             ]
           },
           "total": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "cashDifference": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
               "number",
               "string"
             ],
@@ -4143,7 +4164,7 @@
             }
           },
           "delivery": {
-            "$ref": "#/components/schemas/DeliveryView"
+            "$ref": "#/components/schemas/DeliveryStaffView"
           }
         }
       },
@@ -4258,6 +4279,156 @@
           }
         }
       },
+      "DeliveryStaffView": {
+        "type": "object",
+        "properties": {
+          "riderUserId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cashCollected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "address": {
+            "type": "string"
+          },
+          "building": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "floor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "apartment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "directions": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": "string"
+          },
+          "fee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "distanceMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "riderName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "outAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "deliveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "failedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "returnedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cashHandedInAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "DeliveryView": {
         "type": "object",
         "properties": {
@@ -4329,12 +4500,6 @@
           "stage": {
             "type": "string"
           },
-          "riderUserId": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "riderName": {
             "type": [
               "null",
@@ -4356,6 +4521,20 @@
             "format": "date-time"
           },
           "deliveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "failedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "returnedAt": {
             "type": [
               "null",
               "string"
@@ -4426,6 +4605,22 @@
           "lastOrderAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "HandInCashRequest": {
+        "required": [
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -6087,8 +6282,14 @@
             "type": "boolean"
           },
           "lastSeenAt": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date-time"
+          },
+          "signedIn": {
+            "type": "boolean"
           },
           "out": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",

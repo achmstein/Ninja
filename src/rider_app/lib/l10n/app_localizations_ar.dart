@@ -228,6 +228,87 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navigate => 'الطريق';
 
   @override
+  String riderAppTitle(String business) {
+    return 'مندوب $business';
+  }
+
+  @override
+  String get connectInsecure =>
+      'العنوان ده مش آمن (مش https). اطلب من صاحب النشاط عنوان https.';
+
+  @override
+  String get signInInBrowser =>
+      'هتسجّل دخول من صفحة النشاط نفسه، وبعدين ترجع هنا.';
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String listMayBeOld(String time) {
+    return 'معرفناش نحدّث من $time. القائمة ممكن تكون قديمة.';
+  }
+
+  @override
+  String get dutyNotChanged => 'الكاشير موصلهوش التغيير';
+
+  @override
+  String get errorOffline => 'مفيش اتصال. جرّب تاني بعد شوية.';
+
+  @override
+  String get errorConflict => 'حد تاني غيّر التوصيل ده. القائمة اتحدّثت.';
+
+  @override
+  String get errorNotYours => 'التوصيل ده مبقاش معاك.';
+
+  @override
+  String get errorNotOutYet => 'دوس في الطريق الأول.';
+
+  @override
+  String get errorAlreadyOut => 'الطلب خرج خلاص.';
+
+  @override
+  String get errorAlreadyDone => 'التوصيل ده خلص خلاص.';
+
+  @override
+  String get errorNotConfirmed => 'الكاشير لسه مأكدش الطلب ده.';
+
+  @override
+  String get couldNotOpenMaps => 'معرفناش نفتح الخريطة';
+
+  @override
+  String get couldNotOpenDialer => 'معرفناش نفتح التليفون';
+
+  @override
+  String get couldNotDeliver => 'معرفتش أوصّل';
+
+  @override
+  String get couldNotDeliverTitle => 'ليه معرفتش توصّله؟';
+
+  @override
+  String get couldNotDeliverHint => 'رجّع الشنطة للفرع. الكاشير هيكمّل.';
+
+  @override
+  String get failReasonNoAnswer => 'محدش رد';
+
+  @override
+  String get failReasonRefused => 'العميل رفض الطلب';
+
+  @override
+  String get failReasonWrongAddress => 'ملقتش العنوان';
+
+  @override
+  String get failReasonOther => 'سبب تاني';
+
+  @override
+  String get bringItBack => 'رجّعه للفرع';
+
+  @override
+  String get bringItBackHint => 'مفيش فلوس تتحصّل. سلّم الشنطة للكاشير.';
+
+  @override
+  String get returnedToBranch => 'رجع الفرع';
+
+  @override
   String get notDelivering => 'النشاط ده مش بيوصّل';
 
   @override

@@ -49,6 +49,10 @@ env:
   # The till and the kitchen display take none: one generic build serves
   # every café, and a tablet connects to its own from inside the app.
   TENANT: ${{ github.event.inputs.tenant || 'chillax' }}
+  # What a person typed into the run form reaches the scripts as variables, never pasted into
+  # them: a value is then only ever a value, not shell
+  BUILD_NUMBER: ${{ github.event.inputs.build_number || github.run_number }}
+  TRACK: ${{ github.event.inputs.track || 'internal' }}
 
 jobs:
   # ==========================================
@@ -106,7 +110,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-        run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
+        run: bundle exec fastlane beta track:"$TRACK" build_number:"$BUILD_NUMBER"
 
       # Kept even when the Play upload fails (a brand-new app refuses API
       # uploads until its first bundle goes in by hand), so the signed bundle
@@ -124,11 +128,11 @@ jobs:
       # place from the Fastlane step, so it carries the same upload signature.
       - name: Build APK for direct download
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
+          flutter build apk --release --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
           mkdir -p build/apk-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax.json
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax.json
 
       - name: Publish APK to chillax.site
         uses: appleboy/scp-action@v0.1.7
@@ -199,13 +203,13 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number="$BUILD_NUMBER"
           mkdir -p build/apps-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-pos.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
           # What the installed tills check for an update: a newer build, and the checksum they verify before installing
           sha=$(sha256sum build/apps-publish/ninja-pos.apk | cut -d' ' -f1)
-          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-pos.json
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-pos.json
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -282,13 +286,13 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number="$BUILD_NUMBER"
           mkdir -p build/apps-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-kds.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
           # What the installed kitchen displays check for an update: a newer build, and the checksum they verify before installing
           sha=$(sha256sum build/apps-publish/ninja-kds.apk | cut -d' ' -f1)
-          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-kds.json
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-kds.json
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -357,8 +361,7 @@ jobs:
             echo "::warning::RIDER_GOOGLE_SERVICES_JSON is not set: the rider app ships without push notifications"
           fi
 
-      # One upload key for good, so an installed app updates in place. Without it the build
-      # is debug-signed, and a later release-signed one will not install over it
+      # One upload key for good, so an installed app updates in place. Without it the job stops
       - name: Signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_RIDER_KEYSTORE_BASE64 }}
@@ -367,8 +370,10 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_RIDER_STORE_PASSWORD }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "::warning::ANDROID_RIDER_KEYSTORE_BASE64 is not set: the APK is debug-signed"
-            exit 0
+            # A debug-signed APK on the download page would set the key every later update must
+            # match, and could never be updated in place: nothing is published without the real one
+            echo "::error::ANDROID_RIDER_KEYSTORE_BASE64 is not set: the rider app is not built or published debug-signed"
+            exit 1
           fi
           echo -n "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
           cat > android/key.properties <<PROPS
@@ -380,13 +385,13 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number="$BUILD_NUMBER"
           mkdir -p build/apps-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-rider.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
           # What the installed rider apps check for an update: a newer build, and the checksum they verify before installing
           sha=$(sha256sum build/apps-publish/ninja-rider.apk | cut -d' ' -f1)
-          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-rider.json
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-rider.json
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -422,7 +427,7 @@ jobs:
       - name: Publish the connector
         shell: pwsh
         run: |
-          dotnet publish src/Ninja.PrintConnector -c Release -r win-x64 -o publish -p:Version=1.0.${{ github.event.inputs.build_number || github.run_number }}
+          dotnet publish src/Ninja.PrintConnector -c Release -r win-x64 -o publish -p:Version="1.0.$env:BUILD_NUMBER"
           New-Item -ItemType Directory -Force apps-publish | Out-Null
           Copy-Item publish/ninja-print-connector.exe apps-publish/ninja-print-connector.exe
 
@@ -484,7 +489,7 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Flutter (no codesign)
-        run: flutter build ios --release --no-codesign --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
+        run: flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

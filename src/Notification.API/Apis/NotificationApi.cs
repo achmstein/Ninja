@@ -85,15 +85,15 @@ public static class NotificationApi
         api.MapPost("/subscriptions/rider-deliveries", SubscribeToRiderDeliveries)
             .WithName("SubscribeToRiderDeliveries")
             .WithSummary("Subscribe to rider delivery notifications")
-            .WithDescription("Register the rider app to get a push when a delivery is given to the rider, or taken back (Rider only)")
+            .WithDescription("Register the rider app to get a push when a delivery is given to the rider, or taken back (a Rider account only; an admin standing in for a rider has no phone to ring)")
             .WithTags("Subscriptions")
-            .RequireAuthorization("Rider");
+            .RequireAuthorization(RiderAccountOnly);
 
         api.MapDelete("/subscriptions/rider-deliveries", UnsubscribeFromRiderDeliveries)
             .WithName("UnsubscribeFromRiderDeliveries")
             .WithSummary("Unsubscribe from rider delivery notifications")
             .WithTags("Subscriptions")
-            .RequireAuthorization("Rider");
+            .RequireAuthorization(RiderAccountOnly);
 
         // User session notification endpoints (for customers)
         api.MapPost("/subscriptions/user-sessions", SubscribeToUserSessionNotifications)
@@ -545,13 +545,23 @@ public static class NotificationApi
         return TypedResults.NoContent();
     }
 
-    // Rider delivery handlers: one phone per rider, the latest one signed in
+    /// <summary>A Rider account itself, not the admins the Rider policy also lets stand in for one.</summary>
+    private static readonly Microsoft.AspNetCore.Authorization.AuthorizationPolicy RiderAccountOnly =
+        new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireRole(RoleNames.Rider).Build();
+
+    // Rider delivery handlers: one phone per rider, the latest one signed in; one rider per phone
     public static async Task<Results<Ok<SubscriptionResponse>, Created<SubscriptionResponse>>> SubscribeToRiderDeliveries(
         NotificationContext context,
         ClaimsPrincipal user,
         SubscribeRequest request)
     {
         var userId = user.GetUserId()!;
+
+        // The phone is this rider's now: another rider who signed in on it before stops hearing it
+        var others = await context.Subscriptions
+            .Where(s => s.Type == SubscriptionType.RiderDeliveries && s.FcmToken == request.FcmToken && s.UserId != userId)
+            .ToListAsync();
+        context.Subscriptions.RemoveRange(others);
 
         var existing = await context.Subscriptions
             .FirstOrDefaultAsync(s => s.UserId == userId && s.Type == SubscriptionType.RiderDeliveries);

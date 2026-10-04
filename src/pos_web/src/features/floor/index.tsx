@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Armchair,
+  Bike,
   Clock,
   DoorOpen,
   PackageCheck,
@@ -29,6 +30,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { DeliveriesStrip } from '@/features/deliveries/deliveries-strip'
+import { deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
+import { useDeliveries } from '@/features/deliveries/use-deliveries'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { PlacePanel } from '@/features/places/place-panel'
 import { StartStayDialog } from '@/features/places/start-stay-dialog'
@@ -80,12 +83,15 @@ function BillCard({
   ticket,
   stay,
   waiting,
+  delivery,
   nowMs,
   onClick,
 }: {
   ticket: TicketSummary
   stay: StayViewModel | undefined
   waiting: boolean
+  /** The bill of an order going out with a rider */
+  delivery: boolean
   nowMs: number
   onClick: () => void
 }) {
@@ -94,7 +100,7 @@ function BillCard({
   const money = useMoney()
 
   const type = ticket.type ?? ''
-  const Icon = typeIcon[type] ?? ShoppingBag
+  const Icon = delivery ? Bike : (typeIcon[type] ?? ShoppingBag)
   const typeLabel =
     type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
   const title = localized(ticket.locationName) || ticket.label || typeLabel
@@ -184,6 +190,7 @@ export function Floor() {
     })
   }
   const features = useFeatures()
+  const { deliveries } = useDeliveries()
   // No tables to open or seat: the till is the open bills and the counter
   const cloudKitchen = useIsCloudKitchen()
   const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
@@ -294,6 +301,11 @@ export function Floor() {
     bills
       .filter((b) => pendingForTicket(pending, b).length > 0)
       .map((b) => toNumber(b.id)),
+  )
+  // Which bills are deliveries: Sales names a delivery's bill by its order
+  // ("#42 · Mona"), and the deliveries board says which orders are ones
+  const deliveryOrders = new Set(
+    deliveries.map((d) => toNumber(d.orderNumber)),
   )
 
   const selectedPlace = placeById(selectedPlaceId ?? undefined) ?? null
@@ -444,8 +456,9 @@ export function Floor() {
         <PendingOrdersStrip />
 
         {/* Deliveries out: waiting for a rider, with one, or their cash to take
-            in; only where the business delivers (an add-on) */}
-        {features.delivery && <DeliveriesStrip />}
+            in. Shown even once delivery is switched off, so what is already
+            out can finish; it is gone when there is nothing */}
+        <DeliveriesStrip />
 
         {features.reservations && !cloudKitchen && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
@@ -605,6 +618,7 @@ export function Floor() {
                   ticket={ticket}
                   stay={stayForTicket(ticket)}
                   waiting={waitingIds.has(toNumber(ticket.id))}
+                  delivery={deliveryOrders.has(deliveryOrderOfLabel(ticket.label) ?? -1)}
                   nowMs={nowMs}
                   onClick={() => toTicket(ticket)}
                 />

@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ninja_app_core/config.dart';
 import 'app.dart';
-import 'core/brand/brand_provider.dart';
-import 'core/config/tenant_connection.dart';
-import 'core/providers/branch_provider.dart';
-import 'core/providers/locale_provider.dart';
+import 'core/config/app_config.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'core/services/push_service.dart';
 import 'features/connect/connect_screen.dart';
 
@@ -19,6 +21,9 @@ void main() async {
   // Preserve the native splash screen
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // The shared core learns which app it runs in before anything reads it
+  NinjaCore.configure(AppConfig.core);
 
   // A rider's phone, held upright on a bike mount or in a hand
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

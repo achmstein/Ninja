@@ -3,7 +3,8 @@ namespace Ninja.Ordering.API.Application.DomainEventHandlers;
 
 /// <summary>
 /// Turns a delivery's move into the integration event the rider app, the
-/// customer, the till and Sales each listen for.
+/// customer, the till and Sales each listen for. Logs ids and the stage only:
+/// the customer's address and phone stay out of the logs.
 /// </summary>
 public class OrderDeliveryChangedDomainEventHandler(
     IBuyerRepository buyerRepository,
@@ -17,8 +18,8 @@ public class OrderDeliveryChangedDomainEventHandler(
         var delivery = order.Delivery!;
 
         logger.LogInformation(
-            "Order {OrderId} delivery -> {Stage} (rider {Rider}, cash in {CashIn})",
-            order.Id, domainEvent.Stage, delivery.RiderUserId, domainEvent.CashHandedIn);
+            "Order {OrderId} delivery -> {Stage} (version {Version}, cash in {CashIn})",
+            order.Id, domainEvent.Stage, delivery.Version, domainEvent.CashHandedIn);
 
         var buyer = order.BuyerId.HasValue
             ? await buyerRepository.FindByIdAsync(order.BuyerId.Value)
@@ -35,6 +36,8 @@ public class OrderDeliveryChangedDomainEventHandler(
             order.GuestId,
             domainEvent.CashHandedIn,
             order.GetTotal(),
-            delivery.Address));
+            delivery.Address,
+            delivery.Version,
+            delivery.CashCollected));
     }
 }

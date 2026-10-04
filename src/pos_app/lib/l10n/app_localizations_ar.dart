@@ -1891,4 +1891,155 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get deliveryPlaced =>
       'طلب التوصيل اتسجّل. سلّمه لمندوب من التوصيل في الصالة.';
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String get deliveryChange => 'غيّر التوصيل';
+
+  @override
+  String get deliveryErrorOffline => 'مفيش اتصال. جرّب تاني بعد شوية.';
+
+  @override
+  String get deliveryErrorNotDelivering => 'النشاط ده مش بيوصّل دلوقتي.';
+
+  @override
+  String get deliveryErrorOutOfRange => 'العنوان ده برّه منطقة التوصيل.';
+
+  @override
+  String get deliveryErrorBelowMinimum => 'الطلب أقل من الحد الأدنى للتوصيل.';
+
+  @override
+  String get deliveryErrorPlaceConflict =>
+      'التوصيل بيبقى على فاتورة لوحده، مش على ترابيزة ولا فاتورة مفتوحة.';
+
+  @override
+  String get deliveryErrorTooLong => 'جزء من العنوان طويل قوي. اختصره.';
+
+  @override
+  String get deliveryErrorNotConfirmed => 'أكّد الطلب قبل ما يخرج.';
+
+  @override
+  String get deliveryErrorNoRider => 'سلّمه لمندوب الأول.';
+
+  @override
+  String get deliveryErrorAlreadyOut => 'الطلب خرج مع المندوب خلاص.';
+
+  @override
+  String get deliveryErrorNotOut => 'الطلب لسه مخرجش.';
+
+  @override
+  String get deliveryErrorNotDelivered => 'الطلب لسه متسلّمش.';
+
+  @override
+  String get deliveryErrorAlreadySettled => 'فلوسه اتسلّمت خلاص.';
+
+  @override
+  String get deliveryErrorConflict => 'حد تاني غيّر التوصيل ده. اتحدّث دلوقتي.';
+
+  @override
+  String get deliveryErrorUnknownRider => 'المندوب ده مش من مندوبين الفرع.';
+
+  @override
+  String get deliveryErrorPaused => 'الفرع مش بياخد طلبات دلوقتي.';
+
+  @override
+  String get failReasonNoAnswer => 'محدش رد';
+
+  @override
+  String get failReasonRefused => 'العميل رفض الطلب';
+
+  @override
+  String get failReasonWrongAddress => 'ملقاش العنوان';
+
+  @override
+  String get failReasonOther => 'سبب تاني';
+
+  @override
+  String deliveryFailedBecause(String reason) {
+    return 'متوصّلش: $reason';
+  }
+
+  @override
+  String get couldNotOpenMaps => 'معرفناش نفتح الخريطة';
+
+  @override
+  String get couldNotOpenDialer => 'معرفناش نفتح التليفون';
+
+  @override
+  String deliveryDeliveredConfirm(String name) {
+    return '$name استلم الطلب؟';
+  }
+
+  @override
+  String get deliveryMarkFailed => 'متوصّلش';
+
+  @override
+  String get deliveryFailReasonTitle => 'ليه الطلب متوصّلش؟';
+
+  @override
+  String get deliveryMarkReturned => 'الشنطة رجعت';
+
+  @override
+  String get deliveryCancelReturned => 'الغي الطلب';
+
+  @override
+  String get deliveryCancelReturnedConfirm =>
+      'الشنطة رجعت ومحدش هياخدها. تلغي الطلب؟';
+
+  @override
+  String deliveryComingBack(String name) {
+    return 'راجع مع $name';
+  }
+
+  @override
+  String get deliveryBackAtBranch => 'رجع الفرع';
+
+  @override
+  String deliveryCashCountTitle(String name) {
+    return 'استلم الفلوس من $name';
+  }
+
+  @override
+  String deliveryCashBill(String amount) {
+    return 'الفاتورة: $amount';
+  }
+
+  @override
+  String get deliveryCashCounted => 'المبلغ اللي اتعدّ';
+
+  @override
+  String get deliveryCashInvalid => 'اكتب المبلغ اللي اتعدّ';
+
+  @override
+  String get deliveryCashExact => 'قد الفاتورة بالظبط';
+
+  @override
+  String deliveryCashShort(String amount) {
+    return 'ناقص $amount';
+  }
+
+  @override
+  String deliveryCashOver(String amount) {
+    return 'زيادة $amount';
+  }
+
+  @override
+  String get deliveryCashTakeAction => 'استلم';
+
+  @override
+  String get deliveryLocationNotChecked =>
+      'معرفناش نتأكد من اللوكيشن ده. المندوب هيمشي بالعنوان.';
+
+  @override
+  String get deliveryTermsChecking => 'بنشوف شروط التوصيل في الفرع…';
+
+  @override
+  String get deliveryTermsUnknown =>
+      'معرفناش نتأكد من التوصيل. جرّب تاني، أو خليه بيع عادي.';
+
+  @override
+  String get deliveryNotOfferedNow =>
+      'الفرع ده مش بيوصّل دلوقتي. شيل التوصيل عشان تحاسب.';
 }

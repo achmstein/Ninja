@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMyAddress, assignDeliveryRider, assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getDeliveries, getDeliveryQuote, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiders, getTillDeliveryQuote, handInDeliveryCash, markDeliveryDelivered, markDeliveryOut, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryRider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
-import type { AddMyAddressData, AddMyAddressError, AddMyAddressResponse, AssignDeliveryRiderData, AssignDeliveryRiderError, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRidersData, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashError, HandInDeliveryCashResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredError, MarkDeliveryDeliveredResponse, MarkDeliveryOutData, MarkDeliveryOutError, MarkDeliveryOutResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderError, UnassignDeliveryRiderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressError, UpdateMyAddressResponse } from '../types.gen';
+import { addMyAddress, assignDeliveryRider, assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getDeliveries, getDeliveryQuote, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiders, getTillDeliveryQuote, handInDeliveryCash, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryRider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
+import type { AddMyAddressData, AddMyAddressResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRidersData, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -65,8 +65,8 @@ export const getOrdersByUserOptions = (options: Options<GetOrdersByUserData>) =>
  *
  * Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.
  */
-export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>): UseMutationOptions<unknown, AxiosError<CreateOrderError>, Options<CreateOrderData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<CreateOrderError>, Options<CreateOrderData>> = {
+export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CreateOrderData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CreateOrderData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createOrder({
                 ...options,
@@ -84,8 +84,8 @@ export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>)
  *
  * A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.
  */
-export const createPosOrderMutation = (options?: Partial<Options<CreatePosOrderData>>): UseMutationOptions<CreatePosOrderResponse, AxiosError<CreatePosOrderError>, Options<CreatePosOrderData>> => {
-    const mutationOptions: UseMutationOptions<CreatePosOrderResponse, AxiosError<CreatePosOrderError>, Options<CreatePosOrderData>> = {
+export const createPosOrderMutation = (options?: Partial<Options<CreatePosOrderData>>): UseMutationOptions<CreatePosOrderResponse, AxiosError<DefaultError>, Options<CreatePosOrderData>> => {
+    const mutationOptions: UseMutationOptions<CreatePosOrderResponse, AxiosError<DefaultError>, Options<CreatePosOrderData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createPosOrder({
                 ...options,
@@ -475,7 +475,7 @@ export const getDeliveryQuoteQueryKey = (options: Options<GetDeliveryQuoteData>)
 /**
  * Whether the branch delivers to a point, and what it asks
  *
- * For the branch in X-Branch-Id: whether it delivers right now, whether the point is within its radius, how far it is, the fee and the minimum order. The order itself is held to the same answer.
+ * For the branch in X-Branch-Id: whether it delivers right now, whether the point is within its radius, how far it is, the fee and the minimum order. The order itself is held to the same answer. Rate limited.
  */
 export const getDeliveryQuoteOptions = (options: Options<GetDeliveryQuoteData>) => queryOptions<GetDeliveryQuoteResponse, AxiosError<DefaultError>, GetDeliveryQuoteResponse, ReturnType<typeof getDeliveryQuoteQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -489,6 +489,216 @@ export const getDeliveryQuoteOptions = (options: Options<GetDeliveryQuoteData>) 
     },
     queryKey: getDeliveryQuoteQueryKey(options)
 });
+
+export const getDeliveriesQueryKey = (options: Options<GetDeliveriesData>) => createQueryKey('getDeliveries', options);
+
+/**
+ * The branch's deliveries, for the till's board (staff)
+ *
+ * Confirmed, not voided delivery orders from the last two days: those still open (cash not in, bill not settled), and those finished in the last day. At most a page's worth.
+ */
+export const getDeliveriesOptions = (options: Options<GetDeliveriesData>) => queryOptions<GetDeliveriesResponse, AxiosError<DefaultError>, GetDeliveriesResponse, ReturnType<typeof getDeliveriesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getDeliveries({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getDeliveriesQueryKey(options)
+});
+
+export const getRidersQueryKey = (options: Options<GetRidersData>) => createQueryKey('getRiders', options);
+
+/**
+ * The branch's riders, on duty first (staff)
+ *
+ * Every enabled rider account given the branch, as Identity announced them, with whether their app has ever checked in (signedIn), whether they are on duty here, when the app was last heard from, and how many deliveries they have out.
+ */
+export const getRidersOptions = (options: Options<GetRidersData>) => queryOptions<GetRidersResponse, AxiosError<DefaultError>, GetRidersResponse, ReturnType<typeof getRidersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getRiders({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getRidersQueryKey(options)
+});
+
+/**
+ * Take a delivery back from its rider before it leaves (staff)
+ */
+export const unassignDeliveryRiderMutation = (options?: Partial<Options<UnassignDeliveryRiderData>>): UseMutationOptions<UnassignDeliveryRiderResponse, AxiosError<DefaultError>, Options<UnassignDeliveryRiderData>> => {
+    const mutationOptions: UseMutationOptions<UnassignDeliveryRiderResponse, AxiosError<DefaultError>, Options<UnassignDeliveryRiderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await unassignDeliveryRider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give a delivery to a rider, or to another before it leaves (staff)
+ *
+ * The rider must be one of the branch's riders (code rider.unknown otherwise); their name is Ordering's own record of them.
+ */
+export const assignDeliveryRiderMutation = (options?: Partial<Options<AssignDeliveryRiderData>>): UseMutationOptions<AssignDeliveryRiderResponse, AxiosError<DefaultError>, Options<AssignDeliveryRiderData>> => {
+    const mutationOptions: UseMutationOptions<AssignDeliveryRiderResponse, AxiosError<DefaultError>, Options<AssignDeliveryRiderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await assignDeliveryRider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The rider handed the cash in: the bill is settled in cash (staff)
+ *
+ * With the amount the till counted; the board shows it against the total.
+ */
+export const handInDeliveryCashMutation = (options?: Partial<Options<HandInDeliveryCashData>>): UseMutationOptions<HandInDeliveryCashResponse, AxiosError<DefaultError>, Options<HandInDeliveryCashData>> => {
+    const mutationOptions: UseMutationOptions<HandInDeliveryCashResponse, AxiosError<DefaultError>, Options<HandInDeliveryCashData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await handInDeliveryCash({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The rider brought the order back to the branch (staff)
+ *
+ * After it failed, or instead of handing it over. The till may then cancel the order.
+ */
+export const markDeliveryReturnedMutation = (options?: Partial<Options<MarkDeliveryReturnedData>>): UseMutationOptions<MarkDeliveryReturnedResponse, AxiosError<DefaultError>, Options<MarkDeliveryReturnedData>> => {
+    const mutationOptions: UseMutationOptions<MarkDeliveryReturnedResponse, AxiosError<DefaultError>, Options<MarkDeliveryReturnedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markDeliveryReturned({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMyDeliveriesQueryKey = (options: Options<GetMyDeliveriesData>) => createQueryKey('getMyDeliveries', options);
+
+/**
+ * The deliveries given to the signed-in rider
+ *
+ * Those still to go, then those finished in the last day.
+ */
+export const getMyDeliveriesOptions = (options: Options<GetMyDeliveriesData>) => queryOptions<GetMyDeliveriesResponse, AxiosError<DefaultError>, GetMyDeliveriesResponse, ReturnType<typeof getMyDeliveriesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMyDeliveries({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMyDeliveriesQueryKey(options)
+});
+
+/**
+ * The rider left with it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
+ */
+export const markDeliveryOutMutation = (options?: Partial<Options<MarkDeliveryOutData>>): UseMutationOptions<MarkDeliveryOutResponse, AxiosError<DefaultError>, Options<MarkDeliveryOutData>> => {
+    const mutationOptions: UseMutationOptions<MarkDeliveryOutResponse, AxiosError<DefaultError>, Options<MarkDeliveryOutData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markDeliveryOut({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The customer has it
+ *
+ * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
+ */
+export const markDeliveryDeliveredMutation = (options?: Partial<Options<MarkDeliveryDeliveredData>>): UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<DefaultError>, Options<MarkDeliveryDeliveredData>> => {
+    const mutationOptions: UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<DefaultError>, Options<MarkDeliveryDeliveredData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markDeliveryDelivered({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * It could not be handed over, and why
+ *
+ * Only on the way. Said by the rider, for a delivery given to them; or by the till for its rider.
+ */
+export const markDeliveryFailedMutation = (options?: Partial<Options<MarkDeliveryFailedData>>): UseMutationOptions<MarkDeliveryFailedResponse, AxiosError<DefaultError>, Options<MarkDeliveryFailedData>> => {
+    const mutationOptions: UseMutationOptions<MarkDeliveryFailedResponse, AxiosError<DefaultError>, Options<MarkDeliveryFailedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markDeliveryFailed({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The rider is on duty or off, at the branch in X-Branch-Id
+ *
+ * Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to. Kept only for a rider's own account.
+ */
+export const setMyRiderStatusMutation = (options?: Partial<Options<SetMyRiderStatusData>>): UseMutationOptions<SetMyRiderStatusResponse, AxiosError<DefaultError>, Options<SetMyRiderStatusData>> => {
+    const mutationOptions: UseMutationOptions<SetMyRiderStatusResponse, AxiosError<DefaultError>, Options<SetMyRiderStatusData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setMyRiderStatus({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getMyAddressesQueryKey = (options: Options<GetMyAddressesData>) => createQueryKey('getMyAddresses', options);
 
@@ -511,8 +721,8 @@ export const getMyAddressesOptions = (options: Options<GetMyAddressesData>) => q
 /**
  * Save a delivery address for the signed-in customer
  */
-export const addMyAddressMutation = (options?: Partial<Options<AddMyAddressData>>): UseMutationOptions<AddMyAddressResponse, AxiosError<AddMyAddressError>, Options<AddMyAddressData>> => {
-    const mutationOptions: UseMutationOptions<AddMyAddressResponse, AxiosError<AddMyAddressError>, Options<AddMyAddressData>> = {
+export const addMyAddressMutation = (options?: Partial<Options<AddMyAddressData>>): UseMutationOptions<AddMyAddressResponse, AxiosError<DefaultError>, Options<AddMyAddressData>> => {
+    const mutationOptions: UseMutationOptions<AddMyAddressResponse, AxiosError<DefaultError>, Options<AddMyAddressData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await addMyAddress({
                 ...options,
@@ -545,8 +755,8 @@ export const deleteMyAddressMutation = (options?: Partial<Options<DeleteMyAddres
 /**
  * Change one of the signed-in customer's saved addresses
  */
-export const updateMyAddressMutation = (options?: Partial<Options<UpdateMyAddressData>>): UseMutationOptions<UpdateMyAddressResponse, AxiosError<UpdateMyAddressError>, Options<UpdateMyAddressData>> => {
-    const mutationOptions: UseMutationOptions<UpdateMyAddressResponse, AxiosError<UpdateMyAddressError>, Options<UpdateMyAddressData>> = {
+export const updateMyAddressMutation = (options?: Partial<Options<UpdateMyAddressData>>): UseMutationOptions<UpdateMyAddressResponse, AxiosError<DefaultError>, Options<UpdateMyAddressData>> => {
+    const mutationOptions: UseMutationOptions<UpdateMyAddressResponse, AxiosError<DefaultError>, Options<UpdateMyAddressData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateMyAddress({
                 ...options,
@@ -584,7 +794,7 @@ export const getKnownDeliveryAddressesQueryKey = (options: Options<GetKnownDeliv
 /**
  * Where a caller has asked to be delivered before (staff)
  *
- * A customer account's saved addresses, then the addresses earlier deliveries went to, for that account or that phone number; latest first, each address once.
+ * A customer account's saved addresses, then the addresses this branch's earlier deliveries went to, for that account or that phone number; latest first, each address once. Every read is logged by who asked; rate limited.
  */
 export const getKnownDeliveryAddressesOptions = (options: Options<GetKnownDeliveryAddressesData>) => queryOptions<GetKnownDeliveryAddressesResponse, AxiosError<DefaultError>, GetKnownDeliveryAddressesResponse, ReturnType<typeof getKnownDeliveryAddressesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -598,174 +808,6 @@ export const getKnownDeliveryAddressesOptions = (options: Options<GetKnownDelive
     },
     queryKey: getKnownDeliveryAddressesQueryKey(options)
 });
-
-export const getDeliveriesQueryKey = (options: Options<GetDeliveriesData>) => createQueryKey('getDeliveries', options);
-
-/**
- * The branch's deliveries today, for the till's board (staff)
- *
- * Confirmed delivery orders not yet settled, and those settled in the last day: waiting for a rider, with a rider, delivered with the cash still out.
- */
-export const getDeliveriesOptions = (options: Options<GetDeliveriesData>) => queryOptions<GetDeliveriesResponse, AxiosError<DefaultError>, GetDeliveriesResponse, ReturnType<typeof getDeliveriesQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getDeliveries({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getDeliveriesQueryKey(options)
-});
-
-export const getRidersQueryKey = (options: Options<GetRidersData>) => createQueryKey('getRiders', options);
-
-/**
- * The branch's riders, on duty first (staff)
- *
- * Every rider whose app has been opened at the branch, with whether they are on duty, when the app was last heard from, and how many deliveries they have out.
- */
-export const getRidersOptions = (options: Options<GetRidersData>) => queryOptions<GetRidersResponse, AxiosError<DefaultError>, GetRidersResponse, ReturnType<typeof getRidersQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getRiders({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getRidersQueryKey(options)
-});
-
-/**
- * Take a delivery back from its rider before it leaves (staff)
- */
-export const unassignDeliveryRiderMutation = (options?: Partial<Options<UnassignDeliveryRiderData>>): UseMutationOptions<UnassignDeliveryRiderResponse, AxiosError<UnassignDeliveryRiderError>, Options<UnassignDeliveryRiderData>> => {
-    const mutationOptions: UseMutationOptions<UnassignDeliveryRiderResponse, AxiosError<UnassignDeliveryRiderError>, Options<UnassignDeliveryRiderData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await unassignDeliveryRider({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Give a delivery to a rider, or to another before it leaves (staff)
- */
-export const assignDeliveryRiderMutation = (options?: Partial<Options<AssignDeliveryRiderData>>): UseMutationOptions<AssignDeliveryRiderResponse, AxiosError<AssignDeliveryRiderError>, Options<AssignDeliveryRiderData>> => {
-    const mutationOptions: UseMutationOptions<AssignDeliveryRiderResponse, AxiosError<AssignDeliveryRiderError>, Options<AssignDeliveryRiderData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await assignDeliveryRider({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * The rider handed the cash in: the bill is settled in cash (staff)
- */
-export const handInDeliveryCashMutation = (options?: Partial<Options<HandInDeliveryCashData>>): UseMutationOptions<HandInDeliveryCashResponse, AxiosError<HandInDeliveryCashError>, Options<HandInDeliveryCashData>> => {
-    const mutationOptions: UseMutationOptions<HandInDeliveryCashResponse, AxiosError<HandInDeliveryCashError>, Options<HandInDeliveryCashData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await handInDeliveryCash({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-export const getMyDeliveriesQueryKey = (options: Options<GetMyDeliveriesData>) => createQueryKey('getMyDeliveries', options);
-
-/**
- * The deliveries given to the signed-in rider
- *
- * Those not yet delivered, then those delivered in the last day.
- */
-export const getMyDeliveriesOptions = (options: Options<GetMyDeliveriesData>) => queryOptions<GetMyDeliveriesResponse, AxiosError<DefaultError>, GetMyDeliveriesResponse, ReturnType<typeof getMyDeliveriesQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getMyDeliveries({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getMyDeliveriesQueryKey(options)
-});
-
-/**
- * The rider left with it
- *
- * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
- */
-export const markDeliveryOutMutation = (options?: Partial<Options<MarkDeliveryOutData>>): UseMutationOptions<MarkDeliveryOutResponse, AxiosError<MarkDeliveryOutError>, Options<MarkDeliveryOutData>> => {
-    const mutationOptions: UseMutationOptions<MarkDeliveryOutResponse, AxiosError<MarkDeliveryOutError>, Options<MarkDeliveryOutData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await markDeliveryOut({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * The customer has it
- *
- * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
- */
-export const markDeliveryDeliveredMutation = (options?: Partial<Options<MarkDeliveryDeliveredData>>): UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<MarkDeliveryDeliveredError>, Options<MarkDeliveryDeliveredData>> => {
-    const mutationOptions: UseMutationOptions<MarkDeliveryDeliveredResponse, AxiosError<MarkDeliveryDeliveredError>, Options<MarkDeliveryDeliveredData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await markDeliveryDelivered({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * The rider is on duty or off, at the branch in X-Branch-Id
- *
- * Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to.
- */
-export const setMyRiderStatusMutation = (options?: Partial<Options<SetMyRiderStatusData>>): UseMutationOptions<SetMyRiderStatusResponse, AxiosError<DefaultError>, Options<SetMyRiderStatusData>> => {
-    const mutationOptions: UseMutationOptions<SetMyRiderStatusResponse, AxiosError<DefaultError>, Options<SetMyRiderStatusData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await setMyRiderStatus({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
 
 export const getKitchenStationsQueryKey = (options: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
 

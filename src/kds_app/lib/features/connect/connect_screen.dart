@@ -5,9 +5,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/brand/brand_mark.dart';
 import '../../core/config/app_config.dart';
-import '../../core/config/tenant_connection.dart';
-import '../../core/providers/locale_provider.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The wall before the app: until this tablet knows which business it serves,
@@ -112,7 +112,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
       _failure = null;
     });
     try {
-      final connection = await TenantConnection.probe(input);
+      // A kitchen tablet on the business's own network may reach it over plain http
+      final connection = await TenantConnection.probe(input, allowCleartext: true);
       await TenantConnection.save(connection);
     } on ConnectException catch (e) {
       if (mounted) setState(() => _failure = e.failure);
@@ -137,6 +138,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
         ConnectFailure.unreachable => l10n.connectUnreachable,
         ConnectFailure.notABusiness => l10n.connectNotABusiness,
         ConnectFailure.paused => l10n.connectPaused,
+        // Never from this app's probe, which allows plain http
+        ConnectFailure.insecure => l10n.connectUnreachable,
       };
 
   @override

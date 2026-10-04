@@ -1,15 +1,12 @@
-import 'tenant_connection.dart';
+import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ninja_app_core/config.dart';
+import 'package:ninja_app_core/tenant_connection.dart';
+import '../services/signalr_service.dart';
 
-/// Application configuration for the rider app
-///
-/// Which business this app talks to is data, not code. One generic build goes
-/// to every business from the platform's download page; the first time it opens
-/// it asks for the business's address and keeps the [TenantConnection] it finds
-/// on the device. A build can still be pinned to one stack instead:
-/// `tenants/<slug>.json` at the repository root, passed as
-/// `--dart-define-from-file`, and then it never asks. Debug builds reach the
-/// Aspire AppHost on the dev machine when told the realm alone, since the
-/// code has no tenant of its own:
+/// Application configuration for the rider app. Which business it talks to
+/// and how it reaches it is the shared core's ([CoreEndpoints]); what is the
+/// rider's own is here, and handed to the core as [core] at start:
 ///
 ///   flutter run --dart-define=REALM=chillax
 ///
@@ -17,58 +14,38 @@ import 'tenant_connection.dart';
 class AppConfig {
   static const bool _isRelease = bool.fromEnvironment('dart.vm.product');
 
-  static const String _apiUrl = String.fromEnvironment('API_URL');
-  static const String _authUrl = String.fromEnvironment('AUTH_URL');
-  static const String _realm = String.fromEnvironment('REALM');
-
   /// A build told its stack at build time never asks for one
-  static bool get isPinned => _apiUrl.isNotEmpty;
+  static bool get isPinned => CoreEndpoints.isPinned;
 
   /// The business this device was connected to, when the build is not pinned
-  static TenantConnection? get connection => TenantConnection.current.value;
+  static TenantConnection? get connection => CoreEndpoints.connection;
 
   /// Whether there is a stack to talk to. Until there is, the connect
   /// screen is the whole app.
-  static bool get isConnected => isPinned || connection != null || (!_isRelease && _realm.isNotEmpty);
+  static bool get isConnected => CoreEndpoints.isConnected;
 
-  // Everything goes through the mobile BFF (YARP).
-  // Debug: the Aspire AppHost on the dev machine, reached from the emulator
-  //   through `adb reverse tcp:5000 tcp:5000` and `adb reverse tcp:8080 tcp:8080`
-  //   (localhost on both sides keeps Keycloak's token issuer matching).
-  static String get bffBaseUrl {
-    if (_apiUrl.isNotEmpty) return _apiUrl;
-    if (connection case final connection?) return connection.apiUrl;
-    if (!_isRelease) return 'http://localhost:5000';
-    throw StateError('Not connected to a business: the connect screen comes first');
-  }
+  static String get bffBaseUrl => CoreEndpoints.bffBaseUrl;
+  static String get ordersApiUrl => CoreEndpoints.ordersApiUrl;
 
-  // API endpoints (through BFF) - trailing slash required for Dio path resolution
-  static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
   /// Push: the rider's phone registers here for the deliveries given to them
-  static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';
-  static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
-  /// The tenant's brand: one anonymous resource, no sub-paths
-  static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
+  static String get notificationsApiUrl => '${CoreEndpoints.bffBaseUrl}/api/notifications/';
+  static String get branchesApiUrl => CoreEndpoints.branchesApiUrl;
+  static String get tenantApiUrl => CoreEndpoints.tenantApiUrl;
+  static String get identityUrl => CoreEndpoints.identityUrl;
 
-  /// The OpenID issuer to sign in against: the realm a pinned build was
-  /// given, else the one the business's API named when this device connected
-  /// (its own realm on the platform's auth host), else the AppHost's
-  /// Keycloak through adb reverse in debug. Never a default realm: the app
-  /// signs in against the business's, or against none.
-  static String get identityUrl {
-    if (_authUrl.isNotEmpty && _realm.isNotEmpty) return '$_authUrl/realms/$_realm';
-    if (connection?.authority case final authority?) return authority;
-    if (!_isRelease && _realm.isNotEmpty) return 'http://localhost:8080/realms/$_realm';
-    throw StateError('No realm to sign in against: the business\'s API did not name one');
-  }
-
-  // OIDC configuration (Resource Owner Password Credentials, like pos_app).
+  // OIDC configuration: authorization code with PKCE in the system browser.
   // offline_access on purpose: a rider signs in once at the start of the
   // week, not every shift, so the refresh token must outlive the SSO idle timeout.
   static const String clientId = 'rider-app';
-  // The scheme must match what the native folders declare
-  // (AndroidManifest.xml); it becomes flavor data with them in Phase 5 of
-  // docs/ninja-plan.md.
+
+  /// The password form (Resource Owner Password Credentials) instead of the
+  /// browser: a debug build only, asked for with
+  /// `--dart-define=RIDER_SIGN_IN=password`, for a dev realm whose client has
+  /// no browser flow. A release build always signs in in the browser.
+  static const bool passwordSignIn = !_isRelease && String.fromEnvironment('RIDER_SIGN_IN') == 'password';
+
+  // The scheme must match the redirect the Android build declares
+  // (appAuthRedirectScheme in android/app/build.gradle.kts).
   static const String _redirectScheme =
       String.fromEnvironment('REDIRECT_SCHEME', defaultValue: 'com.ninja.rider');
   static const String redirectUri = '$_redirectScheme://callback';
@@ -93,6 +70,39 @@ class AppConfig {
   // Poll fallback (SignalR and push are the primary update paths)
   static const Duration deliveriesPoll = Duration(seconds: 30);
 
-  /// While on duty and the app is open, the till hears from it this often
+  /// While on duty and the app is in front, the till hears from it this often.
+  /// The till only calls a rider stale after a good while longer (Ordering's
+  /// RiderGone): a rider out on the road with Maps in front stays on duty.
   static const Duration dutyHeartbeat = Duration(minutes: 5);
+
+  /// How long a network step of signing out may take before the session ends anyway
+  static const Duration signOutStepTimeout = Duration(seconds: 5);
+
+  /// A refresh that has failed for this long tells the rider the list may be old
+  static const Duration staleAfter = Duration(minutes: 2);
+
+  /// An update installs on its own only this soon after the app opens (nothing is under way yet)
+  static const Duration updateQuietWindow = Duration(minutes: 3);
+
+  /// Shorter than this a distance reads in metres, longer in kilometres
+  static const int metresUntilKm = 950;
+
+  /// What the shared core needs to know about the rider app
+  static final NinjaAppConfig core = NinjaAppConfig(
+    appKey: 'rider',
+    clientId: clientId,
+    scopes: scopes,
+    allowedRoles: riderRoles,
+    passwordSignIn: passwordSignIn,
+    signOutStepTimeout: signOutStepTimeout,
+    // Over https only, with its checksum and this app's signing certificate
+    // (AppUpdater), and Android's prompt only right after the app opens
+    update: const UpdateConfig(
+      channel: 'com.ninja.rider/update',
+      file: 'ninja-rider',
+      quietWindow: updateQuietWindow,
+    ),
+    onSignedIn: (Ref ref) => unawaited(ref.read(signalRServiceProvider).connect()),
+    onSigningOut: (Ref ref) => ref.read(signalRServiceProvider).disconnect(),
+  );
 }

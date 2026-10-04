@@ -1,8 +1,8 @@
 import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
-import '../../../core/motion/motion.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 
 /// How long a bumped ticket takes to leave the board
 const bumpDuration = Duration(milliseconds: 700);

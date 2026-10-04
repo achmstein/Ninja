@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// One line of an order, as the kitchen needs it: what and how many, plus
 /// the customizations and instructions that change how it is made. No money.
