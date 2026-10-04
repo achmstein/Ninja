@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Ninja.Tenant.API.Model;
 using Ninja.Tenant.API.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -54,7 +54,7 @@ public static class BranchApi
             .AsNoTracking()
             .Where(b => b.IsActive)
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude))
+            .Select(b => BranchResponse.From(b))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -65,7 +65,7 @@ public static class BranchApi
         var branches = await context.Branches
             .AsNoTracking()
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude))
+            .Select(b => BranchResponse.From(b))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -81,6 +81,8 @@ public static class BranchApi
     {
         if (request.Name is null || request.Name.IsEmpty)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
+        if (DeliveryProblem(request.DeliveryRadiusKm, request.DeliveryFee, request.DeliveryMinimumOrder) is { } deliveryProblem)
+            return deliveryProblem;
 
         GeoPoint? point = null;
         if (!string.IsNullOrWhiteSpace(request.Location))
@@ -102,7 +104,10 @@ public static class BranchApi
             IsOrderingEnabled = request.IsOrderingEnabled,
             IsReservationsEnabled = request.IsReservationsEnabled,
             Latitude = point?.Latitude,
-            Longitude = point?.Longitude
+            Longitude = point?.Longitude,
+            DeliveryRadiusKm = request.DeliveryRadiusKm > 0 ? request.DeliveryRadiusKm : null,
+            DeliveryFee = request.DeliveryFee,
+            DeliveryMinimumOrder = request.DeliveryMinimumOrder
         };
 
         context.Branches.Add(branch);
@@ -110,7 +115,7 @@ public static class BranchApi
         // Ordering, Spaces and Notification learn of a branch only through its settings event
         await settings.PublishNewAsync(branch);
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
+        var response = BranchResponse.From(branch);
         return TypedResults.Created($"/api/branches/{branch.Id}", response);
     }
 
@@ -126,6 +131,9 @@ public static class BranchApi
         if (request.Name is null || request.Name.IsEmpty)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The branch's name is required." });
 
+        if (DeliveryProblem(request.DeliveryRadiusKm, request.DeliveryFee, request.DeliveryMinimumOrder) is { } deliveryProblem)
+            return deliveryProblem;
+
         var branch = await context.Branches.FindAsync(id);
         if (branch == null)
             return TypedResults.NotFound();
@@ -138,6 +146,10 @@ public static class BranchApi
         branch.IsActive = request.IsActive;
         branch.DisplayOrder = request.DisplayOrder;
         if (request.DayStartTime != null) branch.DayStartTime = TimeOnly.Parse(request.DayStartTime);
+        // Null leaves each delivery value as it is, like the flags; a radius of 0 takes it away
+        if (request.DeliveryRadiusKm != null) branch.DeliveryRadiusKm = request.DeliveryRadiusKm > 0 ? request.DeliveryRadiusKm : null;
+        if (request.DeliveryFee != null) branch.DeliveryFee = request.DeliveryFee.Value;
+        if (request.DeliveryMinimumOrder != null) branch.DeliveryMinimumOrder = request.DeliveryMinimumOrder.Value;
 
         // Null leaves where it is; empty takes it off the map; anything else must name a point
         if (request.Location is { } location)
@@ -159,9 +171,9 @@ public static class BranchApi
         }
 
         // The flags ride the same save; the service announces the change
-        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders);
+        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled);
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
+        var response = BranchResponse.From(branch);
         return TypedResults.Ok(response);
     }
 
@@ -175,16 +187,37 @@ public static class BranchApi
             Detail = "Paste the branch's Google Maps link (Share → Copy link) or its coordinates, like 30.0444, 31.2357.",
         });
 
-    public static async Task<Results<Ok<BranchResponse>, NotFound>> UpdateBranchSettings(
+    private static BadRequest<ProblemDetails>? DeliveryProblem(decimal? radiusKm, decimal? fee, decimal? minimum) =>
+        radiusKm < 0 || radiusKm > 100 || fee < 0 || minimum < 0
+            ? TypedResults.BadRequest<ProblemDetails>(new()
+            {
+                Title = "Delivery not set",
+                Detail = "The delivery radius is up to 100 km, and the fee and the minimum order can't be below zero.",
+            })
+            : null;
+
+    public static async Task<Results<Ok<BranchResponse>, NotFound, BadRequest<ProblemDetails>>> UpdateBranchSettings(
+        TenantContext context,
         BranchSettingsService settings,
         [Description("The branch ID")] int branchId,
         UpdateBranchSettingsRequest request)
     {
-        var branch = await settings.ApplyAsync(branchId, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders);
+        // Switching delivery on needs somewhere to measure from and somewhere to stop
+        if (request.IsDeliveryEnabled == true
+            && await context.Branches.FindAsync(branchId) is { CanDeliver: false })
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new()
+            {
+                Title = "Delivery not set",
+                Detail = "Set the branch's location and how far it delivers first.",
+            });
+        }
+
+        var branch = await settings.ApplyAsync(branchId, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled);
         if (branch == null)
             return TypedResults.NotFound();
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayStartTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders, branch.Latitude, branch.Longitude);
+        var response = BranchResponse.From(branch);
         return TypedResults.Ok(response);
     }
 
@@ -192,12 +225,20 @@ public static class BranchApi
 
 /// <param name="DayStartTime">When the branch's day turns over; a day runs from it to the same time the next day.</param>
 /// <param name="Latitude">Where the branch is, with Longitude; null until its location is set.</param>
+/// <param name="IsDeliveryEnabled">The branch delivers with its own riders, within DeliveryRadiusKm of where it is.</param>
 /// <param name="DayEndTime">Always the same as DayStartTime, a whole day: kept for the apps already installed, which read a day from a start and an end and take an end at its start as a full day round.</param>
-public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null);
+public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null, bool IsDeliveryEnabled = false, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0)
+{
+    public static BranchResponse From(Model.Branch b) => new(
+        b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder,
+        b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"),
+        b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude,
+        b.IsDeliveryEnabled, b.DeliveryRadiusKm, b.DeliveryFee, b.DeliveryMinimumOrder);
+}
 
-public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null);
+public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0);
 
-public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null);
+public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null, bool? IsDeliveryEnabled = null, decimal? DeliveryRadiusKm = null, decimal? DeliveryFee = null, decimal? DeliveryMinimumOrder = null);
 
-public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null);
+public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, bool? IsDeliveryEnabled = null);
 

@@ -20,30 +20,27 @@ public class BranchSettingsChangedIntegrationEventHandler(
 
         if (row is null)
         {
-            context.BranchSettings.Add(new BranchSettings
-            {
-                BranchId = @event.BranchId,
-                IsOrderingEnabled = @event.IsOrderingEnabled,
-                IsReservationsEnabled = @event.IsReservationsEnabled,
-                RequireSignInForTableOrders = @event.RequireSignInForTableOrders,
-                UpdatedAt = @event.CreationDate,
-            });
+            row = new BranchSettings { BranchId = @event.BranchId };
+            context.BranchSettings.Add(row);
         }
-        else
+        else if (@event.CreationDate <= row.UpdatedAt)
         {
-            if (@event.CreationDate <= row.UpdatedAt)
-            {
-                logger.LogInformation(
-                    "Branch {BranchId} settings event from {EventAt} is not newer than the projection ({RowAt}) - skipped",
-                    @event.BranchId, @event.CreationDate, row.UpdatedAt);
-                return;
-            }
-
-            row.IsOrderingEnabled = @event.IsOrderingEnabled;
-            row.IsReservationsEnabled = @event.IsReservationsEnabled;
-            row.RequireSignInForTableOrders = @event.RequireSignInForTableOrders;
-            row.UpdatedAt = @event.CreationDate;
+            logger.LogInformation(
+                "Branch {BranchId} settings event from {EventAt} is not newer than the projection ({RowAt}) - skipped",
+                @event.BranchId, @event.CreationDate, row.UpdatedAt);
+            return;
         }
+
+        row.IsOrderingEnabled = @event.IsOrderingEnabled;
+        row.IsReservationsEnabled = @event.IsReservationsEnabled;
+        row.RequireSignInForTableOrders = @event.RequireSignInForTableOrders;
+        row.IsDeliveryEnabled = @event.IsDeliveryEnabled;
+        row.Latitude = @event.Latitude;
+        row.Longitude = @event.Longitude;
+        row.DeliveryRadiusKm = @event.DeliveryRadiusKm;
+        row.DeliveryFee = @event.DeliveryFee;
+        row.DeliveryMinimumOrder = @event.DeliveryMinimumOrder;
+        row.UpdatedAt = @event.CreationDate;
 
         await context.SaveChangesAsync();
 

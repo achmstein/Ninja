@@ -8,7 +8,8 @@ namespace Ninja.Tenant.API.Services;
 /// endpoint (the admin app and the till's pause toggles) and from the shift
 /// events Sales publishes. Every change goes out as
 /// <see cref="BranchSettingsChangedIntegrationEvent"/> so Ordering, Spaces and
-/// Notification keep their own copy of the flags.
+/// Notification keep their own copy of the flags (Ordering also of where the
+/// branch is and how it delivers).
 /// </summary>
 public class BranchSettingsService(
     TenantContext context,
@@ -19,13 +20,13 @@ public class BranchSettingsService(
     /// Load, set, save, publish. A null flag leaves that setting as it was.
     /// Returns null when there is no such branch.
     /// </summary>
-    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null)
+    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null)
     {
         var branch = await context.Branches.FindAsync(branchId);
         if (branch == null)
             return null;
 
-        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled, requireSignInForTableOrders);
+        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled, requireSignInForTableOrders, isDeliveryEnabled);
 
         return branch;
     }
@@ -34,11 +35,15 @@ public class BranchSettingsService(
     /// Same on a branch the caller already loaded; whatever else is pending
     /// on the context is saved in the same call.
     /// </summary>
-    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null)
+    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null)
     {
         if (isOrderingEnabled != null) branch.IsOrderingEnabled = isOrderingEnabled.Value;
         if (isReservationsEnabled != null) branch.IsReservationsEnabled = isReservationsEnabled.Value;
         if (requireSignInForTableOrders != null) branch.RequireSignInForTableOrders = requireSignInForTableOrders.Value;
+        if (isDeliveryEnabled != null) branch.IsDeliveryEnabled = isDeliveryEnabled.Value;
+        // Delivering needs a place to measure from and a distance to stop at:
+        // taking either away turns delivery off rather than leaving it boundless
+        if (!branch.CanDeliver) branch.IsDeliveryEnabled = false;
 
         await context.SaveChangesAsync();
 
@@ -57,5 +62,7 @@ public class BranchSettingsService(
 
     private Task PublishAsync(Model.Branch branch)
         => eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders));
+            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders,
+            branch.IsDeliveryEnabled, branch.Latitude, branch.Longitude,
+            branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder));
 }

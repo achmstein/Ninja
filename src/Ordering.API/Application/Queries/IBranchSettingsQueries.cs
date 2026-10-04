@@ -18,4 +18,16 @@ public interface IBranchSettingsQueries
     /// a branch with no projection row takes guest table orders.
     /// </summary>
     Task<bool> RequiresSignInForTableOrdersAsync(int branchId);
+
+    /// <summary>
+    /// How the branch delivers, or null when it does not right now: delivery
+    /// off, ordering paused, or a branch never heard of (fails closed).
+    /// </summary>
+    Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId);
+}
+
+/// <summary>Where a branch delivers from, how far, and what it asks.</summary>
+public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder)
+{
+    public int RadiusMeters => (int)(RadiusKm * 1000);
 }

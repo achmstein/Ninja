@@ -38,4 +38,23 @@ public class Branch
     /// </summary>
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    /// <summary>
+    /// The branch delivers with its own riders, to anywhere within
+    /// <see cref="DeliveryRadiusKm"/> of where it is. Needs the location and
+    /// the radius; Ordering enforces it from its projection.
+    /// </summary>
+    public bool IsDeliveryEnabled { get; set; }
+
+    /// <summary>How far the riders go, straight-line from the branch; null until set.</summary>
+    public decimal? DeliveryRadiusKm { get; set; }
+
+    /// <summary>What a delivery adds to the bill, the same wherever it goes.</summary>
+    public decimal DeliveryFee { get; set; }
+
+    /// <summary>The least the items must come to for a delivery; 0 for none.</summary>
+    public decimal DeliveryMinimumOrder { get; set; }
+
+    /// <summary>Whether delivery can be on: the branch is on the map and says how far it goes.</summary>
+    public bool CanDeliver => Latitude != null && Longitude != null && DeliveryRadiusKm > 0;
 }

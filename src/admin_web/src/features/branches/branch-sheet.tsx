@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
+  Bike,
   CalendarCheck,
   ChefHat,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
   QrCode,
   Receipt,
   Navigation,
+  Ruler,
   UserCheck,
 } from 'lucide-react'
 import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -20,6 +22,7 @@ import { type BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
+import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,6 +35,7 @@ export type BranchSetting =
   | 'isOrderingEnabled'
   | 'isReservationsEnabled'
   | 'requireSignInForTableOrders'
+  | 'isDeliveryEnabled'
 
 const percent = (rate: number | string | undefined) =>
   String(Math.round(Number(rate ?? 0) * 10000) / 100)
@@ -51,6 +55,7 @@ export function BranchSheet({
   onEdit,
   onKitchen,
   onPricing,
+  onDelivery,
   onSetActive,
 }: {
   open: boolean
@@ -62,6 +67,7 @@ export function BranchSheet({
   onEdit: () => void
   onKitchen: () => void
   onPricing: () => void
+  onDelivery: () => void
   onSetActive: (active: boolean) => void
 }) {
   const t = useT()
@@ -92,6 +98,10 @@ export function BranchSheet({
   const stations = stationsQuery.data?.length ?? 0
   const pricing = pricingQuery.data
   const address = localized(branch.address)
+  const located = branch.latitude != null && branch.longitude != null
+  const radiusKm = Number(branch.deliveryRadiusKm ?? 0)
+  const fee = Number(branch.deliveryFee ?? 0)
+  const minimum = Number(branch.deliveryMinimumOrder ?? 0)
 
   return (
     <EntitySheet
@@ -157,6 +167,39 @@ export function BranchSheet({
             onChange={(v) => onToggle('requireSignInForTableOrders', v)}
           />
         )}
+      </Group>
+
+      <Group label={t('branchSectionDelivery')}>
+        <ToggleRow
+          icon={Bike}
+          title={t('deliveryEnabled')}
+          hint={
+            located && radiusKm > 0
+              ? t('deliveryEnabledHint')
+              : t('deliveryNeedsLocation')
+          }
+          checked={branch.isDeliveryEnabled ?? false}
+          disabled={savingSettings || !located || radiusKm <= 0}
+          onChange={(v) => onToggle('isDeliveryEnabled', v)}
+        />
+        <OpenRow
+          icon={Ruler}
+          title={t('deliverySettings')}
+          value={
+            radiusKm > 0
+              ? [
+                  t('deliveryWithinKm', { km: radiusKm }),
+                  fee > 0 ? formatEgp(fee) : t('deliveryFree'),
+                  minimum > 0
+                    ? t('deliveryMinimumShort', { amount: formatEgp(minimum) })
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              : t('branchNotSet')
+          }
+          onClick={onDelivery}
+        />
       </Group>
 
       {features.kds && (
@@ -228,11 +271,7 @@ export function BranchSheet({
         <OpenRow
           icon={Navigation}
           title={t('branchLocation')}
-          value={
-            branch.latitude != null && branch.longitude != null
-              ? t('onTheMap')
-              : t('branchNotSet')
-          }
+          value={located ? t('onTheMap') : t('branchNotSet')}
           onClick={onEdit}
         />
         <OpenRow

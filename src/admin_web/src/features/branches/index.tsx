@@ -36,6 +36,7 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { BranchSheet, type BranchSetting } from './branch-sheet'
 import { BranchDialog } from './components/branch-dialog'
+import { DeliveryDialog } from './components/delivery-dialog'
 import { KitchenDialog } from './components/kitchen-dialog'
 import { PricingDialog } from './components/pricing-dialog'
 
@@ -60,6 +61,9 @@ export function BranchesManagement() {
     null
   )
   const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(
+    null
+  )
+  const [deliveryBranch, setDeliveryBranch] = useState<BranchResponse | null>(
     null
   )
   const [kitchenBranch, setKitchenBranch] = useState<BranchResponse | null>(
@@ -311,6 +315,7 @@ export function BranchesManagement() {
         onEdit={() => openBranch && edit(openBranch)}
         onKitchen={() => openBranch && setKitchenBranch(openBranch)}
         onPricing={() => openBranch && setPricingBranch(openBranch)}
+        onDelivery={() => openBranch && setDeliveryBranch(openBranch)}
         onSetActive={(active) => openBranch && askActive(openBranch, active)}
       />
 
@@ -333,6 +338,13 @@ export function BranchesManagement() {
         branch={kitchenBranch}
         onOpenChange={(o) => {
           if (!o) setKitchenBranch(null)
+        }}
+      />
+
+      <DeliveryDialog
+        branch={deliveryBranch}
+        onOpenChange={(o) => {
+          if (!o) setDeliveryBranch(null)
         }}
       />
 
