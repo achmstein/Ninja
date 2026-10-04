@@ -11,6 +11,7 @@ import {
   Power,
   QrCode,
   Receipt,
+  Navigation,
   UserCheck,
 } from 'lucide-react'
 import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -19,11 +20,12 @@ import { type BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { EntitySheet } from '@/components/entity-sheet'
-import { SettingRow, SettingsCard } from '@/components/kit'
+import { InfoTip } from '@/components/info-tip'
 import { StatusChip } from '@/components/status-chip'
 
 export type BranchSetting =
@@ -126,53 +128,39 @@ export function BranchSheet({
         </Button>
       }
     >
-      <SettingsCard title={t('branchSectionOrdering')}>
-        <SettingRow
+      <Group label={t('branchSectionOrdering')}>
+        <ToggleRow
           icon={QrCode}
           title={t('orderingEnabled')}
-          description={t('orderingEnabledHint')}
-          control={
-            <Switch
-              checked={branch.isOrderingEnabled}
-              disabled={savingSettings}
-              onCheckedChange={(v) => onToggle('isOrderingEnabled', v)}
-            />
-          }
+          hint={t('orderingEnabledHint')}
+          checked={branch.isOrderingEnabled}
+          disabled={savingSettings}
+          onChange={(v) => onToggle('isOrderingEnabled', v)}
         />
         {features.reservations && (
-          <SettingRow
+          <ToggleRow
             icon={CalendarCheck}
             title={t('reservationsEnabled')}
-            description={t('reservationsEnabledHint')}
-            control={
-              <Switch
-                checked={branch.isReservationsEnabled}
-                disabled={savingSettings}
-                onCheckedChange={(v) => onToggle('isReservationsEnabled', v)}
-              />
-            }
+            hint={t('reservationsEnabledHint')}
+            checked={branch.isReservationsEnabled}
+            disabled={savingSettings}
+            onChange={(v) => onToggle('isReservationsEnabled', v)}
           />
         )}
         {!cloudKitchen && (
-          <SettingRow
+          <ToggleRow
             icon={UserCheck}
             title={t('requireSignInForTableOrders')}
-            description={t('branchSignInHint')}
-            control={
-              <Switch
-                checked={branch.requireSignInForTableOrders ?? false}
-                disabled={savingSettings}
-                onCheckedChange={(v) =>
-                  onToggle('requireSignInForTableOrders', v)
-                }
-              />
-            }
+            hint={t('branchSignInHint')}
+            checked={branch.requireSignInForTableOrders ?? false}
+            disabled={savingSettings}
+            onChange={(v) => onToggle('requireSignInForTableOrders', v)}
           />
         )}
-      </SettingsCard>
+      </Group>
 
       {features.kds && (
-        <SettingsCard title={t('branchSectionKitchen')}>
+        <Group label={t('branchSectionKitchen')}>
           <OpenRow
             icon={ChefHat}
             title={t('kitchenStations')}
@@ -187,10 +175,10 @@ export function BranchSheet({
             }
             onClick={onKitchen}
           />
-        </SettingsCard>
+        </Group>
       )}
 
-      <SettingsCard title={t('branchSectionReceipts')}>
+      <Group label={t('branchSectionReceipts')}>
         <OpenRow
           icon={Receipt}
           title={t('receiptPricing')}
@@ -218,9 +206,9 @@ export function BranchSheet({
           value={branch.taxNumber || t('branchNotSet')}
           onClick={onEdit}
         />
-      </SettingsCard>
+      </Group>
 
-      <SettingsCard title={t('details')}>
+      <Group label={t('details')}>
         <OpenRow
           icon={Clock}
           title={t('dayStartTime')}
@@ -238,6 +226,16 @@ export function BranchSheet({
           onClick={onEdit}
         />
         <OpenRow
+          icon={Navigation}
+          title={t('branchLocation')}
+          value={
+            branch.latitude != null && branch.longitude != null
+              ? t('onTheMap')
+              : t('branchNotSet')
+          }
+          onClick={onEdit}
+        />
+        <OpenRow
           icon={Phone}
           title={t('phone')}
           value={
@@ -249,8 +247,62 @@ export function BranchSheet({
           }
           onClick={onEdit}
         />
-      </SettingsCard>
+      </Group>
     </EntitySheet>
+  )
+}
+
+/** A group of rows under a small label, as one bordered list: no card in the sheet */
+function Group({
+  label,
+  children,
+}: {
+  label: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <section className='flex flex-col gap-2'>
+      <h3 className='text-muted-foreground px-1 text-xs font-medium'>
+        {label}
+      </h3>
+      <div className='divide-border/60 divide-y overflow-hidden rounded-xl border'>
+        {children}
+      </div>
+    </section>
+  )
+}
+
+const ROW = 'flex w-full items-center gap-3 px-3.5 py-3 text-start'
+
+/** A yes-or-no switched right here: the setting on one line, what it does behind an ⓘ */
+function ToggleRow({
+  icon: Icon,
+  title,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: React.ReactNode
+  hint?: React.ReactNode
+  checked: boolean
+  disabled?: boolean
+  onChange: (value: boolean) => void
+}) {
+  return (
+    <div className={ROW}>
+      <Icon className='text-muted-foreground size-4 shrink-0' />
+      <span className='flex min-w-0 flex-1 items-center gap-1 text-sm font-medium'>
+        <span className='truncate'>{title}</span>
+        {hint && <InfoTip>{hint}</InfoTip>}
+      </span>
+      <Switch
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+      />
+    </div>
   )
 }
 
@@ -270,18 +322,18 @@ function OpenRow({
     <button
       type='button'
       onClick={onClick}
-      className='hover:bg-muted/40 flex w-full items-center gap-3 px-5 py-3.5 text-start transition-colors'
+      className={cn(ROW, 'hover:bg-muted/40 transition-colors')}
     >
-      <span className='bg-muted grid size-9 shrink-0 place-items-center rounded-lg'>
-        <Icon className='text-muted-foreground size-4' />
+      <Icon className='text-muted-foreground size-4 shrink-0' />
+      <span className='min-w-0 flex-1 truncate text-sm font-medium'>
+        {title}
       </span>
-      <span className='min-w-0 flex-1 text-sm font-medium'>{title}</span>
       {value != null && (
-        <span className='text-muted-foreground min-w-0 truncate text-end text-sm'>
+        <span className='text-muted-foreground max-w-[50%] truncate text-end text-sm'>
           {value}
         </span>
       )}
-      <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />
+      <ChevronRight className='text-muted-foreground/60 size-4 shrink-0 rtl:rotate-180' />
     </button>
   )
 }
