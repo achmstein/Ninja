@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Check, ChevronUp, CircleHelp, ReceiptText, Send, X } from 'lucide-react'
+import { Bike, Check, ChefHat, ChevronUp, CircleHelp, House, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useLiveOrder } from '@/lib/live-order'
 import { STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
@@ -25,7 +25,15 @@ import { useDockRowShown } from './use-dock-row'
 /** What a dot on the row stands for: something asked for and not yet done with */
 const ASKED = [SERVICE_REQUEST.callWaiter, SERVICE_REQUEST.receiptToPay, SERVICE_REQUEST.controllerChange, SERVICE_REQUEST.changeOption]
 
-const STAGE_ICONS: Record<PillStage, typeof Send> = { sent: Send, confirmed: Check, paid: ReceiptText, cancelled: X }
+const STAGE_ICONS: Record<PillStage, typeof Send> = {
+  sent: Send,
+  confirmed: Check,
+  preparing: ChefHat,
+  onTheWay: Bike,
+  delivered: House,
+  paid: ReceiptText,
+  cancelled: X,
+}
 
 /**
  * The bill running now and the order on its way, on the dock: the row says

@@ -7,12 +7,14 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * turned down) until it is done with. The customer app says only what the
  * till has said: that it has the order, and that it confirmed it. Whether
  * the kitchen has finished it is not the customer's to be told, since not
- * every business has a kitchen screen to say so. This file is the pure logic
+ * every business has a kitchen screen to say so. A delivery is followed to
+ * the door: being made, on its way with its rider, delivered, since the
+ * rider says each one. This file is the pure logic
  * (which order, what it says, when it goes) and the little store that
  * remembers there is an order to follow.
  */
 
-export type PillStage = 'sent' | 'confirmed' | 'paid' | 'cancelled'
+export type PillStage = 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'paid' | 'cancelled'
 
 /** What the pill needs from an order (the Ordering OrderSummary shape) */
 export type PillOrder = {
@@ -21,12 +23,16 @@ export type PillOrder = {
   status?: string
   paidAt?: string | null
   voidedAt?: string | null
+  /** The business's own delivery, where it has got to; none for an order eaten in or collected */
+  delivery?: { stage?: string } | null
 }
 
 /** How far back of the tap an order may be dated: the server's clock is not the phone's */
 export const CLOCK_SLACK_MS = 2 * 60_000
 /** The pill follows one order for this long at most */
 export const FOLLOW_FOR_MS = 45 * 60_000
+/** A delivery is followed to the door, for this long at most */
+export const FOLLOW_DELIVERY_FOR_MS = 2 * 60 * 60_000
 /** The order should be in the list by now; if not, the pill lets go */
 export const NOT_FOUND_AFTER_MS = 2 * 60_000
 
@@ -35,6 +41,10 @@ export const LINGER_MS: Record<PillStage, number | null> = {
   sent: null,
   // Confirmed, the round is on the bill: the dock says so for a moment, then the row is the bill again
   confirmed: 8_000,
+  // A delivery stays on the dock while it is made and on its way, and says it arrived for a moment
+  preparing: null,
+  onTheWay: null,
+  delivered: 10_000,
   paid: 4_000,
   cancelled: 8_000,
 }
@@ -49,6 +59,13 @@ function time(value: string | null | undefined): number | null {
 export function stageOf(order: PillOrder): PillStage {
   const status = order.status?.toLowerCase()
   if (status === 'cancelled' || order.voidedAt) return 'cancelled'
+  // A delivery is paid at the door, so it is delivered before it is paid: the door is the news
+  if (order.delivery && status === 'confirmed') {
+    const stage = order.delivery.stage
+    if (stage === 'Delivered') return 'delivered'
+    if (stage === 'OnTheWay') return 'onTheWay'
+    return 'preparing'
+  }
   if (order.paidAt) return 'paid'
   if (status === 'confirmed') return 'confirmed'
   // AwaitingValidation / Submitted: with the business, not yet taken on
@@ -96,16 +113,20 @@ export function pillVisible({
   now,
 }: PillVisibility): boolean {
   if (dismissed) return false
-  if (now - placedAt > FOLLOW_FOR_MS) return false
+  if (now - placedAt > followFor(order)) return false
   if (!order) return now - placedAt < NOT_FOUND_AFTER_MS
   const linger = LINGER_MS[stageOf(order)]
   return linger == null || now - stageSince < linger
 }
 
+function followFor(order: PillOrder | null): number {
+  return order?.delivery ? FOLLOW_DELIVERY_FOR_MS : FOLLOW_FOR_MS
+}
+
 /** The next moment the answer of pillVisible can change, for a timer */
 export function nextCheck(v: PillVisibility): number | null {
   if (v.dismissed) return null
-  const times = [v.placedAt + FOLLOW_FOR_MS]
+  const times = [v.placedAt + followFor(v.order)]
   if (!v.order) times.push(v.placedAt + NOT_FOUND_AFTER_MS)
   else {
     const linger = LINGER_MS[stageOf(v.order)]
@@ -116,9 +137,12 @@ export function nextCheck(v: PillVisibility): number | null {
 }
 
 /** Icon for a stage, by lucide name, resolved by the component */
-export const STAGE_ICON: Record<PillStage, 'send' | 'check' | 'receipt' | 'x'> = {
+export const STAGE_ICON: Record<PillStage, 'send' | 'check' | 'chef' | 'bike' | 'home' | 'receipt' | 'x'> = {
   sent: 'send',
   confirmed: 'check',
+  preparing: 'chef',
+  onTheWay: 'bike',
+  delivered: 'home',
   paid: 'receipt',
   cancelled: 'x',
 }
@@ -129,6 +153,9 @@ type Words = { en: string; ar: string; arStandard: string }
 export const STAGE_LABEL: Record<PillStage, Words> = {
   sent: { en: 'Sent', ar: 'اتبعت', arStandard: 'أُرسل' },
   confirmed: { en: 'Confirmed', ar: 'اتأكد', arStandard: 'تم التأكيد' },
+  preparing: { en: 'Being made', ar: 'بيتجهز', arStandard: 'قيد التحضير' },
+  onTheWay: { en: 'On its way', ar: 'في الطريق', arStandard: 'في الطريق' },
+  delivered: { en: 'Delivered', ar: 'وصل', arStandard: 'تم التوصيل' },
   paid: { en: 'Paid', ar: 'اتدفع', arStandard: 'مدفوع' },
   cancelled: { en: 'Cancelled', ar: 'اتلغى', arStandard: 'أُلغي' },
 }
@@ -148,6 +175,17 @@ export const PILL_WORDS = {
     arStandard: 'تم التأكيد وأُضيف إلى فاتورتك.',
   },
   paidNote: { en: 'Paid. Thank you.', ar: 'اتدفع. شكرًا.', arStandard: 'تم الدفع. شكرًا لك.' },
+  preparingNote: {
+    en: 'Confirmed. {name} is making it for delivery.',
+    ar: 'اتأكد و{name} بيجهزه للتوصيل.',
+    arStandard: 'تم التأكيد ويُحضّره {name} للتوصيل.',
+  },
+  onTheWayNote: {
+    en: 'On its way to you. Pay the rider at the door.',
+    ar: 'في الطريق ليك. ادفع للمندوب عند الباب.',
+    arStandard: 'في الطريق إليك. ادفع للمندوب عند الباب.',
+  },
+  deliveredNote: { en: 'Delivered. Enjoy!', ar: 'وصل. بالهنا والشفا!', arStandard: 'تم التوصيل. بالهناء والشفاء!' },
   cancelledNote: {
     en: '{name} could not take this order.',
     ar: '{name} مقدرش ياخد الطلب ده.',

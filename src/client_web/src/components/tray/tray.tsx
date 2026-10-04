@@ -9,12 +9,14 @@ import { blurSwap, ease } from '@/lib/motion'
 import { usePullDown } from '@/lib/use-pull-down'
 import { cn } from '@/lib/utils'
 import type { CheckoutBlock } from '@/lib/order-payload'
+import type { DeliveryState } from '@/lib/delivery'
 import type { OrderDestination } from '@/lib/order-destination'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { TrayExtras } from './tray-extras'
 import { TrayNudge } from './tray-nudge'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
+import { DeliveryChoice } from '@/components/delivery/delivery-choice'
 import { StillHereCard } from '@/components/places/still-here'
 import { Odometer } from '../ninja/odometer'
 import { DishPhoto } from '../menu/dish-photo'
@@ -39,6 +41,8 @@ export type TrayOrder = {
   destination: OrderDestination
   tableUnconfirmed: boolean
   activePlace: StoredPlace | null
+  /** Brought by the branch's rider: offered where it delivers and the order is not for a place */
+  delivery: DeliveryState
 }
 
 /**
@@ -90,6 +94,8 @@ export function Tray({
   const lines = useCart((s) => s.lines)
   const summary = traySummary(lines)
   const empty = summary.count === 0
+  // What the customer pays, the delivery fee on top once the branch has quoted it
+  const total = extras.total + order.delivery.fee
 
   // An empty tray has nothing to open
   useEffect(() => {
@@ -296,7 +302,7 @@ export function Tray({
         onOpen={() => onExpandedChange(true)}
         onPlace={() => void order.submit()}
         busy={order.isPending}
-        disabled={order.tableUnconfirmed}
+        disabled={order.tableUnconfirmed || (order.delivery.active && !order.delivery.ready)}
       />
     )
   })()
@@ -406,7 +412,7 @@ export function Tray({
                         className='block origin-[0%_50%] rtl:origin-[100%_50%]'
                         style={reduced ? undefined : { scale: totalScale }}
                       >
-                        <Odometer value={price(extras.total)} className='text-name font-bold @max-[21rem]:text-note' />
+                        <Odometer value={price(total)} className='text-name font-bold @max-[21rem]:text-note' />
                       </motion.span>
                       {/* What the code and the points take off, under the total they took it from */}
                       <AnimatePresence initial={false}>
@@ -565,6 +571,11 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
               <PlaceIcon kind={order.destination.placeKind} className='size-4' />
               {localized(order.destination.name)}
             </div>
+          ) : order.delivery.offered ? (
+            <>
+              <DeliveryChoice delivery={order.delivery} cloudKitchen={cloudKitchen} />
+              {order.block === 'table' && <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>}
+            </>
           ) : order.block === 'table' ? (
             <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>
           ) : order.block === 'account' ? (

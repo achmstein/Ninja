@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
-import { Check, ReceiptText, Send, X } from 'lucide-react'
+import { Bike, Check, ChefHat, House, ReceiptText, Send, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -26,6 +26,9 @@ import {
 const ICONS: Record<PillStage, typeof Send> = {
   sent: Send,
   confirmed: Check,
+  preparing: ChefHat,
+  onTheWay: Bike,
+  delivered: House,
   paid: ReceiptText,
   cancelled: X,
 }
@@ -33,6 +36,9 @@ const ICONS: Record<PillStage, typeof Send> = {
 const NOTES = {
   sent: PILL_WORDS.sentNote,
   confirmed: PILL_WORDS.confirmedNote,
+  preparing: PILL_WORDS.preparingNote,
+  onTheWay: PILL_WORDS.onTheWayNote,
+  delivered: PILL_WORDS.deliveredNote,
   paid: PILL_WORDS.paidNote,
   cancelled: PILL_WORDS.cancelledNote,
 } as const
@@ -40,13 +46,16 @@ const NOTES = {
 /** How long the island stays open to say that the order has moved on, ms */
 const ANNOUNCE_MS = 4200
 
-/** The stages worth interrupting for (the business turned the order down); the others only change the dock quietly */
-const LOUD: PillStage[] = ['cancelled']
+/** The stages worth interrupting for (turned down, or a delivery at the door); the others only change the dock quietly */
+const LOUD: PillStage[] = ['cancelled', 'onTheWay', 'delivered']
 
 /** A stage in the island's colours: waiting on the business, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
   sent: 'loading',
   confirmed: 'success',
+  preparing: 'loading',
+  onTheWay: 'loading',
+  delivered: 'success',
   paid: 'success',
   cancelled: 'error',
 }

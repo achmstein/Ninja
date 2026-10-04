@@ -1,6 +1,7 @@
 import type { CartLine } from '@/lib/cart'
 import type { OrderDestination } from '@/lib/order-destination'
 import { placeKindName } from '@/lib/places'
+import type { DeliveryAddress } from '@/stores/delivery-store'
 
 /**
  * The order a cart becomes, and what stands between a guest and sending it.
@@ -16,15 +17,18 @@ export function checkoutBlock({
   destination,
   guestOrdersAnywhere,
   requireSignInForTableOrders,
+  delivering = false,
 }: {
   isGuest: boolean
   destination: OrderDestination
   guestOrdersAnywhere: boolean
   requireSignInForTableOrders: boolean
+  /** It is to be brought to an address: that, and the phone at the door, anchor it as a table would */
+  delivering?: boolean
 }): CheckoutBlock {
   if (!isGuest) return null
   // A guest orders against the table they sit at, unless the business takes guests' orders from anywhere, to collect
-  if (!destination && !guestOrdersAnywhere) return 'table'
+  if (!destination && !guestOrdersAnywhere && !delivering) return 'table'
   // The branch wants a name it can hold to on a table order
   if (destination?.kind === 'place' && requireSignInForTableOrders) return 'account'
   return null
@@ -42,7 +46,13 @@ export type OrderExtras = {
 export const NO_EXTRAS: OrderExtras = { note: '', points: 0, promo: null, loyaltyDiscount: 0 }
 
 /** Same payload, same signature: a retried submit reuses its request id and is deduplicated server-side. */
-export function orderSignature(lines: CartLine[], extras: OrderExtras, guestId: string | null, destination: OrderDestination): string {
+export function orderSignature(
+  lines: CartLine[],
+  extras: OrderExtras,
+  guestId: string | null,
+  destination: OrderDestination,
+  delivery: DeliveryAddress | null = null
+): string {
   return JSON.stringify({
     lines: lines.map((line) => [
       line.productId,
@@ -57,6 +67,8 @@ export function orderSignature(lines: CartLine[], extras: OrderExtras, guestId: 
     guest: guestId,
     // Moving between a table and a room makes it a different order, not a retry
     destination: destination ? [destination.kind, destination.placeId, destination.sessionId ?? 0] : null,
+    // Brought somewhere else makes it a different order too
+    delivery: delivery ? [delivery.latitude, delivery.longitude, delivery.address] : null,
   })
 }
 
@@ -72,6 +84,7 @@ export function orderBody({
   profile,
   guestContact,
   destination,
+  delivery = null,
   newId = () => crypto.randomUUID(),
 }: {
   lines: CartLine[]
@@ -80,6 +93,8 @@ export function orderBody({
   profile: { sub?: string; name?: string; preferred_username?: string } | undefined
   guestContact: { name: string; phone: string } | null
   destination: OrderDestination
+  /** Brought to this address by the branch's rider; null to eat in or collect */
+  delivery?: DeliveryAddress | null
   newId?: () => string
 }) {
   return {
@@ -94,6 +109,19 @@ export function orderBody({
     placeKind: destination ? placeKindName(destination.placeKind) : null,
     placeName: destination ? { en: destination.name.en || null, ar: destination.name.ar || null } : null,
     sessionId: destination?.sessionId ?? null,
+    // Where the rider goes, and the number to call at the door (a guest's checkout phone when the address has none)
+    delivery: delivery
+      ? {
+          latitude: delivery.latitude,
+          longitude: delivery.longitude,
+          address: delivery.address,
+          building: delivery.building || null,
+          floor: delivery.floor || null,
+          apartment: delivery.apartment || null,
+          directions: delivery.directions || null,
+          phone: delivery.phone || guestContact?.phone || null,
+        }
+      : null,
     customerNote: extras.note.trim() || null,
     promoCode: extras.promo,
     // Loyalty needs an account to redeem against; the server rejects a guest order that claims either

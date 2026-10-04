@@ -7,7 +7,8 @@ import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { useSelectedBranch } from '@/lib/branch'
-import { useCart } from '@/lib/cart'
+import { cartTotal, useCart } from '@/lib/cart'
+import { useDelivery } from '@/lib/delivery'
 import { useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
 import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature, type OrderExtras } from '@/lib/order-payload'
@@ -47,12 +48,15 @@ export function usePlaceOrder({
   const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
   const isGuest = !auth.isAuthenticated
   const { lines, clear } = useCart()
+  // Brought by the branch's rider, when it delivers and the order is not for a table or a room
+  const delivery = useDelivery(destination, cartTotal(lines))
 
   const block = checkoutBlock({
     isGuest,
     destination,
     guestOrdersAnywhere,
     requireSignInForTableOrders: branch?.requireSignInForTableOrders ?? false,
+    delivering: delivery.active,
   })
 
   const savePreferences = useMutation(saveUserPreferencesMutation())
@@ -90,6 +94,11 @@ export function usePlaceOrder({
         toast.info(t('orderStillWaiting'))
         return
       }
+      // A delivery the branch turned down says why (too far, too little, not delivering now)
+      if (isAxiosError(error) && error.response?.status === 400 && delivery.active && typeof error.response.data === 'string') {
+        toast.error(error.response.data)
+        return
+      }
       toast.error(t('failedToPlaceOrder'))
     },
   })
@@ -101,19 +110,22 @@ export function usePlaceOrder({
       toast.info(t('confirmTableFirst'))
       return false
     }
+    // The tray says what stands in the way and holds the button; this is the last word
+    if (delivery.active && !delivery.ready) return false
     const guestContact = isGuest ? await ensureGuestDetails() : null
     if (isGuest && !guestContact) return false
     if (!isGuest && !(await ensureProfileComplete())) return false
 
     // Minted on the first order that needs it; set before the request so the interceptor sends it
     const guestId = isGuest ? ensureGuestId() : null
-    const signature = orderSignature(lines, extras, guestId, destination)
+    const deliverTo = delivery.active ? delivery.address : null
+    const signature = orderSignature(lines, extras, guestId, destination, deliverTo)
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
       writePending(requestIdRef.current)
     }
     mutation.mutate({
-      body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination }),
+      body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination, delivery: deliverTo }),
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
     })
@@ -128,6 +140,7 @@ export function usePlaceOrder({
     block,
     isGuest,
     destination,
+    delivery,
     tableUnconfirmed,
     activePlace,
     dialogs: (

@@ -5,6 +5,7 @@ import { useAuth } from 'react-oidc-context'
 import {
   Award,
   Download,
+  House,
   Info,
   LogOut,
   MapPin,
@@ -48,6 +49,7 @@ import { Badge } from '@/components/ui/badge'
 import { SignInOptions } from '@/components/auth/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
 import { BranchSheet } from '@/components/branch-switcher'
+import { AddressSheet } from '@/components/delivery/address-sheet'
 import { useAtBranch } from '@/lib/use-branch-switch'
 import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/ninja/page/tile-row'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -82,6 +84,7 @@ function ProfilePage() {
   const atBranch = useAtBranch()
   const canChangeBranch = branches.length > 1 && !atBranch
   const [branchesOpen, setBranchesOpen] = useState(false)
+  const [addressesOpen, setAddressesOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   // Installing the app, for anyone who let the island's offer go by
   const install = useInstallAction()
@@ -231,6 +234,10 @@ function ProfilePage() {
             {canChangeBranch && (
               <TileButton icon={MapPin} label={t('ninjaBranch')} value={localized(branch?.name)} onClick={() => setBranchesOpen(true)} />
             )}
+            {/* Where a delivery goes, kept on the account: only where some branch delivers */}
+            {signedIn && branches.some((b) => b.isDeliveryEnabled) && (
+              <TileButton icon={House} label={t('myAddresses')} onClick={() => setAddressesOpen(true)} />
+            )}
             <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />
             {branch?.phone && (
               <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
@@ -254,6 +261,7 @@ function ProfilePage() {
       </Rise>
 
       <BranchSheet open={branchesOpen} onOpenChange={setBranchesOpen} />
+      <AddressSheet open={addressesOpen} onOpenChange={setAddressesOpen} manage />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       {install.dialog}
     </NinjaPage>

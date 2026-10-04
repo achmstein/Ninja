@@ -111,3 +111,43 @@ describe('orderBody', () => {
     })
   })
 })
+
+describe('a delivery', () => {
+  const tahrir = { latitude: 30.0444, longitude: 31.2357, address: 'Tahrir St', building: '12', floor: '', apartment: null, directions: 'Blue gate', phone: null }
+
+  it('lets a guest order without a table: the address anchors it', () => {
+    const base = { isGuest: true, destination: null, guestOrdersAnywhere: false, requireSignInForTableOrders: false }
+    expect(checkoutBlock({ ...base, delivering: true })).toBeNull()
+  })
+
+  it('goes with the address, and the guest phone for the door when the address has none', () => {
+    const body = orderBody({
+      lines: [line],
+      extras: NO_EXTRAS,
+      isGuest: true,
+      profile: undefined,
+      guestContact: { name: 'Mona', phone: '01000000000' },
+      destination: null,
+      delivery: tahrir,
+      newId: () => 'id',
+    })
+    expect(body.placeId).toBeNull()
+    expect(body.delivery).toEqual({
+      latitude: 30.0444,
+      longitude: 31.2357,
+      address: 'Tahrir St',
+      building: '12',
+      floor: null,
+      apartment: null,
+      directions: 'Blue gate',
+      phone: '01000000000',
+    })
+  })
+
+  it('is a different order when it goes somewhere else', () => {
+    const a = orderSignature([line], NO_EXTRAS, null, null, tahrir)
+    expect(orderSignature([line], NO_EXTRAS, null, null, tahrir)).toBe(a)
+    expect(orderSignature([line], NO_EXTRAS, null, null, { ...tahrir, latitude: 30.05 })).not.toBe(a)
+    expect(orderSignature([line], NO_EXTRAS, null, null, null)).not.toBe(a)
+  })
+})

@@ -121,3 +121,21 @@ describe('nextCheck', () => {
     expect(nextCheck({ ...base, dismissed: true, order: null })).toBeNull()
   })
 })
+
+describe('a delivery', () => {
+  const delivered = (stage: string): PillOrder => ({ status: 'Confirmed', delivery: { stage } })
+
+  it('is followed to the door: made, on its way, delivered, before it is paid', () => {
+    expect(stageOf(delivered('Waiting'))).toBe('preparing')
+    expect(stageOf(delivered('Assigned'))).toBe('preparing')
+    expect(stageOf(delivered('OnTheWay'))).toBe('onTheWay')
+    expect(stageOf({ ...delivered('Delivered'), paidAt: iso(1) })).toBe('delivered')
+    expect(stageOf({ status: 'Cancelled', delivery: { stage: 'Waiting' } })).toBe('cancelled')
+  })
+
+  it('stays on the dock while it is out, longer than an order eaten in', () => {
+    const order = { ...delivered('OnTheWay'), date: iso(0) }
+    expect(pillVisible({ placedAt, order, stageSince: placedAt, dismissed: false, now: placedAt + FOLLOW_FOR_MS + 60_000 })).toBe(true)
+    expect(LINGER_MS.onTheWay).toBeNull()
+  })
+})
