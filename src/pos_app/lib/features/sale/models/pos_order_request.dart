@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'sale_delivery.dart';
 import 'sale_line.dart';
 
 const _uuid = Uuid();
@@ -20,6 +21,10 @@ class PosOrderRequest {
   final DateTime? placedAt;
   final bool replay;
 
+  /// A delivery taken over the phone: a bill of its own, settled when the
+  /// rider's cash comes in
+  final SaleDelivery? delivery;
+
   const PosOrderRequest({
     required this.lines,
     this.note = '',
@@ -27,6 +32,7 @@ class PosOrderRequest {
     this.ticketId,
     this.placedAt,
     this.replay = false,
+    this.delivery,
   });
 
   Map<String, dynamic> toJson() => {
@@ -67,5 +73,7 @@ class PosOrderRequest {
         'customerName': customer?.name,
         // Redemption at the counter is a later phase
         'pointsToRedeem': 0,
+        // Where it goes; the pin only when the caller shared one
+        'delivery': delivery?.toRequest(),
       };
 }

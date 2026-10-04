@@ -1707,4 +1707,188 @@ class AppLocalizationsAr extends AppLocalizations {
   String deliveryRiderIs(String name) {
     return 'المندوب: $name';
   }
+
+  @override
+  String get deliveries => 'التوصيل';
+
+  @override
+  String get deliveryNoRider => 'من غير مندوب';
+
+  @override
+  String get deliveryReadyNoRider => 'جاهز، من غير مندوب';
+
+  @override
+  String deliveryWith(String name) {
+    return 'مع $name';
+  }
+
+  @override
+  String deliveryOnTheWayWith(String name) {
+    return 'في الطريق مع $name';
+  }
+
+  @override
+  String deliveryCashWith(String name) {
+    return 'اتسلّم، الكاش مع $name';
+  }
+
+  @override
+  String get deliveryGiveTo => 'سلّمه لـ';
+
+  @override
+  String get deliveryNoRiders =>
+      'مفيش مندوبين لسه. ضيف واحد من الموظفين في الإدارة، وبعدين يسجّل دخول في تطبيق المندوب.';
+
+  @override
+  String get deliveryTakeBack => 'اسحبه من المندوب';
+
+  @override
+  String deliveryTakeCash(String amount, String name) {
+    return 'استلم $amount من $name';
+  }
+
+  @override
+  String get deliveryCashTaken => 'الكاش اتسلّم والفاتورة اتقفلت';
+
+  @override
+  String get deliveryActionFailed => 'محصلش. جرب تاني.';
+
+  @override
+  String get riderFree => 'متاح';
+
+  @override
+  String get riderOffDuty => 'مش شغال دلوقتي';
+
+  @override
+  String riderOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'معاه $count طلب',
+      few: 'معاه $count طلبات',
+      two: 'معاه طلبين',
+      one: 'معاه طلب',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get riderNotSignedIn => 'لسه مفتحش تطبيق المندوب';
+
+  @override
+  String deliveryForRider(String name) {
+    return 'لو موبايل $name مش هيقدر يقول:';
+  }
+
+  @override
+  String get deliveryMarkOut => 'خرج مع المندوب';
+
+  @override
+  String get deliveryMarkDelivered => 'اتسلّم للعميل';
+
+  @override
+  String get deliveryMap => 'الخريطة';
+
+  @override
+  String get deliveryFee => 'رسوم التوصيل';
+
+  @override
+  String get deliveryFree => 'مجاني';
+
+  @override
+  String distanceMeters(int value) {
+    return '$value م';
+  }
+
+  @override
+  String distanceKilometres(String value) {
+    return '$value كم';
+  }
+
+  @override
+  String get deliverIt => 'توصيل';
+
+  @override
+  String get deliveryFormTitle => 'طلب توصيل بالتليفون';
+
+  @override
+  String get deliveryCustomerName => 'اسم العميل';
+
+  @override
+  String get deliveryStreetLabel => 'المنطقة والشارع';
+
+  @override
+  String get deliveryBuildingLabel => 'العمارة';
+
+  @override
+  String get deliveryFloorLabel => 'الدور';
+
+  @override
+  String get deliveryApartmentLabel => 'الشقة';
+
+  @override
+  String get deliveryDirectionsLabel => 'وصف للمندوب';
+
+  @override
+  String get deliveryDirectionsHint => 'علامة مميزة، البوابة، أي حاجة تساعد';
+
+  @override
+  String get deliveryPhoneLabel => 'رقم للمندوب';
+
+  @override
+  String get deliveryLocationLabel => 'اللوكيشن (اختياري)';
+
+  @override
+  String get deliveryLocationHint =>
+      'الصق لينك جوجل مابس اللي العميل بعته، على واتساب مثلاً';
+
+  @override
+  String get deliveryLocationReading => 'بنقرا اللوكيشن…';
+
+  @override
+  String deliveryLocationFound(String distance) {
+    return 'اللوكيشن اتحدد، على بعد $distance';
+  }
+
+  @override
+  String get deliveryLocationUnread =>
+      'ده مفيهوش لوكيشن. المندوب هيمشي بالعنوان.';
+
+  @override
+  String get deliveryNoPin => 'من غير لوكيشن: المندوب هيمشي بالعنوان';
+
+  @override
+  String deliveryOutOfRange(String km) {
+    return 'برّه منطقة التوصيل ($km كم)';
+  }
+
+  @override
+  String deliveryUnderMinimum(String amount) {
+    return 'أقل من الحد الأدنى للتوصيل $amount';
+  }
+
+  @override
+  String get deliveryKnownAddresses => 'اتوصّل له قبل كده';
+
+  @override
+  String get deliveryNeedsName => 'الطلب لمين؟';
+
+  @override
+  String get deliveryNeedsStreet => 'رايح فين؟';
+
+  @override
+  String get deliveryPhoneInvalid => 'ده مش رقم تليفون صحيح';
+
+  @override
+  String get deliverySave => 'وصّل هنا';
+
+  @override
+  String get deliveryNotADelivery => 'مش توصيل';
+
+  @override
+  String get deliverySend => 'ابعت للتوصيل';
+
+  @override
+  String get deliveryPlaced =>
+      'طلب التوصيل اتسجّل. سلّمه لمندوب من التوصيل في الصالة.';
 }

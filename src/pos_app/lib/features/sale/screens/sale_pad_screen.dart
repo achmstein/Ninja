@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -19,6 +20,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../catalog/services/catalog_service.dart';
+import '../../deliveries/providers/deliveries_provider.dart';
+import '../../deliveries/widgets/delivery_form_dialog.dart';
 import '../../orders/services/order_service.dart';
 import '../../places/models/place.dart';
 import '../../places/providers/places_provider.dart';
@@ -32,6 +35,7 @@ import '../../tickets/providers/pricing_provider.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../models/pos_order_request.dart';
+import '../models/sale_delivery.dart';
 import '../models/sale_line.dart';
 import '../providers/sale_provider.dart';
 import '../till_suggestions.dart';
@@ -191,6 +195,33 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     if (!suggested) setState(() => _lastAdded = item);
   }
 
+  /// Whether this sale goes out with a rider: a walk-in sale (never a round
+  /// on an open bill) with a delivery on it, where the business and the
+  /// branch deliver
+  bool _delivering(SaleState sale) =>
+      !_addingToTicket &&
+      sale.delivery != null &&
+      ref.read(featuresProvider).delivery &&
+      (ref.read(tillDeliveryTermsProvider).value?.delivers ?? false);
+
+  /// The delivery form: the caller's address, number and name. A caller off
+  /// the street is known on the sale by the name they gave.
+  Future<void> _openDeliveryForm() async {
+    final sale = ref.read(saleProvider);
+    final result = await showDeliveryFormDialog(
+      context,
+      initial: sale.delivery,
+      customer: sale.customer,
+      itemsTotal: saleTotal(sale.lines),
+    );
+    if (result == null || !mounted) return;
+    final notifier = ref.read(saleProvider.notifier);
+    notifier.setDelivery(result.delivery);
+    if ((sale.customer?.id ?? '').isEmpty) {
+      notifier.setCustomer(SaleCustomer(name: result.name, phone: result.delivery.phone));
+    }
+  }
+
   Future<void> _charge() async {
     final sale = ref.read(saleProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -205,10 +236,24 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       'customer': sale.customer?.id ?? sale.customer?.name,
       // The same items against a different bill are a different sale too
       'ticket': widget.ticketId,
+      // And sent somewhere else, another sale again
+      'delivery': _delivering(sale) ? sale.delivery?.toJson() : null,
     });
     if (_requestId == null || _requestSignature != signature) {
       _requestSignature = signature;
       _requestId = const Uuid().v4();
+    }
+
+    // A delivery taken over the phone: a rider needs a name at the door
+    // (taken off the sale, it is asked again), and it needs the server
+    final delivery = _delivering(sale) ? sale.delivery : null;
+    if (delivery != null && (sale.customer?.name.trim() ?? '').isEmpty) {
+      await _openDeliveryForm();
+      return;
+    }
+    if (delivery != null && !ref.read(onlineProvider)) {
+      showPosToast(context, PosToastType.warning, l10n.offlineNotAvailable);
+      return;
     }
 
     // No network: a counter sale is kept on the till and paid right here
@@ -218,7 +263,13 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     setState(() => _placing = true);
     try {
       final orderId = await ref.read(orderRepositoryProvider).createPosOrder(
-            PosOrderRequest(lines: sale.lines, note: sale.note, customer: sale.customer, ticketId: widget.ticketId),
+            PosOrderRequest(
+              lines: sale.lines,
+              note: sale.note,
+              customer: sale.customer,
+              ticketId: widget.ticketId,
+              delivery: delivery,
+            ),
             requestId: _requestId!,
           );
       // The order landed — the next charge is a new logical request
@@ -228,6 +279,18 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       // next time — fire-and-forget, the same as the customer app does.
       _saveCustomerPreferences(sale.customer?.id, sale.lines);
       if (!mounted) return;
+
+      // A delivery is a bill of its own, settled when the rider's cash comes
+      // in: nothing to pay now, and the rider is picked on the floor
+      if (delivery != null) {
+        ref.read(saleProvider.notifier).clear();
+        _note.clear();
+        unawaited(ref.read(deliveriesProvider.notifier).refresh());
+        ref.read(openTicketsProvider.notifier).refresh();
+        showPosToast(context, PosToastType.success, orderId == 0 ? l10n.orderAlreadyPlaced : l10n.deliveryPlaced);
+        context.go('/');
+        return;
+      }
 
       // Adding to a bill already on the floor: the order names the ticket,
       // so there is no lookup to wait on and nothing to pay yet. The lines
@@ -465,6 +528,14 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     };
     final wide = MediaQuery.sizeOf(context).width >= 1280;
     final busy = _placing || _pendingOrderId != null;
+    // A walk-in sale can go out with a rider instead, where the business and
+    // the branch deliver; a round on an open bill never does
+    final features = ref.watch(featuresProvider);
+    final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
+    final canDeliver = terms?.delivers ?? false;
+    final delivery = synced && canDeliver ? sale.delivery : null;
+    final deliveryFee = delivery != null ? terms!.fee : 0.0;
+    final total = saleTotal(lines) + deliveryFee;
 
     return Stack(
       children: [
@@ -654,7 +725,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           dimension: 44,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
-                            onPress: lines.isEmpty && customer == null && sale.note.isEmpty
+                            onPress: lines.isEmpty && customer == null && sale.note.isEmpty && sale.delivery == null
                                 ? null
                                 : () {
                                     ref.read(saleProvider.notifier).clear();
@@ -707,6 +778,25 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                               }
                             },
                           ),
+                        if (canDeliver) ...[
+                          const SizedBox(height: 8),
+                          if (delivery != null)
+                            _DeliverySummary(
+                              delivery: delivery,
+                              onEdit: _openDeliveryForm,
+                              onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
+                            )
+                          else
+                            SizedBox(
+                              height: 48,
+                              child: FButton(
+                                variant: FButtonVariant.outline,
+                                onPress: _openDeliveryForm,
+                                prefix: const Icon(FIcons.bike, size: 20),
+                                child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
+                              ),
+                            ),
+                        ],
                       ],
                     ),
                   ),
@@ -764,6 +854,20 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (delivery != null) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(l10n.deliveryFee,
+                                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                              ),
+                              Text(deliveryFee > 0 ? money(context, deliveryFee) : l10n.deliveryFree,
+                                  style: theme.typography.sm.copyWith(
+                                      color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()])),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         FTextField(
                           control: FTextFieldControl.managed(controller: _note),
                           hint: l10n.orderNoteOptional,
@@ -775,9 +879,15 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           child: FButton(
                             onPress: lines.isEmpty || busy ? null : _charge,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            suffix: Text(money(context, saleTotal(lines)),
+                            suffix: Text(money(context, total),
                                 style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
-                            child: Text(_addingToTicket ? l10n.addToTicket : l10n.chargeAction, style: theme.typography.lg.forButton),
+                            child: Text(
+                                _addingToTicket
+                                    ? l10n.addToTicket
+                                    : delivery != null
+                                        ? l10n.deliverySend
+                                        : l10n.chargeAction,
+                                style: theme.typography.lg.forButton),
                           ),
                         ),
                       ],
@@ -807,6 +917,71 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// The delivery on the sale: where it goes and the number the rider calls
+/// (its digits alone left to right), whether it has a pin; a tap changes
+/// it, the cross makes it a counter sale again
+class _DeliverySummary extends StatelessWidget {
+  final SaleDelivery delivery;
+  final VoidCallback onEdit;
+  final VoidCallback onRemove;
+
+  const _DeliverySummary({required this.delivery, required this.onEdit, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground);
+    return Container(
+      padding: const EdgeInsetsDirectional.only(start: 10, top: 6, bottom: 6, end: 2),
+      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        children: [
+          Icon(FIcons.bike, size: 18, color: theme.colors.mutedForeground),
+          const SizedBox(width: 8),
+          Expanded(
+            child: FTappable(
+              onPress: onEdit,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    [delivery.address, if (delivery.building.isNotEmpty) delivery.building].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                  ),
+                  Row(
+                    children: [
+                      if (delivery.hasPin) ...[
+                        Icon(FIcons.mapPin, size: 12, color: theme.colors.mutedForeground),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(delivery.phone, textDirection: TextDirection.ltr, style: muted),
+                      if (!delivery.hasPin)
+                        Flexible(
+                          child: Text(' · ${l10n.deliveryNoPin}', maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox.square(
+            dimension: 40,
+            child: FButton.icon(
+              variant: FButtonVariant.ghost,
+              onPress: onRemove,
+              child: const Icon(FIcons.x, size: 18),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

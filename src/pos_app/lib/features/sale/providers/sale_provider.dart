@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/sale_delivery.dart';
 import '../models/sale_line.dart';
 
 const _prefsKey = 'ninja-pos-sale';
@@ -10,6 +11,9 @@ class SaleState {
   final String note;
   final SaleCustomer? customer;
 
+  /// A walk-in sale that goes out with a rider instead; never on an open bill
+  final SaleDelivery? delivery;
+
   /// The bill these lines are for: a ticket id, or null for a walk-in sale
   final int? target;
 
@@ -17,18 +21,21 @@ class SaleState {
     this.lines = const [],
     this.note = '',
     this.customer,
+    this.delivery,
     this.target,
   });
 
   double get total => saleTotal(lines);
   int get count => saleCount(lines);
-  bool get isEmpty => lines.isEmpty && customer == null && note.isEmpty;
+  bool get isEmpty => lines.isEmpty && customer == null && note.isEmpty && delivery == null;
 
   SaleState copyWith({
     List<SaleLine>? lines,
     String? note,
     SaleCustomer? customer,
     bool clearCustomer = false,
+    SaleDelivery? delivery,
+    bool clearDelivery = false,
     int? target,
     bool clearTarget = false,
   }) =>
@@ -36,6 +43,7 @@ class SaleState {
         lines: lines ?? this.lines,
         note: note ?? this.note,
         customer: clearCustomer ? null : (customer ?? this.customer),
+        delivery: clearDelivery ? null : (delivery ?? this.delivery),
         target: clearTarget ? null : (target ?? this.target),
       );
 
@@ -43,6 +51,7 @@ class SaleState {
         'lines': lines.map((l) => l.toJson()).toList(),
         'note': note,
         'customer': customer?.toJson(),
+        'delivery': delivery?.toJson(),
         'target': target,
       };
 
@@ -52,6 +61,7 @@ class SaleState {
             .toList(),
         note: json['note'] as String? ?? '',
         customer: json['customer'] == null ? null : SaleCustomer.fromJson(json['customer'] as Map<String, dynamic>),
+        delivery: json['delivery'] == null ? null : SaleDelivery.fromJson(json['delivery'] as Map<String, dynamic>),
         target: json['target'] as int?,
       );
 }
@@ -122,6 +132,9 @@ class SaleNotifier extends Notifier<SaleState> {
 
   void setCustomer(SaleCustomer? customer) =>
       _set(customer == null ? state.copyWith(clearCustomer: true) : state.copyWith(customer: customer));
+
+  void setDelivery(SaleDelivery? delivery) =>
+      _set(delivery == null ? state.copyWith(clearDelivery: true) : state.copyWith(delivery: delivery));
 
   void clear() => _set(SaleState(target: state.target));
 }

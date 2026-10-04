@@ -1696,4 +1696,187 @@ class AppLocalizationsEn extends AppLocalizations {
   String deliveryRiderIs(String name) {
     return 'Rider: $name';
   }
+
+  @override
+  String get deliveries => 'Deliveries';
+
+  @override
+  String get deliveryNoRider => 'No rider yet';
+
+  @override
+  String get deliveryReadyNoRider => 'Ready, no rider';
+
+  @override
+  String deliveryWith(String name) {
+    return 'With $name';
+  }
+
+  @override
+  String deliveryOnTheWayWith(String name) {
+    return 'On the way with $name';
+  }
+
+  @override
+  String deliveryCashWith(String name) {
+    return 'Delivered, cash with $name';
+  }
+
+  @override
+  String get deliveryGiveTo => 'Give it to';
+
+  @override
+  String get deliveryNoRiders =>
+      'No riders yet. Add one from Staff in the admin app, then they sign in to the rider app.';
+
+  @override
+  String get deliveryTakeBack => 'Take it back from the rider';
+
+  @override
+  String deliveryTakeCash(String amount, String name) {
+    return 'Take $amount from $name';
+  }
+
+  @override
+  String get deliveryCashTaken => 'Cash taken in, the bill is settled';
+
+  @override
+  String get deliveryActionFailed => 'That didn\'t go through. Try again.';
+
+  @override
+  String get riderFree => 'On duty, free';
+
+  @override
+  String get riderOffDuty => 'Off duty';
+
+  @override
+  String riderOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count out now',
+      one: '1 out now',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get riderNotSignedIn => 'Hasn\'t opened the rider app yet';
+
+  @override
+  String deliveryForRider(String name) {
+    return 'If $name\'s phone can\'t say it:';
+  }
+
+  @override
+  String get deliveryMarkOut => 'It left with the rider';
+
+  @override
+  String get deliveryMarkDelivered => 'It was delivered';
+
+  @override
+  String get deliveryMap => 'Map';
+
+  @override
+  String get deliveryFee => 'Delivery fee';
+
+  @override
+  String get deliveryFree => 'Free';
+
+  @override
+  String distanceMeters(int value) {
+    return '$value m';
+  }
+
+  @override
+  String distanceKilometres(String value) {
+    return '$value km';
+  }
+
+  @override
+  String get deliverIt => 'Delivery';
+
+  @override
+  String get deliveryFormTitle => 'Delivery over the phone';
+
+  @override
+  String get deliveryCustomerName => 'Customer\'s name';
+
+  @override
+  String get deliveryStreetLabel => 'Area and street';
+
+  @override
+  String get deliveryBuildingLabel => 'Building';
+
+  @override
+  String get deliveryFloorLabel => 'Floor';
+
+  @override
+  String get deliveryApartmentLabel => 'Apartment';
+
+  @override
+  String get deliveryDirectionsLabel => 'Directions for the rider';
+
+  @override
+  String get deliveryDirectionsHint =>
+      'A landmark, the gate, anything that helps';
+
+  @override
+  String get deliveryPhoneLabel => 'Phone for the rider';
+
+  @override
+  String get deliveryLocationLabel => 'Shared location (optional)';
+
+  @override
+  String get deliveryLocationHint =>
+      'Paste the Google Maps link the customer sent, on WhatsApp say';
+
+  @override
+  String get deliveryLocationReading => 'Reading the location…';
+
+  @override
+  String deliveryLocationFound(String distance) {
+    return 'Pin found, $distance away';
+  }
+
+  @override
+  String get deliveryLocationUnread =>
+      'That has no location in it. The rider will go by the address.';
+
+  @override
+  String get deliveryNoPin => 'No pin: the rider goes by the address';
+
+  @override
+  String deliveryOutOfRange(String km) {
+    return 'Outside the $km km delivery area';
+  }
+
+  @override
+  String deliveryUnderMinimum(String amount) {
+    return 'Under the $amount delivery minimum';
+  }
+
+  @override
+  String get deliveryKnownAddresses => 'Delivered to before';
+
+  @override
+  String get deliveryNeedsName => 'Who is it for?';
+
+  @override
+  String get deliveryNeedsStreet => 'Where does it go?';
+
+  @override
+  String get deliveryPhoneInvalid => 'That isn\'t a phone number here';
+
+  @override
+  String get deliverySave => 'Deliver here';
+
+  @override
+  String get deliveryNotADelivery => 'Not a delivery';
+
+  @override
+  String get deliverySend => 'Send for delivery';
+
+  @override
+  String get deliveryPlaced =>
+      'Delivery placed. Give it to a rider from Deliveries on the floor.';
 }

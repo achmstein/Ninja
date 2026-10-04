@@ -25,6 +25,7 @@ class SignalRService {
   final _branchSettingsChanged = StreamController<Map<String, dynamic>>.broadcast();
   final _ticketUpdated = StreamController<Map<String, dynamic>>.broadcast();
   final _catalogChanged = StreamController<Map<String, dynamic>>.broadcast();
+  final _deliveryChanged = StreamController<Map<String, dynamic>>.broadcast();
   final _reconnected = StreamController<void>.broadcast();
 
   Stream<Map<String, dynamic>> get onRoomStatusChanged => _roomStatusChanged.stream;
@@ -37,6 +38,9 @@ class SignalRService {
 
   /// An item was marked sold out (or back) somewhere else
   Stream<Map<String, dynamic>> get onCatalogChanged => _catalogChanged.stream;
+
+  /// A delivery given to a rider, out of the door, delivered, its cash in
+  Stream<Map<String, dynamic>> get onDeliveryChanged => _deliveryChanged.stream;
 
   /// A new connection id after a drop: anything missed while offline must be refetched
   Stream<void> get onReconnected => _reconnected.stream;
@@ -71,6 +75,7 @@ class SignalRService {
       _register('BranchSettingsChanged', _branchSettingsChanged);
       _register('TicketUpdated', _ticketUpdated);
       _register('CatalogChanged', _catalogChanged);
+      _register('DeliveryChanged', _deliveryChanged);
 
       final hub = _hubConnection!;
       hub.onclose(({error}) {
@@ -187,6 +192,7 @@ class SignalRService {
     _branchSettingsChanged.close();
     _ticketUpdated.close();
     _catalogChanged.close();
+    _deliveryChanged.close();
     _reconnected.close();
   }
 }

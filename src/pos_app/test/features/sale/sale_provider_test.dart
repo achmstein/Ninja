@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pos_app/features/sale/models/sale_delivery.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
 import 'package:pos_app/features/sale/providers/sale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,6 +67,30 @@ void main() {
     expect(state.lines, isEmpty);
     expect(state.customer, isNull);
     expect(state.target, isNull);
+  });
+
+  test('a delivery rides on the walk-in sale, survives a restart, and goes with the sale', () async {
+    const delivery = SaleDelivery(address: 'Maadi, Road 9', phone: '01001234567', building: '12', latitude: 30.06, longitude: 31.47);
+    SharedPreferences.setMockInitialValues({
+      'ninja-pos-sale': json.encode(SaleState(lines: [latte()], delivery: delivery).toJson()),
+    });
+    await initializeSale();
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final restored = container.read(saleProvider).delivery;
+    expect(restored?.address, 'Maadi, Road 9');
+    expect(restored?.hasPin, isTrue);
+
+    final sale = container.read(saleProvider.notifier);
+    sale.setDelivery(null);
+    expect(container.read(saleProvider).delivery, isNull, reason: 'not a delivery after all');
+    sale.setDelivery(delivery);
+    sale.clear();
+    expect(container.read(saleProvider).delivery, isNull, reason: 'the sale landed');
+    sale.setDelivery(delivery);
+    sale.setTarget(104);
+    expect(container.read(saleProvider).delivery, isNull, reason: 'a round on an open bill is never delivered');
   });
 
   test('a persisted cart is whole before the first screen builds', () async {

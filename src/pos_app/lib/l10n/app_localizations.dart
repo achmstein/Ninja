@@ -3109,6 +3109,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rider: {name}'**
   String deliveryRiderIs(String name);
+
+  /// No description provided for @deliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliveries'**
+  String get deliveries;
+
+  /// No description provided for @deliveryNoRider.
+  ///
+  /// In en, this message translates to:
+  /// **'No rider yet'**
+  String get deliveryNoRider;
+
+  /// No description provided for @deliveryReadyNoRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready, no rider'**
+  String get deliveryReadyNoRider;
+
+  /// No description provided for @deliveryWith.
+  ///
+  /// In en, this message translates to:
+  /// **'With {name}'**
+  String deliveryWith(String name);
+
+  /// No description provided for @deliveryOnTheWayWith.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way with {name}'**
+  String deliveryOnTheWayWith(String name);
+
+  /// No description provided for @deliveryCashWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered, cash with {name}'**
+  String deliveryCashWith(String name);
+
+  /// No description provided for @deliveryGiveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it to'**
+  String get deliveryGiveTo;
+
+  /// No description provided for @deliveryNoRiders.
+  ///
+  /// In en, this message translates to:
+  /// **'No riders yet. Add one from Staff in the admin app, then they sign in to the rider app.'**
+  String get deliveryNoRiders;
+
+  /// No description provided for @deliveryTakeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it back from the rider'**
+  String get deliveryTakeBack;
+
+  /// No description provided for @deliveryTakeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Take {amount} from {name}'**
+  String deliveryTakeCash(String amount, String name);
+
+  /// No description provided for @deliveryCashTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash taken in, the bill is settled'**
+  String get deliveryCashTaken;
+
+  /// No description provided for @deliveryActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t go through. Try again.'**
+  String get deliveryActionFailed;
+
+  /// No description provided for @riderFree.
+  ///
+  /// In en, this message translates to:
+  /// **'On duty, free'**
+  String get riderFree;
+
+  /// No description provided for @riderOffDuty.
+  ///
+  /// In en, this message translates to:
+  /// **'Off duty'**
+  String get riderOffDuty;
+
+  /// No description provided for @riderOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 out now} other{{count} out now}}'**
+  String riderOut(int count);
+
+  /// No description provided for @riderNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Hasn\'t opened the rider app yet'**
+  String get riderNotSignedIn;
+
+  /// No description provided for @deliveryForRider.
+  ///
+  /// In en, this message translates to:
+  /// **'If {name}\'s phone can\'t say it:'**
+  String deliveryForRider(String name);
+
+  /// No description provided for @deliveryMarkOut.
+  ///
+  /// In en, this message translates to:
+  /// **'It left with the rider'**
+  String get deliveryMarkOut;
+
+  /// No description provided for @deliveryMarkDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'It was delivered'**
+  String get deliveryMarkDelivered;
+
+  /// No description provided for @deliveryMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get deliveryMap;
+
+  /// No description provided for @deliveryFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery fee'**
+  String get deliveryFee;
+
+  /// No description provided for @deliveryFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get deliveryFree;
+
+  /// No description provided for @distanceMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} m'**
+  String distanceMeters(int value);
+
+  /// No description provided for @distanceKilometres.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km'**
+  String distanceKilometres(String value);
+
+  /// No description provided for @deliverIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get deliverIt;
+
+  /// No description provided for @deliveryFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery over the phone'**
+  String get deliveryFormTitle;
+
+  /// No description provided for @deliveryCustomerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer\'s name'**
+  String get deliveryCustomerName;
+
+  /// No description provided for @deliveryStreetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Area and street'**
+  String get deliveryStreetLabel;
+
+  /// No description provided for @deliveryBuildingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Building'**
+  String get deliveryBuildingLabel;
+
+  /// No description provided for @deliveryFloorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get deliveryFloorLabel;
+
+  /// No description provided for @deliveryApartmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartment'**
+  String get deliveryApartmentLabel;
+
+  /// No description provided for @deliveryDirectionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions for the rider'**
+  String get deliveryDirectionsLabel;
+
+  /// No description provided for @deliveryDirectionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A landmark, the gate, anything that helps'**
+  String get deliveryDirectionsHint;
+
+  /// No description provided for @deliveryPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone for the rider'**
+  String get deliveryPhoneLabel;
+
+  /// No description provided for @deliveryLocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared location (optional)'**
+  String get deliveryLocationLabel;
+
+  /// No description provided for @deliveryLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the Google Maps link the customer sent, on WhatsApp say'**
+  String get deliveryLocationHint;
+
+  /// No description provided for @deliveryLocationReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the location…'**
+  String get deliveryLocationReading;
+
+  /// No description provided for @deliveryLocationFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin found, {distance} away'**
+  String deliveryLocationFound(String distance);
+
+  /// No description provided for @deliveryLocationUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'That has no location in it. The rider will go by the address.'**
+  String get deliveryLocationUnread;
+
+  /// No description provided for @deliveryNoPin.
+  ///
+  /// In en, this message translates to:
+  /// **'No pin: the rider goes by the address'**
+  String get deliveryNoPin;
+
+  /// No description provided for @deliveryOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside the {km} km delivery area'**
+  String deliveryOutOfRange(String km);
+
+  /// No description provided for @deliveryUnderMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the {amount} delivery minimum'**
+  String deliveryUnderMinimum(String amount);
+
+  /// No description provided for @deliveryKnownAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered to before'**
+  String get deliveryKnownAddresses;
+
+  /// No description provided for @deliveryNeedsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is it for?'**
+  String get deliveryNeedsName;
+
+  /// No description provided for @deliveryNeedsStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Where does it go?'**
+  String get deliveryNeedsStreet;
+
+  /// No description provided for @deliveryPhoneInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a phone number here'**
+  String get deliveryPhoneInvalid;
+
+  /// No description provided for @deliverySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver here'**
+  String get deliverySave;
+
+  /// No description provided for @deliveryNotADelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a delivery'**
+  String get deliveryNotADelivery;
+
+  /// No description provided for @deliverySend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send for delivery'**
+  String get deliverySend;
+
+  /// No description provided for @deliveryPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery placed. Give it to a rider from Deliveries on the floor.'**
+  String get deliveryPlaced;
 }
 
 class _AppLocalizationsDelegate

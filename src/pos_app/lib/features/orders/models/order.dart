@@ -165,8 +165,10 @@ class PlatformOrder {
 /// The business's own delivery of an order, as the counter reads it: where
 /// it goes, the number to call at the door, the fee, and who has it
 class OrderDelivery {
-  final double latitude;
-  final double longitude;
+  /// The pin; null for an address the till took over the phone without one,
+  /// which the rider finds by its words
+  final double? latitude;
+  final double? longitude;
   final String address;
   final String? building;
   final String? floor;
@@ -174,15 +176,23 @@ class OrderDelivery {
   final String? directions;
   final String phone;
   final double fee;
-  final int distanceMeters;
+
+  /// Straight-line from the branch; null without a pin
+  final int? distanceMeters;
 
   /// 'Waiting', 'Assigned', 'OnTheWay' or 'Delivered'
   final String stage;
+  final String? riderUserId;
   final String? riderName;
+  final DateTime? outAt;
+  final DateTime? deliveredAt;
+
+  /// The till took the rider's cash, which settled the bill
+  final DateTime? cashHandedInAt;
 
   const OrderDelivery({
-    required this.latitude,
-    required this.longitude,
+    this.latitude,
+    this.longitude,
     required this.address,
     this.building,
     this.floor,
@@ -190,18 +200,24 @@ class OrderDelivery {
     this.directions,
     required this.phone,
     this.fee = 0,
-    this.distanceMeters = 0,
+    this.distanceMeters,
     this.stage = 'Waiting',
+    this.riderUserId,
     this.riderName,
+    this.outAt,
+    this.deliveredAt,
+    this.cashHandedInAt,
   });
 
   static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
+  static double? _maybe(Object? v) => v == null ? null : _num(v);
+  static DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toLocal() : null;
 
   static OrderDelivery? parse(Object? json) {
     if (json is! Map<String, dynamic>) return null;
     return OrderDelivery(
-      latitude: _num(json['latitude']),
-      longitude: _num(json['longitude']),
+      latitude: _maybe(json['latitude']),
+      longitude: _maybe(json['longitude']),
       address: (json['address'] as String?) ?? '',
       building: json['building'] as String?,
       floor: json['floor'] as String?,
@@ -209,11 +225,22 @@ class OrderDelivery {
       directions: json['directions'] as String?,
       phone: (json['phone'] as String?) ?? '',
       fee: _num(json['fee']),
-      distanceMeters: _num(json['distanceMeters']).round(),
+      distanceMeters: _maybe(json['distanceMeters'])?.round(),
       stage: (json['stage'] as String?) ?? 'Waiting',
+      riderUserId: json['riderUserId'] as String?,
       riderName: json['riderName'] as String?,
+      outAt: _time(json['outAt']),
+      deliveredAt: _time(json['deliveredAt']),
+      cashHandedInAt: _time(json['cashHandedInAt']),
     );
   }
+
+  bool get hasPin => latitude != null && longitude != null;
+
+  /// Google Maps' way to the door from wherever the rider is: to the pin,
+  /// or to the address as the caller said it, for Maps to find
+  Uri get directionsUri => Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${hasPin ? '$latitude,$longitude' : Uri.encodeQueryComponent(address)}');
 
   /// The address on one line, the street first
   String line({required String building, required String floor, required String apartment}) {

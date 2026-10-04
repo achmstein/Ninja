@@ -111,6 +111,9 @@ class AppConfig {
   static const Duration sessionsPoll = Duration(seconds: 30);
   static const Duration pendingOrdersPoll = Duration(seconds: 60);
   static const Duration serviceRequestsPoll = Duration(seconds: 30);
+
+  /// The deliveries board: the hub's DeliveryChanged is the primary path
+  static const Duration deliveriesPoll = Duration(seconds: 20);
   static const Duration shiftChipPoll = Duration(seconds: 60);
   static const Duration shiftScreenPoll = Duration(seconds: 20);
   static const Duration ticketByOrderPoll = Duration(milliseconds: 600);

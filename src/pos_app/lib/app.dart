@@ -23,6 +23,7 @@ import 'core/auth/auth_service.dart';
 import 'core/demo/demo.dart';
 import 'core/printing/kitchen_printing.dart';
 import 'features/catalog/providers/catalog_provider.dart';
+import 'features/deliveries/providers/deliveries_provider.dart';
 import 'features/orders/providers/pending_orders_provider.dart';
 import 'features/places/providers/places_provider.dart';
 import 'features/service_requests/providers/service_requests_provider.dart';
@@ -183,6 +184,19 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     );
     _signalRSubscriptions.add(signalR.onRoomStatusChanged.listen((_) => refreshRooms()));
     _signalRSubscriptions.add(signalR.onCatalogChanged.listen((_) => refreshCatalog()));
+    // A delivery given to a rider, out of the door, delivered, its cash in:
+    // the board and the rider picker read again (a delivery's bill moves too)
+    void refreshDeliveries() {
+      ref.read(deliveriesProvider.notifier).refresh();
+      ref.invalidate(tillRidersProvider);
+    }
+
+    _signalRSubscriptions.add(
+      signalR.onDeliveryChanged.listen((_) {
+        refreshDeliveries();
+        refreshTickets();
+      }),
+    );
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) {
         ref.read(branchProvider.notifier).refresh();
@@ -199,6 +213,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         refreshRequests();
         refreshRooms();
         refreshCatalog();
+        refreshDeliveries();
         ref.read(branchProvider.notifier).refresh();
         ref.read(brandProvider.notifier).refresh();
         ref.read(kitchenPrintHostProvider).nudge();
