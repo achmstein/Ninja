@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, createPromo, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, createPromo, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, drawDishPhoto, fillForm, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, uploadItemPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, DrawDishPhotoData, DrawDishPhotoError, FillFormData, FillFormError, FillFormResponse2, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
 
 /**
  * Fill in what a menu text is missing
@@ -16,6 +16,25 @@ export const localizeMenuTextMutation = (options?: Partial<Options<LocalizeMenuT
     const mutationOptions: UseMutationOptions<LocalizeMenuTextResponse, AxiosError<LocalizeMenuTextError>, Options<LocalizeMenuTextData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await localizeMenuText({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Fill in a form's empty fields
+ *
+ * Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).
+ */
+export const fillFormMutation = (options?: Partial<Options<FillFormData>>): UseMutationOptions<FillFormResponse2, AxiosError<FillFormError>, Options<FillFormData>> => {
+    const mutationOptions: UseMutationOptions<FillFormResponse2, AxiosError<FillFormError>, Options<FillFormData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await fillForm({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -54,6 +73,25 @@ export const scanMenuMutation = (options?: Partial<Options<ScanMenuData>>): UseM
     const mutationOptions: UseMutationOptions<ScanMenuResponse, AxiosError<ScanMenuError>, Options<ScanMenuData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await scanMenu({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Draw a photo of a dish
+ *
+ * The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).
+ */
+export const drawDishPhotoMutation = (options?: Partial<Options<DrawDishPhotoData>>): UseMutationOptions<unknown, AxiosError<DrawDishPhotoError>, Options<DrawDishPhotoData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DrawDishPhotoError>, Options<DrawDishPhotoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await drawDishPhoto({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

@@ -78,7 +78,12 @@ export function OrdersBoard() {
     )
 
   const place = search.place
-  const counts: Record<OrderPlace, number> = { rooms: 0, tables: 0, counter: 0 }
+  const counts: Record<OrderPlace, number> = {
+    rooms: 0,
+    tables: 0,
+    counter: 0,
+    delivery: 0,
+  }
   for (const order of pending) counts[orderPlace(order)] += 1
   const visible = place
     ? pending.filter((order) => orderPlace(order) === place)
@@ -145,6 +150,14 @@ export function OrdersBoard() {
                     {counts.counter}
                   </span>
                 </ToggleGroupItem>
+                {counts.delivery > 0 && (
+                  <ToggleGroupItem value='delivery' className='gap-1.5 px-3'>
+                    {t('branchSectionDelivery')}
+                    <span className='text-muted-foreground tabular-nums'>
+                      {counts.delivery}
+                    </span>
+                  </ToggleGroupItem>
+                )}
               </ToggleGroup>
             </div>
           )}

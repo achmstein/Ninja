@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { DeliveriesStrip } from '@/features/deliveries/deliveries-strip'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { PlacePanel } from '@/features/places/place-panel'
 import { StartStayDialog } from '@/features/places/start-stay-dialog'
@@ -441,6 +442,9 @@ export function Floor() {
         {/* App orders waiting for a tap come next: someone is waiting on
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
+
+        {/* Deliveries out: waiting for a rider, with one, or their cash to take in */}
+        <DeliveriesStrip />
 
         {features.reservations && !cloudKitchen && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>

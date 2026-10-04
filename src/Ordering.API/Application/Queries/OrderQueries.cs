@@ -148,6 +148,13 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
 
     public async Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId, int? stationId = null)
     {
+        var orders = await KitchenOrdersAsync(branchId, stationId);
+        // A delivery's card says it goes out of the door, where a place's name would be
+        return orders.Select(o => o.IsDelivery && o.PlaceName is null ? o with { PlaceName = KitchenWords.Delivery } : o).ToList();
+    }
+
+    private async Task<List<KitchenOrder>> KitchenOrdersAsync(int branchId, int? stationId)
+    {
         // A card left on the board overnight is stale, not work; ready orders
         // stay in the same window as the day's history the screen can recall from
         var confirmedSince = DateTime.UtcNow.AddHours(-24);

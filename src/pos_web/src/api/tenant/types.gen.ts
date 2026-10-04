@@ -25,6 +25,12 @@ export type BranchResponse = {
     isOrderingEnabled: boolean;
     isReservationsEnabled: boolean;
     requireSignInForTableOrders?: boolean;
+    latitude?: null | number | string;
+    longitude?: null | number | string;
+    isDeliveryEnabled?: boolean;
+    deliveryRadiusKm?: null | number | string;
+    deliveryFee?: number | string;
+    deliveryMinimumOrder?: number | string;
 };
 
 export type CreateBranchRequest = {
@@ -35,9 +41,12 @@ export type CreateBranchRequest = {
     taxNumber?: null | string;
     receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
-    dayEndTime?: null | string;
     isOrderingEnabled?: boolean;
     isReservationsEnabled?: boolean;
+    location?: null | string;
+    deliveryRadiusKm?: null | number | string;
+    deliveryFee?: number | string;
+    deliveryMinimumOrder?: number | string;
 };
 
 export type IFormFile = Blob | File;
@@ -87,6 +96,7 @@ export type TenantLayoutDto = {
     buttons: null | string;
     surface: null | string;
     density: null | string;
+    places?: null | string;
 };
 
 export type TenantLocaleDto = {
@@ -169,16 +179,21 @@ export type UpdateBranchRequest = {
     taxNumber?: null | string;
     receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
-    dayEndTime?: null | string;
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
     requireSignInForTableOrders?: null | boolean;
+    location?: null | string;
+    isDeliveryEnabled?: null | boolean;
+    deliveryRadiusKm?: null | number | string;
+    deliveryFee?: null | number | string;
+    deliveryMinimumOrder?: null | number | string;
 };
 
 export type UpdateBranchSettingsRequest = {
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
     requireSignInForTableOrders?: null | boolean;
+    isDeliveryEnabled?: null | boolean;
 };
 
 export type UpdateTenantRequest = {
@@ -324,6 +339,10 @@ export type UpdateBranchSettingsData = {
 
 export type UpdateBranchSettingsErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -336,6 +355,8 @@ export type UpdateBranchSettingsErrors = {
      */
     404: unknown;
 };
+
+export type UpdateBranchSettingsError = UpdateBranchSettingsErrors[keyof UpdateBranchSettingsErrors];
 
 export type UpdateBranchSettingsResponses = {
     /**

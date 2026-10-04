@@ -88,7 +88,9 @@ export function OrderCard({
   // counter it was rung up at, or the pickup shelf
   const place = localized(order.placeName)
   const channel = place || (isPos ? t('counter') : t('pickup'))
-  const PlaceIcon = !place
+  const PlaceIcon = order.isDelivery
+    ? Bike
+    : !place
     ? isPos
       ? Store
       : ShoppingBag

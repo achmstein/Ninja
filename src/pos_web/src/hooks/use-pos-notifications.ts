@@ -82,7 +82,7 @@ export function usePosNotifications() {
       invalidateTickets()
     })
 
-    const invalidateOrders = () => refresh('getPendingOrders', 'getOrder')
+    const invalidateOrders = () => refresh('getPendingOrders', 'getOrder', 'getDeliveries')
 
     // Customer app orders wait for a cashier's tap, so the till gets the
     // alerts the admin board gets: a chime and a toast when one arrives, and
@@ -113,6 +113,12 @@ export function usePosNotifications() {
           }),
         )
       }
+    })
+
+    // A delivery given to a rider, out of the door, delivered, its cash in:
+    // the floor's deliveries and the riders' load follow
+    connection.on('DeliveryChanged', () => {
+      refresh('getDeliveries', 'getRiders', 'getOrder')
     })
 
     const invalidatePlaces = () =>

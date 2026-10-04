@@ -19,6 +19,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useMoney, toNumber } from '@/lib/money'
 import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
+import { DeliveryDetails } from '@/features/deliveries/delivery-details'
 
 type OrderDetailDialogProps = {
   /** The order to show; null keeps the dialog closed. */
@@ -176,6 +177,8 @@ export function OrderDetailDialog({
                 </div>
               ))}
             </div>
+
+            {order.delivery && <DeliveryDetails delivery={order.delivery} />}
 
             {order.customerNote && (
               <div className='bg-muted flex items-start gap-2 rounded-lg p-3 text-sm'>

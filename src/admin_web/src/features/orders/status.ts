@@ -72,14 +72,17 @@ export const platformRejectReasons: { value: string; key: TranslationKey }[] = [
 export const defaultPlatformRejectReason = platformRejectReasons[0].value
 
 // Where an order was placed from, for grouping the live board
-export type OrderPlace = 'rooms' | 'tables' | 'counter'
+export type OrderPlace = 'rooms' | 'tables' | 'counter' | 'delivery'
 
-/** The board's lane: plain tables, everything timed (rooms, stations), or
- *  the counter for an order with no place at all. */
+/** The board's lane: plain tables, everything timed (rooms, stations),
+ *  the branch's own deliveries, or the counter for an order with no place
+ *  at all. */
 export function orderPlace(order: {
   placeId?: number | string | null
   placeKind?: string | null
+  delivery?: unknown
 }): OrderPlace {
+  if (order.delivery) return 'delivery'
   if (order.placeKind === 'Table') return 'tables'
   if (order.placeId != null) return 'rooms'
   return 'counter'

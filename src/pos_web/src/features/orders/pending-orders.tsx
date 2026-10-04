@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   Armchair,
+  Bike,
   Check,
   Clock,
   DoorOpen,
@@ -55,12 +56,19 @@ function PendingOrderCard({
       : ordersBefore === 0
         ? t('guestFirstOrderHere')
         : t('guestOrdersBefore', { count: ordersBefore })
-  const subtitle = place ? who : order.guestPhone
-  const PlaceIcon = !place
-    ? User
-    : order.placeKind === 'Room'
-      ? DoorOpen
-      : Armchair
+  // A delivery is named for whom it goes to, and says where
+  const subtitle = order.delivery
+    ? order.delivery.address
+    : place
+      ? who
+      : order.guestPhone
+  const PlaceIcon = order.delivery
+    ? Bike
+    : !place
+      ? User
+      : order.placeKind === 'Room'
+        ? DoorOpen
+        : Armchair
 
   return (
     <div

@@ -9,6 +9,11 @@ export type AssignOrderCustomerRequest = {
     customerName: string;
 };
 
+export type AssignRiderRequest = {
+    riderUserId: string;
+    riderName: string;
+};
+
 export type BasketItem = {
     id?: string;
     productId?: number | string;
@@ -19,6 +24,7 @@ export type BasketItem = {
     pictureUrl?: null | string;
     specialInstructions?: null | string;
     selectedCustomizations?: Array<BasketItemCustomization>;
+    suggestion?: SuggestionSource;
     totalPrice?: number | string;
 };
 
@@ -86,10 +92,89 @@ export type CreateOrderRequest = {
     placeKind?: null | string;
     placeName?: null | LocalizedText;
     promoCode?: null | string;
+    delivery?: null | DeliveryRequest;
 };
 
 export type CreatePairingRequest = {
     language: null | string;
+};
+
+export type CustomerAddressRequest = {
+    latitude: number | string;
+    longitude: number | string;
+    address: string;
+    building?: null | string;
+    floor?: null | string;
+    apartment?: null | string;
+    directions?: null | string;
+    phone?: null | string;
+    label?: null | string;
+};
+
+export type CustomerAddressView = {
+    id: number | string;
+    label: null | string;
+    latitude: number | string;
+    longitude: number | string;
+    address: string;
+    building: null | string;
+    floor: null | string;
+    apartment: null | string;
+    directions: null | string;
+    phone: null | string;
+};
+
+export type DeliveryOrder = {
+    orderNumber?: number | string;
+    date?: string;
+    confirmedAt?: null | string;
+    readyAt?: null | string;
+    paidAt?: null | string;
+    customerName?: null | string;
+    customerNote?: null | string;
+    total?: number | string;
+    items?: Array<Orderitem>;
+    delivery?: DeliveryView;
+};
+
+export type DeliveryQuote = {
+    delivers: boolean;
+    inRange: boolean;
+    distanceMeters: null | number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    radiusKm: number | string;
+};
+
+export type DeliveryRequest = {
+    latitude: number | string;
+    longitude: number | string;
+    address: string;
+    building?: null | string;
+    floor?: null | string;
+    apartment?: null | string;
+    directions?: null | string;
+    phone?: null | string;
+};
+
+export type DeliveryView = {
+    latitude?: number | string;
+    longitude?: number | string;
+    address?: string;
+    building?: null | string;
+    floor?: null | string;
+    apartment?: null | string;
+    directions?: null | string;
+    phone?: string;
+    fee?: number | string;
+    distanceMeters?: number | string;
+    stage?: string;
+    riderUserId?: null | string;
+    riderName?: null | string;
+    assignedAt?: null | string;
+    outAt?: null | string;
+    deliveredAt?: null | string;
+    cashHandedInAt?: null | string;
 };
 
 export type FailPrintJobRequest = {
@@ -113,6 +198,7 @@ export type KitchenOrder = {
     readyAt?: null | string;
     source?: string;
     platform?: null | PlatformOrderView;
+    isDelivery?: boolean;
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
@@ -204,6 +290,7 @@ export type Order = {
     sessionId?: null | number | string;
     source?: string;
     platform?: null | PlatformOrderView;
+    delivery?: null | DeliveryView;
     customerNote?: null | string;
     guestName?: null | string;
     guestPhone?: null | string;
@@ -246,6 +333,7 @@ export type OrderItemDto = {
     specialInstructions?: null | string;
     customizationsDescription?: null | LocalizedText;
     optionIds?: null | Array<number | string>;
+    suggestion?: SuggestionSource;
 };
 
 export type OrderRatingDto = {
@@ -292,6 +380,7 @@ export type OrderSummary = {
     sessionId?: null | number | string;
     source?: string;
     platform?: null | PlatformOrderView;
+    delivery?: null | DeliveryView;
     userName?: null | string;
     userId?: null | string;
     guestPhone?: null | string;
@@ -375,9 +464,23 @@ export type RateOrderRequest = {
     comment: null | string;
 };
 
+export type RiderStatusRequest = {
+    onDuty: boolean;
+};
+
+export type RiderView = {
+    userId?: string;
+    name?: string;
+    onDuty?: boolean;
+    lastSeenAt?: string;
+    out?: number | string;
+};
+
 export type SetOrderReadyRequest = {
     ready: boolean;
 };
+
+export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
 
 export type GetOrdersByUserData = {
     body?: never;
@@ -1300,6 +1403,540 @@ export type ReprintKitchenTicketResponses = {
 };
 
 export type ReprintKitchenTicketResponse = ReprintKitchenTicketResponses[keyof ReprintKitchenTicketResponses];
+
+export type GetDeliveryQuoteData = {
+    body?: never;
+    path?: never;
+    query: {
+        latitude: number | string;
+        longitude: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/quote';
+};
+
+export type GetDeliveryQuoteErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetDeliveryQuoteResponses = {
+    /**
+     * OK
+     */
+    200: DeliveryQuote;
+};
+
+export type GetDeliveryQuoteResponse = GetDeliveryQuoteResponses[keyof GetDeliveryQuoteResponses];
+
+export type GetMyAddressesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/addresses';
+};
+
+export type GetMyAddressesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyAddressesResponses = {
+    /**
+     * OK
+     */
+    200: Array<CustomerAddressView>;
+};
+
+export type GetMyAddressesResponse = GetMyAddressesResponses[keyof GetMyAddressesResponses];
+
+export type AddMyAddressData = {
+    body: CustomerAddressRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/addresses';
+};
+
+export type AddMyAddressErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AddMyAddressError = AddMyAddressErrors[keyof AddMyAddressErrors];
+
+export type AddMyAddressResponses = {
+    /**
+     * OK
+     */
+    200: CustomerAddressView;
+};
+
+export type AddMyAddressResponse = AddMyAddressResponses[keyof AddMyAddressResponses];
+
+export type DeleteMyAddressData = {
+    body?: never;
+    path: {
+        addressId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/addresses/{addressId}';
+};
+
+export type DeleteMyAddressErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteMyAddressResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteMyAddressResponse = DeleteMyAddressResponses[keyof DeleteMyAddressResponses];
+
+export type UpdateMyAddressData = {
+    body: CustomerAddressRequest;
+    path: {
+        addressId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/addresses/{addressId}';
+};
+
+export type UpdateMyAddressErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateMyAddressError = UpdateMyAddressErrors[keyof UpdateMyAddressErrors];
+
+export type UpdateMyAddressResponses = {
+    /**
+     * OK
+     */
+    200: CustomerAddressView;
+};
+
+export type UpdateMyAddressResponse = UpdateMyAddressResponses[keyof UpdateMyAddressResponses];
+
+export type GetDeliveriesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/deliveries';
+};
+
+export type GetDeliveriesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetDeliveriesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DeliveryOrder>;
+};
+
+export type GetDeliveriesResponse = GetDeliveriesResponses[keyof GetDeliveriesResponses];
+
+export type GetRidersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/riders';
+};
+
+export type GetRidersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRidersResponses = {
+    /**
+     * OK
+     */
+    200: Array<RiderView>;
+};
+
+export type GetRidersResponse = GetRidersResponses[keyof GetRidersResponses];
+
+export type UnassignDeliveryRiderData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/rider';
+};
+
+export type UnassignDeliveryRiderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UnassignDeliveryRiderError = UnassignDeliveryRiderErrors[keyof UnassignDeliveryRiderErrors];
+
+export type UnassignDeliveryRiderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UnassignDeliveryRiderResponse = UnassignDeliveryRiderResponses[keyof UnassignDeliveryRiderResponses];
+
+export type AssignDeliveryRiderData = {
+    body: AssignRiderRequest;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/rider';
+};
+
+export type AssignDeliveryRiderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type AssignDeliveryRiderError = AssignDeliveryRiderErrors[keyof AssignDeliveryRiderErrors];
+
+export type AssignDeliveryRiderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type AssignDeliveryRiderResponse = AssignDeliveryRiderResponses[keyof AssignDeliveryRiderResponses];
+
+export type HandInDeliveryCashData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/cash-in';
+};
+
+export type HandInDeliveryCashErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type HandInDeliveryCashError = HandInDeliveryCashErrors[keyof HandInDeliveryCashErrors];
+
+export type HandInDeliveryCashResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type HandInDeliveryCashResponse = HandInDeliveryCashResponses[keyof HandInDeliveryCashResponses];
+
+export type GetMyDeliveriesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/deliveries/mine';
+};
+
+export type GetMyDeliveriesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyDeliveriesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DeliveryOrder>;
+};
+
+export type GetMyDeliveriesResponse = GetMyDeliveriesResponses[keyof GetMyDeliveriesResponses];
+
+export type MarkDeliveryOutData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/out';
+};
+
+export type MarkDeliveryOutErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type MarkDeliveryOutError = MarkDeliveryOutErrors[keyof MarkDeliveryOutErrors];
+
+export type MarkDeliveryOutResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkDeliveryOutResponse = MarkDeliveryOutResponses[keyof MarkDeliveryOutResponses];
+
+export type MarkDeliveryDeliveredData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/delivered';
+};
+
+export type MarkDeliveryDeliveredErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type MarkDeliveryDeliveredError = MarkDeliveryDeliveredErrors[keyof MarkDeliveryDeliveredErrors];
+
+export type MarkDeliveryDeliveredResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkDeliveryDeliveredResponse = MarkDeliveryDeliveredResponses[keyof MarkDeliveryDeliveredResponses];
+
+export type SetMyRiderStatusData = {
+    body: RiderStatusRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/riders/me';
+};
+
+export type SetMyRiderStatusErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetMyRiderStatusResponses = {
+    /**
+     * OK
+     */
+    200: RiderView;
+};
+
+export type SetMyRiderStatusResponse = SetMyRiderStatusResponses[keyof SetMyRiderStatusResponses];
 
 export type GetKitchenStationsData = {
     body?: never;

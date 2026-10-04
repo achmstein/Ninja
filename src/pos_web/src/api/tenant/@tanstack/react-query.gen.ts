@@ -5,7 +5,7 @@ import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
 import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import type { CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsError, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -113,8 +113,8 @@ export const updateBranchMutation = (options?: Partial<Options<UpdateBranchData>
 /**
  * Update branch operational settings (ordering, reservations)
  */
-export const updateBranchSettingsMutation = (options?: Partial<Options<UpdateBranchSettingsData>>): UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<DefaultError>, Options<UpdateBranchSettingsData>> => {
-    const mutationOptions: UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<DefaultError>, Options<UpdateBranchSettingsData>> = {
+export const updateBranchSettingsMutation = (options?: Partial<Options<UpdateBranchSettingsData>>): UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<UpdateBranchSettingsError>, Options<UpdateBranchSettingsData>> => {
+    const mutationOptions: UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<UpdateBranchSettingsError>, Options<UpdateBranchSettingsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateBranchSettings({
                 ...options,

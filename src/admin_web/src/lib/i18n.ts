@@ -1402,6 +1402,9 @@ const webExtras = {
   // A branch's own delivery: its riders, one radius, one fee
   branchSectionDelivery: { en: "Delivery", ar: "التوصيل" },
   riderRole: { en: "Rider", ar: "مندوب توصيل" },
+  deliveryBuildingShort: { en: "Bldg", ar: "عمارة" },
+  deliveryFloorShort: { en: "Floor", ar: "دور" },
+  deliveryApartmentShort: { en: "Apt", ar: "شقة" },
   deliveryEnabled: { en: "Delivers", ar: "يوصّل" },
   deliveryEnabledHint: { en: "Customers can order to their address within the radius; the till assigns a rider and the bill is paid in cash at the door.", ar: "يقدر العملاء يطلبوا لعنوانهم داخل المسافة المحددة؛ الكاشير يعيّن مندوب والفاتورة تُدفع كاش عند الاستلام." },
   deliveryNeedsLocation: { en: "Set the branch's location and how far it delivers first.", ar: "حدّد موقع الفرع والمسافة اللي بيوصّل لها الأول." },

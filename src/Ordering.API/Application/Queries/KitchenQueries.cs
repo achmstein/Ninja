@@ -35,6 +35,12 @@ public record KitchenStationView
     };
 }
 
+/// <summary>The kitchen's words for where an order goes when it is not a place.</summary>
+public static class KitchenWords
+{
+    public static readonly LocalizedText Delivery = new() { En = "Delivery", Ar = "توصيل" };
+}
+
 /// <summary>
 /// A ticket waiting for a kitchen printer, with everything the print host
 /// needs to put it on paper: where the printer is and what goes on it.
@@ -109,6 +115,7 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                 Source = o.Source.ToString(),
                 o.PlaceKind,
                 o.PlaceName,
+                IsDelivery = o.Delivery != null,
                 CustomerName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 o.CustomerNote,
                 Items = o.OrderItems.Select(oi => new KitchenOrderItem
@@ -158,7 +165,9 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                 ConfirmedAt = order?.ConfirmedAt,
                 Source = order?.Source,
                 PlaceKind = order?.PlaceKind,
-                PlaceName = order?.PlaceName,
+                // A delivery goes out of the door, not to a place: the ticket says so where the place would be,
+                // so every printer (the apps' and the Windows connector) reads it without knowing of deliveries
+                PlaceName = order is { IsDelivery: true } ? KitchenWords.Delivery : order?.PlaceName,
                 CustomerName = order?.CustomerName,
                 CustomerNote = order?.CustomerNote,
                 Items = order?.Items.Where(i => i.StationId == station.Id).ToList() ?? [],
