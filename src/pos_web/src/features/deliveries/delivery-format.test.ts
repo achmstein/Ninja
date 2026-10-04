@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   boardOrder,
   cashDifference,
+  billLabel,
   deliveryOrderOfLabel,
   directionsUrl,
   distanceParts,
@@ -75,6 +76,17 @@ describe('lanes', () => {
   it('orders the board by what needs the till first', () => {
     const orders = [at('Returned'), at('Delivered'), at('OnTheWay'), at('Failed'), at('Waiting'), at('Delivered', { cashHandedInAt: 'x' })]
     expect(boardOrder(orders).map((o) => o.delivery.stage)).toEqual(['Waiting', 'Failed', 'OnTheWay', 'Delivered', 'Returned'])
+  })
+})
+
+describe('billLabel', () => {
+  it("says a delivery's bill is one", () => {
+    expect(billLabel('#12 · Mona')).toEqual({ text: '#12 · Mona', delivery: true })
+  })
+
+  it('leaves any other bill as it is', () => {
+    expect(billLabel('Ahmed Elhady')).toEqual({ text: 'Ahmed Elhady', delivery: false })
+    expect(billLabel(null)).toEqual({ text: '', delivery: false })
   })
 })
 

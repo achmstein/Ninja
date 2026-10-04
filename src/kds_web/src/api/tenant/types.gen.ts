@@ -31,6 +31,7 @@ export type BranchResponse = {
     deliveryRadiusKm?: null | number | string;
     deliveryFee?: number | string;
     deliveryMinimumOrder?: number | string;
+    requireSignInForDelivery?: boolean;
 };
 
 export type CreateBranchRequest = {
@@ -201,6 +202,7 @@ export type UpdateBranchRequest = {
     deliveryRadiusKm?: null | number | string;
     deliveryFee?: null | number | string;
     deliveryMinimumOrder?: null | number | string;
+    requireSignInForDelivery?: null | boolean;
 };
 
 export type UpdateBranchSettingsRequest = {
@@ -208,6 +210,7 @@ export type UpdateBranchSettingsRequest = {
     isReservationsEnabled?: null | boolean;
     requireSignInForTableOrders?: null | boolean;
     isDeliveryEnabled?: null | boolean;
+    requireSignInForDelivery?: null | boolean;
 };
 
 export type UpdateTenantRequest = {

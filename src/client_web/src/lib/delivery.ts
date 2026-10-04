@@ -11,7 +11,7 @@ import type { OrderDestination } from '@/lib/order-destination'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 
 /** What stands in the way of a delivery, for the tray to say */
-export type DeliveryProblem = 'address' | 'checking' | 'quoteFailed' | 'range' | 'minimum' | null
+export type DeliveryProblem = 'signIn' | 'address' | 'checking' | 'quoteFailed' | 'range' | 'minimum' | null
 
 /**
  * Where the order is going when it is brought: what the tray shows and
@@ -44,12 +44,15 @@ export type DeliveryState = {
 }
 
 /**
- * What stands in the way, in the order the customer meets it: no address, the
- * branch still answering (or not answering at all), too far, too little.
- * Pure, so it is tested apart from the queries.
+ * What stands in the way, in the order the customer meets it: a guest where
+ * the branch delivers to accounts only, no address, the branch still
+ * answering (or not answering at all), too far, too little. Pure, so it is
+ * tested apart from the queries.
  */
 export function deliveryProblem(s: {
   active: boolean
+  /** A guest at a branch that delivers to signed-in customers only: nothing else matters until they sign in */
+  needsSignIn?: boolean
   hasAddress: boolean
   quoted: boolean
   quoteFailed: boolean
@@ -57,6 +60,7 @@ export function deliveryProblem(s: {
   short: number
 }): DeliveryProblem {
   if (!s.active) return null
+  if (s.needsSignIn) return 'signIn'
   if (!s.hasAddress) return 'address'
   if (s.quoteFailed) return 'quoteFailed'
   if (!s.quoted) return 'checking'
@@ -71,6 +75,7 @@ export function useDeliveryOwner(): string {
 }
 
 export function useDelivery(destination: OrderDestination, subtotal: number): DeliveryState {
+  const auth = useAuth()
   const branch = useSelectedBranch()
   const delivers = useFeatures().delivery === true
   const owner = useDeliveryOwner()
@@ -94,7 +99,9 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   // The business delivers (an add-on it bought, and on), and so does this branch
   const offered = delivers && !destination && branch?.isDeliveryEnabled === true && branch.isOrderingEnabled !== false
   const active = offered && store.wanted
-  const address = ownersAddress
+  // Delivery for signed-in customers only here: a guest is asked to sign in, and nothing is quoted
+  const needsSignIn = active && !auth.isAuthenticated && branch?.requireSignInForDelivery === true
+  const address = needsSignIn ? null : ownersAddress
 
   const quoteQuery = useQuery({
     ...getDeliveryQuoteOptions({
@@ -111,6 +118,7 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   const short = Math.max(0, minimum - subtotal)
   const problem = deliveryProblem({
     active,
+    needsSignIn,
     hasAddress: address != null,
     quoted,
     quoteFailed: quoteQuery.isError && !quoteQuery.isFetching,

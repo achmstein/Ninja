@@ -440,6 +440,36 @@ abstract class AppLocalizations {
   /// **'Off duty'**
   String get offDuty;
 
+  /// No description provided for @goOnDuty.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on duty'**
+  String get goOnDuty;
+
+  /// No description provided for @goOffDuty.
+  ///
+  /// In en, this message translates to:
+  /// **'Go off duty'**
+  String get goOffDuty;
+
+  /// No description provided for @goOffDutyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Go off duty?'**
+  String get goOffDutyConfirm;
+
+  /// No description provided for @goOffDutyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The till won\'t give you new deliveries until you\'re back on duty.'**
+  String get goOffDutyHint;
+
+  /// No description provided for @stayOnDuty.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on duty'**
+  String get stayOnDuty;
+
   /// No description provided for @onDutyHint.
   ///
   /// In en, this message translates to:

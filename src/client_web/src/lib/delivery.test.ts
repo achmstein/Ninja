@@ -18,6 +18,12 @@ describe('deliveryProblem', () => {
     expect(deliveryProblem({ ...ok, short: 20 })).toBe('minimum')
   })
 
+  it('asks a guest to sign in before anything else where the branch delivers to accounts only', () => {
+    expect(deliveryProblem({ ...ok, needsSignIn: true })).toBe('signIn')
+    expect(deliveryProblem({ ...ok, needsSignIn: true, hasAddress: false, quoted: false })).toBe('signIn')
+    expect(deliveryProblem({ ...ok, active: false, needsSignIn: true })).toBeNull()
+  })
+
   it('never leaves a quote that failed as "checking" for ever', () => {
     expect(deliveryProblem({ ...ok, quoted: false, quoteFailed: true })).not.toBe('checking')
   })

@@ -121,6 +121,11 @@ export function usePosNotifications() {
       refresh('getDeliveries', 'getRiders', 'getOrder')
     })
 
+    // A rider went on duty or off: the rider picker follows at once
+    connection.on('RiderStatusChanged', () => {
+      refresh('getRiders')
+    })
+
     const invalidatePlaces = () =>
       refresh('listPlaces', 'getOpenStays', 'getOpenReservations', 'getStay')
 

@@ -4217,6 +4217,10 @@
               "string"
             ],
             "format": "double"
+          },
+          "signInRequired": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

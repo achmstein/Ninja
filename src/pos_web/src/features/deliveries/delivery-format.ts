@@ -137,6 +137,12 @@ export function deliveryOrderOfLabel(label: string | null | undefined): number |
   return match ? Number(match[1]) : null
 }
 
+/** A bill's label as the till shows it, and whether it is a delivery's bill (drawn with the bike) */
+export function billLabel(label: string | null | undefined): { text: string; delivery: boolean } {
+  const text = label?.trim() ?? ''
+  return { text, delivery: deliveryOrderOfLabel(text) != null }
+}
+
 /** Collected minus due, to the piastre; null until the cash is in */
 export function cashDifference(collected: number | null | undefined, total: number): number | null {
   if (collected == null || !Number.isFinite(collected)) return null

@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { billLabel } from '@/features/deliveries/delivery-format'
 import { PendingOrders } from '@/features/orders/pending-orders'
 import {
   pendingForTicket,
@@ -500,7 +501,7 @@ export function TicketScreen({
   // different question, and the line groups below are the honest answer.
   const placeName = localized(ticket.locationName)
   const location = placeName || typeLabel
-  const title = placeName || ticket.label || typeLabel
+  const title = placeName || billLabel(ticket.label).text || typeLabel
 
   const toggleLine = (id: number) =>
     setSelectedIds((prev) => {

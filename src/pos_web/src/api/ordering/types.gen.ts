@@ -149,6 +149,7 @@ export type DeliveryQuote = {
     fee: number | string;
     minimumOrder: number | string;
     radiusKm: number | string;
+    signInRequired?: boolean;
 };
 
 export type DeliveryRequest = {

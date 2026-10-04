@@ -31,31 +31,39 @@ class BranchSwitcher extends ConsumerWidget {
           children: [
             const BrandMark(size: 32),
             const SizedBox(width: 8),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tight leading: two lines have to fit the 48 dp button
-                // beside the button's own vertical padding (pos_web's
-                // `leading-tight`)
-                Text(
-                  business.isEmpty ? branchLabel : business,
-                  style: theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                    color: theme.colors.foreground,
-                  ),
-                ),
-                // One branch: the business is the place, and its branch says nothing more
-                if (business.isNotEmpty && switchable)
+            // Takes what the header leaves it and cuts a long name short with
+            // an ellipsis, rather than pushing past the edge
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Tight leading: two lines fit the 48 dp row (pos_web's `leading-tight`)
                   Text(
-                    branchLabel,
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.mutedForeground,
+                    business.isEmpty ? branchLabel : business,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.sm.copyWith(
+                      fontWeight: FontWeight.w600,
                       height: 1.0,
+                      color: theme.colors.foreground,
                     ),
                   ),
-              ],
+                  // One branch: the business is the place, and its branch says nothing more
+                  if (business.isNotEmpty && switchable)
+                    Text(
+                      branchLabel,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.mutedForeground,
+                        height: 1.0,
+                      ),
+                    ),
+                ],
+              ),
             ),
             if (withChevron) ...[
               const SizedBox(width: 8),
@@ -91,13 +99,16 @@ class BranchSwitcher extends ConsumerWidget {
           ],
         ),
       ],
-      builder: (context, controller, _) => SizedBox(
-        height: 48,
-        child: FButton(
-          variant: FButtonVariant.ghost,
-          mainAxisSize: MainAxisSize.min,
-          onPress: controller.toggle,
-          child: brand(withChevron: true),
+      // A plain tappable rather than a button: the button's own vertical
+      // padding left two lines of text less than the 48 dp they need
+      builder: (context, controller, _) => FTappable(
+        onPress: controller.toggle,
+        child: SizedBox(
+          height: 48,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: brand(withChevron: true),
+          ),
         ),
       ),
     );

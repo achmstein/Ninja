@@ -15,7 +15,8 @@ public record BranchView(
     string DayEndTime,
     bool IsOrderingEnabled,
     bool IsReservationsEnabled,
-    bool RequireSignInForTableOrders);
+    bool RequireSignInForTableOrders,
+    bool RequireSignInForDelivery = false);
 
 /// <summary>A branch as far as its delivery goes.</summary>
 public record DeliveryBranchView(int Id, bool IsDeliveryEnabled, decimal? DeliveryRadiusKm);
@@ -90,6 +91,14 @@ public sealed class BranchScenarios
         var back = await till.SendAsync<BranchView>(HttpMethod.Patch, $"{Branches}/{created.Id}/settings", new { isOrderingEnabled = true, requireSignInForTableOrders = true }, HttpStatusCode.OK);
         Assert.IsTrue(back.IsOrderingEnabled);
         Assert.IsTrue(back.RequireSignInForTableOrders);
+        Assert.IsFalse(back.RequireSignInForDelivery, "delivery for accounts only starts off");
+
+        // Delivery for signed-in customers only: its own switch, the others left as they were
+        var accountsOnly = await till.SendAsync<BranchView>(HttpMethod.Patch, $"{Branches}/{created.Id}/settings", new { requireSignInForDelivery = true }, HttpStatusCode.OK);
+        Assert.IsTrue(accountsOnly.RequireSignInForDelivery);
+        Assert.IsTrue(accountsOnly.RequireSignInForTableOrders);
+        var listed = await Owner.GetAsync<List<BranchView>>(Branches);
+        Assert.IsTrue(listed.Single(b => b.Id == created.Id).RequireSignInForDelivery, "the branch list tells the apps");
 
         // A branch this till is not assigned to is not its to pause — and not its to learn about either
         var (elsewhere, _) = await till.RefusedAsync(HttpMethod.Patch, $"{Branches}/999999/settings", new { isOrderingEnabled = false });

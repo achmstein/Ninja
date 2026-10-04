@@ -40,6 +40,7 @@ public class BranchSettingsChangedIntegrationEventHandler(
         row.DeliveryRadiusKm = @event.DeliveryRadiusKm;
         row.DeliveryFee = @event.DeliveryFee;
         row.DeliveryMinimumOrder = @event.DeliveryMinimumOrder;
+        row.RequireSignInForDelivery = @event.RequireSignInForDelivery;
         row.UpdatedAt = @event.CreationDate;
 
         await context.SaveChangesAsync();

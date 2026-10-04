@@ -36,6 +36,7 @@ export type BranchSetting =
   | 'isReservationsEnabled'
   | 'requireSignInForTableOrders'
   | 'isDeliveryEnabled'
+  | 'requireSignInForDelivery'
 
 const percent = (rate: number | string | undefined) =>
   String(Math.round(Number(rate ?? 0) * 10000) / 100)
@@ -184,6 +185,16 @@ export function BranchSheet({
             checked={branch.isDeliveryEnabled ?? false}
             disabled={savingSettings || !located || radiusKm <= 0}
             onChange={(v) => onToggle('isDeliveryEnabled', v)}
+          />
+          {/* Who may have it brought: everyone, or signed-in customers only.
+              The till's phone orders are not held to it */}
+          <ToggleRow
+            icon={UserCheck}
+            title={t('requireSignInForDelivery')}
+            hint={t('requireSignInForDeliveryHint')}
+            checked={branch.requireSignInForDelivery ?? false}
+            disabled={savingSettings}
+            onChange={(v) => onToggle('requireSignInForDelivery', v)}
           />
           <OpenRow
             icon={Ruler}

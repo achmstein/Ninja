@@ -58,6 +58,7 @@ export function usePlaceOrder({
     guestOrdersAnywhere,
     requireSignInForTableOrders: branch?.requireSignInForTableOrders ?? false,
     delivering: delivery.active,
+    requireSignInForDelivery: branch?.requireSignInForDelivery ?? false,
   })
 
   const savePreferences = useMutation(saveUserPreferencesMutation())
@@ -112,7 +113,8 @@ export function usePlaceOrder({
     }
     // The tray says what stands in the way and holds the button; this is the last word
     if (delivery.active && !delivery.ready) return false
-    const guestContact = isGuest ? await ensureGuestDetails() : null
+    // A delivery already carries the number to call: the guest is not asked for it twice
+    const guestContact = isGuest ? await ensureGuestDetails({ phone: (delivery.active && delivery.address?.phone) || undefined }) : null
     if (isGuest && !guestContact) return false
     if (!isGuest && !(await ensureProfileComplete())) return false
 

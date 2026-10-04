@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
-import { Bike, ChevronRight, Loader2, MapPin, ShoppingBag, Store } from 'lucide-react'
+import { Bike, ChevronRight, Loader2, LogIn, MapPin, ShoppingBag, Store } from 'lucide-react'
+import { GuestSignInChoices } from '@/components/auth/sign-in-options'
 import { shownLabel } from '@/lib/address-line'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { addressLine, type DeliveryState } from '@/lib/delivery'
@@ -76,7 +77,21 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
         })}
       </div>
 
-      {delivery.active && (
+      {/* The branch brings orders to signed-in customers only: no address
+          for a guest to fill in, but the way to sign in, right here */}
+      {delivery.problem === 'signIn' && (
+        <div className='bg-background/10 flex flex-col gap-3 rounded-2xl p-3' role='status'>
+          <span className='flex items-center gap-2 text-note font-semibold'>
+            <LogIn className='size-4 shrink-0' />
+            {t('deliveryNeedsAccount')}
+          </span>
+          <div className='text-foreground bg-background rounded-xl p-3'>
+            <GuestSignInChoices />
+          </div>
+        </div>
+      )}
+
+      {delivery.active && delivery.problem !== 'signIn' && (
         <>
           <button
             type='button'

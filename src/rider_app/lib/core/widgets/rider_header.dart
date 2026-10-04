@@ -6,6 +6,7 @@ import '../../features/deliveries/providers/deliveries_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../network/api_errors.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import 'branch_switcher.dart';
 import 'rider_toast.dart';
 
@@ -43,46 +44,24 @@ class RiderHeader extends ConsumerWidget {
       child: Row(
         children: [
           const Flexible(child: BranchSwitcher()),
-          const Spacer(),
-          // The whole pill flips it: a dot and a word, green while working;
-          // while the till has not answered, it says so instead of the dot
-          Semantics(
-            toggled: onDuty,
-            button: true,
-            label: onDuty ? l10n.onDuty : l10n.offDuty,
-            excludeSemantics: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: duty.pending ? null : () => _toggle(context, ref, !onDuty),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: onDuty ? green.withValues(alpha: 0.15) : theme.colors.muted,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (duty.pending)
-                      const SizedBox.square(dimension: 14, child: FCircularProgress())
-                    else
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: onDuty ? green : theme.colors.mutedForeground),
-                      ),
-                    const SizedBox(width: 8),
-                    Text(
-                      onDuty ? l10n.onDuty : l10n.offDuty,
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: onDuty ? green : theme.colors.mutedForeground),
-                    ),
-                    const SizedBox(width: 8),
-                    FSwitch(value: onDuty, onChange: duty.pending ? null : (v) => _toggle(context, ref, v)),
-                  ],
-                ),
-              ),
-            ),
+          const SizedBox(width: 8),
+          _DutyControl(
+            onDuty: onDuty,
+            pending: duty.pending,
+            green: green,
+            onGoOn: () => _toggle(context, ref, true),
+            onGoOff: () async {
+              // Going off takes the rider out of the till's list: asked once,
+              // so a stray tap on the road does not
+              final yes = await showConfirmDialog(
+                context,
+                title: l10n.goOffDutyConfirm,
+                description: l10n.goOffDutyHint,
+                cancelLabel: l10n.stayOnDuty,
+                actionLabel: l10n.goOffDuty,
+              );
+              if (yes && context.mounted) await _toggle(context, ref, false);
+            },
           ),
           const SizedBox(width: 4),
           SizedBox.square(
@@ -98,6 +77,79 @@ class RiderHeader extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The rider's one control, one thing a state: off duty, a solid "Go on duty"
+/// button, the obvious thing to press; on duty, a calm green status that
+/// asks before going off; while the till has not answered, a spinner where
+/// the icon was. 48 dp high, as everything here is used on a bike.
+class _DutyControl extends StatelessWidget {
+  final bool onDuty;
+  final bool pending;
+  final Color green;
+  final VoidCallback onGoOn;
+  final VoidCallback onGoOff;
+
+  const _DutyControl({
+    required this.onDuty,
+    required this.pending,
+    required this.green,
+    required this.onGoOn,
+    required this.onGoOff,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    const spinner = SizedBox.square(dimension: 16, child: FCircularProgress());
+
+    if (!onDuty) {
+      return SizedBox(
+        height: 48,
+        child: FButton(
+          mainAxisSize: MainAxisSize.min,
+          onPress: pending ? null : onGoOn,
+          prefix: pending ? spinner : const Icon(FIcons.power, size: 18),
+          child: Text(l10n.goOnDuty, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+
+    return Semantics(
+      button: true,
+      toggled: true,
+      label: '${l10n.onDuty}. ${l10n.goOffDuty}',
+      excludeSemantics: true,
+      child: FTappable(
+        onPress: pending ? null : onGoOff,
+        child: Container(
+          height: 48,
+          padding: const EdgeInsetsDirectional.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: green.withValues(alpha: 0.12),
+            border: Border.all(color: green.withValues(alpha: 0.45)),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (pending)
+                spinner
+              else
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: green),
+                ),
+              const SizedBox(width: 8),
+              Text(l10n.onDuty, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: green)),
+            ],
+          ),
+        ),
       ),
     );
   }

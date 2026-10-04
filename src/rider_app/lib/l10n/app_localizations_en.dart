@@ -194,6 +194,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offDuty => 'Off duty';
 
   @override
+  String get goOnDuty => 'Go on duty';
+
+  @override
+  String get goOffDuty => 'Go off duty';
+
+  @override
+  String get goOffDutyConfirm => 'Go off duty?';
+
+  @override
+  String get goOffDutyHint =>
+      'The till won\'t give you new deliveries until you\'re back on duty.';
+
+  @override
+  String get stayOnDuty => 'Stay on duty';
+
+  @override
   String get onDutyHint =>
       'While you are on duty the till can give you deliveries.';
 

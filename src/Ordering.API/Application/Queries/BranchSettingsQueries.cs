@@ -54,7 +54,7 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
 
         return row is { IsDeliveryEnabled: true, Latitude: { } lat, Longitude: { } lng, DeliveryRadiusKm: > 0 }
             && (row.IsOrderingEnabled || evenWhilePaused)
-            ? new DeliveryTerms(lat, lng, row.DeliveryRadiusKm.Value, row.DeliveryFee, row.DeliveryMinimumOrder)
+            ? new DeliveryTerms(lat, lng, row.DeliveryRadiusKm.Value, row.DeliveryFee, row.DeliveryMinimumOrder, row.RequireSignInForDelivery)
             : null;
     }
 }

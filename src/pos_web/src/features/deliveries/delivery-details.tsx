@@ -1,5 +1,6 @@
-import { MapPin, Navigation, Phone } from 'lucide-react'
+import { Bike, MapPin, Navigation, Phone } from 'lucide-react'
 import type { DeliveryView } from '@/api/ordering/types.gen'
+import { Button } from '@/components/ui/button'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -23,50 +24,75 @@ export function useDistanceText() {
 }
 
 /**
- * Where an order is going, for the till: the address and the rider's note,
- * the phone to call, how far, the fee, and the map a tap away.
+ * Where an order is going, for the till, read top to bottom: where to (with
+ * how far), the street, the building, floor and flat under it, the rider's
+ * note, then the two things the cashier does with it: call, or open the map.
+ * The fee is money, so it sits with the bill's total (`DeliveryFeeRow`), not here.
  */
 export function DeliveryDetails({ delivery, className }: { delivery: DeliveryView; className?: string }) {
   const t = useT()
-  const money = useMoney()
   const line = useAddressLine()
   const distance = useDistanceText()
-  const fee = toNumber(delivery.fee)
   const tel = telHref(delivery.phone)
+  const details = line({ building: delivery.building, floor: delivery.floor, apartment: delivery.apartment })
+  const pinned = delivery.latitude != null && delivery.longitude != null
 
   return (
-    <div className={cn('bg-muted flex flex-col gap-2 rounded-lg p-3 text-sm', className)}>
-      {/* The address, with the map at the end of its line so it never drops
-          onto a line of its own */}
-      <div className='flex items-start gap-2'>
-        <MapPin className='text-muted-foreground mt-0.5 size-4 shrink-0' />
-        <div className='min-w-0 flex-1'>
-          <div className='font-medium'>{line(delivery)}</div>
-          {delivery.directions && <div className='text-muted-foreground italic'>"{delivery.directions}"</div>}
-        </div>
-        <a
-          href={directionsUrl(delivery)}
-          target='_blank'
-          rel='noreferrer'
-          className='text-foreground flex min-h-11 shrink-0 items-center gap-1.5 px-1 font-medium'
-        >
-          <Navigation className='size-3.5' />
-          {t('deliveryMap')}
-        </a>
-      </div>
-      <div className='text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1'>
-        {tel && (
-          <a href={tel} className='text-foreground flex min-h-11 items-center gap-1.5 font-medium'>
-            <Phone className='size-3.5 shrink-0' />
-            {/* Only the digits run left to right; the icon stays at the line's start */}
-            <span dir='ltr'>{delivery.phone}</span>
-          </a>
+    <section className={cn('flex flex-col gap-3 rounded-lg border p-3', className)} aria-label={t('deliverTo')}>
+      <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+        <Bike className='size-4 shrink-0' />
+        <span className='font-medium'>{t('deliverTo')}</span>
+        {delivery.distanceMeters != null && (
+          <span className='bg-muted ms-auto rounded-full px-2 py-0.5 text-xs tabular-nums'>
+            {distance(toNumber(delivery.distanceMeters))}
+          </span>
         )}
-        {delivery.distanceMeters != null && <span>{distance(toNumber(delivery.distanceMeters))}</span>}
-        <span>
-          {t('deliveryFee')}: {fee > 0 ? money(fee) : t('deliveryFree')}
-        </span>
       </div>
+
+      <div className='flex items-start gap-2'>
+        <MapPin className='text-muted-foreground mt-1 size-4 shrink-0' />
+        <div className='min-w-0 flex-1'>
+          <div className='text-base font-semibold'>{delivery.address}</div>
+          {details && <div className='text-muted-foreground text-sm'>{details}</div>}
+          {delivery.directions && (
+            <div className='text-muted-foreground mt-1 text-sm italic'>"{delivery.directions}"</div>
+          )}
+          {!pinned && <div className='text-muted-foreground mt-1 text-xs'>{t('deliveryNoPin')}</div>}
+        </div>
+      </div>
+
+      <div className='grid grid-cols-2 gap-2'>
+        {tel ? (
+          <Button asChild variant='outline' className='h-11 justify-center gap-2'>
+            <a href={tel}>
+              <Phone className='size-4 shrink-0' />
+              {/* Only the digits run left to right; the icon stays at the start */}
+              <span dir='ltr' className='tabular-nums'>{delivery.phone}</span>
+            </a>
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button asChild variant='outline' className='h-11 justify-center gap-2'>
+          <a href={directionsUrl(delivery)} target='_blank' rel='noreferrer'>
+            <Navigation className='size-4 shrink-0' />
+            {t('deliveryMap')}
+          </a>
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+/** The delivery fee as a line of the bill, just above its total */
+export function DeliveryFeeRow({ delivery, className }: { delivery: DeliveryView; className?: string }) {
+  const t = useT()
+  const money = useMoney()
+  const fee = toNumber(delivery.fee)
+  return (
+    <div className={cn('text-muted-foreground flex justify-between text-sm', className)}>
+      <span>{t('deliveryFee')}</span>
+      <span className='tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
     </div>
   )
 }

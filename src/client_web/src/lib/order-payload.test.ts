@@ -31,6 +31,14 @@ describe('checkoutBlock', () => {
     expect(checkoutBlock({ ...base, destination: table })).toBeNull()
     expect(checkoutBlock({ ...base, destination: table, requireSignInForTableOrders: true })).toBe('account')
   })
+
+  it('asks a guest to sign in for delivery where the branch delivers to accounts only', () => {
+    expect(checkoutBlock({ ...base, delivering: true })).toBeNull()
+    expect(checkoutBlock({ ...base, delivering: true, requireSignInForDelivery: true })).toBe('account')
+    // Collecting it, or a signed-in customer, is not held to it
+    expect(checkoutBlock({ ...base, guestOrdersAnywhere: true, requireSignInForDelivery: true })).toBeNull()
+    expect(checkoutBlock({ ...base, isGuest: false, delivering: true, requireSignInForDelivery: true })).toBeNull()
+  })
 })
 
 describe('orderSignature', () => {

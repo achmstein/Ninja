@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Undo2 } from 'lucide-react'
+import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Undo2, UserRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -65,57 +65,63 @@ function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => v
         lane === 'cashDue' && 'border-emerald-500/70',
       )}
     >
-      {/* Who and what to collect; where; then how it stands and since when.
-          Each line holds one thing, so no language's longer words push
-          another out of the card */}
-      <div className='flex items-baseline gap-2'>
+      {/* One thing a line, read at a glance from across the counter: how it
+          stands and since when; who and what to collect; where; and the
+          rider on a line of their own, so a Latin name never splits an
+          Arabic sentence */}
+      <div className='flex items-center gap-2'>
+        <StagePill order={order} />
+        <span className='text-muted-foreground ms-auto shrink-0 text-xs whitespace-nowrap'>
+          {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)}
+        </span>
+      </div>
+      <div className='mt-1 flex items-baseline gap-2'>
         <span className='truncate text-base font-semibold'>{order.customerName || t('guest')}</span>
         <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
-        <span className='ms-auto shrink-0 text-sm font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
+        <span className='ms-auto shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
       <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />
         <span className='truncate'>{line(order.delivery)}</span>
       </div>
-      <div className='flex items-start gap-2 text-sm'>
-        <StageChip order={order} />
-        <span className='text-muted-foreground ms-auto shrink-0 whitespace-nowrap'>
-          {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)}
-        </span>
-      </div>
+      {order.delivery.riderName && (
+        <div className='flex items-center gap-1.5 text-sm'>
+          <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
+          <bdi className='truncate font-medium'>{order.delivery.riderName}</bdi>
+        </div>
+      )}
     </button>
   )
 }
 
 /**
- * Where the delivery has got to, beside the time: in words and an icon, never
- * colour alone; a long rider name wraps under it rather than being cut from
- * the wrong end in Arabic, and the icon keeps its size on the first line
+ * Where the delivery has got to, as a short pill: a word and an icon (never
+ * colour alone), tinted by what the till should do about it. The rider's
+ * name is not in it: the card gives the rider a line of their own
  */
-function StageChip({ order }: { order: BoardDelivery }) {
+function StagePill({ order }: { order: BoardDelivery }) {
   const t = useT()
-  const d = order.delivery
-  const name = d.riderName ?? ''
+  const amber = 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
   const [Icon, text, tone] = (() => {
     switch (laneOf(order)) {
       case 'waiting':
-        return [Clock, order.readyAt ? t('deliveryReadyNoRider') : t('deliveryNoRider'), 'text-amber-600 dark:text-amber-500'] as const
+        return [Clock, order.readyAt ? t('deliveryReadyNoRider') : t('deliveryNoRider'), amber] as const
       case 'failed':
-        return [AlertTriangle, name ? t('deliveryFailedWith', { name }) : t('deliveryFailed'), 'text-amber-600 dark:text-amber-500'] as const
+        return [AlertTriangle, t('deliveryFailed'), amber] as const
       case 'returned':
-        return [Undo2, t('deliveryReturned'), ''] as const
+        return [Undo2, t('deliveryReturned'), 'bg-muted text-muted-foreground'] as const
       case 'cashDue':
-        return [Banknote, t('deliveryCashWith', { name }), 'text-emerald-600 dark:text-emerald-500'] as const
+        return [Banknote, t('deliveryStageCashDue'), 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'] as const
       default:
-        return d.outAt
-          ? ([Bike, t('deliveryOnTheWayWith', { name }), ''] as const)
-          : ([CircleDot, t('deliveryWith', { name }), ''] as const)
+        return order.delivery.outAt
+          ? ([Bike, t('deliveryStageOnTheWay'), 'bg-sky-500/15 text-sky-700 dark:text-sky-400'] as const)
+          : ([CircleDot, t('deliveryStageWithRider'), 'bg-muted text-foreground'] as const)
     }
   })()
   return (
-    <span className={cn('flex min-w-0 items-start gap-1 font-medium', tone)}>
-      <Icon className='mt-[0.2rem] size-3.5 shrink-0' aria-hidden />
-      <span>{text}</span>
+    <span className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', tone)}>
+      <Icon className='size-3.5 shrink-0' aria-hidden />
+      <span className='truncate'>{text}</span>
     </span>
   )
 }

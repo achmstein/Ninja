@@ -34,6 +34,7 @@ export const PROBLEM_KEYS: Record<string, TranslationKey> = {
   'delivery.phone_invalid': 'deliveryNeedPhone',
   'delivery.address_required': 'deliveryNeedStreet',
   'delivery.pin_invalid': 'problemPinInvalid',
+  'delivery.sign_in_required': 'deliveryNeedsAccount',
   'delivery.place_conflict': 'problemPlaceConflict',
   'delivery.too_long': 'problemTooLong',
   'address.limit': 'problemAddressLimit',

@@ -33,6 +33,15 @@ public class Branch
     public bool RequireSignInForTableOrders { get; set; }
 
     /// <summary>
+    /// Ordering delivery needs an account here: a guest may still order to a
+    /// table or collect, but only a signed-in customer has it brought to their
+    /// door. Off by default; a branch turns it on when cash-at-the-door orders
+    /// from strangers go unanswered. The till's phone orders are not held to it.
+    /// Ordering enforces it from its projection.
+    /// </summary>
+    public bool RequireSignInForDelivery { get; set; }
+
+    /// <summary>
     /// Where the branch is, for a customer's nearest branch and the way there;
     /// set from its Google Maps link. Both or neither.
     /// </summary>

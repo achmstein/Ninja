@@ -181,7 +181,7 @@ public static class BranchApi
             });
 
         // The flags ride the same save; the service announces the change
-        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled);
+        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled, request.RequireSignInForDelivery);
 
         var response = BranchResponse.From(branch);
         return TypedResults.Ok(response);
@@ -220,7 +220,7 @@ public static class BranchApi
             });
         }
 
-        var branch = await settings.ApplyAsync(branchId, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled);
+        var branch = await settings.ApplyAsync(branchId, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled, request.RequireSignInForDelivery);
         if (branch == null)
             return TypedResults.NotFound();
 
@@ -234,18 +234,19 @@ public static class BranchApi
 /// <param name="Latitude">Where the branch is, with Longitude; null until its location is set.</param>
 /// <param name="IsDeliveryEnabled">The branch delivers with its own riders, within DeliveryRadiusKm of where it is.</param>
 /// <param name="DayEndTime">Always the same as DayStartTime, a whole day: kept for the apps already installed, which read a day from a start and an end and take an end at its start as a full day round.</param>
-public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null, bool IsDeliveryEnabled = false, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0)
+/// <param name="RequireSignInForDelivery">Customers must be signed in to order delivery here; the till's phone orders are not held to it.</param>
+public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null, bool IsDeliveryEnabled = false, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0, bool RequireSignInForDelivery = false)
 {
     public static BranchResponse From(Model.Branch b) => new(
         b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder,
         b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"),
         b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude,
-        b.IsDeliveryEnabled, b.DeliveryRadiusKm, b.DeliveryFee, b.DeliveryMinimumOrder);
+        b.IsDeliveryEnabled, b.DeliveryRadiusKm, b.DeliveryFee, b.DeliveryMinimumOrder, b.RequireSignInForDelivery);
 }
 
 public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0);
 
-public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null, bool? IsDeliveryEnabled = null, decimal? DeliveryRadiusKm = null, decimal? DeliveryFee = null, decimal? DeliveryMinimumOrder = null);
+public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null, bool? IsDeliveryEnabled = null, decimal? DeliveryRadiusKm = null, decimal? DeliveryFee = null, decimal? DeliveryMinimumOrder = null, bool? RequireSignInForDelivery = null);
 
-public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, bool? IsDeliveryEnabled = null);
+public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, bool? IsDeliveryEnabled = null, bool? RequireSignInForDelivery = null);
 

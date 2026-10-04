@@ -36,13 +36,15 @@ public enum DeliveryTaker
 public interface IDeliveryPolicy
 {
     /// <param name="itemsSubtotal">What the items come to as sent; the minimum is checked again at the menu's prices.</param>
+    /// <param name="isGuest">The customer ordering has no account: refused where the branch delivers to signed-in customers only.</param>
     /// <exception cref="OrderingDomainException">With a <see cref="DeliveryErrors"/> code, when a rule is broken.</exception>
     Task<Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Delivery> BuildAsync(
         DeliveryDraft draft,
         int branchId,
         DeliveryTaker taker,
         string? fallbackPhone,
-        decimal itemsSubtotal);
+        decimal itemsSubtotal,
+        bool isGuest = false);
 }
 
 public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry country) : IDeliveryPolicy
@@ -52,10 +54,17 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
         int branchId,
         DeliveryTaker taker,
         string? fallbackPhone,
-        decimal itemsSubtotal)
+        decimal itemsSubtotal,
+        bool isGuest = false)
     {
         var terms = await branchSettings.GetDeliveryTermsAsync(branchId, evenWhilePaused: taker == DeliveryTaker.Till)
             ?? throw new OrderingDomainException("This branch isn't delivering right now.", DeliveryErrors.NotDelivering);
+
+        // The branch brings orders to the door of signed-in customers only; the till's phone orders are its own
+        if (taker == DeliveryTaker.Customer && isGuest && terms.SignInRequired)
+        {
+            throw new OrderingDomainException("Sign in to order delivery from this branch.", DeliveryErrors.SignInRequired);
+        }
 
         int? distance = draft is { Latitude: { } lat, Longitude: { } lng } && IsOnTheMap(lat, lng)
             ? Geo.DistanceMeters(terms.Latitude, terms.Longitude, lat, lng)

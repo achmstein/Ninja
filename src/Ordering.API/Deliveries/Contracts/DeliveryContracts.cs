@@ -4,7 +4,8 @@ namespace Ninja.Ordering.API.Deliveries;
 
 /// <param name="Delivers">The branch delivers right now (delivery on, taking orders).</param>
 /// <param name="InRange">The point is within the branch's radius.</param>
-public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm);
+/// <param name="SignInRequired">The branch delivers to signed-in customers only: a guest is asked to sign in first.</param>
+public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false);
 
 /// <summary>The branch's answer for a delivery the till takes over the phone.</summary>
 /// <param name="InRange">Within the radius; true without a pin, where the cashier knows the streets.</param>

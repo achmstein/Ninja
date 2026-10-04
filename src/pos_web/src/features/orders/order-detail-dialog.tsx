@@ -19,7 +19,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useMoney, toNumber } from '@/lib/money'
 import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
-import { DeliveryDetails } from '@/features/deliveries/delivery-details'
+import { DeliveryDetails, DeliveryFeeRow } from '@/features/deliveries/delivery-details'
 
 type OrderDetailDialogProps = {
   /** The order to show; null keeps the dialog closed. */
@@ -190,6 +190,8 @@ export function OrderDetailDialog({
             <Separator />
 
             <div className='flex flex-col gap-1'>
+              {/* The fee is part of the bill: shown with it, so the total adds up */}
+              {order.delivery && <DeliveryFeeRow delivery={order.delivery} />}
               {loyaltyDiscount > 0 && (
                 <div className='text-muted-foreground flex justify-between text-sm'>
                   <span>{t('loyaltyDiscount')}</span>

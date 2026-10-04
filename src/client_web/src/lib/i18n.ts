@@ -458,6 +458,13 @@ const webExtras = {
   deliveryDirections: { en: 'Directions for the rider', ar: 'وصف للمندوب' },
   deliveryDirectionsHint: { en: 'A landmark, the gate, anything that helps', ar: 'علامة مميزة، البوابة، أي حاجة تساعد' },
   deliveryPhone: { en: 'Phone for the rider', ar: 'رقم للمندوب' },
+  deliveryYourName: { en: 'Your name', ar: 'اسمك' },
+  deliveryNeedsAccount: { en: 'Sign in to order delivery from here', ar: 'سجّل دخول عشان تطلب توصيل من هنا' },
+  deliveryNeedName: { en: 'Your name, so the rider knows whom to ask for', ar: 'اسمك، عشان المندوب يعرف يسأل على مين' },
+  guestDetailsHint: {
+    en: 'So the business can reach you about this order. Or sign in below to keep your orders and points.',
+    ar: 'عشان المحل يقدر يكلمك بخصوص الطلب ده. أو سجّل دخول تحت عشان تحتفظ بطلباتك ونقاطك.',
+  },
   deliveryLabel: { en: 'Name it', ar: 'سمّيه' },
   deliveryLabelHome: { en: 'Home', ar: 'البيت' },
   deliveryLabelWork: { en: 'Work', ar: 'الشغل' },

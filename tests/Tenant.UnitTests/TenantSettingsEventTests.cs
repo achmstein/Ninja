@@ -113,6 +113,20 @@ public sealed class TenantSettingsEventTests
         Assert.IsNull(typeof(BranchSettingsChangedIntegrationEvent).GetProperty("GuestOrdersAnywhere"), "the business's setting has its own event");
     }
 
+    [TestMethod]
+    public async Task Delivery_for_accounts_only_rides_the_branch_event()
+    {
+        var (services, bus) = AStack();
+        using var scope = services.CreateScope();
+        var settings = new BranchSettingsService(scope.ServiceProvider.GetRequiredService<TenantContext>(), scope.ServiceProvider.GetRequiredService<TenantEvents>(), NullLogger<BranchSettingsService>.Instance);
+
+        await settings.ApplyAsync(1, isOrderingEnabled: null, isReservationsEnabled: null, requireSignInForDelivery: true);
+
+        var said = bus.Published.OfType<BranchSettingsChangedIntegrationEvent>().Single();
+        Assert.IsTrue(said.RequireSignInForDelivery, "Ordering learns it from the event, never by asking");
+        Assert.IsTrue(said.IsOrderingEnabled, "the switches left out stay as they were");
+    }
+
     /// <summary>The outbox, as far as these tests go: nothing kept, everything sent straight away.</summary>
     private sealed class NoLog : IIntegrationEventLogService
     {

@@ -8,6 +8,7 @@ using Ninja.Testing;
 namespace Ninja.Ordering.FunctionalTests;
 
 public record DeliveryQuoteView(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm);
+public record QuoteWithSignIn(bool Delivers, bool SignInRequired);
 public record AddressView(int Id, string? Label, double Latitude, double Longitude, string Address, string? Building, string? Phone);
 
 /// <summary>
@@ -55,15 +56,58 @@ public sealed class DeliveryScenarios
         delivery = new { latitude = lat, longitude = lng, address = "Qasr El Nil St", building = "12", phone = "01001234567" },
     };
 
-    private static async Task<(HttpStatusCode Status, string Body)> PlaceAsync(Caller caller, object order)
+    private static async Task<(HttpStatusCode Status, string Body)> PlaceAsync(Caller caller, object order, int? guestBranch = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"{Orders}?{Version}")
         {
             Content = System.Net.Http.Json.JsonContent.Create(order, options: Caller.Json),
         };
         request.Headers.Add("x-requestid", Guid.NewGuid().ToString());
+        // A guest has no token: the branch and the device ride as headers
+        if (guestBranch is { } branch)
+        {
+            request.Headers.Add("X-Branch-Id", branch.ToString());
+            request.Headers.Add("X-Guest-Id", $"device-{Guid.NewGuid():N}");
+        }
         using var response = await caller.Http.SendAsync(request);
         return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>A branch of its own that delivers to signed-in customers only</summary>
+    private const int AccountsOnly = 10;
+
+    [TestMethod]
+    public async Task A_branch_that_delivers_to_accounts_only_refuses_a_guest_and_takes_a_customer_and_the_till()
+    {
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var handler = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await handler.Handle(new BranchSettingsChangedIntegrationEvent(
+                AccountsOnly, IsOrderingEnabled: true, IsReservationsEnabled: true, IsDeliveryEnabled: true,
+                Latitude: Lat, Longitude: Lng, DeliveryRadiusKm: 5, DeliveryFee: 20, RequireSignInForDelivery: true));
+        }
+
+        var quote = await Customer($"customer-{Guid.NewGuid():N}", AccountsOnly)
+            .GetAsync<QuoteWithSignIn>($"{Orders}/delivery/quote?latitude={NearLat}&longitude={NearLng}&{Version}");
+        Assert.IsTrue(quote.SignInRequired, "the quote says so before the guest fills in an address");
+
+        var guestOrder = new
+        {
+            guestName = "Mona",
+            guestPhone = "01001234567",
+            items = new[] { new { id = "1", productId = 1, productName = new { en = "Family meal" }, unitPrice = 150m, oldUnitPrice = 150m, quantity = 1 } },
+            delivery = new { latitude = NearLat, longitude = NearLng, address = "Qasr El Nil St", phone = "01001234567" },
+        };
+        var (guest, guestBody) = await PlaceAsync(Suite.Ordering.AsAnonymous(), guestOrder, guestBranch: AccountsOnly);
+        Assert.AreEqual(HttpStatusCode.BadRequest, guest, guestBody);
+        Assert.Contains("delivery.sign_in_required", guestBody);
+
+        var (customer, customerBody) = await PlaceAsync(Customer($"customer-{Guid.NewGuid():N}", AccountsOnly), Order(NearLat, NearLng, 150));
+        Assert.AreEqual(HttpStatusCode.OK, customer, customerBody);
+
+        var till = Suite.Ordering.As(Persona.Cashier(AccountsOnly), AccountsOnly);
+        var (phone, phoneBody) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone = "01001234567" }));
+        Assert.AreEqual(HttpStatusCode.OK, phone, phoneBody);
     }
 
     [TestMethod]

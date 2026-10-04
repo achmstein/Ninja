@@ -59,7 +59,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
         }
 
         var policy = _deliveryPolicy ?? throw new InvalidOperationException("No delivery policy to hold a delivery to.");
-        return await policy.BuildAsync(draft, message.BranchId, taker, message.GuestPhone, itemsTotal);
+        return await policy.BuildAsync(draft, message.BranchId, taker, message.GuestPhone, itemsTotal, isGuest: message.IsGuestOrder);
     }
 
     public async Task<int> Handle(CreateOrderCommand message, CancellationToken cancellationToken)

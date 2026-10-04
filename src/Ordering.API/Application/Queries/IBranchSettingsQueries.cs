@@ -36,7 +36,8 @@ public interface IBranchSettingsQueries
 }
 
 /// <summary>Where a branch delivers from, how far, and what it asks.</summary>
-public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder)
+/// <param name="SignInRequired">A customer must be signed in to order delivery here (the till's phone orders are not held to it).</param>
+public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder, bool SignInRequired = false)
 {
     public int RadiusMeters => (int)(RadiusKm * 1000);
 }

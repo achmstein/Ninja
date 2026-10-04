@@ -13,7 +13,8 @@ public record SetRiderStatusCommand(string UserId, string Name, int BranchId, bo
 /// </summary>
 public class SetRiderStatusCommandHandler(
     OrderingContext context,
-    IIdentityService identity) : IRequestHandler<SetRiderStatusCommand, RiderView>
+    IIdentityService identity,
+    IOrderingIntegrationEventService integrationEvents) : IRequestHandler<SetRiderStatusCommand, RiderView>
 {
     public async Task<RiderView> Handle(SetRiderStatusCommand command, CancellationToken cancellationToken)
     {
@@ -33,6 +34,18 @@ public class SetRiderStatusCommandHandler(
         }
 
         var name = command.Name.Length <= DeliveryLimits.RiderName ? command.Name : command.Name[..DeliveryLimits.RiderName];
+
+        // The till hears a start or a stop (or a move to another branch), not every beat
+        var before = await context.RiderStatuses
+            .AsNoTracking()
+            .Where(s => s.UserId == command.UserId)
+            .Select(s => new { s.OnDuty, s.BranchId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (before is null || before.OnDuty != command.OnDuty || before.BranchId != command.BranchId)
+        {
+            // Saved with this command's transaction, sent once it commits
+            await integrationEvents.AddAndSaveEventAsync(new RiderStatusChangedIntegrationEvent(command.UserId, command.BranchId, command.OnDuty));
+        }
 
         if (context.Database.IsRelational())
         {

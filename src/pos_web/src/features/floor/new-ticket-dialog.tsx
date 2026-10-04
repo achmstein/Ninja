@@ -6,6 +6,7 @@ import {
   getOpenTicketsOptions,
   openTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
+import { billLabel } from '@/features/deliveries/delivery-format'
 import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import {
@@ -89,7 +90,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   const { stays } = usePlaces({ enabled: open })
   const busy = new Map<string, string>()
   for (const ticket of openTickets) {
-    const where = localized(ticket.locationName) || ticket.label || t('counter')
+    const where = localized(ticket.locationName) || billLabel(ticket.label).text || t('counter')
     for (const id of ticket.customerIds ?? []) busy.set(id, where)
     if (ticket.id !== undefined) {
       const pendingId = readPendingCustomerId(ticket.id)

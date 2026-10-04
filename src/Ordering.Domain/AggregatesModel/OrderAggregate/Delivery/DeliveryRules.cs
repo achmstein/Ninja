@@ -32,6 +32,8 @@ public static class DeliveryErrors
     public const string AddressRequired = "delivery.address_required";
     public const string PinInvalid = "delivery.pin_invalid";
     public const string NameRequired = "delivery.name_required";
+    /// <summary>The branch has delivery for signed-in customers only, and this is a guest.</summary>
+    public const string SignInRequired = "delivery.sign_in_required";
     public const string PlaceConflict = "delivery.place_conflict";
     public const string TooLong = "delivery.too_long";
     public const string NotDelivery = "delivery.not_delivery";

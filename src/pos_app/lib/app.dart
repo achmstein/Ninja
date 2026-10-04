@@ -197,6 +197,10 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         refreshTickets();
       }),
     );
+    // A rider went on duty or off: only the picker moves
+    _signalRSubscriptions.add(
+      signalR.onRiderStatusChanged.listen((_) => ref.invalidate(tillRidersProvider)),
+    );
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) {
         ref.read(branchProvider.notifier).refresh();

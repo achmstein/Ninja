@@ -24,6 +24,12 @@ public class BranchSettings
     public bool RequireSignInForTableOrders { get; set; }
 
     /// <summary>
+    /// Ordering delivery needs an account at this branch; the till's phone
+    /// orders are not held to it. Tenant.API's flag, projected here.
+    /// </summary>
+    public bool RequireSignInForDelivery { get; set; }
+
+    /// <summary>
     /// The branch delivers with its own riders, within
     /// <see cref="DeliveryRadiusKm"/> of where it is. Unlike ordering, delivery
     /// fails closed: a branch never heard of does not deliver.

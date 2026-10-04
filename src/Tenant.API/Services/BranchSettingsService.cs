@@ -20,13 +20,13 @@ public class BranchSettingsService(
     /// Load, set, save, publish. A null flag leaves that setting as it was.
     /// Returns null when there is no such branch.
     /// </summary>
-    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null)
+    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null, bool? requireSignInForDelivery = null)
     {
         var branch = await context.Branches.FindAsync(branchId);
         if (branch == null)
             return null;
 
-        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled, requireSignInForTableOrders, isDeliveryEnabled);
+        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled, requireSignInForTableOrders, isDeliveryEnabled, requireSignInForDelivery);
 
         return branch;
     }
@@ -35,12 +35,13 @@ public class BranchSettingsService(
     /// Same on a branch the caller already loaded; whatever else is pending
     /// on the context is saved in the same transaction as the event.
     /// </summary>
-    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null)
+    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null, bool? isDeliveryEnabled = null, bool? requireSignInForDelivery = null)
     {
         if (isOrderingEnabled != null) branch.IsOrderingEnabled = isOrderingEnabled.Value;
         if (isReservationsEnabled != null) branch.IsReservationsEnabled = isReservationsEnabled.Value;
         if (requireSignInForTableOrders != null) branch.RequireSignInForTableOrders = requireSignInForTableOrders.Value;
         if (isDeliveryEnabled != null) branch.IsDeliveryEnabled = isDeliveryEnabled.Value;
+        if (requireSignInForDelivery != null) branch.RequireSignInForDelivery = requireSignInForDelivery.Value;
         // Delivering needs a place to measure from and a distance to stop at. The
         // endpoints refuse a change that would take either from a delivering
         // branch; a shift event never touches them, so this only holds the line
@@ -65,5 +66,6 @@ public class BranchSettingsService(
         branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders,
         branch.IsDeliveryEnabled, branch.Latitude, branch.Longitude,
         branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder,
-        Version: DateTime.UtcNow.Ticks);
+        Version: DateTime.UtcNow.Ticks,
+        RequireSignInForDelivery: branch.RequireSignInForDelivery);
 }

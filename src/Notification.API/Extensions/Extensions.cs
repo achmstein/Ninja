@@ -61,6 +61,8 @@ public static class Extensions
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
             .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
             .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
+            // A rider on duty or off: the till's riders follow
+            .AddSubscription<RiderStatusChangedIntegrationEvent, RiderStatusChangedIntegrationEventHandler>()
             .AddSubscription<KitchenTicketQueuedIntegrationEvent, KitchenTicketQueuedIntegrationEventHandler>()
             .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>()
             // A bill paid or voided ends the sitting at its place, for every phone that scanned it

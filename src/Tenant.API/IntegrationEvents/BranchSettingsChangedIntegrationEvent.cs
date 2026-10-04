@@ -18,4 +18,6 @@ public record BranchSettingsChangedIntegrationEvent(
     decimal DeliveryFee = 0,
     decimal DeliveryMinimumOrder = 0,
     // When the branch's settings were saved (ticks, UTC): a consumer keeps the newest it has seen
-    long Version = 0) : IntegrationEvent;
+    long Version = 0,
+    // Customers must be signed in to order delivery here (the till's phone orders are not)
+    bool RequireSignInForDelivery = false) : IntegrationEvent;

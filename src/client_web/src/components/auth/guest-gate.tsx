@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -30,13 +31,24 @@ export function useGuestGate() {
   const contact = useGuestStore((s) => s.contact)
   const setContact = useGuestStore((s) => s.setContact)
   const resolver = useRef<((contact: GuestContact | null) => void) | null>(null)
+  // What the order already knows (a delivery's phone), to start the fields from
+  const [known, setKnown] = useState<Partial<GuestContact>>({})
 
-  const ensureGuestDetails = async (): Promise<GuestContact | null> => {
-    // A returning guest already gave these; don't ask on every round
-    if (contact?.name.trim() && phonePattern.test(contact.phone.trim())) {
-      return contact
+  /**
+   * The guest's name and phone: the ones they gave before, or what the order
+   * already carries (`known`), asking only when something is still missing.
+   */
+  const ensureGuestDetails = async (orderKnows: Partial<GuestContact> = {}): Promise<GuestContact | null> => {
+    const name = (contact?.name || orderKnows.name || '').trim()
+    const phone = (contact?.phone || orderKnows.phone || '').trim()
+    // A returning guest already gave these, or the order did; don't ask again
+    if (name && phonePattern.test(phone)) {
+      const complete = { name, phone }
+      if (complete.name !== contact?.name || complete.phone !== contact?.phone) setContact(complete)
+      return complete
     }
 
+    setKnown({ name, phone })
     setOpen(true)
     return new Promise((resolve) => {
       resolver.current = resolve
@@ -57,8 +69,8 @@ export function useGuestGate() {
       // page and their closed keys would otherwise collide
       key={`guest-gate-${open}`}
       open={open}
-      initialName={contact?.name ?? ''}
-      initialPhone={contact?.phone ?? ''}
+      initialName={known.name ?? contact?.name ?? ''}
+      initialPhone={known.phone ?? contact?.phone ?? ''}
       onSettle={settle}
     />
   )
@@ -106,6 +118,7 @@ function GuestGateDialog({
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
+          <DialogDescription>{t('guestDetailsHint')}</DialogDescription>
         </DialogHeader>
         <div className='flex flex-col gap-4'>
           <div className='space-y-2'>

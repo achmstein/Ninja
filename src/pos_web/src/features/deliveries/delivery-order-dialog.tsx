@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { DeliveryDetails } from './delivery-details'
+import { DeliveryDetails, DeliveryFeeRow } from './delivery-details'
 import { cashDifference, laneOf } from './delivery-format'
 import { useDeliveryActions, useRiders, type BoardDelivery } from './use-deliveries'
 
@@ -82,6 +82,14 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           </li>
         ))}
       </ul>
+      {/* What the rider collects, with the fee in it shown */}
+      <div className='flex flex-col gap-1 border-t pt-2'>
+        <DeliveryFeeRow delivery={d} />
+        <div className='flex justify-between font-semibold'>
+          <span>{t('total')}</span>
+          <span className='tabular-nums'>{money(order.total)}</span>
+        </div>
+      </div>
 
       {choosing && (
         <div className='flex flex-col gap-2'>

@@ -25,7 +25,7 @@ public static partial class DeliveryApi
         }
 
         var distance = Geo.DistanceMeters(terms.Latitude, terms.Longitude, latitude, longitude);
-        return TypedResults.Ok(new DeliveryQuote(true, distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm));
+        return TypedResults.Ok(new DeliveryQuote(true, distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm, terms.SignInRequired));
     }
 
     public static async Task<Ok<TillDeliveryQuote>> GetTillDeliveryQuoteAsync(

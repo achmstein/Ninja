@@ -5,6 +5,7 @@ import {
   Armchair,
   ArrowLeft,
   ArrowRight,
+  Bike,
   ChevronRight,
   DoorOpen,
   Loader2,
@@ -16,6 +17,7 @@ import { getSettledTickets } from '@/api/sales/sdk.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { billLabel } from '@/features/deliveries/delivery-format'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -133,14 +135,17 @@ export function Receipts() {
       ) : (
         <div className='bg-card divide-y overflow-hidden rounded-xl border'>
           {bills.map((bill) => {
-            const Icon = typeIcon[bill.type ?? ''] ?? ShoppingBag
+            // A delivery's bill reads "#42 · Mona" (older ones with a scooter
+            // emoji first): drawn with the bike, never the emoji
+            const label = billLabel(bill.label)
+            const Icon = label.delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
             const typeLabel =
               bill.type === 'Room'
                 ? t('room')
                 : bill.type === 'Table'
                   ? t('table')
                   : t('counter')
-            const title = localized(bill.locationName) || bill.label || typeLabel
+            const title = localized(bill.locationName) || label.text || typeLabel
             const refunded = toNumber(bill.refundedTotal)
             return (
               <button

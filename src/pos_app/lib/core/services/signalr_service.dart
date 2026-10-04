@@ -16,6 +16,7 @@ class SignalRService extends HubClient {
             'TicketUpdated',
             'CatalogChanged',
             'DeliveryChanged',
+            'RiderStatusChanged',
           ],
           onConnected: (hub) async {
             await hub.invoke('JoinRoomsGroup');
@@ -36,6 +37,9 @@ class SignalRService extends HubClient {
 
   /// A delivery given to a rider, out of the door, delivered, its cash in
   Stream<Map<String, dynamic>> get onDeliveryChanged => on('DeliveryChanged');
+
+  /// A rider went on duty or off: the rider picker follows at once
+  Stream<Map<String, dynamic>> get onRiderStatusChanged => on('RiderStatusChanged');
 }
 
 /// SignalR service provider

@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { DeliveriesStrip } from '@/features/deliveries/deliveries-strip'
-import { deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
+import { billLabel, deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
 import { useDeliveries } from '@/features/deliveries/use-deliveries'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { PlacePanel } from '@/features/places/place-panel'
@@ -103,7 +103,7 @@ function BillCard({
   const Icon = delivery ? Bike : (typeIcon[type] ?? ShoppingBag)
   const typeLabel =
     type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
-  const title = localized(ticket.locationName) || ticket.label || typeLabel
+  const title = localized(ticket.locationName) || billLabel(ticket.label).text || typeLabel
 
   const active = isRunning(stay)
 

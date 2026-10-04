@@ -18,6 +18,7 @@ export function checkoutBlock({
   guestOrdersAnywhere,
   requireSignInForTableOrders,
   delivering = false,
+  requireSignInForDelivery = false,
 }: {
   isGuest: boolean
   destination: OrderDestination
@@ -25,8 +26,12 @@ export function checkoutBlock({
   requireSignInForTableOrders: boolean
   /** It is to be brought to an address: that, and the phone at the door, anchor it as a table would */
   delivering?: boolean
+  /** The branch brings orders to signed-in customers only */
+  requireSignInForDelivery?: boolean
 }): CheckoutBlock {
   if (!isGuest) return null
+  // The branch delivers to accounts only: a guest signs in first
+  if (delivering && requireSignInForDelivery) return 'account'
   // A guest orders against the table they sit at, unless the business takes guests' orders from anywhere, to collect
   if (!destination && !guestOrdersAnywhere && !delivering) return 'table'
   // The branch wants a name it can hold to on a table order

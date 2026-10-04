@@ -172,6 +172,8 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const country = useBrand()?.locale.country ?? 'EG'
   const phoneRule = usePhoneRule((s) => s.pattern)
   const guestPhone = useGuestStore((s) => s.contact?.phone ?? '')
+  const guestName = useGuestStore((s) => s.contact?.name ?? '')
+  const isGuest = !auth.isAuthenticated
   const location = useMyLocation(initial == null)
 
   const [point, setPoint] = useState<LatLng>(() =>
@@ -195,6 +197,9 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const [directions, setDirections] = useState(initial?.directions ?? '')
   // What the customer typed; until then their own number (a guest's checkout one, or the account's)
   const [typedPhone, setPhone] = useState<string | null>(initial?.phone ?? (guestPhone || null))
+  // A guest's name, asked here beside the rider's number: the two are the
+  // guest's contact for the order, so checkout need not ask for them again
+  const [name, setName] = useState(guestName)
   const [kind, setKind] = useState<LabelKind>(labelKind(initial?.label))
   const [labelText, setLabelText] = useState(labelKind(initial?.label) === 'other' ? (initial?.label ?? '') : '')
   const [tried, setTried] = useState(false)
@@ -216,7 +221,16 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
 
   const phoneOk = phoneRule.test(phone.trim().replace(/[\s-]/g, ''))
   const streetOk = street.trim().length > 0
-  const problem = !pinned ? t('deliveryNeedPin') : !streetOk ? t('deliveryNeedStreet') : !phoneOk ? t('deliveryNeedPhone') : null
+  const nameOk = !isGuest || name.trim().length > 0
+  const problem = !pinned
+    ? t('deliveryNeedPin')
+    : !streetOk
+      ? t('deliveryNeedStreet')
+      : !nameOk
+        ? t('deliveryNeedName')
+        : !phoneOk
+          ? t('deliveryNeedPhone')
+          : null
 
   const save = async () => {
     setTried(true)
@@ -233,7 +247,9 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       directions: directions.trim() || null,
       phone: phone.trim(),
     }
-    if (!auth.isAuthenticated) {
+    if (isGuest) {
+      // The guest's contact is now known: placing the order goes straight through
+      useGuestStore.getState().setContact({ name: name.trim(), phone: phone.trim() })
       onDone(address)
       return
     }
@@ -323,6 +339,18 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         aria-label={t('deliveryDirections')}
         maxLength={500}
       />
+      {isGuest && (
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('deliveryYourName')}
+          aria-label={t('deliveryYourName')}
+          aria-invalid={tried && !nameOk}
+          aria-describedby={tried && problem ? 'address-problem' : undefined}
+          maxLength={100}
+          autoComplete='name'
+        />
+      )}
       <Input
         value={phone}
         onChange={(e) => setPhone(e.target.value)}

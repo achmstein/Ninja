@@ -193,6 +193,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offDuty => 'مش شغال';
 
   @override
+  String get goOnDuty => 'ابدأ الشغل';
+
+  @override
+  String get goOffDuty => 'اقفل الشغل';
+
+  @override
+  String get goOffDutyConfirm => 'تقفل الشغل؟';
+
+  @override
+  String get goOffDutyHint =>
+      'الكاشير مش هيديلك طلبات جديدة لحد ما ترجع تشتغل.';
+
+  @override
+  String get stayOnDuty => 'خليني شغال';
+
+  @override
   String get onDutyHint => 'وإنت شغال الكاشير يقدر يديك طلبات توصيل.';
 
   @override

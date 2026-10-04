@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, MapPin as PinIcon } from 'lucide-react'
 import type { Map as MapLibre } from 'maplibre-gl'
-// MapLibre's right-to-left shaping, served from this app (no third-party script host)
-import rtlTextUrl from '@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js?url'
 import type { LatLng } from '@/lib/geo'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+
+/**
+ * MapLibre's right-to-left shaping, served from this app (no third-party script
+ * host). The package exports only its source entry, so its prebuilt script is
+ * reached by path: Vite serves it as is in dev and copies it, hashed, into the build.
+ */
+const rtlTextUrl = new URL('../../../node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js', import.meta.url).href
 
 /** Free street tiles, no key: OpenFreeMap's style, the same streets the riders' maps show */
 const STYLE = 'https://tiles.openfreemap.org/styles/liberty'

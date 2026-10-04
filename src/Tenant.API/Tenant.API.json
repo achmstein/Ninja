@@ -812,6 +812,10 @@
             ],
             "format": "double",
             "default": 0
+          },
+          "requireSignInForDelivery": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -1687,6 +1691,12 @@
               "string"
             ],
             "format": "double"
+          },
+          "requireSignInForDelivery": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -1712,6 +1722,12 @@
             ]
           },
           "isDeliveryEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "requireSignInForDelivery": {
             "type": [
               "null",
               "boolean"

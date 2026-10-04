@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Ninja.Ordering.API.Application.IntegrationEvents;
 using Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 using Ninja.Ordering.API.Application.IntegrationEvents.Events;
 using Ninja.Ordering.API.Application.Queries;
@@ -366,15 +367,37 @@ public class DeliveryHardeningTest
         var admin = Substitute.For<IIdentityService>();
         admin.IsInRole(DeliveryOptions.RiderRole).Returns(false);
 
-        var view = await new SetRiderStatusCommandHandler(context, admin)
+        var events = Substitute.For<IOrderingIntegrationEventService>();
+        var view = await new SetRiderStatusCommandHandler(context, admin, events)
             .Handle(new SetRiderStatusCommand("admin-1", "Admin", Branch, true), CancellationToken.None);
 
         Assert.IsTrue(view.OnDuty);
         Assert.IsEmpty(await context.RiderStatuses.ToListAsync());
+        await events.DidNotReceiveWithAnyArgs().AddAndSaveEventAsync(default!);
 
-        await new SetRiderStatusCommandHandler(context, Rider("rider-1"))
+        await new SetRiderStatusCommandHandler(context, Rider("rider-1"), events)
             .Handle(new SetRiderStatusCommand("rider-1", "Ali", Branch, true), CancellationToken.None);
         Assert.HasCount(1, await context.RiderStatuses.ToListAsync());
+    }
+
+    [TestMethod]
+    public async Task The_till_hears_a_rider_start_and_stop_but_not_every_beat()
+    {
+        var store = new Store();
+        await using var context = store.NewContext();
+        var events = Substitute.For<IOrderingIntegrationEventService>();
+        var handler = new SetRiderStatusCommandHandler(context, Rider("rider-1"), events);
+
+        await handler.Handle(new SetRiderStatusCommand("rider-1", "Ali", Branch, true), CancellationToken.None);
+        await handler.Handle(new SetRiderStatusCommand("rider-1", "Ali", Branch, true), CancellationToken.None);
+        await handler.Handle(new SetRiderStatusCommand("rider-1", "Ali", Branch, false), CancellationToken.None);
+
+        var told = events.ReceivedCalls()
+            .Select(c => c.GetArguments()[0])
+            .OfType<RiderStatusChangedIntegrationEvent>()
+            .Select(e => e.OnDuty)
+            .ToList();
+        CollectionAssert.AreEqual(new[] { true, false }, told, "on duty, then off; the second beat says nothing new");
     }
 
     private static async Task<IDeliveryPolicy> PolicyAsync(OrderingContext context, decimal minimum = 100, bool orderingOn = true)

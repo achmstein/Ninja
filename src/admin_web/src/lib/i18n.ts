@@ -295,6 +295,8 @@ const webExtras = {
   nobodyAtTheTableDesc: { en: "The order is cancelled and this phone can't order here until tomorrow.", ar: "سيُلغى الطلب ولن يتمكن هذا الهاتف من الطلب هنا حتى الغد." },
   guestTurnedAway: { en: "Turned away for today", ar: "مرفوض حتى الغد" },
   requireSignInForTableOrders: { en: "Table orders need an account", ar: "طلبات الطاولة تتطلب حسابًا" },
+  requireSignInForDelivery: { en: "Customers must sign in to order delivery", ar: "طلبات التوصيل تتطلب تسجيل الدخول" },
+  requireSignInForDeliveryHint: { en: "A guest can still order to a table or for pickup; delivery to a door needs an account. Phone orders taken at the till are not affected.", ar: "يمكن للضيف الطلب على الطاولة أو للاستلام؛ لكن التوصيل للعنوان يحتاج حسابًا. طلبات التليفون من الكاشير لا تتأثر." },
   // The place form
   chargedByTheHour: { en: "Charged by the hour", ar: "يُحاسب بالساعة" },
   takesReservations: { en: "Takes reservations", ar: "تقبل الحجز" },
