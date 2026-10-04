@@ -162,6 +162,70 @@ class PlatformOrder {
   }
 }
 
+/// The business's own delivery of an order, as the counter reads it: where
+/// it goes, the number to call at the door, the fee, and who has it
+class OrderDelivery {
+  final double latitude;
+  final double longitude;
+  final String address;
+  final String? building;
+  final String? floor;
+  final String? apartment;
+  final String? directions;
+  final String phone;
+  final double fee;
+  final int distanceMeters;
+
+  /// 'Waiting', 'Assigned', 'OnTheWay' or 'Delivered'
+  final String stage;
+  final String? riderName;
+
+  const OrderDelivery({
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+    this.building,
+    this.floor,
+    this.apartment,
+    this.directions,
+    required this.phone,
+    this.fee = 0,
+    this.distanceMeters = 0,
+    this.stage = 'Waiting',
+    this.riderName,
+  });
+
+  static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
+
+  static OrderDelivery? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    return OrderDelivery(
+      latitude: _num(json['latitude']),
+      longitude: _num(json['longitude']),
+      address: (json['address'] as String?) ?? '',
+      building: json['building'] as String?,
+      floor: json['floor'] as String?,
+      apartment: json['apartment'] as String?,
+      directions: json['directions'] as String?,
+      phone: (json['phone'] as String?) ?? '',
+      fee: _num(json['fee']),
+      distanceMeters: _num(json['distanceMeters']).round(),
+      stage: (json['stage'] as String?) ?? 'Waiting',
+      riderName: json['riderName'] as String?,
+    );
+  }
+
+  /// The address on one line, the street first
+  String line({required String building, required String floor, required String apartment}) {
+    final parts = [
+      if ((this.building ?? '').isNotEmpty) '$building ${this.building}',
+      if ((this.floor ?? '').isNotEmpty) '$floor ${this.floor}',
+      if ((this.apartment ?? '').isNotEmpty) '$apartment ${this.apartment}',
+    ];
+    return parts.isEmpty ? address : '$address · ${parts.join('، ')}';
+  }
+}
+
 /// Order model
 class Order {
   final int id;
@@ -197,6 +261,9 @@ class Order {
   /// A delivery platform's details; null on every other order
   final PlatformOrder? platform;
 
+  /// The business's own delivery; null on every order eaten in or collected
+  final OrderDelivery? delivery;
+
   Order({
     required this.id,
     this.userId,
@@ -220,6 +287,7 @@ class Order {
     this.source,
     this.guestOrdersBefore,
     this.platform,
+    this.delivery,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -260,6 +328,7 @@ class Order {
       source: (json['source'] ?? json['Source']) as String?,
       guestOrdersBefore: (json['guestOrdersBefore'] ?? json['GuestOrdersBefore']) as int?,
       platform: PlatformOrder.parse(json['platform'] ?? json['Platform']),
+      delivery: OrderDelivery.parse(json['delivery'] ?? json['Delivery']),
     );
   }
 }

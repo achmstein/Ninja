@@ -1677,4 +1677,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goesWellWith => 'Goes well with';
+
+  @override
+  String get deliveryBuilding => 'Bldg';
+
+  @override
+  String get deliveryFloor => 'Floor';
+
+  @override
+  String get deliveryApartment => 'Apt';
+
+  @override
+  String deliveryFeeIs(String amount) {
+    return 'Delivery $amount';
+  }
+
+  @override
+  String deliveryRiderIs(String name) {
+    return 'Rider: $name';
+  }
 }

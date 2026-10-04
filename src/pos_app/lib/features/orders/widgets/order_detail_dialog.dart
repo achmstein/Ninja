@@ -6,6 +6,7 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
@@ -178,6 +179,48 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   Text(item.customizationsDescription!.localized(context), style: muted),
                 if (item.specialInstructions != null && item.specialInstructions!.isNotEmpty)
                   Text('"${item.specialInstructions}"', style: muted.copyWith(fontStyle: FontStyle.italic)),
+              ],
+              if (order.delivery case final delivery?) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              delivery.line(building: l10n.deliveryBuilding, floor: l10n.deliveryFloor, apartment: l10n.deliveryApartment),
+                              style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if ((delivery.directions ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 24, top: 2),
+                          child: Text('"${delivery.directions}"', style: muted.copyWith(fontStyle: FontStyle.italic)),
+                        ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 24),
+                        child: Text(
+                          [
+                            bidiIsolate(delivery.phone),
+                            l10n.deliveryFeeIs(money(context, delivery.fee)),
+                            if ((delivery.riderName ?? '').isNotEmpty) l10n.deliveryRiderIs(delivery.riderName!),
+                          ].join(' · '),
+                          style: muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
               if (order.customerNote != null && order.customerNote!.isNotEmpty) ...[
                 const SizedBox(height: 16),

@@ -1688,4 +1688,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goesWellWith => 'يُطلب معه';
+
+  @override
+  String get deliveryBuilding => 'عمارة';
+
+  @override
+  String get deliveryFloor => 'دور';
+
+  @override
+  String get deliveryApartment => 'شقة';
+
+  @override
+  String deliveryFeeIs(String amount) {
+    return 'توصيل $amount';
+  }
+
+  @override
+  String deliveryRiderIs(String name) {
+    return 'المندوب: $name';
+  }
 }

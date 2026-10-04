@@ -792,5 +792,10 @@
   "rejectNoCourier": "لا يوجد مندوب",
   "rejectOutsideArea": "خارج منطقة التوصيل",
   "rejectPrank": "طلب وهمي",
-  "goesWellWith": "يُطلب معه"
+  "goesWellWith": "يُطلب معه",
+  "deliveryBuilding": "عمارة",
+  "deliveryFloor": "دور",
+  "deliveryApartment": "شقة",
+  "deliveryFeeIs": "توصيل {amount}",
+  "deliveryRiderIs": "المندوب: {name}"
 }

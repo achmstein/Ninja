@@ -144,7 +144,8 @@ class _PendingOrderCard extends StatelessWidget {
     final place = order.placeName?.localized(context) ?? '';
     final who = (order.userName ?? '').isNotEmpty ? order.userName! : l10n.guest;
     final title = place.isNotEmpty ? place : who;
-    final subtitle = place.isNotEmpty ? who : order.guestPhone;
+    // A delivery is named for whom it goes to, and says where
+    final subtitle = order.delivery != null ? order.delivery!.address : place.isNotEmpty ? who : order.guestPhone;
     // A guest: how many orders this device has had confirmed here before —
     // a first-timer at a table is worth a look before the kitchen starts
     final ordersBefore = order.guestOrdersBefore;
@@ -153,7 +154,9 @@ class _PendingOrderCard extends StatelessWidget {
         : ordersBefore == 0
             ? l10n.guestFirstOrderHere
             : l10n.guestOrdersBefore(ordersBefore);
-    final placeIcon = place.isEmpty
+    final placeIcon = order.delivery != null
+        ? FIcons.bike
+        : place.isEmpty
         ? FIcons.user
         : order.placeKind == 'Room'
             ? FIcons.doorOpen

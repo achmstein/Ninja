@@ -3079,6 +3079,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Goes well with'**
   String get goesWellWith;
+
+  /// No description provided for @deliveryBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Bldg'**
+  String get deliveryBuilding;
+
+  /// No description provided for @deliveryFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get deliveryFloor;
+
+  /// No description provided for @deliveryApartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Apt'**
+  String get deliveryApartment;
+
+  /// No description provided for @deliveryFeeIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery {amount}'**
+  String deliveryFeeIs(String amount);
+
+  /// No description provided for @deliveryRiderIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider: {name}'**
+  String deliveryRiderIs(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -835,5 +835,12 @@
   "rejectNoCourier": "No rider available",
   "rejectOutsideArea": "Outside delivery area",
   "rejectPrank": "Prank order",
-  "goesWellWith": "Goes well with"
+  "goesWellWith": "Goes well with",
+  "deliveryBuilding": "Bldg",
+  "deliveryFloor": "Floor",
+  "deliveryApartment": "Apt",
+  "deliveryFeeIs": "Delivery {amount}",
+  "@deliveryFeeIs": { "placeholders": { "amount": { "type": "String" } } },
+  "deliveryRiderIs": "Rider: {name}",
+  "@deliveryRiderIs": { "placeholders": { "name": { "type": "String" } } }
 }
