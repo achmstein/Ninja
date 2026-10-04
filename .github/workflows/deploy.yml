@@ -556,11 +556,12 @@ jobs:
             }
             ensure_native_client pos-app com.ninja.pos
             ensure_native_client kds-app com.ninja.kds
+            ensure_native_client rider-app com.ninja.rider
 
             echo ""
             echo "=== Attach the 'branches' scope to the staff clients ==="
             # Customers never get it: mobile-app and client-web are not listed
-            for NAME in admin-panel pos-web kds-web admin-app pos-app kds-app; do
+            for NAME in admin-panel pos-web kds-web admin-app pos-app kds-app rider-app; do
               CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
                 python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
               [ -z "$CID" ] && { echo "  $NAME: not found (skipped)"; continue; }

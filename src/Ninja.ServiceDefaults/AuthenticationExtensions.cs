@@ -105,6 +105,8 @@ public static class AuthenticationExtensions
             // Kitchen policy: the board, ready, and the kitchen's print queue — a kitchen
             // display signs in with its own Kitchen account rather than a cashier's
             options.AddPolicy("Kitchen", policy => policy.RequireRole(ClaimsPrincipalExtensions.KitchenRoles).AddRequirements(branchAccess));
+            // Rider policy: the deliveries a rider was given, on their own Rider account
+            options.AddPolicy("Rider", policy => policy.RequireRole(ClaimsPrincipalExtensions.RiderRoles).AddRequirements(branchAccess));
         });
 
         return services;

@@ -91,7 +91,7 @@ export function AddStaffDialog({
       if (userId && onCreated) onCreated(userId)
       toast.success(
         t(
-          role === 'Cashier' || role === 'Kitchen'
+          role === 'Cashier' || role === 'Kitchen' || role === 'Rider'
             ? 'cashierCreatedSuccess'
             : makeOwner
               ? 'ownerCreatedSuccess'
@@ -170,6 +170,7 @@ export function AddStaffDialog({
                 <SelectItem value='Admin'>{t('adminRole')}</SelectItem>
                 <SelectItem value='Cashier'>{t('cashierRole')}</SelectItem>
                 <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
+                <SelectItem value='Rider'>{t('riderRole')}</SelectItem>
               </SelectContent>
             </Select>
           </Field>

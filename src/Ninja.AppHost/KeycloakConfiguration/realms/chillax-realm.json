@@ -94,6 +94,10 @@
       {
         "name": "Kitchen",
         "description": "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else"
+      },
+      {
+        "name": "Rider",
+        "description": "Rider role - delivers the branch's own orders: the deliveries assigned to them, on the way and delivered, nothing else"
       }
     ]
   },
@@ -761,6 +765,49 @@
           "consentRequired": false,
           "config": {
             "included.client.audience": "kds-app",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "rider-app",
+      "name": "Rider app",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "com.ninja.rider://callback",
+        "com.ninja.rider://*",
+        "http://localhost/*",
+        "http://10.0.2.2/*"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "orders",
+        "branches"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "rider-app",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }

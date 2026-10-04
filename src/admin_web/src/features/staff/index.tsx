@@ -31,8 +31,8 @@ import { ManageBranchesDialog } from './components/manage-branches-dialog'
 
 const columnHelper = createAppColumnHelper<Customer>()
 
-// Owners first, then admins, then cashiers
-const STAFF_ROLES = ['Owner', 'Admin', 'Cashier', 'Kitchen'] as const
+// Owners first, then admins, then cashiers, kitchens and riders
+const STAFF_ROLES = ['Owner', 'Admin', 'Cashier', 'Kitchen', 'Rider'] as const
 const rank = (user: Customer) =>
   STAFF_ROLES.findIndex((role) => (user.realmRoles ?? []).includes(role))
 
@@ -46,12 +46,12 @@ export function StaffManagement() {
 
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
-  // Staff = users holding the Owner, Admin, Cashier or Kitchen realm role
+  // Staff = users holding the Owner, Admin, Cashier, Kitchen or Rider realm role
   const staffQuery = useQuery({
     queryKey: ['staff'],
     queryFn: () =>
       customersService.getCustomers({
-        role: 'Admin,Owner,Cashier,Kitchen',
+        role: 'Admin,Owner,Cashier,Kitchen,Rider',
         max: 200,
       }),
   })
@@ -79,7 +79,9 @@ export function StaffManagement() {
         ? t('adminRole')
         : role === 'Kitchen'
           ? t('kitchenRole')
-          : t('cashierRole')
+          : role === 'Rider'
+            ? t('riderRole')
+            : t('cashierRole')
 
   const rolesOf = (user: (typeof staff)[number]) =>
     STAFF_ROLES.filter((role) => (user.realmRoles ?? []).includes(role)).map(

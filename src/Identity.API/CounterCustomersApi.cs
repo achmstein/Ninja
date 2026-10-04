@@ -23,7 +23,7 @@ public static class CounterCustomersApi
     public const string ClaimPolicy = "claim";
 
     /// <summary>Everyone who works here: never a customer, never matched as one.</summary>
-    public static readonly string[] StaffRoles = ["Admin", "Owner", "Cashier", "Kitchen"];
+    public static readonly string[] StaffRoles = ["Admin", "Owner", "Cashier", "Kitchen", "Rider"];
 
     private const int MinPasswordLength = 8;
 

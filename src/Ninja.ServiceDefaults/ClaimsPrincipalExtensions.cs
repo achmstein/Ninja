@@ -36,6 +36,13 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     public static readonly string[] KitchenRoles = [.. PosRoles, "Kitchen"];
 
+    /// <summary>
+    /// The roles the "Rider" policy accepts: a rider on their own account, and
+    /// the admins who may stand in for one. A cashier assigns riders but is
+    /// not one.
+    /// </summary>
+    public static readonly string[] RiderRoles = ["Admin", "Owner", "Rider"];
+
     // Reads the "role" claims directly: ClaimsPrincipal's own IsInRole would
     // win over the extension and look at the standard role claim type
     public static bool IsPosStaff(this ClaimsPrincipal principal) =>

@@ -147,12 +147,13 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
 app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request, IHttpClientFactory httpClientFactory, IConfiguration config) =>
 {
     // A staff account is an Admin (back office), a Cashier (till, kitchen) or
-    // a Kitchen display's own account (the board and its printers only);
-    // only an Admin can also be an Owner
+    // a Kitchen display's own account (the board and its printers only), or
+    // a Rider (the deliveries given to them, in the rider app); only an Admin
+    // can also be an Owner
     var role = string.IsNullOrWhiteSpace(request.Role) ? "Admin" : request.Role.Trim();
-    if (role is not ("Admin" or "Cashier" or "Kitchen"))
+    if (role is not ("Admin" or "Cashier" or "Kitchen" or "Rider"))
     {
-        return Results.BadRequest(new { message = "role must be Admin, Cashier or Kitchen" });
+        return Results.BadRequest(new { message = "role must be Admin, Cashier, Kitchen or Rider" });
     }
     if (request.IsOwner && role != "Admin")
     {

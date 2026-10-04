@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api-client'
 import type { Customer, CustomerParams } from '../types'
 
-export type StaffRole = 'Admin' | 'Cashier' | 'Kitchen'
+export type StaffRole = 'Admin' | 'Cashier' | 'Kitchen' | 'Rider'
 
 export const customersService = {
   // Get paginated list of customers. `role` / `excludeRole` take one role or

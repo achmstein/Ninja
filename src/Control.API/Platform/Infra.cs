@@ -517,16 +517,21 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         var client = await AdminClientAsync(ct);
         var admin = $"{Base}/admin/realms/{realm}";
 
-        // Roles the template gained after this realm was made: a kitchen display's own account
-        using (var kitchen = await client.GetAsync($"{admin}/roles/Kitchen", ct))
+        // Roles the template gained after this realm was made: a kitchen display's own account, a rider's
+        foreach (var (role, description) in new[]
         {
-            if (kitchen.StatusCode == System.Net.HttpStatusCode.NotFound)
+            ("Kitchen", "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else"),
+            ("Rider", "Rider role - delivers the branch's own orders: the deliveries assigned to them, on the way and delivered, nothing else"),
+        })
+        {
+            using var found = await client.GetAsync($"{admin}/roles/{role}", ct);
+            if (found.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/roles", new JsonObject
                 {
-                    ["name"] = "Kitchen",
-                    ["description"] = "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else",
-                }, ct), $"the Kitchen role in {realm}", ct);
+                    ["name"] = role,
+                    ["description"] = description,
+                }, ct), $"the {role} role in {realm}", ct);
             }
         }
 
@@ -585,7 +590,7 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         if (roles.Count > 0)
             await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/client-scopes/{mcpId}/scope-mappings/realm", roles, ct), $"the mcp role mappings in {realm}", ct);
 
-        // The two clients: created, or brought up to the template (redirect URIs, scopes, the secret on the record)
+        // The assistant's two clients and the rider app: created, or brought up to the template (redirect URIs, scopes, the secret on the record)
         foreach (var wanted in parts.Clients.Select(c => (JsonObject)c!.DeepClone()))
         {
             var clientId = wanted["clientId"]!.GetValue<string>();

@@ -101,7 +101,7 @@ public static partial class Templates
 
         var scope = realm["clientScopes"]!.AsArray().Single(s => Name(s, "name") == "mcp")!.DeepClone().AsObject();
         var clients = new JsonArray(realm["clients"]!.AsArray()
-            .Where(c => Name(c, "clientId") is "ninja-mcp" or "assistant-api")
+            .Where(c => Name(c, "clientId") is "ninja-mcp" or "assistant-api" or "rider-app")
             .Select(c => c!.DeepClone()).ToArray());
         var policies = new JsonArray(realm["components"]![ClientRegistrationPolicyType]!.AsArray().Select(p => p!.DeepClone()).ToArray());
         var defaults = realm["defaultDefaultClientScopes"]!.AsArray().Select(s => s!.GetValue<string>()).ToArray();
