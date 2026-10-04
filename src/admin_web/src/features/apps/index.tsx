@@ -41,6 +41,14 @@ function absoluteUrl(url: string): string {
 
 type AppKey = 'pos' | 'kds' | 'rider' | 'connector'
 
+/**
+ * One app's tab: on a phone the icon over a short label, wrapping to two
+ * centred lines when the name is long; from sm up the icon beside the name,
+ * the tab as wide as its name with room either side
+ */
+const APP_TAB =
+  'h-auto min-w-0 flex-col gap-1 px-2 py-2 text-center text-xs leading-tight whitespace-normal sm:flex-none sm:flex-row sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm sm:whitespace-nowrap'
+
 export function AppsPage() {
   const t = useT()
   const brand = useBrand()
@@ -108,21 +116,21 @@ export function AppsPage() {
             className='grid h-auto w-full p-1 sm:inline-flex sm:w-fit'
             style={{ gridTemplateColumns: `repeat(${tabs}, minmax(0, 1fr))` }}
           >
+            {/* Each tab as wide as its own name (never an equal share a long
+                one like "Kitchen display" overruns); on a phone a long name
+                wraps, centred, inside its column */}
             {tablets.map((app) => (
               <TabsTrigger
                 key={app.key}
                 value={app.key}
-                className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
+                className={APP_TAB}
               >
                 <img src={app.icon} alt='' className='size-5 rounded' />
                 {app.tab}
               </TabsTrigger>
             ))}
             {features.kds && (
-              <TabsTrigger
-                value='connector'
-                className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
-              >
+              <TabsTrigger value='connector' className={APP_TAB}>
                 <Printer className='size-4' />
                 {t('appsTabPrinter')}
               </TabsTrigger>

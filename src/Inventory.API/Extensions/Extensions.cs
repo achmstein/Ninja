@@ -75,16 +75,18 @@ public static class Extensions
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<IInventoryQueries, InventoryQueries>();
 
-        // Stock leaves when an order is confirmed; that is the only event
-        // Inventory listens for
+        // Stock leaves when an order is confirmed, and its sale is given back
+        // (as waste or to the shelf) when Ordering says the order will never be sold
         builder.AddRabbitMqEventBus("eventbus")
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
+            .AddSubscription<OrderStockReleasedIntegrationEvent, OrderStockReleasedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(InventoryIntegrationEventContext.Default));
     }
 }
 
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
+[JsonSerializable(typeof(OrderStockReleasedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogOptionStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]

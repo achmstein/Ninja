@@ -4,6 +4,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:uuid/uuid.dart';
+import '../../orders/models/stock_disposition.dart';
 import '../../orders/services/order_service.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../models/delivery_order.dart';
@@ -85,9 +86,13 @@ class DeliveryActions {
 
   Future<void> cashIn(int orderId, double amount) => _then(() => _repository.cashIn(orderId, amount), bills: true);
 
-  /// The bag is back and nobody will have it: the order is called off
-  Future<void> cancelReturned(int orderId) =>
-      _then(() async => await _ref.read(orderRepositoryProvider).cancelOrder(orderId, requestId: const Uuid().v4()), bills: true);
+  /// The bag is back and nobody will have it: the order is called off, its
+  /// food written off or back to stock as the cashier said
+  Future<void> cancelReturned(int orderId, StockDisposition disposition) => _then(
+      () async => await _ref
+          .read(orderRepositoryProvider)
+          .cancelOrder(orderId, requestId: const Uuid().v4(), stockDisposition: disposition.wire),
+      bills: true);
 }
 
 final deliveryActionsProvider = Provider<DeliveryActions>(DeliveryActions.new);

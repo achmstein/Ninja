@@ -204,6 +204,29 @@ public class Order
 
     public bool IsReady => ReadyAt != null;
 
+    /// <summary>
+    /// When the stock its confirmation took was given back or written off
+    /// (the order cancelled, or its bill voided); null while it stands. Once
+    /// only: a cancelled delivery whose bill is then voided releases nothing more.
+    /// </summary>
+    public DateTime? StockReleasedAt { get; private set; }
+
+    /// <summary>What became of that stock: written off as waste, or back on the shelf.</summary>
+    public StockDisposition? StockDisposition { get; private set; }
+
+    /// <summary>
+    /// Whether the food was made, as far as Ordering can tell: the kitchen
+    /// marked it (or any of its parts) ready, it left with the business's
+    /// rider, or a platform's rider collected it. An order made only at
+    /// kitchen printers, or served without a kitchen screen, never says so:
+    /// the till asks the cashier there.
+    /// </summary>
+    public bool WasPrepared =>
+        IsReady
+        || _stationParts.Any(p => p.IsReady)
+        || Delivery is { OutAt: not null }
+        || Platform is { PickedUpAt: not null };
+
     public static Order NewDraft()
     {
         var order = new Order
@@ -624,7 +647,11 @@ public class Order
     /// <paramref name="platformReason"/> — the kitchen being too busy when
     /// staff give none.
     /// </summary>
-    public void SetCancelledStatus(string? platformReason = null)
+    /// <param name="stockDisposition">
+    /// For a confirmed delivery that came back: what becomes of its food, as
+    /// the cashier said; left out, it is waste once made (<see cref="WasPrepared"/>).
+    /// </param>
+    public void SetCancelledStatus(string? platformReason = null, StockDisposition? stockDisposition = null)
     {
         // A confirmed delivery that could not be handed over, or came back,
         // is cancelled by the till too, as long as no cash came in for it
@@ -640,6 +667,27 @@ public class Order
         Description = "The order was cancelled.";
         Platform?.Reject(string.IsNullOrWhiteSpace(platformReason) ? PlatformRejectReasons.TooBusy : platformReason);
         AddDomainEvent(new OrderCancelledDomainEvent(this));
+        // Only a confirmed order took stock; one cancelled before never did
+        ReleaseStock(stockDisposition, StockReleaseReason.Cancelled, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// The stock this order's confirmation took is let go, once: as waste when
+    /// the food was made, back to the shelf when it never was, or as the
+    /// cashier said. Nothing for an order never confirmed (it took nothing)
+    /// or already released.
+    /// </summary>
+    private void ReleaseStock(StockDisposition? chosen, StockReleaseReason reason, DateTime at)
+    {
+        if (ConfirmedAt is null || StockReleasedAt is not null)
+        {
+            return;
+        }
+
+        var disposition = chosen ?? (WasPrepared ? AggregatesModel.OrderAggregate.StockDisposition.Waste : AggregatesModel.OrderAggregate.StockDisposition.Restock);
+        StockReleasedAt = at;
+        StockDisposition = disposition;
+        AddDomainEvent(new OrderStockReleasedDomainEvent(Id, BranchId, disposition, reason));
     }
 
     /// <summary>
@@ -672,6 +720,8 @@ public class Order
         else if (OrderStatus == OrderStatus.Confirmed)
         {
             Description = $"{Platform.Name} cancelled the order after it was accepted.";
+            // Its stock went at acceptance: waste once made, back otherwise
+            ReleaseStock(null, StockReleaseReason.PlatformCancelled, at);
         }
     }
 
@@ -798,12 +848,17 @@ public class Order
         TicketId ??= ticketId;
     }
 
-    /// <summary>The open bill this order was on was voided; a paid order never is.</summary>
-    public void MarkVoided(DateTime at)
+    /// <summary>
+    /// The open bill this order was on was voided; a paid order never is. Its
+    /// stock is let go as the cashier said (<paramref name="stockDisposition"/>),
+    /// or by whether the food was made.
+    /// </summary>
+    public void MarkVoided(DateTime at, StockDisposition? stockDisposition = null)
     {
         if (IsPaid || VoidedAt != null)
             return;
         VoidedAt = at;
+        ReleaseStock(stockDisposition, StockReleaseReason.Voided, at);
     }
 
     /// <summary>A credit note gave part of this order back; never more than it cost.</summary>

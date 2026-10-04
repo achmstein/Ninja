@@ -23,6 +23,7 @@ import { Route as AuthenticatedTillIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedTalabatIndexRouteImport } from './routes/_authenticated/talabat/index'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedRidersIndexRouteImport } from './routes/_authenticated/riders/index'
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
 import { Route as AuthenticatedPromosIndexRouteImport } from './routes/_authenticated/promos/index'
 import { Route as AuthenticatedPlacesIndexRouteImport } from './routes/_authenticated/places/index'
@@ -44,6 +45,7 @@ import { Route as AuthenticatedTillShiftsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedTillRefundsRouteImport } from './routes/_authenticated/till/refunds'
 import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authenticated/till/payments'
 import { Route as AuthenticatedTillBreakdownRouteImport } from './routes/_authenticated/till/breakdown'
+import { Route as AuthenticatedRidersUserIdRouteImport } from './routes/_authenticated/riders/$userId'
 import { Route as AuthenticatedPlacesReservationsRouteImport } from './routes/_authenticated/places/reservations'
 import { Route as AuthenticatedPlacesPrintRouteImport } from './routes/_authenticated/places/print'
 import { Route as AuthenticatedPlacesHistoryRouteImport } from './routes/_authenticated/places/history'
@@ -134,6 +136,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRidersIndexRoute =
+  AuthenticatedRidersIndexRouteImport.update({
+    id: '/riders/',
+    path: '/riders/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRequestsIndexRoute =
@@ -255,6 +263,12 @@ const AuthenticatedTillBreakdownRoute =
   AuthenticatedTillBreakdownRouteImport.update({
     id: '/till/breakdown',
     path: '/till/breakdown',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRidersUserIdRoute =
+  AuthenticatedRidersUserIdRouteImport.update({
+    id: '/riders/$userId',
+    path: '/riders/$userId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPlacesReservationsRoute =
@@ -402,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/places/print': typeof AuthenticatedPlacesPrintRoute
   '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
+  '/riders/$userId': typeof AuthenticatedRidersUserIdRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -423,6 +438,7 @@ export interface FileRoutesByFullPath {
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
+  '/riders': typeof AuthenticatedRidersIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
   '/talabat': typeof AuthenticatedTalabatIndexRoute
@@ -458,6 +474,7 @@ export interface FileRoutesByTo {
   '/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/places/print': typeof AuthenticatedPlacesPrintRoute
   '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
+  '/riders/$userId': typeof AuthenticatedRidersUserIdRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -479,6 +496,7 @@ export interface FileRoutesByTo {
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
+  '/riders': typeof AuthenticatedRidersIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
   '/talabat': typeof AuthenticatedTalabatIndexRoute
@@ -516,6 +534,7 @@ export interface FileRoutesById {
   '/_authenticated/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/_authenticated/places/print': typeof AuthenticatedPlacesPrintRoute
   '/_authenticated/places/reservations': typeof AuthenticatedPlacesReservationsRoute
+  '/_authenticated/riders/$userId': typeof AuthenticatedRidersUserIdRoute
   '/_authenticated/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/_authenticated/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/_authenticated/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -537,6 +556,7 @@ export interface FileRoutesById {
   '/_authenticated/places/': typeof AuthenticatedPlacesIndexRoute
   '/_authenticated/promos/': typeof AuthenticatedPromosIndexRoute
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
+  '/_authenticated/riders/': typeof AuthenticatedRidersIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
   '/_authenticated/talabat/': typeof AuthenticatedTalabatIndexRoute
@@ -574,6 +594,7 @@ export interface FileRouteTypes {
     | '/places/history'
     | '/places/print'
     | '/places/reservations'
+    | '/riders/$userId'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
@@ -595,6 +616,7 @@ export interface FileRouteTypes {
     | '/places'
     | '/promos'
     | '/requests'
+    | '/riders'
     | '/settings'
     | '/staff'
     | '/talabat'
@@ -630,6 +652,7 @@ export interface FileRouteTypes {
     | '/places/history'
     | '/places/print'
     | '/places/reservations'
+    | '/riders/$userId'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
@@ -651,6 +674,7 @@ export interface FileRouteTypes {
     | '/places'
     | '/promos'
     | '/requests'
+    | '/riders'
     | '/settings'
     | '/staff'
     | '/talabat'
@@ -687,6 +711,7 @@ export interface FileRouteTypes {
     | '/_authenticated/places/history'
     | '/_authenticated/places/print'
     | '/_authenticated/places/reservations'
+    | '/_authenticated/riders/$userId'
     | '/_authenticated/till/breakdown'
     | '/_authenticated/till/payments'
     | '/_authenticated/till/refunds'
@@ -708,6 +733,7 @@ export interface FileRouteTypes {
     | '/_authenticated/places/'
     | '/_authenticated/promos/'
     | '/_authenticated/requests/'
+    | '/_authenticated/riders/'
     | '/_authenticated/settings/'
     | '/_authenticated/staff/'
     | '/_authenticated/talabat/'
@@ -829,6 +855,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/riders/': {
+      id: '/_authenticated/riders/'
+      path: '/riders'
+      fullPath: '/riders'
+      preLoaderRoute: typeof AuthenticatedRidersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/requests/': {
@@ -976,6 +1009,13 @@ declare module '@tanstack/react-router' {
       path: '/till/breakdown'
       fullPath: '/till/breakdown'
       preLoaderRoute: typeof AuthenticatedTillBreakdownRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/riders/$userId': {
+      id: '/_authenticated/riders/$userId'
+      path: '/riders/$userId'
+      fullPath: '/riders/$userId'
+      preLoaderRoute: typeof AuthenticatedRidersUserIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/places/reservations': {
@@ -1138,6 +1178,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlacesHistoryRoute: typeof AuthenticatedPlacesHistoryRoute
   AuthenticatedPlacesPrintRoute: typeof AuthenticatedPlacesPrintRoute
   AuthenticatedPlacesReservationsRoute: typeof AuthenticatedPlacesReservationsRoute
+  AuthenticatedRidersUserIdRoute: typeof AuthenticatedRidersUserIdRoute
   AuthenticatedTillBreakdownRoute: typeof AuthenticatedTillBreakdownRoute
   AuthenticatedTillPaymentsRoute: typeof AuthenticatedTillPaymentsRoute
   AuthenticatedTillRefundsRoute: typeof AuthenticatedTillRefundsRoute
@@ -1159,6 +1200,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlacesIndexRoute: typeof AuthenticatedPlacesIndexRoute
   AuthenticatedPromosIndexRoute: typeof AuthenticatedPromosIndexRoute
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
+  AuthenticatedRidersIndexRoute: typeof AuthenticatedRidersIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
   AuthenticatedTalabatIndexRoute: typeof AuthenticatedTalabatIndexRoute
@@ -1187,6 +1229,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlacesHistoryRoute: AuthenticatedPlacesHistoryRoute,
   AuthenticatedPlacesPrintRoute: AuthenticatedPlacesPrintRoute,
   AuthenticatedPlacesReservationsRoute: AuthenticatedPlacesReservationsRoute,
+  AuthenticatedRidersUserIdRoute: AuthenticatedRidersUserIdRoute,
   AuthenticatedTillBreakdownRoute: AuthenticatedTillBreakdownRoute,
   AuthenticatedTillPaymentsRoute: AuthenticatedTillPaymentsRoute,
   AuthenticatedTillRefundsRoute: AuthenticatedTillRefundsRoute,
@@ -1208,6 +1251,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlacesIndexRoute: AuthenticatedPlacesIndexRoute,
   AuthenticatedPromosIndexRoute: AuthenticatedPromosIndexRoute,
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
+  AuthenticatedRidersIndexRoute: AuthenticatedRidersIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
   AuthenticatedTalabatIndexRoute: AuthenticatedTalabatIndexRoute,

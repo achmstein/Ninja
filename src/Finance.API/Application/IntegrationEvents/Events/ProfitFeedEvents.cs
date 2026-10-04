@@ -32,7 +32,7 @@ public record StockConsumedIntegrationEvent : IntegrationEvent
 {
     public int BranchId { get; init; }
 
-    /// <summary>"Sale" or "Waste".</summary>
+    /// <summary>"Sale", "Waste", or "SaleReversal" (a sale given back: out of the cost of goods).</summary>
     public string Kind { get; init; } = string.Empty;
 
     public decimal Cost { get; init; }

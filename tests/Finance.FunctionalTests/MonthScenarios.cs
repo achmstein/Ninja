@@ -101,6 +101,34 @@ public sealed class MonthScenarios
     }
 
     [TestMethod]
+    public async Task An_order_never_sold_takes_its_cost_out_of_goods_and_made_food_lands_in_waste()
+    {
+        var branch = Suite.NewBranch();
+        var owner = Suite.OwnerAt(branch);
+        var at = Noon(2026, 2, 10);
+
+        // Two orders' sales; one cancelled before the kitchen made it, the
+        // other voided after it was made
+        await TellAsync(new StockConsumedIntegrationEvent { BranchId = branch, Kind = "Sale", Cost = 300m, At = at });
+        await TellAsync(new StockConsumedIntegrationEvent { BranchId = branch, Kind = "Sale", Cost = 100m, At = at });
+        await ServiceUnderTest<Program>.EventuallyAsync(async () =>
+            (await owner.GetAsync<ProfitView>(ProfitUrl(2026, 2))).Goods == 400m, "both sales cost their goods first");
+
+        await TellAsync(new StockConsumedIntegrationEvent { BranchId = branch, Kind = "SaleReversal", Cost = 300m, At = at });
+        await TellAsync(new StockConsumedIntegrationEvent { BranchId = branch, Kind = "SaleReversal", Cost = 100m, At = at });
+        await TellAsync(new StockConsumedIntegrationEvent { BranchId = branch, Kind = "Waste", Cost = 100m, At = at });
+
+        await ServiceUnderTest<Program>.EventuallyAsync(async () =>
+        {
+            var reported = await owner.GetAsync<ProfitView>(ProfitUrl(2026, 2));
+            return reported is { Goods: 0m, Waste: 100m };
+        }, "the sales given back leave the goods, and the made one is waste");
+
+        var month = await owner.GetAsync<ProfitView>(ProfitUrl(2026, 2));
+        Assert.AreEqual(-100m, month.Profit, "nothing sold; the food made and thrown away is the loss");
+    }
+
+    [TestMethod]
     public async Task A_ticket_the_bus_delivers_twice_is_counted_once()
     {
         var branch = Suite.NewBranch();

@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CirclePause, MapPin, UserRound } from 'lucide-react'
+import { CirclePause, UserRound } from 'lucide-react'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
-import { useBranches } from '@/lib/branch'
 import { useBranchStore } from '@/stores/branch-store'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE, PLACE_STATION, PLACE_TABLE } from '@/lib/places'
@@ -24,15 +23,15 @@ import { type PlacesStyle, usePlacesStyle } from '@/components/places/places-sty
 import { Reservation } from '@/components/places/reservation'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
+import { BranchDial } from '@/components/places/branch-dial'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Notice, noticeAction } from '@/components/ninja/page/notice'
+import { Notice } from '@/components/ninja/page/notice'
 import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/auth/sign-in-options'
 import { cn } from '@/lib/utils'
-import { BranchSheet, DirectionsLink, UseMyLocation } from '@/components/branch-switcher'
+import { DirectionsLink, UseMyLocation } from '@/components/branch-switcher'
 import { useAtBranch, useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
-import { useDistance } from '@/lib/geo'
 import type { TranslationKey } from '@/lib/i18n'
 
 export const Route = createFileRoute('/places')({
@@ -132,7 +131,6 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   const localized = useLocalized()
   const auth = useAuth()
   const branchId = useBranchStore((s) => s.branchId)
-  const { data: branches = [] } = useBranches()
   const atBranch = useAtBranch()
   const hold = useMyHold()
   const features = useFeatures()
@@ -168,10 +166,14 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
     return group ? [{ ...group, meters }] : []
   })
   const places = ordered.flatMap((g) => g.places)
+  // One branch at a time, chosen on the dial: the one the customer is at, else the nearest
+  const [viewId, setViewId] = useState<number | null>(null)
+  const viewed =
+    ordered.find((g) => Number(g.branch.id) === viewId) ?? ordered.find((g) => Number(g.branch.id) === branchId) ?? ordered[0]
+  const shown = multi ? (viewed ? [viewed] : []) : ordered
   // The selected branch's own places: the notify switch is the branch's, as is the room the customer is in
   const here = groups.find((g) => Number(g.branch.id) === branchId)?.places ?? []
   const { request: requestBranch, dialog: switchDialog } = useBranchSwitch()
-  const [branchesOpen, setBranchesOpen] = useState(false)
 
   // Some branch takes bookings: the selected one, or another listed beside it
   const takesBookings = (group: BranchPlaces) => features.reservations && (group.branch.isReservationsEnabled ?? true)
@@ -227,26 +229,26 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
             </RiseItem>
           )}
 
-          {/* Booking across branches: the customer's position on their word, and the branch changed by hand */}
-          {(multi && anyPoint && !location.here) || (branches.length > 1 && !atBranch) ? (
+          {/* Booking across branches: the dial, nearest first once the customer's position is known */}
+          {multi && !isLoading && (
             <RiseItem>
               <Recede gone={held}>
-                <div className='flex items-center justify-between gap-3'>
-                  {multi && anyPoint ? <UseMyLocation location={location} /> : <span />}
-                  {branches.length > 1 && !atBranch && (
-                    <button
-                      type='button'
-                      onClick={() => setBranchesOpen(true)}
-                      className='text-muted-foreground active:text-foreground inline-flex items-center gap-1.5 text-caption font-semibold transition-colors'
-                    >
-                      <MapPin className='size-3.5' />
-                      {t('ninjaChangeBranch')}
-                    </button>
-                  )}
+                <div className='flex flex-col gap-2'>
+                  <BranchDial
+                    branches={ordered}
+                    selectedId={viewed ? Number(viewed.branch.id) : null}
+                    onSelect={setViewId}
+                    panelId='branch-places'
+                  />
+                  {/* Under the dial: the customer's position on their word, and the way to the chosen branch */}
+                  <div className='flex items-center justify-between gap-3'>
+                    {anyPoint && !location.here ? <UseMyLocation location={location} /> : <span />}
+                    {viewed && <DirectionsLink branch={viewed.branch} />}
+                  </div>
                 </div>
               </Recede>
             </RiseItem>
-          ) : null}
+          )}
 
           {!reservationsEnabled && (
             <RiseItem>
@@ -256,21 +258,18 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
             </RiseItem>
           )}
 
-          {/* A guest can look but not book: say so up front, with the way to an account, rather than on a tap */}
+          {/* A guest can look but not book: one quiet line with the way to an account, the places first */}
           {!auth.isAuthenticated && reservationsEnabled && (
             <RiseItem>
               <Recede gone={held}>
-                <Notice
-                  tone='invite'
-                  icon={UserRound}
-                  title={t('bookSignInTitle')}
-                  body={t('bookSignInBody')}
-                  action={
-                    <button type='button' onClick={() => setSignInOpen(true)} className={noticeAction}>
-                      {t('bookSignInAction')}
-                    </button>
-                  }
-                />
+                <button
+                  type='button'
+                  onClick={() => setSignInOpen(true)}
+                  className='text-primary inline-flex min-h-11 items-center gap-2 text-note font-semibold'
+                >
+                  <UserRound className='size-4' />
+                  {t('bookSignInLine')}
+                </button>
               </Recede>
             </RiseItem>
           )}
@@ -288,7 +287,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
               <PlaceSkeletons look={look} count={look === 'cards' ? 3 : 6} />
             </RiseItem>
           ) : (
-            <div className='flex flex-col gap-4'>
+            <div id='branch-places' role={multi ? 'tabpanel' : undefined} className='flex flex-col gap-4'>
               {/* In a room, that room first as the hero, the others after it under their label and quieter:
                   while the clock runs another place cannot be booked, so they are there to read */}
               {stay && mine && (
@@ -301,21 +300,13 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                   <SectionLabel>{t('ninjaOtherPlaces')}</SectionLabel>
                 </RiseItem>
               )}
-              {ordered.map((branchGroup) => {
+              {shown.map((branchGroup) => {
                 const groupBranchId = Number(branchGroup.branch.id)
                 const canReserve = canReserveAt(branchGroup)
                 const others = branchGroup.places.filter((p) => p !== mine)
-                const free = branchGroup.places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+                // The dial above names the branch, how many are free and how far: its places follow straight on
                 return (
-                  <div key={String(branchGroup.branch.id)} className={cn('flex flex-col gap-4', multi && 'mt-2 first:mt-0')}>
-                    {/* With more than one branch, each under its name: how many are free, how far, and the way there */}
-                    {multi && (
-                      <RiseItem className={cn(stay && mine && 'opacity-60')}>
-                        <Recede gone={held}>
-                          <BranchHeading group={branchGroup} meters={branchGroup.meters} free={free} />
-                        </Recede>
-                      </RiseItem>
-                    )}
+                  <div key={String(branchGroup.branch.id)} className='flex flex-col gap-4'>
                     {groupByKind(others, look).map((group) => (
                       <div key={group.heading ?? 'all'} className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}>
                         {group.heading && (
@@ -368,37 +359,9 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
       </div>
 
       <Reservation hold={opened} />
-      <BranchSheet open={branchesOpen} onOpenChange={setBranchesOpen} />
       {switchDialog}
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} title={t('bookSignInTitle')} description={t('bookSignInBody')} />
     </NinjaPage>
-  )
-}
-
-
-/** A branch's heading over its places, when booking spans branches: its name, how many are free and how far, and the way there */
-function BranchHeading({ group, meters, free }: { group: BranchPlaces; meters: number | null; free: number }) {
-  const t = useT()
-  const localized = useLocalized()
-  const distance = useDistance()
-  return (
-    <div className='flex items-center gap-3'>
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <h2 className='heading truncate text-headline'>{localized(group.branch.name)}</h2>
-        <p className='text-muted-foreground flex items-center gap-1.5 text-caption'>
-          <span>{t('bookFreeNow', { count: free })}</span>
-          {meters != null && (
-            <>
-              <span aria-hidden>·</span>
-              <span className='tabular-nums' dir='ltr'>
-                {distance(meters)}
-              </span>
-            </>
-          )}
-        </p>
-      </div>
-      <DirectionsLink branch={group.branch} />
-    </div>
   )
 }

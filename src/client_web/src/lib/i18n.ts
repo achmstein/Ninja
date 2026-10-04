@@ -374,6 +374,14 @@ const webExtras = {
     en: { '=0': 'Nothing free right now', '=1': '1 free now', other: '{count} free now' },
     ar: { '=0': 'مفيش حاجة فاضية دلوقتي', '=1': 'واحدة فاضية دلوقتي', '=2': 'اتنين فاضيين دلوقتي', other: '{count} فاضيين دلوقتي' },
   },
+  // A branch's chip on the booking dial: as short as the chip is narrow
+  bookFreeShort: {
+    plural: 'count',
+    en: { '=0': 'Full', other: '{count} free' },
+    ar: { '=0': 'مليان', '=1': 'واحدة فاضية', other: '{count} فاضيين' },
+  },
+  bookBranches: { en: 'Branches', ar: 'الفروع' },
+  bookSignInLine: { en: 'Sign in to book', ar: 'سجّل دخول عشان تحجز' },
   bookClockRunning: { en: 'Clock running', ar: 'العداد شغال' },
   bookStartAt: { en: 'Start at', ar: 'ابدأ بـ' },
   ninjaHeldFor: { en: 'Held for you', ar: 'محجوزة ليك' },

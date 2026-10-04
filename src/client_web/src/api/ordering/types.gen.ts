@@ -39,6 +39,7 @@ export type BasketItemCustomization = {
 export type CancelOrderCommand = {
     orderNumber: number | string;
     platformReason?: null | string;
+    stockDisposition?: null | StockDisposition;
 };
 
 export type ClaimGuestOrdersRequest = {
@@ -186,6 +187,20 @@ export type DeliveryStaffView = {
     failedAt?: null | string;
     returnedAt?: null | string;
     cashHandedInAt?: null | string;
+};
+
+export type DeliveryTimelineStep = {
+    action?: string;
+    at?: string;
+    riderUserId?: null | string;
+    riderName?: null | string;
+    previousRiderUserId?: null | string;
+    previousRiderName?: null | string;
+    actorUserId?: null | string;
+    actorName?: null | string;
+    actorRole?: string;
+    cashCollected?: null | number | string;
+    reason?: null | string;
 };
 
 export type DeliveryView = {
@@ -355,6 +370,8 @@ export type Order = {
     refundedAmount?: number | string;
     voidedAt?: null | string;
     ticketId?: null | number | string;
+    wasPrepared?: boolean;
+    stockDisposition?: null | string;
     rating?: null | OrderRatingDto;
 };
 
@@ -525,6 +542,62 @@ export type RateOrderRequest = {
     comment: null | string;
 };
 
+export type RiderDeliveryHistory = {
+    items?: Array<RiderDeliveryRow>;
+    page?: number | string;
+    pageSize?: number | string;
+    totalCount?: number | string;
+    summary?: RiderHistorySummary;
+};
+
+export type RiderDeliveryRow = {
+    orderNumber?: number | string;
+    customerName?: null | string;
+    address?: string;
+    building?: null | string;
+    floor?: null | string;
+    apartment?: null | string;
+    total?: number | string;
+    fee?: number | string;
+    stage?: string;
+    assignedAt?: string;
+    stillWithRider?: boolean;
+    takenFromRiderAt?: null | string;
+    givenToRiderName?: null | string;
+    outAt?: null | string;
+    deliveredAt?: null | string;
+    failedAt?: null | string;
+    returnedAt?: null | string;
+    failureReason?: null | string;
+    cashCollected?: null | number | string;
+    cashHandedInAt?: null | string;
+    cashDifference?: null | number | string;
+    minutesOutToDelivered?: null | number | string;
+};
+
+export type RiderHistorySummary = {
+    delivered: number | string;
+    failed: number | string;
+    returned: number | string;
+    cashCollected: number | string;
+    cashDifferenceTotal: number | string;
+    averageMinutesOutToDelivered: null | number | string;
+};
+
+export type RiderOverview = {
+    userId?: string;
+    name?: string;
+    enabled?: boolean;
+    status?: string;
+    onDuty?: boolean;
+    lastSeenAt?: null | string;
+    signedIn?: boolean;
+    out?: number | string;
+    deliveredToday?: number | string;
+    failedToday?: number | string;
+    cashCollectedToday?: number | string;
+};
+
 export type RiderStatusRequest = {
     onDuty: boolean;
 };
@@ -541,6 +614,8 @@ export type RiderView = {
 export type SetOrderReadyRequest = {
     ready: boolean;
 };
+
+export type StockDisposition = 'Waste' | 'Restock';
 
 export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
 
@@ -1559,6 +1634,115 @@ export type GetRidersResponses = {
 };
 
 export type GetRidersResponse = GetRidersResponses[keyof GetRidersResponses];
+
+export type GetRidersOverviewData = {
+    body?: never;
+    path?: never;
+    query: {
+        tzOffsetMinutes?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/riders/overview';
+};
+
+export type GetRidersOverviewErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRidersOverviewResponses = {
+    /**
+     * OK
+     */
+    200: Array<RiderOverview>;
+};
+
+export type GetRidersOverviewResponse = GetRidersOverviewResponses[keyof GetRidersOverviewResponses];
+
+export type GetRiderDeliveriesData = {
+    body?: never;
+    path: {
+        userId: string;
+    };
+    query: {
+        from?: string;
+        to?: string;
+        page?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/riders/{userId}/deliveries';
+};
+
+export type GetRiderDeliveriesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRiderDeliveriesResponses = {
+    /**
+     * OK
+     */
+    200: RiderDeliveryHistory;
+};
+
+export type GetRiderDeliveriesResponse = GetRiderDeliveriesResponses[keyof GetRiderDeliveriesResponses];
+
+export type GetDeliveryTimelineData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/timeline';
+};
+
+export type GetDeliveryTimelineErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetDeliveryTimelineResponses = {
+    /**
+     * OK
+     */
+    200: Array<DeliveryTimelineStep>;
+};
+
+export type GetDeliveryTimelineResponse = GetDeliveryTimelineResponses[keyof GetDeliveryTimelineResponses];
 
 export type UnassignDeliveryRiderData = {
     body?: never;

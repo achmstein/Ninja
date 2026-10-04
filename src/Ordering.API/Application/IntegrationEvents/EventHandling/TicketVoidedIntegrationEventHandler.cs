@@ -18,6 +18,10 @@ public class TicketVoidedIntegrationEventHandler(
             return;
         }
         logger.LogInformation("Ticket {TicketId} voided - marking {Count} order(s) voided", @event.TicketId, orderIds.Count);
-        await mediator.Send(new MarkOrdersVoidedCommand(orderIds, @event.CreationDate));
+        // What the cashier said becomes of the food, when they said it
+        StockDisposition? disposition = Enum.TryParse<StockDisposition>(@event.StockDisposition, ignoreCase: true, out var said) && Enum.IsDefined(said)
+            ? said
+            : null;
+        await mediator.Send(new MarkOrdersVoidedCommand(orderIds, @event.CreationDate, disposition));
     }
 }

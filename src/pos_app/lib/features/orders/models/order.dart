@@ -335,6 +335,11 @@ class Order {
   /// The business's own delivery; null on every order eaten in or collected
   final OrderDelivery? delivery;
 
+  /// Whether the food was made, as far as Ordering can tell (the kitchen
+  /// marked it ready, or it left with a rider): what the till's "waste it or
+  /// back to stock?" starts from when it voids or cancels it
+  final bool wasPrepared;
+
   Order({
     required this.id,
     this.userId,
@@ -359,6 +364,7 @@ class Order {
     this.guestOrdersBefore,
     this.platform,
     this.delivery,
+    this.wasPrepared = false,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -400,6 +406,7 @@ class Order {
       guestOrdersBefore: (json['guestOrdersBefore'] ?? json['GuestOrdersBefore']) as int?,
       platform: PlatformOrder.parse(json['platform'] ?? json['Platform']),
       delivery: OrderDelivery.parse(json['delivery'] ?? json['Delivery']),
+      wasPrepared: (json['wasPrepared'] ?? json['WasPrepared']) == true,
     );
   }
 }

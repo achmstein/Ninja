@@ -117,6 +117,11 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         // Projected from Sales' receipt: what the customer's list shows as paid
         orderConfiguration.Property(o => o.PaidAt);
         orderConfiguration.Property(o => o.VoidedAt);
+        // What became of the stock a confirmed order took, once it will never be sold
+        orderConfiguration.Property(o => o.StockReleasedAt);
+        orderConfiguration.Property(o => o.StockDisposition)
+            .HasConversion<string>()
+            .HasMaxLength(16);
         orderConfiguration.Property(o => o.ReceiptNumber);
         orderConfiguration.Property(o => o.PaidWith)
             .HasMaxLength(20);

@@ -6,8 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StockDispositionChoice } from '@/components/stock-disposition-choice'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
+import { defaultDisposition, type StockDisposition } from '@/lib/stock-disposition'
 import { cn } from '@/lib/utils'
 import { DeliveryDetails, DeliveryFeeRow } from './delivery-details'
 import { cashDifference, laneOf } from './delivery-format'
@@ -46,6 +48,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
   const d = order.delivery
   const lane = laneOf(order)
   const out = d.outAt != null
+  const [disposition, setDisposition] = useState<StockDisposition>(defaultDisposition(out))
   const choosing = lane === 'waiting' || (lane === 'withRider' && !out)
   const riders = useRiders(choosing)
   const id = toNumber(order.orderNumber)
@@ -171,16 +174,21 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
         </Button>
       )}
 
-      {/* Failed or back, its cash never in: the order can go, nothing charged */}
+      {/* Failed or back, its cash never in: the order can go, the customer
+          charged nothing; its food was made once it went out, so it is waste
+          unless the cashier says it never left the bag */}
       {(lane === 'failed' || lane === 'returned') &&
         (asking === 'cancel' ? (
-          <Confirm
-            text={t('deliveryCancelConfirm')}
-            destructive
-            busy={actions.busy}
-            onConfirm={() => go(() => actions.cancel(id), true)}
-            onCancel={() => setAsking(null)}
-          />
+          <div className='flex flex-col gap-3'>
+            <StockDispositionChoice value={disposition} onChange={setDisposition} disabled={actions.busy} />
+            <Confirm
+              text={t('deliveryCancelConfirm')}
+              destructive
+              busy={actions.busy}
+              onConfirm={() => go(() => actions.cancel(id, disposition), true)}
+              onCancel={() => setAsking(null)}
+            />
+          </div>
         ) : (
           <Button variant='outline' className='text-destructive h-11' disabled={actions.busy} onClick={() => setAsking('cancel')}>
             <X className='size-4' />

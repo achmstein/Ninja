@@ -66,7 +66,14 @@ public class StockConsumedIntegrationEventHandler(
             if (await facts.HasCostReferenceAsync(reference))
                 return;
 
-            var kind = @event.Kind == "Waste" ? CostFactKind.Waste : CostFactKind.Goods;
+            // A sale given back leaves the cost of goods; made food it was
+            // then comes in again as waste, on its own event
+            var kind = @event.Kind switch
+            {
+                "Waste" => CostFactKind.Waste,
+                "SaleReversal" => CostFactKind.GoodsReturned,
+                _ => CostFactKind.Goods,
+            };
 
             facts.Add(new CostFact(@event.BranchId, BusinessDay.Of(@event.At), kind, @event.Cost, reference));
             await facts.UnitOfWork.SaveEntitiesAsync();

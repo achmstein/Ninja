@@ -3590,6 +3590,36 @@ abstract class AppLocalizations {
   /// **'The bag is back and nobody will have it. Cancel the order?'**
   String get deliveryCancelReturnedConfirm;
 
+  /// No description provided for @stockWasMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Was the food made?'**
+  String get stockWasMade;
+
+  /// No description provided for @stockWaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Waste it'**
+  String get stockWaste;
+
+  /// No description provided for @stockWasteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It was made: its ingredients count as waste'**
+  String get stockWasteHint;
+
+  /// No description provided for @stockRestock.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to stock'**
+  String get stockRestock;
+
+  /// No description provided for @stockRestockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Never made: its ingredients go back on the shelf'**
+  String get stockRestockHint;
+
   /// No description provided for @deliveryComingBack.
   ///
   /// In en, this message translates to:

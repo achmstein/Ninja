@@ -17,6 +17,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { brandQueryKey } from '@/lib/brand'
 import { translate, type TranslationKey } from '@/lib/i18n'
 import { isModuleOff, problemCode, problemMessage } from '@/lib/problem'
+import type { StockDisposition } from '@/lib/stock-disposition'
 import { toast } from '@/lib/toast'
 import { useDebounced } from '@/lib/use-debounced'
 
@@ -113,9 +114,14 @@ export function useDeliveryActions() {
       fail.mutate({ path: { orderId }, body: { reason: reason.trim() || null }, query: q }),
     markReturned: (orderId: number) => returned.mutate({ path: { orderId }, query: q }),
     cashIn: (orderId: number, amount: number) => cashIn.mutate({ path: { orderId }, body: { amount }, query: q }),
-    // A delivery that failed or came back, its cash never in: the order goes, nothing is charged
-    cancel: (orderId: number) =>
-      cancel.mutate({ body: { orderNumber: orderId }, headers: { 'x-requestid': crypto.randomUUID() }, query: q }),
+    // A delivery that failed or came back, its cash never in: the order goes, the
+    // customer charged nothing, and its food goes as the cashier said
+    cancel: (orderId: number, stockDisposition: StockDisposition) =>
+      cancel.mutate({
+        body: { orderNumber: orderId, stockDisposition },
+        headers: { 'x-requestid': crypto.randomUUID() },
+        query: q,
+      }),
     busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel].some((m) => m.isPending),
   }
 }

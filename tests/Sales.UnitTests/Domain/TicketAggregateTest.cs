@@ -1,5 +1,10 @@
 namespace Ninja.Sales.UnitTests.Domain;
 
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using Ninja.Sales.API.Application.DomainEventHandlers;
+using Ninja.Sales.API.Application.IntegrationEvents;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 using Ninja.Sales.Domain.Events;
 using Ninja.Sales.Domain.Exceptions;
@@ -319,6 +324,27 @@ public class TicketAggregateTest
         Assert.AreEqual(2, byOrder.Count);
         Assert.AreEqual(75m, byOrder[41]);
         Assert.AreEqual(30m, byOrder[42]);
+        Assert.IsNull(raised.StockDisposition, "the cashier said nothing of the food: Ordering decides");
+    }
+
+    [TestMethod]
+    public async Task A_void_tells_Ordering_what_the_cashier_said_becomes_of_the_food()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 2, 50)], loyaltyDiscount: 0);
+        ticket.ClearDomainEvents();
+
+        ticket.Void("Walked out", "owner", "Waste");
+
+        var raised = ticket.DomainEvents!.OfType<TicketVoidedDomainEvent>().Single();
+        Assert.AreEqual("Waste", raised.StockDisposition);
+
+        var outbox = Substitute.For<ISalesIntegrationEventService>();
+        await new TicketVoidedDomainEventHandler(outbox, NullLogger<TicketVoidedDomainEventHandler>.Instance)
+            .Handle(raised, CancellationToken.None);
+
+        await outbox.Received(1).AddAndSaveEventAsync(Arg.Is<TicketVoidedIntegrationEvent>(e =>
+            e.StockDisposition == "Waste" && e.OrderReversals.Single().OrderId == 41));
     }
 
     [TestMethod]

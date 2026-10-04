@@ -625,7 +625,12 @@ public class Ticket : Entity, IAggregateRoot
     /// which is a different, deliberate thing. Loyalty hears of it: the
     /// points the ticket's orders earned at confirmation go back with the sale.
     /// </summary>
-    public void Void(string reason, string voidedBy)
+    /// <param name="stockDisposition">
+    /// What becomes of the food on it, as the cashier said ("Waste" or
+    /// "Restock"); it is not kept here, only told to Ordering, which owns
+    /// what the stock does about it.
+    /// </param>
+    public void Void(string reason, string voidedBy, string? stockDisposition = null)
     {
         EnsureOpen();
         EnsureSessionEnded();
@@ -639,7 +644,7 @@ public class Ticket : Entity, IAggregateRoot
         VoidedAt = DateTime.UtcNow;
 
         AddDomainEvent(new TicketChangedDomainEvent(this));
-        AddDomainEvent(new TicketVoidedDomainEvent(this));
+        AddDomainEvent(new TicketVoidedDomainEvent(this, stockDisposition));
     }
 
     /// <summary>

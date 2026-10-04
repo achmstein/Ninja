@@ -181,7 +181,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   }
 
   Future<void> _void() async {
-    final voided = await showVoidDialog(context, widget.ticketId);
+    // The orders on the bill took their ingredients when they were confirmed
+    final lines = ref.read(ticketProvider(widget.ticketId)).value?.lines ?? const [];
+    final orderIds = {for (final line in lines) ?line.orderId}.toList();
+    final voided = await showVoidDialog(context, widget.ticketId, orderIds: orderIds);
     if (voided && mounted) context.go('/');
   }
 

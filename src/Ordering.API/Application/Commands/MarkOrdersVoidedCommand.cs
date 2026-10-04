@@ -8,7 +8,8 @@ namespace Ninja.Ordering.API.Application.Commands;
 [DataContract]
 public record MarkOrdersVoidedCommand(
     [property: DataMember] IReadOnlyCollection<int> OrderNumbers,
-    [property: DataMember] DateTime VoidedAt) : IRequest<bool>;
+    [property: DataMember] DateTime VoidedAt,
+    [property: DataMember] StockDisposition? StockDisposition = null) : IRequest<bool>;
 
 public class MarkOrdersVoidedCommandHandler(
     IOrderRepository orderRepository,
@@ -26,7 +27,7 @@ public class MarkOrdersVoidedCommandHandler(
                 logger.LogInformation("Voided order {OrderNumber} is not known to Ordering - skipped", orderNumber);
                 continue;
             }
-            order.MarkVoided(command.VoidedAt);
+            order.MarkVoided(command.VoidedAt, command.StockDisposition);
             await PaymentNotice.QueueAsync(order, "Voided", buyerRepository, integrationEvents);
         }
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);

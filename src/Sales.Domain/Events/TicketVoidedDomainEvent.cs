@@ -6,4 +6,5 @@ namespace Ninja.Sales.Domain.Events;
 /// An open ticket was voided — nothing was owed, so whatever its orders had
 /// earned at confirmation goes back.
 /// </summary>
-public record TicketVoidedDomainEvent(Ticket Ticket) : INotification;
+/// <param name="StockDisposition">"Waste" or "Restock" as the cashier said; null when they did not.</param>
+public record TicketVoidedDomainEvent(Ticket Ticket, string? StockDisposition = null) : INotification;

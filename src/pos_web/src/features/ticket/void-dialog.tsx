@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { voidTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { StockDispositionChoice } from '@/components/stock-disposition-choice'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,10 +16,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
+import { defaultDispositionFor, type StockDisposition } from '@/lib/stock-disposition'
 import { toast } from '@/lib/toast'
 
 type VoidTicketDialogProps = {
   ticketId: number
+  /** The orders on the bill: their ingredients left the shelf when they were confirmed */
+  orderIds: number[]
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -25,10 +30,13 @@ type VoidTicketDialogProps = {
 /**
  * Owner-only: voids an open ticket. The reason is mandatory — a voided
  * ticket disappears from the floor, and the reason is the only audit
- * trail left behind (the server refuses to void settled tickets).
+ * trail left behind (the server refuses to void settled tickets). A bill
+ * with orders on it also says what becomes of their food: waste if the
+ * kitchen made it, back to stock if not, starting from what Ordering knows.
  */
 export function VoidTicketDialog({
   ticketId,
+  orderIds,
   open,
   onOpenChange,
 }: VoidTicketDialogProps) {
@@ -36,10 +44,28 @@ export function VoidTicketDialog({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
+  // What the cashier picked; until they pick, the orders' own state decides
+  const [picked, setPicked] = useState<StockDisposition | null>(null)
 
   useEffect(() => {
-    if (!open) setReason('')
+    if (!open) {
+      setReason('')
+      setPicked(null)
+    }
   }, [open])
+
+  const orders = useQueries({
+    queries: orderIds.map((orderId) => ({
+      ...getOrderOptions({
+        path: { orderId },
+        query: { 'api-version': API_VERSION },
+      }),
+      enabled: open,
+    })),
+  })
+  const disposition =
+    picked ?? defaultDispositionFor(orders.map((o) => o.data?.wasPrepared))
+  const hasFood = orderIds.length > 0
 
   const voidTicket = useMutation({
     ...voidTicketMutation(),
@@ -60,7 +86,11 @@ export function VoidTicketDialog({
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
       query: { 'api-version': API_VERSION },
-      body: { reason: reason.trim() },
+      body: {
+        reason: reason.trim(),
+        // Only orders took stock; a bill of manual lines says nothing
+        stockDisposition: hasFood ? disposition : null,
+      },
     })
 
   return (
@@ -80,6 +110,15 @@ export function VoidTicketDialog({
             autoComplete='off'
           />
         </div>
+
+        {hasFood && (
+          <StockDispositionChoice
+            value={disposition}
+            onChange={setPicked}
+            disabled={voidTicket.isPending}
+            name='void-stock-disposition'
+          />
+        )}
 
         <DialogFooter className='gap-2'>
           <Button

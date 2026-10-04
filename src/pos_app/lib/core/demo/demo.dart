@@ -310,7 +310,7 @@ class _DemoTicketsRepository implements TicketsRepository {
   }
 
   @override
-  Future<void> voidTicket(int id, String reason, {String? requestId}) async {
+  Future<void> voidTicket(int id, String reason, {String? requestId, String? stockDisposition}) async {
     final ticket = _tickets[id];
     if (ticket == null) throw const TicketNotFound();
     if (!ticket.isOpen) throw const SalesException('Only an open ticket can be voided.');
@@ -541,7 +541,7 @@ class _DemoOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason}) async {
+  Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason, String? stockDisposition}) async {
     _pending.removeWhere((o) => o.id == orderId);
     return true;
   }

@@ -201,7 +201,9 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                 return new UsageReportRow(
                     kv.Key, Name(names, kv.Key), Unit(names, kv.Key),
                     Purchased: Qty(MovementType.Purchase), PurchasedValue: Val(MovementType.Purchase),
-                    Sold: -Qty(MovementType.Sale), SoldValue: -Val(MovementType.Sale),
+                    // A sale given back (the order cancelled or voided) was never sold
+                    Sold: -(Qty(MovementType.Sale) + Qty(MovementType.SaleReversal)),
+                    SoldValue: -(Val(MovementType.Sale) + Val(MovementType.SaleReversal)),
                     Wasted: -Qty(MovementType.Waste), WastedValue: -Val(MovementType.Waste),
                     Adjusted: Qty(MovementType.Adjustment), AdjustedValue: Val(MovementType.Adjustment),
                     CountVariance: Qty(MovementType.Count), CountVarianceValue: Val(MovementType.Count),
@@ -270,7 +272,8 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                 var open = opening.GetValueOrDefault(id);
                 var close = open + sums.Sum(s => s.Quantity);
                 var avg = averages.GetValueOrDefault(id);
-                var theoretical = -Qty(MovementType.Sale);
+                // What the sales should have used: net of the sales given back
+                var theoretical = -(Qty(MovementType.Sale) + Qty(MovementType.SaleReversal));
                 var countVariance = Qty(MovementType.Count);
 
                 return new VarianceRow(
@@ -279,7 +282,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                     Received: Qty(MovementType.Purchase), ReceivedValue: Val(MovementType.Purchase),
                     TransferredIn: Qty(MovementType.TransferIn), TransferredOut: -Qty(MovementType.TransferOut),
                     TransferredValue: Val(MovementType.TransferIn) + Val(MovementType.TransferOut),
-                    Theoretical: theoretical, TheoreticalValue: -Val(MovementType.Sale),
+                    Theoretical: theoretical, TheoreticalValue: -(Val(MovementType.Sale) + Val(MovementType.SaleReversal)),
                     Wasted: -Qty(MovementType.Waste), WastedValue: -Val(MovementType.Waste),
                     Adjusted: Qty(MovementType.Adjustment), AdjustedValue: Val(MovementType.Adjustment),
                     CountVariance: countVariance, CountVarianceValue: Val(MovementType.Count),

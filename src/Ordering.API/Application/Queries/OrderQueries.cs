@@ -14,6 +14,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         var order = await context.Orders
             .Include(o => o.OrderItems)
             .Include(o => o.Rating)
+            .Include(o => o.StationParts)
             .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order is null)
@@ -49,6 +50,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             RefundedAmount = order.RefundedAmount,
             VoidedAt = order.VoidedAt,
             TicketId = order.TicketId,
+            WasPrepared = order.WasPrepared,
+            StockDisposition = order.StockDisposition?.ToString(),
             OrderItems = order.OrderItems.Select(oi => new Orderitem
             {
                 ProductName = oi.ProductName,

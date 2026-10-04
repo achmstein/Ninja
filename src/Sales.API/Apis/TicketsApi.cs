@@ -520,7 +520,13 @@ public static class TicketsApi
     {
         try
         {
-            await mediator.SendIdentified<VoidTicketCommand, bool>(requestId, new VoidTicketCommand(id, request.Reason, httpContext.GetActor()));
+            if (request.StockDisposition is { } disposition && !StockDispositions.IsKnown(disposition))
+            {
+                return TypedResults.BadRequest("Stock disposition is Waste or Restock.");
+            }
+
+            await mediator.SendIdentified<VoidTicketCommand, bool>(
+                requestId, new VoidTicketCommand(id, request.Reason, httpContext.GetActor(), request.StockDisposition));
             return TypedResults.Ok();
         }
         catch (SalesDomainException ex)
@@ -663,7 +669,12 @@ public record AssignLinesCustomerRequest(List<int> LineIds, string? CustomerId, 
 /// <summary>A ticket to open for moved lines: a counter tab (with an optional name), or a table's bill.</summary>
 public record NewTicketRequest(TicketType Type, string? Label = null, int? PlaceId = null, LocalizedText? PlaceName = null);
 
-public record VoidTicketRequest(string Reason);
+/// <param name="StockDisposition">
+/// What becomes of the food on the bill: "Waste" (it was made) or "Restock"
+/// (it never was), as the cashier said. Left out, Ordering decides from what
+/// the kitchen did.
+/// </param>
+public record VoidTicketRequest(string Reason, string? StockDisposition = null);
 
 /// <summary>One of Rate (a fraction: 0.1 is 10%) or Amount (money off the bill).</summary>
 public record DiscountRequest(string? Reason = null, decimal? Rate = null, decimal? Amount = null);

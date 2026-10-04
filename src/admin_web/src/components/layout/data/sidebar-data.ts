@@ -9,6 +9,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   Megaphone,
+  Motorbike,
   Palette,
   Receipt,
   ReceiptText,
@@ -124,6 +125,13 @@ export const sidebarData: SidebarData = {
           ],
           // An employee's own page
           match: ['/payroll/employee'],
+        },
+        // Who is riding now, and each rider's deliveries: only where the business delivers
+        {
+          title: 'ridersNav',
+          url: '/riders',
+          icon: Motorbike,
+          feature: 'delivery',
         },
         {
           title: 'staffAccounts',

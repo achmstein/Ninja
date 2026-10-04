@@ -73,6 +73,25 @@ public static partial class DeliveryApi
             .WithDescription("Every enabled rider account given the branch, as Identity announced them, with whether their app has ever checked in (signedIn), whether they are on duty here, when the app was last heard from, and how many deliveries they have out.")
             .RequireAuthorization("Pos");
 
+        // The admin's Riders page: who is working now, and each rider's deliveries over time
+        orders.MapGet("/riders/overview", GetRidersOverviewAsync)
+            .WithName("GetRidersOverview")
+            .WithSummary("The branch's riders now, with their day so far (admin)")
+            .WithDescription("Every rider account given the branch (disabled ones said so): Online (on duty here and heard from lately), Quiet (on duty here, not heard from lately) or Off; when last heard from; what they have out; what they delivered, failed and handed in since the start of the caller's day (tzOffsetMinutes as JavaScript's getTimezoneOffset). Online first.")
+            .RequireAuthorization("Admin");
+
+        orders.MapGet("/riders/{userId}/deliveries", GetRiderDeliveriesAsync)
+            .WithName("GetRiderDeliveries")
+            .WithSummary("A rider's deliveries at the branch over a window, newest first (admin)")
+            .WithDescription("Every delivery given to the rider in [from, to) (UTC, by when it was given; by default the last week, at most 93 days), a page at a time. One taken from them before it left still shows, as TakenBack or GivenToOther with when and to whom. The window's figures (delivered, failed, brought back, cash handed in and its difference from what was due, average minutes from leaving to handing over) count only the deliveries that stayed theirs.")
+            .RequireAuthorization("Admin");
+
+        orders.MapGet("/{orderId:int}/delivery/timeline", GetDeliveryTimelineAsync)
+            .WithName("GetDeliveryTimeline")
+            .WithSummary("Every step of one delivery, in order: who had it, what was done, by whom (staff)")
+            .WithDescription("Given, taken back, given to another, out, delivered, could not be delivered (and why), brought back, cash counted in (and how much); each with when, the rider, and the account that took the step (the rider, or the till for them). A delivery at another branch is not found.")
+            .RequireAuthorization("Pos");
+
         newWork.MapPut("/{orderId:int}/delivery/rider", AssignRiderAsync)
             .WithName("AssignDeliveryRider")
             .WithSummary("Give a delivery to a rider, or to another before it leaves (staff)")

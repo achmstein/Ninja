@@ -394,6 +394,13 @@ namespace Ordering.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("Customer");
 
+                    b.Property<string>("StockDisposition")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("StockReleasedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("TicketId")
                         .HasColumnType("integer");
 
@@ -593,6 +600,72 @@ namespace Ordering.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("customeraddresses", "delivery");
+                });
+
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.DeliveryAssignment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ActorRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ActorUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("CashCollected")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PreviousRiderUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("RiderName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("RiderUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId", "At");
+
+                    b.HasIndex("PreviousRiderUserId", "At");
+
+                    b.HasIndex("RiderUserId", "At");
+
+                    b.ToTable("deliveryassignments", "delivery");
                 });
 
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.RiderAccount", b =>

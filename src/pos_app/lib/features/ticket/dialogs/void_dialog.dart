@@ -6,39 +6,70 @@ import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
+import '../../../core/widgets/stock_disposition_choice.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../orders/models/stock_disposition.dart';
+import '../../orders/services/order_service.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 
 /// Owner-only: voids an open ticket. The reason is mandatory — a voided
 /// ticket disappears from the floor, and the reason is the only audit
-/// trail left behind (the server refuses to void settled tickets).
-/// Resolves to true once voided; the caller leaves the screen.
-Future<bool> showVoidDialog(BuildContext context, int ticketId) async {
+/// trail left behind (the server refuses to void settled tickets). A bill
+/// with orders on it ([orderIds]) also says what becomes of their food:
+/// waste if the kitchen made it, back to stock if not, starting from what
+/// Ordering knows. Resolves to true once voided; the caller leaves the screen.
+Future<bool> showVoidDialog(BuildContext context, int ticketId, {List<int> orderIds = const []}) async {
   final voided = await showPosDialog<bool>(
     context,
-    builder: (context) => _VoidDialog(ticketId: ticketId),
+    builder: (context) => VoidDialog(ticketId: ticketId, orderIds: orderIds),
   );
   return voided ?? false;
 }
 
-class _VoidDialog extends ConsumerStatefulWidget {
+class VoidDialog extends ConsumerStatefulWidget {
   final int ticketId;
-  const _VoidDialog({required this.ticketId});
+  final List<int> orderIds;
+  const VoidDialog({super.key, required this.ticketId, this.orderIds = const []});
 
   @override
-  ConsumerState<_VoidDialog> createState() => _VoidDialogState();
+  ConsumerState<VoidDialog> createState() => _VoidDialogState();
 }
 
-class _VoidDialogState extends ConsumerState<_VoidDialog> {
+class _VoidDialogState extends ConsumerState<VoidDialog> {
   final _reason = TextEditingController();
   bool _pending = false;
   final String _requestId = const Uuid().v4();
+
+  /// Whether each order on the bill was made, as Ordering says; empty until it does
+  List<bool> _prepared = const [];
+
+  /// What the cashier picked; until they pick, the orders' own state decides
+  StockDisposition? _picked;
+
+  StockDisposition get _disposition => _picked ?? StockDisposition.defaultForAll(_prepared);
+
+  bool get _hasFood => widget.orderIds.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _reason.addListener(() => setState(() {}));
+    if (_hasFood) _readOrders();
+  }
+
+  /// An order Ordering cannot answer for counts as not made: the cashier sees
+  /// the choice either way and says otherwise when it was
+  Future<void> _readOrders() async {
+    final orders = ref.read(orderRepositoryProvider);
+    final prepared = await Future.wait(widget.orderIds.map((id) async {
+      try {
+        return (await orders.getOrderDetails(id)).wasPrepared;
+      } catch (_) {
+        return false;
+      }
+    }));
+    if (mounted) setState(() => _prepared = prepared);
   }
 
   @override
@@ -54,7 +85,13 @@ class _VoidDialogState extends ConsumerState<_VoidDialog> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _pending = true);
     try {
-      await ref.read(ticketsRepositoryProvider).voidTicket(widget.ticketId, _reason.text.trim(), requestId: _requestId);
+      await ref.read(ticketsRepositoryProvider).voidTicket(
+            widget.ticketId,
+            _reason.text.trim(),
+            requestId: _requestId,
+            // Only orders took stock; a bill of manual lines says nothing
+            stockDisposition: _hasFood ? _disposition.wire : null,
+          );
       ref.read(openTicketsProvider.notifier).refresh();
       ref.invalidate(ticketProvider(widget.ticketId));
       if (!mounted) return;
@@ -88,6 +125,14 @@ class _VoidDialogState extends ConsumerState<_VoidDialog> {
             textInputAction: TextInputAction.done,
             onSubmit: (_) => _void(),
           ),
+          if (_hasFood) ...[
+            const SizedBox(height: 16),
+            StockDispositionChoice(
+              value: _disposition,
+              onChanged: (v) => setState(() => _picked = v),
+              enabled: !_pending,
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

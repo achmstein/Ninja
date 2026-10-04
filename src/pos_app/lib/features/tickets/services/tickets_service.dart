@@ -58,8 +58,9 @@ abstract class TicketsRepository {
   /// those lines; a whole order goes through Ordering instead
   Future<void> assignLinesCustomer(int id, {required List<int> lineIds, String? customerId, required String customerName, String? requestId});
 
-  /// Owner-only: void an open ticket with a reason
-  Future<void> voidTicket(int id, String reason, {String? requestId});
+  /// Owner-only: void an open ticket with a reason, and say what becomes of
+  /// its orders' food ([stockDisposition], "Waste" or "Restock"; null leaves it to Ordering)
+  Future<void> voidTicket(int id, String reason, {String? requestId, String? stockDisposition});
 
   /// Money off the whole bill: one of [rate] (a fraction) or [amount]. The
   /// server caps a cashier at the branch's rate; an owner is uncapped.
@@ -194,9 +195,10 @@ class ApiTicketsRepository implements TicketsRepository {
   }
 
   @override
-  Future<void> voidTicket(int id, String reason, {String? requestId}) async {
+  Future<void> voidTicket(int id, String reason, {String? requestId, String? stockDisposition}) async {
     try {
-      await _apiClient.post('tickets/$id/void', data: {'reason': reason}, requestId: requestId);
+      await _apiClient.post('tickets/$id/void',
+          data: {'reason': reason, 'stockDisposition': ?stockDisposition}, requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
     }

@@ -26,10 +26,18 @@ public class StockPostingService(
 {
     public async Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor)
     {
-        var changes = await ledger.PostAsync(branchId, drafts, actor);
+        var posted = await ledger.PostAsync(branchId, drafts, actor);
 
-        if (changes.Count == 0)
-            return changes;
+        if (posted.Count == 0)
+            return posted;
+
+        // One change per item, from before the first draft to after the last:
+        // a released sale reverses and writes off the same item, which leaves
+        // its level where it was and must not look like a crossing
+        var changes = posted
+            .GroupBy(c => c.StockItemId)
+            .Select(g => g.Last() with { Pre = g.First().Pre })
+            .ToList();
 
         var items = (await stockItems.GetManyAsync(changes.Select(c => c.StockItemId)))
             .ToDictionary(s => s.Id);
@@ -51,18 +59,24 @@ public class StockPostingService(
     /// </summary>
     /// <summary>
     /// What a sale or waste posting cost, at the average the units left
-    /// at, so Finance can put the cost of goods beside the sales. Receipts,
-    /// counts, adjustments and transfers cost nothing here.
+    /// at, so Finance can put the cost of goods beside the sales; and what a
+    /// sale given back returns to it, at the cost the sale went out at (one
+    /// that went out at nothing returns nothing). Receipts, counts,
+    /// adjustments and transfers cost nothing here.
     /// </summary>
     private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes)
     {
         var avg = changes.ToDictionary(c => c.StockItemId, c => c.AvgUnitCost);
 
-        foreach (var kind in new[] { MovementType.Sale, MovementType.Waste })
+        foreach (var kind in new[] { MovementType.Sale, MovementType.Waste, MovementType.SaleReversal })
         {
-            var cost = drafts
-                .Where(d => d.Type == kind && d.Quantity < 0)
-                .Sum(d => -d.Quantity * (d.UnitCost ?? avg.GetValueOrDefault(d.StockItemId)));
+            var cost = kind == MovementType.SaleReversal
+                ? drafts
+                    .Where(d => d.Type == kind && d.Quantity > 0)
+                    .Sum(d => d.Quantity * (d.UnitCost ?? 0))
+                : drafts
+                    .Where(d => d.Type == kind && d.Quantity < 0)
+                    .Sum(d => -d.Quantity * (d.UnitCost ?? avg.GetValueOrDefault(d.StockItemId)));
 
             if (cost <= 0)
                 continue;

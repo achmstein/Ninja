@@ -211,7 +211,10 @@ public sealed class TillScenarios
         var (byTill, _) = await Till.RefusedAsync(HttpMethod.Post, Url($"/{id}/void"), new { reason = "Opened by mistake" });
         Assert.AreEqual(HttpStatusCode.Forbidden, byTill, "a cashier does not make a bill disappear");
 
-        var (voided, detail) = await Owner.RefusedAsync(HttpMethod.Post, Url($"/{id}/void"), new { reason = "Opened by mistake" });
+        var (unknown, _) = await Owner.RefusedAsync(HttpMethod.Post, Url($"/{id}/void"), new { reason = "Opened by mistake", stockDisposition = "Burnt" });
+        Assert.AreEqual(HttpStatusCode.BadRequest, unknown, "the food is waste or back to stock, nothing else");
+
+        var (voided, detail) = await Owner.RefusedAsync(HttpMethod.Post, Url($"/{id}/void"), new { reason = "Opened by mistake", stockDisposition = "Restock" });
         Assert.AreEqual(HttpStatusCode.OK, voided, detail);
 
         var bill = await BillAsync(id);

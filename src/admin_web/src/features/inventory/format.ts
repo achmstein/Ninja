@@ -17,6 +17,7 @@ export const MOVEMENT_TYPE_VALUES: { value: number; name: string }[] = [
   { value: 4, name: 'Adjustment' },
   { value: 5, name: 'TransferOut' },
   { value: 6, name: 'TransferIn' },
+  { value: 7, name: 'SaleReversal' },
 ]
 
 // MovementView.type comes back as the enum name
@@ -28,6 +29,8 @@ export const movementTypeKeys: Record<string, TranslationKey> = {
   Adjustment: 'movementTypeAdjustment',
   TransferOut: 'movementTypeTransferOut',
   TransferIn: 'movementTypeTransferIn',
+  // A cancelled or voided order's sale, given back; its made food follows as Waste
+  SaleReversal: 'movementTypeSaleReversal',
 }
 
 // The units a business actually stocks in; anything else is typed in

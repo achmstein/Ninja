@@ -210,7 +210,9 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
         var gross = sales.FirstOrDefault(s => s.Key == SalesFactKind.Sale);
         var refunds = sales.FirstOrDefault(s => s.Key == SalesFactKind.Refund)?.Amount ?? 0;
         var net = (gross?.Amount ?? 0) - refunds;
-        var goods = costs.FirstOrDefault(c => c.Key == CostFactKind.Goods)?.Amount ?? 0;
+        // Net of the sales given back: a cancelled or voided order sold nothing
+        var goods = (costs.FirstOrDefault(c => c.Key == CostFactKind.Goods)?.Amount ?? 0)
+            - (costs.FirstOrDefault(c => c.Key == CostFactKind.GoodsReturned)?.Amount ?? 0);
         var waste = costs.FirstOrDefault(c => c.Key == CostFactKind.Waste)?.Amount ?? 0;
         var byCategory = expenses
             .Select(e => new CategoryTotal(e.Key, categories.GetValueOrDefault(e.Key) ?? new LocalizedText("?", null), e.Amount))

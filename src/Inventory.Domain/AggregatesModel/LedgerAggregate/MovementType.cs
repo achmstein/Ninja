@@ -17,4 +17,11 @@ public enum MovementType
     TransferOut,
     /// <summary>Received from another branch (the same line, destination side).</summary>
     TransferIn,
+    /// <summary>
+    /// A confirmed order that will never be sold (cancelled, or its bill
+    /// voided) takes its <see cref="Sale"/> back: positive, at the cost the
+    /// sale went out at. Reports net it against the sale; a made order's
+    /// food then goes out again as <see cref="Waste"/>.
+    /// </summary>
+    SaleReversal,
 }

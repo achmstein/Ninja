@@ -1985,6 +1985,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'The bag is back and nobody will have it. Cancel the order?';
 
   @override
+  String get stockWasMade => 'Was the food made?';
+
+  @override
+  String get stockWaste => 'Waste it';
+
+  @override
+  String get stockWasteHint => 'It was made: its ingredients count as waste';
+
+  @override
+  String get stockRestock => 'Back to stock';
+
+  @override
+  String get stockRestockHint =>
+      'Never made: its ingredients go back on the shelf';
+
+  @override
   String deliveryComingBack(String name) {
     return 'Coming back with $name';
   }

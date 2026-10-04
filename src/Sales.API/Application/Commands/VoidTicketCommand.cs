@@ -2,7 +2,17 @@
 using Ninja.Sales.Infrastructure.Idempotency;
 namespace Ninja.Sales.API.Application.Commands;
 
-public record VoidTicketCommand(int TicketId, string Reason, string VoidedBy) : IRequest<bool>;
+/// <param name="StockDisposition">"Waste" or "Restock" as the cashier said; null leaves it to Ordering.</param>
+public record VoidTicketCommand(int TicketId, string Reason, string VoidedBy, string? StockDisposition = null) : IRequest<bool>;
+
+/// <summary>What a void may say becomes of the food on the bill.</summary>
+public static class StockDispositions
+{
+    public const string Waste = "Waste";
+    public const string Restock = "Restock";
+
+    public static bool IsKnown(string value) => value is Waste or Restock;
+}
 
 public class VoidTicketCommandHandler(
     ITicketRepository ticketRepository,
@@ -13,7 +23,7 @@ public class VoidTicketCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
-        ticket.Void(command.Reason, command.VoidedBy);
+        ticket.Void(command.Reason, command.VoidedBy, command.StockDisposition);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

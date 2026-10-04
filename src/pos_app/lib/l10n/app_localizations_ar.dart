@@ -1989,6 +1989,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'الشنطة رجعت ومحدش هياخدها. تلغي الطلب؟';
 
   @override
+  String get stockWasMade => 'الأكل اتعمل؟';
+
+  @override
+  String get stockWaste => 'يتحسب هالك';
+
+  @override
+  String get stockWasteHint => 'اتعمل: مكوناته تتحسب هالك';
+
+  @override
+  String get stockRestock => 'يرجع المخزن';
+
+  @override
+  String get stockRestockHint => 'ما اتعملش: مكوناته ترجع على الرف';
+
+  @override
   String deliveryComingBack(String name) {
     return 'راجع مع $name';
   }

@@ -12,4 +12,6 @@ public record TicketVoidedIntegrationEvent(
     int BranchId,
     string? Reason = null,
     string? VoidedBy = null,
-    IReadOnlyCollection<RefundOrderReversal>? OrderReversals = null) : IntegrationEvent;
+    IReadOnlyCollection<RefundOrderReversal>? OrderReversals = null,
+    int? PlaceId = null,
+    string? StockDisposition = null) : IntegrationEvent;

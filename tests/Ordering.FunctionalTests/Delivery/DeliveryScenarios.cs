@@ -429,7 +429,105 @@ public sealed class DeliveryScenarios
         var (nothingThere, _) = await rider.RefusedAsync(HttpMethod.Put, $"{Orders}/999999/delivery/out?{Version}");
         Assert.AreEqual(HttpStatusCode.NotFound, nothingThere);
     }
+
+    [TestMethod]
+    public async Task The_admin_sees_who_rides_now_each_riders_deliveries_and_every_step_of_one()
+    {
+        await DeliverFromTahrirAsync();
+        var aliId = $"rider-{Guid.NewGuid():N}";
+        var omarId = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(aliId, "Ali", Delivering);
+        await AnnounceRiderAsync(omarId, "Omar", Delivering);
+        var id = await ConfirmedDeliveryAsync();
+        var till = Suite.Ordering.As(Persona.Cashier(Delivering), Delivering);
+        var omar = Suite.Ordering.As(Persona.Rider(Delivering, omarId), Delivering);
+        var admin = Suite.Ordering.As(Persona.Admin(Delivering), Delivering);
+
+        // Given to Ali, then to Omar before it left; Omar takes it, the till counts the cash in
+        using (var given = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = aliId }))
+            Assert.AreEqual(HttpStatusCode.NoContent, given.StatusCode, await given.Content.ReadAsStringAsync());
+        using (var regiven = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = omarId }))
+            Assert.AreEqual(HttpStatusCode.NoContent, regiven.StatusCode, await regiven.Content.ReadAsStringAsync());
+        using (var onDuty = await omar.RawAsync(HttpMethod.Put, $"{Orders}/riders/me?{Version}", new { onDuty = true }))
+            Assert.IsTrue(onDuty.IsSuccessStatusCode, await onDuty.Content.ReadAsStringAsync());
+        using (var left = await omar.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/out?{Version}"))
+            Assert.AreEqual(HttpStatusCode.NoContent, left.StatusCode, await left.Content.ReadAsStringAsync());
+        using (var arrived = await omar.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/delivered?{Version}"))
+            Assert.AreEqual(HttpStatusCode.NoContent, arrived.StatusCode, await arrived.Content.ReadAsStringAsync());
+        using (var cash = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/cash-in?{Version}", new { amount = 135 }))
+            Assert.AreEqual(HttpStatusCode.NoContent, cash.StatusCode, await cash.Content.ReadAsStringAsync());
+
+        var overview = await admin.GetAsync<List<RiderOverviewView>>($"{Orders}/riders/overview?tzOffsetMinutes=0&{Version}");
+        var omarNow = overview.Single(r => r.UserId == omarId);
+        Assert.AreEqual("Online", omarNow.Status);
+        Assert.AreEqual(1, omarNow.DeliveredToday);
+        Assert.AreEqual(135m, omarNow.CashCollectedToday);
+        Assert.AreEqual("Off", overview.Single(r => r.UserId == aliId).Status);
+        Assert.IsTrue(overview.FindIndex(r => r.UserId == omarId) < overview.FindIndex(r => r.UserId == aliId), "online first");
+
+        // Ali's history keeps the one taken from him, given to Omar; it counts nothing for him
+        var aliHistory = await admin.GetAsync<RiderHistoryView>($"{Orders}/riders/{aliId}/deliveries?{Version}");
+        var taken = aliHistory.Items.Single(i => i.OrderNumber == id);
+        Assert.AreEqual("GivenToOther", taken.Stage);
+        Assert.AreEqual("Omar", taken.GivenToRiderName);
+        Assert.AreEqual(0, aliHistory.Summary.Delivered);
+
+        var omarHistory = await admin.GetAsync<RiderHistoryView>($"{Orders}/riders/{omarId}/deliveries?{Version}");
+        var mine = omarHistory.Items.Single(i => i.OrderNumber == id);
+        Assert.AreEqual("Delivered", mine.Stage);
+        Assert.AreEqual(1, omarHistory.Summary.Delivered);
+        Assert.AreEqual(135m, omarHistory.Summary.CashCollected);
+
+        // Every step, in order, with who took it
+        var timeline = await till.GetAsync<List<TimelineStepView>>($"{Orders}/{id}/delivery/timeline?{Version}");
+        CollectionAssert.AreEqual(
+            new[] { "Assigned", "Reassigned", "Out", "Delivered", "CashIn" },
+            timeline.Select(s => s.Action).ToArray());
+        Assert.AreEqual("Till", timeline[0].ActorRole);
+        Assert.AreEqual(aliId, timeline[1].PreviousRiderUserId);
+        Assert.AreEqual("Ali", timeline[1].PreviousRiderName);
+        Assert.AreEqual("Rider", timeline[2].ActorRole);
+        Assert.AreEqual(omarId, timeline[2].ActorUserId);
+        Assert.AreEqual(135m, timeline[4].CashCollected);
+        Assert.HasCount(5, await admin.GetAsync<List<TimelineStepView>>($"{Orders}/{id}/delivery/timeline?{Version}"), "the admin reads it too");
+
+        // Another branch's till finds no such delivery
+        var elsewhere = Suite.Ordering.As(Persona.Cashier(NotDelivering), NotDelivering);
+        var (otherBranch, _) = await elsewhere.RefusedAsync(HttpMethod.Get, $"{Orders}/{id}/delivery/timeline?{Version}");
+        Assert.AreEqual(HttpStatusCode.NotFound, otherBranch);
+
+        // A window must start before it ends, and span 93 days at most
+        var (backwards, backwardsBody) = await ProblemAsync(admin, HttpMethod.Get, $"{Orders}/riders/{omarId}/deliveries?from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z&{Version}");
+        Assert.AreEqual(HttpStatusCode.BadRequest, backwards);
+        Assert.Contains("riders.range_invalid", backwardsBody);
+        var (tooWide, _) = await ProblemAsync(admin, HttpMethod.Get, $"{Orders}/riders/{omarId}/deliveries?from=2026-01-01T00:00:00Z&to=2026-06-01T00:00:00Z&{Version}");
+        Assert.AreEqual(HttpStatusCode.BadRequest, tooWide);
+        var (badZone, badZoneBody) = await ProblemAsync(admin, HttpMethod.Get, $"{Orders}/riders/overview?tzOffsetMinutes=5000&{Version}");
+        Assert.AreEqual(HttpStatusCode.BadRequest, badZone);
+        Assert.Contains("riders.tz_invalid", badZoneBody);
+
+        // Neither a customer nor a rider reads them; the till reads no rider's history
+        var customer = Customer($"customer-{Guid.NewGuid():N}");
+        foreach (var caller in new[] { customer, omar })
+        {
+            Assert.AreEqual(HttpStatusCode.Forbidden, (await caller.RefusedAsync(HttpMethod.Get, $"{Orders}/riders/overview?{Version}")).Item1);
+            Assert.AreEqual(HttpStatusCode.Forbidden, (await caller.RefusedAsync(HttpMethod.Get, $"{Orders}/riders/{omarId}/deliveries?{Version}")).Item1);
+            Assert.AreEqual(HttpStatusCode.Forbidden, (await caller.RefusedAsync(HttpMethod.Get, $"{Orders}/{id}/delivery/timeline?{Version}")).Item1);
+        }
+
+        Assert.AreEqual(HttpStatusCode.Forbidden, (await till.RefusedAsync(HttpMethod.Get, $"{Orders}/riders/{omarId}/deliveries?{Version}")).Item1);
+    }
 }
+
+public record RiderOverviewView(string UserId, string Name, string Status, int Out, int DeliveredToday, decimal CashCollectedToday);
+
+public record RiderHistoryRowView(int OrderNumber, string Stage, string? GivenToRiderName);
+
+public record RiderHistorySummaryView(int Delivered, decimal CashCollected);
+
+public record RiderHistoryView(List<RiderHistoryRowView> Items, int TotalCount, RiderHistorySummaryView Summary);
+
+public record TimelineStepView(string Action, string? PreviousRiderUserId, string? PreviousRiderName, string? ActorUserId, string ActorRole, decimal? CashCollected);
 
 public record RiderStatusView(string UserId, string Name, bool OnDuty, int Out);
 

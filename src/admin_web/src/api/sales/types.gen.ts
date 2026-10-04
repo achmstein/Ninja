@@ -704,6 +704,7 @@ export type TypeTotal = {
 
 export type VoidTicketRequest = {
     reason: string;
+    stockDisposition?: null | string;
 };
 
 export type WeekdayTotal = {

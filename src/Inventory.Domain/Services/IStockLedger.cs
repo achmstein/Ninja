@@ -35,6 +35,9 @@ public interface IStockLedger
     /// <summary>Whether any movement carries this reference: the redelivery guard.</summary>
     Task<bool> HasReferenceAsync(string reference);
 
+    /// <summary>The movements a document posted (an order's sale, one per ingredient).</summary>
+    Task<IReadOnlyList<StockMovement>> GetByReferenceAsync(string reference);
+
     /// <summary>The branch's current on-hand figures for these items (0 when never moved).</summary>
     Task<Dictionary<int, decimal>> GetOnHandAsync(int branchId, IEnumerable<int> stockItemIds);
 

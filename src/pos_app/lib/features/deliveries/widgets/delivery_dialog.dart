@@ -9,8 +9,10 @@ import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/stock_disposition_choice.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
+import '../../orders/models/stock_disposition.dart';
 import '../delivery_errors.dart';
 import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
@@ -73,14 +75,15 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
 
   Future<void> _cancelReturned(DeliveryOrder order) async {
     final l10n = AppLocalizations.of(context)!;
-    final yes = await showConfirmDialog(
+    // Its food was made once it went out: waste, unless the cashier says the
+    // bag came back as it left
+    final disposition = await showStockDispositionDialog(
       context,
       title: l10n.deliveryCancelReturnedConfirm,
-      cancelLabel: l10n.cancel,
       actionLabel: l10n.deliveryCancelReturned,
-      destructive: true,
+      initial: StockDisposition.defaultFor(order.delivery.outAt != null),
     );
-    if (yes && mounted) await _run((a) => a.cancelReturned(order.orderNumber), close: true);
+    if (disposition != null && mounted) await _run((a) => a.cancelReturned(order.orderNumber, disposition), close: true);
   }
 
   Future<void> _cashIn(DeliveryOrder order) async {

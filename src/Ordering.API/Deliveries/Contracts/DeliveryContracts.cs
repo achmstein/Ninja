@@ -95,6 +95,107 @@ public record DeliveryOrder
     public DeliveryStaffView Delivery { get; init; } = new();
 }
 
+/// <summary>A rider as the admin's Riders page reads them: where they stand now, and their day.</summary>
+public record RiderOverview
+{
+    public string UserId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    /// <summary>False for an account disabled in Staff: listed, but given nothing.</summary>
+    public bool Enabled { get; init; }
+    /// <summary>"Online" (on duty here, heard lately), "Quiet" (on duty here, not heard lately) or "Off".</summary>
+    public string Status { get; init; } = string.Empty;
+    public bool OnDuty { get; init; }
+    public DateTime? LastSeenAt { get; init; }
+    /// <summary>Their app has checked in at least once.</summary>
+    public bool SignedIn { get; init; }
+    /// <summary>Deliveries with them not yet delivered or brought back.</summary>
+    public int Out { get; init; }
+    /// <summary>Delivered since the start of the caller's day.</summary>
+    public int DeliveredToday { get; init; }
+    /// <summary>Could not be handed over, since the start of the caller's day.</summary>
+    public int FailedToday { get; init; }
+    /// <summary>Cash they handed in at the till since the start of the caller's day.</summary>
+    public decimal CashCollectedToday { get; init; }
+}
+
+/// <summary>One delivery in a rider's history.</summary>
+public record RiderDeliveryRow
+{
+    public int OrderNumber { get; init; }
+    public string? CustomerName { get; init; }
+    public string Address { get; init; } = string.Empty;
+    public string? Building { get; init; }
+    public string? Floor { get; init; }
+    public string? Apartment { get; init; }
+    /// <summary>What the rider collects at the door, the fee in.</summary>
+    public decimal Total { get; init; }
+    public decimal Fee { get; init; }
+    /// <summary>
+    /// Where it stands for this rider: the delivery's own stage while it is still
+    /// theirs ("Assigned", "OnTheWay", "Delivered", "Failed", "Returned"), or
+    /// "TakenBack" / "GivenToOther" when it was taken from them before it left.
+    /// </summary>
+    public string Stage { get; init; } = string.Empty;
+    /// <summary>When it was given to this rider.</summary>
+    public DateTime AssignedAt { get; init; }
+    /// <summary>The delivery is still with this rider.</summary>
+    public bool StillWithRider { get; init; }
+    /// <summary>When it was taken from this rider, if it was (taken back, or given to another).</summary>
+    public DateTime? TakenFromRiderAt { get; init; }
+    /// <summary>The rider it was given to instead, if it was.</summary>
+    public string? GivenToRiderName { get; init; }
+    public DateTime? OutAt { get; init; }
+    public DateTime? DeliveredAt { get; init; }
+    public DateTime? FailedAt { get; init; }
+    public DateTime? ReturnedAt { get; init; }
+    public string? FailureReason { get; init; }
+    public decimal? CashCollected { get; init; }
+    public DateTime? CashHandedInAt { get; init; }
+    /// <summary>Handed in less the total: below zero, short.</summary>
+    public decimal? CashDifference { get; init; }
+    /// <summary>From leaving to handing it over, in whole minutes.</summary>
+    public int? MinutesOutToDelivered { get; init; }
+}
+
+/// <summary>One step of a delivery, as its history recorded it.</summary>
+public record DeliveryTimelineStep
+{
+    /// <summary>"Assigned", "Unassigned", "Reassigned", "Out", "Delivered", "Failed", "Returned" or "CashIn".</summary>
+    public string Action { get; init; } = string.Empty;
+    public DateTime At { get; init; }
+    /// <summary>The rider it is with after the step; null once taken back.</summary>
+    public string? RiderUserId { get; init; }
+    public string? RiderName { get; init; }
+    /// <summary>The rider it was taken from, when the step changed hands.</summary>
+    public string? PreviousRiderUserId { get; init; }
+    public string? PreviousRiderName { get; init; }
+    public string? ActorUserId { get; init; }
+    public string? ActorName { get; init; }
+    /// <summary>"Rider" or "Till".</summary>
+    public string ActorRole { get; init; } = string.Empty;
+    public decimal? CashCollected { get; init; }
+    public string? Reason { get; init; }
+}
+
+/// <summary>A window of a rider's deliveries: its figures over the whole window.</summary>
+public record RiderHistorySummary(
+    int Delivered,
+    int Failed,
+    int Returned,
+    decimal CashCollected,
+    decimal CashDifferenceTotal,
+    double? AverageMinutesOutToDelivered);
+
+/// <summary>A page of a rider's deliveries, newest first.</summary>
+public record RiderDeliveryHistory
+{
+    public List<RiderDeliveryRow> Items { get; init; } = new();
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+    public RiderHistorySummary Summary { get; init; } = new(0, 0, 0, 0, 0, null);
+}
+
 public record RiderView
 {
     public string UserId { get; init; } = string.Empty;

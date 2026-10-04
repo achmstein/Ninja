@@ -56,6 +56,12 @@ public enum CostFactKind
 {
     Goods = 0,
     Waste = 1,
+    /// <summary>
+    /// A sale given back (its order cancelled or its bill voided): what it had
+    /// cost, taken out of <see cref="Goods"/>. Kept as its own fact so every
+    /// amount stays positive and each event keeps its reference.
+    /// </summary>
+    GoodsReturned = 2,
 }
 
 public class CostFact : Entity, IAggregateRoot

@@ -65,6 +65,7 @@ import { DiscardTicketDialog } from './discard-dialog'
 import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
 import { RefundDialog } from './refund-dialog'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
+import { orderIdsOn } from '@/lib/stock-disposition'
 import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
 import { KitchenReprintButton } from './kitchen-reprint'
@@ -1125,6 +1126,7 @@ export function TicketScreen({
       />
       <VoidTicketDialog
         ticketId={ticketId}
+        orderIds={orderIdsOn(ticket?.lines ?? [])}
         open={voidOpen}
         onOpenChange={setVoidOpen}
       />

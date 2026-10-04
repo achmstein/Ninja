@@ -115,6 +115,14 @@ export function useAdminNotifications() {
       invalidatePlaces()
     })
 
+    // The Riders page: a rider starting or stopping, and any delivery moving
+    // (given, taken back, out, delivered, cash in) change who is where and
+    // the day's figures. Both reach the admin group; quiet, only lists change.
+    const invalidateRiders = () =>
+      refresh('getRidersOverview', 'getRiderDeliveries', 'getDeliveryTimeline')
+    connection.on('RiderStatusChanged', invalidateRiders)
+    connection.on('DeliveryChanged', invalidateRiders)
+
     // Inventory.API raises this when a movement takes an item to or below
     // its reorder level at a branch. Every branch's levels are refreshed;
     // only the active branch's warning is worth a toast.
@@ -208,6 +216,7 @@ export function useAdminNotifications() {
       joinGroups().catch(() => {})
       invalidateOrders()
       invalidatePlaces()
+      invalidateRiders()
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

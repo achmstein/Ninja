@@ -34,6 +34,8 @@ public class TicketVoidedDomainEventHandler(
             ticket.VoidReason ?? string.Empty,
             ticket.VoidedBy ?? string.Empty,
             reversals,
-            ticket.PlaceId));
+            ticket.PlaceId,
+            // What the cashier said becomes of the food: Ordering decides the stock from it
+            notification.StockDisposition));
     }
 }

@@ -192,6 +192,14 @@ public record Order
     public DateTime? VoidedAt { get; init; }
     /// <summary>The Sales ticket the order landed on — what the receipt link opens.</summary>
     public int? TicketId { get; init; }
+    /// <summary>
+    /// Whether the food was made, as far as Ordering can tell (the kitchen
+    /// marked it ready, or it left with a rider): what a till asking "waste
+    /// it or back to stock?" starts from when it cancels or voids it.
+    /// </summary>
+    public bool WasPrepared { get; init; }
+    /// <summary>What became of its stock once it would never be sold: "Waste" or "Restock"; null while it stands.</summary>
+    public string? StockDisposition { get; init; }
     public OrderRatingDto? Rating { get; init; }
 }
 

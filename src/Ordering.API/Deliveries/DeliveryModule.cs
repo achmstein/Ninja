@@ -33,6 +33,7 @@ public static class DeliveryModule
         services.AddScoped<ICustomerAddressBook, CustomerAddressBook>();
         services.AddScoped<IRiderDirectory, RiderDirectory>();
         services.AddScoped<IDeliveryBoardQueries, DeliveryBoardQueries>();
+        services.AddScoped<IRiderOverviewQueries, RiderOverviewQueries>();
 
         // The till reads a caller's shared short map link by following it: https, Google's hosts, a few hops
         services.AddMapLinkClient();
