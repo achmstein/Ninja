@@ -21,6 +21,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { InfoTip } from '@/components/info-tip'
 
 const presetKeys: Record<RangeKey, TranslationKey> = {
   all: 'allTime',
@@ -131,100 +140,145 @@ export function DateRangePicker({
     if (range?.from && range?.to) setOpen(false)
   }
 
+  // The presets, the calendar and the hours: beside each other on a desk,
+  // one under the other in a sheet from the bottom on a phone
+  const panel = (
+    <div className={cn('flex', isMobile && 'flex-col')}>
+      <div
+        className={cn(
+          'flex gap-0.5 p-2',
+          isMobile ? 'flex-wrap gap-2 border-b' : 'flex-col border-e'
+        )}
+      >
+        {presets.map((p) => (
+          <Button
+            key={p}
+            variant={
+              preset === p ? 'secondary' : isMobile ? 'outline' : 'ghost'
+            }
+            size='sm'
+            className={cn('justify-start', isMobile && 'rounded-full')}
+            onClick={() => pickPreset(p)}
+          >
+            {t(presetKeys[p])}
+          </Button>
+        ))}
+      </div>
+      <div className='flex flex-col'>
+        <Calendar
+          mode='range'
+          className={cn(isMobile && 'mx-auto')}
+          numberOfMonths={isMobile ? 1 : 2}
+          defaultMonth={from ?? new Date()}
+          selected={preset === 'custom' ? { from, to } : undefined}
+          onSelect={pickRange}
+          disabled={(date: Date) => date > new Date()}
+        />
+        {preset !== 'all' && dayWindow && (
+          <div className='flex flex-col gap-2 border-t p-3'>
+            <div className='flex flex-wrap items-end gap-2'>
+              <div className='grid gap-1'>
+                <Label htmlFor='range-from-time' className='text-xs'>
+                  {t('rangeStartsAt')}
+                </Label>
+                <Input
+                  id='range-from-time'
+                  type='time'
+                  className='h-8 w-28 tabular-nums'
+                  value={startTime}
+                  onChange={(e) => pickTime('fromTime', e.target.value)}
+                />
+              </div>
+              <div className='grid gap-1'>
+                <Label htmlFor='range-to-time' className='text-xs'>
+                  {t('rangeEndsAt')}
+                </Label>
+                <Input
+                  id='range-to-time'
+                  type='time'
+                  className='h-8 w-28 tabular-nums'
+                  value={endTime}
+                  onChange={(e) => pickTime('toTime', e.target.value)}
+                />
+              </div>
+              <InfoTip className='mb-1.5'>{t('rangeHoursHint')}</InfoTip>
+              {hoursPicked && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='ms-auto'
+                  onClick={() =>
+                    onChange({ fromTime: undefined, toTime: undefined })
+                  }
+                >
+                  <RotateCcw />
+                  {t('wholeDay')}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant='outline'
-            size='sm'
-            className={cn(
-              'min-w-[11rem] justify-start font-normal',
-              compact ? 'h-8' : 'h-9'
-            )}
-          >
-            <CalendarIcon className='text-muted-foreground' />
-            <span className='truncate font-medium'>{label}</span>
-            {/* The window itself, once, where the range is chosen: not again as a line beside it */}
-            {span && preset !== 'custom' && (
-              <span className='text-muted-foreground truncate tabular-nums'>
-                · {span}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align='start' className='flex w-auto p-0'>
-          <div className='flex flex-col gap-0.5 border-e p-2'>
-            {presets.map((p) => (
-              <Button
-                key={p}
-                variant={preset === p ? 'secondary' : 'ghost'}
-                size='sm'
-                className='justify-start'
-                onClick={() => pickPreset(p)}
-              >
-                {t(presetKeys[p])}
-              </Button>
-            ))}
-          </div>
-          <div className='flex flex-col'>
-            <Calendar
-              mode='range'
-              numberOfMonths={isMobile ? 1 : 2}
-              defaultMonth={from ?? new Date()}
-              selected={preset === 'custom' ? { from, to } : undefined}
-              onSelect={pickRange}
-              disabled={(date: Date) => date > new Date()}
-            />
-            {preset !== 'all' && dayWindow && (
-              <div className='flex flex-col gap-2 border-t p-3'>
-                <div className='flex flex-wrap items-end gap-2'>
-                  <div className='grid gap-1'>
-                    <Label htmlFor='range-from-time' className='text-xs'>
-                      {t('rangeStartsAt')}
-                    </Label>
-                    <Input
-                      id='range-from-time'
-                      type='time'
-                      className='h-8 w-28 tabular-nums'
-                      value={startTime}
-                      onChange={(e) => pickTime('fromTime', e.target.value)}
-                    />
-                  </div>
-                  <div className='grid gap-1'>
-                    <Label htmlFor='range-to-time' className='text-xs'>
-                      {t('rangeEndsAt')}
-                    </Label>
-                    <Input
-                      id='range-to-time'
-                      type='time'
-                      className='h-8 w-28 tabular-nums'
-                      value={endTime}
-                      onChange={(e) => pickTime('toTime', e.target.value)}
-                    />
-                  </div>
-                  {hoursPicked && (
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='ms-auto'
-                      onClick={() =>
-                        onChange({ fromTime: undefined, toTime: undefined })
-                      }
-                    >
-                      <RotateCcw />
-                      {t('wholeDay')}
-                    </Button>
-                  )}
-                </div>
-                <p className='text-muted-foreground max-w-xs text-xs'>
-                  {t('rangeHoursHint')}
-                </p>
-              </div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+      {isMobile ? (
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant='outline'
+              size='sm'
+              className={cn(
+                'min-w-[11rem] justify-start font-normal',
+                compact ? 'h-8' : 'h-9'
+              )}
+            >
+              <CalendarIcon className='text-muted-foreground' />
+              <span className='truncate font-medium'>{label}</span>
+              {/* The window itself, once, where the range is chosen: not again as a line beside it */}
+              {span && preset !== 'custom' && (
+                <span className='text-muted-foreground truncate tabular-nums'>
+                  · {span}
+                </span>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side='bottom' className='overflow-y-auto p-0'>
+            <SheetHeader className='pb-3'>
+              <SheetTitle>{t('pickADate')}</SheetTitle>
+              <SheetDescription className='sr-only'>{label}</SheetDescription>
+            </SheetHeader>
+            {panel}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant='outline'
+              size='sm'
+              className={cn(
+                'min-w-[11rem] justify-start font-normal',
+                compact ? 'h-8' : 'h-9'
+              )}
+            >
+              <CalendarIcon className='text-muted-foreground' />
+              <span className='truncate font-medium'>{label}</span>
+              {/* The window itself, once, where the range is chosen: not again as a line beside it */}
+              {span && preset !== 'custom' && (
+                <span className='text-muted-foreground truncate tabular-nums'>
+                  · {span}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align='start' className='w-auto p-0'>
+            {panel}
+          </PopoverContent>
+        </Popover>
+      )}
 
       {children}
     </div>
