@@ -506,6 +506,12 @@ abstract class AppLocalizations {
   /// **'Navigate'**
   String get navigate;
 
+  /// Under an address the till took over the phone without a shared location
+  ///
+  /// In en, this message translates to:
+  /// **'No pin: Maps looks for the address. Call if you can\'t find the door.'**
+  String get noPin;
+
   /// No description provided for @call.
   ///
   /// In en, this message translates to:

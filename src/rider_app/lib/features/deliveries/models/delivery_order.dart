@@ -51,8 +51,10 @@ class DeliveryOrder {
   final double total;
   final List<DeliveryLine> lines;
 
-  final double latitude;
-  final double longitude;
+  /// The pin; null for an address the till took over the phone without one,
+  /// which the rider finds by its words
+  final double? latitude;
+  final double? longitude;
   final String address;
   final String? building;
   final String? floor;
@@ -69,8 +71,6 @@ class DeliveryOrder {
   const DeliveryOrder({
     required this.orderNumber,
     required this.total,
-    required this.latitude,
-    required this.longitude,
     required this.address,
     required this.phone,
     required this.stage,
@@ -79,6 +79,8 @@ class DeliveryOrder {
     this.customerName,
     this.customerNote,
     this.lines = const [],
+    this.latitude,
+    this.longitude,
     this.building,
     this.floor,
     this.apartment,
@@ -100,8 +102,8 @@ class DeliveryOrder {
       lines: [
         for (final line in (json['items'] as List? ?? const [])) DeliveryLine.fromJson((line as Map).cast<String, dynamic>()),
       ],
-      latitude: _num(d['latitude']),
-      longitude: _num(d['longitude']),
+      latitude: d['latitude'] == null ? null : _num(d['latitude']),
+      longitude: d['longitude'] == null ? null : _num(d['longitude']),
       address: _text(d['address']) ?? '',
       building: _text(d['building']),
       floor: _text(d['floor']),
@@ -132,8 +134,13 @@ class DeliveryOrder {
     return parts.isEmpty ? address : '$address · ${parts.join('، ')}';
   }
 
-  /// Google Maps' way to the door from wherever the rider is
-  Uri get directionsUri => Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude');
+  /// Whether the customer pinned the door, or only said where it is
+  bool get hasPin => latitude != null && longitude != null;
+
+  /// Google Maps' way to the door from wherever the rider is: to the pin, or
+  /// to the address as the caller said it, for Maps to find
+  Uri get directionsUri => Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${hasPin ? '$latitude,$longitude' : Uri.encodeQueryComponent(address)}');
 
   Uri get phoneUri => Uri(scheme: 'tel', path: phone);
 }

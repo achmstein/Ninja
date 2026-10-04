@@ -34,6 +34,19 @@ public static class DeliveryApi
             .WithName("DeleteMyAddress")
             .WithSummary("Forget one of the signed-in customer's saved addresses");
 
+        // The till taking a delivery over the phone
+        orders.MapGet("/delivery/till-quote", GetTillDeliveryQuoteAsync)
+            .WithName("GetTillDeliveryQuote")
+            .WithSummary("What a delivery the till takes over the phone asks, with or without a pin (staff)")
+            .WithDescription("The branch's fee, minimum and radius even while customers' orders are paused. With a location the caller shared (a Google Maps link, short or long, or coordinates), the pin read from it, how far it is and whether it is within the radius. Without one, InRange is true: the cashier knows the streets.")
+            .RequireAuthorization("Pos");
+
+        orders.MapGet("/delivery/known-addresses", GetKnownAddressesAsync)
+            .WithName("GetKnownDeliveryAddresses")
+            .WithSummary("Where a caller has asked to be delivered before (staff)")
+            .WithDescription("A customer account's saved addresses, then the addresses earlier deliveries went to, for that account or that phone number; latest first, each address once.")
+            .RequireAuthorization("Pos");
+
         // The till: the branch's deliveries, its riders, and who takes what
         orders.MapGet("/deliveries", GetDeliveriesAsync)
             .WithName("GetDeliveries")
@@ -72,12 +85,14 @@ public static class DeliveryApi
         orders.MapPut("/{orderId:int}/delivery/out", MarkOutAsync)
             .WithName("MarkDeliveryOut")
             .WithSummary("The rider left with it")
-            .RequireAuthorization("Rider");
+            .WithDescription("Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.")
+            .RequireAuthorization("DeliveryProgress");
 
         orders.MapPut("/{orderId:int}/delivery/delivered", MarkDeliveredAsync)
             .WithName("MarkDeliveryDelivered")
             .WithSummary("The customer has it")
-            .RequireAuthorization("Rider");
+            .WithDescription("Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.")
+            .RequireAuthorization("DeliveryProgress");
 
         orders.MapPut("/riders/me", SetMyRiderStatusAsync)
             .WithName("SetMyRiderStatus")
@@ -102,6 +117,80 @@ public static class DeliveryApi
 
         var distance = Geo.DistanceMeters(terms.Latitude, terms.Longitude, latitude, longitude);
         return TypedResults.Ok(new DeliveryQuote(true, distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm));
+    }
+
+    /// <summary>The client that follows a shared short map link to the map it opens.</summary>
+    public const string MapLinkClient = "map-links";
+
+    public static async Task<Ok<TillDeliveryQuote>> GetTillDeliveryQuoteAsync(
+        HttpContext httpContext,
+        IBranchSettingsQueries branchSettings,
+        IHttpClientFactory http,
+        string? location = null,
+        CancellationToken ct = default)
+    {
+        var terms = await branchSettings.GetDeliveryTermsAsync(httpContext.GetRequiredBranchId(), evenWhilePaused: true);
+        if (terms is null)
+        {
+            return TypedResults.Ok(new TillDeliveryQuote(false, false, null, 0, 0, 0, null, null, false));
+        }
+
+        // What the caller shared, as the cashier pasted it: a Google Maps
+        // link (a short one is followed) or plain coordinates
+        var pin = string.IsNullOrWhiteSpace(location)
+            ? null
+            : await MapLocation.ResolveAsync(location, http.CreateClient(MapLinkClient), ct);
+        int? distance = pin is { } p ? Geo.DistanceMeters(terms.Latitude, terms.Longitude, p.Latitude, p.Longitude) : null;
+
+        return TypedResults.Ok(new TillDeliveryQuote(
+            true, distance is null || distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm,
+            pin?.Latitude, pin?.Longitude, string.IsNullOrWhiteSpace(location) || pin is not null));
+    }
+
+    /// <summary>A caller's few, not their whole history.</summary>
+    private const int MaxKnownAddresses = 6;
+
+    public static async Task<Ok<List<KnownAddressView>>> GetKnownAddressesAsync(
+        OrderingContext context,
+        TenantCountry country,
+        string? customerUserId = null,
+        string? phone = null)
+    {
+        var userId = string.IsNullOrWhiteSpace(customerUserId) ? null : customerUserId.Trim();
+        var number = string.IsNullOrWhiteSpace(phone) ? null : PhoneRules.Normalize(phone, country.Code);
+        if (userId is null && number is null)
+        {
+            return TypedResults.Ok(new List<KnownAddressView>());
+        }
+
+        var saved = userId is null
+            ? []
+            : await context.CustomerAddresses
+                .AsNoTracking()
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.LastUsedAt)
+                .Select(a => new KnownAddressView(a.Label, a.Latitude, a.Longitude, a.Address, a.Building, a.Floor, a.Apartment, a.Directions, a.Phone, null))
+                .ToListAsync();
+
+        var delivered = await context.Orders
+            .AsNoTracking()
+            .Where(o => o.Delivery != null)
+            .Where(o => (userId != null && o.Buyer != null && o.Buyer.IdentityGuid == userId)
+                || (number != null && o.Delivery!.Phone == number))
+            .OrderByDescending(o => o.OrderDate)
+            .Take(30)
+            .Select(o => new KnownAddressView(
+                null, o.Delivery!.Latitude, o.Delivery.Longitude, o.Delivery.Address, o.Delivery.Building,
+                o.Delivery.Floor, o.Delivery.Apartment, o.Delivery.Directions, o.Delivery.Phone, o.OrderDate))
+            .ToListAsync();
+
+        // The same door once, as it was last asked for
+        var known = saved.Concat(delivered)
+            .DistinctBy(a => (a.Address.ToLowerInvariant(), a.Building?.ToLowerInvariant(), a.Floor?.ToLowerInvariant(), a.Apartment?.ToLowerInvariant()))
+            .Take(MaxKnownAddresses)
+            .ToList();
+
+        return TypedResults.Ok(known);
     }
 
     public static async Task<Results<Ok<List<CustomerAddressView>>, UnauthorizedHttpResult>> GetAddressesAsync(
@@ -417,10 +506,9 @@ public static class DeliveryApi
         int orderId, HttpContext httpContext, IMediator mediator) =>
         ActAsync(orderId, DeliveryAction.Delivered, httpContext, mediator, riderOnly: IsOnlyRider(httpContext));
 
-    /// <summary>An admin or owner may stand in for any rider; a rider moves only their own.</summary>
+    /// <summary>The till (an admin, owner or cashier) may stand in for any rider; a rider moves only their own.</summary>
     private static bool IsOnlyRider(HttpContext httpContext) =>
-        !ClaimsPrincipalExtensions.IsInRole(httpContext.User, "Admin")
-        && !ClaimsPrincipalExtensions.IsInRole(httpContext.User, "Owner");
+        !ClaimsPrincipalExtensions.PosRoles.Any(role => ClaimsPrincipalExtensions.IsInRole(httpContext.User, role));
 
     private static async Task<Results<NoContent, BadRequest<string>, NotFound, ForbidHttpResult>> ActAsync(
         int orderId,
@@ -460,6 +548,21 @@ public static class DeliveryApi
 /// <param name="InRange">The point is within the branch's radius.</param>
 public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm);
 
+/// <summary>The branch's answer for a delivery the till takes over the phone.</summary>
+/// <param name="InRange">Within the radius; true without a pin, where the cashier knows the streets.</param>
+/// <param name="Latitude">With <paramref name="Longitude"/>, the pin read from the pasted location; the till sends it with the order.</param>
+/// <param name="LocationRead">False when a location was pasted but no point could be read from it.</param>
+public record TillDeliveryQuote(
+    bool Delivers,
+    bool InRange,
+    int? DistanceMeters,
+    decimal Fee,
+    decimal MinimumOrder,
+    decimal RadiusKm,
+    double? Latitude,
+    double? Longitude,
+    bool LocationRead);
+
 public record CustomerAddressRequest(
     double Latitude,
     double Longitude,
@@ -486,6 +589,20 @@ public record CustomerAddressView(
     public static CustomerAddressView From(CustomerAddress a) =>
         new(a.Id, a.Label, a.Latitude, a.Longitude, a.Address, a.Building, a.Floor, a.Apartment, a.Directions, a.Phone);
 }
+
+/// <summary>An address a caller had before: one they saved (with its label), or one an earlier delivery went to (with when).</summary>
+/// <param name="Latitude">With <paramref name="Longitude"/>, the pin; null for one the till took over the phone without one.</param>
+public record KnownAddressView(
+    string? Label,
+    double? Latitude,
+    double? Longitude,
+    string Address,
+    string? Building,
+    string? Floor,
+    string? Apartment,
+    string? Directions,
+    string? Phone,
+    DateTime? LastDeliveredAt);
 
 public record AssignRiderRequest(string RiderUserId, string RiderName);
 

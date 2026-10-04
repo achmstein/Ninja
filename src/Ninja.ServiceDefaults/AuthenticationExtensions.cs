@@ -107,6 +107,8 @@ public static class AuthenticationExtensions
             options.AddPolicy("Kitchen", policy => policy.RequireRole(ClaimsPrincipalExtensions.KitchenRoles).AddRequirements(branchAccess));
             // Rider policy: the deliveries a rider was given, on their own Rider account
             options.AddPolicy("Rider", policy => policy.RequireRole(ClaimsPrincipalExtensions.RiderRoles).AddRequirements(branchAccess));
+            // A delivery left or arrived: said by its rider, or by the till for them
+            options.AddPolicy("DeliveryProgress", policy => policy.RequireRole(ClaimsPrincipalExtensions.DeliveryProgressRoles).AddRequirements(branchAccess));
         });
 
         return services;

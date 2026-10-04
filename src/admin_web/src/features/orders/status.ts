@@ -56,6 +56,19 @@ export const orderSourceKeys: Record<string, TranslationKey> = {
 }
 
 /**
+ * The word for where an order came from. A delivery says so whoever placed
+ * it: a guest's is not a QR at a table, and the till's was taken by phone.
+ */
+export function orderSourceKey(order: {
+  source?: string | null
+  delivery?: unknown
+}): TranslationKey | undefined {
+  if (order.delivery)
+    return order.source === 'Pos' ? 'sourcePhoneDelivery' : 'sourceDelivery'
+  return order.source ? orderSourceKeys[order.source] : undefined
+}
+
+/**
  * Why staff turn a delivery platform's order down, as the platform spells
  * it; the platform tells its customer. Too busy is the answer when nothing
  * else fits.

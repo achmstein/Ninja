@@ -1,3 +1,4 @@
+using Ninja.ServiceDefaults;
 using Ninja.Tenant.API.Services;
 
 namespace Ninja.Tenant.UnitTests;

@@ -22,8 +22,10 @@ public interface IBranchSettingsQueries
     /// <summary>
     /// How the branch delivers, or null when it does not right now: delivery
     /// off, ordering paused, or a branch never heard of (fails closed).
+    /// <paramref name="evenWhilePaused"/> is the till's: pausing the customers'
+    /// orders does not stop the till taking one over the phone.
     /// </summary>
-    Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId);
+    Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false);
 }
 
 /// <summary>Where a branch delivers from, how far, and what it asks.</summary>

@@ -63,6 +63,24 @@ public class DeliveryTest
     }
 
     [TestMethod]
+    public void An_address_taken_over_the_phone_goes_without_a_pin()
+    {
+        var delivery = new Delivery(null, null, "Tahrir St", "12", null, null, "Blue gate", "01001234567", 20, 1800);
+
+        Assert.IsNull(delivery.Latitude);
+        Assert.IsNull(delivery.Longitude);
+        Assert.IsNull(delivery.DistanceMeters, "no pin, no distance");
+        Assert.IsTrue(Confirmed(new Order(string.Empty, string.Empty, 1, guestName: "Mona", source: OrderSource.Pos, delivery: delivery)).IsDelivery);
+    }
+
+    [TestMethod]
+    public void A_pin_has_both_coordinates_or_none()
+    {
+        Assert.ThrowsExactly<OrderingDomainException>(() => new Delivery(30, null, "Tahrir", null, null, null, null, "0100", 0, null));
+        Assert.ThrowsExactly<OrderingDomainException>(() => new Delivery(null, 31, "Tahrir", null, null, null, null, "0100", 0, null));
+    }
+
+    [TestMethod]
     public void The_fee_is_on_the_total_and_no_discount_takes_it_off()
     {
         var order = Confirmed(GuestDelivery(ToTahrir(fee: 25)));

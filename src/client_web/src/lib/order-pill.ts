@@ -23,8 +23,8 @@ export type PillOrder = {
   status?: string
   paidAt?: string | null
   voidedAt?: string | null
-  /** The business's own delivery, where it has got to; none for an order eaten in or collected */
-  delivery?: { stage?: string } | null
+  /** The business's own delivery, where it has got to and who took it; none for an order eaten in or collected */
+  delivery?: { stage?: string; riderName?: string | null } | null
 }
 
 /** How far back of the tap an order may be dated: the server's clock is not the phone's */
@@ -185,6 +185,12 @@ export const PILL_WORDS = {
     ar: 'في الطريق ليك. ادفع للمندوب عند الباب.',
     arStandard: 'في الطريق إليك. ادفع للمندوب عند الباب.',
   },
+  /** The same, when the till said who took it: `{rider}` is their name */
+  onTheWayRiderNote: {
+    en: '{rider} is on the way to you. Pay them at the door.',
+    ar: '{rider} في الطريق ليك. ادفع له عند الباب.',
+    arStandard: '{rider} في الطريق إليك. ادفع له عند الباب.',
+  },
   deliveredNote: { en: 'Delivered. Enjoy!', ar: 'وصل. بالهنا والشفا!', arStandard: 'تم التوصيل. بالهناء والشفاء!' },
   cancelledNote: {
     en: '{name} could not take this order.',
@@ -192,6 +198,12 @@ export const PILL_WORDS = {
     arStandard: 'لم يتمكن {name} من قبول هذا الطلب.',
   },
 } satisfies Record<string, Words>
+
+/** What a stage says under its title: on its way, it names the rider when the till said who */
+export function noteFor(stage: PillStage, order: PillOrder | null, notes: Record<PillStage, Words>): { words: Words; rider: string | null } {
+  const rider = order?.delivery?.riderName?.trim() || null
+  return stage === 'onTheWay' && rider ? { words: PILL_WORDS.onTheWayRiderNote, rider } : { words: notes[stage], rider: null }
+}
 
 /** The words in the language asked; a `{name}` in them is the business's name */
 export function words(w: Words, language: 'en' | 'ar', standard: boolean, name = ''): string {

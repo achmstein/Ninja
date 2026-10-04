@@ -5,11 +5,15 @@ import {
   getDeliveriesOptions,
   getRidersOptions,
   handInDeliveryCashMutation,
+  markDeliveryDeliveredMutation,
+  markDeliveryOutMutation,
   unassignDeliveryRiderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
+import { API_VERSION, apiClient } from '@/lib/api-client'
 import { translate } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { useBranchStore } from '@/stores/branch-store'
+import { mergeRiders, type RiderAccount } from './riders'
 
 export type DeliveryLane = 'waiting' | 'withRider' | 'cashDue' | 'done'
 
@@ -34,12 +38,27 @@ export function useDeliveries() {
   return { deliveries: query.data ?? [], isLoading: query.isLoading }
 }
 
+export type { TillRider } from './riders'
+
+/** The branch's riders for the picker: see mergeRiders */
 export function useRiders(enabled: boolean) {
-  return useQuery({
+  const branchId = useBranchStore((s) => s.branchId)
+  const heard = useQuery({
     ...getRidersOptions({ query: { 'api-version': API_VERSION } }),
     enabled,
     refetchInterval: enabled ? 30_000 : false,
   })
+  const accounts = useQuery({
+    queryKey: ['riderAccounts'],
+    queryFn: async () => (await apiClient.get<RiderAccount[]>('/api/identity/users', { params: { role: 'Rider', max: 200 } })).data,
+    enabled,
+    staleTime: 60_000,
+  })
+  return {
+    // Ordering's answer is the one that matters; Identity's only adds to it
+    isLoading: heard.isLoading,
+    data: heard.data ? mergeRiders(heard.data, accounts.data ?? [], branchId) : undefined,
+  }
 }
 
 /** Giving a delivery to a rider, taking it back, and taking the rider's cash in */
@@ -66,11 +85,17 @@ export function useDeliveryActions() {
     onError: failed,
   })
 
+  // Said for a rider whose phone cannot: it left, then it arrived
+  const out = useMutation({ ...markDeliveryOutMutation(), onSuccess: refresh, onError: failed })
+  const delivered = useMutation({ ...markDeliveryDeliveredMutation(), onSuccess: refresh, onError: failed })
+
   return {
     assign: (orderId: number, riderUserId: string, riderName: string) =>
       assign.mutate({ path: { orderId }, body: { riderUserId, riderName }, query: { 'api-version': API_VERSION } }),
     unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
     cashIn: (orderId: number) => cashIn.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
-    busy: assign.isPending || unassign.isPending || cashIn.isPending,
+    markOut: (orderId: number) => out.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
+    markDelivered: (orderId: number) => delivered.mutate({ path: { orderId }, query: { 'api-version': API_VERSION } }),
+    busy: assign.isPending || unassign.isPending || cashIn.isPending || out.isPending || delivered.isPending,
   }
 }

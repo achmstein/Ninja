@@ -26,9 +26,10 @@ public enum DeliveryStage
 /// </summary>
 public class Delivery
 {
-    public double Latitude { get; private set; }
+    /// <summary>The pin; null for an address the till took down over the phone without one.</summary>
+    public double? Latitude { get; private set; }
 
-    public double Longitude { get; private set; }
+    public double? Longitude { get; private set; }
 
     /// <summary>The area and street, in the customer's words.</summary>
     public string Address { get; private set; } = string.Empty;
@@ -48,8 +49,8 @@ public class Delivery
     /// <summary>What the delivery adds to the bill; the branch's fee when the order was placed.</summary>
     public decimal Fee { get; private set; }
 
-    /// <summary>Straight-line from the branch, when the order was placed.</summary>
-    public int DistanceMeters { get; private set; }
+    /// <summary>Straight-line from the branch, when the order was placed; null without a pin.</summary>
+    public int? DistanceMeters { get; private set; }
 
     /// <summary>The rider's account (the token's subject); null until someone is given it.</summary>
     public string? RiderUserId { get; private set; }
@@ -73,9 +74,11 @@ public class Delivery
 
     protected Delivery() { }
 
+    /// <param name="latitude">With <paramref name="longitude"/>, the pin; both or neither.</param>
+    /// <param name="distanceMeters">From the branch to the pin; ignored without one.</param>
     public Delivery(
-        double latitude,
-        double longitude,
+        double? latitude,
+        double? longitude,
         string address,
         string? building,
         string? floor,
@@ -83,9 +86,10 @@ public class Delivery
         string? directions,
         string phone,
         decimal fee,
-        int distanceMeters)
+        int? distanceMeters)
     {
-        if (latitude is < -90 or > 90 || longitude is < -180 or > 180)
+        if (latitude.HasValue != longitude.HasValue
+            || latitude is < -90 or > 90 || longitude is < -180 or > 180)
             throw new OrderingDomainException("A delivery needs a point on the map.");
 
         Latitude = latitude;
@@ -101,7 +105,7 @@ public class Delivery
             ? phone.Trim()
             : throw new OrderingDomainException("A delivery needs a phone number to call at the door.");
         Fee = fee >= 0 ? fee : throw new OrderingDomainException("A delivery fee can't be below zero.");
-        DistanceMeters = Math.Max(0, distanceMeters);
+        DistanceMeters = latitude is null || distanceMeters is null ? null : Math.Max(0, distanceMeters.Value);
     }
 
     private static string? Tidy(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

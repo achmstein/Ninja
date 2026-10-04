@@ -4,7 +4,9 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
+  Bike,
   Loader2,
+  MapPin,
   Minus,
   Plus,
   Search,
@@ -31,6 +33,10 @@ import {
   ChooseCustomerButton,
   SelectedCustomer,
 } from '@/features/customer/selected-customer'
+import {
+  DeliveryDialog,
+  useTillDeliveryQuote,
+} from '@/features/deliveries/delivery-dialog'
 import { stayRoster } from '@/features/places/status'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -213,10 +219,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     setQuantity,
     setNote,
     setCustomer,
+    delivery,
+    setDelivery,
     setTarget,
     target,
     clear,
   } = useSale()
+
+  // A walk-in sale can go out with a rider instead, where the branch
+  // delivers; a round on an open bill never does
+  const [deliveryOpen, setDeliveryOpen] = useState(false)
+  const deliveryTerms = useTillDeliveryQuote('', !addingToTicket).data
+  const canDeliver = !addingToTicket && deliveryTerms?.delivers === true
+  const delivering = canDeliver && delivery !== null
+  const deliveryFee = delivering ? toNumber(deliveryTerms?.fee) : 0
 
   // Before paint, so the cashier never sees the previous destination's cart
   useLayoutEffect(() => {
@@ -415,7 +431,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0),
           )
 
-  const total = saleTotal(lines)
+  const itemsTotal = saleTotal(lines)
+  const total = itemsTotal + deliveryFee
   const count = saleCount(lines)
 
   const tapItem = (item: CatalogItemDto, suggested = false) => {
@@ -491,6 +508,17 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       requestIdRef.current = null
       const orderId = toNumber(data.orderId)
 
+      // A delivery is a bill of its own, settled when the rider's cash comes
+      // in: nothing to pay now, and the rider is picked on the floor
+      if (delivering) {
+        clear()
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getDeliveries' }] })
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+        toast.success(t(orderId === 0 ? 'orderAlreadyPlaced' : 'deliveryPlaced'))
+        navigate({ to: '/' })
+        return
+      }
+
       // Adding to a bill already on the floor: the order names the ticket,
       // so there is no lookup to wait on and nothing to pay yet. The lines
       // land over SignalR (the ticket screen's poll is the fallback).
@@ -522,6 +550,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   })
 
   const charge = () => {
+    // A rider needs a name at the door: taken off the sale, it is asked again
+    if (delivering && !customer?.name.trim()) {
+      setDeliveryOpen(true)
+      return
+    }
     // The blocking "sending" wait paints under an open sheet otherwise
     setOrderOpen(false)
     const signature = JSON.stringify({
@@ -537,6 +570,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       customer: customer?.id ?? customer?.name ?? null,
       // The same items against a different bill are a different sale too
       ticket: ticketId ?? null,
+      // And sent somewhere else, another sale again
+      delivery: delivering ? delivery : null,
     })
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
@@ -584,6 +619,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         // Redemption at the counter is a later phase; accrual happens
         // server-side off the attached customer
         pointsToRedeem: 0,
+        // Where it goes; the pin only when the caller shared one
+        delivery:
+          delivering && delivery
+            ? {
+                address: delivery.address,
+                phone: delivery.phone,
+                latitude: delivery.latitude,
+                longitude: delivery.longitude,
+                building: delivery.building.trim() || null,
+                floor: delivery.floor.trim() || null,
+                apartment: delivery.apartment.trim() || null,
+                directions: delivery.directions.trim() || null,
+              }
+            : null,
       },
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
@@ -674,7 +723,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           size='icon'
           className='size-11'
           aria-label={t('clearSale')}
-          disabled={lines.length === 0 && !customer && !note}
+          disabled={lines.length === 0 && !customer && !note && !delivery}
           onClick={clear}
         >
           <Trash2 className='size-5' />
@@ -722,6 +771,45 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
           <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
         )}
+        {canDeliver &&
+          (delivering && delivery ? (
+            <div className='bg-muted mt-2 flex items-start gap-2 rounded-lg p-2.5 text-sm'>
+              <Bike className='text-muted-foreground mt-0.5 size-4 shrink-0' />
+              <button
+                type='button'
+                onClick={() => setDeliveryOpen(true)}
+                className='min-w-0 flex-1 text-start'
+                aria-label={t('deliveryChange')}
+              >
+                <span className='block truncate font-medium'>
+                  {[delivery.address, delivery.building].filter(Boolean).join(' · ')}
+                </span>
+                <span className='text-muted-foreground flex items-center gap-1 text-xs' dir='auto'>
+                  {delivery.latitude != null && <MapPin className='size-3' />}
+                  <span dir='ltr'>{delivery.phone}</span>
+                  {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
+                </span>
+              </button>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-9 shrink-0'
+                aria-label={t('deliveryNotADelivery')}
+                onClick={() => setDelivery(null)}
+              >
+                <X className='size-4' />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant='outline'
+              className='mt-2 h-12 w-full gap-2 text-base'
+              onClick={() => setDeliveryOpen(true)}
+            >
+              <Bike className='size-5' />
+              {t('deliverIt')}
+            </Button>
+          ))}
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
@@ -764,6 +852,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       )}
 
       <div className='flex flex-col gap-3 border-t p-3'>
+        {delivering && (
+          <div className='text-muted-foreground flex justify-between text-sm'>
+            <span>{t('deliveryFee')}</span>
+            <span className='tabular-nums'>
+              {deliveryFee > 0 ? money(deliveryFee) : t('deliveryFree')}
+            </span>
+          </div>
+        )}
         <Input
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -779,7 +875,13 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           }
           onClick={charge}
         >
-          <span>{addingToTicket ? t('addToTicket') : t('chargeAction')}</span>
+          <span>
+            {addingToTicket
+              ? t('addToTicket')
+              : delivering
+                ? t('deliverySend')
+                : t('chargeAction')}
+          </span>
           <span className='tabular-nums'>{money(total)}</span>
         </Button>
       </div>
@@ -957,6 +1059,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           setCustomizeItem(null)
         }}
       />
+      {canDeliver && (
+        <DeliveryDialog
+          open={deliveryOpen}
+          onOpenChange={setDeliveryOpen}
+          initial={delivery}
+          customer={customer}
+          itemsTotal={itemsTotal}
+          onSave={(saved, name) => {
+            setDelivery(saved)
+            // A caller off the street is known by the name they gave
+            if (!customer?.id) setCustomer({ id: null, name, phone: saved.phone })
+            setDeliveryOpen(false)
+          }}
+        />
+      )}
       <CustomerDialog
         open={customerOpen}
         onOpenChange={setCustomerOpen}

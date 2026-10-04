@@ -20,13 +20,14 @@ public class BranchSettingsQueries(OrderingContext context) : IBranchSettingsQue
         return row?.RequireSignInForTableOrders ?? false;
     }
 
-    public async Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId)
+    public async Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false)
     {
         var row = await context.BranchSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.BranchId == branchId);
 
-        return row is { IsDeliveryEnabled: true, IsOrderingEnabled: true, Latitude: { } lat, Longitude: { } lng, DeliveryRadiusKm: > 0 }
+        return row is { IsDeliveryEnabled: true, Latitude: { } lat, Longitude: { } lng, DeliveryRadiusKm: > 0 }
+            && (row.IsOrderingEnabled || evenWhilePaused)
             ? new DeliveryTerms(lat, lng, row.DeliveryRadiusKm.Value, row.DeliveryFee, row.DeliveryMinimumOrder)
             : null;
     }

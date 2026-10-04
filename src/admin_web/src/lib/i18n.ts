@@ -1002,6 +1002,8 @@ const webExtras = {
   sourceGuest: { en: "QR guest", ar: "ضيف QR" },
   sourcePos: { en: "Till", ar: "الكاشير" },
   sourceTalabat: { en: "Talabat", ar: "طلبات" },
+  sourceDelivery: { en: "Delivery", ar: "توصيل" },
+  sourcePhoneDelivery: { en: "Phone delivery", ar: "توصيل بالتليفون" },
   platformRiderAt: { en: "Rider at {time}", ar: "المندوب {time}" },
   platformCollect: { en: "Customer collects", ar: "يستلمها العميل" },
   platformOwnRider: { en: "Our rider", ar: "مندوبنا" },

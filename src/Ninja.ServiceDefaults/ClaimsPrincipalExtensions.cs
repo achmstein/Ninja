@@ -43,6 +43,13 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     public static readonly string[] RiderRoles = ["Admin", "Owner", "Rider"];
 
+    /// <summary>
+    /// The roles the "DeliveryProgress" policy accepts: a rider saying their
+    /// delivery left or arrived, and the till saying it for them when their
+    /// phone cannot (a flat battery, no app) — the cash still has to come in.
+    /// </summary>
+    public static readonly string[] DeliveryProgressRoles = [.. RiderRoles, "Cashier"];
+
     // Reads the "role" claims directly: ClaimsPrincipal's own IsInRole would
     // win over the extension and look at the standard role claim type
     public static bool IsPosStaff(this ClaimsPrincipal principal) =>

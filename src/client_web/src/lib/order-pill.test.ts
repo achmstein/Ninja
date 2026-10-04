@@ -5,6 +5,8 @@ import {
   LINGER_MS,
   NOT_FOUND_AFTER_MS,
   nextCheck,
+  noteFor,
+  PILL_WORDS,
   pickOrder,
   pillVisible,
   STAGE_ICON,
@@ -124,6 +126,14 @@ describe('nextCheck', () => {
 
 describe('a delivery', () => {
   const delivered = (stage: string): PillOrder => ({ status: 'Confirmed', delivery: { stage } })
+
+  it('names the rider on its way, when the till said who took it', () => {
+    const notes = STAGE_LABEL
+    const withRider: PillOrder = { status: 'Confirmed', delivery: { stage: 'OnTheWay', riderName: ' Emam ' } }
+    expect(noteFor('onTheWay', withRider, notes)).toEqual({ words: PILL_WORDS.onTheWayRiderNote, rider: 'Emam' })
+    expect(noteFor('onTheWay', delivered('OnTheWay'), notes).rider).toBeNull()
+    expect(words(PILL_WORDS.onTheWayRiderNote, 'en', false).replaceAll('{rider}', 'Emam')).toBe('Emam is on the way to you. Pay them at the door.')
+  })
 
   it('is followed to the door: made, on its way, delivered, before it is paid', () => {
     expect(stageOf(delivered('Waiting'))).toBe('preparing')

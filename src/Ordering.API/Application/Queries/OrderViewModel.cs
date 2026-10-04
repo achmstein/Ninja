@@ -68,8 +68,9 @@ public record PlatformOrderView
 /// </summary>
 public record DeliveryView
 {
-    public double Latitude { get; init; }
-    public double Longitude { get; init; }
+    /// <summary>The pin; null for an address the till took over the phone, found by its words.</summary>
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
     public string Address { get; init; } = string.Empty;
     public string? Building { get; init; }
     public string? Floor { get; init; }
@@ -78,7 +79,7 @@ public record DeliveryView
     /// <summary>The number the rider calls at the door.</summary>
     public string Phone { get; init; } = string.Empty;
     public decimal Fee { get; init; }
-    public int DistanceMeters { get; init; }
+    public int? DistanceMeters { get; init; }
     /// <summary>"Waiting", "Assigned", "OnTheWay" or "Delivered".</summary>
     public string Stage { get; init; } = string.Empty;
     public string? RiderUserId { get; init; }

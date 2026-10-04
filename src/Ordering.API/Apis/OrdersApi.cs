@@ -444,6 +444,55 @@ public static partial class OrdersApi
         // cashier standing there knows whether the place takes customers
         var posPlace = request.PlaceId is int posPlaceId ? await services.Places.FindAsync(posPlaceId) : null;
 
+        // A delivery taken over the phone: the branch must deliver, but the
+        // cashier knows the streets, so neither its radius nor its minimum is
+        // held against the order (the till warns); the fee is the branch's
+        Delivery? delivery = null;
+        if (request.Delivery is { } wanted)
+        {
+            if (request.PlaceId is not null || request.TicketId is not null)
+            {
+                return TypedResults.BadRequest("A delivery goes on a bill of its own, not to a table or an open bill.");
+            }
+
+            if (request.Replay)
+            {
+                return TypedResults.BadRequest("A delivery can't be replayed: it hasn't left yet.");
+            }
+
+            if (!attachCustomer && string.IsNullOrWhiteSpace(request.CustomerName))
+            {
+                return TypedResults.BadRequest("A delivery needs the customer's name.");
+            }
+
+            var terms = await services.BranchSettings.GetDeliveryTermsAsync(branchId, evenWhilePaused: true);
+            if (terms is null)
+            {
+                return TypedResults.BadRequest("This branch doesn't deliver.");
+            }
+
+            var phone = PhoneRules.Normalize(wanted.Phone, services.Country.Code);
+            if (!PhoneRules.IsValid(phone, services.Country.Code))
+            {
+                return TypedResults.BadRequest("A valid phone number is required for delivery.");
+            }
+
+            int? distance = wanted is { Latitude: { } lat, Longitude: { } lng }
+                ? Geo.DistanceMeters(terms.Latitude, terms.Longitude, lat, lng)
+                : null;
+
+            try
+            {
+                delivery = new Delivery(
+                    wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor,
+                    wanted.Apartment, wanted.Directions, phone!, terms.Fee, distance);
+            }
+            catch (OrderingDomainException ex)
+            {
+                return TypedResults.BadRequest(ex.Message);
+            }
+        }
+
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
             var command = new CreateOrderCommand(
@@ -461,7 +510,8 @@ public static partial class OrdersApi
                 placeId: request.PlaceId,
                 // The projection fills in what the till left out
                 placeKind: request.PlaceKind ?? posPlace?.Kind,
-                placeName: request.PlaceName ?? posPlace?.Name);
+                placeName: request.PlaceName ?? posPlace?.Name,
+                delivery: delivery);
 
             try
             {
@@ -1038,7 +1088,26 @@ public record PosOrderRequest(
     /// straight away, with no stock check and nothing for the kitchen to
     /// accept. Takes <see cref="PlacedAt"/>.
     /// </summary>
-    bool Replay = false);
+    bool Replay = false,
+    /// <summary>A delivery the till took over the phone; it lands on a bill of its own, settled when the rider's cash comes in.</summary>
+    PosDeliveryRequest? Delivery = null);
+
+/// <summary>
+/// Where a delivery the till took over the phone goes: the address in the
+/// customer's words, and a pin only when they sent one (a shared location).
+/// Without one the rider finds the door by the words and the phone.
+/// </summary>
+/// <param name="Phone">The number the rider calls at the door.</param>
+/// <param name="Latitude">With <paramref name="Longitude"/>, the pin; both or neither.</param>
+public record PosDeliveryRequest(
+    string Address,
+    string Phone,
+    double? Latitude = null,
+    double? Longitude = null,
+    string? Building = null,
+    string? Floor = null,
+    string? Apartment = null,
+    string? Directions = null);
 
 /// <summary>
 /// The created order's id — what the POS uses to find the ticket the order

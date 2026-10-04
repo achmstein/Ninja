@@ -228,6 +228,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navigate => 'الطريق';
 
   @override
+  String get noPin =>
+      'من غير لوكيشن: الخريطة بتدوّر بالعنوان. اتصل لو مش لاقي الباب.';
+
+  @override
   String get call => 'اتصل';
 
   @override

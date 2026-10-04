@@ -25,7 +25,7 @@ import { QueueCard } from '@/components/queue-card'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 import {
   formatEgp,
-  orderSourceKeys,
+  orderSourceKey,
   orderUrgency,
   relativeTime,
   urgencyTextClass,
@@ -70,7 +70,7 @@ export function PendingOrderCard({
   const urgency = orderUrgency(summary.date, nowMs)
   const items = summary.items ?? []
   const loyaltyDiscount = Number(summary.loyaltyDiscount ?? 0)
-  const sourceKey = summary.source ? orderSourceKeys[summary.source] : undefined
+  const sourceKey = orderSourceKey(summary)
   // A guest at a table: how many orders this device has had confirmed here
   // before. A first-timer is worth a look before the kitchen starts.
   const ordersBefore =

@@ -94,8 +94,8 @@ export function usePlaceOrder({
         toast.info(t('orderStillWaiting'))
         return
       }
-      // A delivery the branch turned down says why (too far, too little, not delivering now)
-      if (isAxiosError(error) && error.response?.status === 400 && delivery.active && typeof error.response.data === 'string') {
+      // An order the branch turned down says why (too far, too little, not delivering now, no table)
+      if (isAxiosError(error) && error.response?.status === 400 && typeof error.response.data === 'string' && error.response.data.trim()) {
         toast.error(error.response.data)
         return
       }

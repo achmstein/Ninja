@@ -29,8 +29,12 @@ public class ValidatorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest
         {
             _logger.LogWarning("Validation errors - {CommandType} - Command: {@Command} - Errors: {@ValidationErrors}", typeName, request, failures);
 
+            // The reasons themselves are the message: the API answers a refused
+            // order with it, and the app shows it ("A table or room is required
+            // to order as a guest."), not the name of the command
             throw new OrderingDomainException(
-                $"Command Validation Errors for type {typeof(TRequest).Name}", new ValidationException("Validation exception", failures));
+                string.Join(" ", failures.Select(f => f.ErrorMessage).Distinct()),
+                new ValidationException("Validation exception", failures));
         }
 
         return await next();

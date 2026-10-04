@@ -231,6 +231,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navigate => 'Navigate';
 
   @override
+  String get noPin =>
+      'No pin: Maps looks for the address. Call if you can\'t find the door.';
+
+  @override
   String get call => 'Call';
 
   @override

@@ -155,6 +155,91 @@ public sealed class DeliveryScenarios
         Assert.AreEqual(HttpStatusCode.BadRequest, badPhone);
     }
 
+    /// <summary>The till's own branch, paused for customers, so its scenario touches no other</summary>
+    private const int PhoneOrders = 9;
+
+    private static async Task<(HttpStatusCode Status, string Body)> RingUpAsync(Caller till, object order)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{Orders}/pos?{Version}")
+        {
+            Content = System.Net.Http.Json.JsonContent.Create(order, options: Caller.Json),
+        };
+        request.Headers.Add("x-requestid", Guid.NewGuid().ToString());
+        using var response = await till.Http.SendAsync(request);
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
+    private static object PhoneOrder(object delivery, decimal price = 60, string? customerName = "Mona", int? ticketId = null) => new
+    {
+        customerName,
+        ticketId,
+        items = new[]
+        {
+            new { id = "1", productId = 1, productName = new { en = "Family meal", ar = "وجبة عائلية" }, unitPrice = price, oldUnitPrice = price, quantity = 1, pictureUrl = (string?)null },
+        },
+        delivery,
+    };
+
+    [TestMethod]
+    public async Task The_till_takes_a_delivery_over_the_phone_without_a_pin_even_while_customers_are_paused()
+    {
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var handler = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await handler.Handle(new BranchSettingsChangedIntegrationEvent(
+                PhoneOrders, IsOrderingEnabled: false, IsReservationsEnabled: true, RequireSignInForTableOrders: false,
+                IsDeliveryEnabled: true, Latitude: Lat, Longitude: Lng, DeliveryRadiusKm: 5, DeliveryFee: 20, DeliveryMinimumOrder: 100));
+        }
+        var till = Suite.Ordering.As(Persona.Cashier(PhoneOrders), PhoneOrders);
+        var phone = $"010{Random.Shared.Next(10_000_000, 99_999_999)}";
+
+        var quote = await till.GetAsync<TillQuoteView>($"{Orders}/delivery/till-quote?{Version}");
+        Assert.IsTrue(quote.Delivers, "pausing the customers does not stop the till");
+        Assert.IsTrue(quote.InRange, "without a pin the cashier knows the streets");
+        Assert.IsNull(quote.DistanceMeters);
+        Assert.AreEqual(20m, quote.Fee);
+
+        // The location the caller shared, pasted as it came
+        var shared = await till.GetAsync<TillQuoteView>(
+            $"{Orders}/delivery/till-quote?location={Uri.EscapeDataString($"https://maps.google.com/?q={NearLat},{NearLng}")}&{Version}");
+        Assert.AreEqual(NearLat, shared.Latitude);
+        Assert.IsTrue(shared.InRange);
+        Assert.IsTrue(shared.DistanceMeters is > 1000 and < 3000, $"{shared.DistanceMeters} m");
+
+        var words = await till.GetAsync<TillQuoteView>($"{Orders}/delivery/till-quote?location=Maadi%20road%209&{Version}");
+        Assert.IsFalse(words.LocationRead, "words are not a location");
+
+        // Words only, under the minimum: the cashier's call, not the server's
+        var (ok, okBody) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", building = "12", directions = "Blue gate", phone }));
+        Assert.AreEqual(HttpStatusCode.OK, ok, okBody);
+
+        // A pin past the radius goes too; the till warned
+        var (far, farBody) = await RingUpAsync(till, PhoneOrder(new { address = "Maadi", phone, latitude = FarLat, longitude = FarLng }));
+        Assert.AreEqual(HttpStatusCode.OK, far, farBody);
+
+        var known = await till.GetAsync<List<KnownAddress>>($"{Orders}/delivery/known-addresses?phone={phone}&{Version}");
+        CollectionAssert.AreEquivalent(new[] { "Maadi", "Qasr El Nil St" }, known.Select(a => a.Address).ToArray(), "the caller's doors, each once");
+        Assert.IsNull(known.Single(a => a.Address == "Qasr El Nil St").Latitude);
+
+        var (noName, noNameBody) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone }, customerName: null));
+        Assert.AreEqual(HttpStatusCode.BadRequest, noName);
+        Assert.Contains("customer's name", noNameBody);
+
+        var (onABill, _) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone }, ticketId: 1));
+        Assert.AreEqual(HttpStatusCode.BadRequest, onABill, "a delivery is a bill of its own");
+
+        var (badPhone, _) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone = "12" }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, badPhone);
+
+        var (halfPin, _) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", phone, latitude = NearLat }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, halfPin);
+
+        var (notDelivering, _) = await RingUpAsync(
+            Suite.Ordering.As(Persona.Cashier(NotDelivering), NotDelivering),
+            PhoneOrder(new { address = "Qasr El Nil St", phone }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, notDelivering);
+    }
+
     [TestMethod]
     public async Task A_rider_sees_their_own_deliveries_and_the_till_its_riders()
     {
@@ -181,8 +266,13 @@ public sealed class DeliveryScenarios
         var (customerToRider, _) = await customer.RefusedAsync(HttpMethod.Get, $"{Orders}/deliveries/mine?{Version}");
         Assert.AreEqual(HttpStatusCode.Forbidden, customerToRider);
 
-        var (tillMarksOut, _) = await till.RefusedAsync(HttpMethod.Put, $"{Orders}/1/delivery/out?{Version}");
-        Assert.AreEqual(HttpStatusCode.Forbidden, tillMarksOut, "only a rider (or an admin standing in) says it left");
+        // The till may say it left or arrived for a rider whose phone cannot;
+        // the door lets it in (the order here is none, so: not found)
+        var (tillMarksOut, _) = await till.RefusedAsync(HttpMethod.Put, $"{Orders}/999999/delivery/out?{Version}");
+        Assert.AreEqual(HttpStatusCode.NotFound, tillMarksOut, "the till stands in for its riders");
+
+        var (customerMarksOut, _) = await customer.RefusedAsync(HttpMethod.Put, $"{Orders}/999999/delivery/out?{Version}");
+        Assert.AreEqual(HttpStatusCode.Forbidden, customerMarksOut, "a customer never says it left");
 
         var (riderAssigns, _) = await rider.RefusedAsync(HttpMethod.Put, $"{Orders}/1/delivery/rider?{Version}", new { riderUserId = "x", riderName = "x" });
         Assert.AreEqual(HttpStatusCode.Forbidden, riderAssigns, "a rider does not hand out deliveries");
@@ -196,3 +286,7 @@ public sealed class DeliveryScenarios
 }
 
 public record RiderStatusView(string UserId, string Name, bool OnDuty, int Out);
+
+public record TillQuoteView(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, double? Latitude, double? Longitude, bool LocationRead);
+
+public record KnownAddress(string? Label, double? Latitude, double? Longitude, string Address, string? Building, string? Phone, DateTime? LastDeliveredAt);

@@ -49,6 +49,18 @@ void main() {
       expect(order.phoneUri.toString(), 'tel:01001234567');
     });
 
+    test('an address the till took over the phone, without a pin, is found by its words', () {
+      final json = _json();
+      (json['delivery'] as Map)
+        ..['latitude'] = null
+        ..['longitude'] = null
+        ..['address'] = 'Maadi, Road 9';
+      final order = DeliveryOrder.fromJson(json);
+      expect(order.hasPin, isFalse);
+      expect(order.latitude, isNull);
+      expect(order.directionsUri.toString(), 'https://www.google.com/maps/dir/?api=1&destination=Maadi%2C+Road+9');
+    });
+
     test('an unknown stage is one still waiting', () {
       expect(DeliveryOrder.fromJson(_json(stage: 'Something')).stage, DeliveryStage.waiting);
     });

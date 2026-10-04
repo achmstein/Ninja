@@ -15,6 +15,7 @@ import {
   PILL_WORDS,
   pickOrder,
   LINGER_MS,
+  noteFor,
   pillVisible,
   STAGE_LABEL,
   stageOf,
@@ -138,6 +139,8 @@ export function OrderPill() {
   const say = (w: Parameters<typeof words>[0]) => words(w, language, standard, businessName)
   const items = order?.items ?? []
   const total = order?.total
+  const note = noteFor(stage, order, NOTES)
+  const noteText = say(note.words).replaceAll('{rider}', note.rider ?? '')
   const told = useRef<PillStage | null>(null)
   useEffect(() => {
     if (!visible) {
@@ -153,7 +156,7 @@ export function OrderPill() {
         type: TYPES[stage],
         title: orderNumber != null ? `${say(STAGE_LABEL[stage])} · #${orderNumber}` : say(STAGE_LABEL[stage]),
         icon: <Icon className='size-4' />,
-        description: <OrderDetails note={say(NOTES[stage])} items={items} total={total != null && Number(total) > 0 ? price(total) : null} />,
+        description: <OrderDetails note={noteText} items={items} total={total != null && Number(total) > 0 ? price(total) : null} />,
         button: { title: say(PILL_WORDS.seeBills), onClick: () => void navigate({ to: '/bills' }) },
       },
       ANNOUNCE_MS

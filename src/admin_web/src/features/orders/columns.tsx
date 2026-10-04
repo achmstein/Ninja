@@ -14,7 +14,7 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { PlatformBadge } from './components/platform-badge'
-import { getOrderStatus, isCancelled, orderSourceKeys } from './status'
+import { getOrderStatus, isCancelled, orderSourceKey } from './status'
 
 const columnHelper = createAppColumnHelper<OrderSummary>()
 
@@ -43,7 +43,7 @@ function OrderStatus({ status, t }: { status?: string | null; t: Translate }) {
 /** Where it came from: a delivery platform by its logo, else a quiet word */
 function OrderSource({ order, t }: { order: OrderSummary; t: Translate }) {
   if (order.platform) return <PlatformBadge platform={order.platform} />
-  const key = order.source ? orderSourceKeys[order.source] : null
+  const key = orderSourceKey(order)
   return key ? (
     <Badge variant='muted'>{t(key)}</Badge>
   ) : (

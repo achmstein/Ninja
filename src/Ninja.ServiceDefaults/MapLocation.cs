@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Ninja.Tenant.API.Services;
+namespace Ninja.ServiceDefaults;
 
 /// <summary>A point on the map, in degrees.</summary>
 public readonly record struct GeoPoint(double Latitude, double Longitude);
 
 /// <summary>
-/// Where a branch is, read from what an owner pastes: its Google Maps link
+/// Where a place is, read from what someone pastes (an owner their branch, a
+/// cashier the location a caller shared): its Google Maps link
 /// (long or short, a pin or a place) or plain coordinates ("30.0444, 31.2357").
 /// A short link is followed to the long one it stands for, then read.
 /// </summary>

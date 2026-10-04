@@ -99,6 +99,10 @@
   "floor": "Floor",
   "apartment": "Apt",
   "navigate": "Navigate",
+  "noPin": "No pin: Maps looks for the address. Call if you can't find the door.",
+  "@noPin": {
+    "description": "Under an address the till took over the phone without a shared location"
+  },
   "call": "Call",
   "collect": "Collect {amount}",
   "@collect": {

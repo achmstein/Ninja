@@ -124,6 +124,8 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                     ),
                     if (order.directions != null)
                       Text('"${order.directions}"', style: theme.typography.sm.copyWith(color: muted, fontStyle: FontStyle.italic)),
+                    // Taken over the phone without a shared location: Maps searches the words
+                    if (!order.hasPin) Text(l10n.noPin, style: theme.typography.sm.copyWith(color: muted)),
                   ],
                 ),
               ),

@@ -49,6 +49,36 @@ export type SaleCustomer = {
 }
 
 /**
+ * Where a sale the till took over the phone goes. The words are what the
+ * caller said; the pin only when they shared their location (a pasted map
+ * link, read by Ordering into `latitude`/`longitude`).
+ */
+export type SaleDelivery = {
+  address: string
+  building: string
+  floor: string
+  apartment: string
+  directions: string
+  phone: string
+  /** What the cashier pasted: a Google Maps link or coordinates */
+  location: string
+  latitude: number | null
+  longitude: number | null
+}
+
+export const emptyDelivery: SaleDelivery = {
+  address: '',
+  building: '',
+  floor: '',
+  apartment: '',
+  directions: '',
+  phone: '',
+  location: '',
+  latitude: null,
+  longitude: null,
+}
+
+/**
  * A line's unit price before its options. The line's `price` has them in it
  * (what the pad shows); Ordering adds them itself, so this is what it is sent.
  */
@@ -99,6 +129,8 @@ type SaleState = {
   lines: SaleLine[]
   note: string
   customer: SaleCustomer | null
+  /** A walk-in sale that goes out with a rider instead; never on an open bill. */
+  delivery: SaleDelivery | null
   /** The bill these lines are for: a ticket id, or null for a walk-in sale. */
   target: number | null
   /**
@@ -111,6 +143,7 @@ type SaleState = {
   setQuantity: (key: string, quantity: number) => void
   setNote: (note: string) => void
   setCustomer: (customer: SaleCustomer | null) => void
+  setDelivery: (delivery: SaleDelivery | null) => void
   clear: () => void
 }
 
@@ -120,12 +153,13 @@ export const useSale = create<SaleState>()(
       lines: [],
       note: '',
       customer: null,
+      delivery: null,
       target: null,
       setTarget: (target) =>
         set((state) =>
           state.target === target
             ? {}
-            : { target, lines: [], note: '', customer: null }
+            : { target, lines: [], note: '', customer: null, delivery: null }
         ),
       add: (line) =>
         set((state) => {
@@ -153,7 +187,8 @@ export const useSale = create<SaleState>()(
         })),
       setNote: (note) => set({ note }),
       setCustomer: (customer) => set({ customer }),
-      clear: () => set({ lines: [], note: '', customer: null }),
+      setDelivery: (delivery) => set({ delivery }),
+      clear: () => set({ lines: [], note: '', customer: null, delivery: null }),
     }),
     // Survives an accidental refresh mid-sale; cleared when the sale lands
     { name: 'ninja-pos-sale' }

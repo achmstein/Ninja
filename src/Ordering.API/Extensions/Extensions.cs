@@ -76,6 +76,8 @@ internal static class Extensions
             .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"));
         services.Configure<Ninja.Ordering.API.Talabat.TalabatOptions>(builder.Configuration.GetSection(Ninja.Ordering.API.Talabat.TalabatOptions.Section));
         services.AddHttpClient(Ninja.Ordering.API.Talabat.PlatformUpdateSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(20));
+        // The till reads a caller's shared short map link by following it
+        services.AddHttpClient(DeliveryApi.MapLinkClient, client => client.Timeout = TimeSpan.FromSeconds(5));
         services.AddHostedService<Ninja.Ordering.API.Talabat.PlatformUpdateSender>();
     }
 

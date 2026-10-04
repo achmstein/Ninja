@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Banknote, Bike, Check, CircleDot, Clock, MapPin, UserRound, X } from 'lucide-react'
-import type { DeliveryOrder, RiderView } from '@/api/ordering/types.gen'
+import type { DeliveryOrder } from '@/api/ordering/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { relativeTime } from '@/features/orders/status'
 import { useNowMs } from '@/features/orders/use-pending-orders'
 import { DeliveryDetails, useAddressLine } from './delivery-details'
-import { laneOf, useDeliveries, useDeliveryActions, useRiders, type DeliveryLane } from './use-deliveries'
+import { laneOf, useDeliveries, useDeliveryActions, useRiders, type DeliveryLane, type TillRider } from './use-deliveries'
 
 const LANES: DeliveryLane[] = ['waiting', 'withRider', 'cashDue']
 
@@ -66,46 +66,49 @@ function DeliveryCard({ order, onOpen }: { order: DeliveryOrder; onOpen: () => v
         lane === 'cashDue' && 'border-emerald-500/70',
       )}
     >
-      <div className='flex items-center gap-2'>
+      {/* Who and what to collect; where; then how it stands and since when.
+          Each line holds one thing, so no language's longer words push
+          another out of the card */}
+      <div className='flex items-baseline gap-2'>
         <span className='truncate text-base font-semibold'>{order.customerName || t('guest')}</span>
-        <span className='text-muted-foreground ms-auto text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
+        <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
+        <span className='ms-auto shrink-0 text-sm font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
-      <div className='text-muted-foreground flex items-center gap-1.5 truncate text-sm'>
+      <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
         <MapPin className='size-3.5 shrink-0' />
         <span className='truncate'>{line(d)}</span>
       </div>
-      <div className='flex items-center gap-2 text-sm'>
+      <div className='flex items-start gap-2 text-sm'>
         <StageChip order={order} />
-        <span className='text-muted-foreground ms-auto tabular-nums'>
-          {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)} · {money(order.total)}
+        <span className='text-muted-foreground ms-auto shrink-0 whitespace-nowrap'>
+          {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)}
         </span>
       </div>
     </button>
   )
 }
 
+/**
+ * Where the delivery has got to, beside the time: a long rider name wraps
+ * under it rather than being cut from the wrong end in Arabic, and the icon
+ * keeps its size on the first line
+ */
 function StageChip({ order }: { order: DeliveryOrder }) {
   const t = useT()
   const d = order.delivery!
   const lane = laneOf(order)
-  if (lane === 'waiting')
-    return (
-      <span className='flex items-center gap-1 font-medium text-amber-600 dark:text-amber-500'>
-        <Clock className='size-3.5' />
-        {order.readyAt ? t('deliveryReadyNoRider') : t('deliveryNoRider')}
-      </span>
-    )
-  if (lane === 'cashDue')
-    return (
-      <span className='flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-500'>
-        <Banknote className='size-3.5' />
-        {t('deliveryCashWith', { name: d.riderName ?? '' })}
-      </span>
-    )
+  const [Icon, text, tone] =
+    lane === 'waiting'
+      ? [Clock, order.readyAt ? t('deliveryReadyNoRider') : t('deliveryNoRider'), 'text-amber-600 dark:text-amber-500']
+      : lane === 'cashDue'
+        ? [Banknote, t('deliveryCashWith', { name: d.riderName ?? '' }), 'text-emerald-600 dark:text-emerald-500']
+        : d.outAt
+          ? [Bike, t('deliveryOnTheWayWith', { name: d.riderName ?? '' }), '']
+          : [CircleDot, t('deliveryWith', { name: d.riderName ?? '' }), '']
   return (
-    <span className='flex items-center gap-1 font-medium'>
-      {d.outAt ? <Bike className='size-3.5' /> : <CircleDot className='size-3.5' />}
-      {d.outAt ? t('deliveryOnTheWayWith', { name: d.riderName ?? '' }) : t('deliveryWith', { name: d.riderName ?? '' })}
+    <span className={cn('flex min-w-0 items-start gap-1 font-medium', tone)}>
+      <Icon className='mt-[0.2rem] size-3.5 shrink-0' />
+      <span>{text}</span>
     </span>
   )
 }
@@ -115,7 +118,7 @@ function DeliveryDialog({ order, onOpenChange }: { order: DeliveryOrder | null; 
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
-  const { assign, unassign, cashIn, busy } = useDeliveryActions()
+  const { assign, unassign, cashIn, markOut, markDelivered, busy } = useDeliveryActions()
   const lane = order ? laneOf(order) : null
   const out = !!order?.delivery?.outAt
   const choosing = lane === 'waiting' || (lane === 'withRider' && !out)
@@ -134,9 +137,12 @@ function DeliveryDialog({ order, onOpenChange }: { order: DeliveryOrder | null; 
         {order?.delivery && <DeliveryDetails delivery={order.delivery} />}
         {order && (
           <div className='flex flex-col gap-1 text-sm'>
+            {/* The count and the name apart, so an English dish name in Arabic
+                still reads count first */}
             {(order.items ?? []).map((item, i) => (
-              <span key={i}>
-                {toNumber(item.units)}× {localized(item.productName)}
+              <span key={i} className='flex gap-1.5'>
+                <span className='tabular-nums'>{toNumber(item.units)}×</span>
+                <span>{localized(item.productName)}</span>
               </span>
             ))}
           </div>
@@ -169,6 +175,25 @@ function DeliveryDialog({ order, onOpenChange }: { order: DeliveryOrder | null; 
           </div>
         )}
 
+        {/* For a rider whose phone cannot say it (a flat battery, no app):
+            the till says it left, then that it arrived, so the cash can come in */}
+        {lane === 'withRider' && order?.delivery && (
+          <div className='flex flex-col gap-1.5 border-t pt-3'>
+            <span className='text-muted-foreground text-xs'>{t('deliveryForRider', { name: order.delivery.riderName ?? '' })}</span>
+            {out ? (
+              <Button variant='outline' className='h-11' disabled={busy} onClick={() => markDelivered(id)}>
+                <Check className='size-4' />
+                {t('deliveryMarkDelivered')}
+              </Button>
+            ) : (
+              <Button variant='outline' className='h-11' disabled={busy} onClick={() => markOut(id)}>
+                <Bike className='size-4' />
+                {t('deliveryMarkOut')}
+              </Button>
+            )}
+          </div>
+        )}
+
         {lane === 'cashDue' && (
           <Button
             size='lg'
@@ -188,7 +213,7 @@ function DeliveryDialog({ order, onOpenChange }: { order: DeliveryOrder | null; 
   )
 }
 
-function RiderRow({ rider, current, disabled, onPick }: { rider: RiderView; current: boolean; disabled: boolean; onPick: () => void }) {
+function RiderRow({ rider, current, disabled, onPick }: { rider: TillRider; current: boolean; disabled: boolean; onPick: () => void }) {
   const t = useT()
   const out = toNumber(rider.out)
   return (
@@ -209,7 +234,13 @@ function RiderRow({ rider, current, disabled, onPick }: { rider: RiderView; curr
       <span className='min-w-0 flex-1'>
         <span className='block truncate font-medium'>{rider.name}</span>
         <span className='text-muted-foreground block text-xs'>
-          {rider.onDuty ? (out > 0 ? t('riderOut', { count: out }) : t('riderFree')) : t('riderOffDuty')}
+          {!rider.signedIn
+            ? t('riderNotSignedIn')
+            : rider.onDuty
+              ? out > 0
+                ? t('riderOut', { count: out })
+                : t('riderFree')
+              : t('riderOffDuty')}
         </span>
       </span>
       {current && <Check className='text-primary size-5' />}

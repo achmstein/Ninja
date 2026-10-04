@@ -158,8 +158,8 @@ export type DeliveryRequest = {
 };
 
 export type DeliveryView = {
-    latitude?: number | string;
-    longitude?: number | string;
+    latitude?: null | number | string;
+    longitude?: null | number | string;
     address?: string;
     building?: null | string;
     floor?: null | string;
@@ -167,7 +167,7 @@ export type DeliveryView = {
     directions?: null | string;
     phone?: string;
     fee?: number | string;
-    distanceMeters?: number | string;
+    distanceMeters?: null | number | string;
     stage?: string;
     riderUserId?: null | string;
     riderName?: null | string;
@@ -272,6 +272,19 @@ export type KitchenTicket = {
     customerName?: null | string;
     customerNote?: null | string;
     items?: Array<KitchenOrderItem>;
+};
+
+export type KnownAddressView = {
+    label: null | string;
+    latitude: null | number | string;
+    longitude: null | number | string;
+    address: string;
+    building: null | string;
+    floor: null | string;
+    apartment: null | string;
+    directions: null | string;
+    phone: null | string;
+    lastDeliveredAt: null | string;
 };
 
 export type LocalizedText = {
@@ -431,6 +444,17 @@ export type PlatformOrderView = {
     pickedUpAt?: null | string;
 };
 
+export type PosDeliveryRequest = {
+    address: string;
+    phone: string;
+    latitude?: null | number | string;
+    longitude?: null | number | string;
+    building?: null | string;
+    floor?: null | string;
+    apartment?: null | string;
+    directions?: null | string;
+};
+
 export type PosOrderRequest = {
     items: Array<BasketItem>;
     customerNote?: null | string;
@@ -444,6 +468,7 @@ export type PosOrderRequest = {
     placeKind?: null | string;
     placeName?: null | LocalizedText;
     replay?: boolean;
+    delivery?: null | PosDeliveryRequest;
 };
 
 export type PosOrderResponse = {
@@ -481,6 +506,18 @@ export type SetOrderReadyRequest = {
 };
 
 export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
+
+export type TillDeliveryQuote = {
+    delivers: boolean;
+    inRange: boolean;
+    distanceMeters: null | number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    radiusKm: number | string;
+    latitude: null | number | string;
+    longitude: null | number | string;
+    locationRead: boolean;
+};
 
 export type GetOrdersByUserData = {
     body?: never;
@@ -1589,6 +1626,73 @@ export type UpdateMyAddressResponses = {
 };
 
 export type UpdateMyAddressResponse = UpdateMyAddressResponses[keyof UpdateMyAddressResponses];
+
+export type GetTillDeliveryQuoteData = {
+    body?: never;
+    path?: never;
+    query: {
+        location?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/till-quote';
+};
+
+export type GetTillDeliveryQuoteErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetTillDeliveryQuoteResponses = {
+    /**
+     * OK
+     */
+    200: TillDeliveryQuote;
+};
+
+export type GetTillDeliveryQuoteResponse = GetTillDeliveryQuoteResponses[keyof GetTillDeliveryQuoteResponses];
+
+export type GetKnownDeliveryAddressesData = {
+    body?: never;
+    path?: never;
+    query: {
+        customerUserId?: string;
+        phone?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/known-addresses';
+};
+
+export type GetKnownDeliveryAddressesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetKnownDeliveryAddressesResponses = {
+    /**
+     * OK
+     */
+    200: Array<KnownAddressView>;
+};
+
+export type GetKnownDeliveryAddressesResponse = GetKnownDeliveryAddressesResponses[keyof GetKnownDeliveryAddressesResponses];
 
 export type GetDeliveriesData = {
     body?: never;

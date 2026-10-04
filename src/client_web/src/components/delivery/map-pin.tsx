@@ -7,6 +7,9 @@ import { cn } from '@/lib/utils'
 /** Free street tiles, no key: OpenFreeMap's style, the same streets the riders' maps show */
 const STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 
+/** MapLibre's right-to-left shaping, fetched only when a map first opens */
+const RTL_TEXT = 'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js'
+
 /** Close enough to tell one building from the next */
 const STREET_ZOOM = 17
 
@@ -41,6 +44,8 @@ export function MapPicker({
     let disposed = false
     void Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')]).then(([{ default: maplibre }]) => {
       if (disposed || !box.current) return
+      // Arabic street names joined and right to left, not letter by letter backwards
+      if (maplibre.getRTLTextPluginStatus() === 'unavailable') void maplibre.setRTLTextPlugin(RTL_TEXT, true).catch(() => {})
       const m = new maplibre.Map({
         container: box.current,
         style: STYLE,
@@ -76,7 +81,8 @@ export function MapPicker({
 
   return (
     <div className={cn('bg-muted relative overflow-hidden rounded-[1.25rem]', className)}>
-      <div ref={box} className='absolute inset-0' />
+      {/* Sized by width and height, not inset: MapLibre's stylesheet makes its container position: relative */}
+      <div ref={box} className='size-full' />
       {!ready && (
         <div className='text-muted-foreground absolute inset-0 grid place-items-center'>
           <Loader2 className='size-5 animate-spin' />
