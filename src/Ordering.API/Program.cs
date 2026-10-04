@@ -23,7 +23,7 @@ var orders = app.NewVersionedApi("Orders");
 
 orders.MapOrdersApiV1()
       .MapKitchenOrderRoutes()
-      .MapDeliveryRoutes()
+      .MapDeliveryModule()
       .RequireAuthorization();
 
 // Talabat's orders, relayed by the platform; each endpoint takes only the platform's token

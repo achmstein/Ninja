@@ -32,8 +32,8 @@ internal static class Extensions
 
         services.AddTransient<IOrderingIntegrationEventService, OrderingIntegrationEventService>();
 
-        builder.AddRabbitMqEventBus("eventbus")
-               .AddEventBusSubscriptions();
+        var eventBus = builder.AddRabbitMqEventBus("eventbus");
+        eventBus.AddEventBusSubscriptions();
 
         services.AddHttpContextAccessor();
         services.AddTransient<IIdentityService, IdentityService>();
@@ -67,14 +67,11 @@ internal static class Extensions
         services.AddScoped<IPrintConnectorRepository, PrintConnectorRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
 
-        // Delivery: its numbers, the one policy both the app's and the till's orders are held to,
-        // the riders and the board, all from what Ordering keeps itself
-        services.Configure<DeliveryOptions>(builder.Configuration.GetSection(DeliveryOptions.Section));
+        // The business's switches, cached between the events that change them
         services.AddMemoryCache();
-        services.AddScoped<IDeliveryPolicy, DeliveryPolicy>();
-        services.AddScoped<ICustomerAddressBook, CustomerAddressBook>();
-        services.AddScoped<IRiderDirectory, RiderDirectory>();
-        services.AddScoped<IDeliveryBoardQueries, DeliveryBoardQueries>();
+
+        // The business's own delivery: a module of its own (Deliveries/DeliveryModule.cs)
+        builder.AddDeliveryModule(eventBus);
 
         // Background service for pending order reminders
         services.AddHostedService<Ninja.Ordering.API.BackgroundServices.PendingOrderReminderService>();
@@ -85,8 +82,6 @@ internal static class Extensions
             .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"));
         services.Configure<Ninja.Ordering.API.Talabat.TalabatOptions>(builder.Configuration.GetSection(Ninja.Ordering.API.Talabat.TalabatOptions.Section));
         services.AddHttpClient(Ninja.Ordering.API.Talabat.PlatformUpdateSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(20));
-        // The till reads a caller's shared short map link by following it: https, Google's hosts, a few hops
-        services.AddMapLinkClient();
         services.AddHostedService<Ninja.Ordering.API.Talabat.PlatformUpdateSender>();
     }
 
@@ -109,9 +104,6 @@ internal static class Extensions
 
         // The business's switches: whether it delivers at all (bought, and on)
         eventBus.AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>();
-
-        // Identity's staff accounts: the riders among them, who the till may give a delivery to
-        eventBus.AddSubscription<StaffAccountChangedIntegrationEvent, StaffAccountChangedIntegrationEventHandler>();
 
         // Spaces' places, projected locally: an order names a place and a
         // deactivated one is refused without a call across services

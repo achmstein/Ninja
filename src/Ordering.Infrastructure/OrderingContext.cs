@@ -1,6 +1,7 @@
 #nullable enable
 using Ninja.IntegrationEventLogEF;
 using Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate;
+using Ninja.Ordering.Infrastructure.Deliveries;
 using Ninja.Ordering.Infrastructure.Projections;
 
 namespace Ninja.Ordering.Infrastructure;

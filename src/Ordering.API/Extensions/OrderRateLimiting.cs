@@ -17,15 +17,6 @@ public static class OrderRateLimiting
 {
     public const string GuestCreatePolicy = "guest-order-create";
 
-    /// <summary>The anonymous delivery quote: per device or address, plenty for a customer moving a pin.</summary>
-    public const string DeliveryQuotePolicy = "delivery-quote";
-
-    /// <summary>A caller's earlier addresses, at the till: per staff account, enough for a busy phone line.</summary>
-    public const string KnownAddressesPolicy = "delivery-known-addresses";
-
-    private const int QuotesPerMinute = 60;
-    private const int KnownAddressLookupsPerMinute = 30;
-
     /// <summary>Orders one anonymous caller may place per <see cref="Window"/>.</summary>
     private const int GuestOrdersPerWindow = 10;
 
@@ -93,29 +84,7 @@ public static class OrderRateLimiting
                         QueueLimit = 0,
                     });
             });
-
-            options.AddPolicy(DeliveryQuotePolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    context.User.FindFirst("sub")?.Value
-                        ?? context.GetGuestId()
-                        ?? context.Connection.RemoteIpAddress?.ToString()
-                        ?? "unknown",
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = QuotesPerMinute,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0,
-                    }));
-
-            options.AddPolicy(KnownAddressesPolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    context.User.FindFirst("sub")?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = KnownAddressLookupsPerMinute,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0,
-                    }));
+            // The delivery module adds its own (DeliveryModule)
         });
 
         return services;
