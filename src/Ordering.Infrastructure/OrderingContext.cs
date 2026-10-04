@@ -25,6 +25,8 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<PrintConnector> PrintConnectors { get; set; }
     public DbSet<ConnectorPairing> ConnectorPairings { get; set; }
     public DbSet<PlatformUpdate> PlatformUpdates { get; set; }
+    public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+    public DbSet<RiderStatus> RiderStatuses { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -60,6 +62,8 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new PrintConnectorEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ConnectorPairingEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlatformUpdateEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new CustomerAddressEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new RiderStatusEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

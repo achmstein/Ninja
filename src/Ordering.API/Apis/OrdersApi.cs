@@ -220,13 +220,17 @@ public static partial class OrdersApi
             // that is for account holders — there is nobody to hand a guest's
             // order to and nothing tying it to a visit. Unless the business takes
             // guests' orders from anywhere: then it is theirs to collect, and
-            // the phone they left is how the counter reaches them.
+            // the phone they left is how the counter reaches them. A delivery
+            // says where to bring it: the address and the phone at the door.
             if (request.PlaceId is null)
             {
-                guestOrdersAnywhere = await services.TenantSettings.AllowsGuestOrdersAnywhereAsync();
-                if (!guestOrdersAnywhere)
+                if (request.Delivery is null)
                 {
-                    return TypedResults.BadRequest("A table or room is required to order as a guest.");
+                    guestOrdersAnywhere = await services.TenantSettings.AllowsGuestOrdersAnywhereAsync();
+                    if (!guestOrdersAnywhere)
+                    {
+                        return TypedResults.BadRequest("A table or room is required to order as a guest.");
+                    }
                 }
 
                 // One order at a time from away too, until the till answers it
@@ -295,6 +299,55 @@ public static partial class OrdersApi
             return TypedResults.BadRequest("This branch is not taking orders right now.");
         }
 
+        // A delivery: the branch must deliver, to here, for this much; the fee
+        // is the branch's, never the app's
+        Delivery? delivery = null;
+        if (request.Delivery is { } wanted)
+        {
+            if (request.PlaceId is not null)
+            {
+                return TypedResults.BadRequest("An order goes to a table or room, or is delivered — not both.");
+            }
+
+            var terms = await services.BranchSettings.GetDeliveryTermsAsync(branchId);
+            if (terms is null)
+            {
+                return TypedResults.BadRequest("This branch isn't delivering right now.");
+            }
+
+            var distance = Geo.DistanceMeters(terms.Latitude, terms.Longitude, wanted.Latitude, wanted.Longitude);
+            if (distance > terms.RadiusMeters)
+            {
+                return TypedResults.BadRequest("This address is outside the branch's delivery area.");
+            }
+
+            // Catalog holds every line to the menu's price before the order
+            // stands, so the prices sent here are the ones that count
+            if (request.Items.Sum(i => i.TotalPrice * i.Quantity) < terms.MinimumOrder)
+            {
+                return TypedResults.BadRequest($"Delivery needs an order of at least {terms.MinimumOrder:0.##}.");
+            }
+
+            var phone = PhoneRules.Normalize(
+                string.IsNullOrWhiteSpace(wanted.Phone) ? request.GuestPhone : wanted.Phone,
+                services.Country.Code);
+            if (!PhoneRules.IsValid(phone, services.Country.Code))
+            {
+                return TypedResults.BadRequest("A valid phone number is required for delivery.");
+            }
+
+            try
+            {
+                delivery = new Delivery(
+                    wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor,
+                    wanted.Apartment, wanted.Directions, phone!, terms.Fee, distance);
+            }
+            catch (OrderingDomainException ex)
+            {
+                return TypedResults.BadRequest(ex.Message);
+            }
+        }
+
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
             var createOrderCommand = new CreateOrderCommand(
@@ -316,7 +369,8 @@ public static partial class OrdersApi
                 placeKind: request.PlaceKind ?? place?.Kind,
                 placeName: request.PlaceName ?? place?.Name,
                 promoCode: request.PromoCode,
-                guestOrdersAnywhere: guestOrdersAnywhere);
+                guestOrdersAnywhere: guestOrdersAnywhere,
+                delivery: delivery);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
@@ -936,7 +990,24 @@ public record CreateOrderRequest(
     string? PlaceKind = null,
     LocalizedText? PlaceName = null,
     /// <summary>A promo code typed at checkout; quoted by Catalog beforehand, redeemed when the items check out.</summary>
-    string? PromoCode = null);
+    string? PromoCode = null,
+    /// <summary>Deliver it with the branch's own rider, to this address; null to eat in or collect.</summary>
+    DeliveryRequest? Delivery = null);
+
+/// <summary>
+/// Where a delivery goes: the pin on the map and the words that find the door.
+/// The fee and whether the branch goes that far are the server's to say.
+/// </summary>
+/// <param name="Phone">The number the rider calls at the door; a guest's checkout phone when left out.</param>
+public record DeliveryRequest(
+    double Latitude,
+    double Longitude,
+    string Address,
+    string? Building = null,
+    string? Floor = null,
+    string? Apartment = null,
+    string? Directions = null,
+    string? Phone = null);
 
 /// <summary>
 /// Request model for a counter sale keyed in at the POS. The cashier is the

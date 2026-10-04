@@ -63,6 +63,55 @@ public record PlatformOrderView
 }
 
 /// <summary>
+/// The business's own delivery of an order, as the till, the rider and the
+/// customer read it: where it goes, what it adds, and where it has got to.
+/// </summary>
+public record DeliveryView
+{
+    public double Latitude { get; init; }
+    public double Longitude { get; init; }
+    public string Address { get; init; } = string.Empty;
+    public string? Building { get; init; }
+    public string? Floor { get; init; }
+    public string? Apartment { get; init; }
+    public string? Directions { get; init; }
+    /// <summary>The number the rider calls at the door.</summary>
+    public string Phone { get; init; } = string.Empty;
+    public decimal Fee { get; init; }
+    public int DistanceMeters { get; init; }
+    /// <summary>"Waiting", "Assigned", "OnTheWay" or "Delivered".</summary>
+    public string Stage { get; init; } = string.Empty;
+    public string? RiderUserId { get; init; }
+    public string? RiderName { get; init; }
+    public DateTime? AssignedAt { get; init; }
+    public DateTime? OutAt { get; init; }
+    public DateTime? DeliveredAt { get; init; }
+    /// <summary>The till took the rider's cash, which settled the bill.</summary>
+    public DateTime? CashHandedInAt { get; init; }
+
+    public static DeliveryView? From(Delivery? d) => d is null ? null : new()
+    {
+        Latitude = d.Latitude,
+        Longitude = d.Longitude,
+        Address = d.Address,
+        Building = d.Building,
+        Floor = d.Floor,
+        Apartment = d.Apartment,
+        Directions = d.Directions,
+        Phone = d.Phone,
+        Fee = d.Fee,
+        DistanceMeters = d.DistanceMeters,
+        Stage = d.Stage.ToString(),
+        RiderUserId = d.RiderUserId,
+        RiderName = d.RiderName,
+        AssignedAt = d.AssignedAt,
+        OutAt = d.OutAt,
+        DeliveredAt = d.DeliveredAt,
+        CashHandedInAt = d.CashHandedInAt,
+    };
+}
+
+/// <summary>
 /// Simplified order view model for business orders.
 /// No address or payment information needed.
 /// </summary>
@@ -83,6 +132,8 @@ public record Order
     public string Source { get; init; } = string.Empty;
     /// <summary>A delivery platform's details; null on every other order.</summary>
     public PlatformOrderView? Platform { get; init; }
+    /// <summary>The business's own delivery: where it goes and who takes it; null on every other order.</summary>
+    public DeliveryView? Delivery { get; init; }
     public string? CustomerNote { get; init; }
     /// <summary>Name a guest left at checkout; null on orders placed by a signed-in customer.</summary>
     public string? GuestName { get; init; }
@@ -127,6 +178,8 @@ public record KitchenOrder
     public string Source { get; init; } = string.Empty;
     /// <summary>A delivery platform's details — the code the rider asks for; null on every other order.</summary>
     public PlatformOrderView? Platform { get; init; }
+    /// <summary>The business's own rider takes it to the customer; the address stays off the card.</summary>
+    public bool IsDelivery { get; init; }
     public int? PlaceId { get; init; }
     public string? PlaceKind { get; init; }
     public LocalizedText? PlaceName { get; init; }
@@ -216,6 +269,8 @@ public record OrderSummary
     public string Source { get; init; } = string.Empty;
     /// <summary>A delivery platform's details; null on every other order.</summary>
     public PlatformOrderView? Platform { get; init; }
+    /// <summary>The business's own delivery: where it goes and who takes it; null on every other order.</summary>
+    public DeliveryView? Delivery { get; init; }
     /// <summary>Buyer's name, or the name a guest left at checkout.</summary>
     public string? UserName { get; init; }
     /// <summary>

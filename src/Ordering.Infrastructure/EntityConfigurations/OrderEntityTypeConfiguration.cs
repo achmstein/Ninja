@@ -74,6 +74,24 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             p.HasIndex(x => x.Token).IsUnique();
         });
 
+        // The business's own delivery: the address as the customer gave it,
+        // the fee, and the rider's progress; riders find theirs by the index
+        orderConfiguration.OwnsOne(o => o.Delivery, d =>
+        {
+            d.Property(x => x.Address).HasMaxLength(300).IsRequired();
+            d.Property(x => x.Building).HasMaxLength(100);
+            d.Property(x => x.Floor).HasMaxLength(50);
+            d.Property(x => x.Apartment).HasMaxLength(50);
+            d.Property(x => x.Directions).HasMaxLength(500);
+            d.Property(x => x.Phone).HasMaxLength(30).IsRequired();
+            d.Property(x => x.Fee).HasPrecision(18, 2);
+            d.Property(x => x.RiderUserId).HasMaxLength(100);
+            d.Property(x => x.RiderName).HasMaxLength(200);
+            d.Ignore(x => x.Stage);
+            d.HasIndex(x => x.RiderUserId);
+        });
+        orderConfiguration.Ignore(o => o.IsDelivery);
+
         orderConfiguration.HasOne(o => o.Buyer)
             .WithMany()
             .HasForeignKey(o => o.BuyerId);

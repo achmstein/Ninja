@@ -124,6 +124,9 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public PlatformOrder? Platform { get; private set; }
 
+    [DataMember]
+    public Delivery? Delivery { get; private set; }
+
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
     /// sale keyed in by staff.
@@ -161,10 +164,12 @@ public class CreateOrderCommand : IRequest<int>
         LocalizedText? placeName = null,
         string? promoCode = null,
         bool guestOrdersAnywhere = false,
-        PlatformOrder? platform = null)
+        PlatformOrder? platform = null,
+        Delivery? delivery = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         Platform = platform;
+        Delivery = delivery;
         GuestOrdersAnywhere = guestOrdersAnywhere;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim();
         PlaceId = placeId;

@@ -144,6 +144,14 @@ public class Order
     /// </summary>
     public PlatformOrder? Platform { get; private set; }
 
+    /// <summary>
+    /// The business's own delivery of the order — where it goes and who takes
+    /// it; null on every order eaten in, collected, or delivered by a platform.
+    /// </summary>
+    public Delivery? Delivery { get; private set; }
+
+    public bool IsDelivery => Delivery != null;
+
     // Draft orders have this set to true
 #pragma warning disable CS0414
     private bool _isDraft;
@@ -212,7 +220,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
@@ -262,6 +270,17 @@ public class Order
             GuestPhone = string.IsNullOrWhiteSpace(guestPhone) ? null : guestPhone.Trim();
         }
 
+        // The business's own delivery goes to an address, never to a place in
+        // the building, and only from its own apps and till
+        if (delivery is not null)
+        {
+            if (Source == OrderSource.Talabat)
+                throw new OrderingDomainException("A platform's order is delivered by the platform.");
+            if (HasDestination)
+                throw new OrderingDomainException("An order goes to a table or room, or is delivered — not both.");
+            Delivery = delivery;
+        }
+
         if (Source == OrderSource.Guest)
         {
             GuestId = !string.IsNullOrWhiteSpace(guestId)
@@ -282,7 +301,8 @@ public class Order
             // session belongs to an account. A business that takes guests' orders
             // from anywhere lets one go without: it is collected, and the
             // phone above is how the counter finds whoever ordered it.
-            if (!HasDestination && !guestOrdersAnywhere)
+            // A delivery is anchored too: to an address, with a phone to call at the door.
+            if (!HasDestination && Delivery is null && !guestOrdersAnywhere)
             {
                 throw new OrderingDomainException("A guest order needs a table or room to be delivered to.");
             }
@@ -647,6 +667,67 @@ public class Order
     }
 
     /// <summary>
+    /// Give a confirmed delivery to a rider, or hand it to another before it
+    /// leaves. The same rider again is a no-op.
+    /// </summary>
+    public void AssignRider(string riderUserId, string riderName, DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.RiderUserId == riderUserId)
+            return;
+
+        var previous = delivery.AssignRider(riderUserId, riderName, at ?? DateTime.UtcNow);
+        AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
+    }
+
+    /// <summary>Take a delivery back from its rider before it leaves.</summary>
+    public void UnassignRider()
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.RiderUserId is null)
+            return;
+
+        var previous = delivery.Unassign();
+        AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
+    }
+
+    /// <summary>The rider left with it. A repeat is a no-op.</summary>
+    public void MarkOutForDelivery(DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.MarkOut(at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>The customer has it. A repeat is a no-op.</summary>
+    public void MarkDelivered(DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.MarkDelivered(at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>
+    /// The rider handed the cash in at the till, which settles the bill with
+    /// it. A repeat is a no-op.
+    /// </summary>
+    public void MarkDeliveryCashHandedIn(DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.MarkCashHandedIn(at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, CashHandedIn: true));
+    }
+
+    private Delivery EnsureDelivering()
+    {
+        if (Delivery is null)
+            throw new OrderingDomainException("This order isn't delivered.");
+        if (OrderStatus != OrderStatus.Confirmed)
+            throw new OrderingDomainException("Only a confirmed order goes out for delivery.");
+        return Delivery;
+    }
+
+    /// <summary>
     /// Record that a reminder notification was sent for this pending order
     /// </summary>
     public void RecordReminderSent()
@@ -709,9 +790,10 @@ public class Order
 
     /// <summary>
     /// What the customer actually pays: items net of line discounts, minus the
-    /// promo and loyalty discounts. Never negative.
+    /// promo and loyalty discounts, never below nothing — and the delivery fee
+    /// on top, which no discount takes off.
     /// </summary>
-    public decimal GetTotal() => Math.Max(0, GetItemsTotal() - PromoDiscount - (decimal)LoyaltyDiscount);
+    public decimal GetTotal() => Math.Max(0, GetItemsTotal() - PromoDiscount - (decimal)LoyaltyDiscount) + (Delivery?.Fee ?? 0);
 
     /// <summary>
     /// Check if the order can be rated (must be confirmed)

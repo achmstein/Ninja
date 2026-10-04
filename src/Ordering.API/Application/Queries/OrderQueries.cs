@@ -30,6 +30,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             SessionId = order.SessionId,
             Source = order.Source.ToString(),
             Platform = PlatformOrderView.From(order.Platform),
+            Delivery = DeliveryView.From(order.Delivery),
             CustomerNote = order.CustomerNote,
             // Only an admin or the customer themselves can read an order, so
             // the guest's contact details are safe to carry here — and staff
@@ -114,7 +115,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount),
+                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
+                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -174,6 +176,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                     : o.StationParts.Where(p => p.StationId == stationId).Select(p => p.ReadyAt).FirstOrDefault(),
                 Source = o.Source.ToString(),
                 Platform = PlatformOrderView.From(o.Platform),
+                IsDelivery = o.Delivery != null,
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
@@ -218,7 +221,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount),
+                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
+                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -235,6 +239,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
                 Platform = PlatformOrderView.From(o.Platform),
+                Delivery = DeliveryView.From(o.Delivery),
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.
@@ -315,7 +320,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount),
+                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
+                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -327,6 +333,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
                 Platform = PlatformOrderView.From(o.Platform),
+                Delivery = DeliveryView.From(o.Delivery),
                 UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 IsMine = (userId != null && o.Buyer != null && o.Buyer.IdentityGuid == userId)
                     || (guestId != null && o.GuestId == guestId),
@@ -432,7 +439,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount),
+                Total = Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)
+                    + (double)(o.Delivery != null ? o.Delivery.Fee : 0),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 PromoCode = o.PromoCode,
@@ -449,6 +457,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
                 Platform = PlatformOrderView.From(o.Platform),
+                Delivery = DeliveryView.From(o.Delivery),
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.
