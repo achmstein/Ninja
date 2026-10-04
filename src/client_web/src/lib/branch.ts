@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { type BranchResponse } from '@/api/tenant'
 import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
@@ -23,4 +24,44 @@ export function useSelectedBranch(): BranchResponse | undefined {
   const branchId = useBranchStore((s) => s.branchId)
   const { data: branches = [] } = useBranches()
   return branches.find((b) => Number(b.id) === branchId) ?? branches[0]
+}
+
+/** What a customer can tell of a branch right now: open, open but not taking orders, or closed */
+export type BranchState = 'open' | 'notOrdering' | 'closed'
+
+export function branchState(branch: BranchResponse): BranchState {
+  if (!branch.isActive) return 'closed'
+  return branch.isOrderingEnabled ? 'open' : 'notOrdering'
+}
+
+/**
+ * The branches in the order a customer meets them without a position: the
+ * one they used last (the selected one) first, then the owner's order.
+ */
+export function lastUsedFirst(branches: BranchResponse[], branchId: number): BranchResponse[] {
+  return [...branches].sort((a, b) => {
+    const aOn = Number(a.id) === branchId
+    const bOn = Number(b.id) === branchId
+    if (aOn !== bOn) return aOn ? -1 : 1
+    return Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
+  })
+}
+
+/**
+ * The app opens at the branch last used; where that is not one of the
+ * business's (a first visit, a branch since removed) it opens at the first
+ * open one in the owner's order, and what was fetched for the wrong one is
+ * fetched again. Mounted once, at the root.
+ */
+export function useBranchFallback() {
+  const queryClient = useQueryClient()
+  const { branchId, setBranchId } = useBranchStore()
+  const { data: branches } = useBranches()
+  useEffect(() => {
+    if (!branches?.length || branches.some((b) => Number(b.id) === branchId)) return
+    const ordered = lastUsedFirst(branches, branchId)
+    const first = ordered.find((b) => b.isActive) ?? ordered[0]
+    setBranchId(Number(first.id))
+    queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches' })
+  }, [branches, branchId, setBranchId, queryClient])
 }

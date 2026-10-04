@@ -7,6 +7,7 @@ import {
   Download,
   Info,
   LogOut,
+  MapPin,
   Phone,
   ReceiptText,
   Timer,
@@ -19,9 +20,9 @@ import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
 import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import { getMyProfile } from '@/lib/services/identity'
 import { API_VERSION } from '@/lib/api-client'
-import { useSelectedBranch } from '@/lib/branch'
+import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { unregisterPush } from '@/lib/use-push'
-import { usePrice, useT } from '@/lib/i18n'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
 import { closedAt, useMyBills } from '@/lib/bills'
 import { cn } from '@/lib/utils'
@@ -46,6 +47,8 @@ import { useInstallAction } from '@/components/install/use-install-action'
 import { Badge } from '@/components/ui/badge'
 import { SignInOptions } from '@/components/auth/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
+import { BranchSheet } from '@/components/branch-switcher'
+import { useAtBranch } from '@/lib/use-branch-switch'
 import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/ninja/page/tile-row'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Notice } from '@/components/ninja/page/notice'
@@ -68,11 +71,17 @@ export const Route = createFileRoute('/profile')({
 function ProfilePage() {
   const t = useT()
   const price = usePrice()
+  const localized = useLocalized()
   const auth = useAuth()
   // What a guest gave at their last checkout, remembered in this browser
   const guestContact = useGuestStore((s) => s.contact)
   const features = useFeatures()
   const branch = useSelectedBranch()
+  const { data: branches = [] } = useBranches()
+  // The branch is changed here, not from the bar; not while the customer is at one (a bill, a place, a clock)
+  const atBranch = useAtBranch()
+  const canChangeBranch = branches.length > 1 && !atBranch
+  const [branchesOpen, setBranchesOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   // Installing the app, for anyone who let the island's offer go by
   const install = useInstallAction()
@@ -219,6 +228,9 @@ function ProfilePage() {
 
         <RiseItem>
           <TileGroup>
+            {canChangeBranch && (
+              <TileButton icon={MapPin} label={t('ninjaBranch')} value={localized(branch?.name)} onClick={() => setBranchesOpen(true)} />
+            )}
             <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />
             {branch?.phone && (
               <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
@@ -241,6 +253,7 @@ function ProfilePage() {
         </RiseItem>
       </Rise>
 
+      <BranchSheet open={branchesOpen} onOpenChange={setBranchesOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       {install.dialog}
     </NinjaPage>

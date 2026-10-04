@@ -1,111 +1,114 @@
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { Check, ChevronDown, MapPin } from 'lucide-react'
-import { isOpen, useMyBills } from '@/lib/bills'
-import { useBranches } from '@/lib/branch'
-import { useCart } from '@/lib/cart'
-import { useActiveStay, useMyHold } from '@/lib/stays'
+import { Check, LocateFixed, Loader2, MapPin, Navigation } from 'lucide-react'
+import { type BranchResponse } from '@/api/tenant'
+import { branchState, type BranchState } from '@/lib/branch'
+import { directionsUrl, pointOf, useDistance, type useMyLocation } from '@/lib/geo'
+import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import { useBranchStore } from '@/stores/branch-store'
-import { useActivePlace, usePlaceStore } from '@/stores/place-store'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { springOpen } from '@/lib/motion'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
+const STATE_META: Record<BranchState, { key: TranslationKey; dot: string }> = {
+  open: { key: 'branchOpen', dot: 'bg-emerald-500' },
+  notOrdering: { key: 'branchNotOrdering', dot: 'bg-amber-500' },
+  closed: { key: 'branchClosed', dot: 'bg-muted-foreground' },
+}
+
+/** A branch's quiet facts on one line: open or not, and how far */
+export function BranchFacts({ branch, meters, className }: { branch: BranchResponse; meters: number | null; className?: string }) {
+  const t = useT()
+  const distance = useDistance()
+  const state = STATE_META[branchState(branch)]
+  return (
+    <span className={cn('text-muted-foreground flex items-center gap-1.5 text-caption', className)}>
+      <span className={cn('size-1.5 shrink-0 rounded-full', state.dot)} aria-hidden />
+      <span>{t(state.key)}</span>
+      {meters != null && (
+        <>
+          <span aria-hidden>·</span>
+          <span className='tabular-nums' dir='ltr'>
+            {distance(meters)}
+          </span>
+        </>
+      )}
+    </span>
+  )
+}
+
+/** The way there in Google Maps, for a branch the owner put on the map */
+export function DirectionsLink({ branch, className }: { branch: BranchResponse; className?: string }) {
+  const t = useT()
+  const point = pointOf(branch)
+  if (!point) return null
+  return (
+    <a
+      href={directionsUrl(point)}
+      target='_blank'
+      rel='noopener noreferrer'
+      onClick={(e) => e.stopPropagation()}
+      className={cn('bg-muted active:bg-muted/70 inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-caption font-semibold transition-colors', className)}
+    >
+      <Navigation className='size-3.5' />
+      {t('directions')}
+    </a>
+  )
+}
+
+/** "Use my location", quiet, for a customer who said no or was not asked: a tap asks then */
+export function UseMyLocation({ location, className }: { location: ReturnType<typeof useMyLocation>; className?: string }) {
+  const t = useT()
+  if (location.here) return null
+  if (location.locating) {
+    return (
+      <span className={cn('text-muted-foreground inline-flex items-center gap-1.5 text-caption', className)}>
+        <Loader2 className='size-3.5 animate-spin' />
+        {t('locating')}
+      </span>
+    )
+  }
+  if (!location.canLocate) return null
+  return (
+    <button
+      type='button'
+      onClick={location.locate}
+      className={cn('text-muted-foreground active:text-foreground inline-flex items-center gap-1.5 text-caption font-semibold transition-colors', className)}
+    >
+      <LocateFixed className='size-3.5' />
+      {t('useMyLocation')}
+    </button>
+  )
+}
+
 /**
- * The branch the customer is looking at, as a pill in the top bar that
- * opens the branches as a sheet. While they are at one (an open bill, a
- * held place, a running clock, a scanned table) there is none: another
- * branch's menu and prices over a bill that is here would only mislead, and
- * the dock says where they are. Otherwise it switches, asking first when
- * there are dishes in the order, since the other branch's menu is not this
- * one's and the order is emptied.
+ * The branches as a sheet from the bottom, the one looked at lit: closest
+ * first when the customer let the app know where they are, each with how
+ * far, whether it is open and the way there. A tap moves the app to it,
+ * asking first when there are dishes in the order. Any page opens it
+ * (the You page, booking); the position is asked for only once it is open.
  */
-export function BranchSwitcher() {
+export function BranchSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const localized = useLocalized()
-  const queryClient = useQueryClient()
-  const { branchId, setBranchId } = useBranchStore()
-  const clearPlace = usePlaceStore((s) => s.clearPlace)
-  const lines = useCart((s) => s.lines)
-  const clearCart = useCart((s) => s.clear)
-
-  const { data: branches = [] } = useBranches()
-  const there = useAtBranch()
-  // A switch asked for with dishes in the order, waiting for the answer
-  const [pendingId, setPendingId] = useState<number | null>(null)
-  const [open, setOpen] = useState(false)
-
-  // Single-branch setups don't need a switcher
-  if (branches.length < 2) return null
-
-  const activeBranch = branches.find((b) => Number(b.id) === branchId)
-  const pending = branches.find((b) => Number(b.id) === pendingId)
-
-  const switchTo = (id: number) => {
-    setBranchId(id)
-    clearPlace()
-    clearCart()
-    // Everything on screen is branch-scoped — refetch it all
-    queryClient.invalidateQueries()
-  }
-
-  const handleSelect = (id: number) => {
-    if (id === branchId) return
-    if (lines.length > 0) {
-      setPendingId(id)
-      return
-    }
-    switchTo(id)
-  }
-
-  // At the branch, the dock's row says where the customer is; there is nothing to switch
-  if (there) return null
+  const branchId = useBranchStore((s) => s.branchId)
+  const { request, dialog } = useBranchSwitch()
+  const { sorted, location, anyPoint } = useBranchesByDistance(open)
 
   return (
     <>
-      {/* A pill in the bar, like the scan button beside it */}
-      <button
-        type='button'
-        onClick={() => setOpen(true)}
-        className='bg-muted/80 active:bg-muted flex h-10 max-w-40 items-center gap-1.5 rounded-full ps-3 pe-2.5 text-note font-semibold transition-colors'
-      >
-        <MapPin className='size-4 shrink-0' />
-        <span className='truncate'>{localized(activeBranch?.name)}</span>
-        <ChevronDown className='size-3.5 shrink-0 opacity-60' />
-      </button>
-
-      {/* The branches as a sheet from the bottom, the one looked at lit */}
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>{t('selectBranch')}</SheetTitle>
+            {anyPoint && sorted.length > 1 && <UseMyLocation location={location} className='self-start' />}
           </SheetHeader>
           <div className='flex flex-col gap-1.5' role='radiogroup'>
-            {branches.map((branch) => {
+            {sorted.map(({ item: branch, meters }) => {
               const id = Number(branch.id)
               const on = id === branchId
               return (
-                <button
-                  key={String(branch.id)}
-                  type='button'
-                  role='radio'
-                  aria-checked={on}
-                  onClick={() => {
-                    setOpen(false)
-                    handleSelect(id)
-                  }}
-                  className='relative flex min-h-16 items-center gap-3 rounded-[1.25rem] px-4 py-3 text-start'
-                >
+                <div key={String(branch.id)} className='relative flex min-h-16 items-center gap-2 rounded-[1.25rem] pe-2'>
                   {on && (
                     <motion.span
                       layoutId='branch-on'
@@ -115,48 +118,36 @@ export function BranchSwitcher() {
                       className='bg-muted absolute inset-0'
                     />
                   )}
-                  <span className='bg-muted relative grid size-10 shrink-0 place-items-center rounded-full'>
-                    <MapPin className='size-5' />
-                  </span>
-                  <span className='relative flex min-w-0 flex-1 flex-col'>
-                    <span className='text-body font-semibold'>{localized(branch.name)}</span>
-                    {localized(branch.address) && <span className='text-muted-foreground text-caption'>{localized(branch.address)}</span>}
-                  </span>
-                  {on && <Check className='relative size-5 shrink-0' />}
-                </button>
+                  <button
+                    type='button'
+                    role='radio'
+                    aria-checked={on}
+                    onClick={() => {
+                      onOpenChange(false)
+                      request(id)
+                    }}
+                    className='relative flex min-w-0 flex-1 items-center gap-3 py-3 ps-4 text-start'
+                  >
+                    <span className='bg-muted relative grid size-10 shrink-0 place-items-center rounded-full'>
+                      <MapPin className='size-5' />
+                    </span>
+                    <span className='relative flex min-w-0 flex-1 flex-col'>
+                      <span className='flex items-center gap-1.5 text-body font-semibold'>
+                        <span className='truncate'>{localized(branch.name)}</span>
+                        {on && <Check className='size-4 shrink-0' />}
+                      </span>
+                      {localized(branch.address) && <span className='text-muted-foreground truncate text-caption'>{localized(branch.address)}</span>}
+                      <BranchFacts branch={branch} meters={meters} />
+                    </span>
+                  </button>
+                  <DirectionsLink branch={branch} className={cn('relative', on && 'bg-background')} />
+                </div>
               )
             })}
           </div>
         </SheetContent>
       </Sheet>
-
-      <AlertDialog open={pendingId != null} onOpenChange={(open) => !open && setPendingId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('ninjaSwitchBranchWithOrder', { name: localized(pending?.name) })}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('ninjaKeepOrder')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (pendingId != null) switchTo(pendingId)
-                setPendingId(null)
-              }}
-            >
-              {t('ninjaSwitchBranch')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {dialog}
     </>
   )
-}
-
-/** Whether the customer is at the branch: an open bill, a held place, a running clock or a scanned table */
-function useAtBranch(): boolean {
-  const { data: bills = [] } = useMyBills()
-  const hold = useMyHold()
-  const stay = useActiveStay()
-  const place = useActivePlace()
-  return bills.some(isOpen) || hold != null || stay != null || place != null
 }

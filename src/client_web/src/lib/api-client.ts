@@ -34,7 +34,10 @@ apiClient.interceptors.request.use(
         config.headers['X-Guest-Id'] = guestId
       }
     }
-    config.headers['X-Branch-Id'] = String(getActiveBranchId())
+    // A call that names its own branch keeps it (booking lists every branch's places, lib/visit.ts)
+    if (!config.headers.has('X-Branch-Id')) {
+      config.headers['X-Branch-Id'] = String(getActiveBranchId())
+    }
     return config
   },
   (error) => Promise.reject(error)

@@ -418,6 +418,18 @@ const webExtras = {
   ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
   ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },
   ninjaKeepOrder: { en: 'Keep my order', ar: 'خلّي طلبي' },
+  // Branches by where the customer is: the closest first, how far, and the way there
+  ninjaBranch: { en: 'Branch', ar: 'الفرع' },
+  ninjaChangeBranch: { en: 'Change branch', ar: 'غيّر الفرع' },
+  branchOpen: { en: 'Open', ar: 'فاتح' },
+  branchNotOrdering: { en: 'Not taking orders now', ar: 'مش بياخد طلبات دلوقتي' },
+  branchClosed: { en: 'Closed', ar: 'مقفول' },
+  directions: { en: 'Directions', ar: 'الطريق' },
+  useMyLocation: { en: 'Use my location', ar: 'استخدم مكاني' },
+  locating: { en: 'Finding you…', ar: 'بندوّر على مكانك…' },
+  locationOff: { en: 'Location is off for this site. Turn it on in your browser settings.', ar: 'اللوكيشن مقفول هنا. افتحه من إعدادات المتصفح.' },
+  distanceKm: { en: '{value} km', ar: '{value} كم' },
+  distanceM: { en: '{value} m', ar: '{value} م' },
   // Cart and pay
   payModeItems: { en: 'My items', ar: 'حاجاتي' },
   payModeEqual: { en: 'Equally', ar: 'بالتساوي' },

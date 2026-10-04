@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { CalendarClock, Gamepad2, type LucideIcon } from 'lucide-react'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
-import { type TenantFeatures } from '@/api/tenant'
+import { type BranchResponse, type TenantFeatures } from '@/api/tenant'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
@@ -10,6 +10,8 @@ import { PLACE_ROOM, placeIcon } from '@/lib/places'
 import { useActiveStay, useMyHold, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
 import { useFeatures } from '@/lib/brand'
+import { useBranches } from '@/lib/branch'
+import { useBranchStore } from '@/stores/branch-store'
 
 /**
  * The places a customer may book: in service, and offering something the
@@ -37,6 +39,43 @@ export function useBookablePlaces() {
     refetchInterval: 30_000,
     select: (list) => bookablePlaces(list, features),
   })
+}
+
+/** One branch's bookable places, for booking across the business */
+export type BranchPlaces = { branch: BranchResponse; places: PlaceViewModel[] }
+
+/**
+ * The bookable places of every branch that takes bookings, each branch's
+ * own: the selected branch always (paused or not, as the tab has always
+ * shown it), and every other open one taking reservations. One query per
+ * branch, each naming its branch in the X-Branch-Id header, which the
+ * shared client then leaves as it is (lib/api-client.ts). A business has a
+ * few branches, so a few small queries. A branch appears once its answer
+ * is in; `isLoading` waits for the selected branch's alone.
+ */
+export function useBookablePlacesByBranch(): { groups: BranchPlaces[]; isLoading: boolean } {
+  const features = useFeatures()
+  const branchId = useBranchStore((s) => s.branchId)
+  const { data: branches = [], isLoading: branchesLoading } = useBranches()
+  const shown = branches.filter(
+    (b) => Number(b.id) === branchId || (features.reservations && b.isActive && b.isReservationsEnabled),
+  )
+  const results = useQueries({
+    queries: shown.map((b) => ({
+      ...listPlacesOptions({ headers: { 'X-Branch-Id': String(b.id) } }),
+      refetchInterval: 30_000,
+      select: (list: PlaceViewModel[]) => bookablePlaces(list, features),
+    })),
+  })
+  const groups = shown.flatMap((branch, i) => {
+    const places = results[i]?.data
+    // Another branch with nothing to book is not a heading of its own
+    if (!places || (Number(branch.id) !== branchId && places.length === 0)) return []
+    return [{ branch, places }]
+  })
+  const selectedIndex = shown.findIndex((b) => Number(b.id) === branchId)
+  const isLoading = branchesLoading || (selectedIndex >= 0 && results[selectedIndex]?.isLoading === true)
+  return { groups, isLoading }
 }
 
 /**

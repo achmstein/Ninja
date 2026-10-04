@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CirclePause, UserRound } from 'lucide-react'
+import { CirclePause, MapPin, UserRound } from 'lucide-react'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
-import { useSelectedBranch } from '@/lib/branch'
+import { useBranches } from '@/lib/branch'
+import { useBranchStore } from '@/stores/branch-store'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE, PLACE_STATION, PLACE_TABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
@@ -12,7 +13,7 @@ import { useAfterTickBeat } from '@/lib/tick-beat'
 import { useScrollLock } from '@/lib/use-scroll-lock'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
-import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
+import { useBookablePlacesByBranch, useVisit, useVisitTab, type BranchPlaces } from '@/lib/visit'
 import { useProfileGate } from '@/components/auth/profile-gate'
 import { StayBanner } from '@/components/places/stay-banner'
 import { YourRoomCard } from '@/components/places/your-room-card'
@@ -29,6 +30,9 @@ import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/auth/sign-in-options'
 import { cn } from '@/lib/utils'
+import { BranchSheet, DirectionsLink, UseMyLocation } from '@/components/branch-switcher'
+import { useAtBranch, useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
+import { useDistance } from '@/lib/geo'
 import type { TranslationKey } from '@/lib/i18n'
 
 export const Route = createFileRoute('/places')({
@@ -127,7 +131,9 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   const t = useT()
   const localized = useLocalized()
   const auth = useAuth()
-  const branch = useSelectedBranch()
+  const branchId = useBranchStore((s) => s.branchId)
+  const { data: branches = [] } = useBranches()
+  const atBranch = useAtBranch()
   const hold = useMyHold()
   const features = useFeatures()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
@@ -152,19 +158,35 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
 
   // Live RoomStatusChanged updates + 30s fallback poll (app parity)
   useRoomsGroup()
-  const { data: places = [], isLoading } = useBookablePlaces()
+  const { groups, isLoading } = useBookablePlacesByBranch()
+  // Every branch that takes bookings, each under its own name: the closest first once the customer's
+  // position is known (asked for here, once a session, only where there are branches to measure)
+  const multi = groups.length > 1
+  const { sorted, location, anyPoint } = useBranchesByDistance(multi, groups.map((g) => g.branch))
+  const ordered = sorted.flatMap(({ item, meters }) => {
+    const group = groups.find((g) => g.branch === item)
+    return group ? [{ ...group, meters }] : []
+  })
+  const places = ordered.flatMap((g) => g.places)
+  // The selected branch's own places: the notify switch is the branch's, as is the room the customer is in
+  const here = groups.find((g) => Number(g.branch.id) === branchId)?.places ?? []
+  const { request: requestBranch, dialog: switchDialog } = useBranchSwitch()
+  const [branchesOpen, setBranchesOpen] = useState(false)
 
-  const reservationsEnabled = features.reservations && (branch?.isReservationsEnabled ?? true)
+  // Some branch takes bookings: the selected one, or another listed beside it
+  const takesBookings = (group: BranchPlaces) => features.reservations && (group.branch.isReservationsEnabled ?? true)
+  const reservationsEnabled = groups.length === 0 ? features.reservations : groups.some(takesBookings)
   // One place at a time: a hold, or a clock running (the server refuses a second either way). A guest's
-  // free places answer a tap too: with the sign-in sheet, rather than a card that does nothing
-  const canReserve = !hold && !stay && reservationsEnabled
+  // free places answer a tap too: with the sign-in sheet, rather than a card that does nothing.
+  // Another branch's places book only while the customer is at none (a bill, a scanned table)
+  const canReserveAt = (group: BranchPlaces) =>
+    !hold && !stay && takesBookings(group) && (Number(group.branch.id) === branchId || !atBranch)
   const freeCount = places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
-  // The room the customer is in, when it is one of these places, and the rest
-  const mine = stay ? places.find((p) => String(p.id) === String(stay.placeId)) : undefined
-  const others = mine ? places.filter((p) => p !== mine) : places
-  const allBusy = places.length > 0 && freeCount === 0
+  // The room the customer is in, when it is one of these places
+  const mine = stay ? here.find((p) => String(p.id) === String(stay.placeId)) : undefined
+  const allBusy = here.length > 0 && here.every((p) => Number(p.status) !== PLACE_AVAILABLE) && freeCount === 0
 
-  const handleToggle = async (place: PlaceViewModel) => {
+  const handleToggle = async (place: PlaceViewModel, placeBranchId: number) => {
     if (openId === Number(place.id)) {
       setOpenId(null)
       return
@@ -176,7 +198,9 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
     // One place at a time (app parity; the backend enforces it too)
     if (hold || stay) return
     if (!(await ensureProfileComplete())) return
-    setOpenId(Number(place.id))
+    // Another branch's place: the app moves to that branch first (asking when the order has dishes), then
+    // the booking opens as it would at home, against the branch it now names
+    requestBranch(placeBranchId, () => setOpenId(Number(place.id)))
   }
 
   return (
@@ -202,6 +226,27 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
               </Recede>
             </RiseItem>
           )}
+
+          {/* Booking across branches: the customer's position on their word, and the branch changed by hand */}
+          {(multi && anyPoint && !location.here) || (branches.length > 1 && !atBranch) ? (
+            <RiseItem>
+              <Recede gone={held}>
+                <div className='flex items-center justify-between gap-3'>
+                  {multi && anyPoint ? <UseMyLocation location={location} /> : <span />}
+                  {branches.length > 1 && !atBranch && (
+                    <button
+                      type='button'
+                      onClick={() => setBranchesOpen(true)}
+                      className='text-muted-foreground active:text-foreground inline-flex items-center gap-1.5 text-caption font-semibold transition-colors'
+                    >
+                      <MapPin className='size-3.5' />
+                      {t('ninjaChangeBranch')}
+                    </button>
+                  )}
+                </div>
+              </Recede>
+            </RiseItem>
+          ) : null}
 
           {!reservationsEnabled && (
             <RiseItem>
@@ -251,45 +296,63 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                   <YourRoomCard stay={stay} place={mine} />
                 </RiseItem>
               )}
-              {stay && mine && others.length > 0 && (
+              {stay && mine && places.length > 1 && (
                 <RiseItem>
                   <SectionLabel>{t('ninjaOtherPlaces')}</SectionLabel>
                 </RiseItem>
               )}
-              {groupByKind(others, look).map((group) => (
-                <div key={group.heading ?? 'all'} className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}>
-                  {group.heading && (
-                    <RiseItem className={cn(look === 'grid' && 'col-span-2', stay && mine && 'opacity-60')}>
-                      <Recede gone={held}>
-                        <SectionLabel>{t(group.heading)}</SectionLabel>
-                      </Recede>
-                    </RiseItem>
-                  )}
-                  {group.places.map((place) => (
-                    <RiseItem
-                      key={String(place.id)}
-                      className={cn(
-                        stay && mine && 'opacity-60',
-                        // An open tile takes the row, so the booking under it has the width to breathe
-                        look === 'grid' && openId === Number(place.id) && 'col-span-2'
-                      )}
-                    >
-                      <Recede gone={held && String(place.id) !== heldId}>
-                        <PlaceCard
-                          place={place}
-                          look={look}
-                          canReserve={canReserve}
-                          open={openId === Number(place.id)}
-                          onToggle={handleToggle}
-                          // Booked, the form stays until the hold opens the card into the reservation
-                          onDone={(outcome) => outcome === 'failed' && closeHold()}
-                          handedOver={String(place.id) === heldId}
-                        />
-                      </Recede>
-                    </RiseItem>
-                  ))}
-                </div>
-              ))}
+              {ordered.map((branchGroup) => {
+                const groupBranchId = Number(branchGroup.branch.id)
+                const canReserve = canReserveAt(branchGroup)
+                const others = branchGroup.places.filter((p) => p !== mine)
+                const free = branchGroup.places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+                return (
+                  <div key={String(branchGroup.branch.id)} className={cn('flex flex-col gap-4', multi && 'mt-2 first:mt-0')}>
+                    {/* With more than one branch, each under its name: how many are free, how far, and the way there */}
+                    {multi && (
+                      <RiseItem className={cn(stay && mine && 'opacity-60')}>
+                        <Recede gone={held}>
+                          <BranchHeading group={branchGroup} meters={branchGroup.meters} free={free} />
+                        </Recede>
+                      </RiseItem>
+                    )}
+                    {groupByKind(others, look).map((group) => (
+                      <div key={group.heading ?? 'all'} className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}>
+                        {group.heading && (
+                          <RiseItem className={cn(look === 'grid' && 'col-span-2', stay && mine && 'opacity-60')}>
+                            <Recede gone={held}>
+                              <SectionLabel>{t(group.heading)}</SectionLabel>
+                            </Recede>
+                          </RiseItem>
+                        )}
+                        {group.places.map((place) => (
+                          <RiseItem
+                            key={String(place.id)}
+                            className={cn(
+                              stay && mine && 'opacity-60',
+                              // An open tile takes the row, so the booking under it has the width to breathe
+                              look === 'grid' && openId === Number(place.id) && 'col-span-2'
+                            )}
+                          >
+                            <Recede gone={held && String(place.id) !== heldId}>
+                              <PlaceCard
+                                place={place}
+                                look={look}
+                                canReserve={canReserve}
+                                open={openId === Number(place.id)}
+                                onToggle={(p) => handleToggle(p, groupBranchId)}
+                                // Booked, the form stays until the hold opens the card into the reservation
+                                onDone={(outcome) => outcome === 'failed' && closeHold()}
+                                handedOver={String(place.id) === heldId}
+                              />
+                            </Recede>
+                          </RiseItem>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
             </div>
           )}
 
@@ -305,9 +368,37 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
       </div>
 
       <Reservation hold={opened} />
+      <BranchSheet open={branchesOpen} onOpenChange={setBranchesOpen} />
+      {switchDialog}
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} title={t('bookSignInTitle')} description={t('bookSignInBody')} />
     </NinjaPage>
   )
 }
 
+
+/** A branch's heading over its places, when booking spans branches: its name, how many are free and how far, and the way there */
+function BranchHeading({ group, meters, free }: { group: BranchPlaces; meters: number | null; free: number }) {
+  const t = useT()
+  const localized = useLocalized()
+  const distance = useDistance()
+  return (
+    <div className='flex items-center gap-3'>
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <h2 className='heading truncate text-headline'>{localized(group.branch.name)}</h2>
+        <p className='text-muted-foreground flex items-center gap-1.5 text-caption'>
+          <span>{t('bookFreeNow', { count: free })}</span>
+          {meters != null && (
+            <>
+              <span aria-hidden>·</span>
+              <span className='tabular-nums' dir='ltr'>
+                {distance(meters)}
+              </span>
+            </>
+          )}
+        </p>
+      </div>
+      <DirectionsLink branch={group.branch} />
+    </div>
+  )
+}

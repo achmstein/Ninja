@@ -5,7 +5,6 @@ import { spring } from '@/lib/motion'
 import { useIsland } from '@/lib/island'
 import { cn } from '@/lib/utils'
 import { BrandWordmark } from '@/components/brand/brand-mark'
-import { BranchSwitcher } from '@/components/branch-switcher'
 import { ScanCodeButton } from '@/components/places/table-scanner'
 
 /**
@@ -58,8 +57,7 @@ export function NinjaTopBar({
           aria-hidden={pill || undefined}
         >
           {/* Where the customer is (the table, the branch they are at) the dock's row says; here, while they are at
-              none, the way to scan a table's or a room's code, and the switch of branch */}
-          <BranchSwitcher />
+              none, the way to scan a table's or a room's code. The branch is changed from the You page and from booking */}
           <ScanCodeButton />
         </motion.div>
       )}
