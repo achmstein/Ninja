@@ -1,12 +1,13 @@
-// The POS and KDS launcher icons, the tiles the admin web's apps page
+// The POS, KDS and Rider launcher icons, the tiles the admin web's apps page
 // shows for them, and the launch splash: the platform's N mark (the
 // control web favicon's path) on a tile of the app's colour, and control
 // web's `ninja | POS` lockup on the splash. POS keeps the brand's dark tile;
-// KDS goes ember so a kitchen screen is told apart from a till at a glance.
+// KDS goes ember so a kitchen screen is told apart from a till at a glance,
+// and the rider app teal, so a rider's phone shows its own at a glance too.
 //
 //   node scripts/generate-app-icons.mjs        (from src/, needs the root's sharp)
 //   cd pos_app && dart run flutter_launcher_icons && dart run flutter_native_splash:create
-//   (then the same in kds_app)
+//   (then the same in kds_app and rider_app)
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +16,7 @@ const src = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(
 const favicon = fs.readFileSync(path.join(src, 'control_web/public/favicon.svg'), 'utf8');
 const nPath = favicon.match(/<path d="([^"]+)"/)[1];
 const ink = '#FAFAFA';
-const apps = { pos: '#18181B', kds: '#EA580C' };
+const apps = { pos: '#18181B', kds: '#EA580C', rider: '#0D9488' };
 
 // The splash is control_web's lockup (components/wordmark.tsx, size lg): `ninja` in
 // Original Surfer at 48 px, a 1 px hairline 28 px tall 16 px either side, and the
@@ -32,6 +33,10 @@ const splashes = {
   },
   kds: {
     label: 'KDS',
+    colours: { background: '#000000', ink: '#FFFFFF', line: '#3F3F46', muted: '#A1A1AA' },
+  },
+  rider: {
+    label: 'RIDER',
     colours: { background: '#000000', ink: '#FFFFFF', line: '#3F3F46', muted: '#A1A1AA' },
   },
 };

@@ -12,6 +12,7 @@ on:
           - client_app
           - pos_app
           - kds_app
+          - rider_app
           - print_connector
       platform:
         description: 'Platform to build'
@@ -302,6 +303,104 @@ jobs:
           username: ${{ secrets.PLATFORM_SERVER_USER }}
           key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
           source: "src/kds_app/build/apps-publish/*"
+          target: /opt/ninja/platform/apps
+          strip_components: 4
+
+  # ==========================================
+  # The rider app: one generic APK for every business's riders, published to the
+  # platform's download page beside the till's and the kitchen's. The phone
+  # installs from the page and connects to its business from inside the app.
+  # ==========================================
+
+  build-android-rider:
+    if: |
+      (github.event.inputs.app == 'all' || github.event.inputs.app == 'rider_app') &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
+    runs-on: ubuntu-latest
+    environment: platform
+    defaults:
+      run:
+        working-directory: src/rider_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+
+      # Pushes and crash reports: the Firebase project's Android app com.ninja.rider.
+      # Without the secret the app builds and runs without them (the hub and the poll still bring deliveries)
+      - name: Firebase config
+        env:
+          RIDER_GOOGLE_SERVICES_JSON: ${{ secrets.RIDER_GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$RIDER_GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$RIDER_GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else
+            echo "::warning::RIDER_GOOGLE_SERVICES_JSON is not set: the rider app ships without push notifications"
+          fi
+
+      # One upload key for good, so an installed app updates in place. Without it the build
+      # is debug-signed, and a later release-signed one will not install over it
+      - name: Signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_RIDER_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_RIDER_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_RIDER_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_RIDER_STORE_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::warning::ANDROID_RIDER_KEYSTORE_BASE64 is not set: the APK is debug-signed"
+            exit 0
+          fi
+          echo -n "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          PROPS
+
+      - name: Build APK
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apps-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-rider.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          # What the installed rider apps check for an update: a newer build, and the checksum they verify before installing
+          sha=$(sha256sum build/apps-publish/ninja-rider.apk | cut -d' ' -f1)
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-rider.json
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rider-app-android-apk
+          path: src/rider_app/build/apps-publish/*
+
+      - name: Publish to the platform's download page
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          source: "src/rider_app/build/apps-publish/*"
           target: /opt/ninja/platform/apps
           strip_components: 4
 

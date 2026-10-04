@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
   Copy,
@@ -9,6 +10,7 @@ import {
   QrCode,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
+import { getAllBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -25,7 +27,7 @@ import { PageHeader } from '@/components/page-header'
 import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
 
 /**
- * The native till and kitchen display, and how a tablet gets them: one
+ * The native till, kitchen display and rider app, and how a device gets them: one
  * generic build of each from the platform's download page, then the
  * connect code, which is nothing more than this business's API host. The
  * web versions stay a link away for iPads and for a browser on anything.
@@ -37,7 +39,7 @@ function absoluteUrl(url: string): string {
   return new URL(url, window.location.href).href
 }
 
-type AppKey = 'pos' | 'kds' | 'connector'
+type AppKey = 'pos' | 'kds' | 'rider' | 'connector'
 
 export function AppsPage() {
   const t = useT()
@@ -46,6 +48,9 @@ export function AppsPage() {
   const apiUrl = brand?.apiUrl ?? defaultApiOrigin()
   const appsUrl = brand?.appsUrl ?? null
   const [selected, setSelected] = useState<AppKey>('pos')
+  // The rider app is for a business whose branches deliver with their own riders
+  const branchesQuery = useQuery(getAllBranchesOptions())
+  const delivers = (branchesQuery.data ?? []).some((b) => b.isDeliveryEnabled)
 
   // Each app's launcher icon (the platform's N mark on its own tile), the one a tablet shows once installed
   const tablets = [
@@ -65,11 +70,22 @@ export function AppsPage() {
       about: t('appsKdsAbout'),
       file: 'ninja-kds.apk',
     },
-    // The kitchen display is a module: no tab for it when it is off
-  ].filter((app) => app.key !== 'kds' || features.kds)
+    {
+      key: 'rider' as const,
+      icon: '/apps/rider.svg',
+      tab: t('appsTabRider'),
+      title: t('appsRiderTitle'),
+      about: t('appsRiderAbout'),
+      file: 'ninja-rider.apk',
+    },
+    // The kitchen display is a module, and the rider app is for delivering branches: no tab for either otherwise
+  ].filter(
+    (app) =>
+      (app.key !== 'kds' || features.kds) && (app.key !== 'rider' || delivers)
+  )
 
   // The kitchen's printer on a Windows PC goes with the kitchen display
-  const tabs = features.kds ? 3 : 1
+  const tabs = tablets.length + (features.kds ? 1 : 0)
 
   return (
     <Main>
@@ -82,7 +98,10 @@ export function AppsPage() {
       >
         {/* On a phone the icon over a short label, so no name runs edge to edge */}
         {tabs > 1 && (
-          <TabsList className='grid h-auto w-full grid-cols-3 p-1 sm:inline-flex sm:w-fit'>
+          <TabsList
+            className='grid h-auto w-full p-1 sm:inline-flex sm:w-fit'
+            style={{ gridTemplateColumns: `repeat(${tabs}, minmax(0, 1fr))` }}
+          >
             {tablets.map((app) => (
               <TabsTrigger
                 key={app.key}
@@ -93,13 +112,15 @@ export function AppsPage() {
                 {app.tab}
               </TabsTrigger>
             ))}
-            <TabsTrigger
-              value='connector'
-              className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
-            >
-              <Printer className='size-4' />
-              {t('appsTabPrinter')}
-            </TabsTrigger>
+            {features.kds && (
+              <TabsTrigger
+                value='connector'
+                className='h-auto flex-col gap-1 px-2 py-2 text-xs sm:flex-row sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm'
+              >
+                <Printer className='size-4' />
+                {t('appsTabPrinter')}
+              </TabsTrigger>
+            )}
           </TabsList>
         )}
 
@@ -110,7 +131,8 @@ export function AppsPage() {
               title={app.title}
               about={app.about}
               downloadUrl={appsUrl ? `${appsUrl}/${app.file}` : null}
-              webUrl={staffOrigin(app.key)}
+              // The rider app has no web version: riders are on Android phones
+              webUrl={app.key === 'rider' ? null : staffOrigin(app.key)}
               apiUrl={apiUrl}
             />
           </TabsContent>
@@ -171,7 +193,7 @@ function TabletApp({
   title: string
   about: string
   downloadUrl: string | null
-  webUrl: string
+  webUrl: string | null
   apiUrl: string
 }) {
   const t = useT()
@@ -213,13 +235,15 @@ function TabletApp({
                   caption={t('appsScanToDownload')}
                 />
               )}
-              <Button variant='outline' asChild>
-                <a href={webUrl} target='_blank' rel='noreferrer'>
-                  <ExternalLink />
-                  {t('appsOpenWeb')}
-                </a>
-              </Button>
-              <InfoTip>{t('appsIosHint')}</InfoTip>
+              {webUrl && (
+                <Button variant='outline' asChild>
+                  <a href={webUrl} target='_blank' rel='noreferrer'>
+                    <ExternalLink />
+                    {t('appsOpenWeb')}
+                  </a>
+                </Button>
+              )}
+              {webUrl && <InfoTip>{t('appsIosHint')}</InfoTip>}
             </div>
           </StepRow>
 

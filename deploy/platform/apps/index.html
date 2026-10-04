@@ -2,10 +2,11 @@
 <!--
   The native apps' download page: https://{platform domain}/apps
 
-  One generic build of the till and the kitchen display serves every café;
+  One generic build of the till, the kitchen display and the rider app serves every café;
   which café a tablet belongs to is set inside the app, from the QR code on
   the café's admin → Apps page. mobile-deploy.yml drops the APKs and their
-  version notes (ninja-pos.apk + ninja-pos.json, ninja-kds.apk + ninja-kds.json)
+  version notes (ninja-pos.apk + ninja-pos.json, ninja-kds.apk + ninja-kds.json,
+  ninja-rider.apk + ninja-rider.json)
   beside this file; a card whose note is missing says the app is not published
   yet. Caddy serves this folder as-is (deploy/platform/Caddyfile), so this is
   plain HTML: no build, no framework.
@@ -64,6 +65,12 @@
       <span class="meta" data-meta></span>
       <a class="btn" href="ninja-kds.apk" download data-download data-t="download"></a>
     </section>
+    <section class="card" data-app="rider">
+      <h2 data-t="riderTitle"></h2>
+      <p data-t="riderAbout"></p>
+      <span class="meta" data-meta></span>
+      <a class="btn" href="ninja-rider.apk" download data-download data-t="download"></a>
+    </section>
   </main>
 
   <ol>
@@ -80,6 +87,7 @@
         intro: 'The till and the kitchen display, for Android tablets. One app for every café: install it, then connect it to yours from inside.',
         posTitle: 'ninja POS', posAbout: 'The till: the floor, tickets, payments and shifts, on a landscape tablet by the counter.',
         kdsTitle: 'ninja KDS', kdsAbout: 'The kitchen display: every order as it comes in, bumped when it is done.',
+        riderTitle: 'ninja Rider', riderAbout: 'For your own riders, on their phones: each delivery given to them, the way to the door and the cash to collect.',
         download: 'Download for Android', notYet: 'Not published yet', version: 'Version {v} · {d}',
         step1: 'Download the app on the tablet and open the file. Android asks once to allow installs from this source.',
         step2: 'Open the app. It asks which café it belongs to: scan the code on your admin app\'s Apps page, or type your café\'s address.',
@@ -91,6 +99,7 @@
         intro: 'الكاشير وشاشة المطبخ، لتابلت أندرويد. تطبيق واحد لكل الكافيهات: ثبّته، وبعدين وصّله بكافيهك من جواه.',
         posTitle: 'ninja POS', posAbout: 'الكاشير: الصالة، التذاكر، الدفع والشيفتات، على تابلت عرضي جنب الكاونتر.',
         kdsTitle: 'ninja KDS', kdsAbout: 'شاشة المطبخ: كل أوردر أول ما يوصل، ويتشال لما يخلص.',
+        riderTitle: 'ninja Rider', riderAbout: 'لمندوبين التوصيل بتوعك، على موبايلاتهم: كل طلب يتديلهم، الطريق للباب والكاش المطلوب.',
         download: 'تحميل لأندرويد', notYet: 'لسه منزلش', version: 'إصدار {v} · {d}',
         step1: 'حمّل التطبيق على التابلت وافتح الملف. أندرويد هيسأل مرة واحدة تسمح بالتثبيت من المصدر ده.',
         step2: 'افتح التطبيق. هيسألك تابع أنهي كافيه: امسح الكود من صفحة التطبيقات في تطبيق الإدارة، أو اكتب عنوان كافيهك.',

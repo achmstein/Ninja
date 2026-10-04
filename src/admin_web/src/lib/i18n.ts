@@ -162,6 +162,8 @@ const webExtras = {
   appsPosAbout: { en: "The till: the floor, tickets, payments and shifts, on a landscape tablet by the counter.", ar: "الكاشير: الصالة والتذاكر والدفع والورديات، على جهاز لوحي أفقي بجوار الكاونتر." },
   appsKdsTitle: { en: "ninja KDS", ar: "ninja KDS" },
   appsKdsAbout: { en: "The kitchen display: every order as it comes in, bumped when it is done.", ar: "شاشة المطبخ: كل طلب فور وصوله، ويُزال عند الانتهاء منه." },
+  appsRiderTitle: { en: "ninja Rider", ar: "ninja Rider" },
+  appsRiderAbout: { en: "For your own riders, on their phones: each delivery given to them, the way to the door, and the cash to collect. They sign in with a Rider account from Staff.", ar: "لمندوبين التوصيل بتوعك، على موبايلاتهم: كل طلب يتديلهم، الطريق للباب، والكاش المطلوب. بيسجّلوا دخول بحساب مندوب من صفحة الموظفين." },
   appsDownloadAndroid: { en: "Download for Android", ar: "تنزيل لأندرويد" },
   appsScanToDownload: { en: "On the tablet, scan this with the camera to download the app.", ar: "امسح هذا الرمز بكاميرا الجهاز اللوحي لتنزيل التطبيق مباشرةً." },
   appsNotPublishedHere: { en: "Downloads are not published in this environment", ar: "التنزيل غير متاح في هذه البيئة" },
@@ -1585,6 +1587,7 @@ const webExtras = {
   // The apps page: one app at a time
   appsTabTill: { en: "Till", ar: "الكاشير" },
   appsTabKitchen: { en: "Kitchen display", ar: "شاشة المطبخ" },
+  appsTabRider: { en: "Riders", ar: "المندوبين" },
   appsTabPrinter: { en: "Printer", ar: "الطابعة" },
   appsStepInstall: { en: "Install the app", ar: "ثبّت التطبيق" },
   appsScanToConnect: { en: "Open the app and scan this to connect it", ar: "افتح التطبيق وامسح هذا الرمز لربطه" },

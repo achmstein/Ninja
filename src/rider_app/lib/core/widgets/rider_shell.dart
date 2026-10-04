@@ -1,0 +1,33 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
+import '../auth/auth_service.dart';
+import '../providers/branch_provider.dart';
+import 'no_branch_screen.dart';
+import 'rider_header.dart';
+
+/// The app frame: the header (branch, on duty, settings) and the screen
+/// beneath it. An account with no branch to work in sees the no-branch
+/// screen instead; the header stays, so settings and sign-out are reachable.
+class RiderShell extends ConsumerWidget {
+  final Widget child;
+
+  const RiderShell({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final blocked = ref.watch(branchProvider.select((s) => s.noBranch)) && !ref.watch(isOwnerProvider);
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const RiderHeader(),
+            Expanded(child: blocked ? const NoBranchScreen() : child),
+          ],
+        ),
+      ),
+    );
+  }
+}

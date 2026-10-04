@@ -1,0 +1,134 @@
+name: rider_app
+description: "ninja Rider - the business's own riders: the deliveries given to them, on their phone, for every business on the platform"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # UI Framework - shadcn-style components (same kit as admin_app / client_app)
+  forui: ^0.19.0
+
+  # State Management
+  flutter_riverpod: ^3.1.0
+  firebase_core: ^4.4.0
+  firebase_crashlytics: ^5.0.7
+  # A new delivery rings the rider's phone, app open or not
+  firebase_messaging: ^16.0.0
+
+  # Navigation
+  go_router: ^17.0.1
+
+  # HTTP Client
+  dio: ^5.4.0
+  # Where an update is downloaded before it is installed
+  path_provider: ^2.1.0
+
+  # Authentication (token storage)
+  flutter_secure_storage: ^10.0.0
+
+  # UI Components
+  shimmer: ^3.0.0
+
+  # Utils
+  intl: any
+  shared_preferences: ^2.2.2
+  uuid: ^4.3.3
+  collection: ^1.18.0
+
+  # SignalR (realtime updates)
+  signalr_netcore: ^1.3.7
+
+  # The connect screen reads the QR code from the business's admin
+  mobile_scanner: ^6.0.0
+
+  # The way to the door (Google Maps) and the customer's phone
+  url_launcher: ^6.3.2
+
+  # New-delivery chime (the same file the other apps ship)
+  audioplayers: ^6.1.0
+
+  # Native Splash
+  flutter_native_splash: ^2.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  generate: true
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/fonts/
+    - assets/sounds/
+
+  # Inter + Alexandria, the pair pos_web loads from Google Fonts, bundled as
+  # static instances (weights 400/500/600/700 cover shadcn's
+  # font-normal/medium/semibold/bold).
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    # OFL; licence beside it
+    - family: Alexandria
+      fonts:
+        - asset: assets/fonts/Alexandria-Regular.ttf
+        - asset: assets/fonts/Alexandria-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Alexandria-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Alexandria-Bold.ttf
+          weight: 700
+    # The platform's display face, for its wordmark on the loading screen only (OFL; licence beside it)
+    - family: OriginalSurfer
+      fonts:
+        - asset: assets/fonts/OriginalSurfer-Regular.ttf
+
+# The launcher icon is the platform's N mark on a teal tile, so the rider app
+# is told apart from the till and the kitchen at a glance (the PNGs are the
+# kitchen's for now, until generate-app-icons.mjs draws the rider's); the splash is control_web's
+# `ninja | KDS` lockup on black, as a kitchen screen is, whatever the device's
+# theme (both drawn from the bundled Original Surfer face): one
+# build serves every business, and the business takes over inside once the tablet
+# is connected to it. The icon files are drawn by
+# src/scripts/generate-app-icons.mjs (which also draws the admin web's tile
+# for this app). After that, regenerate with
+#   dart run flutter_launcher_icons && dart run flutter_native_splash:create
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/ninja_icon.png"
+  adaptive_icon_background: "#0D9488"
+  adaptive_icon_foreground: "assets/images/ninja_foreground.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#000000"
+  image: assets/images/ninja_splash.png
+
+  fullscreen: true
+
+  # Android 12+ shows only a centred icon, cut to a 192 dp circle: the lockup
+  # is drawn small enough to sit inside it (so it reads smaller than on older
+  # Androids), on the same black
+  android_12:
+    color: "#000000"
+    image: assets/images/ninja_splash_android12.png

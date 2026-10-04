@@ -1,0 +1,164 @@
+{
+  "@@locale": "en",
+  "appName": "Rider",
+  "poweredBy": "Powered by",
+  "branches": "Branches",
+  "signOut": "Sign out",
+  "settings": "Settings",
+  "connectTitle": "Which business is this?",
+  "connectHint": "Type your business's address, or scan the code on the Apps page of the admin app.",
+  "businessAddress": "Business address",
+  "connect": "Connect",
+  "scanConnectCode": "Scan the code",
+  "connectInvalidAddress": "That is not an address.",
+  "connectUnreachable": "Nothing answered at that address. Check it, and that the phone is online.",
+  "connectNotABusiness": "That address is not a business on ninja.",
+  "connectPaused": "This business is paused. Its owner can see why in the admin app.",
+  "cancel": "Cancel",
+  "thisDevice": "This phone",
+  "connectedTo": "Connected to",
+  "changeBusiness": "Change business",
+  "changeBusinessConfirm": "Sign out and forget this business. The app starts over at the connect screen.",
+  "language": "Language",
+  "theme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "signInFailed": "Sign-in failed",
+  "accessDeniedTitle": "Not a rider account",
+  "accessDeniedDescription": "Ask the owner to make this account a rider on the Staff page.",
+  "retry": "Retry",
+  "toastSuccess": "Done",
+  "toastError": "Something went wrong",
+  "toastInfo": "Heads up",
+  "toastWarning": "Warning",
+  "somethingWentWrong": "Something went wrong!",
+  "email": "Email",
+  "enterEmail": "Enter email address",
+  "password": "Password",
+  "enterPassword": "Enter your password",
+  "signIn": "Sign in",
+  "error": "Error",
+  "invalidCredentials": "Invalid username or password. Please try again.",
+  "enterBothFields": "Please enter both username and password.",
+  "noBranchTitle": "No branch assigned",
+  "noBranchDescription": "Ask the owner to assign a branch.",
+  "appVersion": "App version",
+  "appVersionHint": "New builds come from the platform's download page. The app looks for one when it starts and every few hours. Tap Install when one is ready.",
+  "appVersionInstalled": "Version {version} (build {build})",
+  "@appVersionInstalled": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "int"
+      }
+    }
+  },
+  "updateUpToDate": "Up to date",
+  "updateChecking": "Checking for updates…",
+  "updateDownloading": "Downloading update… {percent}%",
+  "@updateDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updateReady": "Version {version} is ready to install",
+  "@updateReady": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateInstalling": "Installing… the app reopens by itself",
+  "updateNeedsPermission": "Allow installs from this app in the settings Android opened, then tap Install again",
+  "updateFailed": "Could not check for updates",
+  "checkForUpdates": "Check for updates",
+  "installUpdate": "Install",
+  "starting": "Starting…",
+  "onDuty": "On duty",
+  "offDuty": "Off duty",
+  "onDutyHint": "While you are on duty the till can give you deliveries.",
+  "offDutyNote": "You are off duty. Go on duty to get deliveries.",
+  "toGo": "To deliver",
+  "deliveredToday": "Delivered today",
+  "noDeliveries": "No deliveries for you right now",
+  "noDeliveriesHint": "When the till gives you one, your phone rings.",
+  "orderNumber": "Order #{number}",
+  "@orderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "building": "Bldg",
+  "floor": "Floor",
+  "apartment": "Apt",
+  "navigate": "Navigate",
+  "call": "Call",
+  "collect": "Collect {amount}",
+  "@collect": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "collectCash": "Cash to collect",
+  "onTheWay": "On the way",
+  "markOnTheWay": "I'm on the way",
+  "markDelivered": "Delivered",
+  "deliveredConfirm": "Delivered to {name}, and {amount} collected?",
+  "@deliveredConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deliveredConfirmAction": "Yes, delivered",
+  "notYet": "Not yet",
+  "stillCooking": "Still being made",
+  "readyToGo": "Ready to go",
+  "cashInHand": "Cash with you: {amount}",
+  "@cashInHand": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cashInHandHint": "Hand it in at the till; the cashier takes it in.",
+  "handedIn": "Handed in",
+  "cashWithYou": "Cash with you",
+  "newDelivery": "New delivery #{number}",
+  "@newDelivery": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryTakenBack": "Order #{number} was given to someone else",
+  "@deliveryTakenBack": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToUpdate": "That didn't go through. Try again.",
+  "customerNote": "Note",
+  "guest": "Guest",
+  "notifications": "Notifications",
+  "notificationsOn": "On: a new delivery rings the phone",
+  "notificationsOff": "Off: allow notifications for this app in Android settings",
+  "notificationsUnavailable": "Not set up for this app yet"
+}
