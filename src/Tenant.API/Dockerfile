@@ -8,6 +8,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/Tenant.API/Tenant.API.csproj", "Tenant.API/"]
 COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
+COPY ["src/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "IntegrationEventLogEF/"]
 COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 COPY ["src/Shared/", "Shared/"]
 
@@ -18,6 +19,7 @@ RUN dotnet restore "Tenant.API/Tenant.API.csproj"
 COPY ["src/Tenant.API/", "Tenant.API/"]
 COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
+COPY ["src/IntegrationEventLogEF/", "IntegrationEventLogEF/"]
 COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 
 # Build
