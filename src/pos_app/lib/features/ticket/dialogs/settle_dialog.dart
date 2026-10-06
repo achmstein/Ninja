@@ -497,9 +497,15 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
-                            child: Text(
-                              _amountStr.isEmpty ? '0' : _amountStr,
-                              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                            // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                _amountStr.isEmpty ? '0' : _amountStr,
+                                maxLines: 1,
+                                style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                              ),
                             ),
                           ),
                         ),

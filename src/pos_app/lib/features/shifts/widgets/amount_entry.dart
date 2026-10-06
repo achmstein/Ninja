@@ -30,12 +30,18 @@ class AmountEntry extends StatelessWidget {
           ),
           child: Directionality(
             textDirection: TextDirection.ltr,
-            child: Text(
-              value.isEmpty ? '0' : value,
-              style: theme.typography.xl4.copyWith(
-                fontWeight: FontWeight.w700,
-                fontFeatures: const [FontFeature.tabularFigures()],
-                color: value.isEmpty ? theme.colors.mutedForeground : null,
+            // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value.isEmpty ? '0' : value,
+                maxLines: 1,
+                style: theme.typography.xl4.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: value.isEmpty ? theme.colors.mutedForeground : null,
+                ),
               ),
             ),
           ),

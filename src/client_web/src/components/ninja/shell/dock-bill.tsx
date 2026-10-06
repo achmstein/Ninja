@@ -178,7 +178,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               {total > 0 ? (
                 <Odometer value={price(total)} className='text-name font-bold' />
               ) : clock ? (
-                <span dir='ltr' className='self-start text-name font-bold rtl:self-end'>
+                <span dir='ltr' className='self-start text-name font-bold'>
                   <Odometer value={clock} />
                 </span>
               ) : (

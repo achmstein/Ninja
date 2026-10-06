@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { useT } from '@/lib/i18n'
@@ -36,10 +36,11 @@ const useGeo = create<GeoState>()(
   )
 )
 
-const supported = () => typeof navigator !== 'undefined' && 'geolocation' in navigator
+// Browsers give the position only to a secure page: over plain http (a phone on the LAN's address) the call is refused without a prompt
+const supported = () => typeof navigator !== 'undefined' && 'geolocation' in navigator && window.isSecureContext
 
 /** One request for the device's position; the store learns the answer */
-function requestFix() {
+function requestFix(precise = false) {
   const { set } = useGeo.getState()
   if (!supported()) {
     set({ status: 'unavailable', asked: true })
@@ -48,9 +49,13 @@ function requestFix() {
   set({ status: 'locating', asked: true })
   navigator.geolocation.getCurrentPosition(
     (pos) => set({ status: 'ok', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } }),
-    (err) => set({ status: err.code === err.PERMISSION_DENIED ? 'denied' : 'unavailable' }),
-    // A café a street away needs no GPS lock: a coarse fix, a recent one if there is, and soon
-    { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 }
+    // A precise ask that fails keeps the coarse fix there was
+    (err) => set({ status: err.code === err.PERMISSION_DENIED ? 'denied' : useGeo.getState().here ? 'ok' : 'unavailable' }),
+    precise
+      ? // A door for a rider: the GPS, fresh, given time to lock
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20_000 }
+      : // A café a street away needs no GPS lock: a coarse fix, a recent one if there is, and soon
+        { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 }
   )
 }
 
@@ -71,30 +76,46 @@ async function permission(): Promise<PermissionState | null> {
  * or a phone that cannot tell, is taken quietly; `locate` is the customer's
  * own "Use my location", for later. A refusal the browser remembers is not
  * asked again, by the app or by the button, which says so instead.
+ *
+ * `precise` is for putting a pin on a door (a delivery address): the page
+ * asks for the GPS's own fix each time it opens, whatever was asked before
+ * in the session, the coarse fix standing in until it comes; and the button
+ * stays, to come back to where the customer is after moving the map away.
  */
-export function useMyLocation(ask: boolean): {
+export function useMyLocation(
+  ask: boolean,
+  { precise = false }: { precise?: boolean } = {}
+): {
   here: LatLng | null
   locating: boolean
-  /** No fix, and the customer could still give one: the page offers "Use my location" */
+  /** The customer could still give a fix (a better one, when precise): the page offers "Use my location" */
   canLocate: boolean
   locate: () => void
 } {
   const t = useT()
   const { status, here, asked } = useGeo()
+  // A precise page asks once each time it opens, not once a session
+  const askedHere = useRef(false)
 
   useEffect(() => {
-    if (!ask || asked || here || !supported()) return
+    if (!ask || !supported()) return
+    if (precise ? askedHere.current : asked || here) return
+    askedHere.current = true
     let cancelled = false
+    let answered = false
     permission().then((state) => {
-      if (cancelled || useGeo.getState().asked) return
+      if (cancelled || (!precise && useGeo.getState().asked)) return
+      answered = true
       // Refused before, for good: take the answer without asking
       if (state === 'denied') useGeo.getState().set({ status: 'denied', asked: true })
-      else requestFix()
+      else requestFix(precise)
     })
     return () => {
       cancelled = true
+      // Torn down before it asked (strict mode's double mount): the next run asks
+      if (!answered) askedHere.current = false
     }
-  }, [ask, asked, here])
+  }, [ask, asked, here, precise])
 
   const locate = useCallback(() => {
     permission().then((state) => {
@@ -103,11 +124,13 @@ export function useMyLocation(ask: boolean): {
         toast.info(t('locationOff'))
         return
       }
-      requestFix()
+      requestFix(precise)
     })
-  }, [t])
+  }, [t, precise])
 
-  return { here, locating: status === 'locating', canLocate: !here && supported() && status !== 'locating', locate }
+  // A precise page keeps the button (its spinner while the GPS locks); otherwise it is offered only while there is no fix
+  const canLocate = supported() && (precise || (!here && status !== 'locating'))
+  return { here, locating: status === 'locating', canLocate, locate }
 }
 
 /** The branch's point, when the owner gave it one */

@@ -174,18 +174,21 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const guestPhone = useGuestStore((s) => s.contact?.phone ?? '')
   const guestName = useGuestStore((s) => s.contact?.name ?? '')
   const isGuest = !auth.isAuthenticated
-  const location = useMyLocation(initial == null)
+  // A new address asks for the GPS's own fix, not the coarse one the branch list may have had
+  const location = useMyLocation(initial == null, { precise: true })
 
   const [point, setPoint] = useState<LatLng>(() =>
     initial ? { lat: initial.latitude, lng: initial.longitude } : (location.here ?? pointOf(branch) ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG),
   )
   // The pin was put on a door: an address being changed already was; a new one once moved or located
   const [pinned, setPinned] = useState(initial != null || location.here != null)
-  // The map flies once to where the customer is, the first time that is known
+  // The map flies to where the customer is each time a fix comes (the coarse one, then the GPS's),
+  // until the customer moves it themselves; "Use my location" hands it back to the fix
   const [flyTo, setFlyTo] = useState<LatLng | null>(null)
-  const [flew, setFlew] = useState(initial != null)
-  if (!flew && location.here) {
-    setFlew(true)
+  const [moved, setMoved] = useState(initial != null)
+  const [flownTo, setFlownTo] = useState<LatLng | null>(initial == null ? location.here : null)
+  if (!moved && location.here && location.here !== flownTo) {
+    setFlownTo(location.here)
     setFlyTo(location.here)
     setPinned(true)
   }
@@ -295,7 +298,10 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           to={flyTo}
           onSettle={(settled, byUser) => {
             setPoint(settled)
-            if (byUser) setPinned(true)
+            if (byUser) {
+              setPinned(true)
+              setMoved(true)
+            }
           }}
           className='h-56'
         />
@@ -303,9 +309,12 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           <button
             type='button'
             onClick={() => {
-              setFlew(false)
+              setMoved(false)
+              // Back to the fix there is at once; a fresher one follows it
+              if (location.here) setFlyTo({ ...location.here })
               location.locate()
             }}
+            disabled={location.locating}
             className='bg-background text-foreground absolute end-2 bottom-2 grid size-11 place-items-center rounded-full shadow-md'
             aria-label={t('useMyLocation')}
           >
