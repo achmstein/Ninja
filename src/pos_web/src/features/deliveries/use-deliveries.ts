@@ -7,6 +7,7 @@ import {
   getRidersOptions,
   getTillDeliveryQuoteOptions,
   handInDeliveryCashMutation,
+  handInRiderCashMutation,
   markDeliveryDeliveredMutation,
   markDeliveryFailedMutation,
   markDeliveryOutMutation,
@@ -103,6 +104,8 @@ export function useDeliveryActions() {
   const returned = useMutation({ ...markDeliveryReturnedMutation(), onSuccess: done(), onError: failed })
   const cashIn = useMutation({ ...handInDeliveryCashMutation(), onSuccess: done('deliveryCashTaken'), onError: failed })
   const cancel = useMutation({ ...cancelOrderMutation(), onSuccess: done('orderCancelled'), onError: failed })
+  // A rider's cash for several deliveries at once: all or nothing on the server
+  const cashInMany = useMutation({ ...handInRiderCashMutation(), onSuccess: done(), onError: failed })
 
   const q = { 'api-version': API_VERSION }
   return {
@@ -114,6 +117,16 @@ export function useDeliveryActions() {
       fail.mutate({ path: { orderId }, body: { reason: reason.trim() || null }, query: q }),
     markReturned: (orderId: number) => returned.mutate({ path: { orderId }, query: q }),
     cashIn: (orderId: number, amount: number) => cashIn.mutate({ path: { orderId }, body: { amount }, query: q }),
+    cashInMany: (amounts: Map<number, number>, then?: () => void) =>
+      cashInMany.mutate(
+        { body: { items: [...amounts].map(([orderId, amount]) => ({ orderId, amount })) }, query: q },
+        {
+          onSuccess: () => {
+            toast.success(translate('riderCashTaken', { count: amounts.size }))
+            then?.()
+          },
+        },
+      ),
     // A delivery that failed or came back, its cash never in: the order goes, the
     // customer charged nothing, and its food goes as the cashier said
     cancel: (orderId: number, stockDisposition: StockDisposition) =>
@@ -122,6 +135,6 @@ export function useDeliveryActions() {
         headers: { 'x-requestid': crypto.randomUUID() },
         query: q,
       }),
-    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel].some((m) => m.isPending),
+    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel, cashInMany].some((m) => m.isPending),
   }
 }

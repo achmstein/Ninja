@@ -6,6 +6,7 @@ import '../auth/auth_service.dart';
 import '../brand/brand_mark.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/pos_shell.dart';
+import '../../features/deliveries/screens/deliveries_board_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/availability/screens/availability_screen.dart';
 import '../../features/floor/screens/floor_screen.dart';
@@ -183,6 +184,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               final backTo = state.uri.queryParameters['from'] == 'receipts' ? '/receipts' : '/';
               return NoTransitionPage(child: TicketScreen(ticketId: ticketId, autoSettle: settle, backTo: backTo));
             },
+          ),
+          GoRoute(
+            path: '/deliveries',
+            pageBuilder: (context, state) => const NoTransitionPage(child: DeliveriesBoardScreen()),
           ),
           GoRoute(
             path: '/availability',

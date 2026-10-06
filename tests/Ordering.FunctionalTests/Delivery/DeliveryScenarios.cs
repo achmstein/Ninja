@@ -363,6 +363,53 @@ public sealed class DeliveryScenarios
     }
 
     [TestMethod]
+    public async Task A_rider_back_at_the_till_hands_in_the_cash_for_all_their_deliveries_at_once()
+    {
+        await DeliverFromTahrirAsync();
+        var riderId = $"rider-{Guid.NewGuid():N}";
+        await AnnounceRiderAsync(riderId, "Ali Hassan", Delivering);
+        var till = Suite.Ordering.As(Persona.Cashier(Delivering), Delivering);
+        var rider = Suite.Ordering.As(Persona.Rider(Delivering, riderId), Delivering);
+
+        var ids = new List<int>();
+        for (var i = 0; i < 3; i++)
+        {
+            var id = await ConfirmedDeliveryAsync();
+            ids.Add(id);
+            using (var given = await till.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/rider?{Version}", new { riderUserId = riderId }))
+                Assert.AreEqual(HttpStatusCode.NoContent, given.StatusCode, await given.Content.ReadAsStringAsync());
+            using (var left = await rider.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/out?{Version}"))
+                Assert.AreEqual(HttpStatusCode.NoContent, left.StatusCode, await left.Content.ReadAsStringAsync());
+            // The last one is still on its way when the rider comes back with the others' cash
+            if (i < 2)
+            {
+                using var arrived = await rider.RawAsync(HttpMethod.Put, $"{Orders}/{id}/delivery/delivered?{Version}");
+                Assert.AreEqual(HttpStatusCode.NoContent, arrived.StatusCode, await arrived.Content.ReadAsStringAsync());
+            }
+        }
+
+        // The rider cannot count their own cash in
+        var (byRider, _) = await ProblemAsync(rider, HttpMethod.Put, $"{Orders}/deliveries/cash-in?{Version}",
+            new { items = new[] { new { orderId = ids[0], amount = 140 } } });
+        Assert.AreEqual(HttpStatusCode.Forbidden, byRider);
+
+        // One still on the way refuses the lot, and nothing is counted in
+        var (early, earlyBody) = await ProblemAsync(till, HttpMethod.Put, $"{Orders}/deliveries/cash-in?{Version}",
+            new { items = ids.Select(id => new { orderId = id, amount = 140 }) });
+        Assert.AreEqual(HttpStatusCode.Conflict, early);
+        Assert.Contains("delivery.not_delivered", earlyBody);
+
+        using (var cash = await till.RawAsync(HttpMethod.Put, $"{Orders}/deliveries/cash-in?{Version}",
+                   new { items = new[] { new { orderId = ids[0], amount = 140 }, new { orderId = ids[1], amount = 130 } } }))
+            Assert.AreEqual(HttpStatusCode.NoContent, cash.StatusCode, await cash.Content.ReadAsStringAsync());
+
+        var board = await till.GetAsync<List<BoardCard>>($"{Orders}/deliveries?{Version}");
+        Assert.AreEqual(0m, board.Single(o => o.OrderNumber == ids[0]).CashDifference);
+        Assert.AreEqual(-10m, board.Single(o => o.OrderNumber == ids[1]).CashDifference, "ten short on the second");
+        Assert.IsNull(board.Single(o => o.OrderNumber == ids[2]).CashDifference, "the one still out is untouched");
+    }
+
+    [TestMethod]
     public async Task Two_tills_moving_the_same_delivery_at_once_the_second_is_told()
     {
         await DeliverFromTahrirAsync();

@@ -606,6 +606,22 @@ const dictionary = {
   deliveryQuoteFailed: { en: "Couldn't check that. Try again.", ar: "معرفناش نتأكد. جرب تاني." },
   confirmAction: { en: "Confirm", ar: "تأكيد" },
   riderOut: { plural: "count", en: {"=1":"1 out now","other":"{count} out now"}, ar: {"one":"معاه طلب","two":"معاه طلبين","few":"معاه {count} طلبات","many":"معاه {count} طلب","other":"معاه {count} طلب"} },
+  refresh: { en: "Refresh", ar: "تحديث" },
+  deliveriesOff: { en: "This business doesn't deliver now.", ar: "النشاط ده مش بيوصّل دلوقتي." },
+  laneWaiting: { en: "Waiting for a rider", ar: "مستني مندوب" },
+  laneWithRiders: { en: "With riders", ar: "مع المناديب" },
+  laneComingBack: { en: "Coming back", ar: "راجعة" },
+  laneCashDue: { en: "Cash to take in", ar: "كاش لسه ما اتسلّمش" },
+  laneEmpty: { en: "Nothing here", ar: "مفيش حاجة هنا" },
+  riderOrders: { plural: "count", en: {"=1":"1 delivery","other":"{count} deliveries"}, ar: {"one":"توصيلة واحدة","two":"توصيلتين","few":"{count} توصيلات","many":"{count} توصيلة","other":"{count} توصيلة"} },
+  riderCashTake: { en: "Take the cash", ar: "استلم الكاش" },
+  riderCashTitle: { en: "Take the cash from {name}", ar: "استلم الفلوس من {name}" },
+  riderCashExpected: { en: "Bills come to {amount}", ar: "الفواتير {amount}" },
+  riderCashExact: { en: "Exactly the bills", ar: "قد الفواتير بالظبط" },
+  riderCashDifferenceOn: { en: "The difference goes on", ar: "الفرق على" },
+  riderCashTakeIn: { en: "Take in {amount}", ar: "استلم {amount}" },
+  riderCashNoneTicked: { en: "Tick the deliveries the cash is for", ar: "علّم التوصيلات اللي الكاش بتاعها" },
+  riderCashTaken: { plural: "count", en: {"=1":"Cash for 1 delivery taken in","other":"Cash for {count} deliveries taken in"}, ar: {"one":"اتسلّم كاش توصيلة واحدة","two":"اتسلّم كاش توصيلتين","few":"اتسلّم كاش {count} توصيلات","many":"اتسلّم كاش {count} توصيلة","other":"اتسلّم كاش {count} توصيلة"} },
 } satisfies Record<string, Message>
 
 export type TranslationKey = keyof typeof dictionary

@@ -2041,6 +2041,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryCashTakeAction => 'Take it in';
 
   @override
+  String get laneWaiting => 'Waiting for a rider';
+
+  @override
+  String get laneWithRiders => 'With riders';
+
+  @override
+  String get laneComingBack => 'Coming back';
+
+  @override
+  String get laneCashDue => 'Cash to take in';
+
+  @override
+  String get laneEmpty => 'Nothing here';
+
+  @override
+  String riderOrders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '1 delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get riderCashTake => 'Take the cash';
+
+  @override
+  String riderCashExpected(String amount) {
+    return 'Bills come to $amount';
+  }
+
+  @override
+  String get riderCashDifferenceOn => 'The difference goes on';
+
+  @override
+  String riderCashTakeIn(String amount) {
+    return 'Take in $amount';
+  }
+
+  @override
+  String get riderCashNoneTicked => 'Tick the deliveries the cash is for';
+
+  @override
+  String riderCashTaken(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Cash for $count deliveries taken in',
+      one: 'Cash for 1 delivery taken in',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get deliveryLocationNotChecked =>
       'Couldn\'t check that location. The rider will go by the address.';
 

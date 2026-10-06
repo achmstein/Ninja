@@ -32,7 +32,7 @@ import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../../sale/widgets/customer_dialog.dart';
-import '../../deliveries/widgets/deliveries_strip.dart';
+import '../../deliveries/widgets/deliveries_summary.dart';
 import '../dialogs/new_ticket_dialog.dart';
 import '../just_settled.dart';
 import '../widgets/bill_card.dart';
@@ -316,8 +316,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       // gone when nothing is pending.
       const ServiceRequestsStrip(),
       const PendingOrdersStrip(),
-      // Deliveries out: waiting for a rider, with one, or their cash to take in
-      const DeliveriesStrip(),
+      // Deliveries out, one row however many: each lane's count, a tap from the board
+      const DeliveriesSummary(),
       if (reserved.isNotEmpty)
         _HoldsRow(
           reserved: reserved,

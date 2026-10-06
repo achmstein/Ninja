@@ -1,53 +1,18 @@
-import { useState } from 'react'
 import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Undo2, UserRound } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { relativeTime } from '@/features/orders/status'
 import { useNowMs } from '@/features/orders/use-pending-orders'
 import { useAddressLine } from './delivery-details'
-import { boardOrder, laneOf } from './delivery-format'
-import { DeliveryOrderDialog } from './delivery-order-dialog'
-import { useDeliveries, type BoardDelivery } from './use-deliveries'
+import { laneOf } from './delivery-format'
+import type { BoardDelivery } from './use-deliveries'
 
 /**
- * The branch's deliveries on the floor, by where each one stands: waiting for
- * a rider, couldn't be delivered, with a rider, delivered with the cash still
- * out, back at the branch. A tap gives one to a rider, moves it along or takes
- * the cash in. Gone when there is nothing out, so the floor keeps its room on
- * a quiet day.
+ * One delivery on the board: how it stands and since when; who and what to
+ * collect; where; and its rider. Fills the column it is in. A tap opens it.
  */
-export function DeliveriesStrip() {
-  const t = useT()
-  const { deliveries } = useDeliveries()
-  const [open, setOpen] = useState<number | null>(null)
-  const live = boardOrder(deliveries.filter((d) => laneOf(d) !== 'done'))
-  if (live.length === 0) return null
-
-  // The dialog follows the board, so a move made elsewhere shows in it at once
-  const selected = deliveries.find((d) => toNumber(d.orderNumber) === open) ?? null
-
-  return (
-    <section className='flex flex-col gap-2' aria-labelledby='deliveries-heading'>
-      <div className='flex items-center gap-2'>
-        <Bike className='text-primary size-5' aria-hidden />
-        <h2 id='deliveries-heading' className='text-lg font-semibold'>
-          {t('deliveries')}
-        </h2>
-        <Badge className='h-6 tabular-nums'>{live.length}</Badge>
-      </div>
-      <div className='flex gap-3 overflow-x-auto pb-1'>
-        {live.map((order) => (
-          <DeliveryCard key={toNumber(order.orderNumber)} order={order} onOpen={() => setOpen(toNumber(order.orderNumber))} />
-        ))}
-      </div>
-      <DeliveryOrderDialog order={selected} onOpenChange={(o) => !o && setOpen(null)} />
-    </section>
-  )
-}
-
-function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => void }) {
+export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => void }) {
   const t = useT()
   const locale = useLocale()
   const money = useMoney()
@@ -60,7 +25,7 @@ function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => v
       type='button'
       onClick={onOpen}
       className={cn(
-        'bg-card text-card-foreground flex w-[300px] shrink-0 flex-col gap-1 rounded-xl border p-3 text-start shadow-xs',
+        'bg-card text-card-foreground flex w-full flex-col gap-1 rounded-xl border p-3 text-start shadow-xs',
         (lane === 'waiting' || lane === 'failed') && 'border-amber-500/70',
         lane === 'cashDue' && 'border-emerald-500/70',
       )}
@@ -76,9 +41,12 @@ function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => v
         </span>
       </div>
       <div className='mt-1 flex items-baseline gap-2'>
-        <span className='truncate text-base font-semibold'>{order.customerName || t('guest')}</span>
-        <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
-        <span className='ms-auto shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
+        {/* The name and its number share the room up to the amount; a long name is cut there */}
+        <span className='min-w-0 flex-1 truncate'>
+          <span className='text-base font-semibold'>{order.customerName || t('guest')}</span>
+          <span className='text-muted-foreground ms-2 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
+        </span>
+        <span className='shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
       <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />

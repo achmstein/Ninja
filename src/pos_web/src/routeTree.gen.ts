@@ -14,6 +14,7 @@ import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAvailabilityRouteImport } from './routes/_authenticated/availability'
+import { Route as AuthenticatedDeliveriesRouteImport } from './routes/_authenticated/deliveries'
 import { Route as AuthenticatedReceiptsRouteImport } from './routes/_authenticated/receipts'
 import { Route as AuthenticatedSaleRouteImport } from './routes/_authenticated/sale'
 import { Route as AuthenticatedShiftRouteImport } from './routes/_authenticated/shift'
@@ -47,6 +48,11 @@ const AuthenticatedAvailabilityRoute =
     path: '/availability',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDeliveriesRoute = AuthenticatedDeliveriesRouteImport.update({
+  id: '/deliveries',
+  path: '/deliveries',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReceiptsRoute = AuthenticatedReceiptsRouteImport.update({
   id: '/receipts',
   path: '/receipts',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
   '/availability': typeof AuthenticatedAvailabilityRoute
+  '/deliveries': typeof AuthenticatedDeliveriesRoute
   '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
   '/availability': typeof AuthenticatedAvailabilityRoute
+  '/deliveries': typeof AuthenticatedDeliveriesRoute
   '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/signed-out': typeof authSignedOutRoute
   '/_authenticated/availability': typeof AuthenticatedAvailabilityRoute
+  '/_authenticated/deliveries': typeof AuthenticatedDeliveriesRoute
   '/_authenticated/receipts': typeof AuthenticatedReceiptsRoute
   '/_authenticated/sale': typeof AuthenticatedSaleRoute
   '/_authenticated/shift': typeof AuthenticatedShiftRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/signed-out'
     | '/availability'
+    | '/deliveries'
     | '/receipts'
     | '/sale'
     | '/shift'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/signed-out'
     | '/availability'
+    | '/deliveries'
     | '/receipts'
     | '/sale'
     | '/shift'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/(auth)/sign-in'
     | '/(auth)/signed-out'
     | '/_authenticated/availability'
+    | '/_authenticated/deliveries'
     | '/_authenticated/receipts'
     | '/_authenticated/sale'
     | '/_authenticated/shift'
@@ -212,6 +224,13 @@ declare module '@tanstack/react-router' {
       path: '/availability'
       fullPath: '/availability'
       preLoaderRoute: typeof AuthenticatedAvailabilityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/deliveries': {
+      id: '/_authenticated/deliveries'
+      path: '/deliveries'
+      fullPath: '/deliveries'
+      preLoaderRoute: typeof AuthenticatedDeliveriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/receipts': {
@@ -268,6 +287,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAvailabilityRoute: typeof AuthenticatedAvailabilityRoute
+  AuthenticatedDeliveriesRoute: typeof AuthenticatedDeliveriesRoute
   AuthenticatedReceiptsRoute: typeof AuthenticatedReceiptsRoute
   AuthenticatedSaleRoute: typeof AuthenticatedSaleRoute
   AuthenticatedShiftRoute: typeof AuthenticatedShiftRoute
@@ -279,6 +299,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAvailabilityRoute: AuthenticatedAvailabilityRoute,
+  AuthenticatedDeliveriesRoute: AuthenticatedDeliveriesRoute,
   AuthenticatedReceiptsRoute: AuthenticatedReceiptsRoute,
   AuthenticatedSaleRoute: AuthenticatedSaleRoute,
   AuthenticatedShiftRoute: AuthenticatedShiftRoute,

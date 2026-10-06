@@ -75,6 +75,12 @@ public record DeliveryFailedRequest(string? Reason = null);
 /// <param name="Amount">What the rider handed in, as the till counted it.</param>
 public record HandInCashRequest(decimal Amount);
 
+/// <summary>The cash a rider hands in for several deliveries at once: each delivery and what the till counted for it.</summary>
+public record HandInRiderCashRequest(IReadOnlyList<HandInCashItem>? Items);
+
+/// <summary>One delivery of a rider's hand-in, and its amount.</summary>
+public record HandInCashItem(int OrderId, decimal Amount);
+
 /// <summary>A delivery as the till's board and the rider see it: the order, what to collect, where to go.</summary>
 public record DeliveryOrder
 {

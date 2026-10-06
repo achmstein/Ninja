@@ -485,4 +485,79 @@ public class DeliveryHardeningTest
         Assert.IsNull(typeof(DeliveryView).GetProperty("RiderUserId"));
         Assert.AreEqual("rider-1", DeliveryStaffView.ForStaff(order.Delivery)!.RiderUserId);
     }
+
+    private static Order DeliveredBy(string riderId, int branch = Branch)
+    {
+        var order = ConfirmedDelivery(branch);
+        order.AssignRider(riderId, "Ali");
+        order.MarkOutForDelivery();
+        order.MarkDelivered();
+        order.ClearDomainEvents();
+        return order;
+    }
+
+    private static Task<DeliveryStepResult> HandInManyAsync(Store store, IIdentityService identity, params (int OrderId, decimal Amount)[] items)
+    {
+        var context = store.NewContext();
+        return new HandInDeliveriesCashCommandHandler(new OrderRepository(context), identity, NullLogger<HandInDeliveriesCashCommandHandler>.Instance)
+            .Handle(new HandInDeliveriesCashCommand(Branch, [.. items.Select(i => new DeliveryCashItem(i.OrderId, i.Amount))]), CancellationToken.None);
+    }
+
+    private static async Task<Delivery> DeliveryOfAsync(Store store, int orderId)
+    {
+        await using var context = store.NewContext();
+        return (await new OrderRepository(context).GetAsync(orderId))!.Delivery!;
+    }
+
+    [TestMethod]
+    public async Task A_rider_s_cash_for_several_deliveries_is_counted_in_at_once()
+    {
+        var store = new Store();
+        var first = await SaveAsync(store, DeliveredBy("rider-1"));
+        var second = await SaveAsync(store, DeliveredBy("rider-1"));
+
+        Assert.AreEqual(DeliveryStepResult.Done, await HandInManyAsync(store, Till(), (first, 120), (second, 95)));
+
+        Assert.AreEqual(120m, (await DeliveryOfAsync(store, first)).CashCollected);
+        Assert.AreEqual(95m, (await DeliveryOfAsync(store, second)).CashCollected);
+        Assert.IsNotNull((await DeliveryOfAsync(store, second)).CashHandedInAt);
+
+        // The same hand-in again, a retried request: nothing moves
+        Assert.AreEqual(DeliveryStepResult.Done, await HandInManyAsync(store, Till(), (first, 1), (second, 1)));
+        Assert.AreEqual(120m, (await DeliveryOfAsync(store, first)).CashCollected);
+    }
+
+    [TestMethod]
+    public async Task One_delivery_that_cannot_be_counted_in_refuses_the_whole_hand_in()
+    {
+        var store = new Store();
+        var delivered = await SaveAsync(store, DeliveredBy("rider-1"));
+        var stillOut = ConfirmedDelivery();
+        stillOut.AssignRider("rider-1", "Ali");
+        stillOut.MarkOutForDelivery();
+        var outId = await SaveAsync(store, stillOut);
+
+        var refused = await Assert.ThrowsExactlyAsync<OrderingDomainException>(() => HandInManyAsync(store, Till(), (delivered, 120), (outId, 95)));
+        Assert.AreEqual(DeliveryErrors.NotDelivered, refused.Code);
+        Assert.IsNull((await DeliveryOfAsync(store, delivered)).CashHandedInAt, "all or nothing");
+
+        var elsewhere = await SaveAsync(store, DeliveredBy("rider-1", OtherBranch));
+        Assert.AreEqual(DeliveryStepResult.NotFound, await HandInManyAsync(store, Till(), (delivered, 120), (elsewhere, 95)));
+        Assert.IsNull((await DeliveryOfAsync(store, delivered)).CashHandedInAt);
+    }
+
+    [TestMethod]
+    public async Task Only_the_till_takes_a_hand_in_and_the_list_must_make_sense()
+    {
+        var store = new Store();
+        var id = await SaveAsync(store, DeliveredBy("rider-1"));
+
+        Assert.AreEqual(DeliveryStepResult.NotYours, await HandInManyAsync(store, Rider("rider-1"), (id, 120)));
+
+        var empty = await Assert.ThrowsExactlyAsync<OrderingDomainException>(() => HandInManyAsync(store, Till()));
+        Assert.AreEqual(DeliveryErrors.CashInvalid, empty.Code);
+        var twice = await Assert.ThrowsExactlyAsync<OrderingDomainException>(() => HandInManyAsync(store, Till(), (id, 60), (id, 60)));
+        Assert.AreEqual(DeliveryErrors.CashInvalid, twice.Code);
+        Assert.IsNull((await DeliveryOfAsync(store, id)).CashHandedInAt);
+    }
 }

@@ -238,8 +238,17 @@ export type GuestSummary = {
     lastOrderAt?: string;
 };
 
+export type HandInCashItem = {
+    orderId: number | string;
+    amount: number | string;
+};
+
 export type HandInCashRequest = {
     amount: number | string;
+};
+
+export type HandInRiderCashRequest = {
+    items: null | Array<HandInCashItem>;
 };
 
 export type KitchenOrder = {
@@ -1845,6 +1854,38 @@ export type HandInDeliveryCashResponses = {
 };
 
 export type HandInDeliveryCashResponse = HandInDeliveryCashResponses[keyof HandInDeliveryCashResponses];
+
+export type HandInRiderCashData = {
+    body: HandInRiderCashRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/deliveries/cash-in';
+};
+
+export type HandInRiderCashErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type HandInRiderCashResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type HandInRiderCashResponse = HandInRiderCashResponses[keyof HandInRiderCashResponses];
 
 export type MarkDeliveryReturnedData = {
     body?: never;

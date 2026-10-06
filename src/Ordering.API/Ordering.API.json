@@ -2131,6 +2131,52 @@
         ]
       }
     },
+    "/api/orders/deliveries/cash-in": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "A rider handed in the cash for several deliveries at once: each bill is settled in cash (staff)",
+        "description": "Each delivery with the amount the till counted for it, at most 100. All or nothing: one not found here, not delivered yet or settled another way refuses the lot (its code says why), and nothing is counted in. A delivery whose cash is in already is passed over, as a repeated tap is.",
+        "operationId": "HandInRiderCash",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandInRiderCashRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/{orderId}/delivery/returned": {
       "put": {
         "tags": [
@@ -4899,6 +4945,31 @@
           }
         }
       },
+      "HandInCashItem": {
+        "required": [
+          "orderId",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "HandInCashRequest": {
         "required": [
           "amount"
@@ -4912,6 +4983,23 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "HandInRiderCashRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/HandInCashItem"
+            }
           }
         }
       },

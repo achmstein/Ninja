@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
-import { DeliveriesStrip } from '@/features/deliveries/deliveries-strip'
+import { DeliveriesSummary } from '@/features/deliveries/deliveries-summary'
 import { billLabel, deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
 import { useDeliveries } from '@/features/deliveries/use-deliveries'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
@@ -458,7 +458,7 @@ export function Floor() {
         {/* Deliveries out: waiting for a rider, with one, or their cash to take
             in. Shown even once delivery is switched off, so what is already
             out can finish; it is gone when there is nothing */}
-        <DeliveriesStrip />
+        <DeliveriesSummary />
 
         {features.reservations && !cloudKitchen && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>

@@ -109,6 +109,12 @@ public static partial class DeliveryApi
             .WithDescription("With the amount the till counted; the board shows it against the total.")
             .RequireAuthorization("Pos");
 
+        orders.MapPut("/deliveries/cash-in", CashInManyAsync)
+            .WithName("HandInRiderCash")
+            .WithSummary("A rider handed in the cash for several deliveries at once: each bill is settled in cash (staff)")
+            .WithDescription("Each delivery with the amount the till counted for it, at most 100. All or nothing: one not found here, not delivered yet or settled another way refuses the lot (its code says why), and nothing is counted in. A delivery whose cash is in already is passed over, as a repeated tap is.")
+            .RequireAuthorization("Pos");
+
         orders.MapPut("/{orderId:int}/delivery/returned", MarkReturnedAsync)
             .WithName("MarkDeliveryReturned")
             .WithSummary("The rider brought the order back to the branch (staff)")

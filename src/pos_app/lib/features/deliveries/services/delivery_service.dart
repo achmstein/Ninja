@@ -45,6 +45,14 @@ class DeliveryRepository {
   /// The rider handed in [amount] for it; the bill is settled with it
   Future<void> cashIn(int orderId, double amount) => _orders.put('$orderId/delivery/cash-in', data: {'amount': amount});
 
+  /// A rider handed in the cash for several deliveries at once, each with what
+  /// was counted for it; all or nothing on the server
+  Future<void> cashInMany(Map<int, double> amounts) => _orders.put('deliveries/cash-in', data: {
+        'items': [
+          for (final e in amounts.entries) {'orderId': e.key, 'amount': e.value},
+        ],
+      });
+
   /// The branch's fee, minimum and radius for a delivery taken over the
   /// phone; with a pasted [location], the pin read from it and how far
   Future<TillDeliveryQuote> tillQuote({String? location}) async {

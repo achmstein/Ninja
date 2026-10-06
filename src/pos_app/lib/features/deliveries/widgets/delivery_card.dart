@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
@@ -9,7 +8,6 @@ import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/status.dart';
 import '../models/delivery_order.dart';
-import '../providers/deliveries_provider.dart';
 import 'delivery_details.dart';
 import 'delivery_dialog.dart';
 
@@ -19,59 +17,6 @@ final deliveriesClockProvider = StreamProvider.autoDispose<DateTime>(
   (ref) => Stream<DateTime>.periodic(AppConfig.deliveriesClockTick, (_) => DateTime.now()),
 );
 
-/// The branch's deliveries on the floor, by where each one stands: waiting
-/// for a rider, with a rider (and whether they have left), coming back or
-/// back, delivered with the cash still out. A tap opens the delivery. Gone
-/// when there is nothing out, and where the business does not deliver.
-class DeliveriesStrip extends ConsumerWidget {
-  const DeliveriesStrip({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    if (!ref.watch(featuresProvider.select((f) => f.delivery))) return const SizedBox.shrink();
-    final deliveries = ref.watch(deliveriesProvider).value ?? const <DeliveryOrder>[];
-    if (deliveries.isEmpty) return const SizedBox.shrink();
-    final now = ref.watch(deliveriesClockProvider).value ?? DateTime.now();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Icon(FIcons.bike, size: 20, color: theme.colors.primary),
-            const SizedBox(width: 8),
-            Text(l10n.deliveries, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(width: 8),
-            FBadge(child: Text('${deliveries.length}', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]))),
-          ],
-        ),
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final (index, order) in deliveries.indexed) ...[
-                if (index > 0) const SizedBox(width: 12),
-                DeliveryCard(
-                  key: ValueKey(order.orderNumber),
-                  order: order,
-                  now: now,
-                  onTap: () => showDeliveryDialog(context, order.orderNumber),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-}
-
 /// One delivery on the board: who and what to collect; where; then how it
 /// stands and since when. Each line holds one thing, so no language's longer
 /// words push another out of the card. A button to assistive technology.
@@ -80,7 +25,10 @@ class DeliveryCard extends StatelessWidget {
   final DateTime now;
   final VoidCallback onTap;
 
-  const DeliveryCard({super.key, required this.order, required this.now, required this.onTap});
+  /// A fixed width where cards sit side by side; null fills the column it is in
+  final double? width;
+
+  const DeliveryCard({super.key, required this.order, required this.now, required this.onTap, this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +56,7 @@ class DeliveryCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            width: 300,
+            width: width,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(color: border),
@@ -121,13 +69,22 @@ class DeliveryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Flexible(
-                      child: Text(name,
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    // The name and its number as one line, with all the room up to the amount;
+                    // a long name is cut there, never halfway across an empty row
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: name, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                          TextSpan(
+                            text: '  ${bidiIsolate('#${order.orderNumber}')}',
+                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                          ),
+                        ]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(bidiIsolate('#${order.orderNumber}'), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Text(money(context, order.total),
                         style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
                   ],

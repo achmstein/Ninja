@@ -169,3 +169,56 @@ public class HandInDeliveryCashCommandHandler(
         return Task.CompletedTask;
     }
 }
+
+/// <summary>One delivery a rider hands in cash for, and what the till counted for it.</summary>
+public record DeliveryCashItem(int OrderId, decimal Amount);
+
+/// <summary>
+/// A rider back at the till hands in the cash for several deliveries at once.
+/// All or nothing: each delivery is found at the caller's branch and counted
+/// in as <see cref="HandInDeliveryCashCommand"/> would, in one save, so a
+/// dropped connection or one delivery refused leaves none of them half done.
+/// Each still raises its own change, and Sales settles each bill as before.
+/// </summary>
+public record HandInDeliveriesCashCommand(int BranchId, IReadOnlyList<DeliveryCashItem> Items) : IRequest<DeliveryStepResult>
+{
+    /// <summary>A rider's day at a busy branch, with room to spare; more is a mistake, not a hand-in.</summary>
+    public const int MaxItems = 100;
+}
+
+public class HandInDeliveriesCashCommandHandler(
+    IOrderRepository orderRepository, IIdentityService identity, ILogger<HandInDeliveriesCashCommandHandler> logger)
+    : IRequestHandler<HandInDeliveriesCashCommand, DeliveryStepResult>
+{
+    public async Task<DeliveryStepResult> Handle(HandInDeliveriesCashCommand command, CancellationToken cancellationToken)
+    {
+        if (command.Items.Count == 0 || command.Items.Count > HandInDeliveriesCashCommand.MaxItems)
+            throw new OrderingDomainException("Say which deliveries the cash is for.", DeliveryErrors.CashInvalid);
+        if (command.Items.Select(i => i.OrderId).Distinct().Count() != command.Items.Count)
+            throw new OrderingDomainException("A delivery is in the list twice.", DeliveryErrors.CashInvalid);
+
+        // The cash is the till's to take, as for one delivery
+        if (!identity.RunsTheTill())
+            return DeliveryStepResult.NotYours;
+
+        var orders = new List<(Order Order, decimal Amount)>(command.Items.Count);
+        foreach (var item in command.Items)
+        {
+            var order = await orderRepository.GetAsync(item.OrderId);
+            if (order is null || order.BranchId != command.BranchId || order.Delivery is null)
+                return DeliveryStepResult.NotFound;
+            orders.Add((order, item.Amount));
+        }
+
+        // The aggregate refuses one that cannot be counted in (not delivered, settled another way); nothing is saved then
+        foreach (var (order, amount) in orders)
+            order.MarkDeliveryCashHandedIn(amount);
+
+        logger.LogInformation(
+            "Cash for {Count} deliveries ({OrderIds}) handed in at once, {Total} in all, by {Actor} (till)",
+            orders.Count, string.Join(",", orders.Select(o => o.Order.Id)), orders.Sum(o => o.Amount), identity.GetUserIdentity());
+
+        await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        return DeliveryStepResult.Done;
+    }
+}

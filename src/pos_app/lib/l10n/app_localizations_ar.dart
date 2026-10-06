@@ -2044,6 +2044,64 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryCashTakeAction => 'استلم';
 
   @override
+  String get laneWaiting => 'مستني مندوب';
+
+  @override
+  String get laneWithRiders => 'مع المناديب';
+
+  @override
+  String get laneComingBack => 'راجعة';
+
+  @override
+  String get laneCashDue => 'كاش لسه ما اتسلّمش';
+
+  @override
+  String get laneEmpty => 'مفيش حاجة هنا';
+
+  @override
+  String riderOrders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count توصيلات',
+      two: 'توصيلتين',
+      one: 'توصيلة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get riderCashTake => 'استلم الكاش';
+
+  @override
+  String riderCashExpected(String amount) {
+    return 'الفواتير $amount';
+  }
+
+  @override
+  String get riderCashDifferenceOn => 'الفرق على';
+
+  @override
+  String riderCashTakeIn(String amount) {
+    return 'استلم $amount';
+  }
+
+  @override
+  String get riderCashNoneTicked => 'علّم التوصيلات اللي الكاش بتاعها';
+
+  @override
+  String riderCashTaken(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'اتسلّم كاش $count توصيلات',
+      two: 'اتسلّم كاش توصيلتين',
+      one: 'اتسلّم كاش توصيلة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get deliveryLocationNotChecked =>
       'معرفناش نتأكد من اللوكيشن ده. المندوب هيمشي بالعنوان.';
 

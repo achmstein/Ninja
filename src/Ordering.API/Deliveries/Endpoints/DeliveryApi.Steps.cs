@@ -35,11 +35,17 @@ public static partial class DeliveryApi
         int orderId, HandInCashRequest request, HttpContext httpContext, IMediator mediator) =>
         StepAsync(new HandInDeliveryCashCommand(orderId, httpContext.GetRequiredBranchId(), request.Amount), mediator);
 
-    private static async Task<Results<NoContent, ProblemHttpResult>> StepAsync(DeliveryStepCommand command, IMediator mediator)
+    public static Task<Results<NoContent, ProblemHttpResult>> CashInManyAsync(
+        HandInRiderCashRequest request, HttpContext httpContext, IMediator mediator) =>
+        StepAsync(new HandInDeliveriesCashCommand(
+            httpContext.GetRequiredBranchId(),
+            [.. (request.Items ?? []).Select(i => new DeliveryCashItem(i.OrderId, i.Amount))]), mediator);
+
+    private static async Task<Results<NoContent, ProblemHttpResult>> StepAsync(IRequest<DeliveryStepResult> command, IMediator mediator)
     {
         try
         {
-            return await mediator.Send((IRequest<DeliveryStepResult>)command) switch
+            return await mediator.Send(command) switch
             {
                 DeliveryStepResult.NotFound => OrderingProblems.Of("delivery.not_found", "There is no such delivery here."),
                 DeliveryStepResult.NotYours => OrderingProblems.Of(DeliveryErrors.RiderNotYours, "This delivery isn't yours to move."),

@@ -86,6 +86,9 @@ class DeliveryActions {
 
   Future<void> cashIn(int orderId, double amount) => _then(() => _repository.cashIn(orderId, amount), bills: true);
 
+  /// A rider's cash for several deliveries, taken in at once
+  Future<void> cashInMany(Map<int, double> amounts) => _then(() => _repository.cashInMany(amounts), bills: true);
+
   /// The bag is back and nobody will have it: the order is called off, its
   /// food written off or back to stock as the cashier said
   Future<void> cancelReturned(int orderId, StockDisposition disposition) => _then(

@@ -3680,6 +3680,78 @@ abstract class AppLocalizations {
   /// **'Take it in'**
   String get deliveryCashTakeAction;
 
+  /// No description provided for @laneWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a rider'**
+  String get laneWaiting;
+
+  /// No description provided for @laneWithRiders.
+  ///
+  /// In en, this message translates to:
+  /// **'With riders'**
+  String get laneWithRiders;
+
+  /// No description provided for @laneComingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming back'**
+  String get laneComingBack;
+
+  /// No description provided for @laneCashDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash to take in'**
+  String get laneCashDue;
+
+  /// No description provided for @laneEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here'**
+  String get laneEmpty;
+
+  /// No description provided for @riderOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 delivery} other{{count} deliveries}}'**
+  String riderOrders(int count);
+
+  /// No description provided for @riderCashTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take the cash'**
+  String get riderCashTake;
+
+  /// No description provided for @riderCashExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills come to {amount}'**
+  String riderCashExpected(String amount);
+
+  /// No description provided for @riderCashDifferenceOn.
+  ///
+  /// In en, this message translates to:
+  /// **'The difference goes on'**
+  String get riderCashDifferenceOn;
+
+  /// No description provided for @riderCashTakeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Take in {amount}'**
+  String riderCashTakeIn(String amount);
+
+  /// No description provided for @riderCashNoneTicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick the deliveries the cash is for'**
+  String get riderCashNoneTicked;
+
+  /// No description provided for @riderCashTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Cash for 1 delivery taken in} other{Cash for {count} deliveries taken in}}'**
+  String riderCashTaken(int count);
+
   /// No description provided for @deliveryLocationNotChecked.
   ///
   /// In en, this message translates to:
