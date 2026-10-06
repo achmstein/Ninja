@@ -74,6 +74,10 @@ export type ConnectorPairingView = {
     expiresAt: string;
 };
 
+export type CreatedOrder = {
+    orderId: null | number | string;
+};
+
 export type CreateOrderDraftCommand = {
     buyerId: null | string;
     items: null | Array<BasketItem>;
@@ -94,6 +98,7 @@ export type CreateOrderRequest = {
     placeName?: null | LocalizedText;
     promoCode?: null | string;
     delivery?: null | DeliveryRequest;
+    payOnline?: boolean;
 };
 
 export type CreatePairingRequest = {
@@ -146,6 +151,8 @@ export type DeliveryOrder = {
     customerName?: null | string;
     customerNote?: null | string;
     total?: number | string;
+    paidOnline?: boolean;
+    toCollect?: number | string;
     cashDifference?: null | number | string;
     items?: Array<Orderitem>;
     delivery?: DeliveryStaffView;
@@ -386,6 +393,9 @@ export type Order = {
     loyaltyDiscount?: number | string;
     promoCode?: null | string;
     promoDiscount?: number | string;
+    paysOnline?: boolean;
+    paymentDueBy?: null | string;
+    paidOnlineAt?: null | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -456,6 +466,9 @@ export type OrderSummary = {
     loyaltyDiscount?: number | string;
     promoCode?: null | string;
     promoDiscount?: number | string;
+    paysOnline?: boolean;
+    paymentDueBy?: null | string;
+    paidOnlineAt?: null | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -580,6 +593,7 @@ export type RiderDeliveryRow = {
     floor?: null | string;
     apartment?: null | string;
     total?: number | string;
+    paidOnline?: boolean;
     fee?: number | string;
     stage?: string;
     assignedAt?: string;
@@ -719,8 +733,10 @@ export type CreateOrderResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: CreatedOrder;
 };
+
+export type CreateOrderResponse = CreateOrderResponses[keyof CreateOrderResponses];
 
 export type CreatePosOrderData = {
     body: PosOrderRequest;
@@ -1082,6 +1098,42 @@ export type RateOrderErrors = {
 export type RateOrderError = RateOrderErrors[keyof RateOrderErrors];
 
 export type RateOrderResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelUnpaidOrderData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/cancel-unpaid';
+};
+
+export type CancelUnpaidOrderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelUnpaidOrderResponses = {
     /**
      * OK
      */

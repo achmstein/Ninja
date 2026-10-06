@@ -199,6 +199,9 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<bool>("OnlinePaymentsEntitled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("PayAheadEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("PayrollEnabled")
                         .HasColumnType("boolean");
 

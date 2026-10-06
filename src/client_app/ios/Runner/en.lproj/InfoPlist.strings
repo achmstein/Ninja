@@ -1,0 +1,2 @@
+/* What iOS shows when the app asks for the position (the app says the same first, in its own sheet) */
+"NSLocationWhenInUseUsageDescription" = "Your location is used only to find the branch nearest you and to put the pin on your door for a delivery. It is never shared.";

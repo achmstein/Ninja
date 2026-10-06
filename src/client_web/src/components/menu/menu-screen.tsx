@@ -36,6 +36,7 @@ import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
 import { useMenuStyle } from './menu-style'
 import { MAX_ON_SHEET, menuById, pairedFor } from './paired-items'
+import { NearestBranchPrimer } from '@/components/nearest-branch-primer'
 import { OrderingPausedNote } from './paused-note'
 import { cornerOf } from './photo-corner'
 import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
@@ -456,6 +457,9 @@ export function MenuScreen({ menu }: HomeProps) {
           </motion.div>
 
           {/* The bar over the cards: the business, where you are; on the whole menu, the way back */}
+          {/* Why the app would like the customer's position, before the browser asks for it */}
+          <NearestBranchPrimer />
+
           <NinjaTopBar
             ref={bar}
             className='absolute inset-x-0 top-0'

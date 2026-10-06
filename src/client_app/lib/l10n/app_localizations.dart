@@ -2745,6 +2745,36 @@ abstract class AppLocalizations {
   /// **'Location is off for this app. Turn it on in your phone\'s settings.'**
   String get locationOff;
 
+  /// No description provided for @nearestBranchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order from the branch nearest you'**
+  String get nearestBranchTitle;
+
+  /// No description provided for @nearestBranchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We use your location only to find your closest branch and how far it is, so your order is made close to you. It is never shared.'**
+  String get nearestBranchBody;
+
+  /// No description provided for @nearestBranchMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordering from {name}, {distance} away'**
+  String nearestBranchMoved(String name, String distance);
+
+  /// No description provided for @nearestBranchBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is off. Turn it on to find the branch nearest you.'**
+  String get nearestBranchBlocked;
+
+  /// No description provided for @deliveryPinWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your location to put the pin right on your door, so the rider finds you.'**
+  String get deliveryPinWhy;
+
   /// No description provided for @ninjaChangeBranch.
   ///
   /// In en, this message translates to:
@@ -2853,12 +2883,6 @@ abstract class AppLocalizations {
   /// **'Order from {name}, {distance} away'**
   String deliveryTryBranch(String name, String distance);
 
-  /// No description provided for @deliveryFromBranch.
-  ///
-  /// In en, this message translates to:
-  /// **'Delivered from {name}'**
-  String deliveryFromBranch(String name);
-
   /// No description provided for @deliveryNoBranchReaches.
   ///
   /// In en, this message translates to:
@@ -2900,12 +2924,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add {amount} more for delivery'**
   String deliveryAddMore(String amount);
-
-  /// No description provided for @deliveryCashAtDoor.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay the rider in cash at the door'**
-  String get deliveryCashAtDoor;
 
   /// No description provided for @deliveryMovePin.
   ///
@@ -3164,6 +3182,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The rider couldn\'t deliver it. {name} will be in touch.'**
   String orderNotDeliveredNote(String name);
+
+  /// No description provided for @payAheadLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'How you pay'**
+  String get payAheadLabel;
+
+  /// No description provided for @payAheadOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay online'**
+  String get payAheadOnline;
+
+  /// No description provided for @payAheadCashDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash on delivery'**
+  String get payAheadCashDelivery;
+
+  /// No description provided for @payAheadCashPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay at pickup'**
+  String get payAheadCashPickup;
+
+  /// No description provided for @payAheadFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Online payment fee'**
+  String get payAheadFee;
+
+  /// No description provided for @payAheadHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Your card is only charged once {name} accepts the order.'**
+  String payAheadHeld(String name);
+
+  /// No description provided for @payAheadPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to pay'**
+  String get payAheadPlace;
+
+  /// No description provided for @payAheadFinishFromDock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order is waiting for its payment: pay it from the bar below.'**
+  String get payAheadFinishFromDock;
+
+  /// No description provided for @payAheadGettingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your payment ready…'**
+  String get payAheadGettingReady;
+
+  /// No description provided for @payAheadToCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking you to pay…'**
+  String get payAheadToCheckout;
+
+  /// No description provided for @payAheadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay for your order'**
+  String get payAheadTitle;
+
+  /// No description provided for @payAheadWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay within {time} to send it to {name}.'**
+  String payAheadWithin(String time, String name);
+
+  /// No description provided for @payAheadOutOfTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time\'s up for this order.'**
+  String get payAheadOutOfTime;
+
+  /// No description provided for @payAheadPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount}'**
+  String payAheadPay(String amount);
+
+  /// No description provided for @payAheadCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel order'**
+  String get payAheadCancel;
+
+  /// No description provided for @payAheadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Order cancelled. Nothing was charged.'**
+  String get payAheadCancelled;
+
+  /// No description provided for @payAheadCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel the order'**
+  String get payAheadCancelFailed;
+
+  /// No description provided for @payAheadStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the payment'**
+  String get payAheadStartFailed;
+
+  /// No description provided for @payAheadPaidNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has your order.'**
+  String payAheadPaidNote(String name);
+
+  /// No description provided for @payAheadHeldNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has your order. Your card is charged once they accept it.'**
+  String payAheadHeldNote(String name);
+
+  /// No description provided for @payAheadFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your order'**
+  String get payAheadFollow;
+
+  /// No description provided for @payAheadOrderCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'This order was cancelled'**
+  String get payAheadOrderCancelled;
+
+  /// No description provided for @payAheadNothingCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was charged.'**
+  String get payAheadNothingCharged;
+
+  /// No description provided for @payAheadNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find this order to pay'**
+  String get payAheadNotFound;
+
+  /// No description provided for @orderStageAwaitingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment'**
+  String get orderStageAwaitingPayment;
+
+  /// No description provided for @orderPayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay now'**
+  String get orderPayNow;
+
+  /// No description provided for @orderPaidOnTheWayNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On its way to you. It is paid: nothing to pay at the door.'**
+  String get orderPaidOnTheWayNote;
+
+  /// No description provided for @orderPaidOnTheWayRiderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is on the way to you. It is paid: nothing to pay at the door.'**
+  String orderPaidOnTheWayRiderNote(String rider);
+
+  /// No description provided for @orderPaidCancelledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} could not take this order. What you paid goes back to you.'**
+  String orderPaidCancelledNote(String name);
+
+  /// No description provided for @orderUnpaidCancelledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled before it was paid. Nothing was charged.'**
+  String get orderUnpaidCancelledNote;
+
+  /// No description provided for @payWhyAtDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid to the rider at the door'**
+  String get payWhyAtDoor;
 }
 
 class _AppLocalizationsDelegate

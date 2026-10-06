@@ -159,3 +159,12 @@ describe('a delivery', () => {
     expect(orderSignature([line], NO_EXTRAS, null, null, null)).not.toBe(a)
   })
 })
+
+describe('paying ahead', () => {
+  it('asks for it only on an order to a door or the counter, and makes it a different order', () => {
+    const base = { lines: [line], extras: NO_EXTRAS, isGuest: false, profile: { sub: 'u' }, guestContact: null, newId: () => 'id' }
+    expect(orderBody({ ...base, destination: null, payOnline: true }).payOnline).toBe(true)
+    expect(orderBody({ ...base, destination: table, payOnline: true }).payOnline).toBe(false)
+    expect(orderSignature([line], NO_EXTRAS, null, null, null, true)).not.toBe(orderSignature([line], NO_EXTRAS, null, null, null, false))
+  })
+})

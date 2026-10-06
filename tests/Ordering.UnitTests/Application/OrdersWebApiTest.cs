@@ -514,7 +514,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
         await _mediatorMock.Received().Send(
             Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.IsGuestOrder && c.Command.PlaceId == null && c.Command.GuestOrdersAnywhere),
@@ -533,7 +533,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert - told it went through, and not placed a second time
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
         await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
@@ -566,7 +566,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
     }
 
     [TestMethod]
@@ -588,7 +588,7 @@ public class OrdersWebApiTest
         var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, httpContext, orderServices);
 
         // Assert
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
     }
 
     [TestMethod]
@@ -617,7 +617,7 @@ public class OrdersWebApiTest
         var result = await CreateGuestOrderAsync(GuestRequest());
 
         // Assert
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
         await _mediatorMock.Received().Send(
             Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.IsGuestOrder
@@ -646,7 +646,7 @@ public class OrdersWebApiTest
         var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), spoofed, httpContext, orderServices);
 
         // Assert
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
         await _mediatorMock.Received().Send(
             Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.UserId == signedInUserId && !c.Command.IsGuestOrder),
@@ -690,7 +690,7 @@ public class OrdersWebApiTest
         // The shape Saudi Arabia writes is taken
         var saudi = await OrdersApi.CreateOrderAsync(
             Guid.NewGuid(), GuestRequest(guestPhone: "0512345678"), httpContext, riyadh);
-        Assert.IsInstanceOfType<Ok>(saudi.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(saudi.Result);
 
         // Egypt's is not, there
         var egyptian = await OrdersApi.CreateOrderAsync(
@@ -703,13 +703,13 @@ public class OrdersWebApiTest
     public async Task An_egyptian_business_still_takes_an_egyptian_number()
     {
         var result = await CreateGuestOrderAsync(GuestRequest(guestPhone: "01012345678"));
-        Assert.IsInstanceOfType<Ok>(result.Result);
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result);
 
         var saudiNumber = await CreateGuestOrderAsync(GuestRequest(guestPhone: "0512345678"));
         Assert.IsInstanceOfType<ProblemHttpResult>(saudiNumber.Result);
     }
 
-    private Task<Results<Ok, ProblemHttpResult>> CreateGuestOrderAsync(
+    private Task<Results<Ok<CreatedOrder>, ProblemHttpResult>> CreateGuestOrderAsync(
         CreateOrderRequest request,
         string? guestId = "11111111-1111-1111-1111-111111111111")
     {

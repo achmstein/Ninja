@@ -46,6 +46,8 @@ public static class DeliveryErrors
     public const string NotFailed = "delivery.not_failed";
     public const string AlreadySettled = "delivery.already_settled";
     public const string CashInvalid = "delivery.cash_invalid";
+    /// <summary>Paid ahead online: nothing was collected at the door, so there is no cash to hand in.</summary>
+    public const string PaidOnline = "delivery.paid_online";
     public const string Conflict = "delivery.conflict";
     public const string RiderUnknown = "rider.unknown";
     public const string RiderNotYours = "rider.not_yours";
@@ -53,6 +55,6 @@ public static class DeliveryErrors
     /// <summary>The rules an order breaks by where it stands, not by what was sent: answered 409.</summary>
     public static readonly IReadOnlySet<string> StateConflicts = new HashSet<string>
     {
-        NotConfirmed, NoRider, AlreadyOut, NotOut, AlreadyDelivered, NotDelivered, NotFailed, AlreadySettled, Conflict,
+        NotConfirmed, NoRider, AlreadyOut, NotOut, AlreadyDelivered, NotDelivered, NotFailed, AlreadySettled, PaidOnline, Conflict,
     };
 }

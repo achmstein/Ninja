@@ -10,5 +10,7 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 /// type name — and only the switch Sales owns a part of. Absent from an
 /// older stack's event, it reads as off.
 /// </summary>
+/// <param name="PayAhead">Customers pay online for a delivery or an order they collect, before the business sees it.</param>
 public record TenantFeaturesChangedIntegrationEvent(
-    bool OnlinePayments = false) : IntegrationEvent;
+    bool OnlinePayments = false,
+    bool PayAhead = false) : IntegrationEvent;

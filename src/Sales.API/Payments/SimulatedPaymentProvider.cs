@@ -28,6 +28,16 @@ public sealed class SimulatedPaymentProvider(IOptions<PaymentsOptions> options) 
     public CallbackOutcome? VerifyCallback(ProviderAccount account, JsonElement body, string? signature) => null;
 
     public Task RefundAsync(ProviderAccount account, string transactionId, decimal amount, CancellationToken ct) => Task.CompletedTask;
+
+    /// <summary>A pretend hold is captured at once: no money moved to begin with.</summary>
+    public Task CaptureAsync(ProviderAccount account, string transactionId, decimal amount, CancellationToken ct) => Task.CompletedTask;
+
+    public Task VoidAsync(ProviderAccount account, string transactionId, CancellationToken ct) => Task.CompletedTask;
+
+    /// <summary>A pretend payment has no record anywhere else to ask.</summary>
+    public Task<ProviderTransaction?> LookupAsync(ProviderAccount account, string transactionId, CancellationToken ct) => Task.FromResult<ProviderTransaction?>(null);
+
+    public Task<ProviderTransaction?> FindByReferenceAsync(ProviderAccount account, string ourReference, CancellationToken ct) => Task.FromResult<ProviderTransaction?>(null);
 }
 
 /// <summary>Which provider a business's payments go through: its Paymob account once set up, else the simulation where the stack allows one.</summary>

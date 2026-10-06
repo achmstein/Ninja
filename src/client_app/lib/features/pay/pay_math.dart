@@ -97,7 +97,8 @@ PaySummary paySummary(double share, PayOptions options) {
 
 /// Whether the business takes payments at the table at all: "off" and
 /// "not-set-up" hide every pay button, and the guest is not told why.
-bool offersPay(String? why) => why != 'off' && why != 'not-set-up';
+/// A delivery the rider collects ("at-door") is never paid online either
+bool offersPay(String? why) => why != 'off' && why != 'not-set-up' && why != 'at-door';
 
 /// How many equal parts to start from: the room's party where the bill
 /// knows it, else two.

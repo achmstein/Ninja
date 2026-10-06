@@ -4,8 +4,10 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Ninja.Sales.API.Payments;
+using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
 using Ninja.Sales.Infrastructure;
 using Ninja.Testing;
 
@@ -25,7 +27,12 @@ public sealed class SalesUnderTest() : ServiceUnderTest<Program>("salesdb", new(
     public static readonly FakePaymob Paymob = new();
 
     protected override void ConfigureServices(IServiceCollection services)
-        => services.AddHttpClient<PaymobProvider>().ConfigurePrimaryHttpMessageHandler(() => Paymob);
+    {
+        services.AddHttpClient<PaymobProvider>().ConfigurePrimaryHttpMessageHandler(() => Paymob);
+        // The payments' clockwork runs when a scenario turns it (PaymentsWorker.RoundAsync), never behind its back
+        foreach (var worker in services.Where(d => d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) && d.ImplementationType == typeof(PaymentsWorker)).ToList())
+            services.Remove(worker);
+    }
 }
 
 /// <summary>Paymob as far as Sales talks to it: an intention answers with an order and a client secret; a refund answers OK.</summary>
@@ -35,12 +42,43 @@ public sealed class FakePaymob : HttpMessageHandler
 
     public ConcurrentQueue<(string Path, string? Authorization, JsonNode? Body)> Requests { get; } = new();
 
+    /// <summary>
+    /// A scenario's own answer for a path (a refusal, no answer, a lookup's record), in place of the usual
+    /// one; null falls through to it. Throwing is Paymob not answering at all.
+    /// </summary>
+    public Func<string, JsonNode?, HttpResponseMessage?>? Answer;
+
+    /// <summary>Paymob's records as its Transaction Inquiry API reads them, by transaction id</summary>
+    public ConcurrentDictionary<string, JsonObject> Transactions { get; } = new();
+
+    /// <summary>The transaction each checkout ended in, by our reference (its merchant_order_id)</summary>
+    public ConcurrentDictionary<string, JsonObject> Checkouts { get; } = new();
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
         var body = request.Content is null ? null : JsonNode.Parse(await request.Content.ReadAsStringAsync(ct));
-        Requests.Enqueue((request.RequestUri!.AbsolutePath, request.Headers.Authorization?.ToString(), body));
-        return request.RequestUri.AbsolutePath switch
+        var path = request.RequestUri!.AbsolutePath;
+        Requests.Enqueue((path, request.Headers.Authorization?.ToString(), body));
+        if (Answer?.Invoke(path, body) is { } answer) return answer;
+
+        const string lookup = "/api/acceptance/transactions/";
+        if (path.StartsWith(lookup))
         {
+            if (request.Headers.Authorization?.ToString() != "Bearer tok_test") return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+            return Transactions.TryGetValue(path[lookup.Length..], out var found) ? Json(found) : new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+        if (path == "/api/ecommerce/orders/transaction_inquiry")
+        {
+            if (request.Headers.Authorization?.ToString() != "Bearer tok_test") return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+            var reference = body?["merchant_order_id"]?.GetValue<string>() ?? "";
+            return Checkouts.TryGetValue(reference, out var found) ? Json(found) : new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
+        return path switch
+        {
+            "/api/auth/tokens" => body?["api_key"]?.GetValue<string>() == PaymentScenarios.ApiKey
+                ? Json(new JsonObject { ["token"] = "tok_test" })
+                : new HttpResponseMessage(HttpStatusCode.Forbidden),
             "/v1/intention/" => Json(new JsonObject
             {
                 ["id"] = "pi_test",
@@ -48,12 +86,14 @@ public sealed class FakePaymob : HttpMessageHandler
                 ["intention_order_id"] = Interlocked.Increment(ref _order),
             }),
             "/api/acceptance/void_refund/refund" => Json(new JsonObject { ["success"] = true }),
+            "/api/acceptance/capture" => Json(new JsonObject { ["success"] = true, ["is_capture"] = true }),
+            "/api/acceptance/void_refund/void" => Json(new JsonObject { ["success"] = true, ["is_voided"] = true }),
             _ => new HttpResponseMessage(HttpStatusCode.NotFound),
         };
     }
 
-    private static HttpResponseMessage Json(JsonNode body)
-        => new(HttpStatusCode.OK) { Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json") };
+    internal static HttpResponseMessage Json(JsonNode body, HttpStatusCode status = HttpStatusCode.OK)
+        => new(status) { Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json") };
 }
 
 public record PayLine(int Id, decimal Total, decimal Share, bool Claimed, bool IsMine);
@@ -74,21 +114,22 @@ public sealed class PaymentScenarios
 {
     private const string Version = "api-version=1.0";
     private const string HmacSecret = "cafe-hmac-secret";
+    internal const string ApiKey = "paymob-api-key-test";
     private const string SecretKey = "sk_test_cafe_1234";
 
     private static Caller Till => Suite.Sales.As(Persona.Cashier(Suite.Branch), Suite.Branch);
-    private static Caller Owner => Suite.Sales.As(Persona.Owner(Suite.Branch), Suite.Branch);
+    internal static Caller Owner => Suite.Sales.As(Persona.Owner(Suite.Branch), Suite.Branch);
 
     private static int _nextTable = 700;
 
-    private static Caller Guest(string id)
+    internal static Caller Guest(string id)
     {
         var caller = Suite.Sales.AsAnonymous();
         caller.Http.DefaultRequestHeaders.Add("X-Guest-Id", id);
         return caller;
     }
 
-    private static async Task SetUpBusinessAsync()
+    internal static async Task SetUpBusinessAsync()
     {
         await Owner.PutAsync<SettingsView>($"/api/sales/payments/settings?{Version}", new
         {
@@ -96,7 +137,11 @@ public sealed class PaymentScenarios
             secretKey = SecretKey,
             publicKey = "egy_pk_test",
             hmacSecret = HmacSecret,
+            // For asking Paymob how a payment stands
+            apiKey = ApiKey,
             cardIntegrationId = 123,
+            // Paymob's Auth/Capture card integration: orders paid ahead hold the card on it
+            cardHoldIntegrationId = 456,
             feeMode = 0,
             feePercent = 0,
             feeFixed = 0,
@@ -131,23 +176,23 @@ public sealed class PaymentScenarios
         => guest.GetAsync<PayBill>($"/api/sales/payments/places/{table}?branchId={Suite.Branch}&{Version}");
 
     /// <summary>Paymob's transaction callback for a checkout, signed as Paymob signs it (or not).</summary>
-    private static async Task<HttpStatusCode> CallbackAsync(string order, Guid key, decimal charged, bool success = true, string? secret = HmacSecret)
+    internal static async Task<HttpStatusCode> CallbackAsync(string order, Guid key, decimal charged, bool success = true, string? secret = HmacSecret, bool isAuth = false, bool followUp = false)
     {
         var obj = new JsonObject
         {
             // One transaction per checkout: Paymob repeats the same one when it retries
-            ["id"] = Math.Abs(key.GetHashCode()) % 900000 + 100000 + (success ? 0 : 1),
+            ["id"] = Math.Abs(key.GetHashCode()) % 900000 + 100000 + (success ? 0 : 1) + (followUp ? 7 : 0),
             ["pending"] = false,
             ["amount_cents"] = (long)(charged * 100),
             ["success"] = success,
-            ["is_auth"] = false,
-            ["is_capture"] = false,
+            ["is_auth"] = isAuth,
+            ["is_capture"] = followUp,
             ["is_standalone_payment"] = true,
             ["is_voided"] = false,
             ["is_refunded"] = false,
             ["is_3d_secure"] = true,
             ["integration_id"] = 123,
-            ["has_parent_transaction"] = false,
+            ["has_parent_transaction"] = followUp,
             ["order"] = new JsonObject { ["id"] = long.Parse(order), ["merchant_order_id"] = key.ToString("N") },
             ["created_at"] = "2026-09-26T20:00:00.000000",
             ["currency"] = "EGP",
@@ -165,7 +210,7 @@ public sealed class PaymentScenarios
     }
 
     // The order the fake handed out for a checkout: intentions are answered in turn, so it is read back from the payment
-    private static string OrderFor(Guid key)
+    internal static string OrderFor(Guid key)
     {
         using var scope = Suite.Sales.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SalesContext>();
@@ -282,6 +327,68 @@ public sealed class PaymentScenarios
         Assert.AreEqual("Settled", settled.Status);
         CollectionAssert.AreEquivalent(new[] { "Cash", "Online" }, settled.Payments.Select(p => p.Tender).ToArray());
     }
+
+    [TestMethod]
+    public async Task The_till_hears_at_once_when_paymob_refuses_a_refund_and_one_paymob_does_not_answer_is_made_later()
+    {
+        await SetUpBusinessAsync();
+        var (ticketId, table) = await ATableBillAsync(90m);
+        var guest = Guest("guest-hana-" + table);
+        var part = await guest.PostAsync<Started>($"/api/sales/payments/tickets/{ticketId}?{Version}", new { mode = 3, amount = 40m });
+        Assert.AreEqual(HttpStatusCode.OK, await CallbackAsync(OrderFor(part.Key), part.Key, 40m));
+        var refundUrl = $"/api/sales/payments/{part.Key}/refund?{Version}";
+
+        try
+        {
+            // Paymob answers 200 and will not: its body says so, and the cashier is told then and there
+            SalesUnderTest.Paymob.Answer = (path, _) => path == "/api/acceptance/void_refund/refund"
+                ? FakePaymob.Json(new JsonObject { ["success"] = false, ["data"] = new JsonObject { ["message"] = "Refund period expired" } })
+                : null;
+            var (refused, why) = await Till.RefusedAsync(HttpMethod.Post, refundUrl, null);
+            Assert.AreEqual(HttpStatusCode.BadRequest, refused);
+            Assert.Contains("Refund period expired", why);
+            var (payment, _) = await PaymentAsync(part.Key);
+            Assert.AreEqual(OnlinePaymentStatus.Paid, payment.Status);
+            Assert.AreEqual(PaymentMove.None, payment.Move, "dropped: the cashier heard it");
+            Assert.IsNull(payment.AttentionSince, "nothing left for the owner");
+
+            // Paymob does not answer: the till hears the refund is on its way, and it is made once Paymob answers
+            SalesUnderTest.Paymob.Answer = (path, _) => path == "/api/acceptance/void_refund/refund" ? throw new HttpRequestException("down") : null;
+            var (accepted, _) = await Till.RefusedAsync(HttpMethod.Post, refundUrl, null);
+            Assert.AreEqual(HttpStatusCode.Accepted, accepted);
+            (payment, _) = await PaymentAsync(part.Key);
+            Assert.AreEqual(OnlinePaymentStatus.Paid, payment.Status);
+            Assert.AreEqual(PaymentMove.Refund, payment.Move);
+            Assert.IsGreaterThan(DateTime.UtcNow, payment.MoveDueAt!.Value, "tried again after a pause");
+        }
+        finally
+        {
+            SalesUnderTest.Paymob.Answer = null;
+        }
+
+        await DueNowAsync(part.Key);
+        await TurnTheClockworkAsync();
+        Assert.AreEqual(OnlinePaymentStatus.Refunded, (await PaymentAsync(part.Key)).Payment.Status);
+    }
+
+    internal static async Task<(OnlinePayment Payment, int Calls)> PaymentAsync(Guid key)
+    {
+        using var scope = Suite.Sales.Services.CreateScope();
+        var payment = await scope.ServiceProvider.GetRequiredService<SalesContext>().OnlinePayments.AsNoTracking().SingleAsync(p => p.Key == key);
+        return (payment, SalesUnderTest.Paymob.Requests.Count);
+    }
+
+    /// <summary>A move waiting on its next try is due now (the pause it would wait, passed)</summary>
+    internal static async Task DueNowAsync(Guid key)
+    {
+        using var scope = Suite.Sales.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<SalesContext>().OnlinePayments.Where(p => p.Key == key)
+            .ExecuteUpdateAsync(set => set.SetProperty(p => p.MoveDueAt, DateTime.UtcNow.AddSeconds(-1)));
+    }
+
+    /// <summary>One round of the payments' clockwork, as the worker turns it every half minute</summary>
+    internal static async Task TurnTheClockworkAsync()
+        => await ActivatorUtilities.CreateInstance<PaymentsWorker>(Suite.Sales.Services).RoundAsync(CancellationToken.None);
 
     [TestMethod]
     public async Task A_demo_without_a_paymob_account_pays_with_pretend_money_and_nothing_else_can()

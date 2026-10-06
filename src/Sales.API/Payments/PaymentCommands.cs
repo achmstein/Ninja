@@ -1,5 +1,6 @@
 #nullable enable
 using Microsoft.Extensions.Options;
+using Ninja.Sales.Infrastructure;
 using Ninja.Sales.API.Application.Commands;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
 using Ninja.Sales.API.Application.Queries;
@@ -95,7 +96,8 @@ public class StartOnlinePaymentCommandHandler(
         => ticket.LocationName is { IsEmpty: false } place ? $"Bill share, {place.Primary}" : "Bill share";
 }
 
-public sealed record ConfirmedPayment(int TicketId, bool Paid);
+/// <param name="TicketId">The bill it pays; null for an order paid ahead that has no bill yet.</param>
+public sealed record ConfirmedPayment(int? TicketId, bool Paid);
 
 /// <summary>
 /// The provider's verified callback: the payment it names is paid or failed.
@@ -107,6 +109,7 @@ public sealed record ConfirmOnlinePaymentCommand(CallbackOutcome Outcome, string
 public class ConfirmOnlinePaymentCommandHandler(
     IOnlinePaymentRepository payments,
     ITicketRepository tickets,
+    SalesContext context,
     ISalesIntegrationEventService integrationEvents,
     TimeProvider clock,
     ILogger<ConfirmOnlinePaymentCommandHandler> logger) : IRequestHandler<ConfirmOnlinePaymentCommand, ConfirmedPayment?>
@@ -126,6 +129,14 @@ public class ConfirmOnlinePaymentCommandHandler(
         // Still in progress at the provider (a wallet waiting on the guest): the hold stands
         if (outcome.Pending) return new(payment.TicketId, false);
 
+        // A capture, void or refund we made comes back as a transaction of its own: it was recorded when
+        // the provider answered our call, and is never taken for another payment
+        if (outcome.IsFollowUp)
+        {
+            logger.LogInformation("Online payment {Key}: {Provider} reports follow-up transaction {Transaction}", payment.Key, command.Provider, outcome.TransactionId);
+            return new(payment.TicketId, payment.Status == OnlinePaymentStatus.Paid);
+        }
+
         bool changed;
         if (outcome.Success)
         {
@@ -133,7 +144,10 @@ public class ConfirmOnlinePaymentCommandHandler(
                 logger.LogWarning("Online payment {Key}: {Provider} charged {Charged}, expected {Expected}", payment.Key, command.Provider, outcome.Amount, payment.Charged);
             try
             {
-                changed = payment.MarkPaid(outcome.TransactionId, clock.GetUtcNow().UtcDateTime);
+                // A card held (an authorization) is secured, not charged: charged when the order is accepted
+                changed = outcome.IsAuth
+                    ? payment.MarkAuthorized(outcome.TransactionId, clock.GetUtcNow().UtcDateTime)
+                    : payment.MarkPaid(outcome.TransactionId, clock.GetUtcNow().UtcDateTime);
             }
             catch (SalesDomainException ex)
             {
@@ -150,7 +164,23 @@ public class ConfirmOnlinePaymentCommandHandler(
 
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
 
-        var ticket = await tickets.GetAsync(payment.TicketId);
+        // An order paid ahead, its money secured (held, or taken where the card cannot be held): Ordering is
+        // told, and the order goes to the till (or, if it can no longer take it, answers so and the payment is
+        // let go or given back). Through the outbox, in this transaction.
+        if (payment.OrderId is { } orderId && payment.Secured)
+        {
+            if (await context.OrderPaymentsDue.FindAsync([orderId], ct) is { Status: Ninja.Sales.Infrastructure.Projections.OrderPaymentDueStatus.Due } due)
+            {
+                due.Status = Ninja.Sales.Infrastructure.Projections.OrderPaymentDueStatus.Paid;
+                await context.SaveChangesAsync(ct);
+            }
+            await integrationEvents.AddAndSaveEventAsync(new OrderPaidOnlineIntegrationEvent(orderId, payment.Key, payment.Amount, payment.AuthorizedAt ?? payment.PaidAt ?? clock.GetUtcNow().UtcDateTime));
+            logger.LogInformation("Online payment {Key} {How} order {OrderId} ahead ({Amount})", payment.Key, payment.Status == OnlinePaymentStatus.Authorized ? "holds" : "paid", orderId, payment.Amount);
+            return new(payment.TicketId, true);
+        }
+        if (payment.TicketId is null) return new(null, payment.Status == OnlinePaymentStatus.Paid);
+
+        var ticket = await tickets.GetAsync(payment.TicketId.Value);
         if (payment.Status == OnlinePaymentStatus.Paid && ticket is not null && ticket.Status != TicketStatus.Open)
             logger.LogWarning("Online payment {Key} of {Amount} arrived after ticket {TicketId} was {Status}: refund it", payment.Key, payment.Amount, ticket.Id, ticket.Status);
 
@@ -216,7 +246,7 @@ public class CancelOnlinePaymentCommandHandler(
         if (!payment.Cancel(command.PayerId is null ? "Released at the till" : "Cancelled by the guest"))
             throw new SalesDomainException("This payment is already " + payment.Status.ToString().ToLowerInvariant() + ".");
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
-        if (await tickets.GetAsync(payment.TicketId) is { } ticket)
+        if (payment.TicketId is { } ticketId && await tickets.GetAsync(ticketId) is { } ticket)
             await integrationEvents.AddAndSaveEventAsync(new TicketUpdatedIntegrationEvent(ticket.Id, ticket.BranchId));
         logger.LogInformation("Online payment {Key} on ticket {TicketId} let go by {By}", payment.Key, payment.TicketId, command.By);
         return true;
@@ -234,28 +264,25 @@ public sealed record RefundOnlinePaymentCommand(Guid Key, string By) : IRequest<
 public class RefundOnlinePaymentCommandHandler(
     IOnlinePaymentRepository payments,
     ITicketRepository tickets,
-    PaymentProviders providers,
-    SecretSealer sealer,
-    ISalesIntegrationEventService integrationEvents,
     TimeProvider clock) : IRequestHandler<RefundOnlinePaymentCommand, Unit>
 {
     public async Task<Unit> Handle(RefundOnlinePaymentCommand command, CancellationToken ct)
     {
         var payment = await payments.GetByKeyAsync(command.Key)
             ?? throw new SalesDomainException("No such payment.");
-        var ticket = await tickets.GetAsync(payment.TicketId);
+        // An order paid ahead before its bill opened is given back when the order is turned down, never by hand:
+        // the order would still stand as paid
+        if (payment.OrderId is not null && payment.TicketId is null)
+            throw new SalesDomainException("This payment is for an order not yet confirmed; turning the order down gives it back.");
+        var ticket = payment.TicketId is { } ticketId ? await tickets.GetAsync(ticketId) : null;
         if (ticket is { Status: not TicketStatus.Open })
             throw new SalesDomainException("This bill is closed; refund it from the receipt, and the money from the provider's dashboard.");
         if (payment.Status != OnlinePaymentStatus.Paid || payment.TransactionId is null)
             throw new SalesDomainException("Only a paid payment can be refunded.");
 
-        var provider = providers.ByName(payment.Provider);
-        var account = provider is SimulatedPaymentProvider ? PayRules.NoAccount : PayRules.Account(await payments.GetSettingsAsync(), sealer);
-        await provider.RefundAsync(account, payment.TransactionId, payment.Charged, ct);
-        payment.Refund(command.By, clock.GetUtcNow().UtcDateTime);
+        // Recorded here; made once this commits (PaymentMoves), the cashier waiting on it
+        payment.RequestGiveBack(command.By, "Refunded at the till", clock.GetUtcNow().UtcDateTime);
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
-        if (ticket is not null)
-            await integrationEvents.AddAndSaveEventAsync(new TicketUpdatedIntegrationEvent(ticket.Id, ticket.BranchId));
         return Unit.Value;
     }
 }
@@ -275,7 +302,10 @@ public sealed record SavePaymentSettingsCommand(
     decimal FeeFixed,
     bool AllowItems,
     bool AllowEqual,
-    bool AllowCustom) : IRequest<PaymentSettings>;
+    bool AllowCustom,
+    int? CardHoldIntegrationId = null,
+    /// <summary>Null leaves it as it is; empty clears it.</summary>
+    string? ApiKey = null) : IRequest<PaymentSettings>;
 
 public class SavePaymentSettingsCommandHandler(
     IOnlinePaymentRepository payments,
@@ -289,15 +319,16 @@ public class SavePaymentSettingsCommandHandler(
         settings.Update(
             command.Currency, command.PublicKey, command.CardIntegrationId, command.WalletIntegrationId, command.ApplePayIntegrationId,
             command.FeeMode, command.FeePercent, command.FeeFixed,
-            command.AllowItems, command.AllowEqual, command.AllowCustom, now);
+            command.AllowItems, command.AllowEqual, command.AllowCustom, now, command.CardHoldIntegrationId);
 
-        if (command.SecretKey is not null || command.HmacSecret is not null)
+        if (command.SecretKey is not null || command.HmacSecret is not null || command.ApiKey is not null)
         {
             if (!sealer.CanSeal)
                 throw new SalesDomainException("This business cannot keep payment secrets yet; ask for its stack to be upgraded.");
             string? Seal(string? value) => value is null ? null : value.Trim().Length == 0 ? "" : sealer.Seal(value.Trim());
             var key = command.SecretKey?.Trim();
             settings.SetSecrets(Seal(command.SecretKey), key is { Length: >= 4 } ? key[^4..] : null, Seal(command.HmacSecret), now);
+            settings.SetApiKey(Seal(command.ApiKey), now);
         }
 
         await payments.UnitOfWork.SaveEntitiesAsync(ct);
@@ -320,12 +351,16 @@ public static class PayRules
             throw new SalesDomainException("The clock is still running; pay once it stops.");
         if (ticket.Lines.Count == 0)
             throw new SalesDomainException("There is nothing on this bill yet.");
+        // A delivery paid at the door: the rider collects it, so it is never paid online too
+        if (ticket.CollectsAtDoor)
+            throw new SalesDomainException("This delivery is paid to the rider at the door.");
     }
 
     /// <summary>What a simulated payment is made on: no account at all.</summary>
     public static readonly ProviderAccount NoAccount = new("", null, null, []);
 
-    public static ProviderAccount Account(PaymentSettings settings, SecretSealer sealer)
+    /// <param name="hold">For a checkout that asks to hold the card (an order paid ahead): the card integration that holds.</param>
+    public static ProviderAccount Account(PaymentSettings settings, SecretSealer sealer, bool hold = false)
     {
         if (settings.SealedSecretKey is null)
             throw new SalesDomainException("Online payments are not set up here yet.");
@@ -333,6 +368,7 @@ public static class PayRules
             sealer.Open(settings.SealedSecretKey),
             settings.PublicKey,
             settings.SealedHmacSecret is null ? null : sealer.Open(settings.SealedHmacSecret),
-            settings.IntegrationIds);
+            settings.IntegrationIdsFor(hold),
+            settings.SealedApiKey is null ? null : sealer.Open(settings.SealedApiKey));
     }
 }

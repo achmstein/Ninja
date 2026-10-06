@@ -982,6 +982,12 @@
               "null",
               "boolean"
             ]
+          },
+          "payAhead": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -1106,6 +1112,10 @@
             "default": false
           },
           "delivery": {
+            "type": "boolean",
+            "default": false
+          },
+          "payAhead": {
             "type": "boolean",
             "default": false
           }

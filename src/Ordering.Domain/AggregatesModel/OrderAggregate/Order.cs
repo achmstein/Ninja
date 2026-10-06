@@ -80,6 +80,34 @@ public class Order
 
     public bool IsPaid => PaidAt != null;
 
+    /// <summary>
+    /// How long an order paid ahead waits for its payment before it is
+    /// cancelled unpaid: the length of a checkout, with room for a retry.
+    /// </summary>
+    public static readonly TimeSpan PayAheadWindow = TimeSpan.FromMinutes(20);
+
+    /// <summary>
+    /// The customer pays online, in the app, before the business sees the
+    /// order: a delivery, or an order they collect. Checked and priced as any
+    /// order, it then waits in <see cref="OrderStatus.AwaitingPayment"/> until
+    /// the payment comes (<see cref="MarkPaidOnline"/>), and is cancelled unpaid
+    /// at <see cref="PaymentDueBy"/>. Nothing is collected for it at the door
+    /// or the counter; its bill settles itself with the payment once confirmed.
+    /// </summary>
+    public bool PaysOnline { get; private set; }
+
+    /// <summary>When an order paid ahead stops waiting for its payment; set once it is priced.</summary>
+    public DateTime? PaymentDueBy { get; private set; }
+
+    /// <summary>When the customer's online payment for an order paid ahead came in.</summary>
+    public DateTime? PaidOnlineAt { get; private set; }
+
+    /// <summary>Sales' payment that paid the order ahead: its bill settles with it once confirmed.</summary>
+    public Guid? OnlinePaymentKey { get; private set; }
+
+    /// <summary>What the rider or the counter takes from the customer: nothing for an order paid ahead.</summary>
+    public decimal ToCollect => PaysOnline ? 0 : GetTotal();
+
     /// <summary>Whether the order says where it is going: a place was named.</summary>
     public bool HasDestination => PlaceId.HasValue;
 
@@ -243,7 +271,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null, bool paysOnline = false) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
@@ -329,6 +357,17 @@ public class Order
             {
                 throw new OrderingDomainException("A guest order needs a table or room to be delivered to.");
             }
+        }
+
+        // Paid ahead online: a customer's own order away from a table, a delivery or
+        // one they collect. A table's or a room's order is paid on its bill as ever.
+        if (paysOnline)
+        {
+            if (Source is not (OrderSource.Customer or OrderSource.Guest))
+                throw new OrderingDomainException("Only an order placed from the apps is paid ahead online.", PaymentErrors.NotAhead);
+            if (HasDestination || SessionId is not null || TicketId is not null)
+                throw new OrderingDomainException("An order to a table or a room is paid on its bill.", PaymentErrors.NotAhead);
+            PaysOnline = true;
         }
 
         // Add the OrderStartedDomainEvent to the domain events collection
@@ -455,8 +494,18 @@ public class Order
             LoyaltyDiscount = GetLoyaltyDiscountFor(PointsToRedeem, GetItemsTotal());
         }
 
-        OrderStatus = OrderStatus.Submitted;
-        Description = "Items validated. Order ready for confirmation.";
+        // Paid ahead: it waits for the customer's payment, unseen by the till, until the window closes
+        if (PaysOnline)
+        {
+            OrderStatus = OrderStatus.AwaitingPayment;
+            PaymentDueBy = DateTime.UtcNow + PayAheadWindow;
+            Description = "Items validated. Waiting for the customer's online payment.";
+        }
+        else
+        {
+            OrderStatus = OrderStatus.Submitted;
+            Description = "Items validated. Order ready for confirmation.";
+        }
         // A reminder that it was stuck on the check does not count against staff
         ReminderCount = 0;
         LastReminderSentAt = null;
@@ -471,7 +520,76 @@ public class Order
             }
         }
 
+        // The till hears of an order paid ahead only once it is paid (MarkPaidOnline); Sales hears now, to take the payment
+        AddDomainEvent(PaysOnline ? new OrderAwaitingPaymentDomainEvent(this) : new OrderStatusChangedToSubmittedDomainEvent(Id));
+    }
+
+    /// <summary>
+    /// The customer's online payment for an order paid ahead came in: the order
+    /// goes to the till as any order, marked paid. A repeat of the same payment
+    /// is a no-op (false). A payment the order cannot take (it stopped waiting,
+    /// another paid it, or it is for another amount) is refused with its code,
+    /// for the caller to have it given back.
+    /// </summary>
+    public bool MarkPaidOnline(Guid paymentKey, decimal amount, DateTime at)
+    {
+        if (!PaysOnline)
+            throw new OrderingDomainException("This order is not paid ahead.", PaymentErrors.NotAhead);
+        if (PaidOnlineAt is not null)
+        {
+            if (OnlinePaymentKey == paymentKey) return false;
+            throw new OrderingDomainException("This order is paid already.", PaymentErrors.PaidAlready);
+        }
+        if (OrderStatus != OrderStatus.AwaitingPayment)
+            throw new OrderingDomainException("The order is no longer waiting for its payment.", PaymentErrors.TooLate);
+        if (Math.Abs(amount - GetTotal()) > 0.005m)
+            throw new OrderingDomainException("The payment is not for what the order comes to.", PaymentErrors.AmountMismatch);
+
+        PaidOnlineAt = at;
+        OnlinePaymentKey = paymentKey;
+        OrderStatus = OrderStatus.Submitted;
+        Description = "Paid online. Order ready for confirmation.";
         AddDomainEvent(new OrderStatusChangedToSubmittedDomainEvent(Id));
+        return true;
+    }
+
+    /// <summary>
+    /// An order paid ahead that was not paid in time is cancelled; false while
+    /// it still has time, or once it is no longer waiting.
+    /// </summary>
+    public bool ExpireUnpaid(DateTime now)
+    {
+        if (OrderStatus != OrderStatus.AwaitingPayment || PaymentDueBy is null || now < PaymentDueBy)
+            return false;
+        OrderStatus = OrderStatus.Cancelled;
+        Description = "Order cancelled - not paid in time.";
+        AddDomainEvent(new OrderCancelledDomainEvent(this));
+        return true;
+    }
+
+    /// <summary>
+    /// An order paid ahead that the branch did not accept within <paramref name="acceptWithin"/>
+    /// of its payment is cancelled: the customer is not left waiting on money they paid, and the
+    /// hold on their card is let go. False while it still has time, or once it is accepted.
+    /// </summary>
+    public bool ExpireUnaccepted(DateTime now, TimeSpan acceptWithin)
+    {
+        if (!PaysOnline || OrderStatus != OrderStatus.Submitted || PaidOnlineAt is not { } paid || now < paid + acceptWithin)
+            return false;
+        OrderStatus = OrderStatus.Cancelled;
+        Description = "Order cancelled - the branch did not accept it in time.";
+        AddDomainEvent(new OrderCancelledDomainEvent(this));
+        return true;
+    }
+
+    /// <summary>The customer gave up on paying an order ahead: it is cancelled, nothing having been charged.</summary>
+    public void CancelUnpaid()
+    {
+        if (OrderStatus != OrderStatus.AwaitingPayment)
+            throw new OrderingDomainException("Only an order waiting for its payment is cancelled this way.", PaymentErrors.NotDue);
+        OrderStatus = OrderStatus.Cancelled;
+        Description = "Order cancelled by the customer before paying.";
+        AddDomainEvent(new OrderCancelledDomainEvent(this));
     }
 
     /// <summary>
@@ -807,6 +925,9 @@ public class Order
     public void MarkDeliveryCashHandedIn(decimal amount, DateTime? at = null)
     {
         var delivery = EnsureDelivering();
+        // Paid ahead online: the rider collected nothing, and there is nothing to count in
+        if (PaysOnline)
+            throw new OrderingDomainException("Paid online: the rider collected nothing for it.", DeliveryErrors.PaidOnline);
         if (delivery.CashHandedInAt is null && IsPaid)
             throw new OrderingDomainException("The bill was settled already.", DeliveryErrors.AlreadySettled);
         if (delivery.MarkCashHandedIn(amount, at ?? DateTime.UtcNow))

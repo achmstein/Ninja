@@ -97,7 +97,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             promoCode: message.PromoCode,
             guestOrdersAnywhere: message.GuestOrdersAnywhere,
             platform: message.Platform,
-            delivery: delivery);
+            delivery: delivery,
+            paysOnline: message.PayOnline);
 
         foreach (var item in message.OrderItems)
         {

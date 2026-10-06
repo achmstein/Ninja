@@ -190,6 +190,19 @@ export type OpenTicketResponse = {
     ticketId: number | string;
 };
 
+export type OrderPayView = {
+    orderId: number | string;
+    amount: number | string;
+    fee: number | string;
+    charged: number | string;
+    currency: string;
+    status: string;
+    dueBy: string;
+    paymentKey: null | string;
+    paymentStatus: null | string;
+    simulated: boolean;
+};
+
 export type PagedResultOfPaymentRow = {
     items: Array<PaymentRow>;
     totalCount: number | string;
@@ -218,6 +231,15 @@ export type PagedResultOfTicketHistoryRow = {
     pageSize: number | string;
 };
 
+export type PayAheadOptionsView = {
+    available: boolean;
+    currency: string;
+    feeMode: string;
+    feePercent: number | string;
+    feeFixed: number | string;
+    simulated: boolean;
+};
+
 export type PayLineView = {
     id: number | string;
     description: LocalizedText;
@@ -227,6 +249,24 @@ export type PayLineView = {
     share: number | string;
     claimed: boolean;
     isMine: boolean;
+};
+
+export type PaymentAttentionView = {
+    key: string;
+    orderId: null | number | string;
+    ticketId: null | number | string;
+    branchId: number | string;
+    payerName: null | string;
+    charged: number | string;
+    currency: string;
+    status: string;
+    move: string;
+    problem: null | string;
+    attentionSince: string;
+    attempts: number | string;
+    nextTryAt: null | string;
+    transactionId: null | string;
+    createdAt: string;
 };
 
 export type PaymentRow = {
@@ -258,6 +298,8 @@ export type PaymentSettingsRequest = {
     allowItems: boolean;
     allowEqual: boolean;
     allowCustom: boolean;
+    cardHoldIntegrationId?: null | number | string;
+    apiKey?: null | string;
 };
 
 export type PaymentSettingsView = {
@@ -280,11 +322,13 @@ export type PaymentSettingsView = {
     canKeepSecrets: boolean;
     callbackUrl: string;
     simulated?: boolean;
+    cardHoldIntegrationId?: null | number | string;
+    apiKeySet?: boolean;
 };
 
 export type PaymentStatusView = {
     key: string;
-    ticketId: number | string;
+    ticketId: null | number | string;
     status: string;
     amount: number | string;
     fee: number | string;
@@ -292,6 +336,7 @@ export type PaymentStatusView = {
     currency: string;
     failureReason: null | string;
     billClosed: boolean;
+    orderId?: null | number | string;
 };
 
 export type PaymentTender = number;
@@ -564,6 +609,11 @@ export type StartedPayment = {
     amount: number | string;
     fee: number | string;
     charged: number | string;
+};
+
+export type StartOrderPaymentRequest = {
+    payerName?: null | string;
+    payerPhone?: null | string;
 };
 
 export type StartPaymentRequest = {
@@ -2083,6 +2133,93 @@ export type StartOnlinePaymentResponses = {
 
 export type StartOnlinePaymentResponse = StartOnlinePaymentResponses[keyof StartOnlinePaymentResponses];
 
+export type GetPayAheadOptionsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/ahead';
+};
+
+export type GetPayAheadOptionsResponses = {
+    /**
+     * OK
+     */
+    200: PayAheadOptionsView;
+};
+
+export type GetPayAheadOptionsResponse = GetPayAheadOptionsResponses[keyof GetPayAheadOptionsResponses];
+
+export type GetOrderToPayData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/orders/{orderId}';
+};
+
+export type GetOrderToPayErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetOrderToPayResponses = {
+    /**
+     * OK
+     */
+    200: OrderPayView;
+};
+
+export type GetOrderToPayResponse = GetOrderToPayResponses[keyof GetOrderToPayResponses];
+
+export type StartOrderPaymentData = {
+    body?: null | StartOrderPaymentRequest;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/orders/{orderId}';
+};
+
+export type StartOrderPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type StartOrderPaymentError = StartOrderPaymentErrors[keyof StartOrderPaymentErrors];
+
+export type StartOrderPaymentResponses = {
+    /**
+     * OK
+     */
+    200: StartedPayment;
+};
+
+export type StartOrderPaymentResponse = StartOrderPaymentResponses[keyof StartOrderPaymentResponses];
+
 export type GetOnlinePaymentData = {
     body?: never;
     path: {
@@ -2252,6 +2389,10 @@ export type RefundOnlinePaymentError = RefundOnlinePaymentErrors[keyof RefundOnl
 
 export type RefundOnlinePaymentResponses = {
     /**
+     * Accepted
+     */
+    202: ProblemDetails;
+    /**
      * No Content
      */
     204: void;
@@ -2328,3 +2469,155 @@ export type SavePaymentSettingsResponses = {
 };
 
 export type SavePaymentSettingsResponse = SavePaymentSettingsResponses[keyof SavePaymentSettingsResponses];
+
+export type ListPaymentsNeedingAttentionData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/attention';
+};
+
+export type ListPaymentsNeedingAttentionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListPaymentsNeedingAttentionResponses = {
+    /**
+     * OK
+     */
+    200: Array<PaymentAttentionView>;
+};
+
+export type ListPaymentsNeedingAttentionResponse = ListPaymentsNeedingAttentionResponses[keyof ListPaymentsNeedingAttentionResponses];
+
+export type RetryPaymentMoveData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/retry';
+};
+
+export type RetryPaymentMoveErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RetryPaymentMoveError = RetryPaymentMoveErrors[keyof RetryPaymentMoveErrors];
+
+export type RetryPaymentMoveResponses = {
+    /**
+     * OK
+     */
+    200: PaymentAttentionView;
+};
+
+export type RetryPaymentMoveResponse = RetryPaymentMoveResponses[keyof RetryPaymentMoveResponses];
+
+export type MarkPaymentMoveDoneData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/done';
+};
+
+export type MarkPaymentMoveDoneErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type MarkPaymentMoveDoneError = MarkPaymentMoveDoneErrors[keyof MarkPaymentMoveDoneErrors];
+
+export type MarkPaymentMoveDoneResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkPaymentMoveDoneResponse = MarkPaymentMoveDoneResponses[keyof MarkPaymentMoveDoneResponses];
+
+export type DismissPaymentAttentionData = {
+    body?: never;
+    path: {
+        key: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/payments/{key}/dismiss';
+};
+
+export type DismissPaymentAttentionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DismissPaymentAttentionError = DismissPaymentAttentionErrors[keyof DismissPaymentAttentionErrors];
+
+export type DismissPaymentAttentionResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DismissPaymentAttentionResponse = DismissPaymentAttentionResponses[keyof DismissPaymentAttentionResponses];

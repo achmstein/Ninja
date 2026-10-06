@@ -40,6 +40,13 @@ public interface IBranchSettingsQueries
     /// each branch is set.
     /// </summary>
     Task<bool> IsDeliveryOnAsync();
+
+    /// <summary>
+    /// Whether customers may pay online for a delivery or an order they collect,
+    /// before the business sees it: the owner turned it on (with online payments).
+    /// Fail-closed: a stack that has never said takes no such order.
+    /// </summary>
+    Task<bool> IsPayAheadOnAsync();
 }
 
 /// <summary>Where a branch delivers from, how far, and what it asks.</summary>

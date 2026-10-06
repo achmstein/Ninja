@@ -16,8 +16,9 @@ import 'tickets_service.dart';
 abstract class OnlinePaymentsRepository {
   Future<List<OnlinePaymentView>> list(int ticketId);
 
-  /// Throws [SalesException] with the server's reason when it refuses
-  Future<void> refund(String key);
+  /// True once given back; false when the provider has not answered yet and it is given back as soon
+  /// as it does. Throws [SalesException] with the server's reason when it refuses
+  Future<bool> refund(String key);
 
   /// Lets a payment still in checkout go, so its share is free to pay
   /// again. Throws [SalesException] with the server's reason when it refuses.
@@ -38,9 +39,10 @@ class ApiOnlinePaymentsRepository implements OnlinePaymentsRepository {
   }
 
   @override
-  Future<void> refund(String key) async {
+  Future<bool> refund(String key) async {
     try {
-      await _api.post('sales/payments/$key/refund');
+      final response = await _api.post('sales/payments/$key/refund');
+      return response.statusCode != 202;
     } on DioException catch (e) {
       // A ProblemDetails whose detail is the reason (closed bill, provider said no)
       final data = e.response?.data;

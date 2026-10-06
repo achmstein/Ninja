@@ -73,8 +73,9 @@ public class Refund : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(reason))
             throw new SalesDomainException("A refund needs a reason — that is the audit trail.");
 
-        if (tender is not (PaymentTender.Cash or PaymentTender.Account))
-            throw new SalesDomainException("A refund goes back as cash, or onto the customer's tab.");
+        // Online: an order paid ahead given back through the business's provider (no drawer, no tab)
+        if (tender is not (PaymentTender.Cash or PaymentTender.Account or PaymentTender.Online))
+            throw new SalesDomainException("A refund goes back as cash, onto the customer's tab, or to the card it was paid online with.");
 
         if (tender == PaymentTender.Account && string.IsNullOrWhiteSpace(customerId))
             throw new SalesDomainException("Crediting a tab needs the customer it belongs to.");

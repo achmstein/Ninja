@@ -102,6 +102,7 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             PlatformSettles = order.Platform is { } p && (p.PaidOnline || p.Expedition == PlatformExpedition.PlatformDelivery),
             DeliveryFee = order.Delivery?.Fee,
             IsDelivery = order.IsDelivery,
+            PaidOnlineKey = order.PaysOnline ? order.OnlinePaymentKey : null,
         };
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);

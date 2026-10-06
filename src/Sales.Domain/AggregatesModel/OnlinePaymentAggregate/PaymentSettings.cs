@@ -39,12 +39,32 @@ public class PaymentSettings : Entity, IAggregateRoot
     /// <summary>What the provider signs its callbacks with, sealed.</summary>
     public string? SealedHmacSecret { get; private set; }
 
+    /// <summary>
+    /// The provider's API key, sealed: optional, and only for asking the provider how a payment stands
+    /// (Paymob's transaction lookups take it, not the secret key). With it, a late callback is caught up
+    /// with, a move whose answer was lost is confirmed before it is tried again, and every day's payments
+    /// are checked against the provider's.
+    /// </summary>
+    public string? SealedApiKey { get; private set; }
+
+    /// <summary>When the payments were last checked against the provider's records.</summary>
+    public DateTime? ReconciledAt { get; private set; }
+
+    public void Reconciled(DateTime now) => ReconciledAt = now;
+
     /// <summary>The provider's integration ids, one per way to pay.</summary>
     public int? CardIntegrationId { get; private set; }
 
     public int? WalletIntegrationId { get; private set; }
 
     public int? ApplePayIntegrationId { get; private set; }
+
+    /// <summary>
+    /// A card integration of the provider's authorize-and-capture kind (Paymob's "Auth/Capture"): an order
+    /// paid ahead holds the card on it, and is charged only once the branch accepts the order; one
+    /// turned down lets the hold go at no cost. Null: cards are charged at once and refunded if need be.
+    /// </summary>
+    public int? CardHoldIntegrationId { get; private set; }
 
     public FeeMode FeeMode { get; private set; }
 
@@ -67,8 +87,17 @@ public class PaymentSettings : Entity, IAggregateRoot
         => SealedSecretKey is not null && PublicKey is not null && SealedHmacSecret is not null
            && (CardIntegrationId ?? WalletIntegrationId ?? ApplePayIntegrationId) is not null;
 
-    public IReadOnlyList<int> IntegrationIds
-        => new[] { CardIntegrationId, WalletIntegrationId, ApplePayIntegrationId }.OfType<int>().ToList();
+    public IReadOnlyList<int> IntegrationIds => IntegrationIdsFor(hold: false);
+
+    /// <summary>Whether a checkout that asks to hold can hold a card here.</summary>
+    public bool HoldsCards => CardHoldIntegrationId is not null;
+
+    /// <summary>
+    /// The ways to pay a checkout offers. One that asks to <paramref name="hold"/> offers the card that
+    /// holds in place of the one that charges, where there is one; a wallet is charged at once either way.
+    /// </summary>
+    public IReadOnlyList<int> IntegrationIdsFor(bool hold)
+        => new[] { hold && HoldsCards ? CardHoldIntegrationId : CardIntegrationId, WalletIntegrationId, ApplePayIntegrationId }.OfType<int>().ToList();
 
     public PaymentSettings()
     {
@@ -97,7 +126,8 @@ public class PaymentSettings : Entity, IAggregateRoot
         bool allowItems,
         bool allowEqual,
         bool allowCustom,
-        DateTime now)
+        DateTime now,
+        int? cardHoldIntegrationId = null)
     {
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != 3)
             throw new SalesDomainException("The currency must be a three-letter code.");
@@ -105,7 +135,7 @@ public class PaymentSettings : Entity, IAggregateRoot
             throw new SalesDomainException("The fee percentage must be from 0 to below 100.");
         if (feeFixed < 0)
             throw new SalesDomainException("The fixed fee cannot be negative.");
-        if (new[] { cardIntegrationId, walletIntegrationId, applePayIntegrationId }.Any(id => id is <= 0))
+        if (new[] { cardIntegrationId, walletIntegrationId, applePayIntegrationId, cardHoldIntegrationId }.Any(id => id is <= 0))
             throw new SalesDomainException("An integration id is a positive number.");
 
         Currency = currency.Trim().ToUpperInvariant();
@@ -113,6 +143,7 @@ public class PaymentSettings : Entity, IAggregateRoot
         CardIntegrationId = cardIntegrationId;
         WalletIntegrationId = walletIntegrationId;
         ApplePayIntegrationId = applePayIntegrationId;
+        CardHoldIntegrationId = cardHoldIntegrationId;
         FeeMode = feeMode;
         FeePercent = feePercent;
         FeeFixed = feeFixed;
@@ -126,6 +157,14 @@ public class PaymentSettings : Entity, IAggregateRoot
     /// New sealed secrets: null leaves one as it is, empty clears it. The
     /// hint is the plain key's last four, taken before it was sealed.
     /// </summary>
+    /// <param name="sealedApiKey">Null leaves it as it is; empty clears it.</param>
+    public void SetApiKey(string? sealedApiKey, DateTime now)
+    {
+        if (sealedApiKey is null) return;
+        SealedApiKey = sealedApiKey.Length == 0 ? null : sealedApiKey;
+        UpdatedAt = now;
+    }
+
     public void SetSecrets(string? sealedSecretKey, string? secretKeyHint, string? sealedHmacSecret, DateTime now)
     {
         if (sealedSecretKey is not null)

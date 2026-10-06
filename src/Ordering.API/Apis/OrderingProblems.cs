@@ -31,6 +31,7 @@ public static class OrderingProblems
     public static int StatusFor(string code) =>
         Statuses.TryGetValue(code, out var status) ? status
         : DeliveryErrors.StateConflicts.Contains(code) ? StatusCodes.Status409Conflict
+        : PaymentErrors.StateConflicts.Contains(code) ? StatusCodes.Status409Conflict
         : StatusCodes.Status400BadRequest;
 
     public static ProblemHttpResult Of(string code, string detail)

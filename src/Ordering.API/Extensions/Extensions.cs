@@ -75,6 +75,10 @@ internal static class Extensions
 
         // Background service for pending order reminders
         services.AddHostedService<Ninja.Ordering.API.BackgroundServices.PendingOrderReminderService>();
+        // Orders paid ahead that were not paid in time are cancelled
+        // Orders paid ahead: how long the branch has to accept one once it is paid
+        services.Configure<PayAheadOptions>(builder.Configuration.GetSection("PayAhead"));
+        services.AddHostedService<Ninja.Ordering.API.BackgroundServices.UnpaidOrderSweeper>();
 
         // Talabat: the platform relays its orders here with its own token, and
         // passes what the business does with them back through the relay
@@ -114,5 +118,8 @@ internal static class Extensions
         eventBus.AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
         eventBus.AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
+
+        // An order paid ahead online: Sales took the customer's payment, and the order goes to the till
+        eventBus.AddSubscription<OrderPaidOnlineIntegrationEvent, OrderPaidOnlineIntegrationEventHandler>();
     }
 }

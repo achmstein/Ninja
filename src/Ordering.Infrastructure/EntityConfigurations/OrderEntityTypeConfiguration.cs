@@ -129,6 +129,14 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .HasPrecision(18, 2)
             .HasDefaultValue(0m);
 
+        // Paid ahead online: the order waits for the customer's payment before the till sees it
+        orderConfiguration.Property(o => o.PaysOnline).HasDefaultValue(false);
+        orderConfiguration.Property(o => o.PaymentDueBy);
+        orderConfiguration.Property(o => o.PaidOnlineAt);
+        orderConfiguration.Property(o => o.OnlinePaymentKey);
+        // The sweep that cancels the unpaid looks for these
+        orderConfiguration.HasIndex(o => new { o.OrderStatus, o.PaymentDueBy });
+
         orderConfiguration.HasIndex(o => o.BranchId);
         orderConfiguration.HasIndex(o => o.OrderStatus);
         orderConfiguration.HasIndex(o => o.OrderDate);

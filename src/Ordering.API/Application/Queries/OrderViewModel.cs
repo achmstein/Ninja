@@ -180,6 +180,12 @@ public record Order
     public string? PromoCode { get; init; }
     /// <summary>What the promo code took off, already reflected in Total.</summary>
     public decimal PromoDiscount { get; init; }
+    /// <summary>Paid online in the app before the business saw it: nothing is collected at the door or the counter.</summary>
+    public bool PaysOnline { get; init; }
+    /// <summary>An order paid ahead still waiting for its payment: when it is cancelled unpaid.</summary>
+    public DateTime? PaymentDueBy { get; init; }
+    /// <summary>When the customer's online payment for it came in.</summary>
+    public DateTime? PaidOnlineAt { get; init; }
     /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
     public DateTime? PaidAt { get; init; }
     /// <summary>The receipt that covered it — the number the tab and the till show.</summary>
@@ -289,6 +295,12 @@ public record OrderSummary
     public string? PromoCode { get; init; }
     /// <summary>What the promo code took off, already reflected in Total.</summary>
     public decimal PromoDiscount { get; init; }
+    /// <summary>Paid online in the app before the business saw it: nothing is collected at the door or the counter.</summary>
+    public bool PaysOnline { get; init; }
+    /// <summary>An order paid ahead still waiting for its payment: when it is cancelled unpaid.</summary>
+    public DateTime? PaymentDueBy { get; init; }
+    /// <summary>When the customer's online payment for it came in.</summary>
+    public DateTime? PaidOnlineAt { get; init; }
     /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
     public DateTime? PaidAt { get; init; }
     /// <summary>The receipt that covered it — the number the tab and the till show.</summary>

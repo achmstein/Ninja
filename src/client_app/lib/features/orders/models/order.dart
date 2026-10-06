@@ -8,7 +8,10 @@ enum OrderStatus {
   awaitingValidation(1, 'AwaitingValidation'),
   submitted(2, 'Submitted'),
   confirmed(3, 'Confirmed'),
-  cancelled(4, 'Cancelled');
+  cancelled(4, 'Cancelled'),
+
+  /// Paid ahead online: priced, and waiting for its payment before the till sees it
+  awaitingPayment(5, 'AwaitingPayment');
 
   final int value;
   final String label;
@@ -142,7 +145,19 @@ class Order {
   /// Brought by the business's rider: where it has got to; null for an order eaten in or collected
   final OrderDelivery? delivery;
 
+  /// Paid ahead online, rather than at the door or the counter
+  final bool paysOnline;
+
+  /// When its payment ahead came in; null while it waits for it
+  final DateTime? paidOnlineAt;
+
+  /// By when it must be paid ahead, while it waits
+  final DateTime? paymentDueBy;
+
   bool get isPaid => paidAt != null;
+
+  /// Paid ahead and the money in (held or taken): nothing to pay at the door
+  bool get paidAhead => paysOnline && paidOnlineAt != null;
 
   Order({
     required this.id,
@@ -167,6 +182,9 @@ class Order {
     this.voidedAt,
     this.ticketId,
     this.delivery,
+    this.paysOnline = false,
+    this.paidOnlineAt,
+    this.paymentDueBy,
   });
 
   /// Check if order can be rated (must be confirmed and not already rated)
@@ -211,6 +229,9 @@ class Order {
       voidedAt: json['voidedAt'] != null ? DateTime.parse(json['voidedAt'] as String) : null,
       ticketId: (json['ticketId'] as num?)?.toInt(),
       delivery: OrderDelivery.parse(json['delivery']),
+      paysOnline: json['paysOnline'] as bool? ?? false,
+      paidOnlineAt: json['paidOnlineAt'] != null ? DateTime.parse(json['paidOnlineAt'] as String) : null,
+      paymentDueBy: json['paymentDueBy'] != null ? DateTime.parse(json['paymentDueBy'] as String) : null,
     );
   }
 }

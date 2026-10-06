@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Ninja.Sales.Infrastructure;
 using Ninja.Sales.API.Apis;
 using Ninja.Sales.API.Application.Queries;
 using Ninja.Sales.API.Extensions;
@@ -12,6 +13,9 @@ using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
 namespace Ninja.Sales.API.Payments;
 
 /// <param name="PayerName">The name the guest gives; a signed-in customer's own name when left out.</param>
+/// <summary>Who pays an order ahead, for the provider's checkout; left out, the name the order was placed under.</summary>
+public sealed record StartOrderPaymentRequest(string? PayerName = null, string? PayerPhone = null);
+
 public sealed record StartPaymentRequest(SplitMode Mode, IReadOnlyList<int>? LineIds, int? Parts, int? Of, decimal? Amount, string? PayerName, string? PayerPhone);
 
 /// <param name="SecretKey">Null leaves the stored key; an empty string removes it.</param>
@@ -29,7 +33,11 @@ public sealed record PaymentSettingsRequest(
     decimal FeeFixed,
     bool AllowItems,
     bool AllowEqual,
-    bool AllowCustom);
+    bool AllowCustom,
+    /// <summary>A card integration of Paymob's Auth/Capture kind: orders paid ahead hold the card on it, charged once the branch accepts. Null: cards are charged at once.</summary>
+    int? CardHoldIntegrationId = null,
+    /// <summary>Paymob's API key, for checking how payments stand. Null leaves it as it is; empty clears it.</summary>
+    string? ApiKey = null);
 
 /// <summary>
 /// Online payments (docs/online-payments-plan.md): a guest pays or splits their
@@ -64,6 +72,25 @@ public static class PaymentsApi
             .WithName("StartOnlinePayment")
             .WithSummary("Start paying a share of a bill; answers where to send the guest to pay")
             .WithDescription("Full: what is left. Items: the lines picked. Equal: parts of N. Custom: an amount up to what is left. The share is held for 15 minutes while the guest is at the provider's checkout.");
+
+        // Paying an order ahead, before it has a bill: the customer who placed it (signed in, or the guest by X-Guest-Id)
+        api.MapGet("/ahead", GetPayAheadOptions)
+            .AllowAnonymous()
+            .WithName("GetPayAheadOptions")
+            .WithSummary("Whether the customer can pay ahead online here, and the fee they would carry")
+            .WithDescription("For the checkout to offer \"Pay online\" for a delivery or an order to collect, before the order exists.");
+
+        api.MapGet("/orders/{orderId:int}", GetOrderToPay)
+            .AllowAnonymous()
+            .WithName("GetOrderToPay")
+            .WithSummary("An order paid ahead, as its customer pays it")
+            .WithDescription("What it comes to, the fee on top, by when it must be paid, and its latest checkout. 404 until Ordering has priced it (poll), and for anyone but whoever placed it.");
+
+        api.MapPost("/orders/{orderId:int}", StartOrderPayment)
+            .AllowAnonymous()
+            .WithName("StartOrderPayment")
+            .WithSummary("Start paying an order ahead; answers where to send the customer to pay")
+            .WithDescription("The whole order, through the business's provider, while it waits for its payment. Starting again lets the earlier checkout go.");
 
         api.MapGet("/{key:guid}", GetPayment)
             .AllowAnonymous()
@@ -105,6 +132,8 @@ public static class PaymentsApi
             .RequireAuthorization("Owner")
             .WithName("SavePaymentSettings")
             .WithSummary("Change the business's payment account, fee and split options");
+
+        api.MapPaymentAttention();
 
         // The provider calls without an api-version, and signs what it sends
         app.MapPost(CallbackPath, Callback)
@@ -171,17 +200,89 @@ public static class PaymentsApi
         }
     }
 
+    public static async Task<Ok<PayAheadOptionsView>> GetPayAheadOptions(
+        [FromServices] IOnlinePaymentRepository payments,
+        [FromServices] ITenantFeaturesQueries features,
+        [FromServices] PaymentProviders providers)
+    {
+        var settings = await payments.GetSettingsAsync();
+        var available = await features.PayAheadAsync() && providers.For(settings) is not null;
+        var guest = settings.FeeMode == FeeMode.Guest;
+        return TypedResults.Ok(new PayAheadOptionsView(
+            available, settings.Currency, settings.FeeMode.ToString(), guest ? settings.FeePercent : 0, guest ? settings.FeeFixed : 0, providers.IsSimulated(settings),
+            providers.IsSimulated(settings) || settings.HoldsCards));
+    }
+
+    public static async Task<Results<Ok<OrderPayView>, NotFound, UnauthorizedHttpResult>> GetOrderToPay(
+        HttpContext http,
+        [FromServices] SalesContext context,
+        [FromServices] IOnlinePaymentRepository payments,
+        [FromServices] PaymentProviders providers,
+        int orderId)
+    {
+        var (userId, guestId) = Caller(http);
+        if (userId is null && guestId is null) return TypedResults.Unauthorized();
+        var due = await context.OrderPaymentsDue.AsNoTracking().FirstOrDefaultAsync(d => d.OrderId == orderId);
+        if (due is null || !due.IsPlacedBy(userId, guestId)) return TypedResults.NotFound();
+        var settings = await payments.GetSettingsAsync();
+        var latest = (await payments.ListForOrderAsync(orderId)).LastOrDefault();
+        var fee = latest?.Fee ?? settings.GuestFee(due.Amount);
+        return TypedResults.Ok(new OrderPayView(
+            due.OrderId, due.Amount, fee, due.Amount + fee, settings.Currency, due.Status.ToString(), due.DueBy,
+            latest?.Key, latest?.Status.ToString(), providers.IsSimulated(settings), providers.IsSimulated(settings) || settings.HoldsCards));
+    }
+
+    public static async Task<Results<Ok<StartedPayment>, NotFound, BadRequest<ProblemDetails>, UnauthorizedHttpResult>> StartOrderPayment(
+        HttpContext http,
+        [FromServices] IMediator mediator,
+        int orderId,
+        StartOrderPaymentRequest? request)
+    {
+        var (userId, guestId) = Caller(http);
+        if (userId is null && guestId is null) return TypedResults.Unauthorized();
+        var name = string.IsNullOrWhiteSpace(request?.PayerName) ? http.User.GetUserName() : request!.PayerName!.Trim();
+        try
+        {
+            return TypedResults.Ok(await mediator.Send(new StartOrderPaymentCommand(orderId, userId, userId is null ? guestId : null, name, request?.PayerPhone)));
+        }
+        catch (OrderPaymentNotFoundException)
+        {
+            return TypedResults.NotFound();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(new ProblemDetails { Detail = ex.Message });
+        }
+        catch (PaymentProviderException ex)
+        {
+            return TypedResults.BadRequest(new ProblemDetails { Detail = ex.Message, Type = "provider" });
+        }
+    }
+
     public static async Task<Results<Ok<PaymentStatusView>, NotFound>> GetPayment(
         [FromServices] IOnlinePaymentRepository payments,
         [FromServices] ITicketRepository tickets,
-        Guid key)
+        [FromServices] PaymentChecks checks,
+        Guid key,
+        CancellationToken ct)
     {
+        // Back from the checkout and still no callback: the provider is asked (no more than every few
+        // seconds, and only where the business gave its API key), so the customer is not left waiting on it
+        try
+        {
+            await checks.CheckCheckoutAsync(key, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The answer the customer gets is ours either way; the callback, or the next check, catches up
+        }
+
         var payment = await payments.GetByKeyAsync(key);
         if (payment is null) return TypedResults.NotFound();
-        var ticket = await tickets.GetAsync(payment.TicketId);
+        var ticket = payment.TicketId is { } ticketId ? await tickets.GetAsync(ticketId) : null;
         return TypedResults.Ok(new PaymentStatusView(
             payment.Key, payment.TicketId, payment.Status.ToString(), payment.Amount, payment.Fee, payment.Charged,
-            payment.Currency, payment.FailureReason, ticket is { Status: not TicketStatus.Open }));
+            payment.Currency, payment.FailureReason, ticket is { Status: not TicketStatus.Open }, payment.OrderId));
     }
 
     public static async Task<Ok<List<OnlinePaymentView>>> ListForTicket([FromServices] IOnlinePaymentRepository payments, int ticketId)
@@ -213,17 +314,35 @@ public static class PaymentsApi
         }
     }
 
-    public static async Task<Results<NoContent, BadRequest<ProblemDetails>>> Refund(HttpContext http, [FromServices] IMediator mediator, Guid key)
+    /// <summary>
+    /// The till refunds a payment: recorded, then made at the provider with the cashier waiting. Made: 204.
+    /// The provider did not answer: 202, and it is made by itself once it does (the bill refetches then).
+    /// Refused: 400 with the provider's reason, and nothing changed.
+    /// </summary>
+    public static async Task<Results<NoContent, Accepted<ProblemDetails>, BadRequest<ProblemDetails>>> Refund(
+        HttpContext http, [FromServices] IMediator mediator, [FromServices] PaymentMoves moves, Guid key, CancellationToken ct)
     {
         try
         {
-            await mediator.Send(new RefundOnlinePaymentCommand(key, http.GetActor()));
-            return TypedResults.NoContent();
+            await mediator.Send(new RefundOnlinePaymentCommand(key, http.GetActor()), ct);
         }
-        catch (Exception ex) when (ex is SalesDomainException or PaymentProviderException)
+        catch (SalesDomainException ex)
         {
             return TypedResults.BadRequest(new ProblemDetails { Detail = ex.Message });
         }
+
+        var result = await moves.RunAsync(key, ct, interactive: true);
+        return result.Outcome switch
+        {
+            MoveOutcome.Done or MoveOutcome.NothingToDo => TypedResults.NoContent(),
+            MoveOutcome.Refused => TypedResults.BadRequest(new ProblemDetails { Detail = result.Problem }),
+            _ => TypedResults.Accepted((string?)null, new ProblemDetails
+            {
+                Title = "Refund on its way",
+                Detail = "The payment provider did not answer yet; the refund is made as soon as it does.",
+                Status = StatusCodes.Status202Accepted,
+            }),
+        };
     }
 
     public static async Task<Ok<PaymentSettingsView>> GetSettings(
@@ -241,6 +360,7 @@ public static class PaymentsApi
     public static async Task<Results<Ok<PaymentStatusView>, NotFound, BadRequest<ProblemDetails>>> Simulate(
         [FromServices] IOnlinePaymentRepository payments,
         [FromServices] ITicketRepository tickets,
+        [FromServices] PaymentChecks checks,
         [FromServices] PaymentProviders providers,
         [FromServices] IMediator mediator,
         Guid key,
@@ -254,20 +374,20 @@ public static class PaymentsApi
 
         var reference = payment.Key.ToString("N");
         var confirmed = await mediator.Send(new ConfirmOnlinePaymentCommand(
-            new CallbackOutcome(reference, reference, $"sim-{reference}", request.Paid, false, payment.Charged, request.Paid ? null : "Declined in the demo"),
+            new CallbackOutcome(reference, reference, $"sim-{reference}", request.Paid, false, payment.Charged, request.Paid ? null : "Declined in the demo", IsAuth: payment.CardHold),
             SimulatedPaymentProvider.ProviderName));
         if (confirmed is { Paid: true })
         {
             try
             {
-                await mediator.Send(new SettlePaidOnlineCommand(confirmed.TicketId));
+                if (confirmed.TicketId is { } paidTicket) await mediator.Send(new SettlePaidOnlineCommand(paidTicket));
             }
             catch (SalesDomainException)
             {
                 // Paid is paid; the till settles what could not settle itself
             }
         }
-        return (await GetPayment(payments, tickets, key)).Result is Ok<PaymentStatusView> ok ? ok : TypedResults.NotFound();
+        return (await GetPayment(payments, tickets, checks, key, CancellationToken.None)).Result is Ok<PaymentStatusView> ok ? ok : TypedResults.NotFound();
     }
 
     public static async Task<Results<Ok<PaymentSettingsView>, BadRequest<ProblemDetails>>> SaveSettings(
@@ -283,7 +403,7 @@ public static class PaymentsApi
                 request.Currency, request.SecretKey, request.PublicKey, request.HmacSecret,
                 request.CardIntegrationId, request.WalletIntegrationId, request.ApplePayIntegrationId,
                 request.FeeMode, request.FeePercent, request.FeeFixed,
-                request.AllowItems, request.AllowEqual, request.AllowCustom));
+                request.AllowItems, request.AllowEqual, request.AllowCustom, request.CardHoldIntegrationId, request.ApiKey));
             return TypedResults.Ok(PaymentSettingsView.From(settings, sealer.CanSeal, CallbackUrl(options.Value), providers.IsSimulated(settings)));
         }
         catch (SalesDomainException ex)
@@ -335,7 +455,7 @@ public static class PaymentsApi
         {
             try
             {
-                await mediator.Send(new SettlePaidOnlineCommand(confirmed.TicketId));
+                if (confirmed.TicketId is { } paidTicket) await mediator.Send(new SettlePaidOnlineCommand(paidTicket));
             }
             catch (SalesDomainException ex)
             {

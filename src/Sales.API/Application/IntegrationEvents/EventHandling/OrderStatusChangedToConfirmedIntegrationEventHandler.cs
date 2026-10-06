@@ -21,21 +21,28 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     SalesTransaction transaction,
     IMediator mediator,
     DeliveryCashier cashier,
+    Ninja.Sales.API.Payments.PaymentMoves moves,
     ILogger<OrderStatusChangedToConfirmedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStatusChangedToConfirmedIntegrationEvent>
 {
-    // One transaction per event, its floor nudge published after the commit
-    public Task Handle(OrderStatusChangedToConfirmedIntegrationEvent @event)
-        => transaction.RunAsync(nameof(OrderStatusChangedToConfirmedIntegrationEvent), () => Assemble(@event));
-
-    private async Task Assemble(OrderStatusChangedToConfirmedIntegrationEvent @event)
+    // One transaction per event, its floor nudge published after the commit; a held card paying the order
+    // is charged after it too, never inside it
+    public async Task Handle(OrderStatusChangedToConfirmedIntegrationEvent @event)
     {
+        Guid? toCharge = null;
+        await transaction.RunAsync(nameof(OrderStatusChangedToConfirmedIntegrationEvent), async () => toCharge = await Assemble(@event));
+        if (toCharge is { } key) await moves.TryRunAsync(key);
+    }
+
+    private async Task<Guid?> Assemble(OrderStatusChangedToConfirmedIntegrationEvent @event)
+    {
+        Guid? toCharge = null;
         // Events published before Ordering carried the breakdown have no
         // items; there is nothing to bill from them
         if (@event.Items.Count == 0)
         {
             logger.LogWarning("Order {OrderId} confirmed without line items - skipping ticket assembly", @event.OrderId);
-            return;
+            return null;
         }
 
         // At-least-once delivery, checked across every ticket rather than the
@@ -45,7 +52,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (await ticketRepository.HasOrderAsync(@event.OrderId))
         {
             logger.LogInformation("Order {OrderId} is already on a ticket - redelivery ignored", @event.OrderId);
-            return;
+            return null;
         }
 
         var ticket = await ResolveTicketAsync(@event);
@@ -110,11 +117,19 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             await SettleToPlatformAsync(@event, ticket);
         }
 
+        // Paid ahead online in the app: the payment is this bill's, and settles it now
+        if (@event.PaidOnlineKey is { } paymentKey)
+        {
+            toCharge = await mediator.Send(new Ninja.Sales.API.Payments.SettlePaidAheadCommand(@event.OrderId, paymentKey, ticket.Id));
+        }
+
         // The rider's cash may have come in before the bill did: it settles the bill now
         if (IsDelivery(@event))
         {
             await cashier.BillLandedAsync(@event.OrderId, ticket);
         }
+
+        return toCharge;
     }
 
     /// <summary>
@@ -166,10 +181,15 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         }
 
         // The business's own delivery is its own sale too: paid at the door,
-        // in cash the rider brings back, so never joined to a tab
-        if (IsDelivery(@event))
+        // in cash the rider brings back, so never joined to a tab. So is an order
+        // paid ahead online (a delivery, or one collected): its bill is the payment's
+        if (@event.PaidOnlineKey is not null)
         {
             return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, DeliveryLabel(@event)));
+        }
+        if (IsDelivery(@event))
+        {
+            return ticketRepository.Add(Ticket.OpenForDelivery(@event.BranchId, DeliveryLabel(@event)));
         }
 
         // The cashier rang this up against a bill that is already on the

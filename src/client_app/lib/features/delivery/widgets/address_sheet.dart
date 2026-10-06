@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -204,7 +205,7 @@ class _AddressRow extends StatelessWidget {
               if (selected)
                 Icon(LucideIcons.check, size: 20, color: theme.colors.foreground)
               else if (manage)
-                Icon(LucideIcons.chevronRight, size: 16, color: theme.colors.mutedForeground),
+                Icon(Directionality.of(context) == TextDirection.rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight, size: 16, color: theme.colors.mutedForeground),
             ],
           ),
         ),
@@ -263,8 +264,29 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
     if (_initial == null) {
       _pinned = here != null;
       _flownTo = here;
-      // A new address asks for the GPS's own fix, not the coarse one the branch list may have had
-      WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(locationProvider.notifier).request(precise: true));
+      // A new address takes the GPS's own fix, not the coarse one the branch list may have had: at once
+      // where the phone gives it already, else on the customer's word once they have read why (under the map)
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final permission = await ref.read(locationProvider.notifier).permission();
+        if (!mounted) return;
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          ref.read(locationProvider.notifier).request(precise: true);
+        } else if (permission == LocationPermission.denied) {
+          setState(() => _explain = true);
+        }
+      });
+    }
+  }
+
+  /// The phone would ask for the position: why, before it does, and the way to say yes
+  bool _explain = false;
+
+  Future<void> _useMyLocation() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _explain = false);
+    final allowed = await ref.read(locationProvider.notifier).locate(precise: true);
+    if (!allowed && mounted) {
+      showIsland(title: Text(l10n.locationOff), icon: Icon(LucideIcons.mapPinOff, color: context.theme.colors.mutedForeground));
     }
   }
 
@@ -415,13 +437,41 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
-          child: AppText(
-            _tried && !_pinned ? l10n.deliveryNeedPin : l10n.deliveryMovePin,
-            style: _tried && !_pinned ? caption.copyWith(color: c.destructive) : caption,
+        if (_explain && !_moved && location.here == null)
+          // Why the app would like the position, before the phone asks for it
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: Pressable(
+              onTap: _useMyLocation,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: c.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.locateFixed, size: 20, color: c.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(l10n.useMyLocation, style: caption.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                          AppText(l10n.deliveryPinWhy, style: caption),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
+            child: AppText(
+              _tried && !_pinned ? l10n.deliveryNeedPin : l10n.deliveryMovePin,
+              style: _tried && !_pinned ? caption.copyWith(color: c.destructive) : caption,
+            ),
           ),
-        ),
         NinjaField(
           controller: _street,
           hint: l10n.deliveryStreet,

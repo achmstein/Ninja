@@ -46,7 +46,12 @@ public class DeliveryBoardQueries(
         // Open (cash not in, bill not settled another way), or closed within the day
         var orders = await Deliveries(now - Options.OpenWindow)
             .Where(o => o.BranchId == branchId)
-            .Where(o => (o.Delivery!.CashHandedInAt == null && o.PaidAt == null)
+            // Paid ahead online, it stays until it is delivered (or comes back): its bill settled the moment it
+            // was confirmed, which says nothing of where the bag is
+            .Where(o => (o.PaysOnline
+                    ? o.Delivery!.DeliveredAt == null && o.Delivery.ReturnedAt == null
+                    : o.Delivery!.CashHandedInAt == null && o.PaidAt == null)
+                || (o.PaysOnline && (o.Delivery!.DeliveredAt >= finishedSince || o.Delivery.ReturnedAt >= finishedSince))
                 || o.Delivery.CashHandedInAt >= finishedSince
                 || o.PaidAt >= finishedSince)
             .OrderBy(o => o.ConfirmedAt)
@@ -141,6 +146,8 @@ public class DeliveryBoardQueries(
             ConfirmedAt = o.ConfirmedAt,
             ReadyAt = o.ReadyAt,
             PaidAt = o.PaidAt,
+            PaidOnline = o.PaysOnline,
+            ToCollect = o.ToCollect,
             CustomerName = o.Buyer?.Name ?? o.GuestName,
             CustomerNote = o.CustomerNote,
             Total = total,

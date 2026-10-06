@@ -236,7 +236,8 @@ class StartedPayment {
 
 /// How one payment stands (Sales `PaymentStatusView`).
 class PaymentStatus {
-  /// "Pending", "Paid", "Failed", "Expired" or "Refunded"
+  /// "Pending", "Paid", "Authorized" (a card held, charged once the order is accepted), "Failed", "Expired",
+  /// "Voided" (a hold let go) or "Refunded"
   final String status;
   final double amount;
   final double fee;
@@ -244,6 +245,9 @@ class PaymentStatus {
   final String currency;
   final String? failureReason;
   final bool billClosed;
+
+  /// The order it pays ahead; null for a share of a bill
+  final int? orderId;
 
   const PaymentStatus({
     required this.status,
@@ -253,10 +257,17 @@ class PaymentStatus {
     this.currency = 'EGP',
     this.failureReason,
     this.billClosed = false,
+    this.orderId,
   });
 
   bool get isPending => status == 'Pending';
   bool get isPaid => status == 'Paid';
+
+  /// The card is held for it, charged once the order is accepted
+  bool get isHeld => status == 'Authorized';
+
+  /// Held or taken: the customer's money is in
+  bool get isSecured => isPaid || isHeld;
 
   factory PaymentStatus.fromJson(Map<String, dynamic> json) => PaymentStatus(
         status: json['status'] as String? ?? 'Pending',
@@ -266,5 +277,6 @@ class PaymentStatus {
         currency: json['currency'] as String? ?? 'EGP',
         failureReason: json['failureReason'] as String?,
         billClosed: json['billClosed'] as bool? ?? false,
+        orderId: (json['orderId'] as num?)?.toInt(),
       );
 }

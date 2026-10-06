@@ -89,6 +89,8 @@ const FEATURE_ROWS: {
   { key: 'kds', label: 'featureKds' },
   // An add-on on every plan: not offered at all until it is bought
   { key: 'onlinePayments', label: 'featureOnlinePayments', addon: true },
+  // Delivery and pickup orders paid before the branch sees them; with online payments only
+  { key: 'payAhead', label: 'featurePayAhead', addon: true },
   { key: 'delivery', label: 'featureDelivery', addon: true },
 ]
 

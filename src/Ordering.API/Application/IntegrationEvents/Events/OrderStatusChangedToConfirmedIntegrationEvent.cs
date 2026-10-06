@@ -101,6 +101,13 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public bool IsDelivery { get; init; }
 
+    /// <summary>
+    /// Paid ahead online in the app: Sales' payment that paid it. The order's bill is its own (a counter
+    /// one, as a delivery's), and settles itself with this payment the moment it opens. Null for every
+    /// order paid at its bill, at the door or at the counter.
+    /// </summary>
+    public Guid? PaidOnlineKey { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

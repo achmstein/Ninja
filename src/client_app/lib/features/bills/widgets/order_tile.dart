@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
+import '../../pay/widgets/pay_order_sheet.dart';
 
 /// An order the till has not put on a bill: where it was sent, and what is
 /// in it. The status dot says what the till did.
@@ -103,6 +104,17 @@ class OrderTile extends ConsumerWidget {
                     ),
                   ],
                 ),
+              // Paid ahead, and the payment not in yet: the way to pay it, while there is time
+              if (order.status == OrderStatus.awaitingPayment) ...[
+                const SizedBox(height: 8),
+                NinjaButton(
+                  size: NinjaButtonSize.sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => showPayOrderSheet(context, order.id),
+                  prefix: const Icon(LucideIcons.creditCard),
+                  child: Text(l10n.orderPayNow),
+                ),
+              ],
             ],
           ),
         ],
@@ -171,7 +183,8 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      OrderStatus.awaitingValidation || OrderStatus.submitted => NinjaColors.warningSolid,
+      // Waiting on the till, or (paid ahead) on the customer's payment
+      OrderStatus.awaitingValidation || OrderStatus.submitted || OrderStatus.awaitingPayment => NinjaColors.warningSolid,
       OrderStatus.confirmed => NinjaColors.success,
       OrderStatus.cancelled => context.theme.colors.destructive,
     };

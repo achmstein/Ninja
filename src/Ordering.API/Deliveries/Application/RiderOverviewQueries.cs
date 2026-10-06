@@ -204,6 +204,7 @@ public class RiderOverviewQueries(OrderingContext context, IOptions<DeliveryOpti
                 o.Delivery.CashHandedInAt,
                 o.Delivery.RiderUserId,
                 Total = OrderTotals.Of(o),
+                o.PaysOnline,
             })
             .WithOrderTotals()
             .ToListAsync();
@@ -230,6 +231,7 @@ public class RiderOverviewQueries(OrderingContext context, IOptions<DeliveryOpti
                     Floor = o.Floor,
                     Apartment = o.Apartment,
                     Total = o.Total,
+                    PaidOnline = o.PaysOnline,
                     Fee = o.Fee,
                     Stage = stage,
                     AssignedAt = given[o.Id],

@@ -816,6 +816,7 @@
   },
   "refundOnlineHint": "The money goes back to their card through the payment provider.",
   "onlineRefundedToast": "Online payment refunded",
+  "onlineRefundPendingToast": "Refund on its way: Paymob has not answered yet, and it goes through as soon as it does",
   "releaseOnline": "Release",
   "onlineReleasedToast": "Released: the share is free to pay again",
   "guestPayingOnline": "A guest is paying online. Settle once they finish.",

@@ -10,3 +10,8 @@ export const useLiveOrder = create<{ stage: PillStage | null; orderNumber: numbe
   stage: null,
   orderNumber: null,
 }))
+
+/** The dock's way to pay an order waiting for its payment ahead (its number is its id) */
+export function payOrderLink(orderNumber: number) {
+  return { to: '/pay/order/$orderId', params: { orderId: String(orderNumber) } } as const
+}

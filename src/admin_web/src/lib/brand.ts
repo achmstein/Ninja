@@ -34,6 +34,7 @@ export const ALL_FEATURES: TenantFeatures = {
   kds: true,
   onlinePayments: true,
   delivery: true,
+  payAhead: true,
 }
 
 export const brandQueryOptions = () => ({

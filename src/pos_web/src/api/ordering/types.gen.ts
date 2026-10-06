@@ -74,6 +74,10 @@ export type ConnectorPairingView = {
     expiresAt: string;
 };
 
+export type CreatedOrder = {
+    orderId: null | number | string;
+};
+
 export type CreateOrderDraftCommand = {
     buyerId: null | string;
     items: null | Array<BasketItem>;
@@ -94,6 +98,7 @@ export type CreateOrderRequest = {
     placeName?: null | LocalizedText;
     promoCode?: null | string;
     delivery?: null | DeliveryRequest;
+    payOnline?: boolean;
 };
 
 export type CreatePairingRequest = {
@@ -125,6 +130,14 @@ export type CustomerAddressView = {
     phone: null | string;
 };
 
+export type DeliveringBranch = {
+    branchId: number | string;
+    distanceMeters: number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    signInRequired: boolean;
+};
+
 export type DeliveryFailedRequest = {
     reason?: null | string;
 };
@@ -138,6 +151,8 @@ export type DeliveryOrder = {
     customerName?: null | string;
     customerNote?: null | string;
     total?: number | string;
+    paidOnline?: boolean;
+    toCollect?: number | string;
     cashDifference?: null | number | string;
     items?: Array<Orderitem>;
     delivery?: DeliveryStaffView;
@@ -162,6 +177,11 @@ export type DeliveryRequest = {
     apartment?: null | string;
     directions?: null | string;
     phone?: null | string;
+};
+
+export type DeliveryResolution = {
+    delivers: boolean;
+    branches: Array<DeliveringBranch>;
 };
 
 export type DeliveryStaffView = {
@@ -373,6 +393,9 @@ export type Order = {
     loyaltyDiscount?: number | string;
     promoCode?: null | string;
     promoDiscount?: number | string;
+    paysOnline?: boolean;
+    paymentDueBy?: null | string;
+    paidOnlineAt?: null | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -443,6 +466,9 @@ export type OrderSummary = {
     loyaltyDiscount?: number | string;
     promoCode?: null | string;
     promoDiscount?: number | string;
+    paysOnline?: boolean;
+    paymentDueBy?: null | string;
+    paidOnlineAt?: null | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -567,6 +593,7 @@ export type RiderDeliveryRow = {
     floor?: null | string;
     apartment?: null | string;
     total?: number | string;
+    paidOnline?: boolean;
     fee?: number | string;
     stage?: string;
     assignedAt?: string;
@@ -706,8 +733,10 @@ export type CreateOrderResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: CreatedOrder;
 };
+
+export type CreateOrderResponse = CreateOrderResponses[keyof CreateOrderResponses];
 
 export type CreatePosOrderData = {
     body: PosOrderRequest;
@@ -1069,6 +1098,42 @@ export type RateOrderErrors = {
 export type RateOrderError = RateOrderErrors[keyof RateOrderErrors];
 
 export type RateOrderResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelUnpaidOrderData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/cancel-unpaid';
+};
+
+export type CancelUnpaidOrderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelUnpaidOrderResponses = {
     /**
      * OK
      */
@@ -1579,6 +1644,40 @@ export type GetDeliveryQuoteResponses = {
 };
 
 export type GetDeliveryQuoteResponse = GetDeliveryQuoteResponses[keyof GetDeliveryQuoteResponses];
+
+export type ResolveDeliveryBranchData = {
+    body?: never;
+    path?: never;
+    query: {
+        latitude: number | string;
+        longitude: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/resolve';
+};
+
+export type ResolveDeliveryBranchErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ResolveDeliveryBranchResponses = {
+    /**
+     * OK
+     */
+    200: DeliveryResolution;
+};
+
+export type ResolveDeliveryBranchResponse = ResolveDeliveryBranchResponses[keyof ResolveDeliveryBranchResponses];
 
 export type GetDeliveriesData = {
     body?: never;

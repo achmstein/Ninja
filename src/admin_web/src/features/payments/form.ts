@@ -22,7 +22,9 @@ export type PaymentsForm = {
   secretKey: SecretEdit
   publicKey: string
   hmacSecret: SecretEdit
+  apiKey: SecretEdit
   cardIntegrationId: string
+  cardHoldIntegrationId: string
   walletIntegrationId: string
   applePayIntegrationId: string
   feeMode: number
@@ -42,7 +44,9 @@ export function toForm(view: PaymentSettingsView): PaymentsForm {
     secretKey: { mode: 'keep' },
     publicKey: view.publicKey ?? '',
     hmacSecret: { mode: 'keep' },
+    apiKey: { mode: 'keep' },
     cardIntegrationId: text(view.cardIntegrationId),
+    cardHoldIntegrationId: text(view.cardHoldIntegrationId),
     walletIntegrationId: text(view.walletIntegrationId),
     applePayIntegrationId: text(view.applePayIntegrationId),
     // A number on the wire today; the name too, should enums ever be spelled
@@ -90,7 +94,8 @@ export function toRequest(
   const card = optionalId(form.cardIntegrationId)
   const wallet = optionalId(form.walletIntegrationId)
   const applePay = optionalId(form.applePayIntegrationId)
-  if (card === undefined || wallet === undefined || applePay === undefined)
+  const cardHold = optionalId(form.cardHoldIntegrationId)
+  if (card === undefined || wallet === undefined || applePay === undefined || cardHold === undefined)
     return { problem: 'integrationId' }
 
   const feePercent = amount(form.feePercent)
@@ -104,7 +109,9 @@ export function toRequest(
       secretKey: secretValue(form.secretKey),
       publicKey: form.publicKey.trim() || null,
       hmacSecret: secretValue(form.hmacSecret),
+      apiKey: secretValue(form.apiKey),
       cardIntegrationId: card,
+      cardHoldIntegrationId: cardHold,
       walletIntegrationId: wallet,
       applePayIntegrationId: applePay,
       feeMode: form.feeMode,

@@ -126,6 +126,7 @@ void main() {
   test('only a business with no payments at the table hides the pay buttons', () {
     expect(offersPay('off'), isFalse);
     expect(offersPay('not-set-up'), isFalse);
+    expect(offersPay('at-door'), isFalse, reason: 'a delivery the rider collects is never paid online');
     expect(offersPay('paid'), isTrue);
     expect(offersPay(null), isTrue);
   });

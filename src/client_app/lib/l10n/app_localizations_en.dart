@@ -1506,6 +1506,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location is off for this app. Turn it on in your phone\'s settings.';
 
   @override
+  String get nearestBranchTitle => 'Order from the branch nearest you';
+
+  @override
+  String get nearestBranchBody =>
+      'We use your location only to find your closest branch and how far it is, so your order is made close to you. It is never shared.';
+
+  @override
+  String nearestBranchMoved(String name, String distance) {
+    return 'Ordering from $name, $distance away';
+  }
+
+  @override
+  String get nearestBranchBlocked =>
+      'Location is off. Turn it on to find the branch nearest you.';
+
+  @override
+  String get deliveryPinWhy =>
+      'Use your location to put the pin right on your door, so the rider finds you.';
+
+  @override
   String get ninjaChangeBranch => 'Change branch';
 
   @override
@@ -1569,11 +1589,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String deliveryFromBranch(String name) {
-    return 'Delivered from $name';
-  }
-
-  @override
   String get deliveryNoBranchReaches => 'We don\'t deliver to this address yet';
 
   @override
@@ -1601,9 +1616,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String deliveryAddMore(String amount) {
     return 'Add $amount more for delivery';
   }
-
-  @override
-  String get deliveryCashAtDoor => 'Pay the rider in cash at the door';
 
   @override
   String get deliveryMovePin => 'Move the map to put the pin on your door';
@@ -1745,4 +1757,114 @@ class AppLocalizationsEn extends AppLocalizations {
   String orderNotDeliveredNote(String name) {
     return 'The rider couldn\'t deliver it. $name will be in touch.';
   }
+
+  @override
+  String get payAheadLabel => 'How you pay';
+
+  @override
+  String get payAheadOnline => 'Pay online';
+
+  @override
+  String get payAheadCashDelivery => 'Cash on delivery';
+
+  @override
+  String get payAheadCashPickup => 'Pay at pickup';
+
+  @override
+  String get payAheadFee => 'Online payment fee';
+
+  @override
+  String payAheadHeld(String name) {
+    return 'Your card is only charged once $name accepts the order.';
+  }
+
+  @override
+  String get payAheadPlace => 'Continue to pay';
+
+  @override
+  String get payAheadFinishFromDock =>
+      'Your order is waiting for its payment: pay it from the bar below.';
+
+  @override
+  String get payAheadGettingReady => 'Getting your payment ready…';
+
+  @override
+  String get payAheadToCheckout => 'Taking you to pay…';
+
+  @override
+  String get payAheadTitle => 'Pay for your order';
+
+  @override
+  String payAheadWithin(String time, String name) {
+    return 'Pay within $time to send it to $name.';
+  }
+
+  @override
+  String get payAheadOutOfTime => 'Time\'s up for this order.';
+
+  @override
+  String payAheadPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get payAheadCancel => 'Cancel order';
+
+  @override
+  String get payAheadCancelled => 'Order cancelled. Nothing was charged.';
+
+  @override
+  String get payAheadCancelFailed => 'Couldn\'t cancel the order';
+
+  @override
+  String get payAheadStartFailed => 'Couldn\'t start the payment';
+
+  @override
+  String payAheadPaidNote(String name) {
+    return '$name has your order.';
+  }
+
+  @override
+  String payAheadHeldNote(String name) {
+    return '$name has your order. Your card is charged once they accept it.';
+  }
+
+  @override
+  String get payAheadFollow => 'Follow your order';
+
+  @override
+  String get payAheadOrderCancelled => 'This order was cancelled';
+
+  @override
+  String get payAheadNothingCharged => 'Nothing was charged.';
+
+  @override
+  String get payAheadNotFound => 'We couldn\'t find this order to pay';
+
+  @override
+  String get orderStageAwaitingPayment => 'Waiting for payment';
+
+  @override
+  String get orderPayNow => 'Pay now';
+
+  @override
+  String get orderPaidOnTheWayNote =>
+      'On its way to you. It is paid: nothing to pay at the door.';
+
+  @override
+  String orderPaidOnTheWayRiderNote(String rider) {
+    return '$rider is on the way to you. It is paid: nothing to pay at the door.';
+  }
+
+  @override
+  String orderPaidCancelledNote(String name) {
+    return '$name could not take this order. What you paid goes back to you.';
+  }
+
+  @override
+  String get orderUnpaidCancelledNote =>
+      'Cancelled before it was paid. Nothing was charged.';
+
+  @override
+  String get payWhyAtDoor => 'Paid to the rider at the door';
 }

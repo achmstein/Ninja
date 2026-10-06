@@ -4,7 +4,7 @@ import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { type BranchResponse } from '@/api/tenant'
 import { lastUsedFirst, useBranches } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
-import { byDistance, pointOf, useMyLocation } from '@/lib/geo'
+import { byDistance, type LatLng, pointOf, useMyLocation } from '@/lib/geo'
 import { useLocalized, useT } from '@/lib/i18n'
 import { moveLines, type OrderMove } from '@/lib/order-move'
 import { toast } from '@/lib/toast'
@@ -87,12 +87,26 @@ export function useBranchFallback() {
   useEffect(() => {
     if (!firstVisit || !here || !branches?.length || placed.current) return
     placed.current = true
-    const open = branches.filter((b) => b.isActive && b.isOrderingEnabled)
-    const nearest = byDistance(open, here, pointOf)[0]
-    if (nearest?.meters != null && Number(nearest.item.id) !== useBranchStore.getState().branchId) {
-      moveToBranch(queryClient, Number(nearest.item.id))
-    }
+    moveToNearest(queryClient, branches, here)
   }, [firstVisit, here, branches, queryClient])
+}
+
+/**
+ * The app to the nearest open branch taking orders, the order with it; the branch it went to, or
+ * null where it stayed (already the nearest, or no branch has a point). Twice in a row (the first
+ * visit's quiet look and the customer's own "Use my location") moves once: the branch is set at once.
+ */
+export function moveToNearest(
+  queryClient: QueryClient,
+  branches: BranchResponse[],
+  here: LatLng,
+  onMoved?: (move: OrderMove) => void
+): { branch: BranchResponse; meters: number } | null {
+  const open = branches.filter((b) => b.isActive && b.isOrderingEnabled)
+  const nearest = byDistance(open, here, pointOf)[0]
+  if (nearest?.meters == null || Number(nearest.item.id) === useBranchStore.getState().branchId) return null
+  moveToBranch(queryClient, Number(nearest.item.id), onMoved)
+  return { branch: nearest.item, meters: nearest.meters }
 }
 
 /** The order going where the address is served from, once that is known (lib/delivery.ts's `moveTo`) */

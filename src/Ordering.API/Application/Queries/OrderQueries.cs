@@ -45,6 +45,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             PromoCode = order.PromoCode,
             PromoDiscount = order.PromoDiscount,
             PaidAt = order.PaidAt,
+            PaysOnline = order.PaysOnline,
+            PaymentDueBy = order.PaymentDueBy,
+            PaidOnlineAt = order.PaidOnlineAt,
             ReceiptNumber = order.ReceiptNumber,
             PaidWith = order.PaidWith,
             RefundedAmount = order.RefundedAmount,
@@ -124,6 +127,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PromoCode = o.PromoCode,
                 PromoDiscount = o.PromoDiscount,
                 PaidAt = o.PaidAt,
+                PaysOnline = o.PaysOnline,
+                PaymentDueBy = o.PaymentDueBy,
+                PaidOnlineAt = o.PaidOnlineAt,
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
@@ -237,6 +243,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PromoCode = o.PromoCode,
                 PromoDiscount = o.PromoDiscount,
                 PaidAt = o.PaidAt,
+                PaysOnline = o.PaysOnline,
+                PaymentDueBy = o.PaymentDueBy,
+                PaidOnlineAt = o.PaidOnlineAt,
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
@@ -292,7 +301,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .AsNoTracking()
             .AnyAsync(o => o.GuestId == guestId
                 && o.PlaceId == null
+                // One waiting for its online payment counts too: the guest pays it, or cancels it, first
                 && (o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.AwaitingValidation
+                    || o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.AwaitingPayment
                     || o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Submitted));
 
     public Task<bool> IsGuestBlockedAsync(string guestId, int branchId)
@@ -455,6 +466,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PromoCode = o.PromoCode,
                 PromoDiscount = o.PromoDiscount,
                 PaidAt = o.PaidAt,
+                PaysOnline = o.PaysOnline,
+                PaymentDueBy = o.PaymentDueBy,
+                PaidOnlineAt = o.PaidOnlineAt,
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,

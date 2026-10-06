@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
@@ -12,6 +13,7 @@ import { cartTotal, useCart } from '@/lib/cart'
 import { useDelivery } from '@/lib/delivery'
 import { useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
+import { usePayAhead } from '@/lib/pay-ahead'
 import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature, type OrderExtras } from '@/lib/order-payload'
 import { toast } from '@/lib/toast'
 import { useOrderFollowsAddress } from '@/lib/use-branch-switch'
@@ -54,6 +56,9 @@ export function usePlaceOrder({
   const delivery = useDelivery(destination, cartTotal(lines))
   // The address decides the branch: the order moves to the one that serves it
   useOrderFollowsAddress(delivery.moveTo)
+  // Paid ahead online, where the business takes it and the order goes to a door or the counter
+  const payAhead = usePayAhead(destination)
+  const navigate = useNavigate()
 
   const block = checkoutBlock({
     isGuest,
@@ -72,7 +77,7 @@ export function usePlaceOrder({
 
   const mutation = useMutation({
     ...createOrderMutation(),
-    onSuccess: () => {
+    onSuccess: (created, variables) => {
       requestIdRef.current = null
       writePending(null)
       // Preferences hang off an account, so there is nothing to save for a guest
@@ -91,6 +96,13 @@ export function usePlaceOrder({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
       if (onPlaced) onPlaced(clear)
       else clear()
+      // Paid ahead: straight on to paying it. The same request answered again carries no number; the
+      // order is then on the dock, waiting for its payment, with the way to pay it
+      if ((variables.body as { payOnline?: boolean }).payOnline) {
+        const orderId = created?.orderId != null ? Number(created.orderId) : null
+        if (orderId) void navigate({ to: '/pay/order/$orderId', params: { orderId: String(orderId) }, search: { start: true } })
+        else toast.info(t('payAheadFinishFromDock'))
+      }
     },
     onError: (error) => {
       onFailed?.()
@@ -124,13 +136,14 @@ export function usePlaceOrder({
     // Minted on the first order that needs it; set before the request so the interceptor sends it
     const guestId = isGuest ? ensureGuestId() : null
     const deliverTo = delivery.active ? delivery.address : null
-    const signature = orderSignature(lines, extras, guestId, destination, deliverTo)
+    const payOnline = payAhead.online
+    const signature = orderSignature(lines, extras, guestId, destination, deliverTo, payOnline)
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
       writePending(requestIdRef.current)
     }
     mutation.mutate({
-      body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination, delivery: deliverTo }),
+      body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination, delivery: deliverTo, payOnline }),
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
     })
@@ -146,6 +159,7 @@ export function usePlaceOrder({
     isGuest,
     destination,
     delivery,
+    payAhead,
     tableUnconfirmed,
     activePlace,
     dialogs: (

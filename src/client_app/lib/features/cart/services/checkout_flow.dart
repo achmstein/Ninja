@@ -17,6 +17,8 @@ import '../../delivery/services/delivery_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
+import '../../pay/pay_ahead.dart';
+import '../../pay/widgets/pay_order_sheet.dart';
 import '../../places/services/place_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
 import '../widgets/order_island.dart';
@@ -36,7 +38,8 @@ final orderNoteProvider = NotifierProvider<OrderNoteNotifier, String>(OrderNoteN
 /// Where the order just placed has got to, for the dock's row. A delivery is
 /// followed to the door: being made, on its way with its rider, delivered
 /// (or not), since the rider says each one
-enum OrderStage { sent, confirmed, preparing, onTheWay, delivered, notDelivered, cancelled }
+/// (or not), since the rider says each one. Paid ahead online, it waits for its payment first
+enum OrderStage { awaitingPayment, sent, confirmed, preparing, onTheWay, delivered, notDelivered, cancelled }
 
 class LiveOrder {
   final OrderStage stage;
@@ -47,13 +50,20 @@ class LiveOrder {
   /// The rider who has a delivery on its way, when the till said who
   final String? rider;
 
-  const LiveOrder(this.stage, {this.orderId, this.rider});
+  /// Paid ahead online, and the money in: nothing to pay at the door, and it goes back if the order is not made
+  final bool paidAhead;
+
+  /// Paid ahead online, whether or not the money came in
+  final bool paysOnline;
+
+  const LiveOrder(this.stage, {this.orderId, this.rider, this.paidAhead = false, this.paysOnline = false});
 }
 
 /// Where an order stands for the dock: a delivery, confirmed, by its rider's word
 OrderStage orderStageOf(Order order) {
   final delivery = order.delivery;
   if (order.status == OrderStatus.cancelled) return OrderStage.cancelled;
+  if (order.status == OrderStatus.awaitingPayment) return OrderStage.awaitingPayment;
   if (order.status != OrderStatus.confirmed) return OrderStage.sent;
   if (delivery == null) return OrderStage.confirmed;
   return switch (delivery.stage) {
@@ -66,7 +76,8 @@ OrderStage orderStageOf(Order order) {
 
 /// How long a stage stays on the dock once reached; null while the order is still on its way to the customer
 Duration? lingerOf(OrderStage stage) => switch (stage) {
-      OrderStage.sent || OrderStage.preparing || OrderStage.onTheWay => null,
+      // Waiting for its payment ahead: on the dock, with the way to pay, until paid or let go
+      OrderStage.awaitingPayment || OrderStage.sent || OrderStage.preparing || OrderStage.onTheWay => null,
       OrderStage.delivered => const Duration(seconds: 10),
       // The rider couldn't find the door, or nobody answered: said, and held long enough to be read
       OrderStage.notDelivered => const Duration(seconds: 30),
@@ -169,13 +180,13 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
       return;
     }
     _pollWhile(order.delivery != null && lingerOf(stage) == null);
-    if (stage == live.stage && order.id == live.orderId && rider == live.rider) return;
-    state = LiveOrder(stage, orderId: order.id, rider: rider);
+    if (stage == live.stage && order.id == live.orderId && rider == live.rider && order.paidAhead == live.paidAhead) return;
+    state = LiveOrder(stage, orderId: order.id, rider: rider, paidAhead: order.paidAhead, paysOnline: order.paysOnline);
     if (stage != live.stage) {
       // Turned down is worth interrupting for: the island says so out loud, opened with the dishes
       if (stage == OrderStage.cancelled) _announce(order);
       // So is a delivery at the door, or one that could not get there
-      if (stage == OrderStage.onTheWay || stage == OrderStage.delivered || stage == OrderStage.notDelivered) _announceDelivery(stage, rider);
+      if (stage == OrderStage.onTheWay || stage == OrderStage.delivered || stage == OrderStage.notDelivered) _announceDelivery(stage, rider, paid: order.paidAhead);
     }
     final linger = lingerOf(stage);
     _clear?.cancel();
@@ -193,11 +204,18 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
   }
 
   /// A delivery's step said out loud on the island (client_web's order-pill LOUD stages)
-  void _announceDelivery(OrderStage stage, String? rider) {
+  void _announceDelivery(OrderStage stage, String? rider, {bool paid = false}) {
     final l10n = lookupAppLocalizations(ref.read(localeProvider));
     final business = ref.read(brandNameProvider);
     final (String title, IconData icon, Color color) = switch (stage) {
-      OrderStage.onTheWay => (rider != null ? l10n.orderOnTheWayRiderNote(rider) : l10n.orderOnTheWayNote, LucideIcons.bike, NinjaColors.success),
+      // Paid ahead online: nothing to pay at the door
+      OrderStage.onTheWay => (
+          paid
+              ? (rider != null ? l10n.orderPaidOnTheWayRiderNote(rider) : l10n.orderPaidOnTheWayNote)
+              : (rider != null ? l10n.orderOnTheWayRiderNote(rider) : l10n.orderOnTheWayNote),
+          LucideIcons.bike,
+          NinjaColors.success,
+        ),
       OrderStage.delivered => (l10n.orderDeliveredNote, LucideIcons.house, NinjaColors.success),
       _ => (l10n.orderNotDeliveredNote(business), LucideIcons.circleX, NinjaColors.warning),
     };
@@ -212,6 +230,12 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     island.flash(
       turnedDownFace(
         order,
+        // Paid ahead: the money goes back; never paid: nothing was charged
+        note: order.paysOnline
+            ? (order.paidAhead
+                ? lookupAppLocalizations(ref.read(localeProvider)).orderPaidCancelledNote(ref.read(brandNameProvider))
+                : lookupAppLocalizations(ref.read(localeProvider)).orderUnpaidCancelledNote)
+            : null,
         business: ref.read(brandNameProvider),
         total: order.total > 0 ? money(order.total) : null,
         onBills: () => ref.read(routerProvider).push('/bills'),
@@ -254,6 +278,9 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
   if (delivery.active && !delivery.ready) return false;
   final deliverTo = delivery.active ? delivery.address : null;
 
+  // Paid ahead online, where the business takes it and the order goes to a door or the counter
+  final payOnline = ref.read(payAheadProvider).online;
+
   ref.read(liveOrderProvider.notifier).placing();
   final success = await ref.read(checkoutProvider.notifier).submitOrder(
         items: cart.items,
@@ -266,6 +293,7 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
         loyaltyDiscount: redemption.serverDiscount ?? 0,
         promoCode: promo.applied ? promo.code : null,
         delivery: deliverTo == null ? null : {...deliverTo.body(), 'phone': deliverTo.phone ?? ref.read(authServiceProvider).phoneNumber},
+        payOnline: payOnline,
       );
 
   if (success) {
@@ -277,8 +305,19 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
     // Points earned show once the order is confirmed
     ref.read(loyaltyProvider.notifier).refresh();
     ref.read(liveOrderProvider.notifier).sent();
-    SoundService.instance.playSuccess();
-    showIsland(title: Text(l10n.orderPlacedSuccessfully), icon: const Icon(LucideIcons.check, color: NinjaColors.success));
+    if (payOnline) {
+      // Straight on to paying it. The same request answered again carries no number: the order is then on
+      // the dock, waiting for its payment, with the way to pay it
+      final orderId = ref.read(checkoutProvider).placedOrderId;
+      if (orderId != null && context.mounted) {
+        unawaited(showPayOrderSheet(context, orderId, start: true));
+      } else {
+        showIsland(title: Text(l10n.payAheadFinishFromDock), icon: const Icon(LucideIcons.creditCard, color: NinjaColors.warning));
+      }
+    } else {
+      SoundService.instance.playSuccess();
+      showIsland(title: Text(l10n.orderPlacedSuccessfully), icon: const Icon(LucideIcons.check, color: NinjaColors.success));
+    }
   } else {
     final checkout = ref.read(checkoutProvider);
     // A rule the order broke is said in the customer's words; a delivery switched off under the open order drops it

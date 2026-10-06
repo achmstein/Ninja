@@ -86,6 +86,13 @@ public static partial class OrdersApi
             .WithDescription("Readable by an admin, the customer who placed it, or the guest whose X-Guest-Id matches.")
             .AllowAnonymous();
 
+        // An order paid ahead online that the customer did not pay: theirs to cancel while it waits
+        api.MapPut("/{orderId:int}/cancel-unpaid", CancelUnpaidOrderAsync)
+            .WithName("CancelUnpaidOrder")
+            .WithSummary("Cancel your own order that is waiting for its online payment")
+            .WithDescription("For the customer who placed it, or the guest whose X-Guest-Id matches; only while the order waits for its payment (payment.not_due otherwise). Nothing was charged.")
+            .AllowAnonymous();
+
         api.MapGet("/", GetOrdersByUserAsync)
             .WithName("GetOrdersByUser")
             .WithSummary("Get current user's orders")

@@ -101,8 +101,12 @@ public record DeliveryOrder
     public DateTime? PaidAt { get; init; }
     public string? CustomerName { get; init; }
     public string? CustomerNote { get; init; }
-    /// <summary>What the rider collects at the door, the fee in.</summary>
+    /// <summary>What the order comes to, the fee in.</summary>
     public decimal Total { get; init; }
+    /// <summary>Paid online in the app before the business saw it: the rider collects nothing, and no cash is handed in for it.</summary>
+    public bool PaidOnline { get; init; }
+    /// <summary>What the rider collects at the door: the total, or nothing when it was paid online.</summary>
+    public decimal ToCollect { get; init; }
     /// <summary>What the rider handed in less <see cref="Total"/>, once the cash is in: below zero, short.</summary>
     public decimal? CashDifference { get; init; }
     public List<Orderitem> Items { get; init; } = new();
@@ -141,8 +145,10 @@ public record RiderDeliveryRow
     public string? Building { get; init; }
     public string? Floor { get; init; }
     public string? Apartment { get; init; }
-    /// <summary>What the rider collects at the door, the fee in.</summary>
+    /// <summary>What the order comes to, the fee in: what the rider collects at the door, unless <see cref="PaidOnline"/>.</summary>
     public decimal Total { get; init; }
+    /// <summary>Paid online in the app before the business saw it: the rider collected nothing for it.</summary>
+    public bool PaidOnline { get; init; }
     public decimal Fee { get; init; }
     /// <summary>
     /// Where it stands for this rider: the delivery's own stage while it is still

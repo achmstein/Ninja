@@ -37,7 +37,17 @@ public record CreateOrderRequest(
     /// <summary>A promo code typed at checkout; quoted by Catalog beforehand, redeemed when the items check out.</summary>
     string? PromoCode = null,
     /// <summary>Deliver it with the branch's own rider, to this address; null to eat in or collect.</summary>
-    DeliveryRequest? Delivery = null);
+    DeliveryRequest? Delivery = null,
+    /// <summary>
+    /// Pay online in the app before the business sees the order (a delivery, or an order the customer
+    /// collects), where the owner turned it on. The order is checked and priced, then waits for the
+    /// payment (Sales' /api/sales/payments/orders/{id}) for 20 minutes before it is cancelled unpaid.
+    /// </summary>
+    bool PayOnline = false);
+
+/// <summary>The order made: its number, which a customer paying ahead online pays it by.</summary>
+/// <param name="OrderId">The order's number; null when the same request came again and was answered as made.</param>
+public record CreatedOrder(int? OrderId);
 
 /// <summary>
 /// Where a delivery goes: the pin on the map and the words that find the door.

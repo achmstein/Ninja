@@ -49,7 +49,14 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     /// <summary>The business's own rider delivers it, for this fee: a bill of its own with the fee as a line. Null when not delivered.</summary>
     decimal? DeliveryFee = null,
     /// <summary>The business's own rider delivers it. False from an Ordering older than the flag, when <see cref="DeliveryFee"/> says it.</summary>
-    bool IsDelivery = false) : IntegrationEvent;
+    bool IsDelivery = false) : IntegrationEvent
+{
+    /// <summary>
+    /// Paid ahead online in the app: the payment that paid it. The order's bill is its own, and settles
+    /// itself with this payment as it opens. Null for every order paid at its bill, the door or the counter.
+    /// </summary>
+    public Guid? PaidOnlineKey { get; init; }
+}
 
 public record OrderConfirmedItem(
     int ProductId,

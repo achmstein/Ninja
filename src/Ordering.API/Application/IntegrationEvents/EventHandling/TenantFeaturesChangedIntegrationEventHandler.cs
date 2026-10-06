@@ -26,6 +26,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
             context.TenantFeatures.Add(new TenantFeatures
             {
                 Delivery = @event.Delivery,
+                PayAhead = @event.PayAhead,
                 UpdatedAt = @event.CreationDate,
             });
         }
@@ -40,12 +41,13 @@ public class TenantFeaturesChangedIntegrationEventHandler(
             }
 
             row.Delivery = @event.Delivery;
+            row.PayAhead = @event.PayAhead;
             row.UpdatedAt = @event.CreationDate;
         }
 
         await context.SaveChangesAsync();
         cache?.Remove(BranchSettingsQueries.DeliveryOnCacheKey);
 
-        logger.LogInformation("Tenant features projection: delivery {Delivery}", @event.Delivery);
+        logger.LogInformation("Tenant features projection: delivery {Delivery}, pay ahead {PayAhead}", @event.Delivery, @event.PayAhead);
     }
 }

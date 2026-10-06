@@ -317,6 +317,7 @@ const dictionary = {
   onlineRefund: { en: "Refund", ar: "استرداد" },
   onlineRefundTitle: { en: "Give {name}'s online payment back?", ar: "استرداد دفعة {name} الأونلاين؟" },
   onlineRefunded: { en: "Online payment refunded", ar: "تم استرداد الدفعة الأونلاين" },
+  onlineRefundPending: { en: "Refund on its way: Paymob has not answered yet, and it goes through as soon as it does", ar: "الاسترداد قيد التنفيذ: لم يرد Paymob بعد، وسيتم فور رده" },
   onlineRefundFailed: { en: "Couldn't refund the online payment", ar: "تعذّر استرداد الدفعة الأونلاين" },
   onlineRelease: { en: "Release", ar: "إلغاء الحجز" },
   onlineReleased: { en: "Released: the share is free to pay again", ar: "تم إلغاء الحجز: يمكن دفع هذا الجزء من جديد" },

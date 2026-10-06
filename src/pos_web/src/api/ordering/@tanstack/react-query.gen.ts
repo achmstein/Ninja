@@ -4,8 +4,8 @@ import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOption
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMyAddress, assignDeliveryRider, assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryRider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
-import type { AddMyAddressData, AddMyAddressResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
+import { addMyAddress, assignDeliveryRider, assignOrderCustomer, cancelOrder, cancelUnpaidOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, resolveDeliveryBranch, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryRider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
+import type { AddMyAddressData, AddMyAddressResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, CancelUnpaidOrderData, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, ResolveDeliveryBranchData, ResolveDeliveryBranchResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -65,8 +65,8 @@ export const getOrdersByUserOptions = (options: Options<GetOrdersByUserData>) =>
  *
  * Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.
  */
-export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CreateOrderData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CreateOrderData>> = {
+export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>): UseMutationOptions<CreateOrderResponse, AxiosError<DefaultError>, Options<CreateOrderData>> => {
+    const mutationOptions: UseMutationOptions<CreateOrderResponse, AxiosError<DefaultError>, Options<CreateOrderData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createOrder({
                 ...options,
@@ -235,6 +235,25 @@ export const rateOrderMutation = (options?: Partial<Options<RateOrderData>>): Us
     const mutationOptions: UseMutationOptions<unknown, AxiosError<RateOrderError>, Options<RateOrderData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await rateOrder({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Cancel your own order that is waiting for its online payment
+ *
+ * For the customer who placed it, or the guest whose X-Guest-Id matches; only while the order waits for its payment (payment.not_due otherwise). Nothing was charged.
+ */
+export const cancelUnpaidOrderMutation = (options?: Partial<Options<CancelUnpaidOrderData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CancelUnpaidOrderData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<CancelUnpaidOrderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelUnpaidOrder({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -488,6 +507,26 @@ export const getDeliveryQuoteOptions = (options: Options<GetDeliveryQuoteData>) 
         return data;
     },
     queryKey: getDeliveryQuoteQueryKey(options)
+});
+
+export const resolveDeliveryBranchQueryKey = (options: Options<ResolveDeliveryBranchData>) => createQueryKey('resolveDeliveryBranch', options);
+
+/**
+ * Which branches deliver to a point, nearest first
+ *
+ * Every branch that delivers right now and whose radius takes the point in, nearest first, with how far it is, the fee and the minimum order. No X-Branch-Id: the app moves the order to the first it lists. Rate limited.
+ */
+export const resolveDeliveryBranchOptions = (options: Options<ResolveDeliveryBranchData>) => queryOptions<ResolveDeliveryBranchResponse, AxiosError<DefaultError>, ResolveDeliveryBranchResponse, ReturnType<typeof resolveDeliveryBranchQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await resolveDeliveryBranch({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: resolveDeliveryBranchQueryKey(options)
 });
 
 export const getDeliveriesQueryKey = (options: Options<GetDeliveriesData>) => createQueryKey('getDeliveries', options);

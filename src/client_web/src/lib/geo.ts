@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { useT } from '@/lib/i18n'
@@ -67,6 +67,35 @@ async function permission(): Promise<PermissionState | null> {
   } catch {
     return null
   }
+}
+
+/**
+ * What the browser would do if asked for the position: give it (granted), refuse it without a word
+ * (denied), or ask (prompt); null while unknown or where the browser cannot say. Follows a change
+ * the customer makes in the browser's settings. 'unsupported' where no position can be had at all.
+ */
+export function useLocationPermission(): PermissionState | 'unsupported' | null {
+  const [state, setState] = useState<PermissionState | 'unsupported' | null>(() => (supported() ? null : 'unsupported'))
+  useEffect(() => {
+    if (!supported()) return
+    let status: PermissionStatus | undefined
+    let cancelled = false
+    const follow = () => status && setState(status.state)
+    navigator.permissions
+      ?.query({ name: 'geolocation' })
+      .then((s) => {
+        if (cancelled) return
+        status = s
+        follow()
+        s.addEventListener('change', follow)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      status?.removeEventListener('change', follow)
+    }
+  }, [])
+  return state
 }
 
 /**

@@ -22,6 +22,7 @@ const WHY_KEY: Record<Why, TranslationKey> = {
   empty: 'payWhyEmpty',
   paid: 'payWhyPaid',
   'being-paid': 'payWhyBeingPaid',
+  'at-door': 'payWhyAtDoor',
 }
 
 /**

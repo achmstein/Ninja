@@ -212,10 +212,16 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     if (!sure || !mounted) return;
     setState(() => _busy = true);
     try {
-      await ref.read(onlinePaymentsRepositoryProvider).refund(payment.key);
+      final done = await ref.read(onlinePaymentsRepositoryProvider).refund(payment.key);
       ref.invalidate(onlinePaymentsProvider(widget.ticketId));
       ref.invalidate(ticketProvider(widget.ticketId));
-      if (mounted) showPosToast(context, PosToastType.success, l10n.onlineRefundedToast);
+      if (mounted) {
+        showPosToast(
+          context,
+          done ? PosToastType.success : PosToastType.info,
+          done ? l10n.onlineRefundedToast : l10n.onlineRefundPendingToast,
+        );
+      }
     } catch (e) {
       if (mounted) showPosToast(context, PosToastType.error, describeError(e, l10n));
     } finally {

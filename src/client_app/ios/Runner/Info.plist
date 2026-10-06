@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>CFBundleLocalizations</key>
+		<array>
+			<string>en</string>
+			<string>ar</string>
+		</array>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -76,7 +81,7 @@
 			<true/>
 		</dict>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Your location finds the branch nearest you and puts the pin on your door for a delivery.</string>
+		<string>Your location is used only to find the branch nearest you and to put the pin on your door for a delivery. It is never shared.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Chillax needs camera access to scan QR codes.</string>
 		<key>UIStatusBarHidden</key>

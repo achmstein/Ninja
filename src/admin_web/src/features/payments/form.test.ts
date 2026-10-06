@@ -52,8 +52,10 @@ describe('secrets', () => {
     const f = toForm(view)
     expect(f.secretKey).toEqual({ mode: 'keep' })
     expect(f.hmacSecret).toEqual({ mode: 'keep' })
+    expect(f.apiKey).toEqual({ mode: 'keep' })
     expect(request().secretKey).toBeNull()
     expect(request().hmacSecret).toBeNull()
+    expect(request().apiKey).toBeNull()
   })
 })
 
@@ -69,6 +71,14 @@ describe('toRequest', () => {
       feeFixed: 3,
       allowCustom: false,
     })
+  })
+
+  it('carries the card that holds, and refuses one that is not an id', () => {
+    const f = toForm({ ...view, cardHoldIntegrationId: 456 })
+    expect(f.cardHoldIntegrationId).toBe('456')
+    expect(toRequest(f)).toMatchObject({ request: { cardHoldIntegrationId: 456 } })
+    expect(toRequest({ ...f, cardHoldIntegrationId: '' })).toMatchObject({ request: { cardHoldIntegrationId: null } })
+    expect(toRequest({ ...f, cardHoldIntegrationId: 'abc' })).toEqual({ problem: 'integrationId' })
   })
 
   it('reads the fee mode by name too', () => {

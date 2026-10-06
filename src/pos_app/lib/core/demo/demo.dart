@@ -133,7 +133,7 @@ class _DemoOnlinePaymentsRepository implements OnlinePaymentsRepository {
   Future<List<OnlinePaymentView>> list(int ticketId) async => const [];
 
   @override
-  Future<void> refund(String key) async {}
+  Future<bool> refund(String key) async => true;
 
   @override
   Future<void> cancel(String key) async {}

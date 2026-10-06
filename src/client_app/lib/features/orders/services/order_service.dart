@@ -20,7 +20,8 @@ const _uuid = Uuid();
 abstract class OrderRepository {
   Future<PaginatedOrders> getOrders({int pageIndex = 0, int pageSize = 10, DateTime? fromDate, DateTime? toDate});
   Future<Order> getOrder(int id);
-  Future<void> createOrder({
+  /// The order's number; null when the same request came again and was answered as made
+  Future<int?> createOrder({
     required List<CartItem> items,
     required String userId,
     required String userName,
@@ -34,6 +35,7 @@ abstract class OrderRepository {
     double loyaltyDiscount,
     String? promoCode,
     Map<String, dynamic>? delivery,
+    bool payOnline,
   });
   Future<void> submitFastOrder({
     required MenuItem item,
@@ -46,6 +48,9 @@ abstract class OrderRepository {
     UserItemPreference? preference,
   });
   Future<void> cancelOrder(int id);
+
+  /// The customer gives up on an order waiting for its payment ahead: it is cancelled, nothing charged
+  Future<void> cancelUnpaid(int id);
   Future<void> rateOrder({
     required int orderId,
     required int ratingValue,
@@ -91,10 +96,9 @@ class ApiOrderRepository implements OrderRepository {
     return Order.fromJson(response.data!);
   }
 
-  /// Create new order from cart
-  /// Returns void - the backend returns 200 OK with no body on success
+  /// Create new order from cart; the server answers with its number (null for a repeated request)
   @override
-  Future<void> createOrder({
+  Future<int?> createOrder({
     required List<CartItem> items,
     required String userId,
     required String userName,
@@ -108,8 +112,9 @@ class ApiOrderRepository implements OrderRepository {
     double loyaltyDiscount = 0,
     String? promoCode,
     Map<String, dynamic>? delivery,
+    bool payOnline = false,
   }) async {
-    await _apiClient.post<void>(
+    final response = await _apiClient.post<dynamic>(
       '',
       data: {
         'userId': userId,
@@ -126,11 +131,20 @@ class ApiOrderRepository implements OrderRepository {
         'promoCode': promoCode,
         // Brought by the branch's rider: where, and the number to call at the door
         'delivery': delivery,
+        // Paid ahead online before the till sees it: a delivery or an order to collect only
+        'payOnline': payOnline && placeId == null,
         'items': items.map((item) => item.toJson()).toList(),
       },
       headers: {'x-requestid': requestId},
     );
-    // Success if no exception thrown - API returns 200 OK with empty body
+    final data = response.data;
+    final id = data is Map ? data['orderId'] : null;
+    return id is num ? id.toInt() : int.tryParse('${id ?? ''}');
+  }
+
+  @override
+  Future<void> cancelUnpaid(int id) async {
+    await _apiClient.put<void>('$id/cancel-unpaid');
   }
 
   /// Submit a fast order for a menu item using saved preferences or defaults
@@ -325,11 +339,15 @@ class CheckoutState {
   final String? errorCode;
   final Order? order;
 
+  /// The order just placed, by its number (null for a repeated request); paid ahead, it is paid by it
+  final int? placedOrderId;
+
   const CheckoutState({
     this.isLoading = false,
     this.error,
     this.errorCode,
     this.order,
+    this.placedOrderId,
   });
 
   CheckoutState copyWith({
@@ -337,12 +355,14 @@ class CheckoutState {
     String? error,
     String? errorCode,
     Order? order,
+    int? placedOrderId,
   }) {
     return CheckoutState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
       errorCode: errorCode,
       order: order ?? this.order,
+      placedOrderId: placedOrderId,
     );
   }
 }
@@ -392,6 +412,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     double loyaltyDiscount = 0,
     String? promoCode,
     Map<String, dynamic>? delivery,
+    bool payOnline = false,
   }) async {
     if (state.isLoading) return false; // Prevent duplicate submissions
     state = state.copyWith(isLoading: true, error: null);
@@ -406,6 +427,8 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       'promoCode': promoCode,
       // Brought somewhere else makes it a different order, not a retry
       'delivery': delivery,
+      // Paid online or in cash makes it a different order too
+      'payOnline': payOnline,
     });
     if (_requestSignature != signature || _requestId == null) {
       _requestSignature = signature;
@@ -413,7 +436,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     }
 
     try {
-      await _orderService.createOrder(
+      final placedId = await _orderService.createOrder(
         items: items,
         userId: _authState.userId ?? '',
         userName: _authState.name ?? 'Guest',
@@ -427,6 +450,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         loyaltyDiscount: loyaltyDiscount,
         promoCode: promoCode,
         delivery: delivery,
+        payOnline: payOnline,
       );
 
       // The order went through — the next submission is a new order
@@ -442,7 +466,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       // Refresh orders so the new order appears when navigating to orders page
       ref.read(ordersProvider.notifier).refresh();
 
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, placedOrderId: placedId);
       return true;
     } catch (e) {
       state = state.copyWith(

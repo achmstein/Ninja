@@ -39,10 +39,12 @@ export function OnlinePaymentsPanel({
 
   const refund = useMutation({
     ...refundOnlinePaymentMutation(),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listOnlinePayments' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
-      toast.success(t('onlineRefunded'))
+      // 202: the provider did not answer yet; the refund is made as soon as it does
+      if ((data as { status?: number } | undefined)?.status === 202) toast.info(t('onlineRefundPending'))
+      else toast.success(t('onlineRefunded'))
     },
     onError: (error) => {
       // A 400 carries the server's own words (the bill closed meanwhile,

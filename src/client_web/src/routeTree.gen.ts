@@ -23,6 +23,7 @@ import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as PPlaceIdRouteImport } from './routes/p/$placeId'
 import { Route as PayKeyRouteImport } from './routes/pay/$key'
 import { Route as ReceiptsTicketIdRouteImport } from './routes/receipts/$ticketId'
+import { Route as PayOrderOrderIdRouteImport } from './routes/pay/order/$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +95,11 @@ const ReceiptsTicketIdRoute = ReceiptsTicketIdRouteImport.update({
   path: '/receipts/$ticketId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayOrderOrderIdRoute = PayOrderOrderIdRouteImport.update({
+  id: '/pay/order/$orderId',
+  path: '/pay/order/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
+  '/pay/order/$orderId': typeof PayOrderOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
+  '/pay/order/$orderId': typeof PayOrderOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
+  '/pay/order/$orderId': typeof PayOrderOrderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
+    | '/pay/order/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
+    | '/pay/order/$orderId'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
+    | '/pay/order/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   PPlaceIdRoute: typeof PPlaceIdRoute
   PayKeyRoute: typeof PayKeyRoute
   ReceiptsTicketIdRoute: typeof ReceiptsTicketIdRoute
+  PayOrderOrderIdRoute: typeof PayOrderOrderIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReceiptsTicketIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pay/order/$orderId': {
+      id: '/pay/order/$orderId'
+      path: '/pay/order/$orderId'
+      fullPath: '/pay/order/$orderId'
+      preLoaderRoute: typeof PayOrderOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   PPlaceIdRoute: PPlaceIdRoute,
   PayKeyRoute: PayKeyRoute,
   ReceiptsTicketIdRoute: ReceiptsTicketIdRoute,
+  PayOrderOrderIdRoute: PayOrderOrderIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

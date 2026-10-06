@@ -20,6 +20,7 @@ import '../../features/service_request/models/service_request.dart';
 import '../../features/service_request/services/service_request_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
+import '../../features/pay/widgets/pay_order_sheet.dart';
 
 /// The orders on their way with no open bill to land on (client_web's
 /// live-bills.ts `forming`): sent and waiting, or confirmed and not on a bill
@@ -76,7 +77,10 @@ class DockBill extends ConsumerWidget {
         forming.firstOrNull?.placeName?.localized(context) ??
         l10n.atTheCounter;
     final stage = live?.stage;
+    // Waiting for its payment ahead: the row is the way to pay it, not the bill
+    final toPay = stage == OrderStage.awaitingPayment && live?.orderId != null;
     final stageWord = switch (stage) {
+      OrderStage.awaitingPayment => l10n.orderStageAwaitingPayment,
       OrderStage.sent => l10n.orderStageSent,
       OrderStage.confirmed => l10n.orderStageConfirmed,
       OrderStage.preparing => l10n.orderStagePreparing,
@@ -95,13 +99,16 @@ class DockBill extends ConsumerWidget {
     // A dot on the place while the waiter or the bill is asked for, so the answer is one tap away
     final asking = destination != null &&
         ref.watch(myRequestsProvider).any((r) => r.placeId == destination.placeId && r.isOpen && r.requestType != ServiceRequestType.changeOption);
-    final label = destination == null
+    final label = toPay
+        ? l10n.orderPayNow
+        : destination == null
         ? l10n.ninjaBillOpen
         : destination.isStay
             ? l10n.ninjaRoomOpen
             : l10n.ninjaTableOpen;
 
     final (IconData icon, Color fill, Color ink) = switch (stage) {
+      OrderStage.awaitingPayment => (LucideIcons.creditCard, NinjaColors.warning, Colors.black),
       OrderStage.sent => (LucideIcons.send, c.foreground.withValues(alpha: 0.12), c.foreground),
       OrderStage.confirmed => (LucideIcons.check, NinjaColors.successSolid, Colors.white),
       // A delivery on its way to the door: being made, then with its rider, then there
@@ -114,7 +121,9 @@ class DockBill extends ConsumerWidget {
     };
 
     void onTap() {
-      if (destination == null) {
+      if (toPay) {
+        showPayOrderSheet(context, live!.orderId!);
+      } else if (destination == null) {
         showDockBills(context);
       } else if (destination.isStay) {
         // The room, out of the dock: the same sheet the Book tab's card opens
@@ -234,13 +243,16 @@ class DockBill extends ConsumerWidget {
                 Container(
                   height: 40,
                   padding: const EdgeInsetsDirectional.only(start: 16, end: 12),
-                  decoration: ShapeDecoration(color: c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                  // Waiting for its payment: the way to pay it, lit
+                  decoration: ShapeDecoration(color: toPay ? c.foreground : c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: c.foreground))),
-                      const SizedBox(width: 4),
-                      Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
+                      Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: toPay ? c.background : c.foreground))),
+                      if (!toPay) ...[
+                        const SizedBox(width: 4),
+                        Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
+                      ],
                     ],
                   ),
                 ),

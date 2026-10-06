@@ -134,7 +134,6 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               </span>
             )}
             {delivery.problem === 'range' && <OutOfRange delivery={delivery} />}
-            {delivery.quoted && delivery.inRange && <DeliveredFrom />}
             {delivery.quoted && delivery.inRange && (
               <span className='flex items-center justify-between opacity-80'>
                 <span>{t('deliveryFee')}</span>
@@ -144,7 +143,6 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
             {delivery.problem === 'minimum' && (
               <span className='font-semibold text-amber-300'>{t('deliveryAddMore', { amount: price(delivery.short) })}</span>
             )}
-            {delivery.ready && <span className='opacity-70'>{t('deliveryCashAtDoor')}</span>}
           </div>
         </>
       )}
@@ -152,16 +150,6 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
       <AddressSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   )
-}
-
-/** Which branch brings it: the address chose it, the customer is only told */
-function DeliveredFrom() {
-  const t = useT()
-  const localized = useLocalized()
-  const branch = useSelectedBranch()
-  const { data: branches = [] } = useBranches()
-  if (!branch || branches.length < 2) return null
-  return <span className='opacity-70'>{t('deliveryFromBranch', { name: localized(branch.name) })}</span>
 }
 
 /**

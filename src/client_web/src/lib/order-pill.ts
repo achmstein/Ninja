@@ -14,7 +14,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * remembers there is an order to follow.
  */
 
-export type PillStage = 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'notDelivered' | 'paid' | 'cancelled'
+export type PillStage = 'awaitingPayment' | 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'notDelivered' | 'paid' | 'cancelled'
 
 /** What the pill needs from an order (the Ordering OrderSummary shape) */
 export type PillOrder = {
@@ -25,6 +25,12 @@ export type PillOrder = {
   voidedAt?: string | null
   /** The business's own delivery, where it has got to and who took it; none for an order eaten in or collected */
   delivery?: { stage?: string; riderName?: string | null } | null
+  /** Paid ahead online, rather than at the door or the counter */
+  paysOnline?: boolean
+  /** When its payment ahead came in; none while it waits for it */
+  paidOnlineAt?: string | null
+  /** By when it must be paid ahead, while it waits */
+  paymentDueBy?: string | null
 }
 
 /** How far back of the tap an order may be dated: the server's clock is not the phone's */
@@ -38,6 +44,8 @@ export const NOT_FOUND_AFTER_MS = 2 * 60_000
 
 /** How long each end state stays on screen once reached */
 export const LINGER_MS: Record<PillStage, number | null> = {
+  // Waiting for its payment ahead: on the dock, with the way to pay, until paid or let go
+  awaitingPayment: null,
   sent: null,
   // Confirmed, the round is on the bill: the dock says so for a moment, then the row is the bill again
   confirmed: 8_000,
@@ -61,6 +69,7 @@ function time(value: string | null | undefined): number | null {
 export function stageOf(order: PillOrder): PillStage {
   const status = order.status?.toLowerCase()
   if (status === 'cancelled' || order.voidedAt) return 'cancelled'
+  if (status === 'awaitingpayment') return 'awaitingPayment'
   // A delivery is paid at the door, so it is delivered before it is paid: the door is the news
   if (order.delivery && status === 'confirmed') {
     const stage = order.delivery.stage
@@ -140,7 +149,8 @@ export function nextCheck(v: PillVisibility): number | null {
 }
 
 /** Icon for a stage, by lucide name, resolved by the component */
-export const STAGE_ICON: Record<PillStage, 'send' | 'check' | 'chef' | 'bike' | 'home' | 'receipt' | 'x'> = {
+export const STAGE_ICON: Record<PillStage, 'card' | 'send' | 'check' | 'chef' | 'bike' | 'home' | 'receipt' | 'x'> = {
+  awaitingPayment: 'card',
   sent: 'send',
   confirmed: 'check',
   preparing: 'chef',
@@ -155,6 +165,7 @@ type Words = { en: string; ar: string; arStandard: string }
 
 /** The pill's words; kept here rather than in the app dictionary */
 export const STAGE_LABEL: Record<PillStage, Words> = {
+  awaitingPayment: { en: 'Waiting for payment', ar: 'مستني الدفع', arStandard: 'بانتظار الدفع' },
   sent: { en: 'Sent', ar: 'اتبعت', arStandard: 'أُرسل' },
   confirmed: { en: 'Confirmed', ar: 'اتأكد', arStandard: 'تم التأكيد' },
   preparing: { en: 'Being made', ar: 'بيتجهز', arStandard: 'قيد التحضير' },
@@ -169,6 +180,40 @@ export const PILL_WORDS = {
   order: { en: 'Order', ar: 'طلب', arStandard: 'طلب' },
   seeBills: { en: 'See your bill', ar: 'شوف الحساب', arStandard: 'اعرض الفاتورة' },
   hide: { en: 'Hide', ar: 'اخفي', arStandard: 'إخفاء' },
+  awaitingPaymentNote: {
+    en: 'Pay for it to send it to {name}.',
+    ar: 'ادفع عشان الطلب يوصل لـ{name}.',
+    arStandard: 'ادفع ليصل الطلب إلى {name}.',
+  },
+  /** Paid ahead, and with the business now */
+  paidSentNote: {
+    en: 'Paid. {name} has it and will confirm it in a moment.',
+    ar: 'اتدفع. الطلب وصل لـ{name} وهيتأكد حالًا.',
+    arStandard: 'تم الدفع. وصل الطلب إلى {name} وسيُؤكَّد بعد قليل.',
+  },
+  paidOnTheWayNote: {
+    en: 'On its way to you. It is paid: nothing to pay at the door.',
+    ar: 'في الطريق ليك. مدفوع، مفيش حاجة تدفعها عند الباب.',
+    arStandard: 'في الطريق إليك. الطلب مدفوع، لا شيء تدفعه عند الباب.',
+  },
+  paidOnTheWayRiderNote: {
+    en: '{rider} is on the way to you. It is paid: nothing to pay at the door.',
+    ar: '{rider} في الطريق ليك. مدفوع، مفيش حاجة تدفعها عند الباب.',
+    arStandard: '{rider} في الطريق إليك. الطلب مدفوع، لا شيء تدفعه عند الباب.',
+  },
+  /** Turned down, or not brought, after it was paid ahead: the money goes back */
+  paidCancelledNote: {
+    en: '{name} could not take this order. What you paid goes back to you.',
+    ar: '{name} مقدرش ياخد الطلب ده. فلوسك هترجعلك.',
+    arStandard: 'لم يتمكن {name} من قبول هذا الطلب. سيُعاد إليك ما دفعته.',
+  },
+  /** Let go before it was paid (the time ran out, or the customer cancelled it) */
+  unpaidCancelledNote: {
+    en: 'Cancelled before it was paid. Nothing was charged.',
+    ar: 'اتلغى قبل الدفع. محدش خصم حاجة.',
+    arStandard: 'أُلغي قبل الدفع. لم يُخصم أي مبلغ.',
+  },
+  payNow: { en: 'Pay now', ar: 'ادفع دلوقتي', arStandard: 'ادفع الآن' },
   sentNote: {
     en: '{name} has it. It will be confirmed in a moment.',
     ar: 'الطلب وصل لـ{name} وهيتأكد حالًا.',
@@ -212,7 +257,12 @@ export const PILL_WORDS = {
 /** What a stage says under its title: on its way, it names the rider when the till said who */
 export function noteFor(stage: PillStage, order: PillOrder | null, notes: Record<PillStage, Words>): { words: Words; rider: string | null } {
   const rider = order?.delivery?.riderName?.trim() || null
+  // Paid ahead online: nothing to pay at the door, and money that goes back if it is not made
+  const paid = order?.paysOnline === true && !!order.paidOnlineAt
   if (stage === 'notDelivered') return { words: PILL_WORDS.notDeliveredNote, rider: null }
+  if (order?.paysOnline && stage === 'cancelled') return { words: paid ? PILL_WORDS.paidCancelledNote : PILL_WORDS.unpaidCancelledNote, rider: null }
+  if (paid && stage === 'sent') return { words: PILL_WORDS.paidSentNote, rider: null }
+  if (paid && stage === 'onTheWay') return rider ? { words: PILL_WORDS.paidOnTheWayRiderNote, rider } : { words: PILL_WORDS.paidOnTheWayNote, rider: null }
   return stage === 'onTheWay' && rider ? { words: PILL_WORDS.onTheWayRiderNote, rider } : { words: notes[stage], rider: null }
 }
 

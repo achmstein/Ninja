@@ -1619,6 +1619,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onlineRefundedToast => 'Online payment refunded';
 
   @override
+  String get onlineRefundPendingToast =>
+      'Refund on its way: Paymob has not answered yet, and it goes through as soon as it does';
+
+  @override
   String get releaseOnline => 'Release';
 
   @override

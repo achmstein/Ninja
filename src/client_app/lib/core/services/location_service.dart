@@ -48,6 +48,16 @@ class LocationNotifier extends Notifier<LocationState> {
     request();
   }
 
+  /// What the phone would do if asked for the position: ask (the app may explain first), give it
+  /// at once, or refuse without a prompt (refused for good, or location off); null where it cannot tell
+  Future<LocationPermission?> permission() async {
+    try {
+      return await Geolocator.checkPermission();
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool _readQuietly = false;
 
   /// A page that would use the position but must not ask for it (the

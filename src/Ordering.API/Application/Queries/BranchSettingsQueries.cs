@@ -43,6 +43,13 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
         return on;
     }
 
+    public async Task<bool> IsPayAheadOnAsync() =>
+        await context.TenantFeatures
+            .AsNoTracking()
+            .Where(f => f.Id == TenantFeatures.SingletonId)
+            .Select(f => (bool?)f.PayAhead)
+            .FirstOrDefaultAsync() ?? false;
+
     public async Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false)
     {
         // Not bought, or switched off: no branch delivers, whatever it was set to

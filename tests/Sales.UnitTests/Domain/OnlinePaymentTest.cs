@@ -115,6 +115,38 @@ public class OnlinePaymentTest
     }
 
     [TestMethod]
+    public void An_order_paid_ahead_is_held_then_charged_once_or_let_go_and_never_both()
+    {
+        var held = OnlinePayment.StartForOrder(41, 1, 115m, 0, "EGP", "guest-1", null, "paymob", Now, hold: true);
+        Assert.IsTrue(held.CardHold);
+        Assert.IsTrue(held.MarkAuthorized("tx-1", Now.AddMinutes(1)));
+        Assert.IsFalse(held.MarkAuthorized("tx-1", Now.AddMinutes(2)), "a repeated callback is a no-op");
+        Assert.ThrowsExactly<SalesDomainException>(() => held.MarkAuthorized("tx-2", Now));
+        Assert.ThrowsExactly<SalesDomainException>(() => held.MarkPaid("tx-3", Now), "a held payment is charged by its capture, not by another transaction");
+        Assert.AreEqual(OnlinePaymentStatus.Authorized, held.Status);
+        Assert.IsTrue(held.Secured);
+        Assert.IsTrue(held.Holds(Now.AddDays(1)), "what it holds is not offered to anyone else");
+        Assert.IsFalse(held.DomainEvents?.OfType<OnlinePaymentPaidDomainEvent>().Any() ?? false, "held is not paid");
+
+        Assert.IsTrue(held.MarkCaptured(Now.AddMinutes(5)));
+        Assert.IsFalse(held.MarkCaptured(Now.AddMinutes(6)), "a capture repeated is a no-op");
+        Assert.AreEqual(OnlinePaymentStatus.Paid, held.Status);
+        Assert.AreEqual(Now.AddMinutes(5), held.PaidAt);
+        Assert.AreEqual(1, held.DomainEvents!.OfType<OnlinePaymentPaidDomainEvent>().Count());
+        Assert.ThrowsExactly<SalesDomainException>(() => held.Void("ordering", Now), "a charged payment is refunded, not let go");
+        Assert.IsFalse(held.MarkAuthorized("tx-1", Now.AddMinutes(7)), "the hold's own callback, late, changes nothing");
+
+        var letGo = OnlinePayment.StartForOrder(42, 1, 115m, 0, "EGP", "guest-1", null, "paymob", Now, hold: true);
+        letGo.MarkAuthorized("tx-9", Now);
+        Assert.IsTrue(letGo.Void("ordering", Now.AddMinutes(3)));
+        Assert.IsFalse(letGo.Void("ordering", Now.AddMinutes(4)));
+        Assert.AreEqual(OnlinePaymentStatus.Voided, letGo.Status);
+        Assert.IsFalse(letGo.Holds(Now.AddMinutes(4)));
+        Assert.ThrowsExactly<SalesDomainException>(() => letGo.MarkCaptured(Now), "a hold let go is never charged");
+        Assert.ThrowsExactly<SalesDomainException>(() => letGo.Refund("ordering", Now), "nothing was taken to give back");
+    }
+
+    [TestMethod]
     public void Money_that_arrives_after_the_hold_ran_out_is_still_paid()
     {
         var (_, bill) = Table((1, 100m));

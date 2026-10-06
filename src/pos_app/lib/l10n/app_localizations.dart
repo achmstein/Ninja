@@ -2972,6 +2972,12 @@ abstract class AppLocalizations {
   /// **'Online payment refunded'**
   String get onlineRefundedToast;
 
+  /// No description provided for @onlineRefundPendingToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund on its way: Paymob has not answered yet, and it goes through as soon as it does'**
+  String get onlineRefundPendingToast;
+
   /// No description provided for @releaseOnline.
   ///
   /// In en, this message translates to:

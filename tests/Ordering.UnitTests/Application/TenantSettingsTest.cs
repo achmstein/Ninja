@@ -80,7 +80,7 @@ public class TenantSettingsTest
 
         var result = await CreateGuestOrderAwayAsync(context, branchId: 9);
 
-        Assert.IsInstanceOfType<Ok>(result.Result, "a branch opened after the switch takes guests' orders too");
+        Assert.IsInstanceOfType<Ok<CreatedOrder>>(result.Result, "a branch opened after the switch takes guests' orders too");
     }
 
     [TestMethod]
@@ -108,7 +108,7 @@ public class TenantSettingsTest
         Assert.IsInstanceOfType<ProblemHttpResult>(result.Result, "no row reads as off, as it always has");
     }
 
-    private static Task<Results<Ok, ProblemHttpResult>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
+    private static Task<Results<Ok<CreatedOrder>, ProblemHttpResult>> CreateGuestOrderAwayAsync(OrderingContext context, int branchId)
     {
         var mediator = Substitute.For<IMediator>();
         mediator.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default).Returns(Task.FromResult(42));

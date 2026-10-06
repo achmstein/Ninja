@@ -56,7 +56,8 @@ export function orderSignature(
   extras: OrderExtras,
   guestId: string | null,
   destination: OrderDestination,
-  delivery: DeliveryAddress | null = null
+  delivery: DeliveryAddress | null = null,
+  payOnline = false
 ): string {
   return JSON.stringify({
     lines: lines.map((line) => [
@@ -74,6 +75,8 @@ export function orderSignature(
     destination: destination ? [destination.kind, destination.placeId, destination.sessionId ?? 0] : null,
     // Brought somewhere else makes it a different order too
     delivery: delivery ? [delivery.latitude, delivery.longitude, delivery.address] : null,
+    // Paid online or in cash makes it a different order too
+    online: payOnline,
   })
 }
 
@@ -90,6 +93,7 @@ export function orderBody({
   guestContact,
   destination,
   delivery = null,
+  payOnline = false,
   newId = () => crypto.randomUUID(),
 }: {
   lines: CartLine[]
@@ -100,6 +104,8 @@ export function orderBody({
   destination: OrderDestination
   /** Brought to this address by the branch's rider; null to eat in or collect */
   delivery?: DeliveryAddress | null
+  /** Paid ahead online before the till sees it: a delivery or an order to collect only */
+  payOnline?: boolean
   newId?: () => string
 }) {
   return {
@@ -128,6 +134,8 @@ export function orderBody({
         }
       : null,
     customerNote: extras.note.trim() || null,
+    // It waits for its payment (lib/pay-ahead.ts) and goes to the till once paid
+    payOnline: payOnline && !destination,
     promoCode: extras.promo,
     // Loyalty needs an account to redeem against; the server rejects a guest order that claims either
     pointsToRedeem: isGuest ? 0 : extras.points,

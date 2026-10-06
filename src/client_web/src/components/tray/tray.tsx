@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue, type PanInfo } from 'motion/react'
-import { ArrowUp, Check, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { ArrowUp, Check, CreditCard, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { lineKey, useCart, type CartLine } from '@/lib/cart'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
@@ -17,6 +17,8 @@ import { TrayNudge } from './tray-nudge'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
 import { DeliveryChoice } from '@/components/delivery/delivery-choice'
+import { PayChoice } from '@/components/pay/pay-choice'
+import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
 import { Odometer } from '../ninja/odometer'
 import { DishPhoto } from '../menu/dish-photo'
@@ -43,6 +45,8 @@ export type TrayOrder = {
   activePlace: StoredPlace | null
   /** Brought by the branch's rider: offered where it delivers and the order is not for a place */
   delivery: DeliveryState
+  /** Paid ahead online: offered for a door or the counter where the business takes it */
+  payAhead: PayAhead
 }
 
 /**
@@ -95,7 +99,7 @@ export function Tray({
   const summary = traySummary(lines)
   const empty = summary.count === 0
   // What the customer pays, the delivery fee on top once the branch has quoted it
-  const total = extras.total + order.delivery.fee
+  const total = extras.total + order.delivery.fee + order.payAhead.feeFor(extras.total + order.delivery.fee)
 
   // An empty tray has nothing to open
   useEffect(() => {
@@ -302,6 +306,7 @@ export function Tray({
         onOpen={() => onExpandedChange(true)}
         onPlace={() => void order.submit()}
         busy={order.isPending}
+        online={order.payAhead.online}
         disabled={order.tableUnconfirmed || (order.delivery.active && !order.delivery.ready)}
       />
     )
@@ -575,18 +580,24 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
             <>
               <DeliveryChoice delivery={order.delivery} cloudKitchen={cloudKitchen} />
               {order.block === 'table' && <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>}
+              {!order.block && order.payAhead.offered && (
+                <PayChoice payAhead={order.payAhead} delivering={order.delivery.active} fee={order.payAhead.feeFor(extras.total + order.delivery.fee)} />
+              )}
             </>
           ) : order.block === 'table' ? (
             <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>
           ) : order.block === 'account' ? (
             <p className='opacity-80'>{t('tableOrdersNeedAccount')}</p>
           ) : (
-            order.isGuest && (
-              <div className='flex items-center gap-2 opacity-70'>
-                <ShoppingBag className='size-4' />
-                {t(cloudKitchen ? 'orderToCollect' : 'guestOrderToCollect')}
-              </div>
-            )
+            <>
+              {order.isGuest && (
+                <div className='flex items-center gap-2 opacity-70'>
+                  <ShoppingBag className='size-4' />
+                  {t(cloudKitchen ? 'orderToCollect' : 'guestOrderToCollect')}
+                </div>
+              )}
+              {order.payAhead.offered && <PayChoice payAhead={order.payAhead} delivering={false} fee={order.payAhead.feeFor(extras.total)} />}
+            </>
           )}
         </div>
       </div>
@@ -721,12 +732,15 @@ function OrderButton({
   onOpen,
   onPlace,
   busy,
+  online = false,
   disabled,
 }: {
   open: boolean
   onOpen: () => void
   onPlace: () => void
   busy: boolean
+  /** Paid ahead: the button goes on to paying */
+  online?: boolean
   /** The order cannot go yet (the table is still to be confirmed in the sheet) */
   disabled?: boolean
 }) {
@@ -753,8 +767,8 @@ function OrderButton({
             </>
           ) : state === 'place' ? (
             <>
-              <Check className='size-4' strokeWidth={3} />
-              {t('placeOrder')}
+              {online ? <CreditCard className='size-4' /> : <Check className='size-4' strokeWidth={3} />}
+              {t(online ? 'payAheadPlace' : 'placeOrder')}
             </>
           ) : (
             t('ninjaOrder')

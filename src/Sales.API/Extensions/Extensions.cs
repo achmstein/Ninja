@@ -21,9 +21,18 @@ public static class Extensions
         // Online payments: the business's own provider account, its secrets sealed with the stack's payments key
         services.Configure<Ninja.Sales.API.Payments.PaymentsOptions>(builder.Configuration.GetSection("Payments"));
         services.AddSingleton<Ninja.Sales.API.Payments.SecretSealer>();
-        services.AddHttpClient<Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20));
+        // No retries underneath: a money move resent blindly after a lost answer could be made twice. Whether one
+        // happened is asked of Paymob before it is tried again (PaymentMoves), and a checkout is simply started anew
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is marked experimental; the alternative is to hand-roll the pipeline
+        services.AddHttpClient<Ninja.Sales.API.Payments.PaymobProvider>(http => http.Timeout = TimeSpan.FromSeconds(20)).RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
         services.AddSingleton<Ninja.Sales.API.Payments.SimulatedPaymentProvider>();
         services.AddScoped<Ninja.Sales.API.Payments.PaymentProviders>();
+        // Money moves at the provider (charge a hold, let it go, refund), made after the save that decides them
+        // and retried until made; late checkouts and the daily check against the provider
+        services.AddSingleton<Ninja.Sales.API.Payments.PaymentMoves>();
+        services.AddSingleton<Ninja.Sales.API.Payments.PaymentChecks>();
+        services.AddHostedService<Ninja.Sales.API.Payments.PaymentsWorker>();
         services.AddScoped<Ninja.Sales.API.Payments.PayReader>();
         services.TryAddSingleton(TimeProvider.System);
 
@@ -88,6 +97,9 @@ public static class Extensions
             .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
             // A delivery cancelled after it could not be handed over: its own bill is voided
             .AddSubscription<OrderStatusChangedToCancelledIntegrationEvent, OrderStatusChangedToCancelledIntegrationEventHandler>()
+            // Orders paid ahead online: what each waits for, and a payment an order could not take
+            .AddSubscription<OrderAwaitingPaymentIntegrationEvent, OrderAwaitingPaymentIntegrationEventHandler>()
+            .AddSubscription<OrderOnlinePaymentRefusedIntegrationEvent, OrderOnlinePaymentRefusedIntegrationEventHandler>()
             // Whether guests may pay online: Sales keeps its own copy of the switch
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
@@ -104,6 +116,9 @@ public static class Extensions
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(OrderDeliveryChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
+[JsonSerializable(typeof(OrderAwaitingPaymentIntegrationEvent))]
+[JsonSerializable(typeof(OrderOnlinePaymentRefusedIntegrationEvent))]
+[JsonSerializable(typeof(OrderPaidOnlineIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]

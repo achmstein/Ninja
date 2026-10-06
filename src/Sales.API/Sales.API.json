@@ -2468,6 +2468,158 @@
         }
       }
     },
+    "/api/sales/payments/ahead": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Whether the customer can pay ahead online here, and the fee they would carry",
+        "description": "For the checkout to offer \"Pay online\" for a delivery or an order to collect, before the order exists.",
+        "operationId": "GetPayAheadOptions",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayAheadOptionsView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sales/payments/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "An order paid ahead, as its customer pays it",
+        "description": "What it comes to, the fee on top, by when it must be paid, and its latest checkout. 404 until Ordering has priced it (poll), and for anyone but whoever placed it.",
+        "operationId": "GetOrderToPay",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPayView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Start paying an order ahead; answers where to send the customer to pay",
+        "description": "The whole order, through the business's provider, while it waits for its payment. Starting again lets the earlier checkout go.",
+        "operationId": "StartOrderPayment",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartOrderPaymentRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartedPayment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sales/payments/{key}": {
       "get": {
         "tags": [
@@ -2716,6 +2868,16 @@
           "204": {
             "description": "No Content"
           },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Bad Request",
             "content": {
@@ -2817,6 +2979,220 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/sales/payments/attention": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Online payments waiting on the owner: money the provider would not move, or its records disagreeing with ours",
+        "operationId": "ListPaymentsNeedingAttention",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentAttentionView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/sales/payments/{key}/retry": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Try a payment's money move (charge, let go, refund) at the provider now",
+        "operationId": "RetryPaymentMove",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentAttentionView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/sales/payments/{key}/done": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "The owner made the payment's money move in the provider's dashboard: recorded as made, with what follows from it",
+        "operationId": "MarkPaymentMoveDone",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/sales/payments/{key}/dismiss": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "The owner has seen to a payment that disagreed with the provider; it leaves the list",
+        "operationId": "DismissPaymentAttention",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
           },
           "400": {
             "description": "Bad Request",
@@ -3840,6 +4216,85 @@
           }
         }
       },
+      "OrderPayView": {
+        "required": [
+          "orderId",
+          "amount",
+          "fee",
+          "charged",
+          "currency",
+          "status",
+          "dueBy",
+          "paymentKey",
+          "paymentStatus",
+          "simulated"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "fee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "charged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paymentKey": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "paymentStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "holdsCards": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "PagedResultOfPaymentRow": {
         "required": [
           "items",
@@ -4004,6 +4459,51 @@
           }
         }
       },
+      "PayAheadOptionsView": {
+        "required": [
+          "available",
+          "currency",
+          "feeMode",
+          "feePercent",
+          "feeFixed",
+          "simulated"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "feeMode": {
+            "type": "string"
+          },
+          "feePercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "feeFixed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "holdsCards": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "PayLineView": {
         "required": [
           "id",
@@ -4067,6 +4567,116 @@
           },
           "isMine": {
             "type": "boolean"
+          }
+        }
+      },
+      "PaymentAttentionView": {
+        "required": [
+          "key",
+          "orderId",
+          "ticketId",
+          "branchId",
+          "payerName",
+          "charged",
+          "currency",
+          "status",
+          "move",
+          "problem",
+          "attentionSince",
+          "attempts",
+          "nextTryAt",
+          "transactionId",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ticketId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "payerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "charged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "move": {
+            "type": "string"
+          },
+          "problem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attentionSince": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nextTryAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -4252,6 +4862,21 @@
           },
           "allowCustom": {
             "type": "boolean"
+          },
+          "cardHoldIntegrationId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "apiKey": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4369,6 +4994,19 @@
           "simulated": {
             "type": "boolean",
             "default": false
+          },
+          "cardHoldIntegrationId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "apiKeySet": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4393,6 +5031,7 @@
           "ticketId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "null",
               "integer",
               "string"
             ],
@@ -4436,6 +5075,15 @@
           },
           "billClosed": {
             "type": "boolean"
+          },
+          "orderId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -5985,6 +6633,23 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "StartOrderPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "payerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "payerPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

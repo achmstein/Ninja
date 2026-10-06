@@ -1630,6 +1630,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onlineRefundedToast => 'تم استرداد الدفعة الأونلاين';
 
   @override
+  String get onlineRefundPendingToast =>
+      'الاسترداد قيد التنفيذ: لم يرد Paymob بعد، وسيتم فور رده';
+
+  @override
   String get releaseOnline => 'إلغاء الحجز';
 
   @override

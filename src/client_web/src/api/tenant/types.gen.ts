@@ -61,6 +61,7 @@ export type FeatureSwitches = {
     kds?: null | boolean;
     onlinePayments?: null | boolean;
     delivery?: null | boolean;
+    payAhead?: null | boolean;
 };
 
 export type IFormFile = Blob | File;
@@ -94,6 +95,7 @@ export type TenantFeatures = {
     kds: boolean;
     onlinePayments?: boolean;
     delivery?: boolean;
+    payAhead?: boolean;
 };
 
 export type TenantIcons = {

@@ -8,6 +8,7 @@ import {
   savePaymentSettingsMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { PaymentSettingsView } from '@/api/sales/types.gen'
+import { PaymentsAttention } from './attention'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -88,6 +89,8 @@ export function PaymentSettingsPage() {
           ))
         }
       />
+      {/* Money Paymob would not move, or records that differ: first, as it is what wants doing */}
+      <PaymentsAttention />
       {query.error ? (
         <ErrorState error={query.error} onRetry={() => query.refetch()} />
       ) : settings ? (
@@ -202,6 +205,15 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
             onChange={(edit) => set('hmacSecret', edit)}
             disabled={secretsLocked}
           />
+          <SecretField
+            id='pay-api-key'
+            label={t('payApiKey')}
+            hintText={t('payApiKeyHint')}
+            isSet={settings.apiKeySet ?? false}
+            edit={form.apiKey}
+            onChange={(edit) => set('apiKey', edit)}
+            disabled={secretsLocked}
+          />
         </div>
         <div className='grid gap-3 px-5 py-4'>
           <div>
@@ -229,6 +241,21 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
               </Field>
             ))}
           </FieldGrid>
+          {/* Orders paid ahead hold the card here, charged once the branch accepts */}
+          <Field
+            label={t('payIntegrationCardHold')}
+            htmlFor='pay-cardHoldIntegrationId'
+            hint={t('payIntegrationCardHoldHint')}
+          >
+            <Input
+              id='pay-cardHoldIntegrationId'
+              value={form.cardHoldIntegrationId}
+              inputMode='numeric'
+              dir='ltr'
+              className='sm:max-w-[calc((100%-2rem)/3)]'
+              onChange={(e) => set('cardHoldIntegrationId', e.target.value)}
+            />
+          </Field>
         </div>
         <div className='px-5 py-4'>
           <Field
@@ -347,6 +374,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
 function SecretField({
   id,
   label,
+  hintText,
   isSet,
   hint,
   edit,
@@ -355,6 +383,8 @@ function SecretField({
 }: {
   id: string
   label: string
+  /** What it is for, under the field */
+  hintText?: string
   isSet: boolean
   hint?: string | null
   edit: SecretEdit
@@ -365,7 +395,7 @@ function SecretField({
   const typing = !isSet || edit.mode === 'replace'
 
   return (
-    <Field label={label} htmlFor={typing ? id : undefined}>
+    <Field label={label} htmlFor={typing ? id : undefined} hint={hintText}>
       {typing ? (
         <div className='flex gap-2'>
           <Input

@@ -17,6 +17,9 @@ public class TenantFeatures
     /// <summary>The business's own delivery: bought, and not switched off by the owner.</summary>
     public bool Delivery { get; set; } = true;
 
+    /// <summary>Customers may pay online for a delivery or an order they collect, before the business sees it. Off until the owner turns it on.</summary>
+    public bool PayAhead { get; set; }
+
     /// <summary>
     /// CreationDate of the last event applied: the out-of-order guard, so an
     /// older event arriving late does not undo a newer one.

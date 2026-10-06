@@ -6,7 +6,7 @@ namespace Ninja.Tenant.UnitTests;
 [TestClass]
 public sealed class TenantEntitlementsTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true);
+    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true, PayAhead: true);
     private static readonly TenantFeatures NoInventory = AllOn with { Inventory = false };
 
     [TestMethod]
@@ -14,7 +14,7 @@ public sealed class TenantEntitlementsTests
     {
         var tenant = new API.Model.Tenant();
         Assert.AreEqual(AllOn, tenant.Entitlements, "the dev host and a stack stamped before plans keep every switch usable");
-        Assert.AreEqual(AllOn with { OnlinePayments = false }, tenant.Features, "online payments waits for the owner (and the business's payment keys)");
+        Assert.AreEqual(AllOn with { OnlinePayments = false, PayAhead = false }, tenant.Features, "online payments waits for the owner (and the business's payment keys), and paying ahead with it");
     }
 
     [TestMethod]

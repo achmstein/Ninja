@@ -89,7 +89,11 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
   })
   const cancel = useMutation({
     ...cancelOnlinePaymentMutation(),
-    onSettled: () => navigate({ to: '/bills', replace: true }),
+    // Back where the payment was started from: the order still waiting for it, or the bills
+    onSettled: () =>
+      payment.orderId != null
+        ? navigate({ to: '/pay/order/$orderId', params: { orderId: String(payment.orderId) }, replace: true })
+        : navigate({ to: '/bills', replace: true }),
   })
 
   const pay = () => {

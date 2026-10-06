@@ -9,6 +9,7 @@ import '../models/localized_text.dart';
 import '../motion/motion.dart';
 import '../providers/branch_provider.dart';
 import '../providers/branch_switch.dart';
+import 'nearest_branch_primer.dart';
 import '../providers/current_place_provider.dart';
 import '../shell/dish_layer.dart';
 import '../shell/dock_bill.dart';
@@ -67,6 +68,7 @@ class MainScaffold extends ConsumerStatefulWidget {
 class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProviderStateMixin {
   late final TrayMotion _tray = TrayMotion(this);
   bool _wasExpanded = false;
+  bool _primerScheduled = false;
 
   /// The dishes' layer, and the page it was opened on
   final _dishes = GlobalKey<NavigatorState>(debugLabel: 'dishes');
@@ -90,8 +92,24 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     });
 
     // The address decides the branch: a delivery's order moves to the one that serves it
+    // After the frame: switching the branch from inside the delivery state's own update would rebuild it
+    // twice in one frame. Still wanted then, and not the branch already, it moves.
     ref.listenManual(deliveryStateProvider.select((d) => d.moveTo), (_, next) {
-      if (next != null) ref.read(branchProvider.notifier).selectBranch(next);
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || ref.read(deliveryStateProvider).moveTo != next) return;
+        ref.read(branchProvider.notifier).selectBranch(next);
+      });
+    }, fireImmediately: true);
+
+    // Why the app would like the customer's position, before the phone asks: once the branches are in
+    // and the menu has settled, where there is more than one to choose between
+    ref.listenManual(branchProvider.select((s) => s.branches.length), (_, count) {
+      if (count < 2 || _primerScheduled) return;
+      _primerScheduled = true;
+      Future<void>.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) maybeAskNearestBranch(context, ref);
+      });
     }, fireImmediately: true);
 
     // The order moved to another branch and something in it changed: said on the island

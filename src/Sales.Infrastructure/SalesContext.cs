@@ -24,6 +24,8 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
     /// <summary>The riders' cash for deliveries, waiting for its bill or recorded against it.</summary>
     public DbSet<Projections.DeliveryCashIn> DeliveryCashIns { get; set; }
+    /// <summary>Orders paid ahead online, waiting for (or past) the customer's payment, from Ordering's events.</summary>
+    public DbSet<Projections.OrderPaymentDue> OrderPaymentsDue { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -55,6 +57,7 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new PaymentSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new DeliveryCashInEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderPaymentDueEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

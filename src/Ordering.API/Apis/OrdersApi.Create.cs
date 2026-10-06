@@ -9,7 +9,7 @@ using Ninja.ServiceDefaults;
 /// </summary>
 public static partial class OrdersApi
 {
-    public static async Task<Results<Ok, ProblemHttpResult>> CreateOrderAsync(
+    public static async Task<Results<Ok<CreatedOrder>, ProblemHttpResult>> CreateOrderAsync(
         [FromHeader(Name = "x-requestid")] Guid requestId,
         CreateOrderRequest request,
         HttpContext httpContext,
@@ -28,7 +28,7 @@ public static partial class OrdersApi
         if (await services.Requests.ExistAsync(requestId))
         {
             services.Logger.LogInformation("CreateOrder - RequestId {RequestId} was already placed; answered as placed", requestId);
-            return TypedResults.Ok();
+            return TypedResults.Ok(new CreatedOrder(null));
         }
 
         // The identity comes from the token, never from the body: a signed-in
@@ -156,6 +156,13 @@ public static partial class OrdersApi
             return OrderingProblems.Of("order.paused", "This branch is not taking orders right now.");
         }
 
+        // Paying ahead online is the owner's to offer (with online payments on); the aggregate holds it to
+        // orders away from a table
+        if (request.PayOnline && !await services.BranchSettings.IsPayAheadOnAsync())
+        {
+            return OrderingProblems.Of(PaymentErrors.AheadOff, "This business does not take payment online ahead of the order.");
+        }
+
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
             var createOrderCommand = new CreateOrderCommand(
@@ -181,7 +188,8 @@ public static partial class OrdersApi
                 // Held to the branch's terms by the handler: one rule for the app and the till
                 delivery: request.Delivery is { } wanted
                     ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone)
-                    : null);
+                    : null,
+                payOnline: request.PayOnline);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
@@ -194,7 +202,7 @@ public static partial class OrdersApi
                     requestId,
                     orderId == 0 ? "duplicate request" : orderId);
 
-                return TypedResults.Ok();
+                return TypedResults.Ok(new CreatedOrder(orderId == 0 ? null : orderId));
             }
             catch (OrderingDomainException ex)
             {

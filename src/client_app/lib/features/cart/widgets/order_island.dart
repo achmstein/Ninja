@@ -14,10 +14,11 @@ const orderAnnounce = Duration(milliseconds: 4200);
 /// way (Sent, Confirmed) the dock's row says it quietly; this is the one
 /// stage worth interrupting for.
 /// Raised away from any page, its words are looked up where the island draws them.
-IslandFace turnedDownFace(Order order, {required String business, required String? total, required VoidCallback onBills}) => IslandFace(
+/// [note]: what it says in place of "could not take it" (an order paid ahead: the money goes back)
+IslandFace turnedDownFace(Order order, {required String business, required String? total, required VoidCallback onBills, String? note}) => IslandFace(
       icon: const Icon(LucideIcons.x, color: NinjaColors.error),
       title: Builder(builder: (context) => Text('${AppLocalizations.of(context)!.orderStageCancelled} · #${order.id}')),
-      description: _OrderDetails(order: order, business: business, total: total),
+      description: _OrderDetails(order: order, business: business, total: total, note: note),
       actionLabelOf: (context) => AppLocalizations.of(context)!.orderSeeBills,
       onAction: onBills,
     );
@@ -27,8 +28,9 @@ class _OrderDetails extends StatelessWidget {
   final Order order;
   final String business;
   final String? total;
+  final String? note;
 
-  const _OrderDetails({required this.order, required this.business, required this.total});
+  const _OrderDetails({required this.order, required this.business, required this.total, this.note});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,7 @@ class _OrderDetails extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.orderCancelledNote(business), style: TextStyle(color: ink.withValues(alpha: 0.8))),
+        Text(note ?? l10n.orderCancelledNote(business), style: TextStyle(color: ink.withValues(alpha: 0.8))),
         if (items.isNotEmpty) ...[
           const SizedBox(height: 8),
           for (final line in items.take(4))

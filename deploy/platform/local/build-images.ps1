@@ -1,4 +1,4 @@
-# Builds what a local platform run needs: the twelve service images for this
+# Builds what a local platform run needs: the thirteen service images for this
 # machine's architecture (tag :local), the five web apps against
 # http://auth.localhost, and the platform realm rendered for localhost.
 # Re-run after code changes; docker's layer cache keeps it short.
@@ -30,12 +30,12 @@ $realm = $realm.Replace('{{smtpServer}}', '{"host":"mailpit","port":"1025","from
 Write-Host 'realm  ninja-realm.json (platform / Local123$)'
 
 if ($all -or $Images -or $Only) {
-    $services = @('catalog', 'ordering', 'spaces', 'sales', 'inventory', 'payroll', 'finance', 'identity', 'loyalty', 'notification', 'accounts', 'tenant')
+    $services = @('catalog', 'ordering', 'spaces', 'sales', 'inventory', 'payroll', 'finance', 'identity', 'loyalty', 'notification', 'accounts', 'tenant', 'assistant')
     if ($Only) { $services = @($Only) }
     $map = @{
         catalog = 'Catalog.API'; ordering = 'Ordering.API'; spaces = 'Spaces.API'; sales = 'Sales.API'
         inventory = 'Inventory.API'; payroll = 'Payroll.API'; finance = 'Finance.API'; identity = 'Identity.API'
-        loyalty = 'Loyalty.API'; notification = 'Notification.API'; accounts = 'Accounts.API'; tenant = 'Tenant.API'
+        loyalty = 'Loyalty.API'; notification = 'Notification.API'; accounts = 'Accounts.API'; tenant = 'Tenant.API'; assistant = 'Assistant.API'
     }
     foreach ($svc in $services) {
         $project = $map[$svc]

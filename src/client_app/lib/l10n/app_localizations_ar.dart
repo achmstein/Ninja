@@ -1502,6 +1502,26 @@ class AppLocalizationsAr extends AppLocalizations {
       'اللوكيشن مقفول للتطبيق ده. افتحه من إعدادات الموبايل.';
 
   @override
+  String get nearestBranchTitle => 'اطلب من أقرب فرع ليك';
+
+  @override
+  String get nearestBranchBody =>
+      'بنستخدم مكانك بس عشان نعرف أقرب فرع ليك وبعده قد إيه، فطلبك يتعمل جنبك. مش بنشاركه مع حد.';
+
+  @override
+  String nearestBranchMoved(String name, String distance) {
+    return 'بتطلب من فرع $name، على بعد $distance';
+  }
+
+  @override
+  String get nearestBranchBlocked =>
+      'اللوكيشن مقفول. افتحه عشان نلاقي أقرب فرع ليك.';
+
+  @override
+  String get deliveryPinWhy =>
+      'استخدم مكانك عشان الدبوس ييجي على بابك بالظبط والمندوب يلاقيك.';
+
+  @override
   String get ninjaChangeBranch => 'غيّر الفرع';
 
   @override
@@ -1564,11 +1584,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String deliveryFromBranch(String name) {
-    return 'التوصيل من فرع $name';
-  }
-
-  @override
   String get deliveryNoBranchReaches => 'لسه مش بنوصّل للعنوان ده';
 
   @override
@@ -1596,9 +1611,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String deliveryAddMore(String amount) {
     return 'زوّد $amount كمان عشان التوصيل';
   }
-
-  @override
-  String get deliveryCashAtDoor => 'ادفع كاش للمندوب عند الباب';
 
   @override
   String get deliveryMovePin => 'حرّك الخريطة لحد ما الدبوس ييجي على بابك';
@@ -1734,6 +1746,115 @@ class AppLocalizationsAr extends AppLocalizations {
   String orderNotDeliveredNote(String name) {
     return 'المندوب مقدرش يوصّله. $name هيكلمك.';
   }
+
+  @override
+  String get payAheadLabel => 'هتدفع إزاي';
+
+  @override
+  String get payAheadOnline => 'ادفع أونلاين';
+
+  @override
+  String get payAheadCashDelivery => 'كاش عند الاستلام';
+
+  @override
+  String get payAheadCashPickup => 'ادفع وانت بتستلم';
+
+  @override
+  String get payAheadFee => 'رسوم الدفع أونلاين';
+
+  @override
+  String payAheadHeld(String name) {
+    return 'الكارت مش هيتخصم منه غير لما $name يقبل الطلب.';
+  }
+
+  @override
+  String get payAheadPlace => 'كمّل للدفع';
+
+  @override
+  String get payAheadFinishFromDock =>
+      'طلبك مستني الدفع: ادفعه من الشريط اللي تحت.';
+
+  @override
+  String get payAheadGettingReady => 'بنجهز الدفع…';
+
+  @override
+  String get payAheadToCheckout => 'رايحين للدفع…';
+
+  @override
+  String get payAheadTitle => 'ادفع تمن طلبك';
+
+  @override
+  String payAheadWithin(String time, String name) {
+    return 'ادفع خلال $time عشان الطلب يوصل لـ$name.';
+  }
+
+  @override
+  String get payAheadOutOfTime => 'وقت الطلب ده خلص.';
+
+  @override
+  String payAheadPay(String amount) {
+    return 'ادفع $amount';
+  }
+
+  @override
+  String get payAheadCancel => 'الغي الطلب';
+
+  @override
+  String get payAheadCancelled => 'الطلب اتلغى. محدش خصم حاجة.';
+
+  @override
+  String get payAheadCancelFailed => 'معرفناش نلغي الطلب';
+
+  @override
+  String get payAheadStartFailed => 'معرفناش نبدأ الدفع';
+
+  @override
+  String payAheadPaidNote(String name) {
+    return 'طلبك وصل لـ$name.';
+  }
+
+  @override
+  String payAheadHeldNote(String name) {
+    return 'طلبك وصل لـ$name. الكارت هيتخصم منه لما يقبل الطلب.';
+  }
+
+  @override
+  String get payAheadFollow => 'تابع طلبك';
+
+  @override
+  String get payAheadOrderCancelled => 'الطلب ده اتلغى';
+
+  @override
+  String get payAheadNothingCharged => 'محدش خصم حاجة.';
+
+  @override
+  String get payAheadNotFound => 'مش لاقيين الطلب ده عشان يتدفع';
+
+  @override
+  String get orderStageAwaitingPayment => 'مستني الدفع';
+
+  @override
+  String get orderPayNow => 'ادفع دلوقتي';
+
+  @override
+  String get orderPaidOnTheWayNote =>
+      'في الطريق ليك. مدفوع، مفيش حاجة تدفعها عند الباب.';
+
+  @override
+  String orderPaidOnTheWayRiderNote(String rider) {
+    return '$rider في الطريق ليك. مدفوع، مفيش حاجة تدفعها عند الباب.';
+  }
+
+  @override
+  String orderPaidCancelledNote(String name) {
+    return '$name مقدرش ياخد الطلب ده. فلوسك هترجعلك.';
+  }
+
+  @override
+  String get orderUnpaidCancelledNote => 'اتلغى قبل الدفع. محدش خصم حاجة.';
+
+  @override
+  String get payWhyAtDoor => 'بيتدفع للمندوب عند الباب';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2878,6 +2999,26 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
       'خدمة الموقع غير مفعّلة لهذا التطبيق. فعّلها من إعدادات الهاتف.';
 
   @override
+  String get nearestBranchTitle => 'اطلب من الفرع الأقرب إليك';
+
+  @override
+  String get nearestBranchBody =>
+      'نستخدم موقعك فقط لمعرفة أقرب فرع إليك والمسافة إليه، ليُحضَّر طلبك بالقرب منك. لا نشاركه مع أحد.';
+
+  @override
+  String nearestBranchMoved(String name, String distance) {
+    return 'تطلب من فرع $name، على بُعد $distance';
+  }
+
+  @override
+  String get nearestBranchBlocked =>
+      'خدمة الموقع غير مفعّلة. فعّلها لنجد الفرع الأقرب إليك.';
+
+  @override
+  String get deliveryPinWhy =>
+      'استخدم موقعك لوضع الدبوس على بابك تمامًا ليصل إليك المندوب.';
+
+  @override
   String get ninjaChangeBranch => 'تغيير الفرع';
 
   @override
@@ -2941,11 +3082,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String deliveryFromBranch(String name) {
-    return 'التوصيل من فرع $name';
-  }
-
-  @override
   String get deliveryNoBranchReaches => 'لا نوصّل إلى هذا العنوان بعد';
 
   @override
@@ -2973,9 +3109,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String deliveryAddMore(String amount) {
     return 'أضف $amount أخرى للتوصيل';
   }
-
-  @override
-  String get deliveryCashAtDoor => 'ادفع للمندوب نقدًا عند الباب';
 
   @override
   String get deliveryMovePin => 'حرّك الخريطة حتى يقع الدبوس على بابك';
@@ -3113,4 +3246,113 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String orderNotDeliveredNote(String name) {
     return 'لم يتمكن المندوب من توصيله. سيتواصل معك $name.';
   }
+
+  @override
+  String get payAheadLabel => 'طريقة الدفع';
+
+  @override
+  String get payAheadOnline => 'الدفع أونلاين';
+
+  @override
+  String get payAheadCashDelivery => 'نقدًا عند الاستلام';
+
+  @override
+  String get payAheadCashPickup => 'الدفع عند الاستلام';
+
+  @override
+  String get payAheadFee => 'رسوم الدفع أونلاين';
+
+  @override
+  String payAheadHeld(String name) {
+    return 'لن تُخصم البطاقة إلا بعد قبول $name للطلب.';
+  }
+
+  @override
+  String get payAheadPlace => 'المتابعة إلى الدفع';
+
+  @override
+  String get payAheadFinishFromDock =>
+      'طلبك بانتظار الدفع: ادفعه من الشريط بالأسفل.';
+
+  @override
+  String get payAheadGettingReady => 'جارٍ تجهيز الدفع…';
+
+  @override
+  String get payAheadToCheckout => 'جارٍ الانتقال إلى الدفع…';
+
+  @override
+  String get payAheadTitle => 'ادفع ثمن طلبك';
+
+  @override
+  String payAheadWithin(String time, String name) {
+    return 'ادفع خلال $time ليصل الطلب إلى $name.';
+  }
+
+  @override
+  String get payAheadOutOfTime => 'انتهت مهلة هذا الطلب.';
+
+  @override
+  String payAheadPay(String amount) {
+    return 'ادفع $amount';
+  }
+
+  @override
+  String get payAheadCancel => 'إلغاء الطلب';
+
+  @override
+  String get payAheadCancelled => 'أُلغي الطلب. لم يُخصم أي مبلغ.';
+
+  @override
+  String get payAheadCancelFailed => 'تعذّر إلغاء الطلب';
+
+  @override
+  String get payAheadStartFailed => 'تعذّر بدء الدفع';
+
+  @override
+  String payAheadPaidNote(String name) {
+    return 'وصل طلبك إلى $name.';
+  }
+
+  @override
+  String payAheadHeldNote(String name) {
+    return 'وصل طلبك إلى $name. ستُخصم البطاقة عند قبول الطلب.';
+  }
+
+  @override
+  String get payAheadFollow => 'تابع طلبك';
+
+  @override
+  String get payAheadOrderCancelled => 'أُلغي هذا الطلب';
+
+  @override
+  String get payAheadNothingCharged => 'لم يُخصم أي مبلغ.';
+
+  @override
+  String get payAheadNotFound => 'تعذّر العثور على هذا الطلب للدفع';
+
+  @override
+  String get orderStageAwaitingPayment => 'بانتظار الدفع';
+
+  @override
+  String get orderPayNow => 'ادفع الآن';
+
+  @override
+  String get orderPaidOnTheWayNote =>
+      'في الطريق إليك. الطلب مدفوع، لا شيء تدفعه عند الباب.';
+
+  @override
+  String orderPaidOnTheWayRiderNote(String rider) {
+    return '$rider في الطريق إليك. الطلب مدفوع، لا شيء تدفعه عند الباب.';
+  }
+
+  @override
+  String orderPaidCancelledNote(String name) {
+    return 'لم يتمكن $name من قبول هذا الطلب. سيُعاد إليك ما دفعته.';
+  }
+
+  @override
+  String get orderUnpaidCancelledNote => 'أُلغي قبل الدفع. لم يُخصم أي مبلغ.';
+
+  @override
+  String get payWhyAtDoor => 'يُدفع للمندوب عند الباب';
 }

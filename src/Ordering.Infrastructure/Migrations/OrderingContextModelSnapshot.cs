@@ -334,6 +334,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<double>("LoyaltyDiscount")
                         .HasColumnType("double precision");
 
+                    b.Property<Guid?>("OnlinePaymentKey")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -345,9 +348,20 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("PaidOnlineAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PaidWith")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("PaymentDueBy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("PaysOnline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<int?>("PlaceId")
                         .HasColumnType("integer");
@@ -422,6 +436,8 @@ namespace Ordering.Infrastructure.Migrations
                     b.HasIndex("PlaceId");
 
                     b.HasIndex("SessionId");
+
+                    b.HasIndex("OrderStatus", "PaymentDueBy");
 
                     b.ToTable("orders", "ordering");
                 });
@@ -926,6 +942,9 @@ namespace Ordering.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("Delivery")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PayAhead")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")

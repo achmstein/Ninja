@@ -28,11 +28,24 @@ class OnlinePaymentEntityTypeConfiguration : IEntityTypeConfiguration<OnlinePaym
         builder.Property(p => p.TransactionId).HasMaxLength(100);
         builder.Property(p => p.FailureReason).HasMaxLength(500);
         builder.Property(p => p.RefundedBy).HasMaxLength(64);
+        builder.Property(p => p.Move).HasConversion<string>().HasMaxLength(10).IsRequired();
+        builder.Property(p => p.MoveBy).HasMaxLength(64);
+        builder.Property(p => p.MoveReason).HasMaxLength(200);
+        builder.Property(p => p.Problem).HasMaxLength(500);
+        builder.Ignore(p => p.Secured);
 
         builder.HasIndex(p => p.Key).IsUnique();
         builder.HasIndex(p => p.TicketId);
+        // An order paid ahead: its payments before it has a bill
+        builder.HasIndex(p => p.OrderId);
         builder.HasIndex(p => new { p.Provider, p.ProviderReference });
         builder.HasIndex(p => new { p.BranchId, p.PaidAt });
+        // The retry worker's round: moves owed and due
+        builder.HasIndex(p => new { p.Move, p.MoveDueAt });
+        // The owner's list of payments that need them
+        builder.HasIndex(p => p.AttentionSince);
+        // Checkouts whose callback is late
+        builder.HasIndex(p => new { p.Status, p.CreatedAt });
 
         // A callback and a refund may land together; the second is told to reload
         builder.Property<uint>("xmin").IsRowVersion();
@@ -56,6 +69,8 @@ class PaymentSettingsEntityTypeConfiguration : IEntityTypeConfiguration<PaymentS
         builder.Property(s => s.SecretKeyHint).HasMaxLength(8);
         builder.Property(s => s.PublicKey).HasMaxLength(500);
         builder.Property(s => s.SealedHmacSecret).HasMaxLength(1000);
+        builder.Property(s => s.SealedApiKey).HasMaxLength(2000);
+        builder.Ignore(s => s.HoldsCards);
         builder.Property(s => s.FeeMode).HasConversion<string>().HasMaxLength(10).IsRequired();
         builder.Property(s => s.FeePercent).HasPrecision(6, 3);
         builder.Property(s => s.FeeFixed).HasPrecision(18, 2);

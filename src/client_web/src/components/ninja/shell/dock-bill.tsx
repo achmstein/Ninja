@@ -1,8 +1,9 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Bike, Check, ChefHat, ChevronUp, CircleHelp, House, ReceiptText, Send, X } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Bike, Check, ChefHat, ChevronUp, CircleHelp, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
-import { useLiveOrder } from '@/lib/live-order'
-import { STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
+import { payOrderLink, useLiveOrder } from '@/lib/live-order'
+import { PILL_WORDS, STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
 import { cn } from '@/lib/utils'
 import { type LiveBills } from '@/lib/live-bills'
 import { blurSwap } from '@/lib/motion'
@@ -26,6 +27,7 @@ import { useDockRowShown } from './use-dock-row'
 const ASKED = [SERVICE_REQUEST.callWaiter, SERVICE_REQUEST.receiptToPay, SERVICE_REQUEST.controllerChange, SERVICE_REQUEST.changeOption]
 
 const STAGE_ICONS: Record<PillStage, typeof Send> = {
+  awaitingPayment: CreditCard,
   sent: Send,
   confirmed: Check,
   preparing: ChefHat,
@@ -63,6 +65,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const open = useDockSheet((s) => s.open)
   const setOpen = useDockSheet((s) => s.setOpen)
   const { stage, orderNumber } = useLiveOrder()
+  const navigate = useNavigate()
+  // Waiting for its payment ahead: the row is the way to pay it, not the bill
+  const toPay = stage === 'awaitingPayment' && orderNumber != null
   const stay = useActiveStay()
   // A running room is where the customer is, over a table scanned before it
   const scanned = useActivePlace()
@@ -95,7 +100,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
   const placeKind = stay ? Number(stay.placeKind) : table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
-  const label = t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
+  const label = toPay ? words(PILL_WORDS.payNow, language, standard) : t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
 
   return (
     <>
@@ -104,7 +109,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           <motion.button
             key='bill'
             type='button'
-            onClick={() => setOpen(true)}
+            onClick={() => (toPay ? void navigate(payOrderLink(orderNumber)) : setOpen(true))}
             // Pulled up by its handle, as the tray's row is, it opens too: it had only the tap, so a pull on
             // the handle it draws did nothing while an order was waiting
             onPanEnd={(_, info) => trayOpensAfterDrag(false, info.offset.y, info.velocity.y) && setOpen(true)}
@@ -123,7 +128,13 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             <span
               className={cn(
                 'relative grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-300',
-                stage === 'confirmed' || stage === 'paid' ? 'bg-emerald-500 text-white' : stage === 'cancelled' ? 'bg-red-500 text-white' : 'bg-background/12'
+                stage === 'confirmed' || stage === 'paid'
+                  ? 'bg-emerald-500 text-white'
+                  : stage === 'cancelled'
+                    ? 'bg-red-500 text-white'
+                    : stage === 'awaitingPayment'
+                      ? 'bg-amber-400 text-black'
+                      : 'bg-background/12'
               )}
             >
               <AnimatePresence mode='popLayout' initial={false}>
@@ -185,9 +196,14 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 <span className='truncate text-name font-bold'>{place}</span>
               )}
             </span>
-            <span className='bg-background/12 flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold'>
+            <span
+              className={cn(
+                'flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold',
+                toPay ? 'bg-background text-foreground pe-4' : 'bg-background/12'
+              )}
+            >
               {label}
-              <ChevronUp className='size-4' />
+              {!toPay && <ChevronUp className='size-4' />}
             </span>
           </motion.button>
         )}

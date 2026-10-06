@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
-import { Bike, Check, ChefHat, House, ReceiptText, Send, X } from 'lucide-react'
+import { Bike, Check, ChefHat, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -25,6 +25,7 @@ import {
 } from '@/lib/order-pill'
 
 const ICONS: Record<PillStage, typeof Send> = {
+  awaitingPayment: CreditCard,
   sent: Send,
   confirmed: Check,
   preparing: ChefHat,
@@ -36,6 +37,7 @@ const ICONS: Record<PillStage, typeof Send> = {
 }
 
 const NOTES = {
+  awaitingPayment: PILL_WORDS.awaitingPaymentNote,
   sent: PILL_WORDS.sentNote,
   confirmed: PILL_WORDS.confirmedNote,
   preparing: PILL_WORDS.preparingNote,
@@ -54,6 +56,7 @@ const LOUD: PillStage[] = ['cancelled', 'onTheWay', 'delivered', 'notDelivered']
 
 /** A stage in the island's colours: waiting on the business, done, or turned down */
 const TYPES: Record<PillStage, IslandFace['type']> = {
+  awaitingPayment: 'loading',
   sent: 'loading',
   confirmed: 'success',
   preparing: 'loading',

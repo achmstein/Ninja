@@ -289,6 +289,24 @@ public class Ticket : Entity, IAggregateRoot
     /// <summary>The delivery platform whose order this bill is ("Talabat"); null for every bill of the business's own.</summary>
     public string? Platform { get; private set; }
 
+    /// <summary>
+    /// The business's own delivery, paid to its rider at the door: the rider's cash settles it, so it is
+    /// never paid online (that would have the customer pay twice). False for one paid ahead online, whose
+    /// bill settles with that payment.
+    /// </summary>
+    public bool CollectsAtDoor { get; private set; }
+
+    /// <summary>
+    /// The business's own delivery paid at the door: a counter bill of its own, named for the order,
+    /// settled by the rider's cash and never online.
+    /// </summary>
+    public static Ticket OpenForDelivery(int branchId, string? label = null)
+        => new(TicketType.Counter, branchId)
+        {
+            Label = CleanLabel(label),
+            CollectsAtDoor = true,
+        };
+
     private static string? CleanLabel(string? label)
         => string.IsNullOrWhiteSpace(label) ? null : label.Trim();
 

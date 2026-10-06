@@ -775,6 +775,7 @@
   "refundOnlineTitle": "إرجاع {amount} إلى {name}؟",
   "refundOnlineHint": "يعود المبلغ إلى بطاقته عبر مزوّد الدفع.",
   "onlineRefundedToast": "تم استرداد الدفعة الأونلاين",
+  "onlineRefundPendingToast": "الاسترداد قيد التنفيذ: لم يرد Paymob بعد، وسيتم فور رده",
   "releaseOnline": "إلغاء الحجز",
   "onlineReleasedToast": "تم إلغاء الحجز: الحصة متاحة للدفع من جديد",
   "guestPayingOnline": "ضيف يدفع أونلاين الآن. أغلق الفاتورة بعد انتهائه.",

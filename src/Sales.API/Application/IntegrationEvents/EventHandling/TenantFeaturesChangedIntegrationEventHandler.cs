@@ -28,6 +28,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
             context.TenantFeatures.Add(new TenantFeatures
             {
                 OnlinePayments = @event.OnlinePayments,
+                PayAhead = @event.PayAhead,
                 UpdatedAt = @event.CreationDate,
             });
         }
@@ -42,6 +43,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
             }
 
             row.OnlinePayments = @event.OnlinePayments;
+            row.PayAhead = @event.PayAhead;
             row.UpdatedAt = @event.CreationDate;
         }
 

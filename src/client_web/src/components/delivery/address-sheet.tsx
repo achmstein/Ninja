@@ -12,7 +12,7 @@ import { labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/addres
 import { useBrand, usePhoneRule } from '@/lib/brand'
 import { useSelectedBranch } from '@/lib/branch'
 import { addressBody, addressLine, fromSaved, useMyAddresses } from '@/lib/delivery'
-import { pointOf, useMyLocation, type LatLng } from '@/lib/geo'
+import { pointOf, useLocationPermission, useMyLocation, type LatLng } from '@/lib/geo'
 import { useLanguage, useT } from '@/lib/i18n'
 import { problemMessage } from '@/lib/problem'
 import { getMyProfile } from '@/lib/services/identity'
@@ -174,8 +174,11 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const guestPhone = useGuestStore((s) => s.contact?.phone ?? '')
   const guestName = useGuestStore((s) => s.contact?.name ?? '')
   const isGuest = !auth.isAuthenticated
-  // A new address asks for the GPS's own fix, not the coarse one the branch list may have had
-  const location = useMyLocation(initial == null, { precise: true })
+  // A new address takes the GPS's own fix, not the coarse one the branch list may have had: at once where
+  // the browser gives it already, else on the customer's word, once they have read why (under the map)
+  const location = useMyLocation(initial == null, { precise: true, quiet: true })
+  const permission = useLocationPermission()
+  const explain = initial == null && !location.here && location.canLocate && (permission === 'prompt' || permission === null)
 
   const [point, setPoint] = useState<LatLng>(() =>
     initial ? { lat: initial.latitude, lng: initial.longitude } : (location.here ?? pointOf(branch) ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG),
@@ -322,9 +325,25 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           </button>
         )}
       </div>
-      <p className={cn('-mt-1 px-1 text-caption', tried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
-        {tried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
-      </p>
+      {explain && !moved ? (
+        // Why the app would like the position, before the browser asks for it
+        <button
+          type='button'
+          onClick={() => location.locate()}
+          disabled={location.locating}
+          className='bg-primary/10 text-foreground -mt-1 flex items-center gap-3 rounded-2xl p-3 text-start text-caption'
+        >
+          {location.locating ? <Loader2 className='text-primary size-5 shrink-0 animate-spin' /> : <LocateFixed className='text-primary size-5 shrink-0' />}
+          <span className='flex flex-col gap-0.5'>
+            <span className='font-semibold'>{t('useMyLocation')}</span>
+            <span className='text-muted-foreground'>{t('deliveryPinWhy')}</span>
+          </span>
+        </button>
+      ) : (
+        <p className={cn('-mt-1 px-1 text-caption', tried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
+          {tried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
+        </p>
+      )}
 
       <Input
         value={street}

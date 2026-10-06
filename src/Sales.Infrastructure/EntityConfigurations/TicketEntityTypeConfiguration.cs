@@ -37,6 +37,8 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Property(t => t.Label).HasMaxLength(200);
         builder.Property(t => t.Platform).HasMaxLength(20);
+        // A delivery paid at the door: never paid online
+        builder.Property(t => t.CollectsAtDoor).HasDefaultValue(false);
         // The customers who sat in the room, as a text array
         builder.Property(t => t.MemberIds);
         builder.Property(t => t.GuestPhone).HasMaxLength(30);

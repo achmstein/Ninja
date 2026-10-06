@@ -22,7 +22,7 @@ export function money(value: number): number {
   return (Math.sign(value) * cents) / 100 || 0
 }
 
-const num = (value: number | string | null | undefined) => Number(value ?? 0) || 0
+export const num = (value: number | string | null | undefined) => Number(value ?? 0) || 0
 
 /**
  * The guest's fee on a share when the business passes the provider's fee on:
@@ -92,11 +92,13 @@ export const PAY_WHY = [
   'empty',
   'paid',
   'being-paid',
+  // A delivery the rider collects: never paid online
+  'at-door',
 ] as const
 export type PayWhy = (typeof PAY_WHY)[number]
 
 export const offersPay = (why: string | null | undefined) =>
-  why !== 'off' && why !== 'not-set-up'
+  why !== 'off' && why !== 'not-set-up' && why !== 'at-door'
 
 /** How many equal parts to start from: the room's party where the bill
  *  knows it, else two. */

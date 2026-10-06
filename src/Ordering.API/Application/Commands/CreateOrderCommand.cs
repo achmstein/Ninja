@@ -132,6 +132,10 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public DeliveryDraft? Delivery { get; private set; }
 
+    /// <summary>Paid online in the app before the business sees it; the aggregate holds it to orders away from a table.</summary>
+    [DataMember]
+    public bool PayOnline { get; private set; }
+
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
     /// sale keyed in by staff.
@@ -170,11 +174,13 @@ public class CreateOrderCommand : IRequest<int>
         string? promoCode = null,
         bool guestOrdersAnywhere = false,
         PlatformOrder? platform = null,
-        DeliveryDraft? delivery = null)
+        DeliveryDraft? delivery = null,
+        bool payOnline = false)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         Platform = platform;
         Delivery = delivery;
+        PayOnline = payOnline;
         GuestOrdersAnywhere = guestOrdersAnywhere;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim();
         PlaceId = placeId;

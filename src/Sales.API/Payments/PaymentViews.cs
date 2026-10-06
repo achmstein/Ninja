@@ -56,7 +56,25 @@ public sealed record PayView(
     string? Why);
 
 /// <summary>One payment, as the guest's return page follows it.</summary>
-public sealed record PaymentStatusView(Guid Key, int TicketId, string Status, decimal Amount, decimal Fee, decimal Charged, string Currency, string? FailureReason, bool BillClosed);
+/// <param name="TicketId">The bill it pays; null for an order paid ahead that has no bill yet.</param>
+/// <param name="OrderId">The order it pays ahead, when it is a payment ahead: the app follows that order once it is paid.</param>
+public sealed record PaymentStatusView(Guid Key, int? TicketId, string Status, decimal Amount, decimal Fee, decimal Charged, string Currency, string? FailureReason, bool BillClosed, int? OrderId = null);
+
+/// <summary>
+/// Whether the customer can pay ahead online here, for the checkout to offer it and show the fee before an order exists.
+/// </summary>
+/// <param name="Available">The owner takes payment ahead, and the business can take it (its provider set up, or a demo's).</param>
+/// <param name="FeeMode">Business or Guest: who carries the provider's fee.</param>
+/// <param name="HoldsCards">A card is only held at the checkout, and charged once the branch accepts the order (a wallet is charged at once).</param>
+public sealed record PayAheadOptionsView(bool Available, string Currency, string FeeMode, decimal FeePercent, decimal FeeFixed, bool Simulated, bool HoldsCards = false);
+
+/// <summary>An order paid ahead as its customer pays it: what it comes to, by when, and where its payment stands.</summary>
+/// <param name="Status">Due (waiting for the payment), Paid, or Cancelled.</param>
+/// <param name="Fee">What the guest's fee would be on top, when they carry it.</param>
+/// <param name="PaymentKey">The latest checkout for it, to follow or resume; null before one was started.</param>
+/// <param name="PaymentStatus">That checkout's status: Pending, Paid, Failed, Expired or Refunded.</param>
+/// <param name="HoldsCards">A card is only held, and charged once the branch accepts the order.</param>
+public sealed record OrderPayView(int OrderId, decimal Amount, decimal Fee, decimal Charged, string Currency, string Status, DateTime DueBy, Guid? PaymentKey, string? PaymentStatus, bool Simulated, bool HoldsCards = false);
 
 /// <summary>An online payment on a bill, as the till lists it.</summary>
 public sealed record OnlinePaymentView(Guid Key, string Mode, string? PayerName, decimal Amount, decimal Fee, string Status, DateTime CreatedAt, DateTime? PaidAt, string? TransactionId, DateTime? RefundedAt);
@@ -81,13 +99,15 @@ public sealed record PaymentSettingsView(
     bool Ready,
     bool CanKeepSecrets,
     string CallbackUrl,
-    bool Simulated = false)
+    bool Simulated = false,
+    int? CardHoldIntegrationId = null,
+    bool ApiKeySet = false)
 {
     /// <param name="simulated">A demo taking pretend payments until a real account is entered.</param>
     public static PaymentSettingsView From(PaymentSettings s, bool canKeepSecrets, string callbackUrl, bool simulated = false) => new(
         s.Provider, s.Currency, s.SealedSecretKey is not null, s.SecretKeyHint, s.PublicKey, s.SealedHmacSecret is not null,
         s.CardIntegrationId, s.WalletIntegrationId, s.ApplePayIntegrationId, s.FeeMode, s.FeePercent, s.FeeFixed,
-        s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl, simulated);
+        s.AllowItems, s.AllowEqual, s.AllowCustom, s.IsReady, canKeepSecrets, callbackUrl, simulated, s.CardHoldIntegrationId, s.SealedApiKey is not null);
 }
 
 public static class PayViews
@@ -106,6 +126,8 @@ public static class PayViews
 
         string? why = null;
         if (!enabled) why = "off";
+        // A delivery paid at the door is the rider's to collect: never offered online
+        else if (ticket.CollectsAtDoor) why = "at-door";
         else if (!settings.IsReady && !simulated) why = "not-set-up";
         else if (ticket.Status != TicketStatus.Open) why = "closed";
         else if (ticket.HasSession && ticket.SessionEndedAt is null) why = "clock-running";

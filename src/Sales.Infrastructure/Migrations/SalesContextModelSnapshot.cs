@@ -97,8 +97,20 @@ namespace Sales.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<DateTime?>("AttentionSince")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("AuthorizedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("CardHold")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -131,7 +143,32 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<string>("Move")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("MoveAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MoveBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("MoveDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("MoveLeasedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MoveReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<int?>("Of")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("OrderId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("PaidAt")
@@ -148,6 +185,10 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<string>("PayerName")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Problem")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Provider")
                         .IsRequired()
@@ -170,12 +211,15 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<int>("TicketId")
+                    b.Property<int?>("TicketId")
                         .HasColumnType("integer");
 
                     b.Property<string>("TransactionId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
@@ -185,14 +229,22 @@ namespace Sales.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AttentionSince");
+
                     b.HasIndex("Key")
                         .IsUnique();
+
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("TicketId");
 
                     b.HasIndex("BranchId", "PaidAt");
 
+                    b.HasIndex("Move", "MoveDueAt");
+
                     b.HasIndex("Provider", "ProviderReference");
+
+                    b.HasIndex("Status", "CreatedAt");
 
                     b.ToTable("online_payments", "sales");
                 });
@@ -212,6 +264,9 @@ namespace Sales.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int?>("ApplePayIntegrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CardHoldIntegrationId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("CardIntegrationId")
@@ -243,6 +298,13 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<string>("PublicKey")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReconciledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SealedApiKey")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("SealedHmacSecret")
                         .HasMaxLength(1000)
@@ -688,6 +750,11 @@ namespace Sales.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<bool>("CollectsAtDoor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<decimal>("Discount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -946,12 +1013,63 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("deliverycashins", "sales");
                 });
 
+            modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.OrderPaymentDue", b =>
+                {
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DueBy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDelivery")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PayerGuestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PayerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PayerUserId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.HasKey("OrderId");
+
+                    b.ToTable("orderpaymentsdue", "sales");
+                });
+
             modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.TenantFeatures", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<bool>("OnlinePayments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PayAhead")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")

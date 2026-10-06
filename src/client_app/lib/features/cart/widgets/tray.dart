@@ -20,6 +20,8 @@ import '../services/promo_service.dart';
 import '../../delivery/services/delivery_service.dart';
 import '../../delivery/widgets/delivery_choice.dart';
 import 'cart_nudge.dart';
+import '../../pay/pay_ahead.dart';
+import '../../pay/widgets/pay_choice.dart';
 import 'tray_extras.dart';
 import 'tray_flights.dart';
 import 'tray_hint.dart';
@@ -218,7 +220,9 @@ class _TrayRowState extends ConsumerState<TrayRow> {
     final summary = traySummary(cart.items);
     final saved = _saved(ref);
     // What the customer pays, the delivery fee on top once the branch has quoted it
-    final total = (summary.total - saved).clamp(0.0, double.infinity) + ref.watch(deliveryStateProvider.select((d) => d.fee));
+    final beforeFee = (summary.total - saved).clamp(0.0, double.infinity) + ref.watch(deliveryStateProvider.select((d) => d.fee));
+    // Paid ahead online, the fee the customer carries on top
+    final total = beforeFee + ref.watch(payAheadProvider).feeFor(beforeFee);
     final canOrder = ref.watch(branchProvider).selectedBranch?.isOrderingEnabled ?? true;
     final reduced = reduceMotion(context);
     // The photos fly to their rows as the order opens: they leave the dock at once, and come back as it shuts
@@ -447,6 +451,8 @@ class OrderButton extends ConsumerWidget {
     final busy = ref.watch(checkoutProvider.select((s) => s.isLoading));
     // A delivery waits for its address, the branch's yes and the minimum: the open tray says which
     final held = ref.watch(deliveryStateProvider.select((d) => d.active && !d.ready));
+    // Paid ahead: the button goes on to paying
+    final online = ref.watch(payAheadProvider.select((p) => p.online));
     return ListenableBuilder(
       listenable: motion,
       builder: (context, _) {
@@ -490,7 +496,11 @@ class OrderButton extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(l10n.ninjaSending, style: label),
                     ],
-                    'place' => [Icon(LucideIcons.check, size: 16, color: ink), const SizedBox(width: 8), Text(l10n.placeOrder, style: label)],
+                    'place' => [
+                      Icon(online ? LucideIcons.creditCard : LucideIcons.check, size: 16, color: ink),
+                      const SizedBox(width: 8),
+                      Text(online ? l10n.payAheadPlace : l10n.placeOrder, style: label),
+                    ],
                     _ => [Text(l10n.ninjaOrder, style: label)],
                   },
                 ),
@@ -572,6 +582,9 @@ class TraySheet extends ConsumerWidget {
                       ],
                     ),
                   ),
+                // Not at a table: pay online now, or in cash, where the business takes payment ahead
+                if (canOrder && destination == null)
+                  Padding(padding: const EdgeInsets.fromLTRB(8, 12, 8, 0), child: PayChoiceView(total: _orderTotal(ref))),
               ],
             ),
           ),
@@ -580,6 +593,10 @@ class TraySheet extends ConsumerWidget {
     );
   }
 }
+
+/// What the order comes to before any online fee: the dishes less what the code and points take off, the delivery fee on
+double _orderTotal(WidgetRef ref) =>
+    (traySummary(ref.watch(cartProvider).items).total - _saved(ref)).clamp(0.0, double.infinity) + ref.watch(deliveryStateProvider.select((d) => d.fee));
 
 /// A heading set as the style sets headings, the size of a sheet's title
 class BrandHeadingText extends StatelessWidget {

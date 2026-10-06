@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CancelOnlinePaymentData, CancelOnlinePaymentErrors, CancelOnlinePaymentResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBillToPayData, GetBillToPayErrors, GetBillToPayResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOnlinePaymentData, GetOnlinePaymentErrors, GetOnlinePaymentResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentSettingsData, GetPaymentSettingsErrors, GetPaymentSettingsResponses, GetPaymentsResponses, GetPlaceBillToPayData, GetPlaceBillToPayErrors, GetPlaceBillToPayResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, ListOnlinePaymentsData, ListOnlinePaymentsErrors, ListOnlinePaymentsResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundOnlinePaymentData, RefundOnlinePaymentErrors, RefundOnlinePaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SavePaymentSettingsData, SavePaymentSettingsErrors, SavePaymentSettingsResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, SimulateOnlinePaymentData, SimulateOnlinePaymentErrors, SimulateOnlinePaymentResponses, StartOnlinePaymentData, StartOnlinePaymentErrors, StartOnlinePaymentResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CancelOnlinePaymentData, CancelOnlinePaymentErrors, CancelOnlinePaymentResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, DismissPaymentAttentionData, DismissPaymentAttentionErrors, DismissPaymentAttentionResponses, GetBillToPayData, GetBillToPayErrors, GetBillToPayResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOnlinePaymentData, GetOnlinePaymentErrors, GetOnlinePaymentResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetOrderToPayData, GetOrderToPayErrors, GetOrderToPayResponses, GetPayAheadOptionsData, GetPayAheadOptionsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentSettingsData, GetPaymentSettingsErrors, GetPaymentSettingsResponses, GetPaymentsResponses, GetPlaceBillToPayData, GetPlaceBillToPayErrors, GetPlaceBillToPayResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, ListOnlinePaymentsData, ListOnlinePaymentsErrors, ListOnlinePaymentsResponses, ListPaymentsNeedingAttentionData, ListPaymentsNeedingAttentionErrors, ListPaymentsNeedingAttentionResponses, MarkPaymentMoveDoneData, MarkPaymentMoveDoneErrors, MarkPaymentMoveDoneResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundOnlinePaymentData, RefundOnlinePaymentErrors, RefundOnlinePaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, RetryPaymentMoveData, RetryPaymentMoveErrors, RetryPaymentMoveResponses, SavePaymentSettingsData, SavePaymentSettingsErrors, SavePaymentSettingsResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, SimulateOnlinePaymentData, SimulateOnlinePaymentErrors, SimulateOnlinePaymentResponses, StartOnlinePaymentData, StartOnlinePaymentErrors, StartOnlinePaymentResponses, StartOrderPaymentData, StartOrderPaymentErrors, StartOrderPaymentResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -422,6 +422,43 @@ export const startOnlinePayment = <ThrowOnError extends boolean = false>(options
 });
 
 /**
+ * Whether the customer can pay ahead online here, and the fee they would carry
+ *
+ * For the checkout to offer "Pay online" for a delivery or an order to collect, before the order exists.
+ */
+export const getPayAheadOptions = <ThrowOnError extends boolean = false>(options: Options<GetPayAheadOptionsData, ThrowOnError>): RequestResult<GetPayAheadOptionsResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetPayAheadOptionsResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/ahead',
+    ...options
+});
+
+/**
+ * An order paid ahead, as its customer pays it
+ *
+ * What it comes to, the fee on top, by when it must be paid, and its latest checkout. 404 until Ordering has priced it (poll), and for anyone but whoever placed it.
+ */
+export const getOrderToPay = <ThrowOnError extends boolean = false>(options: Options<GetOrderToPayData, ThrowOnError>): RequestResult<GetOrderToPayResponses, GetOrderToPayErrors, ThrowOnError> => (options.client ?? client).get<GetOrderToPayResponses, GetOrderToPayErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/orders/{orderId}',
+    ...options
+});
+
+/**
+ * Start paying an order ahead; answers where to send the customer to pay
+ *
+ * The whole order, through the business's provider, while it waits for its payment. Starting again lets the earlier checkout go.
+ */
+export const startOrderPayment = <ThrowOnError extends boolean = false>(options: Options<StartOrderPaymentData, ThrowOnError>): RequestResult<StartOrderPaymentResponses, StartOrderPaymentErrors, ThrowOnError> => (options.client ?? client).post<StartOrderPaymentResponses, StartOrderPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/orders/{orderId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * How a payment stands, for the page the guest comes back to
  *
  * Only the provider's signed callback changes it; the guest's return proves nothing.
@@ -466,7 +503,11 @@ export const cancelOnlinePayment = <ThrowOnError extends boolean = false>(option
 /**
  * Give an online payment back through the provider, while its bill is open
  */
-export const refundOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<RefundOnlinePaymentData, ThrowOnError>): RequestResult<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).post<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/refund', ...options });
+export const refundOnlinePayment = <ThrowOnError extends boolean = false>(options: Options<RefundOnlinePaymentData, ThrowOnError>): RequestResult<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError> => (options.client ?? client).post<RefundOnlinePaymentResponses, RefundOnlinePaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/{key}/refund',
+    ...options
+});
 
 /**
  * How the business takes payments at the table; secrets only as whether they are set
@@ -489,3 +530,31 @@ export const savePaymentSettings = <ThrowOnError extends boolean = false>(option
         ...options.headers
     }
 });
+
+/**
+ * Online payments waiting on the owner: money the provider would not move, or its records disagreeing with ours
+ */
+export const listPaymentsNeedingAttention = <ThrowOnError extends boolean = false>(options: Options<ListPaymentsNeedingAttentionData, ThrowOnError>): RequestResult<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError> => (options.client ?? client).get<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/attention',
+    ...options
+});
+
+/**
+ * Try a payment's money move (charge, let go, refund) at the provider now
+ */
+export const retryPaymentMove = <ThrowOnError extends boolean = false>(options: Options<RetryPaymentMoveData, ThrowOnError>): RequestResult<RetryPaymentMoveResponses, RetryPaymentMoveErrors, ThrowOnError> => (options.client ?? client).post<RetryPaymentMoveResponses, RetryPaymentMoveErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/payments/{key}/retry',
+    ...options
+});
+
+/**
+ * The owner made the payment's money move in the provider's dashboard: recorded as made, with what follows from it
+ */
+export const markPaymentMoveDone = <ThrowOnError extends boolean = false>(options: Options<MarkPaymentMoveDoneData, ThrowOnError>): RequestResult<MarkPaymentMoveDoneResponses, MarkPaymentMoveDoneErrors, ThrowOnError> => (options.client ?? client).post<MarkPaymentMoveDoneResponses, MarkPaymentMoveDoneErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/done', ...options });
+
+/**
+ * The owner has seen to a payment that disagreed with the provider; it leaves the list
+ */
+export const dismissPaymentAttention = <ThrowOnError extends boolean = false>(options: Options<DismissPaymentAttentionData, ThrowOnError>): RequestResult<DismissPaymentAttentionResponses, DismissPaymentAttentionErrors, ThrowOnError> => (options.client ?? client).post<DismissPaymentAttentionResponses, DismissPaymentAttentionErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/dismiss', ...options });

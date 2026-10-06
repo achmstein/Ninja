@@ -156,3 +156,32 @@ describe('a delivery', () => {
     expect(LINGER_MS.onTheWay).toBeNull()
   })
 })
+
+describe('an order paid ahead online', () => {
+  const ahead = (status: string, paid = true, delivery?: PillOrder['delivery']): PillOrder => ({
+    status,
+    paysOnline: true,
+    paidOnlineAt: paid ? iso(60_000) : null,
+    delivery,
+  })
+
+  it('waits for its payment on the dock, with no clock of its own', () => {
+    expect(stageOf(ahead('AwaitingPayment', false))).toBe('awaitingPayment')
+    expect(LINGER_MS.awaitingPayment).toBeNull()
+    expect(STAGE_ICON.awaitingPayment).toBe('card')
+    expect(noteFor('awaitingPayment', ahead('AwaitingPayment', false), STAGE_LABEL).words).toBe(STAGE_LABEL.awaitingPayment)
+  })
+
+  it('says it is paid once it is with the business, and that nothing is owed at the door', () => {
+    expect(noteFor('sent', ahead('Submitted'), STAGE_LABEL).words).toBe(PILL_WORDS.paidSentNote)
+    const onTheWay = ahead('Confirmed', true, { stage: 'OnTheWay', riderName: 'Emam' })
+    expect(noteFor('onTheWay', onTheWay, STAGE_LABEL)).toEqual({ words: PILL_WORDS.paidOnTheWayRiderNote, rider: 'Emam' })
+    expect(noteFor('onTheWay', ahead('Confirmed', true, { stage: 'OnTheWay' }), STAGE_LABEL).words).toBe(PILL_WORDS.paidOnTheWayNote)
+    expect(words(PILL_WORDS.paidOnTheWayNote, 'en', false)).toContain('nothing to pay at the door')
+  })
+
+  it('says the money goes back when it is turned down, and that nothing was taken when it was never paid', () => {
+    expect(noteFor('cancelled', ahead('Cancelled'), STAGE_LABEL).words).toBe(PILL_WORDS.paidCancelledNote)
+    expect(noteFor('cancelled', ahead('Cancelled', false), STAGE_LABEL).words).toBe(PILL_WORDS.unpaidCancelledNote)
+  })
+})

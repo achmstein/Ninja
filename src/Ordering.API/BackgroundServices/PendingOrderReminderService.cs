@@ -60,7 +60,8 @@ public class PendingOrderReminderService(
             .Include(o => o.Buyer)
             .Where(o => o.OrderStatus == OrderStatus.Submitted
                 && o.ReminderCount < MaxReminders
-                && o.OrderDate <= now.AddMinutes(-ReminderThresholdsMinutes[0]))
+                // An order paid ahead reached the till when it was paid, not when it was placed
+                && (o.PaidOnlineAt ?? o.OrderDate) <= now.AddMinutes(-ReminderThresholdsMinutes[0]))
             .ToListAsync(ct);
 
         if (pendingOrders.Count == 0)
@@ -70,7 +71,7 @@ public class PendingOrderReminderService(
 
         foreach (var order in pendingOrders)
         {
-            var minutesPending = (int)(now - order.OrderDate).TotalMinutes;
+            var minutesPending = (int)(now - (order.PaidOnlineAt ?? order.OrderDate)).TotalMinutes;
             var nextReminderIndex = order.ReminderCount;
 
             // Check if enough time has passed for the next reminder

@@ -122,7 +122,7 @@ class DeliveryChoiceView extends ConsumerWidget {
                             ],
                           ),
                   ),
-                  Icon(LucideIcons.chevronRight, size: 16, color: ink.withValues(alpha: 0.6)),
+                  Icon(Directionality.of(context) == TextDirection.rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight, size: 16, color: ink.withValues(alpha: 0.6)),
                 ],
               ),
             ),
@@ -158,9 +158,6 @@ class DeliveryChoiceView extends ConsumerWidget {
                     ],
                   ),
                 if (delivery.problem == DeliveryProblem.range) _OutOfRange(delivery: delivery),
-                // Which branch brings it: the address chose it, the customer is only told
-                if (delivery.quoted && delivery.inRange && ref.watch(branchProvider).branches.length > 1)
-                  AppText(l10n.deliveryFromBranch(ref.watch(branchProvider).selectedBranch?.name.localized(context) ?? ''), style: note),
                 if (delivery.quoted && delivery.inRange)
                   Row(
                     children: [
@@ -172,7 +169,6 @@ class DeliveryChoiceView extends ConsumerWidget {
                     ],
                   ),
                 if (delivery.problem == DeliveryProblem.minimum) AppText(l10n.deliveryAddMore(money(delivery.short)), style: warn),
-                if (delivery.ready) AppText(l10n.deliveryCashAtDoor, style: note),
               ],
             ),
           ),
@@ -270,7 +266,7 @@ class _PickupFrom extends ConsumerWidget {
               ],
             ),
           ),
-          if (canChange) Icon(LucideIcons.chevronRight, size: 16, color: ink.withValues(alpha: 0.6)),
+          if (canChange) Icon(Directionality.of(context) == TextDirection.rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight, size: 16, color: ink.withValues(alpha: 0.6)),
         ],
       ),
     );

@@ -17,6 +17,9 @@ public class TenantFeatures
     /// <summary>Guests may pay or split the bill online, through the business's own payment account.</summary>
     public bool OnlinePayments { get; set; }
 
+    /// <summary>Customers may pay online for a delivery or an order they collect, before the business sees it.</summary>
+    public bool PayAhead { get; set; }
+
     /// <summary>
     /// CreationDate of the last event applied — the out-of-order guard: an
     /// older event arriving late must not undo a newer one.

@@ -7,4 +7,5 @@ namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 /// Ordering owns a part of is read.
 /// </summary>
 /// <param name="Delivery">Last and defaulted at the source: a Tenant.API older than delivery does not send it.</param>
-public record TenantFeaturesChangedIntegrationEvent(bool Delivery = false) : IntegrationEvent;
+/// <param name="PayAhead">Customers pay online for a delivery or an order they collect before the business sees it; a Tenant.API older than it does not send it.</param>
+public record TenantFeaturesChangedIntegrationEvent(bool Delivery = false, bool PayAhead = false) : IntegrationEvent;
