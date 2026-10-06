@@ -51,6 +51,8 @@ type CartState = {
   add: (line: CartLine) => void
   setQuantity: (key: string, quantity: number) => void
   remove: (key: string) => void
+  /** The order as another branch takes it (lib/order-move.ts) */
+  setLines: (lines: CartLine[]) => void
   clear: () => void
 }
 
@@ -86,6 +88,7 @@ export const useCart = create<CartState>()(
         set((state) => ({
           lines: state.lines.filter((l) => lineKey(l) !== key),
         })),
+      setLines: (lines) => set({ lines }),
       clear: () => set({ lines: [] }),
     }),
     { name: 'ninja-cart' }

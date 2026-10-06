@@ -29,8 +29,9 @@ class LocationState {
 }
 
 /// Where the customer is, on demand (client_web's geo.ts). Nothing asks on
-/// launch: a page that needs it (the branches, booking) asks once it is on
-/// screen with something to measure, and the phone asks then, once a run. A
+/// launch, nor on opening the branches or booking: those read a position the
+/// phone already gives ([readQuietly]); a page that needs one to go on (a pin
+/// on a door) asks once it is on screen, once a run ([askOnce]). A
 /// no, or a phone that cannot tell, is taken quietly; [locate] is the
 /// customer's own "Use my location", later. A refusal for good is not asked
 /// again; the button says so and opens the app's settings.
@@ -45,6 +46,23 @@ class LocationNotifier extends Notifier<LocationState> {
   void askOnce() {
     if (state.asked || state.here != null || state.locating) return;
     request();
+  }
+
+  bool _readQuietly = false;
+
+  /// A page that would use the position but must not ask for it (the
+  /// branches, booking, the branch the app opens at): read where the phone
+  /// already gives it, else nothing, leaving the asking to "Use my location"
+  Future<void> readQuietly() async {
+    if (_readQuietly || state.here != null || state.locating) return;
+    _readQuietly = true;
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) return;
+    } catch (_) {
+      return;
+    }
+    await request();
   }
 
   /// One request for the device's position; the state learns the answer.

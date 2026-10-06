@@ -28,6 +28,28 @@ public static partial class DeliveryApi
         return TypedResults.Ok(new DeliveryQuote(true, distance <= terms.RadiusMeters, distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm, terms.SignInRequired));
     }
 
+    public static async Task<Results<Ok<DeliveryResolution>, ProblemHttpResult>> ResolveDeliveryBranchAsync(
+        double latitude,
+        double longitude,
+        IBranchSettingsQueries branchSettings)
+    {
+        if (latitude is < -90 or > 90 || longitude is < -180 or > 180 || double.IsNaN(latitude) || double.IsNaN(longitude))
+        {
+            return OrderingProblems.Of(DeliveryErrors.PinInvalid, "That isn't a point on the map.");
+        }
+
+        var delivering = await branchSettings.GetDeliveringBranchesAsync();
+        var reaching = delivering
+            .Select(b => (b.BranchId, b.Terms, Distance: Geo.DistanceMeters(b.Terms.Latitude, b.Terms.Longitude, latitude, longitude)))
+            .Where(b => b.Distance <= b.Terms.RadiusMeters)
+            .OrderBy(b => b.Distance)
+            .ThenBy(b => b.BranchId)
+            .Select(b => new DeliveringBranch(b.BranchId, b.Distance, b.Terms.Fee, b.Terms.MinimumOrder, b.Terms.SignInRequired))
+            .ToList();
+
+        return TypedResults.Ok(new DeliveryResolution(delivering.Count > 0, reaching));
+    }
+
     public static async Task<Ok<TillDeliveryQuote>> GetTillDeliveryQuoteAsync(
         HttpContext httpContext,
         IBranchSettingsQueries branchSettings,

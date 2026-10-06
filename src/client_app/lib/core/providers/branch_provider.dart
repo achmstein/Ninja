@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/branch.dart';
 import '../services/branch_service.dart';
+import '../services/location_service.dart';
 import '../../../features/cart/services/cart_service.dart';
+import '../../../features/cart/services/order_move.dart';
+import '../../../features/menu/services/menu_service.dart';
 
 const String _branchKey = 'selected_branch_id';
 
@@ -71,10 +74,16 @@ class BranchNotifier extends Notifier<BranchState> {
       var selectedId = state.selectedBranchId;
 
       // The app opens at the branch last used; where that is not one of the business's (a first
-      // visit, a branch since removed) at the first open one in the owner's order
+      // visit, a branch since removed) at the first open one taking orders in the owner's order,
+      // asking the customer nothing: the menu is the same everywhere, and a delivery address or a
+      // booking moves the app, the order with it, to the branch that counts
+      final firstVisit = selectedId == null;
       if (selectedId == null || !branches.any((b) => b.id == selectedId)) {
         final ordered = [...branches]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-        selectedId = (ordered.where((b) => b.isActive).firstOrNull ?? ordered.firstOrNull)?.id;
+        selectedId = (ordered.where((b) => b.isActive && b.isOrderingEnabled).firstOrNull ??
+                ordered.where((b) => b.isActive).firstOrNull ??
+                ordered.firstOrNull)
+            ?.id;
         if (selectedId != null) {
           _saveBranchId(selectedId);
         }
@@ -85,23 +94,47 @@ class BranchNotifier extends Notifier<BranchState> {
         selectedBranchId: selectedId,
         isLoading: false,
       );
+      if (firstVisit && branches.length > 1) _nearestOnFirstVisit(branches);
     } catch (e) {
       debugPrint('Failed to load branches: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
+  /// A first visit, where the phone already gives the position without a
+  /// prompt: the nearest open branch, rather than the owner's first
+  Future<void> _nearestOnFirstVisit(List<Branch> branches) async {
+    await ref.read(locationProvider.notifier).readQuietly();
+    final here = ref.read(locationProvider).here;
+    if (here == null) return;
+    final open = branches.where((b) => b.isActive && b.isOrderingEnabled).toList();
+    final nearest = byDistance(open, here, (b) => b.point).firstOrNull;
+    if (nearest != null && nearest.meters != null) await selectBranch(nearest.item.id);
+  }
+
+  /// Moves the app to another branch, the order with it: the dishes stay, at
+  /// the new branch's prices, and one it does not serve goes (order_move.dart);
+  /// what changed is said ([orderMoveProvider]). Branch-scoped providers use
+  /// .family(branchId) or watch the selected branch, so they fetch afresh.
   Future<void> selectBranch(int branchId) async {
     if (branchId == state.selectedBranchId) return;
 
     state = state.copyWith(selectedBranchId: branchId);
     await _saveBranchId(branchId);
 
-    // Branch-scoped providers use .family(branchId) so switching branches
-    // creates a fresh provider instance with clean loading state.
-    // myStaysProvider watches selectedBranchIdProvider directly (Notifier).
-    // Cart is local state — just clear it on branch switch:
-    ref.read(cartProvider.notifier).clear();
+    if (ref.read(cartProvider).isEmpty) return;
+    try {
+      final menu = await ref.read(menuRepositoryProvider).getMenuItems(branchId: branchId);
+      // Moved again meanwhile: that move carries the order
+      if (state.selectedBranchId != branchId) return;
+      final move = moveLines(ref.read(cartProvider).items, menu);
+      if (!move.changed) return;
+      ref.read(cartProvider.notifier).setItems(move.items);
+      ref.read(orderMoveProvider.notifier).say(OrderMoveNotice(branchId, move));
+    } catch (e) {
+      // The menu could not be had: the order goes as it is, and the branch's own check of it says what is off
+      debugPrint('Moving the order: $e');
+    }
   }
 
   Future<void> refresh() async {

@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/models/branch.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/providers/branch_switch.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../cart/services/cart_service.dart';
 import '../models/delivery_address.dart';
@@ -34,6 +36,36 @@ class DeliveryQuote {
       );
 }
 
+/// Which of the business's branches deliver to a point
+/// (`GET /api/orders/delivery/resolve`): nearest first, none when no branch
+/// goes that far; [delivers] false while the business does not deliver at all
+@immutable
+class DeliveryResolution {
+  final bool delivers;
+  final List<({int branchId, double meters})> branches;
+
+  const DeliveryResolution({required this.delivers, this.branches = const []});
+
+  factory DeliveryResolution.fromJson(Map<String, dynamic> json) => DeliveryResolution(
+        delivers: json['delivers'] as bool? ?? false,
+        branches: [
+          for (final b in (json['branches'] as List?) ?? const [])
+            (branchId: ((b as Map)['branchId'] as num).toInt(), meters: DeliveryQuote._num(b['distanceMeters'])),
+        ],
+      );
+}
+
+/// The branch that delivers to an address: the nearest of those the server
+/// says reach it that the customer can order from (open, taking orders).
+/// The address, not the last branch used, decides (client_web's servingBranch)
+({int branchId, double meters})? servingBranch(List<({int branchId, double meters})> reaching, List<Branch> branches) {
+  for (final candidate in reaching) {
+    final branch = branches.where((b) => b.id == candidate.branchId).firstOrNull;
+    if (branch != null && branch.isActive && branch.isOrderingEnabled) return candidate;
+  }
+  return null;
+}
+
 /// The customer's own side of delivery, all on Ordering: what a delivery here
 /// would cost, and their saved addresses
 class DeliveryRepository {
@@ -44,6 +76,12 @@ class DeliveryRepository {
   Future<DeliveryQuote> quote(double latitude, double longitude) async {
     final response = await _orders.get<Map<String, dynamic>>('delivery/quote', queryParameters: {'latitude': latitude, 'longitude': longitude});
     return DeliveryQuote.fromJson(response.data ?? const {});
+  }
+
+  /// Which branches reach a point, asked of no branch in particular
+  Future<DeliveryResolution> resolve(double latitude, double longitude) async {
+    final response = await _orders.get<Map<String, dynamic>>('delivery/resolve', queryParameters: {'latitude': latitude, 'longitude': longitude});
+    return DeliveryResolution.fromJson(response.data ?? const {});
   }
 
   /// The signed-in customer's saved addresses, latest first
@@ -154,6 +192,13 @@ final deliveryQuoteProvider = FutureProvider.autoDispose.family<DeliveryQuote, (
   return ref.read(deliveryRepositoryProvider).quote(key.lat, key.lng);
 });
 
+/// Which branches reach a pin; kept a minute
+final deliveryResolutionProvider = FutureProvider.autoDispose.family<DeliveryResolution, ({double lat, double lng})>((ref, key) async {
+  final link = ref.keepAlive();
+  Future<void>.delayed(const Duration(minutes: 1), link.close);
+  return ref.read(deliveryRepositoryProvider).resolve(key.lat, key.lng);
+});
+
 /// What stands in the way of a delivery, in the order the customer meets it
 enum DeliveryProblem { address, checking, quoteFailed, range, minimum }
 
@@ -198,6 +243,18 @@ class DeliveryState {
   final double short;
   final bool quoted;
   final bool inRange;
+
+  /// The branch the address belongs to, when that is not the one the order
+  /// is at: the order moves there ([moveTo]), or, while the customer is at
+  /// this one, is offered the move
+  final ({int branchId, double meters})? servedBy;
+
+  /// Some branch reaches the address; false when none goes that far
+  final bool reached;
+
+  /// The branch the order is to move to now, for the address: [servedBy],
+  /// unless the customer is at this branch (a bill, a hold, a clock)
+  final int? moveTo;
   final DeliveryProblem? problem;
 
   const DeliveryState({
@@ -209,6 +266,9 @@ class DeliveryState {
     this.short = 0,
     this.quoted = false,
     this.inRange = false,
+    this.servedBy,
+    this.reached = true,
+    this.moveTo,
     this.problem,
   });
 
@@ -219,8 +279,14 @@ class DeliveryState {
 final deliveryStateProvider = Provider<DeliveryState>((ref) {
   final delivers = ref.watch(featuresProvider.select((f) => f.delivery));
   final branch = ref.watch(branchProvider.select((b) => b.selectedBranch));
+  final branches = ref.watch(branchProvider.select((b) => b.branches));
   final destination = ref.watch(orderDestinationProvider);
-  final offered = delivers && destination == null && branch != null && branch.isDeliveryEnabled && branch.isOrderingEnabled;
+  // The business delivers, and so does one of its branches: whichever the order is at now, the
+  // address picks the one that brings it
+  final offered = delivers &&
+      destination == null &&
+      branch != null &&
+      branches.any((b) => b.isActive && b.isDeliveryEnabled && b.isOrderingEnabled);
   if (!offered) return const DeliveryState();
 
   final choice = ref.watch(deliveryChoiceProvider);
@@ -233,8 +299,20 @@ final deliveryStateProvider = Provider<DeliveryState>((ref) {
   final quote = active && address != null
       ? ref.watch(deliveryQuoteProvider((lat: address.latitude, lng: address.longitude, branchId: branch.id)))
       : null;
+  // Which branches reach the address, asked of no branch in particular
+  final resolution = active && address != null
+      ? ref.watch(deliveryResolutionProvider((lat: address.latitude, lng: address.longitude)))
+      : null;
+  final reaching = resolution?.value;
+  final serving = reaching != null ? servingBranch(reaching.branches, branches) : null;
+  final servedBy = serving != null && serving.branchId != branch.id ? serving : null;
+  final reached = reaching == null || serving != null;
+  // The order follows the address to its branch, unless the customer is at this one
+  final moveTo = servedBy != null && !ref.watch(atBranchProvider) ? servedBy.branchId : null;
+
   final answer = quote?.value;
-  final quoted = answer != null && address != null;
+  // While the order is on its way to the address's branch, this one's answer is not the one that counts
+  final quoted = answer != null && address != null && !(resolution?.isLoading ?? false) && moveTo == null;
   final inRange = quoted && answer.delivers && answer.inRange;
   final minimum = quoted ? answer.minimumOrder : 0.0;
   final short = (minimum - ref.watch(cartTotalProvider)).clamp(0.0, double.infinity);
@@ -255,6 +333,9 @@ final deliveryStateProvider = Provider<DeliveryState>((ref) {
     short: short,
     quoted: quoted,
     inRange: inRange,
+    servedBy: servedBy,
+    reached: reached,
+    moveTo: moveTo,
     problem: problem,
   );
 });

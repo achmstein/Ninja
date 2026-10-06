@@ -71,8 +71,10 @@ async function permission(): Promise<PermissionState | null> {
 
 /**
  * Where the customer is, on demand. Nothing asks on launch: a page that
- * needs it (the branches, booking) passes `ask` once it is on screen with
- * something to measure, and the browser asks then, once a session. A no,
+ * needs it passes `ask` once it is on screen with something to measure,
+ * and the browser asks then, once a session; a `quiet` page (the branches,
+ * booking, the pickup branch) only reads a position the browser already
+ * gives, and leaves the asking to the customer's own button. A no,
  * or a phone that cannot tell, is taken quietly; `locate` is the customer's
  * own "Use my location", for later. A refusal the browser remembers is not
  * asked again, by the app or by the button, which says so instead.
@@ -84,7 +86,14 @@ async function permission(): Promise<PermissionState | null> {
  */
 export function useMyLocation(
   ask: boolean,
-  { precise = false }: { precise?: boolean } = {}
+  {
+    precise = false,
+    quiet = false,
+  }: {
+    precise?: boolean
+    /** Take the position only where the browser already gives it: never a prompt the customer did not ask for */
+    quiet?: boolean
+  } = {}
 ): {
   here: LatLng | null
   locating: boolean
@@ -108,6 +117,8 @@ export function useMyLocation(
       answered = true
       // Refused before, for good: take the answer without asking
       if (state === 'denied') useGeo.getState().set({ status: 'denied', asked: true })
+      // Quiet: given already, or not at all (it stays for "Use my location")
+      else if (quiet && state !== 'granted') askedHere.current = false
       else requestFix(precise)
     })
     return () => {
@@ -115,7 +126,7 @@ export function useMyLocation(
       // Torn down before it asked (strict mode's double mount): the next run asks
       if (!answered) askedHere.current = false
     }
-  }, [ask, asked, here, precise])
+  }, [ask, asked, here, precise, quiet])
 
   const locate = useCallback(() => {
     permission().then((state) => {

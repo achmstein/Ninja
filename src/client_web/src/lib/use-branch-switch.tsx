@@ -1,116 +1,147 @@
-import { useCallback, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
+import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { type BranchResponse } from '@/api/tenant'
-import { isOpen, useMyBills } from '@/lib/bills'
 import { lastUsedFirst, useBranches } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
 import { byDistance, pointOf, useMyLocation } from '@/lib/geo'
 import { useLocalized, useT } from '@/lib/i18n'
-import { useActiveStay, useMyHold } from '@/lib/stays'
+import { moveLines, type OrderMove } from '@/lib/order-move'
+import { toast } from '@/lib/toast'
+import { useHandler } from '@/lib/use-handler'
 import { useBranchStore } from '@/stores/branch-store'
-import { useActivePlace, usePlaceStore } from '@/stores/place-store'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { usePlaceStore } from '@/stores/place-store'
 
 /**
- * Moving the app to another branch: the branch is set, the scanned place
- * and the order go (the other branch's menu is not this one's), and
- * everything on screen, all of it branch-scoped, is fetched again. With
- * dishes in the order it asks first. `then` runs once the switch is made
- * (at once, or after the yes), never on a no.
+ * Moving the app to another branch, the order with it: the branch is set
+ * and everything on screen, all of it branch-scoped, is fetched again; the
+ * dishes stay, at the new branch's prices, and one it does not serve goes
+ * (lib/order-move.ts), `onMoved` told what changed. Nothing asks: the
+ * customer loses nothing they could still have.
  */
-export function useBranchSwitch() {
+export function moveToBranch(queryClient: QueryClient, branchId: number, onMoved?: (move: OrderMove) => void) {
+  useBranchStore.getState().setBranchId(branchId)
+  queryClient.invalidateQueries()
+  if (useCart.getState().lines.length === 0) return
+  queryClient
+    .fetchQuery({ ...listItemsOptions({ headers: { 'X-Branch-Id': String(branchId) } }), staleTime: 0 })
+    .then((menu) => {
+      // Moved again meanwhile: that move carries the order
+      if (useBranchStore.getState().branchId !== branchId) return
+      const move = moveLines(useCart.getState().lines, menu)
+      if (move.dropped.length === 0 && move.repriced.length === 0) return
+      useCart.getState().setLines(move.lines)
+      onMoved?.(move)
+    })
+    // The menu could not be had: the order goes as it is, and the branch's own check of it says what is off
+    .catch(() => {})
+}
+
+/** What the customer is told of an order that moved: only what changed in it */
+export function useSayOrderMoved() {
   const t = useT()
   const localized = useLocalized()
-  const queryClient = useQueryClient()
-  const { branchId, setBranchId } = useBranchStore()
-  const clearPlace = usePlaceStore((s) => s.clearPlace)
-  const lines = useCart((s) => s.lines)
-  const clearCart = useCart((s) => s.clear)
   const { data: branches = [] } = useBranches()
-  // A switch asked for with dishes in the order, waiting for the answer
-  const [pending, setPending] = useState<{ id: number; then?: () => void } | null>(null)
-
-  const switchTo = useCallback(
-    (id: number) => {
-      setBranchId(id)
-      clearPlace()
-      clearCart()
-      // Everything on screen is branch-scoped — refetch it all
-      queryClient.invalidateQueries()
+  return useCallback(
+    (branchId: number, move: OrderMove) => {
+      const name = localized(branches.find((b) => Number(b.id) === branchId)?.name)
+      if (move.dropped.length > 0) {
+        const dishes = move.dropped.map((l) => localized({ en: l.nameEn, ar: l.nameAr })).join(' · ')
+        toast.warning(t('orderMovedDropped', { name, dishes }))
+      } else if (move.repriced.length > 0) {
+        toast.info(t('orderMovedRepriced', { name }))
+      }
     },
-    [setBranchId, clearPlace, clearCart, queryClient]
+    [t, localized, branches]
   )
+}
+
+/**
+ * The branch the app opens at, without asking the customer anything: the
+ * one last used; on a first visit (or where that branch is gone) the first
+ * open one taking orders in the owner's order, then, where the browser
+ * already gives the position without a prompt, the nearest open one. What
+ * was fetched for the wrong one is fetched again. The menu is the same
+ * everywhere, so a guess costs nothing: a delivery address or a booking
+ * moves the app, the order with it, to the branch that counts.
+ * Mounted once, at the root.
+ */
+export function useBranchFallback() {
+  const queryClient = useQueryClient()
+  const { branchId, chosen, setBranchId } = useBranchStore()
+  const { data: branches } = useBranches()
+  // Decided once, at launch: a later visit keeps its branch, wherever the customer is
+  const [firstVisit] = useState(() => !useBranchStore.getState().chosen)
+  const { here } = useMyLocation(firstVisit && (branches?.length ?? 0) > 1, { quiet: true })
+
+  useEffect(() => {
+    if (!branches?.length) return
+    if (chosen && branches.some((b) => Number(b.id) === branchId)) return
+    const ordered = lastUsedFirst(branches, branchId)
+    const first = ordered.find((b) => b.isActive && b.isOrderingEnabled) ?? ordered.find((b) => b.isActive) ?? ordered[0]
+    setBranchId(Number(first.id))
+    queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches' })
+  }, [branches, branchId, chosen, setBranchId, queryClient])
+
+  const placed = useRef(false)
+  useEffect(() => {
+    if (!firstVisit || !here || !branches?.length || placed.current) return
+    placed.current = true
+    const open = branches.filter((b) => b.isActive && b.isOrderingEnabled)
+    const nearest = byDistance(open, here, pointOf)[0]
+    if (nearest?.meters != null && Number(nearest.item.id) !== useBranchStore.getState().branchId) {
+      moveToBranch(queryClient, Number(nearest.item.id))
+    }
+  }, [firstVisit, here, branches, queryClient])
+}
+
+/** The order going where the address is served from, once that is known (lib/delivery.ts's `moveTo`) */
+export function useOrderFollowsAddress(branchId: number | null) {
+  const queryClient = useQueryClient()
+  const say = useHandler(useSayOrderMoved())
+  useEffect(() => {
+    if (branchId == null) return
+    moveToBranch(queryClient, branchId, (move) => say(branchId, move))
+  }, [branchId, queryClient, say])
+}
+
+/**
+ * The customer moving to another branch (the branch sheet, booking there,
+ * a delivery from there): the scanned place goes, the order comes along.
+ * `then` runs once the switch is made.
+ */
+export function useBranchSwitch() {
+  const queryClient = useQueryClient()
+  const branchId = useBranchStore((s) => s.branchId)
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
+  const say = useSayOrderMoved()
 
   const request = (id: number, then?: () => void) => {
-    if (id === branchId) {
-      then?.()
-      return
+    if (id !== branchId) {
+      clearPlace()
+      moveToBranch(queryClient, id, (move) => say(id, move))
     }
-    if (lines.length > 0) {
-      setPending({ id, then })
-      return
-    }
-    switchTo(id)
     then?.()
   }
 
-  const pendingBranch = branches.find((b) => Number(b.id) === pending?.id)
-  const dialog = (
-    <AlertDialog open={pending != null} onOpenChange={(open) => !open && setPending(null)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t('ninjaSwitchBranchWithOrder', { name: localized(pendingBranch?.name) })}</AlertDialogTitle>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t('ninjaKeepOrder')}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              if (pending) {
-                switchTo(pending.id)
-                pending.then?.()
-              }
-              setPending(null)
-            }}
-          >
-            {t('ninjaSwitchBranch')}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-
-  return { request, dialog }
+  return { request }
 }
 
 /**
  * The branches with how far each is, closest first once the customer's
  * position is known, else the one used last and then the owner's order.
- * `ask`: the list is on screen and worth measuring, so the browser may ask
- * for the position (once a session).
+ * `ask`: the list is on screen and worth measuring, so a position the
+ * browser already gives is read; nothing prompts for one, the customer's
+ * "Use my location" does.
  */
 export function useBranchesByDistance(ask: boolean, list?: BranchResponse[]) {
   const branchId = useBranchStore((s) => s.branchId)
   const { data: all = [] } = useBranches()
   const branches = list ?? all
   const anyPoint = branches.filter((b) => pointOf(b)).length > 0
-  const location = useMyLocation(ask && branches.length > 1 && anyPoint)
+  const location = useMyLocation(ask && branches.length > 1 && anyPoint, { quiet: true })
   const sorted = byDistance(lastUsedFirst(branches, branchId), location.here, pointOf)
   return { sorted, location, anyPoint }
 }
 
-/** Whether the customer is at the branch: an open bill, a held place, a running clock or a scanned table */
-export function useAtBranch(): boolean {
-  const { data: bills = [] } = useMyBills()
-  const hold = useMyHold()
-  const stay = useActiveStay()
-  const place = useActivePlace()
-  return bills.some(isOpen) || hold != null || stay != null || place != null
-}
+export { useAtBranch } from '@/lib/at-branch'

@@ -158,7 +158,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   useRoomsGroup()
   const { groups, isLoading } = useBookablePlacesByBranch()
   // Every branch that takes bookings, each under its own name: the closest first once the customer's
-  // position is known (asked for here, once a session, only where there are branches to measure)
+  // position is known (never asked for on opening: read where the browser gives it, else the customer's tap)
   const multi = groups.length > 1
   const { sorted, location, anyPoint } = useBranchesByDistance(multi, groups.map((g) => g.branch))
   const ordered = sorted.flatMap(({ item, meters }) => {
@@ -173,7 +173,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   const shown = multi ? (viewed ? [viewed] : []) : ordered
   // The selected branch's own places: the notify switch is the branch's, as is the room the customer is in
   const here = groups.find((g) => Number(g.branch.id) === branchId)?.places ?? []
-  const { request: requestBranch, dialog: switchDialog } = useBranchSwitch()
+  const { request: requestBranch } = useBranchSwitch()
 
   // Some branch takes bookings: the selected one, or another listed beside it
   const takesBookings = (group: BranchPlaces) => features.reservations && (group.branch.isReservationsEnabled ?? true)
@@ -200,7 +200,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
     // One place at a time (app parity; the backend enforces it too)
     if (hold || stay) return
     if (!(await ensureProfileComplete())) return
-    // Another branch's place: the app moves to that branch first (asking when the order has dishes), then
+    // Another branch's place: the app moves to that branch first (the order comes along), then
     // the booking opens as it would at home, against the branch it now names
     requestBranch(placeBranchId, () => setOpenId(Number(place.id)))
   }
@@ -359,7 +359,6 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
       </div>
 
       <Reservation hold={opened} />
-      {switchDialog}
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} title={t('bookSignInTitle')} description={t('bookSignInBody')} />
     </NinjaPage>

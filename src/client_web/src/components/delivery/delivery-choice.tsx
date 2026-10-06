@@ -3,12 +3,14 @@ import { motion } from 'motion/react'
 import { Bike, ChevronRight, Loader2, LogIn, MapPin, ShoppingBag, Store } from 'lucide-react'
 import { GuestSignInChoices } from '@/components/auth/sign-in-options'
 import { shownLabel } from '@/lib/address-line'
+import { useAtBranch } from '@/lib/at-branch'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { addressLine, type DeliveryState } from '@/lib/delivery'
-import { distanceMeters, pointOf, useDistance } from '@/lib/geo'
+import { useDistance } from '@/lib/geo'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
-import { useBranchSwitch } from '@/lib/use-branch-switch'
+import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import { cn } from '@/lib/utils'
+import { BranchSheet } from '@/components/branch-switcher'
 import { AddressSheet } from './address-sheet'
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
@@ -91,6 +93,8 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
         </div>
       )}
 
+      {!delivery.active && <PickupFrom />}
+
       {delivery.active && delivery.problem !== 'signIn' && (
         <>
           <button
@@ -130,6 +134,7 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               </span>
             )}
             {delivery.problem === 'range' && <OutOfRange delivery={delivery} />}
+            {delivery.quoted && delivery.inRange && <DeliveredFrom />}
             {delivery.quoted && delivery.inRange && (
               <span className='flex items-center justify-between opacity-80'>
                 <span>{t('deliveryFee')}</span>
@@ -149,37 +154,83 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
   )
 }
 
-/** This branch does not go that far: the nearest branch that does, if any, a tap away */
+/** Which branch brings it: the address chose it, the customer is only told */
+function DeliveredFrom() {
+  const t = useT()
+  const localized = useLocalized()
+  const branch = useSelectedBranch()
+  const { data: branches = [] } = useBranches()
+  if (!branch || branches.length < 2) return null
+  return <span className='opacity-70'>{t('deliveryFromBranch', { name: localized(branch.name) })}</span>
+}
+
+/**
+ * The address is not this branch's. No branch goes that far: said so.
+ * Another does, but the customer is at this one (a bill, a hold, a clock),
+ * so the order did not move by itself: that branch, a tap away.
+ */
 function OutOfRange({ delivery }: { delivery: DeliveryState }) {
   const t = useT()
   const localized = useLocalized()
   const distance = useDistance()
   const branch = useSelectedBranch()
   const { data: branches = [] } = useBranches()
-  const { request, dialog } = useBranchSwitch()
-  const address = delivery.address
+  const { request } = useBranchSwitch()
+  const other = delivery.servedBy
+  const otherBranch = other ? branches.find((b) => Number(b.id) === other.branchId) : undefined
 
-  const here = address ? { lat: address.latitude, lng: address.longitude } : null
-  const nearest = here
-    ? branches
-        .filter((b) => b.isDeliveryEnabled && b.id !== branch?.id)
-        .map((b) => {
-          const point = pointOf(b)
-          return { branch: b, meters: point ? distanceMeters(here, point) : null }
-        })
-        .filter((c): c is { branch: (typeof branches)[number]; meters: number } => c.meters != null && c.meters <= Number(c.branch.deliveryRadiusKm ?? 0) * 1000)
-        .sort((a, b) => a.meters - b.meters)[0]
-    : undefined
-
+  if (!delivery.reached) return <span className='font-semibold text-amber-300'>{t('deliveryNoBranchReaches')}</span>
   return (
     <>
       <span className='font-semibold text-amber-300'>{t('deliveryOutOfRange', { name: localized(branch?.name) })}</span>
-      {nearest && (
-        <button type='button' onClick={() => request(Number(nearest.branch.id))} className='self-start font-semibold underline underline-offset-4'>
-          {t('deliveryTryBranch', { name: localized(nearest.branch.name), distance: distance(nearest.meters) })}
+      {other && otherBranch && (
+        <button type='button' onClick={() => request(other.branchId)} className='self-start font-semibold underline underline-offset-4'>
+          {t('deliveryTryBranch', { name: localized(otherBranch.name), distance: distance(other.meters) })}
         </button>
       )}
-      {dialog}
+    </>
+  )
+}
+
+/**
+ * Collected: from which branch, said before the order goes, with how far it
+ * is when the customer's position is known (never asked for here) and the
+ * branch a tap away to change, unless the customer is at this one.
+ */
+function PickupFrom() {
+  const t = useT()
+  const localized = useLocalized()
+  const distance = useDistance()
+  const branch = useSelectedBranch()
+  const { data: branches = [] } = useBranches()
+  const atBranch = useAtBranch()
+  const { sorted } = useBranchesByDistance(false)
+  const [open, setOpen] = useState(false)
+  if (!branch) return null
+  const meters = sorted.find((s) => s.item.id === branch.id)?.meters ?? null
+  const canChange = branches.length > 1 && !atBranch
+  const body = (
+    <>
+      <Store className='size-5 shrink-0' />
+      <span className='min-w-0 flex-1'>
+        <span className='block truncate text-note font-semibold'>{t('pickupFrom', { name: localized(branch.name) })}</span>
+        {(meters != null || localized(branch.address)) && (
+          <span className='block truncate text-caption opacity-70'>
+            {[meters != null ? distance(meters) : null, localized(branch.address)].filter(Boolean).join(' · ')}
+          </span>
+        )}
+      </span>
+      {canChange && <ChevronRight className='size-4 shrink-0 opacity-60 rtl:rotate-180' />}
+    </>
+  )
+  const box = 'bg-background/10 flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2.5 text-start'
+  if (!canChange) return <div className={box}>{body}</div>
+  return (
+    <>
+      <button type='button' onClick={() => setOpen(true)} className={box}>
+        {body}
+      </button>
+      <BranchSheet open={open} onOpenChange={setOpen} />
     </>
   )
 }

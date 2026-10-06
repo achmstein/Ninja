@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/bills/services/bills_service.dart';
-import '../../features/cart/services/cart_service.dart';
+import '../../features/cart/services/order_move.dart';
 import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -48,41 +50,33 @@ final atBranchProvider = Provider<bool>((ref) {
   return openBill || hold || stay || scanned;
 });
 
-/// Moves the app to another branch: the branch is set, the scanned place and
-/// the order go (the other branch's menu is not this one's), and everything
-/// branch-scoped is fetched again. With dishes in the order it asks first.
-/// [then] runs once the switch is made (at once, or after the yes), never on
-/// a no.
+/// Moves the app to another branch (the branch sheet, booking there, a
+/// delivery from there): the branch is set, the scanned place goes and the
+/// order comes along, at that branch's prices (BranchNotifier.selectBranch).
+/// Nothing asks: the customer loses nothing they could still have. [then]
+/// runs once the switch is made.
 Future<void> requestBranchSwitch(BuildContext context, WidgetRef ref, int branchId, {VoidCallback? then}) async {
-  final branches = ref.read(branchProvider);
-  if (branchId == branches.selectedBranchId) {
-    then?.call();
-    return;
+  if (branchId != ref.read(branchProvider).selectedBranchId) {
+    await ref.read(currentPlaceProvider.notifier).clear();
+    // Every branch-scoped provider watches the selected branch; the order is repriced in the background
+    unawaited(ref.read(branchProvider.notifier).selectBranch(branchId));
   }
-  if (ref.read(cartItemCountProvider) > 0) {
-    final l10n = AppLocalizations.of(context)!;
-    final name = branches.branches.where((b) => b.id == branchId).firstOrNull?.name.localized(context) ?? '';
-    final yes = await showNinjaSheet<bool>(
-      context: context,
-      builder: (sheetContext) => NinjaDialog(
-        title: AppText(l10n.ninjaSwitchBranchWithOrder(name)),
-        actions: [
-          NinjaButton(
-            variant: NinjaButtonVariant.secondary,
-            onPress: () => Navigator.pop(sheetContext, false),
-            child: AppText(l10n.ninjaKeepOrder),
-          ),
-          NinjaButton(
-            onPress: () => Navigator.pop(sheetContext, true),
-            child: AppText(l10n.ninjaSwitchBranch),
-          ),
-        ],
-      ),
-    );
-    if (yes != true) return;
-  }
-  await ref.read(currentPlaceProvider.notifier).clear();
-  // Clears the order too; every branch-scoped provider watches the selected branch
-  await ref.read(branchProvider.notifier).selectBranch(branchId);
   then?.call();
+}
+
+/// What the customer is told of an order that moved: only what changed in it
+void sayOrderMoved(BuildContext context, List<Branch> branches, OrderMoveNotice notice) {
+  final l10n = AppLocalizations.of(context)!;
+  final name = branches.where((b) => b.id == notice.branchId).firstOrNull?.name.localized(context) ?? '';
+  final move = notice.move;
+  if (move.dropped.isNotEmpty) {
+    final dishes = move.dropped.map((l) => l.productName.localized(context)).join(' · ');
+    showIsland(
+      title: AppText(l10n.orderMovedDropped(name, dishes)),
+      icon: const Icon(LucideIcons.circleAlert),
+      duration: const Duration(seconds: 5),
+    );
+  } else if (move.repriced.isNotEmpty) {
+    showIsland(title: AppText(l10n.orderMovedRepriced(name)), icon: const Icon(LucideIcons.tag));
+  }
 }

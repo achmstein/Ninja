@@ -2745,24 +2745,6 @@ abstract class AppLocalizations {
   /// **'Location is off for this app. Turn it on in your phone\'s settings.'**
   String get locationOff;
 
-  /// No description provided for @ninjaSwitchBranchWithOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to {name}? Your order will be emptied.'**
-  String ninjaSwitchBranchWithOrder(String name);
-
-  /// No description provided for @ninjaKeepOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep my order'**
-  String get ninjaKeepOrder;
-
-  /// No description provided for @ninjaSwitchBranch.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch'**
-  String get ninjaSwitchBranch;
-
   /// No description provided for @ninjaChangeBranch.
   ///
   /// In en, this message translates to:
@@ -2870,6 +2852,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order from {name}, {distance} away'**
   String deliveryTryBranch(String name, String distance);
+
+  /// No description provided for @deliveryFromBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered from {name}'**
+  String deliveryFromBranch(String name);
+
+  /// No description provided for @deliveryNoBranchReaches.
+  ///
+  /// In en, this message translates to:
+  /// **'We don\'t deliver to this address yet'**
+  String get deliveryNoBranchReaches;
+
+  /// No description provided for @pickupFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up from {name}'**
+  String pickupFrom(String name);
+
+  /// No description provided for @orderMovedDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Not served at {name}, taken out of your order: {dishes}'**
+  String orderMovedDropped(String name, String dishes);
+
+  /// No description provided for @orderMovedRepriced.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order now has {name}\'s prices'**
+  String orderMovedRepriced(String name);
 
   /// No description provided for @deliveryFee.
   ///

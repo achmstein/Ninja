@@ -1506,17 +1506,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location is off for this app. Turn it on in your phone\'s settings.';
 
   @override
-  String ninjaSwitchBranchWithOrder(String name) {
-    return 'Switch to $name? Your order will be emptied.';
-  }
-
-  @override
-  String get ninjaKeepOrder => 'Keep my order';
-
-  @override
-  String get ninjaSwitchBranch => 'Switch';
-
-  @override
   String get ninjaChangeBranch => 'Change branch';
 
   @override
@@ -1577,6 +1566,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deliveryTryBranch(String name, String distance) {
     return 'Order from $name, $distance away';
+  }
+
+  @override
+  String deliveryFromBranch(String name) {
+    return 'Delivered from $name';
+  }
+
+  @override
+  String get deliveryNoBranchReaches => 'We don\'t deliver to this address yet';
+
+  @override
+  String pickupFrom(String name) {
+    return 'Pick up from $name';
+  }
+
+  @override
+  String orderMovedDropped(String name, String dishes) {
+    return 'Not served at $name, taken out of your order: $dishes';
+  }
+
+  @override
+  String orderMovedRepriced(String name) {
+    return 'Your order now has $name\'s prices';
   }
 
   @override

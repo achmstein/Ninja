@@ -1673,6 +1673,75 @@
         ]
       }
     },
+    "/api/orders/delivery/resolve": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Which branches deliver to a point, nearest first",
+        "description": "Every branch that delivers right now and whose radius takes the point in, nearest first, with how far it is, the fee and the minimum order. No X-Branch-Id: the app moves the order to the first it lists. Rate limited.",
+        "operationId": "ResolveDeliveryBranch",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryResolution"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/deliveries": {
       "get": {
         "tags": [
@@ -4348,6 +4417,53 @@
           }
         }
       },
+      "DeliveringBranch": {
+        "required": [
+          "branchId",
+          "distanceMeters",
+          "fee",
+          "minimumOrder",
+          "signInRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minimumOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "signInRequired": {
+            "type": "boolean"
+          }
+        }
+      },
       "DeliveryFailedRequest": {
         "type": "object",
         "properties": {
@@ -4547,6 +4663,24 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "DeliveryResolution": {
+        "required": [
+          "delivers",
+          "branches"
+        ],
+        "type": "object",
+        "properties": {
+          "delivers": {
+            "type": "boolean"
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveringBranch"
+            }
           }
         }
       },

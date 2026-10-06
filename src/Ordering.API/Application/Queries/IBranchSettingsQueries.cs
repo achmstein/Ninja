@@ -28,6 +28,13 @@ public interface IBranchSettingsQueries
     Task<DeliveryTerms?> GetDeliveryTermsAsync(int branchId, bool evenWhilePaused = false);
 
     /// <summary>
+    /// Every branch that delivers to customers right now, with its terms, for
+    /// finding the one that serves an address. Empty while the business does
+    /// not deliver.
+    /// </summary>
+    Task<IReadOnlyList<BranchDeliveryTerms>> GetDeliveringBranchesAsync();
+
+    /// <summary>
     /// Whether the business delivers at all: delivery bought, and not switched
     /// off by the owner. Fail-open: a stack that has never said delivers as
     /// each branch is set.
@@ -41,3 +48,5 @@ public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm,
 {
     public int RadiusMeters => (int)(RadiusKm * 1000);
 }
+
+public record BranchDeliveryTerms(int BranchId, DeliveryTerms Terms);

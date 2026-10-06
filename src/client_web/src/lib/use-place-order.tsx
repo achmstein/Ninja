@@ -14,6 +14,7 @@ import { useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
 import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature, type OrderExtras } from '@/lib/order-payload'
 import { toast } from '@/lib/toast'
+import { useOrderFollowsAddress } from '@/lib/use-branch-switch'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { useGuestGate } from '@/components/auth/guest-gate'
@@ -51,6 +52,8 @@ export function usePlaceOrder({
   const { lines, clear } = useCart()
   // Brought by the branch's rider, when it delivers and the order is not for a table or a room
   const delivery = useDelivery(destination, cartTotal(lines))
+  // The address decides the branch: the order moves to the one that serves it
+  useOrderFollowsAddress(delivery.moveTo)
 
   const block = checkoutBlock({
     isGuest,

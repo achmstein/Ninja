@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useDeliveryStore } from '@/stores/delivery-store'
-import { deliveryProblem } from './delivery'
+import { deliveryProblem, servingBranch } from './delivery'
 
 describe('deliveryProblem', () => {
   const ok = { active: true, hasAddress: true, quoted: true, quoteFailed: false, inRange: true, short: 0 }
@@ -47,5 +47,20 @@ describe('the delivery choice on a shared device', () => {
     useDeliveryStore.getState().claim('guest')
     expect(useDeliveryStore.getState().address).toBeNull()
     expect(useDeliveryStore.getState().wanted).toBe(true)
+  })
+})
+
+describe('servingBranch', () => {
+  const reach = (branchId: number, distanceMeters: number) => ({ branchId, distanceMeters, fee: 0, minimumOrder: 0, signInRequired: false })
+  const branch = (id: number, extra: object = {}) => ({ id, isActive: true, isOrderingEnabled: true, ...extra }) as never
+
+  it('is the nearest branch that reaches the address and takes orders', () => {
+    expect(servingBranch([reach(2, 900), reach(1, 2500)], [branch(1), branch(2)])).toEqual({ branchId: 2, meters: 900 })
+    expect(servingBranch([reach(2, 900), reach(1, 2500)], [branch(1), branch(2, { isOrderingEnabled: false })])).toEqual({ branchId: 1, meters: 2500 })
+  })
+
+  it('skips a branch the customer cannot see, and is none when nothing reaches', () => {
+    expect(servingBranch([reach(9, 100)], [branch(1)])).toBeNull()
+    expect(servingBranch([], [branch(1)])).toBeNull()
   })
 })

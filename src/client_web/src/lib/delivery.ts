@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { CustomerAddressView, DeliveryView } from '@/api/ordering'
-import { getDeliveryQuoteOptions, getMyAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import type { CustomerAddressView, DeliveringBranch, DeliveryView } from '@/api/ordering'
+import { getDeliveryQuoteOptions, getMyAddressesOptions, resolveDeliveryBranchOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import type { BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
+import { useAtBranch } from '@/lib/at-branch'
 import { useFeatures } from '@/lib/brand'
-import { useSelectedBranch } from '@/lib/branch'
+import { useBranches, useSelectedBranch } from '@/lib/branch'
 import type { OrderDestination } from '@/lib/order-destination'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 
@@ -34,6 +36,16 @@ export type DeliveryState = {
   /** The branch answered for this address */
   quoted: boolean
   inRange: boolean
+  /**
+   * The branch the address belongs to, when that is not the one the order
+   * is at: the order moves there (lib/use-delivery-branch.ts), or, while the
+   * customer is at this branch, is offered the move.
+   */
+  servedBy: { branchId: number; meters: number } | null
+  /** Some branch reaches the address; false when none goes that far */
+  reached: boolean
+  /** The branch the order is to move to now, for the address: servedBy, unless the customer is at this branch */
+  moveTo: number | null
   /** Active, addressed, in range and enough: nothing stands in the way */
   ready: boolean
   problem: DeliveryProblem
@@ -68,6 +80,22 @@ export function deliveryProblem(s: {
   return s.short > 0 ? 'minimum' : null
 }
 
+/**
+ * The branch that delivers to an address: the nearest of those the server
+ * says reach it that the customer can order from (open, taking orders).
+ * The one the order is at already, when it reaches it, is kept only when
+ * it is that nearest one: the address, not the last branch, decides.
+ */
+export function servingBranch(reaching: DeliveringBranch[], branches: BranchResponse[]): { branchId: number; meters: number } | null {
+  for (const candidate of reaching) {
+    const branch = branches.find((b) => Number(b.id) === Number(candidate.branchId))
+    if (branch?.isActive !== false && branch?.isOrderingEnabled !== false && branch != null) {
+      return { branchId: Number(candidate.branchId), meters: Number(candidate.distanceMeters) }
+    }
+  }
+  return null
+}
+
 /** Whose the delivery choice on this device is: the signed-in account, or the guest */
 export function useDeliveryOwner(): string {
   const auth = useAuth()
@@ -77,6 +105,7 @@ export function useDeliveryOwner(): string {
 export function useDelivery(destination: OrderDestination, subtotal: number): DeliveryState {
   const auth = useAuth()
   const branch = useSelectedBranch()
+  const { data: branches = [] } = useBranches()
   const delivers = useFeatures().delivery === true
   const owner = useDeliveryOwner()
   const store = useDeliveryStore()
@@ -96,8 +125,10 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
       ? store.address
       : null
 
-  // The business delivers (an add-on it bought, and on), and so does this branch
-  const offered = delivers && !destination && branch?.isDeliveryEnabled === true && branch.isOrderingEnabled !== false
+  // The business delivers (an add-on it bought, and on), and so does one of its branches: whichever
+  // the order is at now, the address picks the one that brings it
+  const offered =
+    delivers && !destination && branches.some((b) => b.isActive !== false && b.isDeliveryEnabled === true && b.isOrderingEnabled !== false)
   const active = offered && store.wanted
   // Delivery for signed-in customers only here: a guest is asked to sign in, and nothing is quoted
   const needsSignIn = active && !auth.isAuthenticated && branch?.requireSignInForDelivery === true
@@ -110,8 +141,25 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
     enabled: active && address != null,
     staleTime: 60_000,
   })
+  // Which branches reach the address, asked of no branch in particular
+  const resolveQuery = useQuery({
+    ...resolveDeliveryBranchOptions({
+      query: { 'api-version': API_VERSION, latitude: address?.latitude ?? 0, longitude: address?.longitude ?? 0 },
+    }),
+    enabled: active && address != null,
+    staleTime: 60_000,
+  })
+  const resolution = address != null ? resolveQuery.data : undefined
+  const serving = resolution ? servingBranch(resolution.branches ?? [], branches) : null
+  const servedBy = serving && serving.branchId !== Number(branch?.id) ? serving : null
+  const reached = resolution == null || serving != null
+  // The order follows the address to its branch, unless the customer is at this one (a bill, a hold, a clock)
+  const atBranch = useAtBranch()
+  const moveTo = active && servedBy != null && !atBranch ? servedBy.branchId : null
+
   const quote = quoteQuery.data
-  const quoted = quote != null && address != null
+  // While the order is on its way to the address's branch, this one's answer is not the one that counts
+  const quoted = quote != null && address != null && !(resolveQuery.isPending && resolveQuery.isFetching) && moveTo == null
   const inRange = quoted && quote.delivers && quote.inRange
   const fee = quoted ? Number(quote.fee) : 0
   const minimum = quoted ? Number(quote.minimumOrder) : 0
@@ -135,6 +183,9 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
     short,
     quoted,
     inRange,
+    servedBy,
+    reached,
+    moveTo,
     ready: active && problem == null,
     problem,
     retryQuote: () => void quoteQuery.refetch(),

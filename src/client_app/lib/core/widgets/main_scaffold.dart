@@ -8,6 +8,7 @@ import '../brand/brand_provider.dart';
 import '../models/localized_text.dart';
 import '../motion/motion.dart';
 import '../providers/branch_provider.dart';
+import '../providers/branch_switch.dart';
 import '../providers/current_place_provider.dart';
 import '../shell/dish_layer.dart';
 import '../shell/dock_bill.dart';
@@ -17,6 +18,8 @@ import '../shell/tuck.dart';
 import '../theme/theme_provider.dart';
 import '../ui/ui.dart';
 import '../../features/cart/services/cart_service.dart';
+import '../../features/cart/services/order_move.dart';
+import '../../features/delivery/services/delivery_service.dart';
 import '../../features/cart/widgets/tray.dart';
 import '../../features/cart/widgets/tray_flights.dart';
 import '../../features/cart/widgets/tray_model.dart';
@@ -84,6 +87,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
       if (inRoom && ref.read(currentPlaceProvider) != null) {
         ref.read(currentPlaceProvider.notifier).clear();
       }
+    });
+
+    // The address decides the branch: a delivery's order moves to the one that serves it
+    ref.listenManual(deliveryStateProvider.select((d) => d.moveTo), (_, next) {
+      if (next != null) ref.read(branchProvider.notifier).selectBranch(next);
+    }, fireImmediately: true);
+
+    // The order moved to another branch and something in it changed: said on the island
+    ref.listenManual(orderMoveProvider, (_, next) {
+      if (next != null && mounted) sayOrderMoved(context, ref.read(branchProvider).branches, next);
     });
 
     trayFlights.addListener(_onFlights);

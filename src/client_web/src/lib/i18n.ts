@@ -422,10 +422,6 @@ const webExtras = {
   ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
   ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
   ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },
-  // The branch: fixed while the customer is there; switching empties the order
-  ninjaSwitchBranchWithOrder: { en: 'Switch to {name}? Your order will be emptied.', ar: 'تغيّر لفرع {name}؟ الطلب اللي معاك هيتشال.' },
-  ninjaSwitchBranch: { en: 'Switch', ar: 'غيّر' },
-  ninjaKeepOrder: { en: 'Keep my order', ar: 'خلّي طلبي' },
   // Branches by where the customer is: the closest first, how far, and the way there
   ninjaBranch: { en: 'Branch', ar: 'الفرع' },
   ninjaChangeBranch: { en: 'Change branch', ar: 'غيّر الفرع' },

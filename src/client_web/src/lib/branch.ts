@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { type BranchResponse } from '@/api/tenant'
 import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
@@ -45,23 +44,4 @@ export function lastUsedFirst(branches: BranchResponse[], branchId: number): Bra
     if (aOn !== bOn) return aOn ? -1 : 1
     return Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
   })
-}
-
-/**
- * The app opens at the branch last used; where that is not one of the
- * business's (a first visit, a branch since removed) it opens at the first
- * open one in the owner's order, and what was fetched for the wrong one is
- * fetched again. Mounted once, at the root.
- */
-export function useBranchFallback() {
-  const queryClient = useQueryClient()
-  const { branchId, setBranchId } = useBranchStore()
-  const { data: branches } = useBranches()
-  useEffect(() => {
-    if (!branches?.length || branches.some((b) => Number(b.id) === branchId)) return
-    const ordered = lastUsedFirst(branches, branchId)
-    const first = ordered.find((b) => b.isActive) ?? ordered[0]
-    setBranchId(Number(first.id))
-    queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches' })
-  }, [branches, branchId, setBranchId, queryClient])
 }

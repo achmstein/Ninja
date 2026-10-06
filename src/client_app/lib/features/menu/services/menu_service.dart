@@ -8,7 +8,8 @@ import '../models/user_preference.dart';
 
 /// Abstract interface for menu data access
 abstract class MenuRepository {
-  Future<List<MenuItem>> getMenuItems({int? categoryId});
+  /// [branchId]: another branch's menu than the one the app is at (an order moving there)
+  Future<List<MenuItem>> getMenuItems({int? categoryId, int? branchId});
   Future<MenuItem> getMenuItem(int id);
   Future<List<MenuCategory>> getCategories();
   Future<UserItemPreference?> getUserPreference(int catalogItemId);
@@ -28,7 +29,7 @@ class ApiMenuRepository implements MenuRepository {
 
   /// Get all menu items
   @override
-  Future<List<MenuItem>> getMenuItems({int? categoryId}) async {
+  Future<List<MenuItem>> getMenuItems({int? categoryId, int? branchId}) async {
     final queryParams = <String, dynamic>{};
     if (categoryId != null) {
       queryParams['categoryId'] = categoryId;
@@ -37,6 +38,7 @@ class ApiMenuRepository implements MenuRepository {
     final response = await _apiClient.get<List<dynamic>>(
       'items',
       queryParameters: queryParams,
+      headers: branchId == null ? null : {'X-Branch-Id': '$branchId'},
     );
 
     return (response.data ?? [])

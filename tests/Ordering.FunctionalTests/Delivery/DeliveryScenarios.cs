@@ -140,6 +140,38 @@ public sealed class DeliveryScenarios
         Assert.IsFalse(far.InRange);
     }
 
+    /// <summary>A branch of its own in the south, out of Tahrir's reach</summary>
+    private const int South = 11;
+
+    [TestMethod]
+    public async Task The_address_finds_the_branch_that_delivers_there_nearest_first()
+    {
+        await DeliverFromTahrirAsync();
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var handler = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await handler.Handle(new BranchSettingsChangedIntegrationEvent(
+                South, IsOrderingEnabled: true, IsReservationsEnabled: true, IsDeliveryEnabled: true,
+                Latitude: FarLat, Longitude: FarLng, DeliveryRadiusKm: 5, DeliveryFee: 30, DeliveryMinimumOrder: 50));
+        }
+        // No X-Branch-Id: the app does not know the branch yet
+        var anyone = Suite.Ordering.AsAnonymous();
+
+        var near = await anyone.GetAsync<DeliveryResolution>($"{Orders}/delivery/resolve?latitude={NearLat}&longitude={NearLng}&{Version}");
+        Assert.IsTrue(near.Delivers);
+        CollectionAssert.Contains(near.Branches.Select(b => b.BranchId).ToList(), Delivering);
+        CollectionAssert.DoesNotContain(near.Branches.Select(b => b.BranchId).ToList(), South);
+        CollectionAssert.AreEqual(near.Branches.OrderBy(b => b.DistanceMeters).ToList(), near.Branches.ToList(), "nearest first");
+
+        var south = await anyone.GetAsync<DeliveryResolution>($"{Orders}/delivery/resolve?latitude={FarLat + 0.01}&longitude={FarLng}&{Version}");
+        Assert.AreEqual(South, south.Branches[0].BranchId);
+        Assert.AreEqual(30m, south.Branches[0].Fee);
+
+        var nowhere = await anyone.GetAsync<DeliveryResolution>($"{Orders}/delivery/resolve?latitude=31.2&longitude=29.9&{Version}");
+        Assert.IsTrue(nowhere.Delivers, "the business delivers, just not that far");
+        Assert.IsEmpty(nowhere.Branches);
+    }
+
     [TestMethod]
     public async Task A_delivery_too_far_or_too_small_is_refused_before_it_stands()
     {

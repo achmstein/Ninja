@@ -85,14 +85,14 @@ export function UseMyLocation({ location, className }: { location: ReturnType<ty
  * The branches as a sheet from the bottom, the one looked at lit: closest
  * first when the customer let the app know where they are, each with how
  * far, whether it is open and the way there. A tap moves the app to it,
- * asking first when there are dishes in the order. Any page opens it
- * (the You page, booking); the position is asked for only once it is open.
+ * the order with it. Any page opens it (the You page, booking, the pickup
+ * branch); the position is read where the browser gives it, never asked.
  */
 export function BranchSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const localized = useLocalized()
   const branchId = useBranchStore((s) => s.branchId)
-  const { request, dialog } = useBranchSwitch()
+  const { request } = useBranchSwitch()
   const { sorted, location, anyPoint } = useBranchesByDistance(open)
 
   return (
@@ -147,7 +147,6 @@ export function BranchSheet({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
         </SheetContent>
       </Sheet>
-      {dialog}
     </>
   )
 }

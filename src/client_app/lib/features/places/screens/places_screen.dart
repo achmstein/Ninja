@@ -148,8 +148,8 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     final multi = groups.length > 1;
     final here = ref.watch(locationProvider).here;
     final anyPoint = groups.any((g) => g.branch.point != null);
-    // There are branches to measure: the phone may ask for the position, once a run
-    if (multi && anyPoint) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(locationProvider.notifier).askOnce());
+    // There are branches to measure: a position the phone already gives; nothing asks on opening the tab
+    if (multi && anyPoint) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(locationProvider.notifier).readQuietly());
     final ordered = [
       for (final (:item, :meters) in branchesByDistance([for (final g in groups) g.branch], branchId, here))
         (branch: item, places: groups.firstWhere((g) => g.branch.id == item.id).places, meters: meters),
@@ -271,7 +271,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
   }
 
   /// Opens a place's booking, or closes it. Another branch's place moves the app to that branch first
-  /// (asking when the order has dishes), then the booking opens as it would at home
+  /// (the order comes along), then the booking opens as it would at home
   void _toggle(int placeId, int placeBranchId) {
     if (_openId == placeId) {
       setState(() => _openId = null);

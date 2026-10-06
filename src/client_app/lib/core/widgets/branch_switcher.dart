@@ -126,9 +126,9 @@ class UseMyLocationButton extends ConsumerWidget {
 
 /// The branches as a sheet from the bottom, the one looked at lit: closest
 /// first when the customer let the app know where they are, each with how
-/// far, whether it is open and the way there. A tap moves the app to it,
-/// asking first when there are dishes in the order. The position is asked
-/// for only once the sheet is open (client_web's BranchSheet).
+/// far, whether it is open and the way there. A tap moves the app to it, the
+/// order with it. The position is read where the phone already gives it,
+/// never asked for (client_web's BranchSheet).
 Future<void> showBranchSheet(BuildContext context) => showNinjaSheet<void>(
       context: context,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
@@ -146,10 +146,10 @@ class _BranchSheetState extends ConsumerState<_BranchSheet> {
   @override
   void initState() {
     super.initState();
-    // Something to measure: the phone may ask, once a run
+    // Something to measure: a position the phone already gives, never a prompt
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final branches = ref.read(branchProvider).branches;
-      if (branches.length > 1 && branches.any((b) => b.point != null)) ref.read(locationProvider.notifier).askOnce();
+      if (branches.length > 1 && branches.any((b) => b.point != null)) ref.read(locationProvider.notifier).readQuietly();
     });
   }
 

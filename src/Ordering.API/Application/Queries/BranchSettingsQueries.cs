@@ -57,4 +57,21 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
             ? new DeliveryTerms(lat, lng, row.DeliveryRadiusKm.Value, row.DeliveryFee, row.DeliveryMinimumOrder, row.RequireSignInForDelivery)
             : null;
     }
+
+    public async Task<IReadOnlyList<BranchDeliveryTerms>> GetDeliveringBranchesAsync()
+    {
+        if (!await IsDeliveryOnAsync()) return [];
+
+        var rows = await context.BranchSettings
+            .AsNoTracking()
+            .Where(b => b.IsDeliveryEnabled && b.IsOrderingEnabled
+                && b.Latitude != null && b.Longitude != null && b.DeliveryRadiusKm > 0)
+            .ToListAsync();
+
+        return rows
+            .Select(row => new BranchDeliveryTerms(row.BranchId, new DeliveryTerms(
+                row.Latitude!.Value, row.Longitude!.Value, row.DeliveryRadiusKm!.Value,
+                row.DeliveryFee, row.DeliveryMinimumOrder, row.RequireSignInForDelivery)))
+            .ToList();
+    }
 }

@@ -7,6 +7,14 @@ namespace Ninja.Ordering.API.Deliveries;
 /// <param name="SignInRequired">The branch delivers to signed-in customers only: a guest is asked to sign in first.</param>
 public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false);
 
+/// <summary>Which of the business's branches deliver to a point.</summary>
+/// <param name="Delivers">Some branch delivers right now; false while the business does not deliver at all.</param>
+/// <param name="Branches">The branches whose radius takes the point in, nearest first; empty when none goes that far.</param>
+public record DeliveryResolution(bool Delivers, IReadOnlyList<DeliveringBranch> Branches);
+
+/// <param name="SignInRequired">The branch delivers to signed-in customers only.</param>
+public record DeliveringBranch(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool SignInRequired);
+
 /// <summary>The branch's answer for a delivery the till takes over the phone.</summary>
 /// <param name="InRange">Within the radius; true without a pin, where the cashier knows the streets.</param>
 /// <param name="Latitude">With <paramref name="Longitude"/>, the pin read from the pasted location; the till sends it with the order.</param>

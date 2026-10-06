@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { toast } from '@/lib/toast'
 import { springSoft } from '@/lib/motion'
 import { getPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { moveToBranch, useSayOrderMoved } from '@/lib/use-branch-switch'
 import { useBranchStore } from '@/stores/branch-store'
 import { usePlaceStore } from '@/stores/place-store'
 import { useT, useLocalized } from '@/lib/i18n'
@@ -35,7 +36,8 @@ function PlaceLinkPage() {
   const localized = useLocalized()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { branchId, setBranchId } = useBranchStore()
+  const branchId = useBranchStore((s) => s.branchId)
+  const sayMoved = useSayOrderMoved()
   const setPlace = usePlaceStore((s) => s.setPlace)
   const clearPlace = usePlaceStore((s) => s.clearPlace)
 
@@ -68,10 +70,10 @@ function PlaceLinkPage() {
       return
     }
 
-    // The QR belongs to a specific branch — switch to it
+    // The QR belongs to a specific branch — switch to it, the order with it
     if (place.branchId != null && Number(place.branchId) !== branchId) {
-      setBranchId(Number(place.branchId))
-      queryClient.invalidateQueries()
+      const to = Number(place.branchId)
+      moveToBranch(queryClient, to, (move) => sayMoved(to, move))
     }
 
     // A plain table is theirs by scanning it: where the order goes, and the

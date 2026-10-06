@@ -9,16 +9,18 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
+import '../../../core/widgets/branch_switcher.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_address.dart';
 import '../services/delivery_service.dart';
 import 'address_sheet.dart';
 
-/// In the open order, where the branch delivers and the customer is not at a
-/// table: collect it or have it brought (client_web's delivery-choice.tsx).
-/// Brought, the address is a tap away, and under it what the branch says
-/// about it: the fee, how much more the dishes must come to, or that it does
-/// not go that far, with the nearest branch that does a tap away too.
+/// In the open order, where the business delivers and the customer is not at
+/// a table: collect it or have it brought (client_web's delivery-choice.tsx).
+/// Collected, from which branch, a tap from another. Brought, the address is
+/// a tap away; it picks the branch (the order moves there by itself), and
+/// under it what that branch says about it: the fee, how much more the dishes
+/// must come to, or that no branch goes that far.
 class DeliveryChoiceView extends ConsumerWidget {
   const DeliveryChoiceView({super.key});
 
@@ -87,6 +89,10 @@ class DeliveryChoiceView extends ConsumerWidget {
             ),
           ),
         ),
+        if (!delivery.active) ...[
+          const SizedBox(height: 8),
+          const _PickupFrom(),
+        ],
         if (delivery.active) ...[
           const SizedBox(height: 8),
           // Where it goes: a tap picks another or adds one
@@ -151,7 +157,10 @@ class DeliveryChoiceView extends ConsumerWidget {
                       ),
                     ],
                   ),
-                if (delivery.problem == DeliveryProblem.range) _OutOfRange(address: address!),
+                if (delivery.problem == DeliveryProblem.range) _OutOfRange(delivery: delivery),
+                // Which branch brings it: the address chose it, the customer is only told
+                if (delivery.quoted && delivery.inRange && ref.watch(branchProvider).branches.length > 1)
+                  AppText(l10n.deliveryFromBranch(ref.watch(branchProvider).selectedBranch?.name.localized(context) ?? ''), style: note),
                 if (delivery.quoted && delivery.inRange)
                   Row(
                     children: [
@@ -173,11 +182,13 @@ class DeliveryChoiceView extends ConsumerWidget {
   }
 }
 
-/// This branch does not go that far: the nearest branch that does, if any, a tap away
+/// The address is not this branch's. No branch goes that far: said so.
+/// Another does, but the customer is at this one (a bill, a hold, a clock),
+/// so the order did not move by itself: that branch, a tap away
 class _OutOfRange extends ConsumerWidget {
-  final DeliveryAddress address;
+  final DeliveryState delivery;
 
-  const _OutOfRange({required this.address});
+  const _OutOfRange({required this.delivery});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -186,31 +197,83 @@ class _OutOfRange extends ConsumerWidget {
     final state = ref.watch(branchProvider);
     final branch = state.selectedBranch;
     final warn = context.localeText(theme.typography.caption.copyWith(color: NinjaColors.warning, fontWeight: FontWeight.w600));
-    final here = (lat: address.latitude, lng: address.longitude);
-    final candidates = [
-      for (final b in state.branches)
-        if (b.isDeliveryEnabled && b.id != branch?.id && b.point != null)
-          (branch: b, meters: distanceMeters(here, b.point!)),
-    ].where((c) => c.meters <= (c.branch.deliveryRadiusKm ?? 0) * 1000).toList()
-      ..sort((a, b) => a.meters.compareTo(b.meters));
-    final nearest = candidates.firstOrNull;
+    if (!delivery.reached) return AppText(l10n.deliveryNoBranchReaches, style: warn);
+    final other = delivery.servedBy;
+    final otherBranch = other == null ? null : state.branches.where((b) => b.id == other.branchId).firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppText(l10n.deliveryOutOfRange(branch?.name.localized(context) ?? ''), style: warn),
-        if (nearest != null)
+        if (other != null && otherBranch != null)
           Pressable(
-            onTap: () => requestBranchSwitch(context, ref, nearest.branch.id),
+            onTap: () => requestBranchSwitch(context, ref, other.branchId),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: AppText(
-                l10n.deliveryTryBranch(nearest.branch.name.localized(context), distanceText(context, nearest.meters)),
+                l10n.deliveryTryBranch(otherBranch.name.localized(context), distanceText(context, other.meters)),
                 style: warn.copyWith(color: theme.colors.foreground, decoration: TextDecoration.underline),
               ),
             ),
           ),
       ],
     );
+  }
+}
+
+/// Collected: from which branch, said before the order goes, with how far
+/// it is when the phone already gives the position (never asked for here)
+/// and the branch a tap away to change, unless the customer is at this one
+class _PickupFrom extends ConsumerWidget {
+  const _PickupFrom();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final state = ref.watch(branchProvider);
+    final branch = state.selectedBranch;
+    if (branch == null) return const SizedBox.shrink();
+    final ink = theme.colors.foreground;
+    final here = ref.watch(locationProvider).here;
+    final meters = here != null && branch.point != null ? distanceMeters(here, branch.point!) : null;
+    final canChange = state.branches.length > 1 && !ref.watch(atBranchProvider);
+    final cloudKitchen = ref.watch(brandProvider).isCloudKitchen;
+    final address = branch.address?.localized(context);
+    final under = [if (meters != null) distanceText(context, meters), if (address != null && address.isNotEmpty) address].join(' · ');
+
+    final box = Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: ink.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          Icon(cloudKitchen ? LucideIcons.shoppingBag : LucideIcons.store, size: 20, color: ink),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText(
+                  l10n.pickupFrom(branch.name.localized(context)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: ink)),
+                ),
+                if (under.isNotEmpty)
+                  AppText(
+                    under,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.localeText(theme.typography.caption.copyWith(color: ink.withValues(alpha: 0.75))),
+                  ),
+              ],
+            ),
+          ),
+          if (canChange) Icon(LucideIcons.chevronRight, size: 16, color: ink.withValues(alpha: 0.6)),
+        ],
+      ),
+    );
+    return canChange ? Pressable(onTap: () => showBranchSheet(context), child: box) : box;
   }
 }

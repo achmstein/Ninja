@@ -61,6 +61,11 @@ class CartNotifier extends Notifier<Cart> {
     state = state.removeItem(index);
   }
 
+  /// The order as another branch takes it (order_move.dart)
+  void setItems(List<CartItem> items) {
+    state = Cart(items: items);
+  }
+
   /// Clear cart
   void clear() {
     state = state.clear();

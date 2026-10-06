@@ -1502,17 +1502,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'اللوكيشن مقفول للتطبيق ده. افتحه من إعدادات الموبايل.';
 
   @override
-  String ninjaSwitchBranchWithOrder(String name) {
-    return 'تغيّر لفرع $name؟ الطلب اللي معاك هيتشال.';
-  }
-
-  @override
-  String get ninjaKeepOrder => 'خلّي طلبي';
-
-  @override
-  String get ninjaSwitchBranch => 'غيّر';
-
-  @override
   String get ninjaChangeBranch => 'غيّر الفرع';
 
   @override
@@ -1572,6 +1561,29 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String deliveryTryBranch(String name, String distance) {
     return 'اطلب من $name، على بعد $distance';
+  }
+
+  @override
+  String deliveryFromBranch(String name) {
+    return 'التوصيل من فرع $name';
+  }
+
+  @override
+  String get deliveryNoBranchReaches => 'لسه مش بنوصّل للعنوان ده';
+
+  @override
+  String pickupFrom(String name) {
+    return 'الاستلام من فرع $name';
+  }
+
+  @override
+  String orderMovedDropped(String name, String dishes) {
+    return 'مش موجود في فرع $name، فاتشال من طلبك: $dishes';
+  }
+
+  @override
+  String orderMovedRepriced(String name) {
+    return 'طلبك بقى بأسعار فرع $name';
   }
 
   @override
@@ -2866,17 +2878,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
       'خدمة الموقع غير مفعّلة لهذا التطبيق. فعّلها من إعدادات الهاتف.';
 
   @override
-  String ninjaSwitchBranchWithOrder(String name) {
-    return 'هل تريد الانتقال إلى فرع $name؟ سيتم إفراغ طلبك.';
-  }
-
-  @override
-  String get ninjaKeepOrder => 'الإبقاء على طلبي';
-
-  @override
-  String get ninjaSwitchBranch => 'انتقال';
-
-  @override
   String get ninjaChangeBranch => 'تغيير الفرع';
 
   @override
@@ -2937,6 +2938,29 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   @override
   String deliveryTryBranch(String name, String distance) {
     return 'اطلب من $name، على بُعد $distance';
+  }
+
+  @override
+  String deliveryFromBranch(String name) {
+    return 'التوصيل من فرع $name';
+  }
+
+  @override
+  String get deliveryNoBranchReaches => 'لا نوصّل إلى هذا العنوان بعد';
+
+  @override
+  String pickupFrom(String name) {
+    return 'الاستلام من فرع $name';
+  }
+
+  @override
+  String orderMovedDropped(String name, String dishes) {
+    return 'غير متوفر في فرع $name، فأُزيل من طلبك: $dishes';
+  }
+
+  @override
+  String orderMovedRepriced(String name) {
+    return 'أصبح طلبك بأسعار فرع $name';
   }
 
   @override

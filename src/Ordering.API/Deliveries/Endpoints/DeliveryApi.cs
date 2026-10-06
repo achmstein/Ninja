@@ -30,6 +30,14 @@ public static partial class DeliveryApi
             .AllowAnonymous()
             .RequireRateLimiting(DeliveryModule.QuotePolicy);
 
+        // The address picks the branch: the customer never chooses one to be delivered from
+        orders.MapGet("/delivery/resolve", ResolveDeliveryBranchAsync)
+            .WithName("ResolveDeliveryBranch")
+            .WithSummary("Which branches deliver to a point, nearest first")
+            .WithDescription("Every branch that delivers right now and whose radius takes the point in, nearest first, with how far it is, the fee and the minimum order. No X-Branch-Id: the app moves the order to the first it lists. Rate limited.")
+            .AllowAnonymous()
+            .RequireRateLimiting(DeliveryModule.QuotePolicy);
+
         newWork.MapGet("/addresses", GetAddressesAsync)
             .WithName("GetMyAddresses")
             .WithSummary("The signed-in customer's saved delivery addresses, latest first");

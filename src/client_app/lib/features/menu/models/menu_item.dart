@@ -10,6 +10,9 @@ class MenuItem {
   final int catalogTypeId;
   final LocalizedText catalogTypeName;
   final bool isAvailable;
+
+  /// Inventory ran out of what it needs at the branch the menu was fetched for
+  final bool isOutOfStock;
   final bool isOnOffer;
   final double? offerPrice;
   final bool isPopular;
@@ -29,6 +32,7 @@ class MenuItem {
     required this.catalogTypeId,
     required this.catalogTypeName,
     this.isAvailable = true,
+    this.isOutOfStock = false,
     this.isOnOffer = false,
     this.offerPrice,
     this.isPopular = false,
@@ -51,6 +55,7 @@ class MenuItem {
       catalogTypeId: json['catalogTypeId'] as int,
       catalogTypeName: _parseLocalizedText(json['catalogTypeName'] ?? '', json['catalogTypeNameAr']),
       isAvailable: json['isAvailable'] as bool? ?? true,
+      isOutOfStock: json['isOutOfStock'] as bool? ?? false,
       isOnOffer: json['isOnOffer'] as bool? ?? false,
       offerPrice: (json['offerPrice'] as num?)?.toDouble(),
       isPopular: json['isPopular'] as bool? ?? false,
