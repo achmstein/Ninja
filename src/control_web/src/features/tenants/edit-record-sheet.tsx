@@ -97,6 +97,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [dock, setDock] = useState<Dock>(dockOf(tenant.slab))
   const [social, setSocial] = useState(tenant.socialSignIn ?? true)
   const [customerDomain, setCustomerDomain] = useState(tenant.customerDomain ?? '')
+  const [appId, setAppId] = useState(tenant.appId ?? '')
   const [contactName, setContactName] = useState(tenant.record.contactName ?? '')
   const [phone, setPhone] = useState(tenant.record.phone ?? '')
   const [address, setAddress] = useState(tenant.record.address ?? '')
@@ -161,6 +162,8 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         slab: dock,
         socialSignIn: social,
         customerDomain: customerDomain.trim() || null,
+        // Empty clears it on the record
+        appId: appId.trim(),
         contactName: contactName.trim() || null,
         phone: phone.trim() || null,
         address: address.trim() || null,
@@ -213,6 +216,19 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             value={customerDomain}
             onChange={(e) => setCustomerDomain(e.target.value)}
           />
+        </div>
+        <div className='grid gap-2'>
+          <Label htmlFor='record-app'>{t('appId')}</Label>
+          <Input
+            id='record-app'
+            dir='ltr'
+            placeholder='net.ninjapp.business'
+            autoCapitalize='none'
+            spellCheck={false}
+            value={appId}
+            onChange={(e) => setAppId(e.target.value)}
+          />
+          <p className='text-muted-foreground text-xs'>{t('appIdHint')}</p>
         </div>
         <div className='grid gap-2'>
           <Label htmlFor='record-contact'>{t('contactName')}</Label>

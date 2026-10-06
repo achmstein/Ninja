@@ -584,7 +584,8 @@ public record TenantDetail(
     [property: Description("light or dark for someone who has not chosen; null follows the device")] string? DefaultTheme = null,
     [property: Description("The dock's colour: neutral (black); null a deep shade of the brand colour")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple")] bool SocialSignIn = true,
-    [property: Description("The business on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null)
+    [property: Description("The business on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null,
+    [property: Description("The business's own customer app (its iOS bundle ID and Android package); null when it has none")] string? AppId = null)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -605,7 +606,8 @@ public record TenantDetail(
             t.DefaultTheme,
             t.Slab,
             t.SocialSignIn,
-            TenantTalabatDto.From(t, p));
+            TenantTalabatDto.From(t, p),
+            t.AppId);
 }
 
 /// <summary>Where the business stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

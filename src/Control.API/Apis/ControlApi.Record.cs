@@ -50,6 +50,14 @@ public static partial class ControlApi
         if (request.Slab is not null && !TrySlab(request.Slab, out slab))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = SlabError });
 
+        // Null leaves the business's own app as it is; empty clears it
+        var appId = request.AppId is null ? tenant.AppId : Clean(request.AppId);
+        if (appId is not null && (appId.Length > 155 || !AppIdPattern().IsMatch(appId)))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The app's id is its bundle ID and Android package, like net.ninjapp.lucaffe: two or more parts, each starting with a letter, of letters, digits and _." });
+        var appChanged = appId != tenant.AppId;
+        if (appChanged && appId is not null && await context.Tenants.AnyAsync(t => t.Id != tenant.Id && t.AppId == appId && t.Status != TenantStatus.Destroyed, ct))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{appId} is already another business's app." });
+
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
@@ -75,6 +83,7 @@ public static partial class ControlApi
         tenant.Slab = slab;
         var socialChanged = request.SocialSignIn is { } social && social != tenant.SocialSignIn;
         if (socialChanged) tenant.SocialSignIn = request.SocialSignIn!.Value;
+        tenant.AppId = appId;
         // The kind of place is a label on a running business: its menu, switches and guest ordering stay as they are
         if (request.BusinessType is { } business) tenant.BusinessType = business;
         await context.SaveChangesAsync(ct);
@@ -88,8 +97,8 @@ public static partial class ControlApi
         if (domainChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "edge"), ct);
 
-        // Google and Apple on or off: its realm and hub clients follow, and the apps are told
-        if (socialChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
+        // Google and Apple on or off, or its own app given or changed: its realm and hub clients follow, and the apps are told
+        if ((socialChanged || appChanged) && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "social"), ct);
 
         // A running business's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
@@ -134,6 +143,10 @@ public static partial class ControlApi
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>An id both stores take: Android's package rule (letters, digits, _; each part starting with a letter), which iOS bundle IDs accept too</summary>
+    [System.Text.RegularExpressions.GeneratedRegex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+$")]
+    private static partial System.Text.RegularExpressions.Regex AppIdPattern();
 }
 
 public record UpdateTenantRequest(
@@ -155,7 +168,8 @@ public record UpdateTenantRequest(
     [property: Description("The kind of place; on a running business only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null,
-    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null);
+    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null,
+    [property: Description("The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it")] string? AppId = null);
 
 /// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
 public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);

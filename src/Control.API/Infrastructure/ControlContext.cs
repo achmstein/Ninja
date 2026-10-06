@@ -92,6 +92,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.Slab).HasMaxLength(16);
             entity.Property(e => e.CustomerDomain).HasMaxLength(253);
+            entity.Property(e => e.AppId).HasMaxLength(155);
             entity.Property(e => e.OwnerEmail).HasMaxLength(254).IsRequired();
             // The secrets: encrypted at rest under the platform's key (enc:v1:… is 12 + 16 + n bytes in base64, 128 chars covers a 64-char secret)
             var secret = _secrets.Converter();

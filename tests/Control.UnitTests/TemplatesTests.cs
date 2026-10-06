@@ -117,6 +117,28 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
+    public void A_business_with_its_own_app_takes_that_apps_apple_sign_ins_through_a_provider_of_its_own()
+    {
+        var providers = Templates.SocialProviders(WithSocial(), "net.ninjapp.lucaffe");
+        var byAlias = providers.ToDictionary(p => p!["alias"]!.GetValue<string>(), p => p!.AsObject());
+        CollectionAssert.AreEquivalent(new[] { "google", "apple", "apple-app" }, byAlias.Keys.ToArray());
+
+        var app = byAlias["apple-app"];
+        // Apple signs the app's token for its bundle ID: Keycloak takes a token only for its provider's client id
+        Assert.AreEqual("net.ninjapp.lucaffe", app["config"]!["clientId"]!.GetValue<string>());
+        Assert.AreEqual("https://appleid.apple.com", app["config"]!["issuer"]!.GetValue<string>());
+        Assert.IsTrue(app["hideOnLogin"]!.GetValue<bool>(), "the native path only; the browser goes through the hub");
+        // The shared build's provider stays for the platform's app
+        Assert.AreEqual("app.ninja.client", byAlias["apple"]["config"]!["clientId"]!.GetValue<string>());
+
+        // No app of its own: no provider for one
+        Assert.IsFalse(Templates.SocialProviders(WithSocial(), null).Any(p => p!["alias"]!.GetValue<string>() == "apple-app"));
+        // Its own app needs no platform Apple app: only Apple's keys check its token
+        var alone = Templates.SocialProviders(Platform, "net.ninjapp.lucaffe");
+        Assert.AreEqual("apple-app", alone.Single()!["alias"]!.GetValue<string>());
+    }
+
+    [TestMethod]
     public void Apples_form_post_goes_on_to_the_hubs_broker_as_a_get_with_only_what_it_reads()
     {
         Assert.AreEqual("/realms/ninja-hub/broker/apple/endpoint?state=s%2B1&code=c.2", Ninja.Control.API.Apis.ControlApi.AppleBrokerUrl("s+1", "c.2", null));

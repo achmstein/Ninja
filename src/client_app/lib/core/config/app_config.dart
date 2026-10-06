@@ -15,6 +15,11 @@ class AppConfig {
   static const String _realm = String.fromEnvironment('REALM');
   static const String _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
+  /// The realm's provider an Apple sign-in is exchanged through: "apple-app" in a business's own app
+  /// (Apple signs its tokens for that app, the realm takes them through a provider of its own), "apple"
+  /// in the platform's shared build
+  static const String appleIssuer = String.fromEnvironment('APPLE_ISSUER', defaultValue: 'apple');
+
   /// The value this build was given; the AppHost's in debug when it was not.
   /// A release build that was not told is a mistake, and says so at first use.
   static String _given(String name, String value, {String? debug}) {

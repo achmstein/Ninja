@@ -131,6 +131,24 @@ public static partial class Templates
     public static JsonArray SocialProviders(PlatformOptions platform) => RealProviders(platform, hidden: true);
 
     /// <summary>
+    /// A business's realm's providers for the native apps: the platform's shared ones, and, when the
+    /// business has an app of its own (<paramref name="appId"/>), an Apple provider for that app. Apple
+    /// signs a native sign-in's token for the app that asked (its bundle ID is the token's audience), and
+    /// Keycloak takes a token only for its provider's client id. Only the token is checked on this path,
+    /// against Apple's keys: the app's provider needs no secret of its own.
+    /// </summary>
+    public static JsonArray SocialProviders(PlatformOptions platform, string? appId)
+    {
+        var providers = SocialProviders(platform);
+        if (appId is not null)
+        {
+            var app = new SocialProviderOptions { ClientId = appId, ClientSecret = string.IsNullOrWhiteSpace(platform.Social.Apple.ClientSecret) ? "unused" : platform.Social.Apple.ClientSecret };
+            providers.Add(Provider(TenantNaming.AppAppleAlias, "oidc", "Apple", app, AppleConfig(), hidden: true));
+        }
+        return providers;
+    }
+
+    /// <summary>
     /// The same Google and Apple apps in the hub realm, where they are what the browser is sent to: shown,
     /// and with the hub's one redirect URI each registered with Google and Apple once. A person's hub
     /// record is only a pass through, so the hub never stops them to review a profile.
@@ -157,22 +175,24 @@ public static partial class Templates
             // Apple is not a first-class Keycloak provider: it is plain OIDC with its endpoints spelled out.
             // Asking for name and email, Apple answers only as a form post; the auth host turns that post
             // into the GET Keycloak listens for (ControlApi.AppleFormPost)
-            providers.Add(Provider("apple", "oidc", "Apple", platform.Social.Apple, new JsonObject
-            {
-                ["authorizationUrl"] = AppleAuthorizationUrl,
-                ["tokenUrl"] = "https://appleid.apple.com/auth/token",
-                ["jwksUrl"] = "https://appleid.apple.com/auth/keys",
-                ["issuer"] = "https://appleid.apple.com",
-                ["useJwksUrl"] = "true",
-                ["validateSignature"] = "true",
-                ["disableUserInfo"] = "true",
-                ["disableTypeClaimCheck"] = "true",
-                ["clientAuthMethod"] = "client_secret_post",
-                ["defaultScope"] = "openid name email",
-            }, hidden));
+            providers.Add(Provider("apple", "oidc", "Apple", platform.Social.Apple, AppleConfig(), hidden));
         }
         return providers;
     }
+
+    private static JsonObject AppleConfig() => new()
+    {
+        ["authorizationUrl"] = AppleAuthorizationUrl,
+        ["tokenUrl"] = "https://appleid.apple.com/auth/token",
+        ["jwksUrl"] = "https://appleid.apple.com/auth/keys",
+        ["issuer"] = "https://appleid.apple.com",
+        ["useJwksUrl"] = "true",
+        ["validateSignature"] = "true",
+        ["disableUserInfo"] = "true",
+        ["disableTypeClaimCheck"] = "true",
+        ["clientAuthMethod"] = "client_secret_post",
+        ["defaultScope"] = "openid name email",
+    };
 
     /// <summary>Apple's authorize endpoint, answering by form post (the only way it will with name and email asked for)</summary>
     public const string AppleAuthorizationUrl = "https://appleid.apple.com/auth/authorize?response_mode=form_post";

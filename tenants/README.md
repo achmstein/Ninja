@@ -25,6 +25,12 @@ wanted, and then they never ask.
 | `AUTH_URL` | Keycloak's public host, `https://auth.{domain}` |
 | `REALM` | The tenant's realm, `{slug}` on the platform |
 | `GOOGLE_SERVER_CLIENT_ID` | client_app only: the Web Client ID the realm's Google identity provider uses; leave out for no Google sign-in |
+| `APPLE_ISSUER` | client_app only: `apple-app` for a business's own app (its id, `net.ninjapp.<business>`, set as "Own customer app" on the control plane's record, which gives its realm the `apple-app` provider for it); left out, `apple`, the shared build's |
+
+A business's own app is published under its own Apple developer account
+(App Store guideline 4.2.6), with Sign in with Apple on its own App ID, not
+grouped with another: Apple gives a person's name once per app, on their
+first sign-in, and grouped apps count as one.
 
 Not here yet, because the customer app's native folders still carry tenant
 one's: the application id and redirect scheme (`REDIRECT_SCHEME` is read,

@@ -91,6 +91,13 @@ public static partial class TenantNaming
     /// </summary>
     public static string BrokerAlias(string provider) => $"ninja-{provider}";
 
+    /// <summary>
+    /// The business realm's provider for Apple sign-ins from the business's own app (Tenant.AppId): Apple
+    /// signs those for that app, not for the platform's, so they need a provider of their own. The app is
+    /// built to exchange its token with this as its subject issuer; the shared build keeps "apple".
+    /// </summary>
+    public const string AppAppleAlias = "apple-app";
+
     public static string VHost(string slug) => slug;
 
     public static string Database(string slug, string db) => $"{slug}_{db}";

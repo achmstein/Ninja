@@ -6357,6 +6357,13 @@
                 "$ref": "#/components/schemas/TenantTalabatDto"
               }
             ]
+          },
+          "appId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The business's own customer app (its iOS bundle ID and Android package); null when it has none"
           }
         }
       },
@@ -7149,6 +7156,13 @@
               "string"
             ],
             "description": "both, ar or en: the languages the business writes its menu, places and stock in; null leaves it"
+          },
+          "appId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it"
           }
         }
       },

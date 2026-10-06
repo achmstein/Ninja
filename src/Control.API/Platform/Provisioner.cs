@@ -81,7 +81,7 @@ public sealed class Provisioner(
                 {
                     // Realms are never re-imported: what the template gained since this one was made is added by hand
                     await keycloak.EnsureRealmUpToDateAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
-                    await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                    await keycloak.EnsureSocialProvidersAsync(realm, tenant.AppId, ct);
                     await SocialBrokersAsync(tenant, ct);
                     await keycloak.EnsureAccountConsoleAsync(realm, ct);
                     await keycloak.EnsureProfileFieldsAsync(realm, tenant.Country, ct);
@@ -90,7 +90,7 @@ public sealed class Provisioner(
                 await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts, Platform), ct);
                 // The shared Google and Apple apps are the platform's, not the template's: they carry
                 // secrets that rotate, so they go on through the admin API rather than into the realm file
-                await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                await keycloak.EnsureSocialProvidersAsync(realm, tenant.AppId, ct);
                 await SocialBrokersAsync(tenant, ct);
                 // Keycloak makes its built-in account console on import, without the template's scopes
                 await keycloak.EnsureAccountConsoleAsync(realm, ct);
@@ -634,7 +634,7 @@ public sealed class Provisioner(
                 // Realms are never re-imported: the roles and clients the template gained since this
                 // one was made (a rider's role, the rider app) are added here, as in provisioning
                 await keycloak.EnsureRealmUpToDateAsync(realm, TenantHosts.For(tenant, Platform).ApiUrl, tenant.AssistantSecret, ct);
-                await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                await keycloak.EnsureSocialProvidersAsync(realm, tenant.AppId, ct);
                 await SocialBrokersAsync(tenant, ct);
                 await keycloak.EnsureProfileFieldsAsync(realm, tenant.Country, ct);
                 return "staff roles and clients, social providers, name and phone fields ensured";
@@ -887,7 +887,8 @@ public sealed class Provisioner(
     }
 
     /// <summary>
-    /// Google and Apple sign-in turned on or off: the business's realm and its hub clients follow, then the
+    /// Google and Apple sign-in turned on or off, or the business's own app given or changed: the business's
+    /// realm (its native apps' providers too) and its hub clients follow, then the
     /// stack is re-stamped so Tenant.API tells the apps (only Tenant.API is recreated). A stack that is
     /// not running gets its files now and the rest on start.
     /// </summary>
@@ -899,9 +900,13 @@ public sealed class Provisioner(
         {
             await Step(tenant, runId, "social", async () =>
             {
-                if (!await keycloak.RealmExistsAsync(TenantNaming.Realm(tenant.Slug), ct)) return "no realm yet; the next provision sets it";
+                var realm = TenantNaming.Realm(tenant.Slug);
+                if (!await keycloak.RealmExistsAsync(realm, ct)) return "no realm yet; the next provision sets it";
+                // The native apps' providers too: the business's own app given, changed or gone
+                await keycloak.EnsureSocialProvidersAsync(realm, tenant.AppId, ct);
                 await SocialBrokersAsync(tenant, ct);
-                return tenant.SocialSignIn ? "Google and Apple through the hub" : "off";
+                var app = tenant.AppId is null ? "" : $"; its own app {tenant.AppId}";
+                return (tenant.SocialSignIn ? "Google and Apple through the hub" : "off") + app;
             }, ct);
             await Step(tenant, runId, "stack", async () =>
             {

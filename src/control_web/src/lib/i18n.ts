@@ -188,6 +188,8 @@ const dictionary = {
   placesLayoutGrid: "Grid, two a row",
   placesLayoutHint: "How the places to book are shown. Big cards suit a few places; the list and the grid fit many on one screen, grouped by kind when there are rooms and tables.",
   customerDomain: "Customer domain",
+  appId: "Own customer app",
+  appIdHint: "The business's own app in the stores: its iOS bundle ID and Android package, the same for both. Its Apple sign-ins are taken for this app. Empty while it uses Ninja's shared app.",
   demoDays: "Demo days",
   logo: "Logo",
   create: "Create",

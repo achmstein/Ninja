@@ -392,7 +392,7 @@ class AuthService extends Notifier<AuthState> {
         );
 
         socialToken = credential.identityToken;
-        providerAlias = 'apple';
+        providerAlias = AppConfig.appleIssuer;
         tokenType = 'urn:ietf:params:oauth:token-type:id_token';
 
         // Apple provides name only on first sign-in — capture it now

@@ -160,6 +160,31 @@ public sealed class StackSettingsTests
         Assert.IsFalse(_stack.Brands.ContainsKey("blue"), "nothing was sent to a stopped stack");
     }
 
+    /// <summary>The business's own app on the record: an id both stores take, one business's alone, cleared by an empty one.</summary>
+    [TestMethod]
+    public async Task The_record_keeps_the_businesss_own_app()
+    {
+        // Not running: nothing is queued or pushed, only the record
+        _tenant.Status = TenantStatus.Requested;
+        UpdateTenantRequest WithApp(string? appId) => Record() with { AppId = appId };
+
+        Assert.IsInstanceOfType<Ok<TenantDetail>>((await SaveAsync(WithApp(" net.ninjapp.blue "))).Result);
+        Assert.AreEqual("net.ninjapp.blue", _tenant.AppId);
+
+        Assert.IsInstanceOfType<Ok<TenantDetail>>((await SaveAsync(WithApp(null))).Result);
+        Assert.AreEqual("net.ninjapp.blue", _tenant.AppId, "left out, it stays");
+
+        foreach (var bad in new[] { "blue", "com.ninja-blue.app", "com.1blue", "com..blue" })
+            Assert.IsInstanceOfType<BadRequest<Microsoft.AspNetCore.Mvc.ProblemDetails>>((await SaveAsync(WithApp(bad))).Result, bad);
+
+        _context.Tenants.Add(new Tenant { Slug = "red", OwnerEmail = "owner@red.test", AppId = "net.ninjapp.red", Status = TenantStatus.Running });
+        await _context.SaveChangesAsync();
+        Assert.IsInstanceOfType<BadRequest<Microsoft.AspNetCore.Mvc.ProblemDetails>>((await SaveAsync(WithApp("net.ninjapp.red"))).Result, "another business's app");
+
+        Assert.IsInstanceOfType<Ok<TenantDetail>>((await SaveAsync(WithApp(""))).Result);
+        Assert.IsNull(_tenant.AppId);
+    }
+
     /// <summary>The brand is sent back whole: the theme, the switches and the customer URL the business had go with it.</summary>
     [TestMethod]
     public void The_rest_of_the_brand_goes_back_as_the_business_had_it()

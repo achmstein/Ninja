@@ -67,9 +67,10 @@ public interface IKeycloakAdmin
     /// <summary>
     /// The platform's shared Google and Apple providers in a tenant's realm,
     /// so the native apps can exchange a provider token for one of the realm's
-    /// own. Idempotent, and a no-op while the platform holds no social app.
+    /// own, and the Apple provider for the business's own app when it has one
+    /// (<paramref name="appId"/>; gone when it has none). Idempotent.
     /// </summary>
-    Task EnsureSocialProvidersAsync(string realm, CancellationToken ct);
+    Task EnsureSocialProvidersAsync(string realm, string? appId, CancellationToken ct);
     /// <summary>
     /// The hub realm every business's browser sign-in with Google and Apple goes through: made when
     /// missing, the platform's apps in it (a rotated secret lands too), a hub record never stopped
@@ -650,12 +651,18 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         }
     }
 
-    public async Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)
+    public async Task EnsureSocialProvidersAsync(string realm, string? appId, CancellationToken ct)
     {
-        var wanted = Templates.SocialProviders(options.Value);
-        if (wanted.Count == 0) return;
+        var client = await AdminClientAsync(ct);
+        var wanted = Templates.SocialProviders(options.Value, appId);
         // A rotated secret (Apple's expires) lands on the realm that already has the provider
-        await UpsertProvidersAsync(await AdminClientAsync(ct), realm, wanted, ct);
+        if (wanted.Count > 0) await UpsertProvidersAsync(client, realm, wanted, ct);
+        // No app of its own (any more): its provider goes, so a token signed for that app is taken no longer
+        if (appId is null)
+        {
+            var gone = await client.DeleteAsync($"{Base}/admin/realms/{realm}/identity-provider/instances/{TenantNaming.AppAppleAlias}", ct);
+            if (gone.StatusCode != HttpStatusCode.NotFound) gone.EnsureSuccessStatusCode();
+        }
     }
 
     public async Task EnsureProfileFieldsAsync(string realm, string country, CancellationToken ct)
@@ -995,9 +1002,9 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         logger.LogInformation("(dry run) realm {Realm} up to date: {Roles} staff roles, mcp scope, {Clients} clients, {Policies} policies", realm, RoleNames.RealmStaffRoles.Count, parts.Clients.Count, parts.Policies.Count);
         return Task.CompletedTask;
     }
-    public Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)
+    public Task EnsureSocialProvidersAsync(string realm, string? appId, CancellationToken ct)
     {
-        logger.LogInformation("(dry run) social providers in {Realm}", realm);
+        logger.LogInformation("(dry run) social providers in {Realm}, own app {AppId}", realm, appId ?? "none");
         return Task.CompletedTask;
     }
     public List<string> AccountConsolesEnsured { get; } = [];

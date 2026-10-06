@@ -130,6 +130,14 @@ public class Tenant
     /// <summary>Whether its customers may sign in with Google and Apple (the platform's apps, through the hub realm). On unless turned off.</summary>
     public bool SocialSignIn { get; set; } = true;
 
+    /// <summary>
+    /// The business's own customer app, when it bought one: its bundle ID on iOS and its package on
+    /// Android ("net.ninjapp.lucaffe"), the same for both. Apple signs a native sign-in's token for the
+    /// app that asked, so the business's realm takes its Apple sign-ins through a provider of its own
+    /// for this id ("apple-app"); the platform's shared build keeps the shared one. Null: no app of its own.
+    /// </summary>
+    public string? AppId { get; set; }
+
     /// <summary>A business's own customer host ("menu.example.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 

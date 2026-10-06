@@ -562,6 +562,10 @@ export type TenantDetail = {
      */
     socialSignIn?: boolean;
     talabat?: null | TenantTalabatDto;
+    /**
+     * The business's own customer app (its iOS bundle ID and Android package); null when it has none
+     */
+    appId?: null | string;
 };
 
 export type TenantHostsDto = {
@@ -732,6 +736,10 @@ export type UpdateTenantRequest = {
      * both, ar or en: the languages the business writes its menu, places and stock in; null leaves it
      */
     contentLanguages?: null | string;
+    /**
+     * The business's own customer app: its iOS bundle ID and Android package (com.ninja.lucaffe); empty clears it, null leaves it
+     */
+    appId?: null | string;
 };
 
 export type UpgradeRequest = {
