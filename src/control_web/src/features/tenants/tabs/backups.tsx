@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { apiClient } from '@/lib/api-client'
-import { megabytes, useFormat } from '@/lib/format'
+import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { canBackup, isValidSlug, tenantStatus } from '@/lib/tenant'
@@ -162,7 +162,7 @@ export function BackupsTab({ tenant }: { tenant: TenantDetail }) {
                     </div>
                   </TableCell>
                   <TableCell className='text-end tabular-nums'>
-                    <div>{megabytes(Number(b.sizeBytes) / 1024 / 1024)}</div>
+                    <div>{bytes(Number(b.sizeBytes))}</div>
                     <div className='text-muted-foreground text-xs'>
                       {b.databases.length} DB
                     </div>

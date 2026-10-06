@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { apiClient } from '@/lib/api-client'
-import { megabytes, useFormat } from '@/lib/format'
+import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
@@ -128,7 +128,7 @@ export function PlatformBackups() {
                     </div>
                   </TableCell>
                   <TableCell className='text-end tabular-nums'>
-                    {megabytes(Number(b.sizeBytes) / 1024 / 1024)}
+                    {bytes(Number(b.sizeBytes))}
                   </TableCell>
                   <TableCell>
                     <OffsiteCell at={b.offsiteAt} />

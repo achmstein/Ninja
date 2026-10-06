@@ -28,6 +28,29 @@ export function megabytes(mb: number | null | undefined): string {
   return `${gb < 10 ? gb.toFixed(1) : Math.round(gb)} GB`
 }
 
+/**
+ * A file's size in the unit that reads best: "0 B", "512 B", "23 KB", "4.2 MB",
+ * "1.5 GB". A backup of a few hundred kilobytes (the platform's own: two
+ * compressed dumps) reads as such, never rounded down to "0 MB".
+ */
+export function bytes(value: number | null | undefined): string {
+  const n = Math.max(0, value ?? 0)
+  if (n < 1024) return `${Math.round(n)} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let size = n / 1024
+  let unit = 0
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024
+    unit++
+  }
+  // Rounding 1023.7 KB up would read "1024 KB": step to the next unit instead
+  if (Math.round(size) >= 1024 && unit < units.length - 1) {
+    size /= 1024
+    unit++
+  }
+  return `${size < 10 ? size.toFixed(1).replace(/\.0$/, '') : Math.round(size)} ${units[unit]}`
+}
+
 /** A share as a whole percentage, never past 100. */
 export function percent(part: number, whole: number): number {
   if (whole <= 0) return 0

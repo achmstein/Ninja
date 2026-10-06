@@ -216,15 +216,20 @@ export function PlatformPage() {
           navigate({ search: { tab: v as Tab }, replace: true })
         }
       >
-        <TabsList>
-          <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
-          <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
-          <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
-          <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
-          <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
-          <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
-          <TabsTrigger value='ai'>{t('tabAi')}</TabsTrigger>
-        </TabsList>
+        {/* Seven tabs are wider than a phone: the list scrolls sideways in
+            its own box rather than pushing the page past the screen, as the
+            tenant page's tabs do */}
+        <div className='max-w-full overflow-x-auto'>
+          <TabsList>
+            <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
+            <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
+            <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
+            <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
+            <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
+            <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
+            <TabsTrigger value='ai'>{t('tabAi')}</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value='tenants'>
           {destroyedCount > 0 && (
             <div className='mb-3 flex items-center justify-end gap-2'>
