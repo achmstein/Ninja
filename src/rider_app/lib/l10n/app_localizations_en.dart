@@ -214,13 +214,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'While you are on duty the till can give you deliveries.';
 
   @override
-  String get offDutyNote => 'You are off duty. Go on duty to get deliveries.';
+  String get offDutyHint => 'Go on duty so the till can give you deliveries.';
 
   @override
   String get toGo => 'To deliver';
 
   @override
   String get deliveredToday => 'Delivered today';
+
+  @override
+  String get navDeliveries => 'Deliveries';
+
+  @override
+  String get navToday => 'Today';
+
+  @override
+  String get goOff => 'Go off';
+
+  @override
+  String get inTheBag => 'In the bag';
+
+  @override
+  String get allHandedIn => 'All your cash is handed in';
+
+  @override
+  String get noneDeliveredToday => 'Nothing delivered yet today';
 
   @override
   String get noDeliveries => 'No deliveries for you right now';
@@ -376,11 +394,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readyToGo => 'Ready to go';
-
-  @override
-  String cashInHand(String amount) {
-    return 'Cash with you: $amount';
-  }
 
   @override
   String get cashInHandHint =>

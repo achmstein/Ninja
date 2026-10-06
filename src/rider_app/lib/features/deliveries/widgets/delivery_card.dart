@@ -11,12 +11,14 @@ import '../../../l10n/app_localizations.dart';
 import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
 import 'fail_reason_dialog.dart';
+import 'parts.dart';
 
-/// One delivery still to do: whom it is for and where (the address, the
-/// note that finds the door), what is in the bag, the cash to collect, the
-/// way there and the phone a tap away, and the one next step in a button
-/// a thumb cannot miss: on the way, then delivered. On the way, it can also
-/// not be handed over; then the bag goes back to the branch.
+/// One delivery still to do, read top to bottom as the rider needs it:
+/// where it stands and whose it is; where it goes (the street, the door, the
+/// note that finds it); what is in the bag; the cash to collect; then the way
+/// there and the phone a tap away, and the one next step in a button a thumb
+/// cannot miss: on the way, then delivered. On the way, it can also not be
+/// handed over; then the bag goes back to the branch.
 class DeliveryCard extends ConsumerStatefulWidget {
   final DeliveryOrder order;
   final String Function(double) money;
@@ -85,175 +87,261 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
     final locale = Localizations.localeOf(context);
     final ready = order.readyAt != null;
     final amber = AppColors.amber(theme.colors.brightness);
+    final green = AppColors.emerald(theme.colors.brightness);
+    final sky = theme.colors.brightness == Brightness.dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
 
     final (statusText, statusColor) = switch (order.stage) {
-      DeliveryStage.onTheWay => (l10n.onTheWay, theme.colors.primary),
+      DeliveryStage.onTheWay => (l10n.onTheWay, sky),
       DeliveryStage.failed => (l10n.bringItBack, amber),
-      _ => ready ? (l10n.readyToGo, AppColors.emerald(theme.colors.brightness)) : (l10n.stillCooking, amber),
+      _ => ready ? (l10n.readyToGo, green) : (l10n.stillCooking, amber),
     };
+    final details = order.addressDetails(
+      building: l10n.building,
+      floor: l10n.floor,
+      apartment: l10n.apartment,
+      separator: l10n.listSeparator,
+    );
 
     return Container(
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: order.isOut ? theme.colors.primary : order.isFailed ? amber : theme.colors.border,
+          color: order.isOut ? sky : order.isFailed ? amber : theme.colors.border,
           width: order.isOut || order.isFailed ? 1.5 : 1,
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: theme.colors.brightness == Brightness.dark ? 0.3 : 0.05), blurRadius: 12, offset: const Offset(0, 4)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  order.customerName ?? l10n.guest,
-                  style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Where it stands (being made, ready, on the way, to bring back), and its number
+                Row(
+                  children: [
+                    StatusChip(text: statusText, color: statusColor),
+                    const Spacer(),
+                    Text(
+                      l10n.orderNumber(order.orderNumber),
+                      style: theme.typography.sm.copyWith(color: muted, fontWeight: FontWeight.w500, fontFeatures: tabular),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  order.customerName == null ? l10n.guest : typed(order.customerName!),
+                  style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, height: 1.25),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(l10n.orderNumber(order.orderNumber), style: theme.typography.sm.copyWith(color: muted)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          // Where it stands, in words (never colour alone): being made, ready, on the way, or to bring back
-          Text(statusText, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: statusColor)),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(FIcons.mapPin, size: 18, color: muted),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 12),
+                // Where: the street, the door under it, the note that finds it
+                _Inset(
+                  icon: FIcons.mapPin,
                   children: [
-                    Text(
-                      order.addressLine(
-                        building: l10n.building,
-                        floor: l10n.floor,
-                        apartment: l10n.apartment,
-                        separator: l10n.listSeparator,
-                      ),
-                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
-                    ),
-                    if (order.directions != null)
-                      Text('"${order.directions}"', style: theme.typography.sm.copyWith(color: muted, fontStyle: FontStyle.italic)),
+                    Text(typed(order.address), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    if (details != null) Text(details, style: theme.typography.sm.copyWith(color: theme.colors.foreground)),
+                    if (order.directions != null) ...[
+                      const SizedBox(height: 4),
+                      Text(typed('"${order.directions}"'), style: theme.typography.sm.copyWith(color: muted, fontStyle: FontStyle.italic)),
+                    ],
                     // Taken over the phone without a shared location: Maps searches the words
-                    if (!order.hasPin) Text(l10n.noPin, style: theme.typography.sm.copyWith(color: muted)),
+                    if (!order.hasPin) ...[
+                      const SizedBox(height: 4),
+                      Text(l10n.noPin, style: theme.typography.xs.copyWith(color: amber, fontWeight: FontWeight.w500)),
+                    ],
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (order.customerNote != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(FIcons.messageSquare, size: 18, color: muted),
-                const SizedBox(width: 8),
-                Expanded(child: Text(order.customerNote!, style: theme.typography.sm)),
-              ],
-            ),
-          ],
-          const SizedBox(height: 10),
-          // The bag, to check against before leaving: the count kept apart
-          // from the dish's name, so a Latin name in Arabic still reads count first
-          for (final line in order.lines)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${line.units}×', style: theme.typography.sm.copyWith(color: muted, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      line.options == null || line.options!.isEmpty
-                          ? line.name.getText(locale)
-                          : '${line.name.getText(locale)} · ${line.options!.getText(locale)}',
-                      style: theme.typography.sm.copyWith(color: muted),
-                    ),
+                if (order.customerNote != null) ...[
+                  const SizedBox(height: 8),
+                  _Inset(
+                    icon: FIcons.messageSquare,
+                    children: [Text(typed(order.customerNote!), style: theme.typography.sm)],
                   ),
                 ],
-              ),
-            ),
-          const SizedBox(height: 10),
-          if (!order.isFailed)
-            Row(
-              children: [
-                Icon(FIcons.banknote, size: 18, color: muted),
-                const SizedBox(width: 8),
-                Text(l10n.collectCash, style: theme.typography.sm.copyWith(color: muted)),
-                const Spacer(),
-                Text(widget.money(order.total), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 14),
+                // The bag, to check against before leaving: the count kept apart
+                // from the dish's name, so a Latin name in Arabic still reads count first
+                Text(l10n.inTheBag, style: theme.typography.xs.copyWith(color: muted, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                for (final line in order.lines)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 30),
+                          height: 24,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(6)),
+                          child: Text(
+                            '${line.units}×',
+                            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular, height: 1),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              line.options == null || line.options!.isEmpty
+                                  ? line.name.getText(locale)
+                                  : '${line.name.getText(locale)} · ${line.options!.getText(locale)}',
+                              style: theme.typography.sm,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // The money, on a band of its own: what to collect at the door, or that the bag goes back
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: order.isFailed ? amber.withValues(alpha: 0.1) : theme.colors.muted,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: order.isFailed
+                ? Row(
+                    children: [
+                      Icon(FIcons.undo2, size: 18, color: amber),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(l10n.bringItBackHint, style: theme.typography.sm)),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Icon(FIcons.banknote, size: 20, color: muted),
+                      const SizedBox(width: 10),
+                      Text(l10n.collectCash, style: theme.typography.sm.copyWith(color: muted, fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Text(
+                            widget.money(order.total),
+                            maxLines: 1,
+                            style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          if (!order.isFailed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FButton(
+                            variant: FButtonVariant.outline,
+                            onPress: () => _open(order.directionsUri, (l10n) => l10n.couldNotOpenMaps),
+                            prefix: const Icon(FIcons.navigation, size: 18),
+                            child: Text(l10n.navigate, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FButton(
+                            variant: FButtonVariant.outline,
+                            onPress: order.phone.isEmpty ? null : () => _open(order.phoneUri, (l10n) => l10n.couldNotOpenDialer),
+                            prefix: const Icon(FIcons.phone, size: 18),
+                            child: Text(l10n.call, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 60,
+                    child: FButton(
+                      onPress: _busy ? null : _next,
+                      prefix: _busy
+                          ? const SizedBox.square(dimension: 20, child: FCircularProgress())
+                          : Icon(order.isOut ? FIcons.circleCheck : FIcons.motorbike, size: 24),
+                      child: Text(
+                        order.isOut ? l10n.markDelivered : l10n.markOnTheWay,
+                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton,
+                      ),
+                    ),
+                  ),
+                  // On the way and the door did not open: the other answer, kept quieter
+                  if (order.isOut) ...[
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 48,
+                      child: FButton(
+                        variant: FButtonVariant.ghost,
+                        onPress: _busy ? null : _couldNotDeliver,
+                        child: Text(
+                          l10n.couldNotDeliver,
+                          style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             )
           else
-            Text(l10n.bringItBackHint, style: theme.typography.sm.copyWith(color: muted)),
-          const SizedBox(height: 12),
-          if (!order.isFailed)
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: FButton(
-                      variant: FButtonVariant.outline,
-                      onPress: () => _open(order.directionsUri, (l10n) => l10n.couldNotOpenMaps),
-                      prefix: const Icon(FIcons.navigation, size: 18),
-                      child: Text(l10n.navigate, style: theme.typography.base.forButton),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: FButton(
-                      variant: FButtonVariant.outline,
-                      onPress: order.phone.isEmpty ? null : () => _open(order.phoneUri, (l10n) => l10n.couldNotOpenDialer),
-                      prefix: const Icon(FIcons.phone, size: 18),
-                      child: Text(l10n.call, style: theme.typography.base.forButton),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          if (!order.isFailed) ...[
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 56,
-              child: FButton(
-                onPress: _busy ? null : _next,
-                prefix: _busy
-                    ? const SizedBox.square(dimension: 18, child: FCircularProgress())
-                    : Icon(order.isOut ? FIcons.circleCheck : FIcons.bike, size: 22),
-                child: Text(
-                  order.isOut ? l10n.markDelivered : l10n.markOnTheWay,
-                  style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton,
-                ),
-              ),
-            ),
-          ],
-          // On the way and the door did not open: the other answer, kept quieter
-          if (order.isOut) ...[
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 48,
-              child: FButton(
-                variant: FButtonVariant.ghost,
-                onPress: _busy ? null : _couldNotDeliver,
-                child: Text(l10n.couldNotDeliver, style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
-              ),
-            ),
-          ],
+            const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+}
+
+/// A soft block with its icon at the start: the address, the customer's note
+class _Inset extends StatelessWidget {
+  final IconData icon;
+  final List<Widget> children;
+
+  const _Inset({required this.icon, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, size: 16, color: theme.colors.foreground),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+          ),
+        ),
+      ],
     );
   }
 }

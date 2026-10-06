@@ -29,8 +29,8 @@ class BranchSwitcher extends ConsumerWidget {
     Widget brand({required bool withChevron}) => Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const BrandMark(size: 32),
-            const SizedBox(width: 8),
+            const BrandMark(size: 36),
+            const SizedBox(width: 10),
             // Takes what the header leaves it and cuts a long name short with
             // an ellipsis, rather than pushing past the edge
             Flexible(
@@ -38,7 +38,7 @@ class BranchSwitcher extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tight leading: two lines fit the 48 dp row (pos_web's `leading-tight`)
+                  // The bar is the switcher's alone: room for the two lines with Arabic's taller letters
                   Text(
                     business.isEmpty ? branchLabel : business,
                     maxLines: 1,
@@ -46,7 +46,7 @@ class BranchSwitcher extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.typography.sm.copyWith(
                       fontWeight: FontWeight.w600,
-                      height: 1.0,
+                      height: 1.3,
                       color: theme.colors.foreground,
                     ),
                   ),
@@ -59,7 +59,7 @@ class BranchSwitcher extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.xs.copyWith(
                         color: theme.colors.mutedForeground,
-                        height: 1.0,
+                        height: 1.3,
                       ),
                     ),
                 ],

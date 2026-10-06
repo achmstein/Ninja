@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../widgets/rider_shell.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/deliveries/screens/deliveries_screen.dart';
+import '../../features/deliveries/screens/today_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
 /// What shows while the rider app reads its session and business: Ninja's
@@ -84,8 +85,8 @@ class _AuthChangeNotifier extends ChangeNotifier {
   }
 }
 
-/// Router provider: `/` is the rider's deliveries, and the settings screen
-/// sits beside it under the same header.
+/// Router provider: `/` is the rider's deliveries, `/today` their day so
+/// far and `/settings` the settings, the three tabs of the same frame.
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = _AuthChangeNotifier(ref);
   ref.onDispose(() => authNotifier.dispose());
@@ -147,11 +148,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Shell route with the rider's header
+      // The frame: the branch at the top, the tabs at the foot
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
-          return RiderShell(child: child);
+          return RiderShell(location: state.matchedLocation, child: child);
         },
         routes: [
           GoRoute(
@@ -159,6 +160,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: DeliveriesScreen(),
             ),
+          ),
+          GoRoute(
+            path: '/today',
+            pageBuilder: (context, state) => const NoTransitionPage(child: TodayScreen()),
           ),
           GoRoute(
             path: '/settings',

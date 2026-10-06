@@ -87,9 +87,15 @@
   "goOffDutyHint": "The till won't give you new deliveries until you're back on duty.",
   "stayOnDuty": "Stay on duty",
   "onDutyHint": "While you are on duty the till can give you deliveries.",
-  "offDutyNote": "You are off duty. Go on duty to get deliveries.",
+  "offDutyHint": "Go on duty so the till can give you deliveries.",
   "toGo": "To deliver",
   "deliveredToday": "Delivered today",
+  "navDeliveries": "Deliveries",
+  "navToday": "Today",
+  "goOff": "Go off",
+  "inTheBag": "In the bag",
+  "allHandedIn": "All your cash is handed in",
+  "noneDeliveredToday": "Nothing delivered yet today",
   "noDeliveries": "No deliveries for you right now",
   "noDeliveriesHint": "When the till gives you one, your phone rings.",
   "orderNumber": "Order #{number}",
@@ -180,14 +186,6 @@
   "notYet": "Not yet",
   "stillCooking": "Still being made",
   "readyToGo": "Ready to go",
-  "cashInHand": "Cash with you: {amount}",
-  "@cashInHand": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
   "cashInHandHint": "Hand it in at the till; the cashier takes it in.",
   "handedIn": "Handed in",
   "cashWithYou": "Cash with you",

@@ -38,7 +38,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Delivered'), findsWidgets);
     expect(find.text("Couldn't deliver"), findsOneWidget);
-    expect(find.text('Tahrir St · Bldg 12, Floor 3'), findsOneWidget, reason: 'an English comma in English');
+    // The street on its own line (isolated, so a Latin street keeps its order on an Arabic screen), the door under it
+    expect(find.text('⁨Tahrir St⁩'), findsOneWidget);
+    expect(find.text('Bldg 12, Floor 3'), findsOneWidget, reason: 'an English comma in English');
   });
 
   testWidgets('not handed over: bring it back, nothing to collect, no next step', (tester) async {

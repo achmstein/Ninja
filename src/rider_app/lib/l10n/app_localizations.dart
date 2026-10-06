@@ -476,11 +476,11 @@ abstract class AppLocalizations {
   /// **'While you are on duty the till can give you deliveries.'**
   String get onDutyHint;
 
-  /// No description provided for @offDutyNote.
+  /// No description provided for @offDutyHint.
   ///
   /// In en, this message translates to:
-  /// **'You are off duty. Go on duty to get deliveries.'**
-  String get offDutyNote;
+  /// **'Go on duty so the till can give you deliveries.'**
+  String get offDutyHint;
 
   /// No description provided for @toGo.
   ///
@@ -493,6 +493,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivered today'**
   String get deliveredToday;
+
+  /// No description provided for @navDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliveries'**
+  String get navDeliveries;
+
+  /// No description provided for @navToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get navToday;
+
+  /// No description provided for @goOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Go off'**
+  String get goOff;
+
+  /// No description provided for @inTheBag.
+  ///
+  /// In en, this message translates to:
+  /// **'In the bag'**
+  String get inTheBag;
+
+  /// No description provided for @allHandedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'All your cash is handed in'**
+  String get allHandedIn;
+
+  /// No description provided for @noneDeliveredToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing delivered yet today'**
+  String get noneDeliveredToday;
 
   /// No description provided for @noDeliveries.
   ///
@@ -769,12 +805,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ready to go'**
   String get readyToGo;
-
-  /// No description provided for @cashInHand.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash with you: {amount}'**
-  String cashInHand(String amount);
 
   /// No description provided for @cashInHandHint.
   ///

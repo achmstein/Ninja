@@ -159,12 +159,18 @@ class DeliveryOrder {
   /// The address on one line, the street first: "Tahrir St · Bldg 12, Floor 3, Apt 7".
   /// [separator] is the language's list comma (", " or "، "), from the app's strings.
   String addressLine({required String building, required String floor, required String apartment, required String separator}) {
+    final details = addressDetails(building: building, floor: floor, apartment: apartment, separator: separator);
+    return details == null ? address : '$address · $details';
+  }
+
+  /// The door under the street: "Bldg 12, Floor 3, Apt 7"; null when the address has none
+  String? addressDetails({required String building, required String floor, required String apartment, required String separator}) {
     final parts = [
       if (this.building != null) '$building ${this.building}',
       if (this.floor != null) '$floor ${this.floor}',
       if (this.apartment != null) '$apartment ${this.apartment}',
     ];
-    return parts.isEmpty ? address : '$address · ${parts.join(separator)}';
+    return parts.isEmpty ? null : parts.join(separator);
   }
 
   /// Whether the customer pinned the door, or only said where it is

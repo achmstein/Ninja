@@ -212,13 +212,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onDutyHint => 'وإنت شغال الكاشير يقدر يديك طلبات توصيل.';
 
   @override
-  String get offDutyNote => 'إنت مش شغال دلوقتي. خليك شغال عشان تاخد طلبات.';
+  String get offDutyHint => 'ابدأ الشغل عشان الكاشير يقدر يديك طلبات توصيل.';
 
   @override
   String get toGo => 'عليك توصيلها';
 
   @override
   String get deliveredToday => 'اتسلّمت النهارده';
+
+  @override
+  String get navDeliveries => 'التوصيلات';
+
+  @override
+  String get navToday => 'النهارده';
+
+  @override
+  String get goOff => 'اقفل';
+
+  @override
+  String get inTheBag => 'في الشنطة';
+
+  @override
+  String get allHandedIn => 'سلّمت كل الكاش للكاشير';
+
+  @override
+  String get noneDeliveredToday => 'لسه ما وصّلتش حاجة النهارده';
 
   @override
   String get noDeliveries => 'مفيش طلبات ليك دلوقتي';
@@ -371,11 +389,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get readyToGo => 'جاهز يطلع';
-
-  @override
-  String cashInHand(String amount) {
-    return 'الكاش اللي معاك: $amount';
-  }
 
   @override
   String get cashInHandHint => 'سلّمه للكاشير وهو يستلمه منك.';

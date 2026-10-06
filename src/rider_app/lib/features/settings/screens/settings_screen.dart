@@ -2,7 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/auth/sign_out.dart';
 import '../../../core/config/app_config.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
@@ -36,24 +35,12 @@ class SettingsScreen extends ConsumerWidget {
             : l10n.notificationsOn;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              SizedBox.square(
-                dimension: 48,
-                child: FButton.icon(
-                  variant: FButtonVariant.ghost,
-                  onPress: () => context.go('/'),
-                  child: const Icon(FIcons.arrowLeft, size: 24),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(l10n.settings, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
-            ],
-          ),
+          // A tab of its own: a title, no way back to go
+          Text(l10n.settings, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           SettingsSection(
             title: l10n.thisDevice,
