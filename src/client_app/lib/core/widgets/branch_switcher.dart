@@ -1,106 +1,275 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../ui/ui.dart';
+import '../theme/theme_provider.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
-import '../../features/places/models/place.dart';
-import '../../features/places/services/place_service.dart';
+import '../providers/branch_switch.dart';
+import '../services/location_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
 
-/// Thin bar that shows the branch switcher chip, hidden when only one branch
-class BranchSwitcherBar extends ConsumerWidget {
-  const BranchSwitcherBar({super.key});
+/// A branch's quiet facts on one line: open or not, and how far
+class BranchFacts extends StatelessWidget {
+  final Branch branch;
+  final double? meters;
+
+  const BranchFacts({super.key, required this.branch, this.meters});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final branchState = ref.watch(branchProvider);
-    if (branchState.branches.length <= 1) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 4),
-      child: const BranchSwitcher(),
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.colors.mutedForeground;
+    final (text, dot) = switch (branchOpenState(branch)) {
+      BranchOpenState.open => (l10n.branchOpen, NinjaColors.success),
+      BranchOpenState.notOrdering => (l10n.branchNotOrdering, NinjaColors.warning),
+      BranchOpenState.closed => (l10n.branchClosed, muted),
+    };
+    final style = context.localeText(theme.typography.caption.copyWith(color: muted));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 6, height: 6, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Flexible(child: AppText(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        if (meters != null) ...[
+          AppText(' · ', style: style),
+          Text(distanceText(context, meters!), textDirection: TextDirection.ltr, style: style.copyWith(fontFeatures: NinjaTypography.tabular)),
+        ],
+      ],
     );
   }
 }
 
-/// Compact branch switcher chip for use in app bars
-class BranchSwitcher extends ConsumerWidget {
-  const BranchSwitcher({super.key});
+/// The way there in Google Maps, for a branch the owner put on the map
+class DirectionsButton extends StatelessWidget {
+  final Branch branch;
+
+  /// Drawn on the muted row that is lit: the pill takes the page's colour to stand off it
+  final bool onMuted;
+
+  const DirectionsButton({super.key, required this.branch, this.onMuted = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final branchState = ref.watch(branchProvider);
+  Widget build(BuildContext context) {
+    final point = branch.point;
+    if (point == null) return const SizedBox.shrink();
     final theme = context.theme;
-
-    if (branchState.branches.length <= 1) {
-      return const SizedBox.shrink();
-    }
-
-    final selectedBranch = branchState.selectedBranch;
-    if (selectedBranch == null) return const SizedBox.shrink();
-
-    // A chip in the top bar's end corner: where the customer is ordering from
     return Pressable(
-      onTap: () => _showBranchPicker(context, ref, branchState.branches, selectedBranch),
+      onTap: () => launchUrl(directionsUri(point), mode: LaunchMode.externalApplication),
       child: Container(
         height: 36,
-        padding: const EdgeInsetsDirectional.only(start: 10, end: 8),
-        decoration: ShapeDecoration(color: theme.colors.muted, shape: const StadiumBorder()),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: ShapeDecoration(color: onMuted ? theme.colors.background : theme.colors.muted, shape: const StadiumBorder()),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.mapPin, size: 14, color: theme.colors.foreground),
-            const SizedBox(width: 4),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
-              child: AppText(
-                selectedBranch.name.localized(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.typography.caption.copyWith(color: theme.colors.foreground, fontWeight: FontWeight.w600),
-              ),
+            Icon(LucideIcons.navigation, size: 14, color: theme.colors.foreground),
+            const SizedBox(width: 6),
+            AppText(
+              AppLocalizations.of(context)!.directions,
+              style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: theme.colors.foreground)),
             ),
-            const SizedBox(width: 2),
-            Icon(LucideIcons.chevronDown, size: 16, color: theme.colors.mutedForeground),
           ],
         ),
       ),
     );
   }
+}
 
-  void _showBranchPicker(BuildContext context, WidgetRef ref, List<Branch> branches, Branch current) {
-    // Check for active session
-    final sessions = ref.read(myStaysProvider);
-    final hasActiveSession = sessions.value?.any((s) => s.status == StayStatus.active) ?? false;
+/// "Use my location", quiet, for a customer who said no or was not asked: a
+/// tap asks then. Gone once the position is known; a spinner while it is found
+class UseMyLocationButton extends ConsumerWidget {
+  const UseMyLocationButton({super.key});
 
-    if (hasActiveSession) {
-      final l10n = AppLocalizations.of(context)!;
-      showIsland(
-        context: context,
-        title: Text(l10n.cannotSwitchBranchDuringSession),
-        icon: Icon(LucideIcons.circleX, color: context.theme.colors.destructive),
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final location = ref.watch(locationProvider);
+    if (location.here != null) return const SizedBox.shrink();
+    final style = context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: theme.colors.mutedForeground));
+    if (location.locating) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox.square(dimension: 14, child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground)),
+          const SizedBox(width: 6),
+          AppText(l10n.locating, style: style),
+        ],
       );
-      return;
     }
+    return Pressable(
+      onTap: () async {
+        final allowed = await ref.read(locationProvider.notifier).locate();
+        if (!allowed && context.mounted) {
+          showIsland(context: context, title: Text(l10n.locationOff), icon: Icon(LucideIcons.mapPinOff, color: theme.colors.mutedForeground));
+        }
+      },
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.locateFixed, size: 14, color: theme.colors.mutedForeground),
+            const SizedBox(width: 6),
+            AppText(l10n.useMyLocation, style: style),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-    showNinjaSheet(
+/// The branches as a sheet from the bottom, the one looked at lit: closest
+/// first when the customer let the app know where they are, each with how
+/// far, whether it is open and the way there. A tap moves the app to it,
+/// asking first when there are dishes in the order. The position is asked
+/// for only once the sheet is open (client_web's BranchSheet).
+Future<void> showBranchSheet(BuildContext context) => showNinjaSheet<void>(
       context: context,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-      builder: (ctx) => TileGroup(
-        children: [
-          for (final branch in branches)
-            NinjaTile(
-              icon: LucideIcons.mapPin,
-              title: AppText(branch.name.localized(context)),
-              trailing: branch.id == current.id ? Icon(LucideIcons.check, size: 18, color: ctx.theme.colors.foreground) : const SizedBox.shrink(),
-              onPress: () {
-                Navigator.pop(ctx);
-                if (branch.id != current.id) ref.read(branchProvider.notifier).selectBranch(branch.id);
-              },
+      builder: (sheetContext) => const _BranchSheet(),
+    );
+
+class _BranchSheet extends ConsumerStatefulWidget {
+  const _BranchSheet();
+
+  @override
+  ConsumerState<_BranchSheet> createState() => _BranchSheetState();
+}
+
+class _BranchSheetState extends ConsumerState<_BranchSheet> {
+  @override
+  void initState() {
+    super.initState();
+    // Something to measure: the phone may ask, once a run
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final branches = ref.read(branchProvider).branches;
+      if (branches.length > 1 && branches.any((b) => b.point != null)) ref.read(locationProvider.notifier).askOnce();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final state = ref.watch(branchProvider);
+    final here = ref.watch(locationProvider).here;
+    final sorted = branchesByDistance(state.branches, state.selectedBranchId, here);
+    final anyPoint = state.branches.any((b) => b.point != null);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+          child: AppText(
+            l10n.selectBranch,
+            style: context.localeText(theme.typography.headline.copyWith(fontWeight: FontWeight.w800, color: theme.colors.foreground)),
+          ),
+        ),
+        if (anyPoint && sorted.length > 1)
+          const Padding(
+            padding: EdgeInsetsDirectional.only(start: 4, bottom: 8),
+            child: Align(alignment: AlignmentDirectional.centerStart, child: UseMyLocationButton()),
+          ),
+        for (final (:item, :meters) in sorted)
+          _BranchRow(
+            branch: item,
+            meters: meters,
+            selected: item.id == state.selectedBranchId,
+            onPick: () {
+              final navigator = Navigator.of(context);
+              final parent = navigator.context;
+              navigator.pop();
+              requestBranchSwitch(parent, ref, item.id);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _BranchRow extends StatelessWidget {
+  final Branch branch;
+  final double? meters;
+  final bool selected;
+  final VoidCallback onPick;
+
+  const _BranchRow({required this.branch, required this.meters, required this.selected, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final address = branch.address?.localized(context) ?? '';
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 64),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsetsDirectional.only(end: 8),
+        decoration: BoxDecoration(color: selected ? theme.colors.muted : null, borderRadius: BorderRadius.circular(20)),
+        child: Row(
+          children: [
+            Expanded(
+              child: Pressable(
+                onTap: onPick,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 8, 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(color: selected ? theme.colors.background : theme.colors.muted, shape: BoxShape.circle),
+                        child: Icon(LucideIcons.mapPin, size: 20, color: theme.colors.foreground),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: AppText(
+                                    branch.name.localized(context),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: theme.colors.foreground)),
+                                  ),
+                                ),
+                                if (selected) ...[
+                                  const SizedBox(width: 6),
+                                  Icon(LucideIcons.check, size: 16, color: theme.colors.foreground),
+                                ],
+                              ],
+                            ),
+                            if (address.isNotEmpty)
+                              AppText(
+                                address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.localeText(theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+                              ),
+                            BranchFacts(branch: branch, meters: meters),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-        ],
+            DirectionsButton(branch: branch, onMuted: selected),
+          ],
+        ),
       ),
     );
   }

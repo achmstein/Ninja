@@ -19,6 +19,10 @@ class TenantFeatures {
   /// it says nothing).
   final bool onlinePayments;
 
+  /// The business brings orders to the door with its own riders. An add-on
+  /// too: off until the brand says otherwise
+  final bool delivery;
+
   const TenantFeatures({
     this.reservations = true,
     this.timeBilling = true,
@@ -29,6 +33,7 @@ class TenantFeatures {
     this.payroll = true,
     this.kds = true,
     this.onlinePayments = false,
+    this.delivery = false,
   });
 
   static const all = TenantFeatures();
@@ -45,6 +50,7 @@ class TenantFeatures {
         kds: json['kds'] as bool? ?? true,
         // A cache from before the rename says "payAtTable"
         onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
+        delivery: json['delivery'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -57,6 +63,7 @@ class TenantFeatures {
         'payroll': payroll,
         'kds': kds,
         'onlinePayments': onlinePayments,
+        'delivery': delivery,
       };
 
   @override
@@ -71,10 +78,11 @@ class TenantFeatures {
           other.finance == finance &&
           other.payroll == payroll &&
           other.kds == kds &&
-          other.onlinePayments == onlinePayments;
+          other.onlinePayments == onlinePayments &&
+          other.delivery == delivery;
 
   @override
-  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, onlinePayments);
+  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, onlinePayments, delivery);
 }
 
 /// The wide logo for headers and sign-in. [width] and [height] are the
@@ -485,6 +493,9 @@ class TenantBrand {
   /// which keeps both, as the app always offered them
   final Set<String>? socialProviders;
 
+  /// "cafe", "restaurant", "cloud_kitchen" or "game_station"; null when the stack does not say
+  final String? businessType;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -499,7 +510,11 @@ class TenantBrand {
     this.version = 0,
     this.customerUrl,
     this.socialProviders,
+    this.businessType,
   });
+
+  /// A cloud kitchen has no tables: an order is collected or brought, never eaten in
+  bool get isCloudKitchen => businessType == 'cloud_kitchen';
 
   /// What shows until anything is known: a neutral name, no color, no logo,
   /// every feature on
@@ -526,6 +541,7 @@ class TenantBrand {
       version: (json['version'] as num?)?.toInt() ?? 0,
       customerUrl: json['customerUrl'] as String?,
       socialProviders: _social(json['auth'] is Map ? (json['auth'] as Map)['social'] : null),
+      businessType: json['businessType'] as String?,
     );
   }
 
@@ -552,6 +568,7 @@ class TenantBrand {
         version: (json['version'] as num?)?.toInt() ?? 0,
         customerUrl: json['customerUrl'] as String?,
         socialProviders: json['social'] is List ? {for (final p in json['social'] as List) if (p is String) p} : null,
+        businessType: json['businessType'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -568,6 +585,7 @@ class TenantBrand {
         'version': version,
         'customerUrl': customerUrl,
         'social': socialProviders?.toList(),
+        'businessType': businessType,
       };
 
   Color? get primaryColor => _color(primaryColorHex);
@@ -600,10 +618,11 @@ class TenantBrand {
           other.locale == locale &&
           other.features == features &&
           other.version == version &&
-          other.customerUrl == customerUrl;
+          other.customerUrl == customerUrl &&
+          other.businessType == businessType;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

@@ -75,6 +75,8 @@
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
 		</dict>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Your location finds the branch nearest you and puts the pin on your door for a delivery.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Chillax needs camera access to scan QR codes.</string>
 		<key>UIStatusBarHidden</key>

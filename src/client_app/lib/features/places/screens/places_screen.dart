@@ -20,6 +20,10 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/providers/branch_switch.dart';
+import '../../../core/services/location_service.dart';
+import '../../../core/models/branch.dart';
+import '../../../core/widgets/branch_switcher.dart';
 import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../service_request/models/service_request.dart';
@@ -53,8 +57,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     ref.listenManual(currentRouteProvider, (previous, next) {
       if (next == '/places' && previous != '/places') {
         ref.read(myStaysProvider.notifier).refresh();
-        final branchId = ref.read(selectedBranchIdProvider);
-        if (branchId != null) ref.invalidate(placesProvider(branchId));
+        ref.invalidate(placesProvider);
         _startPolling();
       } else if (previous == '/places' && next != '/places') {
         _stopPolling();
@@ -89,8 +92,8 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       ref.read(myStaysProvider.notifier).refresh();
-      final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(placesProvider(branchId));
+      // Every branch listed for booking, not only this one
+      ref.invalidate(placesProvider);
     });
   }
 
@@ -107,8 +110,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     // due to stale sockets, and invalidate would flash an error.
     if (state == AppLifecycleState.resumed) {
       ref.read(myStaysProvider.notifier).refresh();
-      final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(placesProvider(branchId));
+      ref.invalidate(placesProvider);
     }
   }
 
@@ -131,6 +133,30 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     final canReserve = reservedSession == null && stay == null && reservationsEnabled;
     final allBusy = rooms.isNotEmpty && free == 0;
     final layout = BrandStyle.of(context).layout.places;
+    final features = ref.watch(featuresProvider);
+    final branches = ref.watch(branchProvider).branches;
+    final atBranch = ref.watch(atBranchProvider);
+    // Every branch that takes bookings, each under its own name (client_web's places.tsx): this one
+    // always, and every other open one taking reservations once its places are in and there are some
+    final groups = <({Branch branch, List<Place> places})>[
+      for (final b in branches)
+        if (b.id == branchId)
+          (branch: b, places: rooms)
+        else if (features.reservations && b.isActive && b.isReservationsEnabled)
+          if (ref.watch(placesProvider(b.id)).value case final List<Place> list when list.isNotEmpty) (branch: b, places: list),
+    ];
+    final multi = groups.length > 1;
+    final here = ref.watch(locationProvider).here;
+    final anyPoint = groups.any((g) => g.branch.point != null);
+    // There are branches to measure: the phone may ask for the position, once a run
+    if (multi && anyPoint) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(locationProvider.notifier).askOnce());
+    final ordered = [
+      for (final (:item, :meters) in branchesByDistance([for (final g in groups) g.branch], branchId, here))
+        (branch: item, places: groups.firstWhere((g) => g.branch.id == item.id).places, meters: meters),
+    ];
+    // Another branch's places book only while the customer is at none (a bill, a scanned table)
+    bool canReserveAt(Branch b) =>
+        reservedSession == null && stay == null && features.reservations && b.isReservationsEnabled && (b.id == branchId || !atBranch);
 
     // A hold open: the tab is the reservation, one slab between the top bar and the dock, while they walk over
     if (reservedSession != null && stay == null) {
@@ -152,7 +178,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       gap: 16,
       controller: _scrollController,
       onRefresh: () async {
-        ref.invalidate(placesProvider(branchId));
+        ref.invalidate(placesProvider);
         await ref.read(myStaysProvider.notifier).refresh();
       },
       children: [
@@ -162,6 +188,32 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
         if (allBusy && reservedSession == null) const NotifyMeBanner(),
+        // Booking across branches: the customer's position on their word, and the branch changed by hand
+        if ((multi && anyPoint && here == null) || (branches.length > 1 && !atBranch))
+          Row(
+            children: [
+              if (multi && anyPoint) const UseMyLocationButton(),
+              const Spacer(),
+              if (branches.length > 1 && !atBranch)
+                Pressable(
+                  onTap: () => showBranchSheet(context),
+                  child: SizedBox(
+                    height: 36,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.mapPin, size: 14, color: c.mutedForeground),
+                        const SizedBox(width: 6),
+                        AppText(
+                          l10n.ninjaChangeBranch,
+                          style: context.localeText(context.theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.mutedForeground)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ...roomsAsync.when(
           skipLoadingOnRefresh: true,
           // The skeletons take the shape the places will
@@ -199,7 +251,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           },
           // A stale socket after a resume: the places known stay up while the poll catches up
           error: (_, _) => roomsAsync.hasValue
-              ? _cards(rooms, stay, canReserve, layout)
+              ? (multi ? _byBranch(ordered, stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout))
               : [
                   EmptyState(
                     icon: LucideIcons.circleAlert,
@@ -212,10 +264,50 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                     ),
                   ),
                 ],
-          data: (rooms) => _cards(rooms, stay, canReserve, layout),
+          data: (rooms) => multi ? _byBranch(ordered, stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout),
         ),
       ],
     );
+  }
+
+  /// Opens a place's booking, or closes it. Another branch's place moves the app to that branch first
+  /// (asking when the order has dishes), then the booking opens as it would at home
+  void _toggle(int placeId, int placeBranchId) {
+    if (_openId == placeId) {
+      setState(() => _openId = null);
+      return;
+    }
+    requestBranchSwitch(context, ref, placeBranchId, then: () {
+      if (mounted) setState(() => _openId = placeId);
+    });
+  }
+
+  /// Booking across branches: each branch under its heading, closest first; in a room, that room
+  /// leads as the hero and every other place follows quieter
+  List<Widget> _byBranch(
+    List<({Branch branch, List<Place> places, double? meters})> ordered,
+    Stay? stay,
+    bool Function(Branch) canReserveAt,
+    PlacesLayout layout,
+  ) {
+    final branchId = ref.read(selectedBranchIdProvider);
+    final mine = stay == null
+        ? null
+        : ordered.where((g) => g.branch.id == branchId).firstOrNull?.places.where((r) => r.id == stay.placeId).firstOrNull;
+    final quiet = mine != null;
+    return [
+      if (stay != null && mine != null) YourRoomCard(stay: stay, place: mine),
+      for (final group in ordered) ...[
+        Opacity(opacity: quiet ? 0.6 : 1, child: _BranchHeading(branch: group.branch, places: group.places, meters: group.meters)),
+        ..._laidOut(
+          [for (final p in group.places) if (p != mine) p],
+          !quiet && canReserveAt(group.branch),
+          layout,
+          quiet: quiet,
+          placeBranchId: group.branch.id,
+        ),
+      ],
+    ];
   }
 
   /// The places; in a room, that room first as the hero and the others after it, quieter: while the
@@ -235,9 +327,12 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
 
   /// The places the way the business chose: a big card each, or the slim
   /// rows or tiles (those grouped by kind when there is more than one)
-  List<Widget> _laidOut(List<Place> rooms, bool canReserve, PlacesLayout layout, {bool quiet = false}) {
+  List<Widget> _laidOut(List<Place> rooms, bool canReserve, PlacesLayout layout, {bool quiet = false, int? placeBranchId}) {
+    final at = placeBranchId ?? ref.read(selectedBranchIdProvider) ?? 0;
     if (layout == PlacesLayout.cards) {
-      return [for (final room in rooms) quiet ? Opacity(opacity: 0.6, child: _card(room, canReserve)) : _card(room, canReserve)];
+      return [
+        for (final room in rooms) quiet ? Opacity(opacity: 0.6, child: _card(room, canReserve, at)) : _card(room, canReserve, at),
+      ];
     }
     return [
       PlacesLaidOut(
@@ -246,18 +341,18 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         canReserve: canReserve,
         openId: _openId,
         quiet: quiet,
-        onToggle: (id) => setState(() => _openId = _openId == id ? null : id),
+        onToggle: (id) => _toggle(id, at),
         onDone: (_) => setState(() => _openId = null),
       ),
     ];
   }
 
-  Widget _card(Place room, bool canReserve) => PlaceListItem(
-        key: ValueKey(room.id),
+  Widget _card(Place room, bool canReserve, int placeBranchId) => PlaceListItem(
+        key: ValueKey('$placeBranchId-${room.id}'),
         room: room,
         canReserve: canReserve,
         open: _openId == room.id && canReserve,
-        onToggle: () => setState(() => _openId = _openId == room.id ? null : room.id),
+        onToggle: () => _toggle(room.id, placeBranchId),
         // Booked or turned down, the form goes; booked, the hold shows over the places
         onDone: (_) => setState(() => _openId = null),
       );
@@ -1494,3 +1589,51 @@ String tariffLine(BuildContext context, MoneyFormat money, List<RateOption> opti
   return '$parts ${l10n.perHourShort}';
 }
 
+
+/// A branch's heading over its places, when booking spans branches: its name,
+/// how many are free and how far, and the way there
+class _BranchHeading extends StatelessWidget {
+  final Branch branch;
+  final List<Place> places;
+  final double? meters;
+
+  const _BranchHeading({required this.branch, required this.places, required this.meters});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.colors.mutedForeground;
+    final caption = context.localeText(theme.typography.caption.copyWith(color: muted));
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText(
+                  branch.name.localized(context),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.localeText(theme.typography.headline.copyWith(fontWeight: FontWeight.w800, color: theme.colors.foreground)),
+                ),
+                Row(
+                  children: [
+                    AppText(l10n.bookFreeNow(places.where((p) => p.canBookNow).length), style: caption),
+                    if (meters != null) ...[
+                      AppText(' · ', style: caption),
+                      Text(distanceText(context, meters!), textDirection: TextDirection.ltr, style: caption.copyWith(fontFeatures: NinjaTypography.tabular)),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          DirectionsButton(branch: branch),
+        ],
+      ),
+    );
+  }
+}

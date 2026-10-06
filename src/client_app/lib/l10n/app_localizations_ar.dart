@@ -1478,6 +1478,250 @@ class AppLocalizationsAr extends AppLocalizations {
   String orderCancelledNote(String name) {
     return '$name مقدرش ياخد الطلب ده.';
   }
+
+  @override
+  String get branchOpen => 'فاتح';
+
+  @override
+  String get branchNotOrdering => 'مش بياخد طلبات دلوقتي';
+
+  @override
+  String get branchClosed => 'مقفول';
+
+  @override
+  String get directions => 'الطريق';
+
+  @override
+  String get locating => 'بندوّر على مكانك…';
+
+  @override
+  String get useMyLocation => 'استخدم مكاني';
+
+  @override
+  String get locationOff =>
+      'اللوكيشن مقفول للتطبيق ده. افتحه من إعدادات الموبايل.';
+
+  @override
+  String ninjaSwitchBranchWithOrder(String name) {
+    return 'تغيّر لفرع $name؟ الطلب اللي معاك هيتشال.';
+  }
+
+  @override
+  String get ninjaKeepOrder => 'خلّي طلبي';
+
+  @override
+  String get ninjaSwitchBranch => 'غيّر';
+
+  @override
+  String get ninjaChangeBranch => 'غيّر الفرع';
+
+  @override
+  String get ninjaBranch => 'الفرع';
+
+  @override
+  String distanceKm(String value) {
+    return '$value كم';
+  }
+
+  @override
+  String distanceM(String value) {
+    return '$value م';
+  }
+
+  @override
+  String get deliveryModeLabel => 'هتستلم إزاي';
+
+  @override
+  String get deliveryDeliver => 'توصيل';
+
+  @override
+  String get deliveryPickup => 'استلام';
+
+  @override
+  String get deliveryAddAddress => 'ضيف عنوانك';
+
+  @override
+  String get deliveryAddressTitle => 'التوصيل إلى';
+
+  @override
+  String get deliveryNewAddress => 'عنوان جديد';
+
+  @override
+  String get deliveryEditAddress => 'تعديل العنوان';
+
+  @override
+  String get myAddresses => 'عناويني';
+
+  @override
+  String get myAddressesEmpty => 'لسه مفيش عناوين. ضيف واحد لما تطلب توصيل.';
+
+  @override
+  String get deliveryChecking => 'بنشوف العنوان…';
+
+  @override
+  String get deliveryQuoteFailed => 'معرفناش نتأكد من العنوان ده.';
+
+  @override
+  String get deliveryRetry => 'جرب تاني';
+
+  @override
+  String deliveryOutOfRange(String name) {
+    return '$name مش بيوصّل للمسافة دي';
+  }
+
+  @override
+  String deliveryTryBranch(String name, String distance) {
+    return 'اطلب من $name، على بعد $distance';
+  }
+
+  @override
+  String get deliveryFee => 'رسوم التوصيل';
+
+  @override
+  String get deliveryFree => 'توصيل مجاني';
+
+  @override
+  String deliveryAddMore(String amount) {
+    return 'زوّد $amount كمان عشان التوصيل';
+  }
+
+  @override
+  String get deliveryCashAtDoor => 'ادفع كاش للمندوب عند الباب';
+
+  @override
+  String get deliveryMovePin => 'حرّك الخريطة لحد ما الدبوس ييجي على بابك';
+
+  @override
+  String get deliveryNeedPin => 'حرّك الخريطة لحد بابك، أو استخدم مكانك';
+
+  @override
+  String get deliveryStreet => 'المنطقة والشارع';
+
+  @override
+  String get deliveryBuilding => 'العمارة';
+
+  @override
+  String get deliveryFloor => 'الدور';
+
+  @override
+  String get deliveryApartment => 'الشقة';
+
+  @override
+  String get deliveryBuildingShort => 'عمارة';
+
+  @override
+  String get deliveryFloorShort => 'دور';
+
+  @override
+  String get deliveryApartmentShort => 'شقة';
+
+  @override
+  String get deliveryDirections => 'وصف للمندوب';
+
+  @override
+  String get deliveryDirectionsHint => 'علامة مميزة، البوابة، أي حاجة تساعد';
+
+  @override
+  String get deliveryPhone => 'رقم للمندوب';
+
+  @override
+  String get deliveryLabel => 'سمّيه';
+
+  @override
+  String get deliveryLabelHome => 'البيت';
+
+  @override
+  String get deliveryLabelWork => 'الشغل';
+
+  @override
+  String get deliverySaveAddress => 'وصّل هنا';
+
+  @override
+  String get deliveryAddressSaved => 'العنوان اتحفظ';
+
+  @override
+  String get deliveryAddressNotSaved => 'العنوان متحفظش. جرب تاني.';
+
+  @override
+  String get deliveryRemoveAddress => 'شيل العنوان ده';
+
+  @override
+  String get deliveryRemoveConfirm => 'تشيل العنوان ده؟';
+
+  @override
+  String get deliveryKeep => 'سيبه';
+
+  @override
+  String get deliveryRemoveYes => 'شيله';
+
+  @override
+  String get deliveryAddressRemoved => 'العنوان اتشال';
+
+  @override
+  String get deliveryAddressNotRemoved => 'العنوان متشالش. جرب تاني.';
+
+  @override
+  String get deliveryNeedStreet => 'اكتب المنطقة والشارع';
+
+  @override
+  String get deliveryNeedPhone => 'رقم يقدر المندوب يكلمه';
+
+  @override
+  String get mapNotLoaded => 'الخريطة محمّلتش.';
+
+  @override
+  String get mapRetry => 'حمّلها تاني';
+
+  @override
+  String get problemNotDelivering => 'الفرع ده مش بيوصّل دلوقتي.';
+
+  @override
+  String get problemOutOfRange => 'العنوان ده برّه منطقة توصيل الفرع.';
+
+  @override
+  String get problemBelowMinimum => 'زوّد شوية عشان التوصيل.';
+
+  @override
+  String get problemPinInvalid => 'الدبوس ده مش نقطة على الخريطة.';
+
+  @override
+  String get problemPlaceConflict => 'الطلب يا للترابيزة يا للباب، مش الاتنين.';
+
+  @override
+  String get problemTooLong => 'جزء من العنوان طويل أوي. قصّره.';
+
+  @override
+  String get orderStagePreparing => 'بيتجهز';
+
+  @override
+  String get orderStageOnTheWay => 'في الطريق';
+
+  @override
+  String get orderStageDelivered => 'وصل';
+
+  @override
+  String get orderStageNotDelivered => 'موصلش';
+
+  @override
+  String get orderOnTheWayNote => 'في الطريق ليك. ادفع للمندوب عند الباب.';
+
+  @override
+  String get orderDeliveredNote => 'وصل. بالهنا والشفا!';
+
+  @override
+  String orderPreparingNote(String name) {
+    return 'اتأكد و$name بيجهزه للتوصيل.';
+  }
+
+  @override
+  String orderOnTheWayRiderNote(String rider) {
+    return '$rider في الطريق ليك. ادفع له عند الباب.';
+  }
+
+  @override
+  String orderNotDeliveredNote(String name) {
+    return 'المندوب مقدرش يوصّله. $name هيكلمك.';
+  }
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -2597,5 +2841,252 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   @override
   String orderCancelledNote(String name) {
     return 'لم يتمكن $name من قبول هذا الطلب.';
+  }
+
+  @override
+  String get branchOpen => 'مفتوح';
+
+  @override
+  String get branchNotOrdering => 'لا يستقبل الطلبات حاليًا';
+
+  @override
+  String get branchClosed => 'مغلق';
+
+  @override
+  String get directions => 'الاتجاهات';
+
+  @override
+  String get locating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get useMyLocation => 'استخدم موقعي';
+
+  @override
+  String get locationOff =>
+      'خدمة الموقع غير مفعّلة لهذا التطبيق. فعّلها من إعدادات الهاتف.';
+
+  @override
+  String ninjaSwitchBranchWithOrder(String name) {
+    return 'هل تريد الانتقال إلى فرع $name؟ سيتم إفراغ طلبك.';
+  }
+
+  @override
+  String get ninjaKeepOrder => 'الإبقاء على طلبي';
+
+  @override
+  String get ninjaSwitchBranch => 'انتقال';
+
+  @override
+  String get ninjaChangeBranch => 'تغيير الفرع';
+
+  @override
+  String get ninjaBranch => 'الفرع';
+
+  @override
+  String distanceKm(String value) {
+    return '$value كم';
+  }
+
+  @override
+  String distanceM(String value) {
+    return '$value م';
+  }
+
+  @override
+  String get deliveryModeLabel => 'كيف تستلم طلبك';
+
+  @override
+  String get deliveryDeliver => 'توصيل';
+
+  @override
+  String get deliveryPickup => 'استلام';
+
+  @override
+  String get deliveryAddAddress => 'أضف عنوانك';
+
+  @override
+  String get deliveryAddressTitle => 'التوصيل إلى';
+
+  @override
+  String get deliveryNewAddress => 'عنوان جديد';
+
+  @override
+  String get deliveryEditAddress => 'تعديل العنوان';
+
+  @override
+  String get myAddresses => 'عناويني';
+
+  @override
+  String get myAddressesEmpty =>
+      'لا توجد عناوين بعد. أضف عنوانًا عند طلب التوصيل.';
+
+  @override
+  String get deliveryChecking => 'جارٍ التحقق من العنوان…';
+
+  @override
+  String get deliveryQuoteFailed => 'تعذّر التحقق من هذا العنوان.';
+
+  @override
+  String get deliveryRetry => 'حاول مرة أخرى';
+
+  @override
+  String deliveryOutOfRange(String name) {
+    return 'لا يوصّل $name إلى هذه المسافة';
+  }
+
+  @override
+  String deliveryTryBranch(String name, String distance) {
+    return 'اطلب من $name، على بُعد $distance';
+  }
+
+  @override
+  String get deliveryFee => 'رسوم التوصيل';
+
+  @override
+  String get deliveryFree => 'توصيل مجاني';
+
+  @override
+  String deliveryAddMore(String amount) {
+    return 'أضف $amount أخرى للتوصيل';
+  }
+
+  @override
+  String get deliveryCashAtDoor => 'ادفع للمندوب نقدًا عند الباب';
+
+  @override
+  String get deliveryMovePin => 'حرّك الخريطة حتى يقع الدبوس على بابك';
+
+  @override
+  String get deliveryNeedPin => 'حرّك الخريطة حتى بابك، أو استخدم موقعك';
+
+  @override
+  String get deliveryStreet => 'المنطقة والشارع';
+
+  @override
+  String get deliveryBuilding => 'المبنى';
+
+  @override
+  String get deliveryFloor => 'الطابق';
+
+  @override
+  String get deliveryApartment => 'الشقة';
+
+  @override
+  String get deliveryBuildingShort => 'مبنى';
+
+  @override
+  String get deliveryFloorShort => 'طابق';
+
+  @override
+  String get deliveryApartmentShort => 'شقة';
+
+  @override
+  String get deliveryDirections => 'وصف للمندوب';
+
+  @override
+  String get deliveryDirectionsHint => 'معلم قريب، البوابة، أي شيء يساعد';
+
+  @override
+  String get deliveryPhone => 'رقم هاتف للمندوب';
+
+  @override
+  String get deliveryLabel => 'سمِّه';
+
+  @override
+  String get deliveryLabelHome => 'المنزل';
+
+  @override
+  String get deliveryLabelWork => 'العمل';
+
+  @override
+  String get deliverySaveAddress => 'التوصيل إلى هنا';
+
+  @override
+  String get deliveryAddressSaved => 'تم حفظ العنوان';
+
+  @override
+  String get deliveryAddressNotSaved => 'لم يُحفظ العنوان. حاول مرة أخرى.';
+
+  @override
+  String get deliveryRemoveAddress => 'إزالة هذا العنوان';
+
+  @override
+  String get deliveryRemoveConfirm => 'هل تريد إزالة هذا العنوان؟';
+
+  @override
+  String get deliveryKeep => 'الإبقاء عليه';
+
+  @override
+  String get deliveryRemoveYes => 'إزالة';
+
+  @override
+  String get deliveryAddressRemoved => 'تمت إزالة العنوان';
+
+  @override
+  String get deliveryAddressNotRemoved =>
+      'لم تتم إزالة العنوان. حاول مرة أخرى.';
+
+  @override
+  String get deliveryNeedStreet => 'اكتب المنطقة والشارع';
+
+  @override
+  String get deliveryNeedPhone => 'رقم يستطيع المندوب الاتصال به';
+
+  @override
+  String get mapNotLoaded => 'لم تُحمَّل الخريطة.';
+
+  @override
+  String get mapRetry => 'أعد التحميل';
+
+  @override
+  String get problemNotDelivering => 'هذا الفرع لا يوصّل حاليًا.';
+
+  @override
+  String get problemOutOfRange => 'هذا العنوان خارج منطقة توصيل الفرع.';
+
+  @override
+  String get problemBelowMinimum => 'أضف المزيد قليلًا للتوصيل.';
+
+  @override
+  String get problemPinInvalid => 'هذا الدبوس ليس نقطة على الخريطة.';
+
+  @override
+  String get problemPlaceConflict =>
+      'يُرسل الطلب إلى طاولة أو إلى بابك، لا كليهما.';
+
+  @override
+  String get problemTooLong => 'جزء من العنوان طويل جدًا. اختصره.';
+
+  @override
+  String get orderStagePreparing => 'قيد التحضير';
+
+  @override
+  String get orderStageOnTheWay => 'في الطريق';
+
+  @override
+  String get orderStageDelivered => 'تم التوصيل';
+
+  @override
+  String get orderStageNotDelivered => 'تعذّر التوصيل';
+
+  @override
+  String get orderOnTheWayNote => 'في الطريق إليك. ادفع للمندوب عند الباب.';
+
+  @override
+  String get orderDeliveredNote => 'تم التوصيل. بالهناء والشفاء!';
+
+  @override
+  String orderPreparingNote(String name) {
+    return 'تم التأكيد ويُحضّره $name للتوصيل.';
+  }
+
+  @override
+  String orderOnTheWayRiderNote(String rider) {
+    return '$rider في الطريق إليك. ادفع له عند الباب.';
+  }
+
+  @override
+  String orderNotDeliveredNote(String name) {
+    return 'لم يتمكن المندوب من توصيله. سيتواصل معك $name.';
   }
 }

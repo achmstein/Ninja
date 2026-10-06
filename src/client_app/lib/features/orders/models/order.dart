@@ -79,6 +79,28 @@ class OrderItem {
 }
 
 /// Order model
+/// Where the business's own delivery of an order has got to, as Ordering says it
+class OrderDelivery {
+  /// "Waiting", "Assigned", "OnTheWay", "Delivered", "Failed" or "Returned"
+  final String stage;
+
+  /// The rider who has it, when the till said who
+  final String? riderName;
+  final double fee;
+
+  const OrderDelivery({required this.stage, this.riderName, this.fee = 0});
+
+  static OrderDelivery? parse(Object? json) {
+    if (json is! Map) return null;
+    final rider = json['riderName'];
+    return OrderDelivery(
+      stage: json['stage'] as String? ?? 'Waiting',
+      riderName: rider is String && rider.trim().isNotEmpty ? rider.trim() : null,
+      fee: (json['fee'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
 class Order {
   final int id;
   final DateTime date;
@@ -117,6 +139,9 @@ class Order {
   /// The Sales ticket the order landed on — what the receipt opens
   final int? ticketId;
 
+  /// Brought by the business's rider: where it has got to; null for an order eaten in or collected
+  final OrderDelivery? delivery;
+
   bool get isPaid => paidAt != null;
 
   Order({
@@ -141,6 +166,7 @@ class Order {
     this.refundedAmount = 0,
     this.voidedAt,
     this.ticketId,
+    this.delivery,
   });
 
   /// Check if order can be rated (must be confirmed and not already rated)
@@ -184,6 +210,7 @@ class Order {
       refundedAmount: ((json['refundedAmount'] ?? 0) as num).toDouble(),
       voidedAt: json['voidedAt'] != null ? DateTime.parse(json['voidedAt'] as String) : null,
       ticketId: (json['ticketId'] as num?)?.toInt(),
+      delivery: OrderDelivery.parse(json['delivery']),
     );
   }
 }

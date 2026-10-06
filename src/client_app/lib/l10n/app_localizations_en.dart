@@ -1482,4 +1482,255 @@ class AppLocalizationsEn extends AppLocalizations {
   String orderCancelledNote(String name) {
     return '$name could not take this order.';
   }
+
+  @override
+  String get branchOpen => 'Open';
+
+  @override
+  String get branchNotOrdering => 'Not taking orders now';
+
+  @override
+  String get branchClosed => 'Closed';
+
+  @override
+  String get directions => 'Directions';
+
+  @override
+  String get locating => 'Finding you…';
+
+  @override
+  String get useMyLocation => 'Use my location';
+
+  @override
+  String get locationOff =>
+      'Location is off for this app. Turn it on in your phone\'s settings.';
+
+  @override
+  String ninjaSwitchBranchWithOrder(String name) {
+    return 'Switch to $name? Your order will be emptied.';
+  }
+
+  @override
+  String get ninjaKeepOrder => 'Keep my order';
+
+  @override
+  String get ninjaSwitchBranch => 'Switch';
+
+  @override
+  String get ninjaChangeBranch => 'Change branch';
+
+  @override
+  String get ninjaBranch => 'Branch';
+
+  @override
+  String distanceKm(String value) {
+    return '$value km';
+  }
+
+  @override
+  String distanceM(String value) {
+    return '$value m';
+  }
+
+  @override
+  String get deliveryModeLabel => 'How you get it';
+
+  @override
+  String get deliveryDeliver => 'Delivery';
+
+  @override
+  String get deliveryPickup => 'Pickup';
+
+  @override
+  String get deliveryAddAddress => 'Add your address';
+
+  @override
+  String get deliveryAddressTitle => 'Deliver to';
+
+  @override
+  String get deliveryNewAddress => 'New address';
+
+  @override
+  String get deliveryEditAddress => 'Edit address';
+
+  @override
+  String get myAddresses => 'My addresses';
+
+  @override
+  String get myAddressesEmpty =>
+      'No addresses yet. Add one when you order for delivery.';
+
+  @override
+  String get deliveryChecking => 'Checking the address…';
+
+  @override
+  String get deliveryQuoteFailed => 'Couldn\'t check this address.';
+
+  @override
+  String get deliveryRetry => 'Try again';
+
+  @override
+  String deliveryOutOfRange(String name) {
+    return '$name doesn\'t deliver this far';
+  }
+
+  @override
+  String deliveryTryBranch(String name, String distance) {
+    return 'Order from $name, $distance away';
+  }
+
+  @override
+  String get deliveryFee => 'Delivery fee';
+
+  @override
+  String get deliveryFree => 'Free delivery';
+
+  @override
+  String deliveryAddMore(String amount) {
+    return 'Add $amount more for delivery';
+  }
+
+  @override
+  String get deliveryCashAtDoor => 'Pay the rider in cash at the door';
+
+  @override
+  String get deliveryMovePin => 'Move the map to put the pin on your door';
+
+  @override
+  String get deliveryNeedPin =>
+      'Move the map to your door, or use your location';
+
+  @override
+  String get deliveryStreet => 'Area and street';
+
+  @override
+  String get deliveryBuilding => 'Building';
+
+  @override
+  String get deliveryFloor => 'Floor';
+
+  @override
+  String get deliveryApartment => 'Apartment';
+
+  @override
+  String get deliveryBuildingShort => 'Bldg';
+
+  @override
+  String get deliveryFloorShort => 'Floor';
+
+  @override
+  String get deliveryApartmentShort => 'Apt';
+
+  @override
+  String get deliveryDirections => 'Directions for the rider';
+
+  @override
+  String get deliveryDirectionsHint =>
+      'A landmark, the gate, anything that helps';
+
+  @override
+  String get deliveryPhone => 'Phone for the rider';
+
+  @override
+  String get deliveryLabel => 'Name it';
+
+  @override
+  String get deliveryLabelHome => 'Home';
+
+  @override
+  String get deliveryLabelWork => 'Work';
+
+  @override
+  String get deliverySaveAddress => 'Deliver here';
+
+  @override
+  String get deliveryAddressSaved => 'Address saved';
+
+  @override
+  String get deliveryAddressNotSaved => 'The address wasn\'t saved. Try again.';
+
+  @override
+  String get deliveryRemoveAddress => 'Remove this address';
+
+  @override
+  String get deliveryRemoveConfirm => 'Remove this address?';
+
+  @override
+  String get deliveryKeep => 'Keep it';
+
+  @override
+  String get deliveryRemoveYes => 'Remove';
+
+  @override
+  String get deliveryAddressRemoved => 'Address removed';
+
+  @override
+  String get deliveryAddressNotRemoved =>
+      'The address wasn\'t removed. Try again.';
+
+  @override
+  String get deliveryNeedStreet => 'Say the area and street';
+
+  @override
+  String get deliveryNeedPhone => 'A phone number the rider can call';
+
+  @override
+  String get mapNotLoaded => 'The map didn\'t load.';
+
+  @override
+  String get mapRetry => 'Load it again';
+
+  @override
+  String get problemNotDelivering => 'This branch isn\'t delivering right now.';
+
+  @override
+  String get problemOutOfRange =>
+      'This address is outside the branch\'s delivery area.';
+
+  @override
+  String get problemBelowMinimum => 'Add a little more for delivery.';
+
+  @override
+  String get problemPinInvalid => 'That pin isn\'t a point on the map.';
+
+  @override
+  String get problemPlaceConflict =>
+      'An order goes to a table or to your door, not both.';
+
+  @override
+  String get problemTooLong => 'Part of the address is too long. Shorten it.';
+
+  @override
+  String get orderStagePreparing => 'Being made';
+
+  @override
+  String get orderStageOnTheWay => 'On its way';
+
+  @override
+  String get orderStageDelivered => 'Delivered';
+
+  @override
+  String get orderStageNotDelivered => 'Couldn\'t be delivered';
+
+  @override
+  String get orderOnTheWayNote =>
+      'On its way to you. Pay the rider at the door.';
+
+  @override
+  String get orderDeliveredNote => 'Delivered. Enjoy!';
+
+  @override
+  String orderPreparingNote(String name) {
+    return 'Confirmed. $name is making it for delivery.';
+  }
+
+  @override
+  String orderOnTheWayRiderNote(String rider) {
+    return '$rider is on the way to you. Pay them at the door.';
+  }
+
+  @override
+  String orderNotDeliveredNote(String name) {
+    return 'The rider couldn\'t deliver it. $name will be in touch.';
+  }
 }

@@ -7,7 +7,6 @@ import '../brand/brand_mark.dart';
 import '../brand/brand_provider.dart';
 import '../motion/motion.dart';
 import '../ui/ui.dart';
-import '../widgets/branch_switcher.dart';
 import 'deck_compact.dart';
 import 'tuck.dart';
 
@@ -69,8 +68,6 @@ class NinjaTopBar extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const BranchSwitcher(),
-                  const SizedBox(width: 8),
                   NinjaIconButton(
                     size: 36,
                     semanticLabel: l10n.claimScan,

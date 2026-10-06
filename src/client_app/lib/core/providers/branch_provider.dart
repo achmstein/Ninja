@@ -70,9 +70,11 @@ class BranchNotifier extends Notifier<BranchState> {
 
       var selectedId = state.selectedBranchId;
 
-      // If no branch selected yet, or selected branch not in list, pick first
+      // The app opens at the branch last used; where that is not one of the business's (a first
+      // visit, a branch since removed) at the first open one in the owner's order
       if (selectedId == null || !branches.any((b) => b.id == selectedId)) {
-        selectedId = branches.isNotEmpty ? branches.first.id : null;
+        final ordered = [...branches]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        selectedId = (ordered.where((b) => b.isActive).firstOrNull ?? ordered.firstOrNull)?.id;
         if (selectedId != null) {
           _saveBranchId(selectedId);
         }

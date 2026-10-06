@@ -34,8 +34,8 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
-        // Add branch header if getter is provided
-        if (branchIdGetter != null) {
+        // The selected branch, unless the call names its own (booking lists every branch's places)
+        if (branchIdGetter != null && !options.headers.containsKey('X-Branch-Id')) {
           options.headers['X-Branch-Id'] = branchIdGetter().toString();
         }
         return handler.next(options);
@@ -58,8 +58,8 @@ class ApiClient {
   }
 
   Future<Response<T>> get<T>(String path,
-      {Map<String, dynamic>? queryParameters}) {
-    return _dio.get<T>(path, queryParameters: queryParameters);
+      {Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) {
+    return _dio.get<T>(path, queryParameters: queryParameters, options: headers != null ? Options(headers: headers) : null);
   }
 
   Future<Response<T>> post<T>(String path,

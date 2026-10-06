@@ -79,6 +79,10 @@ class DockBill extends ConsumerWidget {
     final stageWord = switch (stage) {
       OrderStage.sent => l10n.orderStageSent,
       OrderStage.confirmed => l10n.orderStageConfirmed,
+      OrderStage.preparing => l10n.orderStagePreparing,
+      OrderStage.onTheWay => l10n.orderStageOnTheWay,
+      OrderStage.delivered => l10n.orderStageDelivered,
+      OrderStage.notDelivered => l10n.orderStageNotDelivered,
       OrderStage.cancelled => l10n.orderStageCancelled,
       null => null,
     };
@@ -100,6 +104,11 @@ class DockBill extends ConsumerWidget {
     final (IconData icon, Color fill, Color ink) = switch (stage) {
       OrderStage.sent => (LucideIcons.send, c.foreground.withValues(alpha: 0.12), c.foreground),
       OrderStage.confirmed => (LucideIcons.check, NinjaColors.successSolid, Colors.white),
+      // A delivery on its way to the door: being made, then with its rider, then there
+      OrderStage.preparing => (LucideIcons.chefHat, c.foreground.withValues(alpha: 0.12), c.foreground),
+      OrderStage.onTheWay => (LucideIcons.bike, NinjaColors.successSolid, Colors.white),
+      OrderStage.delivered => (LucideIcons.house, NinjaColors.successSolid, Colors.white),
+      OrderStage.notDelivered => (LucideIcons.x, NinjaColors.warning, Colors.white),
       OrderStage.cancelled => (LucideIcons.x, NinjaColors.errorSolid, Colors.white),
       null => (destination?.placeKind.icon ?? LucideIcons.receiptText, c.foreground.withValues(alpha: 0.12), c.foreground),
     };

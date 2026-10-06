@@ -2702,6 +2702,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} could not take this order.'**
   String orderCancelledNote(String name);
+
+  /// No description provided for @branchOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get branchOpen;
+
+  /// No description provided for @branchNotOrdering.
+  ///
+  /// In en, this message translates to:
+  /// **'Not taking orders now'**
+  String get branchNotOrdering;
+
+  /// No description provided for @branchClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get branchClosed;
+
+  /// No description provided for @directions.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get directions;
+
+  /// No description provided for @locating.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding you…'**
+  String get locating;
+
+  /// No description provided for @useMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my location'**
+  String get useMyLocation;
+
+  /// No description provided for @locationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is off for this app. Turn it on in your phone\'s settings.'**
+  String get locationOff;
+
+  /// No description provided for @ninjaSwitchBranchWithOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {name}? Your order will be emptied.'**
+  String ninjaSwitchBranchWithOrder(String name);
+
+  /// No description provided for @ninjaKeepOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my order'**
+  String get ninjaKeepOrder;
+
+  /// No description provided for @ninjaSwitchBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get ninjaSwitchBranch;
+
+  /// No description provided for @ninjaChangeBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Change branch'**
+  String get ninjaChangeBranch;
+
+  /// No description provided for @ninjaBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get ninjaBranch;
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km'**
+  String distanceKm(String value);
+
+  /// No description provided for @distanceM.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} m'**
+  String distanceM(String value);
+
+  /// No description provided for @deliveryModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'How you get it'**
+  String get deliveryModeLabel;
+
+  /// No description provided for @deliveryDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get deliveryDeliver;
+
+  /// No description provided for @deliveryPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get deliveryPickup;
+
+  /// No description provided for @deliveryAddAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your address'**
+  String get deliveryAddAddress;
+
+  /// No description provided for @deliveryAddressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to'**
+  String get deliveryAddressTitle;
+
+  /// No description provided for @deliveryNewAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'New address'**
+  String get deliveryNewAddress;
+
+  /// No description provided for @deliveryEditAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit address'**
+  String get deliveryEditAddress;
+
+  /// No description provided for @myAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'My addresses'**
+  String get myAddresses;
+
+  /// No description provided for @myAddressesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No addresses yet. Add one when you order for delivery.'**
+  String get myAddressesEmpty;
+
+  /// No description provided for @deliveryChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the address…'**
+  String get deliveryChecking;
+
+  /// No description provided for @deliveryQuoteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check this address.'**
+  String get deliveryQuoteFailed;
+
+  /// No description provided for @deliveryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get deliveryRetry;
+
+  /// No description provided for @deliveryOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} doesn\'t deliver this far'**
+  String deliveryOutOfRange(String name);
+
+  /// No description provided for @deliveryTryBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Order from {name}, {distance} away'**
+  String deliveryTryBranch(String name, String distance);
+
+  /// No description provided for @deliveryFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery fee'**
+  String get deliveryFee;
+
+  /// No description provided for @deliveryFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free delivery'**
+  String get deliveryFree;
+
+  /// No description provided for @deliveryAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount} more for delivery'**
+  String deliveryAddMore(String amount);
+
+  /// No description provided for @deliveryCashAtDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the rider in cash at the door'**
+  String get deliveryCashAtDoor;
+
+  /// No description provided for @deliveryMovePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the map to put the pin on your door'**
+  String get deliveryMovePin;
+
+  /// No description provided for @deliveryNeedPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the map to your door, or use your location'**
+  String get deliveryNeedPin;
+
+  /// No description provided for @deliveryStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Area and street'**
+  String get deliveryStreet;
+
+  /// No description provided for @deliveryBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Building'**
+  String get deliveryBuilding;
+
+  /// No description provided for @deliveryFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get deliveryFloor;
+
+  /// No description provided for @deliveryApartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Apartment'**
+  String get deliveryApartment;
+
+  /// No description provided for @deliveryBuildingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Bldg'**
+  String get deliveryBuildingShort;
+
+  /// No description provided for @deliveryFloorShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get deliveryFloorShort;
+
+  /// No description provided for @deliveryApartmentShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Apt'**
+  String get deliveryApartmentShort;
+
+  /// No description provided for @deliveryDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions for the rider'**
+  String get deliveryDirections;
+
+  /// No description provided for @deliveryDirectionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A landmark, the gate, anything that helps'**
+  String get deliveryDirectionsHint;
+
+  /// No description provided for @deliveryPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone for the rider'**
+  String get deliveryPhone;
+
+  /// No description provided for @deliveryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name it'**
+  String get deliveryLabel;
+
+  /// No description provided for @deliveryLabelHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get deliveryLabelHome;
+
+  /// No description provided for @deliveryLabelWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get deliveryLabelWork;
+
+  /// No description provided for @deliverySaveAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver here'**
+  String get deliverySaveAddress;
+
+  /// No description provided for @deliveryAddressSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Address saved'**
+  String get deliveryAddressSaved;
+
+  /// No description provided for @deliveryAddressNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The address wasn\'t saved. Try again.'**
+  String get deliveryAddressNotSaved;
+
+  /// No description provided for @deliveryRemoveAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this address'**
+  String get deliveryRemoveAddress;
+
+  /// No description provided for @deliveryRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this address?'**
+  String get deliveryRemoveConfirm;
+
+  /// No description provided for @deliveryKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get deliveryKeep;
+
+  /// No description provided for @deliveryRemoveYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get deliveryRemoveYes;
+
+  /// No description provided for @deliveryAddressRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Address removed'**
+  String get deliveryAddressRemoved;
+
+  /// No description provided for @deliveryAddressNotRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The address wasn\'t removed. Try again.'**
+  String get deliveryAddressNotRemoved;
+
+  /// No description provided for @deliveryNeedStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Say the area and street'**
+  String get deliveryNeedStreet;
+
+  /// No description provided for @deliveryNeedPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'A phone number the rider can call'**
+  String get deliveryNeedPhone;
+
+  /// No description provided for @mapNotLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The map didn\'t load.'**
+  String get mapNotLoaded;
+
+  /// No description provided for @mapRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Load it again'**
+  String get mapRetry;
+
+  /// No description provided for @problemNotDelivering.
+  ///
+  /// In en, this message translates to:
+  /// **'This branch isn\'t delivering right now.'**
+  String get problemNotDelivering;
+
+  /// No description provided for @problemOutOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is outside the branch\'s delivery area.'**
+  String get problemOutOfRange;
+
+  /// No description provided for @problemBelowMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a little more for delivery.'**
+  String get problemBelowMinimum;
+
+  /// No description provided for @problemPinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That pin isn\'t a point on the map.'**
+  String get problemPinInvalid;
+
+  /// No description provided for @problemPlaceConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'An order goes to a table or to your door, not both.'**
+  String get problemPlaceConflict;
+
+  /// No description provided for @problemTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of the address is too long. Shorten it.'**
+  String get problemTooLong;
+
+  /// No description provided for @orderStagePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Being made'**
+  String get orderStagePreparing;
+
+  /// No description provided for @orderStageOnTheWay.
+  ///
+  /// In en, this message translates to:
+  /// **'On its way'**
+  String get orderStageOnTheWay;
+
+  /// No description provided for @orderStageDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get orderStageDelivered;
+
+  /// No description provided for @orderStageNotDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t be delivered'**
+  String get orderStageNotDelivered;
+
+  /// No description provided for @orderOnTheWayNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On its way to you. Pay the rider at the door.'**
+  String get orderOnTheWayNote;
+
+  /// No description provided for @orderDeliveredNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered. Enjoy!'**
+  String get orderDeliveredNote;
+
+  /// No description provided for @orderPreparingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed. {name} is making it for delivery.'**
+  String orderPreparingNote(String name);
+
+  /// No description provided for @orderOnTheWayRiderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is on the way to you. Pay them at the door.'**
+  String orderOnTheWayRiderNote(String rider);
+
+  /// No description provided for @orderNotDeliveredNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider couldn\'t deliver it. {name} will be in touch.'**
+  String orderNotDeliveredNote(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -32,6 +33,7 @@ abstract class OrderRepository {
     int pointsToRedeem,
     double loyaltyDiscount,
     String? promoCode,
+    Map<String, dynamic>? delivery,
   });
   Future<void> submitFastOrder({
     required MenuItem item,
@@ -105,6 +107,7 @@ class ApiOrderRepository implements OrderRepository {
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
     String? promoCode,
+    Map<String, dynamic>? delivery,
   }) async {
     await _apiClient.post<void>(
       '',
@@ -121,6 +124,8 @@ class ApiOrderRepository implements OrderRepository {
         'pointsToRedeem': pointsToRedeem,
         'loyaltyDiscount': loyaltyDiscount,
         'promoCode': promoCode,
+        // Brought by the branch's rider: where, and the number to call at the door
+        'delivery': delivery,
         'items': items.map((item) => item.toJson()).toList(),
       },
       headers: {'x-requestid': requestId},
@@ -315,25 +320,40 @@ final orderProvider = FutureProvider.family<Order, int>((ref, id) async {
 class CheckoutState {
   final bool isLoading;
   final String? error;
+
+  /// The rule the order broke, as the API names it ("delivery.out_of_range"), for the screen to say in the customer's words
+  final String? errorCode;
   final Order? order;
 
   const CheckoutState({
     this.isLoading = false,
     this.error,
+    this.errorCode,
     this.order,
   });
 
   CheckoutState copyWith({
     bool? isLoading,
     String? error,
+    String? errorCode,
     Order? order,
   }) {
     return CheckoutState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      errorCode: errorCode,
       order: order ?? this.order,
     );
   }
+}
+
+/// The problem code of a refused request (RFC 9457's "code" extension), if the API gave one
+String? problemCodeOf(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['code'] is String) return data['code'] as String;
+  }
+  return null;
 }
 
 /// Checkout notifier
@@ -371,6 +391,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
     String? promoCode,
+    Map<String, dynamic>? delivery,
   }) async {
     if (state.isLoading) return false; // Prevent duplicate submissions
     state = state.copyWith(isLoading: true, error: null);
@@ -383,6 +404,8 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       'pointsToRedeem': pointsToRedeem,
       'loyaltyDiscount': loyaltyDiscount,
       'promoCode': promoCode,
+      // Brought somewhere else makes it a different order, not a retry
+      'delivery': delivery,
     });
     if (_requestSignature != signature || _requestId == null) {
       _requestSignature = signature;
@@ -403,6 +426,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         pointsToRedeem: pointsToRedeem,
         loyaltyDiscount: loyaltyDiscount,
         promoCode: promoCode,
+        delivery: delivery,
       );
 
       // The order went through — the next submission is a new order
@@ -424,6 +448,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
+        errorCode: problemCodeOf(e),
       );
       return false;
     }

@@ -8,6 +8,10 @@ import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/providers/branch_switch.dart';
+import '../../../core/models/localized_text.dart';
+import '../../../core/widgets/branch_switcher.dart';
+import '../../delivery/widgets/address_sheet.dart';
 import '../../../core/widgets/app_text.dart';
 import 'loyalty_screen.dart' show tierName, TierChip;
 import '../../../core/brand/brand_style.dart';
@@ -194,11 +198,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : () => context.push('/loyalty'),
                 ),
               NinjaTile(icon: LucideIcons.heart, title: AppText(l10n.favorites), onPress: () => context.push('/favorites')),
+              // Where orders are brought, kept on the account: changed or removed here
+              if (features.delivery)
+                NinjaTile(icon: LucideIcons.mapPinHouse, title: AppText(l10n.myAddresses), onPress: () => showAddressSheet(context, manage: true)),
             ],
           ),
 
         TileGroup(
           children: [
+            // The branch is changed here, not from the bar; not while the customer is at one (a bill, a place, a clock)
+            if (ref.watch(branchProvider).branches.length > 1 && !ref.watch(atBranchProvider))
+              NinjaTile(
+                icon: LucideIcons.mapPin,
+                title: AppText(l10n.ninjaBranch),
+                value: AppText(ref.watch(branchProvider).selectedBranch?.name.localized(context) ?? ''),
+                onPress: () => showBranchSheet(context),
+              ),
             NinjaTile(icon: LucideIcons.settings, title: AppText(l10n.settings), onPress: () => context.push('/settings')),
             if (phone != null)
               NinjaTile(

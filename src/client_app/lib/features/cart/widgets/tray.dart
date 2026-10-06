@@ -17,6 +17,8 @@ import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../services/checkout_flow.dart';
 import '../services/promo_service.dart';
+import '../../delivery/services/delivery_service.dart';
+import '../../delivery/widgets/delivery_choice.dart';
 import 'cart_nudge.dart';
 import 'tray_extras.dart';
 import 'tray_flights.dart';
@@ -215,7 +217,8 @@ class _TrayRowState extends ConsumerState<TrayRow> {
     final cart = ref.watch(cartProvider);
     final summary = traySummary(cart.items);
     final saved = _saved(ref);
-    final total = (summary.total - saved).clamp(0.0, double.infinity);
+    // What the customer pays, the delivery fee on top once the branch has quoted it
+    final total = (summary.total - saved).clamp(0.0, double.infinity) + ref.watch(deliveryStateProvider.select((d) => d.fee));
     final canOrder = ref.watch(branchProvider).selectedBranch?.isOrderingEnabled ?? true;
     final reduced = reduceMotion(context);
     // The photos fly to their rows as the order opens: they leave the dock at once, and come back as it shuts
@@ -442,6 +445,8 @@ class OrderButton extends ConsumerWidget {
     final theme = context.theme;
     final c = theme.colors;
     final busy = ref.watch(checkoutProvider.select((s) => s.isLoading));
+    // A delivery waits for its address, the branch's yes and the minimum: the open tray says which
+    final held = ref.watch(deliveryStateProvider.select((d) => d.active && !d.ready));
     return ListenableBuilder(
       listenable: motion,
       builder: (context, _) {
@@ -454,7 +459,7 @@ class OrderButton extends ConsumerWidget {
         final ink = c.primaryForeground;
         final label = context.localeText(theme.typography.body.copyWith(color: ink, fontWeight: FontWeight.w700));
         return Pressable(
-          onTap: busy
+          onTap: busy || (open && held)
               ? null
               : open
               ? () async {
@@ -466,7 +471,10 @@ class OrderButton extends ConsumerWidget {
           child: AnimatedSize(
             duration: Motion.base,
             curve: Motion.enter,
-            child: Container(
+            child: AnimatedOpacity(
+              duration: Motion.base,
+              opacity: open && held ? 0.45 : 1,
+              child: Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
@@ -487,6 +495,7 @@ class OrderButton extends ConsumerWidget {
                   },
                 ),
               ),
+            ),
             ),
           ),
         );
@@ -544,6 +553,9 @@ class TraySheet extends ConsumerWidget {
                       ],
                     ),
                   )
+                // Not at a table: collect it or have it brought, where the branch delivers
+                else if (destination == null && ref.watch(deliveryStateProvider.select((d) => d.offered)))
+                  const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: DeliveryChoiceView())
                 else if (destination != null)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),

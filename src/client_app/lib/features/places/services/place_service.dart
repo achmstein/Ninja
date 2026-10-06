@@ -10,7 +10,8 @@ import '../models/place.dart';
 abstract class PlaceRepository {
   /// Every bookable place of the branch that takes customers: the rooms and
   /// stations with a clock, and any table the owner opened to reservations
-  Future<List<Place>> getPlaces();
+  /// The bookable places of [branchId], else of the selected branch
+  Future<List<Place>> getPlaces({int? branchId});
 
   /// One place, whatever it is — the anonymous read a scanned code starts with
   Future<Place> getPlace(int id);
@@ -34,8 +35,8 @@ class ApiPlaceRepository implements PlaceRepository {
   ApiPlaceRepository(this._places, this._reservations, this._stays);
 
   @override
-  Future<List<Place>> getPlaces() async {
-    final response = await _places.get<List<dynamic>>('');
+  Future<List<Place>> getPlaces({int? branchId}) async {
+    final response = await _places.get<List<dynamic>>('', headers: branchId == null ? null : {'X-Branch-Id': '$branchId'});
     return (response.data ?? [])
         .map((e) => Place.fromJson(e as Map<String, dynamic>))
         .where((p) => p.isActive && (p.isTimed || p.reservable))
@@ -109,7 +110,8 @@ final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
 /// Provider for the branch's bookable places — keyed by branch ID for clean state per branch
 final placesProvider = FutureProvider.family<List<Place>, int>((ref, branchId) async {
   final service = ref.watch(placeRepositoryProvider);
-  return service.getPlaces();
+  // Named in the call, so another branch's places (booking across the business) are that branch's
+  return service.getPlaces(branchId: branchId);
 });
 
 /// Provider for customer stays
