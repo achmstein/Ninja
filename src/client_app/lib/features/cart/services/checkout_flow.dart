@@ -15,6 +15,7 @@ import '../../../core/utils/money.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../delivery/services/delivery_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../bills/services/bills_service.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
 import '../../pay/pay_ahead.dart';
@@ -101,7 +102,9 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
   /// Followed again after a reload, not placed here: a loaded list without it means it is gone
   bool _restored = false;
 
-  /// A delivery is asked after while it is followed: the rider's steps reach the customer by no event
+  /// The order is asked after while it is followed (client_web's order-pill, every 8 s): the hub's
+  /// OrderStatusChanged refreshes it at once, the poll covers a socket that silently died, and a
+  /// delivery's rider steps reach the customer by no event at all
   Timer? _poll;
 
   /// A delivery is followed to the door, for this long at most
@@ -131,6 +134,7 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     _since = DateTime.now();
     state = const LiveOrder(OrderStage.sent);
     _keep();
+    _pollWhile(true);
     _follow(ref.read(ordersProvider).orders);
   }
 
@@ -142,6 +146,7 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
       _before = before;
       _restored = true;
       state = const LiveOrder(OrderStage.sent);
+      _pollWhile(true);
       final orders = ref.read(ordersProvider);
       // The list may not have loaded yet (it starts empty, not loading): only a list with orders in it says this one is gone
       _follow(orders.orders, loaded: !orders.isLoading && orders.orders.isNotEmpty);
@@ -179,7 +184,8 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
       _done();
       return;
     }
-    _pollWhile(order.delivery != null && lingerOf(stage) == null);
+    // Until it settles (confirmed, turned down, delivered): a confirmation the hub never brought still lands
+    _pollWhile(lingerOf(stage) == null);
     if (stage == live.stage && order.id == live.orderId && rider == live.rider && order.paidAhead == live.paidAhead) return;
     state = LiveOrder(stage, orderId: order.id, rider: rider, paidAhead: order.paidAhead, paysOnline: order.paysOnline);
     if (stage != live.stage) {
@@ -193,14 +199,17 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     if (linger != null) _clear = Timer(linger, _done);
   }
 
-  /// Ask the orders list again every few seconds while a delivery is on its way to the customer
+  /// Ask the orders, and the bills they land on, again every few seconds while the order is followed
   void _pollWhile(bool on) {
     if (!on) {
       _poll?.cancel();
       _poll = null;
       return;
     }
-    _poll ??= Timer.periodic(const Duration(seconds: 8), (_) => ref.read(ordersProvider.notifier).refresh());
+    _poll ??= Timer.periodic(const Duration(seconds: 8), (_) {
+      ref.read(ordersProvider.notifier).refresh();
+      ref.read(myBillsProvider.notifier).refresh();
+    });
   }
 
   /// A delivery's step said out loud on the island (client_web's order-pill LOUD stages)

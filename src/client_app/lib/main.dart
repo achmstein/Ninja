@@ -99,6 +99,10 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _wasAuthenticated) {
       ref.read(signalRServiceProvider).reconnectIfNeeded();
+      // What the till did while the app was away (an order confirmed, a bill paid) came over a
+      // connection that was down: asked again, so the dock and the bills show it on return
+      ref.read(ordersProvider.notifier).refresh();
+      ref.read(myBillsProvider.notifier).refresh();
       ref.read(myStaysProvider.notifier).refresh();
       ref.read(myReservationsProvider.notifier).refresh();
       ref.read(branchProvider.notifier).refreshSilently();
