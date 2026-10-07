@@ -53,6 +53,24 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   double _from = 0;
   DateTime _quietUntil = DateTime.fromMillisecondsSinceEpoch(0);
 
+  /// Whether the page was last read at its end (client_web's use-tuck.ts `atEnd`)
+  bool _atEnd = false;
+
+  /// The tabs coming back at the end make the page's room under the dock grow (or, on the menu, its
+  /// list shorter): read at its end, the page stays at its end, so the last card or dish and its price
+  /// are not left under the dock
+  bool _onMetrics(ScrollMetricsNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    if (!_atEnd || n.metrics.pixels >= n.metrics.maxScrollExtent - 0.5) return false;
+    final position = Scrollable.maybeOf(n.context)?.position;
+    if (position == null) return false;
+    _quietUntil = DateTime.now().add(tuckSettle);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (position.hasPixels && position.pixels < position.maxScrollExtent) position.jumpTo(position.maxScrollExtent);
+    });
+    return false;
+  }
+
   @override
   void didUpdateWidget(TuckOnScroll old) {
     super.didUpdateWidget(old);
@@ -63,6 +81,7 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
     if (!widget.enabled || n.metrics.axis != Axis.vertical) return false;
     final y = n.metrics.pixels;
     final max = n.metrics.maxScrollExtent;
+    if (n.depth == 0) _atEnd = max > 0 && y >= max - 2;
     final tuck = ref.read(dockTuckProvider.notifier);
     final tucked = ref.read(dockTuckProvider);
     // Come to rest at the top or the end: the dock is whole again
@@ -89,5 +108,8 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   }
 
   @override
-  Widget build(BuildContext context) => NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child);
+  Widget build(BuildContext context) => NotificationListener<ScrollMetricsNotification>(
+        onNotification: _onMetrics,
+        child: NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child),
+      );
 }

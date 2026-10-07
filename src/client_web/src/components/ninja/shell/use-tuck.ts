@@ -80,8 +80,26 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
         useTuck.setState({ tucked: next.tucked })
       }
     }
+    // The menu's scroller sits over the dock and gets shorter as the tabs come back at its end; read at its
+    // end, it stays at its end while it shrinks, so the last dishes and their prices are not left under the dock
+    let atEnd = false
+    const onScrolled = () => {
+      const { y, max } = read()
+      atEnd = max > 0 && y >= max - 2
+    }
+    const resized = target
+      ? new ResizeObserver(() => {
+          if (!atEnd) return
+          quietUntil = performance.now() + SETTLE_MS
+          target.scrollTop = target.scrollHeight
+        })
+      : null
+    if (target && resized) resized.observe(target)
+    source.addEventListener('scroll', onScrolled, { passive: true })
     source.addEventListener('scroll', onScroll, { passive: true })
     return () => {
+      resized?.disconnect()
+      source.removeEventListener('scroll', onScrolled)
       source.removeEventListener('scroll', onScroll)
       if (rest !== null) window.clearTimeout(rest)
       useTuck.setState({ tucked: false })

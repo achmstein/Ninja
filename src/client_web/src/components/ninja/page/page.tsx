@@ -6,7 +6,11 @@ import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { NinjaTopBar } from '../shell/top-bar'
+import { DOCK_H, DOCK_INSET, TABS_H } from '../shell/chrome'
 import { pushTitleId } from './push'
+
+/** The room a page keeps under its last card: the dock whole, and a gap over it */
+const PAGE_END = `calc(${DOCK_H + TABS_H + 16}px + max(${DOCK_INSET}px, env(safe-area-inset-bottom)))`
 
 /** How far the page scrolls before its large title has faded away, px */
 const TITLE_FOLD = 44
@@ -48,8 +52,9 @@ export function NinjaPage({
     <MotionConfig reducedMotion='user'>
       <NinjaTopBar chips={!back} start={back ? <BackButton to={back} /> : undefined} />
       {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
-      {/* pb-24: room for the dock's bill row, which sits above the tabs while a bill or an order is on */}
-      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-(--page-top) pb-24', className)}>
+      {/* Room under the last card for the whole dock (its bill row, the tabs, its gap to the edge): at the
+          page's end the tabs come back, and they come back into this room, never over the last card */}
+      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-(--page-top)', className)} style={{ paddingBottom: PAGE_END }}>
         <PageTitle title={title} subtitle={subtitle} action={action} scrollY={scrollY} fade={fade} push={push} />
         {children}
       </div>

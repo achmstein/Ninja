@@ -210,7 +210,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     final gone = tucked && !hasRow;
     final stuck = tucked && hasRow;
     final safeBottom = media.viewPadding.bottom;
-    final dockBottom = stuck ? 0.0 : math.max(DockMetrics.inset, safeBottom);
+    // Off the bottom edge by the dock's own inset, clear of the phone's: Android's gesture bar is its inset,
+    // so the dock stands the inset above it there (a browser's own bottom bar gives the web that room);
+    // iPhone's home indicator sits low in its inset, and the dock rests on the inset as on the web
+    final floating = Theme.of(context).platform == TargetPlatform.android ? safeBottom + DockMetrics.inset : math.max(DockMetrics.inset, safeBottom);
+    final dockBottom = stuck ? 0.0 : floating;
     final tabsHeight = stuck ? 0.0 : metrics.tabs;
     final rowHeight = hasRow ? metrics.row : 0.0;
     // How much of the page's bottom the dock covers now: the whole of it, its row alone on the bottom
@@ -219,7 +223,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
         ? safeBottom
         : stuck
             ? rowHeight + safeBottom
-            : rowHeight + metrics.tabs + math.max(DockMetrics.inset, safeBottom);
+            : rowHeight + metrics.tabs + floating;
     final c = context.theme.colors;
 
     final dock = AnimatedContainer(
@@ -413,7 +417,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
                 curve: Curves.easeOut,
                 left: 0,
                 right: 0,
-                bottom: gone ? -(rowHeight + metrics.tabs + DockMetrics.inset * 2 + safeBottom) : dockBottom,
+                bottom: gone ? -(rowHeight + metrics.tabs + DockMetrics.inset + floating) : dockBottom,
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: Ninja.maxWidth),
