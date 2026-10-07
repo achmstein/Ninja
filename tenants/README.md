@@ -82,24 +82,30 @@ it), and everything that signs and uploads comes from the GitHub environment
 
    | | Name | What |
    |---|---|---|
-   | variable | `MATCH_GIT_URL` | A private repo for its certificates, one per business |
-   | secret | `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION` | That repo's encryption password and access |
    | secret | `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_PRIVATE_KEY` | An App Store Connect API key from its account (App Manager) |
    | secret | `GOOGLE_SERVICE_INFO_PLIST` | Its iOS app's Firebase file, as it is |
    | secret | `PLAY_STORE_SERVICE_ACCOUNT_JSON` | A service account with release rights on its Play account |
    | secret | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD` | Its own upload key (`keytool -genkey`), kept somewhere safe besides |
    | secret | `GOOGLE_SERVICES_JSON` | Its Android app's Firebase file, as it is |
 
-   A secret the environment does not hold falls back to the repository's,
-   which are Chillax's: the stamp refuses a Firebase file that is not the
+   The repository itself holds what every business shares: none of it is set
+   per business. The stamp refuses a Firebase file that is not the
    business's, and the stores refuse another account's keys.
-6. **The certificates, once:** an empty private repo of its own
-   (`MATCH_GIT_URL`), a new passphrase (`MATCH_PASSWORD`, kept somewhere safe
-   besides), then the workflow Initialize Fastlane Match with its slug, which
-   creates a distribution certificate on its team and the app's and Live
-   Activity's profiles ("Ninja AppStore <id>") there; CI only reads them after.
-   Chillax's are in `ninja-certificates-chillax`, apart from the
-   `chillax-certificates` its builds before Ninja signed with.
+6. **Its iOS signing, nothing to do:** every business's distribution
+   certificate and App Store profiles live in one private repo,
+   `achmstein/ninja-certificates` (the repository variable `MATCH_GIT_URL`),
+   a branch per business named by its slug. Its first build makes them there
+   (Fastfile, lane `certificates`): one certificate on its team, and the
+   app's and Live Activity's profiles named "Ninja AppStore <id>"; every build
+   after reads them. Each branch is encrypted with the business's own
+   passphrase, HMAC-SHA256 of the repository secret `MATCH_MASTER_KEY` and
+   its slug (`match-env.sh`), so no passphrase is kept anywhere; a
+   `MATCH_PASSWORD` in its environment would win. The repository secret
+   `MATCH_GIT_BASIC_AUTHORIZATION` reads and writes that repo (base64 of
+   `achmstein:<token>`, a fine-grained token with Contents read and write on
+   it alone). The workflow Initialize Fastlane Match does the same ahead of a
+   build. Apple allows a team a few distribution certificates: never delete a
+   business's branch, or the next build makes another.
 7. **The first build:** run Build and Deploy Mobile Apps with app
    `client_app` and tenant `<slug>`. iOS lands in TestFlight. Play refuses an
    API upload until the app's first bundle went in by hand: take

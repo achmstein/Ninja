@@ -1,21 +1,35 @@
 default_platform(:ios)
 
 platform :ios do
-  lane :beta do
+  # The business's distribution certificate and App Store profiles, from its branch of the certificates
+  # repo (Matchfile), made there on its first build and only read after that. Apple allows a team a
+  # few distribution certificates, so one is made per business, once: what the branch holds is used.
+  # A profile Ninja makes is named "Ninja AppStore <id>", so an older repo's profiles of the same app
+  # (match's default names) are left as they are.
+  lane :certificates do
     setup_ci if ENV['CI']
 
+    app_id = ENV["APP_ID"] || "com.chillax.client"
+    team_id = ENV["APPLE_TEAM_ID"] || "NT4VMTB8MK"
+
+    [app_id, "#{app_id}.ChillaxLiveActivity"].each do |id|
+      begin
+        match(type: "appstore", app_identifier: id, team_id: team_id, readonly: true, api_key_path: ENV["API_KEY_PATH"])
+      rescue => e
+        UI.important("No signing for #{id} in the business's branch yet (#{e.message}): making it")
+        match(type: "appstore", app_identifier: id, team_id: team_id, readonly: false, api_key_path: ENV["API_KEY_PATH"],
+              profile_name: "Ninja AppStore #{id}")
+      end
+    end
+  end
+
+  lane :beta do
     # The business's own app and team when the build was stamped for one (tool/stamp_tenant.dart)
     app_id = ENV["APP_ID"] || "com.chillax.client"
     extension_id = "#{app_id}.ChillaxLiveActivity"
     team_id = ENV["APPLE_TEAM_ID"] || "NT4VMTB8MK"
 
-    match(
-      type: "appstore",
-      app_identifier: [app_id, extension_id],
-      team_id: team_id,
-      readonly: is_ci,
-      api_key_path: ENV["API_KEY_PATH"],
-    )
+    certificates
 
     update_code_signing_settings(
       use_automatic_signing: false,

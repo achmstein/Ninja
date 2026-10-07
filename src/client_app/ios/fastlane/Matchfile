@@ -1,7 +1,15 @@
-git_url(ENV["MATCH_GIT_URL"] || "https://github.com/achmstein/chillax-certificates")
+# Every business's signing in one repo, a branch per business (MATCH_GIT_URL,
+# MATCH_GIT_BRANCH = its slug), each encrypted with its own passphrase
+# (MATCH_PASSWORD, derived per business in mobile-deploy.yml). Without them,
+# Chillax's from before Ninja. An empty variable counts as none: GitHub passes
+# an unset one as "".
+given = ->(name) { value = ENV[name].to_s.strip; value.empty? ? nil : value }
+
+git_url(given.call("MATCH_GIT_URL") || "https://github.com/achmstein/chillax-certificates")
+git_branch(given.call("MATCH_GIT_BRANCH") || "master")
 storage_mode("git")
 type("appstore")
-# The app and its Live Activity, which is named after it; a business's own team and certificates repo
-app_id = ENV["APP_ID"] || "com.chillax.client"
+# The app and its Live Activity, which is named after it; a business's own team
+app_id = given.call("APP_ID") || "com.chillax.client"
 app_identifier([app_id, "#{app_id}.ChillaxLiveActivity"])
-team_id(ENV["APPLE_TEAM_ID"] || "NT4VMTB8MK")
+team_id(given.call("APPLE_TEAM_ID") || "NT4VMTB8MK")

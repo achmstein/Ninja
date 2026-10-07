@@ -1,11 +1,11 @@
 name: Initialize Fastlane Match
 
-# Creates a business's iOS distribution certificate and App Store profiles in
-# its certificates repo (MATCH_GIT_URL), encrypted with MATCH_PASSWORD, once;
-# mobile-deploy.yml only reads them after that. Everything comes from the
-# business's environment app-<slug> and its record on the control plane, as
-# the build's do (tenants/README.md). Run again to add what is missing; what
-# is there already is kept.
+# A business's iOS distribution certificate and App Store profiles, in its
+# branch of the certificates repo, ahead of its first build (which would make
+# them itself). Run again to add what is missing; what is there is kept.
+# Everything comes from the business's environment app-<slug>, its record on
+# the control plane and the shared MATCH_* settings, as the build's do
+# (tenants/README.md).
 
 on:
   workflow_dispatch:
@@ -71,18 +71,21 @@ jobs:
           EOF
           echo "API_KEY_PATH=$API_KEY_PATH" >> $GITHUB_ENV
 
-      # The app and its Live Activity, one at a time so each profile has a
-      # name of its own: an older certificates repo of the same app (Chillax's
-      # before Ninja) may hold profiles under match's default names, and the
-      # portal takes a name once
+      # The business's branch of the one certificates repo and its derived
+      # passphrase, as the build uses them (tenants/match-env.sh)
+      - name: Signing settings
+        working-directory: src/client_app
+        env:
+          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+          MATCH_MASTER_KEY: ${{ secrets.MATCH_MASTER_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: |
+          if [ -z "$MATCH_GIT_URL" ]; then echo "::error::Set the repository variable MATCH_GIT_URL (the certificates repo)"; exit 1; fi
+          bash ../../tenants/match-env.sh "$TENANT"
+
+      # The lane the build runs first: reads what the branch holds and makes
+      # what is missing (the Fastfile says how)
       - name: Run Match (client_app)
         env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
-        run: |
-          if [ -z "$MATCH_GIT_URL" ]; then echo "::error::Set MATCH_GIT_URL in the app-$TENANT environment"; exit 1; fi
-          for id in "$APP_ID" "$APP_ID.ChillaxLiveActivity"; do
-            bundle exec fastlane match appstore --api_key_path "$API_KEY_PATH" \
-              --app_identifier "$id" --team_id "$APPLE_TEAM_ID" --profile_name "Ninja AppStore $id"
-          done
+        run: bundle exec fastlane certificates

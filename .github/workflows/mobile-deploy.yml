@@ -513,17 +513,23 @@ jobs:
         run: bash ../../tenants/fetch-record.sh "$TENANT"
 
       # As on Android. The Apple team is the record's (the stamp passes it on
-      # to Fastlane); the certificates repo is the business's own, and only
-      # passed on when its environment names it, so a build without one keeps
-      # Fastlane's default
+      # to Fastlane)
       - name: Stamp the business's own app
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
-          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
         run: |
           if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist; fi
           dart run tool/stamp_tenant.dart "$TENANT" --platform ios
-          if [ -n "$MATCH_GIT_URL" ]; then echo "MATCH_GIT_URL=$MATCH_GIT_URL" >> "$GITHUB_ENV"; fi
+
+      # The business's signing: its branch of the one certificates repo, its
+      # passphrase derived from the master key (tenants/match-env.sh); made
+      # there by Fastlane on its first build
+      - name: Signing settings
+        env:
+          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+          MATCH_MASTER_KEY: ${{ secrets.MATCH_MASTER_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bash ../../tenants/match-env.sh "$TENANT"
 
       - name: Build Flutter (no codesign)
         run: flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
@@ -553,10 +559,11 @@ jobs:
           EOF
           echo "API_KEY_PATH=$API_KEY_PATH" >> $GITHUB_ENV
 
+      # MATCH_PASSWORD and the repo come from Signing settings; setting them
+      # here again would override those
       - name: Build and deploy with Fastlane
         working-directory: src/client_app/ios
         env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: bundle exec fastlane beta
 
