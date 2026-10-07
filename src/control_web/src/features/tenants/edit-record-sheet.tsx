@@ -98,6 +98,8 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [social, setSocial] = useState(tenant.socialSignIn ?? true)
   const [customerDomain, setCustomerDomain] = useState(tenant.customerDomain ?? '')
   const [appId, setAppId] = useState(tenant.appId ?? '')
+  const [appleTeamId, setAppleTeamId] = useState(tenant.appleTeamId ?? '')
+  const [fingerprints, setFingerprints] = useState((tenant.androidCertFingerprints ?? []).join('\n'))
   const [contactName, setContactName] = useState(tenant.record.contactName ?? '')
   const [phone, setPhone] = useState(tenant.record.phone ?? '')
   const [address, setAddress] = useState(tenant.record.address ?? '')
@@ -164,6 +166,8 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         customerDomain: customerDomain.trim() || null,
         // Empty clears it on the record
         appId: appId.trim(),
+        appleTeamId: appleTeamId.trim(),
+        androidCertFingerprints: fingerprints.trim(),
         contactName: contactName.trim() || null,
         phone: phone.trim() || null,
         address: address.trim() || null,
@@ -207,7 +211,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         <div className='sm:col-span-2'>
           <SocialField id='record-social' checked={social} onChange={setSocial} />
         </div>
-        <div className='grid gap-2'>
+        <div className='grid content-start gap-2'>
           <Label htmlFor='record-domain'>{t('customerDomain')}</Label>
           <Input
             id='record-domain'
@@ -217,7 +221,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             onChange={(e) => setCustomerDomain(e.target.value)}
           />
         </div>
-        <div className='grid gap-2'>
+        <div className='grid content-start gap-2'>
           <Label htmlFor='record-app'>{t('appId')}</Label>
           <Input
             id='record-app'
@@ -230,6 +234,39 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
           />
           <p className='text-muted-foreground text-xs'>{t('appIdHint')}</p>
         </div>
+        {/* What the app's QR-code links are checked against, once it has an app of its own */}
+        {appId.trim() && (
+          <>
+            <div className='grid content-start gap-2'>
+              <Label htmlFor='record-team'>{t('appleTeamId')}</Label>
+              <Input
+                id='record-team'
+                dir='ltr'
+                placeholder='ABCDE12345'
+                autoCapitalize='characters'
+                spellCheck={false}
+                maxLength={10}
+                value={appleTeamId}
+                onChange={(e) => setAppleTeamId(e.target.value)}
+              />
+              <p className='text-muted-foreground text-xs'>{t('appleTeamIdHint')}</p>
+            </div>
+            <div className='grid content-start gap-2'>
+              <Label htmlFor='record-fingerprints'>{t('androidFingerprints')}</Label>
+              <Textarea
+                id='record-fingerprints'
+                dir='ltr'
+                rows={2}
+                spellCheck={false}
+                className='font-mono text-xs'
+                placeholder='14:6D:E9:…'
+                value={fingerprints}
+                onChange={(e) => setFingerprints(e.target.value)}
+              />
+              <p className='text-muted-foreground text-xs'>{t('androidFingerprintsHint')}</p>
+            </div>
+          </>
+        )}
         <div className='grid gap-2'>
           <Label htmlFor='record-contact'>{t('contactName')}</Label>
           <Input id='record-contact' value={contactName} onChange={(e) => setContactName(e.target.value)} />

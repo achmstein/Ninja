@@ -68,7 +68,8 @@ public interface IKeycloakAdmin
     /// The platform's shared Google and Apple providers in a tenant's realm,
     /// so the native apps can exchange a provider token for one of the realm's
     /// own, and the Apple provider for the business's own app when it has one
-    /// (<paramref name="appId"/>; gone when it has none). Idempotent.
+    /// (<paramref name="appId"/>; gone when it has none), with the customer app's client taking that
+    /// app's redirects. Idempotent.
     /// </summary>
     Task EnsureSocialProvidersAsync(string realm, string? appId, CancellationToken ct);
     /// <summary>
@@ -663,6 +664,11 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             var gone = await client.DeleteAsync($"{Base}/admin/realms/{realm}/identity-provider/instances/{TenantNaming.AppAppleAlias}", ct);
             if (gone.StatusCode != HttpStatusCode.NotFound) gone.EnsureSuccessStatusCode();
         }
+        // A browser sign-in in the business's own app comes back to its own scheme
+        var admin = $"{Base}/admin/realms/{realm}";
+        var mobile = (await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId=mobile-app", ct))?.OfType<JsonObject>().FirstOrDefault();
+        if (mobile is not null && Templates.WithAppRedirects(mobile, realm, appId))
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/clients/{mobile["id"]!.GetValue<string>()}", mobile, ct), $"the customer app's redirects in {realm}", ct);
     }
 
     public async Task EnsureProfileFieldsAsync(string realm, string country, CancellationToken ct)

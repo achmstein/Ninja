@@ -137,6 +137,28 @@ public static partial class Templates
     /// Keycloak takes a token only for its provider's client id. Only the token is checked on this path,
     /// against Apple's keys: the app's provider needs no secret of its own.
     /// </summary>
+    /// <summary>
+    /// The customer app's client ("mobile-app") taking the business's own app's redirects: that app is
+    /// built with its id as its scheme (REDIRECT_SCHEME in the record the control plane hands out), so a
+    /// browser sign-in in it comes back to {appId}://callback. Another app's redirects go (the id
+    /// changed or was cleared); the template's com.ninja.{slug}.client and anything else stay. True when
+    /// the client changed.
+    /// </summary>
+    public static bool WithAppRedirects(JsonObject client, string slug, string? appId)
+    {
+        var shared = $"com.ninja.{slug}.client";
+        var current = client["redirectUris"]?.AsArray().Select(u => u?.GetValue<string>()).OfType<string>().ToList() ?? [];
+        var wanted = current.Where(u => AppRedirect().Match(u) is not { Success: true } m || m.Groups[1].Value == shared).ToList();
+        if (appId is not null) wanted.AddRange([$"{appId}://callback", $"{appId}://*"]);
+        if (wanted.SequenceEqual(current)) return false;
+        client["redirectUris"] = new JsonArray([.. wanted.Select(u => JsonValue.Create(u))]);
+        return true;
+    }
+
+    /// <summary>A native app's redirect: a reverse-domain scheme, back to callback or to anything</summary>
+    [GeneratedRegex(@"^([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+)://(?:callback|\*)$")]
+    private static partial Regex AppRedirect();
+
     public static JsonArray SocialProviders(PlatformOptions platform, string? appId)
     {
         var providers = SocialProviders(platform);
@@ -648,6 +670,8 @@ public static partial class Templates
             // Only the control app and the business's own admin may frame the customer app (their live brand previews)
             sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')} {TenantHosts.For(tenant, platform).AdminUrl}\"");
             sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
+            // Its own app's link files, as on {slug}.{domain}: the printed QR codes carry this host
+            sb.AppendLine("\timport app_links");
             sb.AppendLine("\thandle {");
             sb.AppendLine("\t\timport spa /srv/client-web");
             sb.AppendLine("\t}");

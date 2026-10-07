@@ -65,8 +65,9 @@ class AppConfig {
   static String get identityUrl => '$keycloakUrl/realms/$keycloakRealm';
 
   // OIDC configuration. The scheme must match what the native folders
-  // declare (AndroidManifest.xml, Info.plist); it becomes flavor data with
-  // them in Phase 5 of docs/ninja-plan.md.
+  // declare (AndroidManifest.xml, Info.plist): a business's own app is
+  // stamped with its id as both (tool/stamp_tenant.dart), and its record
+  // says the same here.
   static const String clientId = 'mobile-app';
   static const String _redirectScheme =
       String.fromEnvironment('REDIRECT_SCHEME', defaultValue: 'com.chillax.client');

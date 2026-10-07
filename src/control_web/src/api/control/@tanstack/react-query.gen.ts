@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateDishPhotos, getAiSettings, getAiUsage, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listAudit, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, saveAiProvider, saveAiRoles, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateDishPhotosData, GenerateDishPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListAuditData, ListAuditResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateDishPhotos, getAiSettings, getAiUsage, getAppleSiteAssociation, getAssetLinks, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantAppConfig, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listAudit, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, saveAiProvider, saveAiRoles, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateDishPhotosData, GenerateDishPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetAppleSiteAssociationData, GetAssetLinksData, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantAppConfigData, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListAuditData, ListAuditResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -545,6 +545,60 @@ export const putTenantSeedMenuMutation = (options?: Partial<Options<PutTenantSee
     };
     return mutationOptions;
 };
+
+export const getTenantAppConfigQueryKey = (options: Options<GetTenantAppConfigData>) => createQueryKey('getTenantAppConfig', options);
+
+/**
+ * The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file
+ */
+export const getTenantAppConfigOptions = (options: Options<GetTenantAppConfigData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantAppConfigQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantAppConfig({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantAppConfigQueryKey(options)
+});
+
+export const getAssetLinksQueryKey = (options?: Options<GetAssetLinksData>) => createQueryKey('getAssetLinks', options);
+
+/**
+ * Android's App Links file for the customer host asked: the business's own app and its signing certificates; 404 without them
+ */
+export const getAssetLinksOptions = (options?: Options<GetAssetLinksData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getAssetLinksQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAssetLinks({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAssetLinksQueryKey(options)
+});
+
+export const getAppleSiteAssociationQueryKey = (options?: Options<GetAppleSiteAssociationData>) => createQueryKey('getAppleSiteAssociation', options);
+
+/**
+ * iOS's Universal Links file for the customer host asked: the business's own app under its team; 404 without them
+ */
+export const getAppleSiteAssociationOptions = (options?: Options<GetAppleSiteAssociationData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getAppleSiteAssociationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAppleSiteAssociation({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAppleSiteAssociationQueryKey(options)
+});
 
 /**
  * A demo becomes a customer: no expiry, on a plan

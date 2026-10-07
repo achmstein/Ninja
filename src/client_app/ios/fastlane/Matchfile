@@ -1,5 +1,7 @@
 git_url(ENV["MATCH_GIT_URL"] || "https://github.com/achmstein/chillax-certificates")
 storage_mode("git")
 type("appstore")
-app_identifier(["com.chillax.client", "com.chillax.client.ChillaxLiveActivity"])
-team_id("NT4VMTB8MK")
+# The app and its Live Activity, which is named after it; a business's own team and certificates repo
+app_id = ENV["APP_ID"] || "com.chillax.client"
+app_identifier([app_id, "#{app_id}.ChillaxLiveActivity"])
+team_id(ENV["APPLE_TEAM_ID"] || "NT4VMTB8MK")

@@ -1,2 +1,3 @@
-app_identifier("com.chillax.client")
-team_id("NT4VMTB8MK")
+# The business's own app and Apple team when the build was stamped for one (tool/stamp_tenant.dart)
+app_identifier(ENV['APP_ID'] || "com.chillax.client")
+team_id(ENV['APPLE_TEAM_ID'] || "NT4VMTB8MK")

@@ -566,6 +566,14 @@ export type TenantDetail = {
      * The business's own customer app (its iOS bundle ID and Android package); null when it has none
      */
     appId?: null | string;
+    /**
+     * The Apple team its own app is published under; null when not given
+     */
+    appleTeamId?: null | string;
+    /**
+     * The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…
+     */
+    androidCertFingerprints?: null | Array<string>;
 };
 
 export type TenantHostsDto = {
@@ -737,9 +745,17 @@ export type UpdateTenantRequest = {
      */
     contentLanguages?: null | string;
     /**
-     * The business's own customer app: its iOS bundle ID and Android package (com.ninja.lucaffe); empty clears it, null leaves it
+     * The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it
      */
     appId?: null | string;
+    /**
+     * The Apple team its own app is published under, for its Universal Links; empty clears it, null leaves it
+     */
+    appleTeamId?: null | string;
+    /**
+     * The SHA-256 fingerprints its own app is signed with on Android (Play's app signing key, the upload key), separated by spaces, commas or lines, for its App Links; empty clears them, null leaves them
+     */
+    androidCertFingerprints?: null | string;
 };
 
 export type UpgradeRequest = {
@@ -1851,6 +1867,58 @@ export type PutTenantSeedMenuResponses = {
 };
 
 export type PutTenantSeedMenuResponse = PutTenantSeedMenuResponses[keyof PutTenantSeedMenuResponses];
+
+export type GetTenantAppConfigData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app-config';
+};
+
+export type GetTenantAppConfigErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetAssetLinksData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/app-links/assetlinks.json';
+};
+
+export type GetAssetLinksErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetAppleSiteAssociationData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/app-links/apple-app-site-association';
+};
+
+export type GetAppleSiteAssociationErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
 
 export type ConvertTenantData = {
     body?: null | ConvertRequest;

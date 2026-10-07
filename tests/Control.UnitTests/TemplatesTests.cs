@@ -399,6 +399,8 @@ public sealed class TemplatesTests
         // own domain needs it as much as one on {slug}.{domain} -- without it a suspended
         // stack shows a bare 502 instead of the app's paused page
         StringAssert.Contains(snippet, "import paused_api");
+        // The printed QR codes carry the business's own host: its app's link files are answered there too
+        StringAssert.Contains(snippet, "import app_links");
     }
 
     [TestMethod]
@@ -477,7 +479,7 @@ public sealed class TemplatesTests
         }
     }
 
-    private static string FindUp(string relative)
+    internal static string FindUp(string relative)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Ninja.slnx"))) dir = dir.Parent;

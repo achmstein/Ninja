@@ -32,6 +32,17 @@
 	}
 }
 
+(app_links) {
+	handle /.well-known/assetlinks.json {
+		rewrite * /api/control/app-links/assetlinks.json
+		reverse_proxy control-api:8080
+	}
+	handle /.well-known/apple-app-site-association {
+		rewrite * /api/control/app-links/apple-app-site-association
+		reverse_proxy control-api:8080
+	}
+}
+
 https:// {
 	tls {
 		on_demand
@@ -128,6 +139,8 @@ https:// {
 	handle @customer {
 		header Content-Security-Policy "frame-ancestors 'self' https://control.localhost https://admin.{host}"
 		import tenant_api {labels.1}-gateway
+		# A business's own app's link files, from its record (deploy/platform/Caddyfile)
+		import app_links
 		handle {
 			import spa /srv/client-web
 		}

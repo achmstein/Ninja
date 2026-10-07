@@ -189,7 +189,11 @@ const dictionary = {
   placesLayoutHint: "How the places to book are shown. Big cards suit a few places; the list and the grid fit many on one screen, grouped by kind when there are rooms and tables.",
   customerDomain: "Customer domain",
   appId: "Own customer app",
-  appIdHint: "The business's own app in the stores: its iOS bundle ID and Android package, the same for both. Its Apple sign-ins are taken for this app. Empty while it uses Ninja's shared app.",
+  appleTeamId: "Apple team ID",
+  appleTeamIdHint: "The business's Apple developer account, under Membership. Its app opens the printed QR codes on iPhones once this is given.",
+  androidFingerprints: "Android signing fingerprints",
+  androidFingerprintsHint: "SHA-256, from Play Console under App integrity: the app signing key, and the upload key for builds installed outside Play. Its app opens the printed QR codes on Android once these are given.",
+  appIdHint:"The business's own app in the stores: its iOS bundle ID and Android package, the same for both. Its Apple sign-ins are taken for this app. Empty while it uses Ninja's shared app.",
   demoDays: "Demo days",
   logo: "Logo",
   create: "Create",
@@ -494,6 +498,10 @@ const dictionary = {
   editRecord: "Edit record",
   recordSaved: "Record saved",
   ownDomain: "Own domain",
+  customerApp: "Customer app",
+  sharedApp: "Ninja's shared app",
+  appConfig: "App config",
+  appConfigHint: "The record the customer app's Flutter build is given, as tenants/<slug>.json: its hosts, realm and sign-in providers, from this record",
 
   // Brand
   brand: "Brand",

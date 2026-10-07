@@ -64,6 +64,10 @@ jobs:
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'client_app') &&
       (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
     runs-on: ubuntu-latest
+    # A business's own app signs and uploads with its own Play account and
+    # keys, kept in the environment named after it (tenants/README.md); a
+    # secret it does not hold falls back to the repository's
+    environment: app-${{ inputs.tenant || 'chillax' }}
     defaults:
       run:
         working-directory: src/client_app
@@ -88,6 +92,16 @@ jobs:
 
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      # A record with an APP_ID is a business's own app: its Firebase file goes
+      # in place and the native folders take its id, name, host and icon. One
+      # without builds as the folders are. Either way APP_ID reaches Fastlane.
+      - name: Stamp the business's own app
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; fi
+          dart run tool/stamp_tenant.dart "$TENANT" --platform android
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -126,7 +140,9 @@ jobs:
       # The same signed build as an APK, for tablets and phones that install
       # from chillax.site instead of Google Play. key.properties is still in
       # place from the Fastlane step, so it carries the same upload signature.
+      # Chillax's alone: a business's own app is installed from its stores.
       - name: Build APK for direct download
+        if: env.TENANT == 'chillax'
         run: |
           flutter build apk --release --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
           mkdir -p build/apk-publish
@@ -135,6 +151,7 @@ jobs:
           printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax.json
 
       - name: Publish APK to chillax.site
+        if: env.TENANT == 'chillax'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -469,6 +486,9 @@ jobs:
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'client_app') &&
       (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios')
     runs-on: macos-latest
+    # A business's own app signs and uploads with its own Apple team, keys and
+    # certificates, kept in the environment named after it (tenants/README.md)
+    environment: app-${{ inputs.tenant || 'chillax' }}
     defaults:
       run:
         working-directory: src/client_app
@@ -487,6 +507,19 @@ jobs:
 
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      # As on Android. The Apple team is the record's (the stamp passes it on
+      # to Fastlane); the certificates repo is the business's own, and only
+      # passed on when its environment names it, so a build without one keeps
+      # Fastlane's default
+      - name: Stamp the business's own app
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist; fi
+          dart run tool/stamp_tenant.dart "$TENANT" --platform ios
+          if [ -n "$MATCH_GIT_URL" ]; then echo "MATCH_GIT_URL=$MATCH_GIT_URL" >> "$GITHUB_ENV"; fi
 
       - name: Build Flutter (no codesign)
         run: flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"

@@ -14,6 +14,10 @@ public static partial class ControlApi
     private static void MapRecordApi(RouteGroupBuilder api)
     {
         api.MapPut("/tenants/{slug}", UpdateTenant).WithName("UpdateTenant").WithSummary("The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once").RequireAuthorization("Platform");
+        api.MapGet("/tenants/{slug}/app-config", GetAppConfig).WithName("GetTenantAppConfig").WithSummary("The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file").RequireAuthorization("Platform");
+        // The edge hands /.well-known/ on a customer host here (deploy/platform/Caddyfile, app_links), the host as it was asked
+        api.MapGet("/app-links/assetlinks.json", GetAssetLinks).WithName("GetAssetLinks").WithSummary("Android's App Links file for the customer host asked: the business's own app and its signing certificates; 404 without them").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
+        api.MapGet("/app-links/apple-app-site-association", GetSiteAssociation).WithName("GetAppleSiteAssociation").WithSummary("iOS's Universal Links file for the customer host asked: the business's own app under its team; 404 without them").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
         api.MapPost("/tenants/{slug}/convert", Convert).WithName("ConvertTenant").WithSummary("A demo becomes a customer: no expiry, on a plan").RequireAuthorization("Platform");
         api.MapGet("/audit", ListAudit).WithName("ListAudit").WithSummary("Every platform action, newest first, for one tenant or all").RequireAuthorization("Platform");
     }
@@ -58,6 +62,18 @@ public static partial class ControlApi
         if (appChanged && appId is not null && await context.Tenants.AnyAsync(t => t.Id != tenant.Id && t.AppId == appId && t.Status != TenantStatus.Destroyed, ct))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{appId} is already another business's app." });
 
+        // What the app's links are checked against; null leaves each as it is, empty clears it
+        var teamId = request.AppleTeamId is null ? tenant.AppleTeamId : Clean(request.AppleTeamId)?.ToUpperInvariant();
+        if (teamId is not null && !AppLinks.IsTeamId(teamId))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The Apple team ID is ten capital letters and digits, as the business's developer account shows it under Membership." });
+        var fingerprints = tenant.AndroidCertFingerprints;
+        if (request.AndroidCertFingerprints is not null)
+        {
+            fingerprints = AppLinks.NormalizeFingerprints(request.AndroidCertFingerprints, out var fingerprintError);
+            if (fingerprintError is not null)
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = fingerprintError });
+        }
+
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
@@ -84,6 +100,8 @@ public static partial class ControlApi
         var socialChanged = request.SocialSignIn is { } social && social != tenant.SocialSignIn;
         if (socialChanged) tenant.SocialSignIn = request.SocialSignIn!.Value;
         tenant.AppId = appId;
+        tenant.AppleTeamId = teamId;
+        tenant.AndroidCertFingerprints = fingerprints;
         // The kind of place is a label on a running business: its menu, switches and guest ordering stay as they are
         if (request.BusinessType is { } business) tenant.BusinessType = business;
         await context.SaveChangesAsync(ct);
@@ -106,6 +124,77 @@ public static partial class ControlApi
             return TypedResults.Problem(detail: $"Saved on the record, but the business did not take it: {refused}", statusCode: StatusCodes.Status502BadGateway);
 
         return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
+    }
+
+    /// <summary>
+    /// What the customer app's build is told about the stack it talks to, from the record and the
+    /// platform's own settings, so nobody types it: the gateway, Keycloak, the realm, the shared Google
+    /// app (the realm's hidden "google" provider takes tokens for it, whether or not the browser offers
+    /// Google), and, for a business's own app, the Apple provider that trusts tokens signed for it.
+    /// </summary>
+    public static async Task<Results<FileContentHttpResult, NotFound>> GetAppConfig(
+        ControlContext context, IOptions<PlatformOptions> options, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        return TypedResults.File(AppConfig(tenant, options.Value), "application/json", $"{slug}.json");
+    }
+
+    public static async Task<Results<JsonHttpResult<System.Text.Json.Nodes.JsonArray>, NotFound>> GetAssetLinks(
+        HttpContext http, ControlContext context, IOptions<PlatformOptions> options, CancellationToken ct)
+    {
+        if (await TenantOfCustomerHostAsync(http, context, options.Value, ct) is not { } tenant || AppLinks.AssetLinks(tenant) is not { } links)
+            return TypedResults.NotFound();
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return TypedResults.Json(links);
+    }
+
+    public static async Task<Results<JsonHttpResult<System.Text.Json.Nodes.JsonObject>, NotFound>> GetSiteAssociation(
+        HttpContext http, ControlContext context, IOptions<PlatformOptions> options, CancellationToken ct)
+    {
+        if (await TenantOfCustomerHostAsync(http, context, options.Value, ct) is not { } tenant || AppLinks.SiteAssociation(tenant) is not { } association)
+            return TypedResults.NotFound();
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return TypedResults.Json(association);
+    }
+
+    /// <summary>The business whose customer app the host serves: {slug}.{domain}, or its own domain</summary>
+    private static async Task<Tenant?> TenantOfCustomerHostAsync(HttpContext http, ControlContext context, PlatformOptions platform, CancellationToken ct)
+    {
+        var host = http.Request.Host.Host.ToLowerInvariant();
+        var slug = TenantHosts.SlugFromHost(host, platform);
+        // Only the bare customer host: admin.{slug}.{domain} serves no customer app
+        if (slug is not null && host != $"{slug}.{platform.Domain}") slug = null;
+        return await context.Tenants.AsNoTracking()
+            .Where(t => t.Status != TenantStatus.Destroyed)
+            .Where(t => (slug != null && t.Slug == slug) || t.CustomerDomain == host)
+            .FirstOrDefaultAsync(ct);
+    }
+
+    internal static byte[] AppConfig(Tenant tenant, PlatformOptions platform)
+    {
+        var config = new System.Text.Json.Nodes.JsonObject
+        {
+            ["API_URL"] = TenantHosts.For(tenant, platform).ApiUrl,
+            ["AUTH_URL"] = platform.KeycloakPublicUrl.TrimEnd('/'),
+            ["REALM"] = TenantNaming.Realm(tenant.Slug),
+        };
+        // Only when the realm has the provider: a build told of one it lacks fails every Google sign-in
+        if (platform.Social.Google.Configured) config["GOOGLE_SERVER_CLIENT_ID"] = platform.Social.Google.ClientId;
+        // The business's own app: Apple's tokens through its own provider, sign-ins back to its own scheme
+        // (the realm's customer app client takes it), and what the build stamps into the native folders
+        // (src/client_app/tool/stamp_tenant.dart). Left out, the shared build's
+        if (tenant.AppId is { } appId)
+        {
+            config["APPLE_ISSUER"] = TenantNaming.AppAppleAlias;
+            config["REDIRECT_SCHEME"] = appId;
+            config["APP_ID"] = appId;
+            config["APP_NAME"] = tenant.NameEn ?? tenant.NameAr ?? tenant.Slug;
+            config["CUSTOMER_HOST"] = TenantHosts.For(tenant, platform).Customer;
+            if (tenant.AppleTeamId is not null) config["APPLE_TEAM_ID"] = tenant.AppleTeamId;
+        }
+        var json = config.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n";
+        return System.Text.Encoding.UTF8.GetBytes(json);
     }
 
     public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> Convert(
@@ -169,7 +258,9 @@ public record UpdateTenantRequest(
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null,
     [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null,
-    [property: Description("The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it")] string? AppId = null);
+    [property: Description("The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it")] string? AppId = null,
+    [property: Description("The Apple team its own app is published under, for its Universal Links; empty clears it, null leaves it")] string? AppleTeamId = null,
+    [property: Description("The SHA-256 fingerprints its own app is signed with on Android (Play's app signing key, the upload key), separated by spaces, commas or lines, for its App Links; empty clears them, null leaves them")] string? AndroidCertFingerprints = null);
 
 /// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
 public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);

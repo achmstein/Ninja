@@ -1,12 +1,16 @@
 import { useState } from 'react'
-import { CalendarPlus, ExternalLink, Pencil } from 'lucide-react'
+import { CalendarPlus, Download, ExternalLink, Pencil } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
 import { CopyButton } from '@/components/copy-button'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { apiClient } from '@/lib/api-client'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { countryOf } from '@/lib/locale'
+import { problemDetail } from '@/lib/problem'
 import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tenant'
+import { toast } from '@/lib/toast'
 import { UpdateStanding } from '../dialogs'
 import { EditRecordSheet } from '../edit-record-sheet'
 import { Steps } from '../steps'
@@ -44,6 +48,31 @@ export function OverviewTab({
   const alive = status !== 'Destroyed' && status !== 'Destroying'
   const country = countryOf(tenant.locale.country)
   const { record, locale } = tenant
+
+  // A plain link would not carry the bearer token: fetch the record
+  // through the shared client and hand the browser a blob
+  const [downloading, setDownloading] = useState(false)
+  const downloadAppConfig = async () => {
+    setDownloading(true)
+    try {
+      const res = await apiClient.get<Blob>(
+        `/api/control/tenants/${encodeURIComponent(tenant.slug)}/app-config`,
+        { responseType: 'blob' }
+      )
+      const url = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${tenant.slug}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast.error(problemDetail(e) || t('somethingWentWrong'))
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className='flex flex-col gap-6'>
@@ -171,6 +200,23 @@ export function OverviewTab({
               <dd className='truncate' dir='ltr'>{tenant.customerDomain}</dd>
             </>
           )}
+          <dt className={dtClass}>{t('customerApp')}</dt>
+          <dd className='flex min-w-0 items-center justify-between gap-2'>
+            <span className='truncate' dir={tenant.appId ? 'ltr' : undefined}>
+              {tenant.appId ?? t('sharedApp')}
+            </span>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-7 shrink-0 px-2'
+              title={t('appConfigHint')}
+              disabled={downloading}
+              onClick={downloadAppConfig}
+            >
+              {downloading ? <Spinner /> : <Download />}
+              {t('appConfig')}
+            </Button>
+          </dd>
           {record.notes && (
             <>
               <dt className={dtClass}>{t('notes')}</dt>

@@ -138,6 +138,16 @@ public class Tenant
     /// </summary>
     public string? AppId { get; set; }
 
+    /// <summary>The Apple team the business's own app is published under ("ABCDE12345"): its Universal Links name the app by it.</summary>
+    public string? AppleTeamId { get; set; }
+
+    /// <summary>
+    /// The SHA-256 fingerprints of the certificates the business's own app is signed with on Android
+    /// (Play's app signing key, and the upload key for a build installed outside the store), as
+    /// AA:BB:… comma-separated: its App Links are only taken for an app signed with one of them.
+    /// </summary>
+    public string? AndroidCertFingerprints { get; set; }
+
     /// <summary>A business's own customer host ("menu.example.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 

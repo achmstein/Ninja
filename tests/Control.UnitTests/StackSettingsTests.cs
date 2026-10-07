@@ -185,6 +185,32 @@ public sealed class StackSettingsTests
         Assert.IsNull(_tenant.AppId);
     }
 
+    /// <summary>What the app's link files are checked against: the team as Apple writes it, the fingerprints however Play Console was copied.</summary>
+    [TestMethod]
+    public async Task The_record_keeps_what_the_apps_links_are_checked_against()
+    {
+        _tenant.Status = TenantStatus.Requested;
+        var hex = string.Concat(Enumerable.Repeat("ab", 32));
+        var colons = string.Join(':', Enumerable.Repeat("CD", 32));
+
+        var result = await SaveAsync(Record() with { AppleTeamId = " abcde12345 ", AndroidCertFingerprints = $"{hex}\n{colons}, {colons}" });
+        Assert.IsInstanceOfType<Ok<TenantDetail>>(result.Result);
+        Assert.AreEqual("ABCDE12345", _tenant.AppleTeamId);
+        Assert.AreEqual($"{string.Join(':', Enumerable.Repeat("AB", 32))},{colons}", _tenant.AndroidCertFingerprints, "upper-case, colons, once each");
+        CollectionAssert.AreEqual(AppLinks.Fingerprints(_tenant.AndroidCertFingerprints), ((Ok<TenantDetail>)result.Result).Value!.AndroidCertFingerprints!.ToArray());
+
+        Assert.IsInstanceOfType<Ok<TenantDetail>>((await SaveAsync(Record())).Result);
+        Assert.AreEqual("ABCDE12345", _tenant.AppleTeamId, "left out, it stays");
+        Assert.IsNotNull(_tenant.AndroidCertFingerprints);
+
+        Assert.IsInstanceOfType<BadRequest<Microsoft.AspNetCore.Mvc.ProblemDetails>>((await SaveAsync(Record() with { AppleTeamId = "ABC" })).Result);
+        Assert.IsInstanceOfType<BadRequest<Microsoft.AspNetCore.Mvc.ProblemDetails>>((await SaveAsync(Record() with { AndroidCertFingerprints = "AB:CD" })).Result, "not 32 bytes");
+
+        Assert.IsInstanceOfType<Ok<TenantDetail>>((await SaveAsync(Record() with { AppleTeamId = "", AndroidCertFingerprints = " " })).Result);
+        Assert.IsNull(_tenant.AppleTeamId);
+        Assert.IsNull(_tenant.AndroidCertFingerprints);
+    }
+
     /// <summary>The brand is sent back whole: the theme, the switches and the customer URL the business had go with it.</summary>
     [TestMethod]
     public void The_rest_of_the_brand_goes_back_as_the_business_had_it()

@@ -54,6 +54,20 @@
 	}
 }
 
+# A business's own app opening its printed QR codes (App Links, Universal
+# Links): the control plane answers from the business's record, for the host
+# that was asked (Caddy passes it on), and 404 when it has no app of its own
+(app_links) {
+	handle /.well-known/assetlinks.json {
+		rewrite * /api/control/app-links/assetlinks.json
+		reverse_proxy control-api:8080
+	}
+	handle /.well-known/apple-app-site-association {
+		rewrite * /api/control/app-links/apple-app-site-association
+		reverse_proxy control-api:8080
+	}
+}
+
 # A stack that is off (suspended for non-payment, or stopped) answers nothing: say so,
 # as JSON the apps recognise, instead of a bare 502. It sits at the site level
 # and not in (tenant_api), because handle_errors is not an ordered handler and
@@ -229,6 +243,7 @@ https://*.{$PLATFORM_DOMAIN} {
 	}
 	header Content-Security-Policy "frame-ancestors 'self' https://control.{$PLATFORM_DOMAIN} https://admin.{host}"
 	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+	import app_links
 	handle {
 		import spa /srv/client-web
 	}

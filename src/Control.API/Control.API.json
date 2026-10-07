@@ -1550,6 +1550,67 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/app-config": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file",
+        "operationId": "GetTenantAppConfig",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/app-links/assetlinks.json": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Android's App Links file for the customer host asked: the business's own app and its signing certificates; 404 without them",
+        "operationId": "GetAssetLinks",
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/control/app-links/apple-app-site-association": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "iOS's Universal Links file for the customer host asked: the business's own app under its team; 404 without them",
+        "operationId": "GetAppleSiteAssociation",
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/control/tenants/{slug}/convert": {
       "post": {
         "tags": [
@@ -6364,6 +6425,23 @@
               "string"
             ],
             "description": "The business's own customer app (its iOS bundle ID and Android package); null when it has none"
+          },
+          "appleTeamId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Apple team its own app is published under; null when not given"
+          },
+          "androidCertFingerprints": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…"
           }
         }
       },
@@ -7163,6 +7241,20 @@
               "string"
             ],
             "description": "The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it"
+          },
+          "appleTeamId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Apple team its own app is published under, for its Universal Links; empty clears it, null leaves it"
+          },
+          "androidCertFingerprints": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The SHA-256 fingerprints its own app is signed with on Android (Play's app signing key, the upload key), separated by spaces, commas or lines, for its App Links; empty clears them, null leaves them"
           }
         }
       },
