@@ -416,7 +416,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               >
                 <div className='flex items-center justify-between gap-2'>
                   <p className='text-primary flex items-center gap-1 text-xs'>
-                    <NinjaMark className='size-3 shrink-0' aria-hidden />
+                    <NinjaMark className='size-3.5 shrink-0' />
                     {t('assistSuggestedCustomizations')}
                   </p>
                   <div className='flex shrink-0 gap-1'>

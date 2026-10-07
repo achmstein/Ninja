@@ -553,7 +553,7 @@ export function ItemDetailsForm({
             </Select>
             {suggested.category && (
               <p className='text-primary flex items-center gap-1 text-xs'>
-                <NinjaMark className='size-3' aria-hidden />
+                <NinjaMark className='size-3.5' />
                 {t('assistCategorySuggested')}
               </p>
             )}
@@ -656,7 +656,7 @@ export function ItemDetailsForm({
           <div className='border-primary/30 bg-primary/5 space-y-3 rounded-lg border p-3'>
             <div className='flex items-center justify-between gap-2'>
               <p className='text-primary flex items-center gap-1 text-xs'>
-                <NinjaMark className='size-3 shrink-0' aria-hidden />
+                <NinjaMark className='size-3.5 shrink-0' />
                 {t('assistProposedCustomizations')}
               </p>
               <Button

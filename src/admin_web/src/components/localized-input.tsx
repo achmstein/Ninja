@@ -280,7 +280,7 @@ export function LocalizedInput({
       </InputGroup>
       {isSuggested && !error && (
         <p className='text-primary flex items-center gap-1 text-xs'>
-          <NinjaMark className='size-3' aria-hidden />
+          <NinjaMark className='size-3.5' />
           {t('assistSuggested')}
         </p>
       )}
@@ -316,7 +316,7 @@ function LangItem({
     >
       {lang === 'en' ? 'EN' : 'ع'}
       {suggested ? (
-        <NinjaMark className='text-primary size-3' aria-hidden />
+        <NinjaMark className='text-primary size-3.5' />
       ) : (
         !filled && (
           <span

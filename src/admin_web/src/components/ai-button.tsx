@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NinjaMark } from '@/components/ninja-mark'
@@ -26,6 +27,8 @@ export function AiButton({
   variant?: 'outline' | 'default'
   className?: string
 }) {
+  // Hovering pops the mark again, as it popped in
+  const [replay, setReplay] = useState(0)
   return (
     <Button
       type='button'
@@ -38,8 +41,10 @@ export function AiButton({
       disabled={disabled || pending}
       title={disabled ? why : undefined}
       onClick={onClick}
+      onMouseEnter={() => setReplay((r) => r + 1)}
     >
-      <NinjaMark working={pending} />
+      {/* Larger than the 16 px icons around it, so the hood and its slit read at a glance */}
+      <NinjaMark working={pending} replay={replay} className='size-5' />
       {children}
     </Button>
   )

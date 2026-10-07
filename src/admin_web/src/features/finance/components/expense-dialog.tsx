@@ -374,7 +374,7 @@ function ExpenseForm({
           </div>
           {fromBill && suggested.size > 0 && (
             <p className='text-primary flex items-center gap-1 text-xs'>
-              <NinjaMark className='size-3' aria-hidden />
+              <NinjaMark className='size-3.5' />
               {t('billFilledIn')}
             </p>
           )}
