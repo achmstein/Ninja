@@ -342,7 +342,8 @@ jobs:
             # notification services run as, by nobody else on the box. Every stack's notification service
             # still mounts it; a platform push relay that held the key alone would end that
             if [ -f firebase-credentials.json ]; then
-              if chown 1654:1654 firebase-credentials.json 2>/dev/null; then
+              # The deploy user owns the file, not uid 1654: handing it over takes root, as the setup above does
+              if sudo -n chown 1654:1654 firebase-credentials.json 2>/dev/null || chown 1654:1654 firebase-credentials.json 2>/dev/null; then
                 chmod 400 firebase-credentials.json
               else
                 # Not root: the services must still read it

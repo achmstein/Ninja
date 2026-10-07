@@ -145,29 +145,19 @@ jobs:
           name: client-app-android-aab
           path: src/client_app/build/app/outputs/bundle/release/app-release.aab
 
-      # The same signed build as an APK, for tablets and phones that install
-      # from chillax.site instead of Google Play. key.properties is still in
-      # place from the Fastlane step, so it carries the same upload signature.
-      # Chillax's alone: a business's own app is installed from its stores.
-      - name: Build APK for direct download
-        if: env.TENANT == 'chillax'
-        run: |
-          flutter build apk --release --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
-          mkdir -p build/apk-publish
-          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax.apk
-          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "$BUILD_NUMBER" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax.json
+      # The same build as an APK, kept with the run to install by hand. It is
+      # signed with the business's upload key (key.properties is still in
+      # place from the Fastlane step), not re-signed by Play, so it is the one
+      # to test with where Play's signing key is not registered yet. A
+      # business's app reaches its customers through its stores alone.
+      - name: Build APK
+        run: flutter build apk --release --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
 
-      - name: Publish APK to chillax.site
-        if: env.TENANT == 'chillax'
-        uses: appleboy/scp-action@v0.1.7
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "src/client_app/build/apk-publish/*"
-          target: ${{ secrets.DEPLOY_PATH }}/website/apk
-          strip_components: 4
+          name: client-app-android-apk
+          path: src/client_app/build/app/outputs/flutter-apk/app-release.apk
 
   # ==========================================
   # The till: one generic APK, published to the platform's download page
