@@ -29,6 +29,7 @@ public class CatalogContext : DbContext
     public required DbSet<BranchOptionStockOut> BranchOptionStockOuts { get; set; }
     public required DbSet<PromoCode> PromoCodes { get; set; }
     public required DbSet<PromoRedemption> PromoRedemptions { get; set; }
+    public required DbSet<ComposedItemRequest> ComposedItemRequests { get; set; }
     public required DbSet<Talabat.TalabatSettings> TalabatSettings { get; set; }
     public required DbSet<Talabat.TalabatTask> TalabatTasks { get; set; }
 
@@ -62,6 +63,7 @@ public class CatalogContext : DbContext
         builder.ApplyConfiguration(new Talabat.TalabatSettingsEntityTypeConfiguration());
         builder.ApplyConfiguration(new Talabat.TalabatTaskEntityTypeConfiguration());
         builder.ApplyConfiguration(new PromoRedemptionEntityTypeConfiguration());
+        builder.ApplyConfiguration(new ComposedItemRequestEntityTypeConfiguration());
 
         // Add the outbox table to this context
         builder.UseIntegrationEventLogs();

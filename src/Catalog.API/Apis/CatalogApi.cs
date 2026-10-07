@@ -18,6 +18,7 @@ public static class CatalogApi
         api.MapCatalogAssistApi();
         api.MapPromoApi();
         api.MapMenuImportApi();
+        api.MapComposeItemApi();
 
         // Menu Items endpoints
         api.MapGet("/items", GetAllItems)
