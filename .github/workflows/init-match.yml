@@ -1,13 +1,50 @@
 name: Initialize Fastlane Match
 
+# Creates a business's iOS distribution certificate and App Store profiles in
+# its certificates repo (MATCH_GIT_URL), encrypted with MATCH_PASSWORD, once;
+# mobile-deploy.yml only reads them after that. Everything comes from the
+# business's environment app-<slug> and its record on the control plane, as
+# the build's do (tenants/README.md). Run again to add what is missing; what
+# is there already is kept.
+
 on:
   workflow_dispatch:
+    inputs:
+      tenant:
+        description: 'The business whose own app is signed: its slug'
+        required: true
+        default: chillax
+        type: string
+
+env:
+  TENANT: ${{ inputs.tenant }}
 
 jobs:
   init-match-client:
     runs-on: macos-latest
+    environment: app-${{ inputs.tenant }}
+    defaults:
+      run:
+        working-directory: src/client_app/ios
     steps:
       - uses: actions/checkout@v4
+
+      # The app's id and Apple team, as the build is told them
+      - name: Fetch the business's record
+        working-directory: src/client_app
+        env:
+          APP_BUILDER_SECRET: ${{ secrets.APP_BUILDER_SECRET }}
+          PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+        run: |
+          bash ../../tenants/fetch-record.sh "$TENANT"
+          python3 - "../../tenants/$TENANT.json" >> "$GITHUB_ENV" <<'EOF'
+          import json, sys
+          record = json.load(open(sys.argv[1]))
+          if not record.get('APP_ID') or not record.get('APPLE_TEAM_ID'):
+              sys.exit(f"{sys.argv[1]} has no APP_ID or APPLE_TEAM_ID: set Own customer app and Apple team ID on the control plane")
+          print(f"APP_ID={record['APP_ID']}")
+          print(f"APPLE_TEAM_ID={record['APPLE_TEAM_ID']}")
+          EOF
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -34,9 +71,18 @@ jobs:
           EOF
           echo "API_KEY_PATH=$API_KEY_PATH" >> $GITHUB_ENV
 
+      # The app and its Live Activity, one at a time so each profile has a
+      # name of its own: an older certificates repo of the same app (Chillax's
+      # before Ninja) may hold profiles under match's default names, and the
+      # portal takes a name once
       - name: Run Match (client_app)
-        working-directory: src/client_app/ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-        run: bundle exec fastlane match appstore --api_key_path "$API_KEY_PATH" --app_identifier "com.chillax.client,com.chillax.client.ChillaxLiveActivity"
+          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
+        run: |
+          if [ -z "$MATCH_GIT_URL" ]; then echo "::error::Set MATCH_GIT_URL in the app-$TENANT environment"; exit 1; fi
+          for id in "$APP_ID" "$APP_ID.ChillaxLiveActivity"; do
+            bundle exec fastlane match appstore --api_key_path "$API_KEY_PATH" \
+              --app_identifier "$id" --team_id "$APPLE_TEAM_ID" --profile_name "Ninja AppStore $id"
+          done

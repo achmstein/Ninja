@@ -93,9 +93,13 @@ it), and everything that signs and uploads comes from the GitHub environment
    A secret the environment does not hold falls back to the repository's,
    which are Chillax's: the stamp refuses a Firebase file that is not the
    business's, and the stores refuse another account's keys.
-6. **The certificates, once:** `bundle exec fastlane match appstore` in
-   `src/client_app/ios` with `APP_ID`, `APPLE_TEAM_ID` and `MATCH_GIT_URL` set
-   and the API key at hand fills its repo; CI only reads it.
+6. **The certificates, once:** an empty private repo of its own
+   (`MATCH_GIT_URL`), a new passphrase (`MATCH_PASSWORD`, kept somewhere safe
+   besides), then the workflow Initialize Fastlane Match with its slug, which
+   creates a distribution certificate on its team and the app's and Live
+   Activity's profiles ("Ninja AppStore <id>") there; CI only reads them after.
+   Chillax's are in `ninja-certificates-chillax`, apart from the
+   `chillax-certificates` its builds before Ninja signed with.
 7. **The first build:** run Build and Deploy Mobile Apps with app
    `client_app` and tenant `<slug>`. iOS lands in TestFlight. Play refuses an
    API upload until the app's first bundle went in by hand: take
