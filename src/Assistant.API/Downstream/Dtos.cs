@@ -52,7 +52,10 @@ public sealed record TenantLocaleDto(string? Country, string? Currency, string? 
     public static readonly TenantLocaleDto Default = new("EG", "EGP", "Africa/Cairo", "ar");
 }
 
-public sealed record TenantResponse(LocalizedText? Name, TenantLocaleDto? Locale);
+public sealed record TenantResponse(LocalizedText? Name, TenantLocaleDto? Locale, TenantFeaturesDto? Features = null);
+
+/// <summary>The owner's switches; only Ninja AI matters here. Null on a stack older than it.</summary>
+public sealed record TenantFeaturesDto(bool? Ai);
 
 // --- Sales -------------------------------------------------------------------
 

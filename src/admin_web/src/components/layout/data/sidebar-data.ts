@@ -173,8 +173,13 @@ export const sidebarData: SidebarData = {
         { title: 'talabatNav', url: '/talabat', icon: Bike },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
-        // The owner's assistant: this business's MCP server in their own Claude or ChatGPT, in every plan
-        { title: 'assistantNav', url: '/assistant', icon: Sparkles },
+        // The owner's assistant: this business's MCP server in their own Claude or ChatGPT, part of Ninja AI
+        {
+          title: 'assistantNav',
+          url: '/assistant',
+          icon: Sparkles,
+          feature: 'ai',
+        },
       ],
     },
   ],

@@ -31,7 +31,8 @@ public sealed class SubscriptionTests
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
         Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments, Module.Delivery])));
         CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+        Assert.Contains(Module.Ai, PlanCatalog.Included(TenantPlan.Pro), "Ninja AI comes with Pro");
     }
 
     [TestMethod]
@@ -150,7 +151,27 @@ public sealed class SubscriptionTests
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
         Assert.IsFalse(features["onlinePayments"]!.GetValue<bool>(), "an add-on on every plan");
         Assert.IsFalse(features["delivery"]!.GetValue<bool>(), "an add-on on every plan");
-        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments", "delivery" }, features.Select(f => f.Key).ToArray());
+        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments", "delivery", "ai" }, features.Select(f => f.Key).ToArray());
+    }
+
+    [TestMethod]
+    public void Without_ninja_ai_every_ai_path_and_the_owner_assistant_answer_402_ahead_of_their_services()
+    {
+        var tenant = Customer(TenantPlan.Starter);
+        var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
+        foreach (var path in new[] { "/api/catalog/assist/{*any}", "/api/inventory/recipes/assist/{*any}", "/api/finance/expenses/scan", "/mcp", "/mcp/{*any}", "/.well-known/oauth-protected-resource" })
+        {
+            var route = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: """ + Regex.Escape(path) + @"""").Groups[1].Value;
+            Assert.IsFalse(string.IsNullOrEmpty(route), $"{path} is routed");
+            Assert.Contains($"{route}__CLUSTERID: \"tenant\"", yaml, path);
+            Assert.Contains($"{route}__ORDER: \"-1\"", yaml, $"{path} answers before the catch-all");
+            Assert.Contains($"{route}__TRANSFORMS__1__Set: \"ai\"", yaml, path);
+        }
+
+        var pro = Customer(TenantPlan.Pro);
+        var proYaml = Templates.Compose(pro, TenantHosts.For(pro, Platform), Platform);
+        var mcp = Regex.Match(proYaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/mcp""").Groups[1].Value;
+        Assert.Contains($"{mcp}__CLUSTERID: \"assistant\"", proYaml, "Pro talks to its assistant");
     }
 
     [TestMethod]

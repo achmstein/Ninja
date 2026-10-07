@@ -228,6 +228,7 @@ const webExtras = {
   featureKds: { en: "Kitchen display", ar: "شاشة المطبخ" },
   featureOnlinePayments: { en: "Online payments", ar: "الدفع أونلاين" },
   featureDelivery: { en: "Delivery", ar: "التوصيل" },
+  featureAi: { en: "Ninja AI", ar: "ذكاء نينجا" },
   featurePayAhead: { en: "Customers pay online when they order", ar: "الدفع أونلاين عند الطلب" },
   brandWordmarkEn: { en: "Wide logo", ar: "الشعار العريض" },
   brandLogoDark: { en: "Logo, dark mode", ar: "الشعار للوضع الداكن" },

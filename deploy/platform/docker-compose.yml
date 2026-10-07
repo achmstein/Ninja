@@ -147,7 +147,6 @@ services:
       # The floor on the tenants drive: below it no backup, no stamp, and a mail to ops
       Platform__MinFreeDiskMb: ${MIN_FREE_DISK_MB:-5120}
       # Which plans' stacks get the assistant key (a demo always does); a comma list of Free, Starter, Pro
-      Platform__AssistantPlans__0: ${ASSISTANT_PLAN_0:-Pro}
       # A copy of every backup off the box, into any S3-compatible bucket; off until a bucket and keys are set
       Platform__Offsite__Endpoint: ${OFFSITE_ENDPOINT:-}
       Platform__Offsite__Bucket: ${OFFSITE_BUCKET:-}

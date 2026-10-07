@@ -9,8 +9,9 @@ import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
-import { assistErrorMessage, useAssistStore } from './errors'
+import { assistErrorMessage } from './errors'
 import { hasText, toSide } from './helpers'
+import { useAiAvailable } from './use-ai-available'
 
 /** The item as the form has it; saved or not yet */
 type SuggestArgs = {
@@ -31,7 +32,7 @@ type SuggestArgs = {
  * says the assistant is not set up.
  */
 export function useCustomizationsAssist() {
-  const available = useAssistStore((s) => !s.unavailable)
+  const available = useAiAvailable()
   const languages = useContentLanguages()
   const mutation = useMutation({
     ...suggestCustomizationsMutation(),

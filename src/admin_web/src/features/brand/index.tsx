@@ -92,6 +92,8 @@ const FEATURE_ROWS: {
   // Delivery and pickup orders paid before the branch sees them; with online payments only
   { key: 'payAhead', label: 'featurePayAhead', addon: true },
   { key: 'delivery', label: 'featureDelivery', addon: true },
+  // Every AI helper and the owner's assistant: in Pro, bought on top of the others
+  { key: 'ai', label: 'featureAi' },
 ]
 
 /** The two slots every business fills and the cover photo, then the four variants behind a disclosure. */

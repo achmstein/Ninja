@@ -46,7 +46,8 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { SheetActions } from '@/components/entity-sheet'
 import { NinjaMark } from '@/components/ninja-mark'
-import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
+import { assistErrorMessage } from '@/features/assist/errors'
+import { useAiAvailable } from '@/features/assist/use-ai-available'
 import { formatQuantity } from '@/features/inventory/format'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
 import {
@@ -120,7 +121,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
 
   // "Propose": the assistant fills the whole recipe for this one item; the
   // review sheet (the same one "Track items" uses) shows it before anything is saved
-  const assistAvailable = useAssistStore((s) => !s.unavailable)
+  const assistAvailable = useAiAvailable()
   const propose = useMutation(proposeRecipesMutation())
   const languages = useContentLanguages()
   const [proposal, setProposal] = useState<RecipesProposal | null>(null)

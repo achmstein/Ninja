@@ -5,8 +5,9 @@ import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
-import { assistErrorMessage, useAssistStore } from './errors'
+import { assistErrorMessage } from './errors'
 import { halfFilled, hasText, toSide } from './helpers'
+import { useAiAvailable } from './use-ai-available'
 
 // Wire values of Catalog's LocalizeKind (the enum has no string converter)
 export const LOCALIZE_MENU_ITEM = 0
@@ -30,7 +31,7 @@ type LocalizeArgs = {
  * not configured.
  */
 export function useLocalizeAssist() {
-  const available = useAssistStore((s) => !s.unavailable)
+  const available = useAiAvailable()
   // The assistant writes only the languages the business writes
   const languages = useContentLanguages()
   const mutation = useMutation({

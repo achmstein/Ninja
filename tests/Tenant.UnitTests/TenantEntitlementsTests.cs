@@ -6,7 +6,7 @@ namespace Ninja.Tenant.UnitTests;
 [TestClass]
 public sealed class TenantEntitlementsTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true, PayAhead: true);
+    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true, PayAhead: true, Ai: true);
     private static readonly TenantFeatures NoInventory = AllOn with { Inventory = false };
 
     [TestMethod]

@@ -59,7 +59,10 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
             request.Headers.Add(BranchHeader, b.ToString(CultureInfo.InvariantCulture));
         if (requestId is { } id)
             request.Headers.Add(RequestIdHeader, id.ToString());
-        if (body is not null)
+        // A form (a picture upload) goes as it is; anything else as JSON
+        if (body is HttpContent content)
+            request.Content = content;
+        else if (body is not null)
             request.Content = JsonContent.Create(body, options: Json);
 
         HttpResponseMessage response;
@@ -82,6 +85,9 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
             {
                 if (typeof(T) == typeof(Unit))
                     return ApiResult<T>.Ok((T)(object)default(Unit));
+                // A file (a drawn dish photo) is read as bytes
+                if (typeof(T) == typeof(byte[]))
+                    return ApiResult<T>.Ok((T)(object)await response.Content.ReadAsByteArrayAsync(ct));
                 if (response.Content.Headers.ContentLength == 0)
                     return ApiResult<T>.Fail($"{Pretty(service)} returned an empty answer.", response.StatusCode);
                 var value = await response.Content.ReadFromJsonAsync<T>(Json, ct);
@@ -98,6 +104,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
                     ? $"Your account may not {Verb(method)} {Pretty(service)} data for branch {fb}. Owner accounts need the Admin role as well."
                     : $"Your account may not {Verb(method)} {Pretty(service)} data. Owner accounts need the Admin role as well.",
                 402 => $"{Pretty(service)} is not included in this business's plan.",
+                503 => $"{Pretty(service)} could not do that right now: {Reason(text)}",
                 404 => "Nothing was found for that request.",
                 400 => $"{Pretty(service)} refused the request: {Reason(text)}",
                 _ => $"{Pretty(service)} failed with HTTP {(int)response.StatusCode}.",

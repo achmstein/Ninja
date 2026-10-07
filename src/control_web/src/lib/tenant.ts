@@ -152,7 +152,7 @@ export const needsPayment = (tone: BillingTone) =>
   tone === 'overdue' || tone === 'stopped'
 
 /** The switches as modules a plan includes or sells; the order the API's enum has. */
-export const MODULES = ['Reservations', 'TimeBilling', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds', 'OnlinePayments', 'Delivery'] as const
+export const MODULES = ['Reservations', 'TimeBilling', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds', 'OnlinePayments', 'Delivery', 'Ai'] as const
 export type ModuleName = (typeof MODULES)[number]
 
 export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
@@ -166,6 +166,7 @@ export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
   Kds: 'featureKds',
   OnlinePayments: 'featureOnlinePayments',
   Delivery: 'featureDelivery',
+  Ai: 'featureAi',
 }
 
 /** The API sends modules as names; a number would be the enum index. */

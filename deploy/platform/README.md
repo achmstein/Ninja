@@ -313,10 +313,11 @@ admin console (`auth.{domain}/admin/*`) answers only from
 anonymous endpoints, the edge's certificate question and the
 sign-in-as-owner link, are metered per address; everything else per admin.
 
-The assistant key reaches only the stacks whose plan is listed in
-`ASSISTANT_PLAN_0`, `ASSISTANT_PLAN_1`, … (`Pro` by default; a demo always
-gets it), so one café's compromised service does not hand the platform's
-key to everyone; the rest run with the assistant off.
+The AI gateway key reaches only the stacks entitled to Ninja AI (the `Ai`
+module: in Pro, an add-on on Free and Starter, set on the tenant's
+Subscription tab; a demo always has it), and the gateway itself refuses a
+tenant that is not entitled or is suspended, since the keys are derived and
+cannot be revoked one by one. The rest run with every AI feature off.
 
 ## Tests
 

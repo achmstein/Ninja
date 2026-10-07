@@ -35,6 +35,7 @@ export const ALL_FEATURES: TenantFeatures = {
   onlinePayments: true,
   delivery: true,
   payAhead: true,
+  ai: true,
 }
 
 export const brandQueryOptions = () => ({
@@ -125,7 +126,6 @@ function setLink(rel: string, href: string, type?: string) {
 export function useBrand(): Brand | undefined {
   return useQuery(brandQueryOptions()).data
 }
-
 
 /** Keeps the page's head and theme in step with the brand and the language. Mount once. */
 export function useBrandEffects() {

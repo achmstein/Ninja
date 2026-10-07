@@ -225,14 +225,12 @@ public sealed class PlatformOptions
     /// </summary>
     public string? EncryptionKey { get; set; }
 
-    /// <summary>The plans whose stacks reach the AI gateway; a demo always does. Everything else runs with the assistant off.</summary>
-    public TenantPlan[] AssistantPlans { get; set; } = [TenantPlan.Pro];
-
     /// <summary>
-    /// Whether this tenant's stack is given a key to the AI gateway: by its plan alone. Whether a model
-    /// answers is the gateway's to say (the panel's AI settings), and changes with no stack touched.
+    /// Whether this tenant's stack is given a key to the AI gateway: when Ninja AI is in its plan or
+    /// bought on top (a demo has everything). Whether a model answers is the gateway's to say (the
+    /// panel's AI settings), and changes with no stack touched.
     /// </summary>
-    public bool AssistantFor(Tenant tenant) => tenant.Kind == TenantKind.Demo || AssistantPlans.Contains(tenant.Plan);
+    public bool AssistantFor(Tenant tenant) => PlanCatalog.Entitlements(tenant).Contains(Module.Ai);
 }
 
 public sealed class RegistryOptions

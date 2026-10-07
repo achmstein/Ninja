@@ -297,13 +297,18 @@ public static class AiGatewayApi
     /// refusal keeps its status (a 429 stays a 429).
     /// </summary>
     public static async Task ImagesAsync(
-        HttpContext http, AiImages images, IOptions<PlatformOptions> options, CancellationToken ct)
+        HttpContext http, AiImages images, ControlContext context, IOptions<PlatformOptions> options, CancellationToken ct)
     {
         var presented = http.Request.Headers.Authorization.ToString();
         var slug = AiGatewayKeys.SlugOf(presented.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? presented[7..].Trim() : null, options.Value.EncryptionKey);
         if (slug is null)
         {
             await ErrorAsync(http, StatusCodes.Status401Unauthorized, "invalid_api_key", "Not a key of this platform's AI gateway.", ct);
+            return;
+        }
+        if (await RefusalAsync(context, slug, ct) is { } refusal)
+        {
+            await ErrorAsync(http, refusal.Status, refusal.Code, refusal.Message, ct);
             return;
         }
 
@@ -339,14 +344,36 @@ public static class AiGatewayApi
         }
     }
 
+    /// <summary>
+    /// Why this business may not use the gateway now, or null: the keys are derived from the
+    /// slug and cannot be revoked one by one, so the plan is checked on every call. Ninja AI must
+    /// be in its plan or bought on top (a demo has everything), and a suspended stack gets nothing.
+    /// </summary>
+    internal static async Task<(int Status, string Code, string Message)?> RefusalAsync(ControlContext context, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null || tenant.Status is TenantStatus.Destroying or TenantStatus.Destroyed)
+            return (StatusCodes.Status401Unauthorized, "invalid_api_key", "This business is not on the platform.");
+        if (tenant.Status == TenantStatus.Suspended)
+            return (StatusCodes.Status403Forbidden, "suspended", "This business is suspended.");
+        if (!PlanCatalog.Entitlements(tenant).Contains(Module.Ai))
+            return (StatusCodes.Status402PaymentRequired, "not_in_plan", "Ninja AI is not in this business's plan.");
+        return null;
+    }
+
     public static async Task ChatAsync(
-        HttpContext http, AiRouter router, AiUsageRecorder usage, IHttpClientFactory clients, IOptions<PlatformOptions> options, CancellationToken ct)
+        HttpContext http, AiRouter router, AiUsageRecorder usage, IHttpClientFactory clients, ControlContext context, IOptions<PlatformOptions> options, CancellationToken ct)
     {
         var presented = http.Request.Headers.Authorization.ToString();
         var slug = AiGatewayKeys.SlugOf(presented.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? presented[7..].Trim() : null, options.Value.EncryptionKey);
         if (slug is null)
         {
             await ErrorAsync(http, StatusCodes.Status401Unauthorized, "invalid_api_key", "Not a key of this platform's AI gateway.", ct);
+            return;
+        }
+        if (await RefusalAsync(context, slug, ct) is { } refusal)
+        {
+            await ErrorAsync(http, refusal.Status, refusal.Code, refusal.Message, ct);
             return;
         }
 

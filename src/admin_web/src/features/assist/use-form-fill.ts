@@ -5,7 +5,8 @@ import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { type LocalizedValue } from '@/lib/localized-value'
 import { toast } from '@/lib/toast'
-import { assistErrorMessage, useAssistStore } from './errors'
+import { assistErrorMessage } from './errors'
+import { useAiAvailable } from './use-ai-available'
 
 // Wire values of Catalog's FormFieldType (the enum has no string converter)
 const FIELD_TYPE = { text: 0, long: 1, number: 2, choice: 3, yesno: 4 } as const
@@ -83,7 +84,7 @@ export function fillBlocker(
  * (`available === false`) once the server says it has no assistant.
  */
 export function useFormFill() {
-  const available = useAssistStore((s) => !s.unavailable)
+  const available = useAiAvailable()
   const languages = useContentLanguages()
   const mutation = useMutation({
     ...fillFormMutation(),

@@ -5453,7 +5453,8 @@
           "Payroll",
           "Kds",
           "OnlinePayments",
-          "Delivery"
+          "Delivery",
+          "Ai"
         ]
       },
       "OperatorInvitedResponse": {

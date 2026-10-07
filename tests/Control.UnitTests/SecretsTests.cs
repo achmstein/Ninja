@@ -82,14 +82,13 @@ public sealed class SecretsTests
     }
 
     [TestMethod]
-    public void The_gateway_key_reaches_only_the_plans_that_include_the_assistant_and_every_demo()
+    public void The_gateway_key_reaches_only_a_tenant_entitled_to_ninja_ai_and_every_demo()
     {
         var platform = new PlatformOptions();
         Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Demo, Plan = TenantPlan.Free }));
         Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Pro }));
         Assert.IsFalse(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Starter }));
-        platform.AssistantPlans = [TenantPlan.Starter, TenantPlan.Pro];
-        Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Starter }));
+        Assert.IsTrue(platform.AssistantFor(new Tenant { Kind = TenantKind.Customer, Plan = TenantPlan.Starter, Addons = [Module.Ai] }), "bought on top");
     }
 
     /// <summary>Answers Keycloak's token endpoint and counts how often it was asked; everything else is 200 {}.</summary>

@@ -124,6 +124,12 @@ public class Tenant
     public bool PayAheadEnabled { get; set; }
 
     /// <summary>
+    /// Ninja AI: every AI helper in the back office and the owner's own
+    /// assistant (MCP). On once bought; the owner may switch it off.
+    /// </summary>
+    public bool AiEnabled { get; set; } = true;
+
+    /// <summary>
     /// What the business's plan allows, set by the control plane: an owner may
     /// switch an entitled module off, never an unentitled one on. All on by
     /// default, so a stack nobody has told otherwise (the dev host, a stack
@@ -149,9 +155,11 @@ public class Tenant
 
     public bool DeliveryEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled, DeliveryEnabled, PayAheadEnabled);
+    public bool AiEntitled { get; set; } = true;
 
-    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled, DeliveryEntitled, PayAhead: OnlinePaymentsEntitled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled, DeliveryEnabled, PayAheadEnabled, AiEnabled);
+
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled, DeliveryEntitled, PayAhead: OnlinePaymentsEntitled, Ai: AiEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
@@ -168,6 +176,7 @@ public class Tenant
         OnlinePaymentsEnabled = f.OnlinePayments;
         DeliveryEnabled = f.Delivery;
         PayAheadEnabled = f.PayAhead;
+        AiEnabled = f.Ai;
     }
 
     /// <summary>
@@ -190,7 +199,8 @@ public class Tenant
             requested.Kds ?? now.Kds,
             requested.OnlinePayments ?? now.OnlinePayments,
             requested.Delivery ?? now.Delivery,
-            requested.PayAhead ?? now.PayAhead));
+            requested.PayAhead ?? now.PayAhead,
+            requested.Ai ?? now.Ai));
     }
 
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
@@ -200,6 +210,8 @@ public class Tenant
         // need an area before anyone orders to a door); other modules wait for
         // the owner, as they always have
         if (!DeliveryEntitled && entitled.Delivery) DeliveryEnabled = true;
+        // So does Ninja AI: bought, its helpers show at once
+        if (!AiEntitled && entitled.Ai) AiEnabled = true;
 
         ReservationsEntitled = entitled.Reservations;
         TimeBillingEntitled = entitled.TimeBilling;
@@ -211,6 +223,7 @@ public class Tenant
         KdsEntitled = entitled.Kds;
         OnlinePaymentsEntitled = entitled.OnlinePayments;
         DeliveryEntitled = entitled.Delivery;
+        AiEntitled = entitled.Ai;
         ApplyFeatures(Features);
     }
 
@@ -395,13 +408,14 @@ public class TenantThemeDark
 /// </summary>
 public record FeatureSwitches(
     bool? Reservations = null, bool? TimeBilling = null, bool? Loyalty = null, bool? Tabs = null, bool? Inventory = null,
-    bool? Finance = null, bool? Payroll = null, bool? Kds = null, bool? OnlinePayments = null, bool? Delivery = null, bool? PayAhead = null);
+    bool? Finance = null, bool? Payroll = null, bool? Kds = null, bool? OnlinePayments = null, bool? Delivery = null, bool? PayAhead = null, bool? Ai = null);
 
 /// <summary>The switches, as the surfaces read them and as the plan allows them.</summary>
 /// <param name="OnlinePayments">Last and defaulted: a caller older than online payments does not send it, and it stays off.</param>
 /// <param name="Delivery">Last and defaulted: a caller older than delivery does not send it, and it stays off.</param>
 /// <param name="PayAhead">Customers pay online for a delivery or an order they collect, before the business sees it; on only with <paramref name="OnlinePayments"/>.</param>
-public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false, bool PayAhead = false)
+/// <param name="Ai">Ninja AI. Last and defaulted: a control plane older than it does not send it, and it stays off.</param>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false, bool PayAhead = false, bool Ai = false)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
@@ -409,7 +423,8 @@ public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, 
         Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds,
         OnlinePayments && entitled.OnlinePayments, Delivery && entitled.Delivery,
         // Paying ahead is a way of paying online: off with it
-        PayAhead && OnlinePayments && entitled.OnlinePayments);
+        PayAhead && OnlinePayments && entitled.OnlinePayments,
+        Ai && entitled.Ai);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

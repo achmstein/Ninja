@@ -350,7 +350,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery';
+export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery' | 'Ai';
 
 export type OperatorInvitedResponse = {
     id: string;

@@ -11,8 +11,10 @@ public sealed record TenantSnapshot(IReadOnlyList<BranchResponse> Branches, Tena
 
 /// <summary>
 /// Loads the branch list on every call (an Owner endpoint, so it also proves
-/// the token) and the tenant's locale once every few minutes (public, and it
-/// changes only when the owner edits the brand page).
+/// the token) and the tenant's locale and Ninja AI switch once a minute
+/// (public, and they change only when the owner edits them). With Ninja AI
+/// switched off in the back office the assistant answers nothing: every tool
+/// starts here.
 /// </summary>
 public sealed class TenantContext(NinjaApiClient api, IMemoryCache cache)
 {
@@ -24,17 +26,20 @@ public sealed class TenantContext(NinjaApiClient api, IMemoryCache cache)
         if (!branches.IsOk)
             return ApiResult<TenantSnapshot>.Fail(branches.Error!, branches.Status);
 
-        var locale = await cache.GetOrCreateAsync(LocaleKey, async entry =>
+        var (locale, aiOn) = await cache.GetOrCreateAsync(LocaleKey, async entry =>
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             var tenant = await api.GetAsync<TenantResponse>("tenant-api", "/api/tenant", null, ct);
             if (!tenant.IsOk || tenant.Value?.Locale is null)
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);
-                return TenantLocaleDto.Default;
+                return (TenantLocaleDto.Default, tenant.Value?.Features?.Ai != false);
             }
-            return tenant.Value.Locale;
-        }) ?? TenantLocaleDto.Default;
+            return (tenant.Value.Locale, tenant.Value.Features?.Ai != false);
+        });
+        if (!aiOn)
+            return ApiResult<TenantSnapshot>.Fail("Ninja AI is switched off for this business. Turn it on in the back office (Settings → Features) to use the assistant.", System.Net.HttpStatusCode.Forbidden);
+        locale ??= TenantLocaleDto.Default;
 
         return ApiResult<TenantSnapshot>.Ok(new TenantSnapshot(
             branches.Value!,

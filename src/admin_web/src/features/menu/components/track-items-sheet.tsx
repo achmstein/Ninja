@@ -21,11 +21,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { AiButton } from '@/components/ai-button'
 import { EmptyState } from '@/components/empty-state'
 import { EntitySheet } from '@/components/entity-sheet'
-import {
-  assistErrorMessage,
-  assistRetryAfter,
-  useAssistStore,
-} from '@/features/assist/errors'
+import { assistErrorMessage, assistRetryAfter } from '@/features/assist/errors'
+import { useAiAvailable } from '@/features/assist/use-ai-available'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
 import { PROPOSE_BATCH, toMenuItemToTrack } from '../track-items'
 import { RecipeReviewSheet } from './recipe-review-sheet'
@@ -49,7 +46,7 @@ export function TrackItemsSheet({
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
-  const assistAvailable = useAssistStore((s) => !s.unavailable)
+  const assistAvailable = useAiAvailable()
   const shelf = useQuery(stockItemsQueryOptions())
 
   const [selected, setSelected] = useState<Set<number>>(new Set())

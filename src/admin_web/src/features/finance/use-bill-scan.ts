@@ -5,7 +5,8 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { toast } from '@/lib/toast'
-import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
+import { assistErrorMessage } from '@/features/assist/errors'
+import { useAiAvailable } from '@/features/assist/use-ai-available'
 
 /**
  * The sparkle on a bill attached to an expense: shrink the photo, send it,
@@ -14,7 +15,7 @@ import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
  */
 export function useBillScan() {
   const t = useT()
-  const available = useAssistStore((s) => !s.unavailable)
+  const available = useAiAvailable()
 
   const scan = useMutation({
     ...scanBillMutation(),

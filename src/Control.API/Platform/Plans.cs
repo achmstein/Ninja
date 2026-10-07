@@ -24,6 +24,14 @@ public enum Module
     /// app and bring the cash back. An add-on on every plan.
     /// </summary>
     Delivery,
+    /// <summary>
+    /// Ninja AI: every AI feature at once. In the back office: filling in
+    /// names and the other language, proposing customizations, recipes and
+    /// dish photos, reading a menu, a receipt or a bill. And the owner's own
+    /// assistant: the business as an MCP server the owner talks to from
+    /// Claude or ChatGPT. Included in Pro, an add-on on Free and Starter.
+    /// </summary>
+    Ai,
 }
 
 /// <summary>
@@ -96,6 +104,15 @@ public static class PlanCatalog
         (Module.Delivery, "/api/orders/riders"),
         (Module.Delivery, "/api/orders/riders/{*any}"),
         (Module.Delivery, "/api/orders/{id}/delivery/{*any}"),
+        // Ninja AI: the services' AI endpoints, and the owner's assistant with its sign-in document
+        (Module.Ai, "/api/catalog/assist/{*any}"),
+        (Module.Ai, "/api/inventory/purchases/scan"),
+        (Module.Ai, "/api/inventory/recipes/assist/{*any}"),
+        (Module.Ai, "/api/finance/expenses/scan"),
+        (Module.Ai, "/mcp"),
+        (Module.Ai, "/mcp/{*any}"),
+        (Module.Ai, "/.well-known/oauth-protected-resource"),
+        (Module.Ai, "/.well-known/oauth-protected-resource/{*any}"),
     ];
 
     /// <summary>
