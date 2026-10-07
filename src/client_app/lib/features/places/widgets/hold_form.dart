@@ -306,25 +306,25 @@ Future<void> showHoldSheet(BuildContext context, Place place) => showNinjaSheet<
               Container(
                 clipBehavior: Clip.antiAlias,
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(22)),
+                decoration: BoxDecoration(color: c.foreground.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(22)),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     PositionedDirectional(
                       end: -24,
                       bottom: -32,
-                      child: Transform.rotate(angle: -0.21, child: Icon(place.kind.icon, size: 160, color: c.primaryForeground.withValues(alpha: 0.12))),
+                      child: Transform.rotate(angle: -0.21, child: Icon(place.kind.icon, size: 160, color: c.foreground.withValues(alpha: 0.12))),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        BrandHeading(l10n.reserveRoomName(place.name.localized(context)), style: theme.typography.headline.copyWith(color: c.primaryForeground)),
+                        BrandHeading(l10n.reserveRoomName(place.name.localized(context)), style: theme.typography.headline.copyWith(color: c.foreground)),
                         if (rate.isNotEmpty)
-                          Text(rate, style: context.localeText(theme.typography.note.copyWith(color: c.primaryForeground.withValues(alpha: 0.8)))),
+                          Text(rate, style: context.localeText(theme.typography.note.copyWith(color: c.mutedForeground))),
                         if (place.description != null)
                           Text(
                             place.description!.localized(context),
-                            style: context.localeText(theme.typography.note.copyWith(color: c.primaryForeground.withValues(alpha: 0.8))),
+                            style: context.localeText(theme.typography.note.copyWith(color: c.mutedForeground)),
                           ),
                       ],
                     ),

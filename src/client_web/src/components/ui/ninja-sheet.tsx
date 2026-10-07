@@ -22,6 +22,27 @@ import { DOCK_EDGES } from '@/components/ninja/shell/chrome'
 
 export type SheetFrom = 'bottom' | 'top'
 
+// The dock's own slab and action, with the dark scheme's other roles mixed from its two inks, so a
+// sheet is the dock's material on either page and in the business's colour, not the dark page's.
+// Inline, as the business's colours reach .dark in a <style> no utility would win over
+const mix = (ink: number) => `color-mix(in oklab, var(--dock-slab-ink) ${ink}%, var(--dock-slab))`
+const SLAB_SCHEME = {
+  '--background': 'var(--dock-slab)',
+  '--foreground': 'var(--dock-slab-ink)',
+  '--card': mix(6),
+  '--card-foreground': 'var(--dock-slab-ink)',
+  '--popover': mix(8),
+  '--popover-foreground': 'var(--dock-slab-ink)',
+  '--muted': mix(10),
+  '--accent': mix(10),
+  '--accent-foreground': 'var(--dock-slab-ink)',
+  '--muted-foreground': mix(62),
+  '--border': mix(14),
+  '--input': mix(18),
+  '--primary': 'var(--dock-primary)',
+  '--primary-foreground': 'var(--dock-primary-foreground)',
+} as React.CSSProperties
+
 export const SheetOpen = React.createContext<{ open: boolean; setOpen: (open: boolean) => void }>({
   open: false,
   setOpen: () => {},
@@ -94,6 +115,7 @@ export function SheetFrame({
                 from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'
               )}
               style={{
+                ...SLAB_SCHEME,
                 // As wide as the dock it opens over
                 ...DOCK_EDGES,
                 ...(from === 'bottom' && { bottom: keyboardInset > 0 ? keyboardInset + 8 : 'max(8px, env(safe-area-inset-bottom))' }),

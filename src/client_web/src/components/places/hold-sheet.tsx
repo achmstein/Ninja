@@ -20,15 +20,15 @@ export function HoldSheet({ place, onOpenChange }: { place: PlaceViewModel | nul
       <SheetContent
         className='gap-0 px-2 pb-2'
       >
-        <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
+        <SheetHeader className='bg-foreground/[0.07] relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
           <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-          <SheetTitle className='heading text-primary-foreground text-headline pe-8'>
+          <SheetTitle className='heading text-headline pe-8'>
             {t('reserveRoomName', { roomName: localized(place.name) })}
           </SheetTitle>
-          <SheetDescription className='text-primary-foreground/80'>
+          <SheetDescription className='text-muted-foreground'>
             <TariffLine place={place} />
           </SheetDescription>
-          {place.description && <p className='text-primary-foreground/80 text-note'>{localized(place.description)}</p>}
+          {place.description && <p className='text-muted-foreground text-note'>{localized(place.description)}</p>}
         </SheetHeader>
         <HoldForm place={place} onDone={() => onOpenChange(false)} className='p-3 pt-4' />
       </SheetContent>

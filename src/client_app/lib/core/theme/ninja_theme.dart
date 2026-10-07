@@ -435,8 +435,11 @@ class NinjaSchemes extends InheritedWidget {
   bool updateShouldNotify(NinjaSchemes oldWidget) => oldWidget.light != light || oldWidget.dark != dark;
 }
 
-/// [child] set in the dark scheme, as the web's `dark` class sets a sheet:
-/// everything in it reads on the dark page whatever the page around it is
+/// [child] set in the dark scheme on the dock's own slab, as the web's
+/// sheet is (components/ui/ninja-sheet.tsx): its page is the slab and its
+/// action the dock's, the other roles mixed from the slab's two inks, so a
+/// sheet is the dock's material in the business's colour on either page,
+/// not the dark page's
 class DarkScope extends StatelessWidget {
   final Widget child;
 
@@ -444,8 +447,40 @@ class DarkScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = NinjaSchemes.darkOf(context);
-    final ink = theme.extension<NinjaTheme>()?.colors.foreground ?? Colors.white;
+    final dock = context.theme.colors;
+    final dark = NinjaSchemes.darkOf(context);
+    final ninja = dark.extension<NinjaTheme>() ?? NinjaTheme.neutral(Brightness.dark);
+    final slab = dock.slab;
+    final ink = dock.slabInk;
+    Color mix(double t) => Color.lerp(slab, ink, t)!;
+    final colors = ninja.colors.copyWith(
+      background: slab,
+      foreground: ink,
+      card: mix(0.06),
+      popover: mix(0.08),
+      muted: mix(0.10),
+      accent: mix(0.10),
+      accentForeground: ink,
+      mutedForeground: mix(0.62),
+      border: mix(0.14),
+      input: mix(0.18),
+      primary: dock.primary,
+      primaryForeground: dock.primaryForeground,
+      slab: slab,
+      slabInk: ink,
+    );
+    final theme = dark.copyWith(
+      colorScheme: dark.colorScheme.copyWith(
+        surface: slab,
+        onSurface: ink,
+        primary: dock.primary,
+        onPrimary: dock.primaryForeground,
+        outline: colors.border,
+      ),
+      extensions: [
+        for (final extension in dark.extensions.values) extension is NinjaTheme ? ninja.copyWith(colors: colors) : extension,
+      ],
+    );
     return Theme(
       data: theme,
       child: DefaultTextStyle.merge(style: TextStyle(color: ink), child: IconTheme.merge(data: IconThemeData(color: ink), child: child)),

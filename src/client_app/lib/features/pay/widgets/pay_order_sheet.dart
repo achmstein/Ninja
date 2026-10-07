@@ -20,11 +20,8 @@ import '../services/pay_service.dart';
 /// its payment (a delivery or an order to collect). [start]: just placed, so
 /// straight on to the provider's checkout once Sales has it priced.
 Future<void> showPayOrderSheet(BuildContext context, int orderId, {bool start = false}) {
-  return showModalBottomSheet<void>(
+  return showNinjaSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
     builder: (context) => PayOrderSheet(orderId: orderId, start: start),
   );
 }
@@ -251,33 +248,7 @@ class _PayOrderSheetState extends ConsumerState<PayOrderSheet> with WidgetsBindi
   }
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final media = MediaQuery.of(context);
-    return Container(
-      constraints: BoxConstraints(maxHeight: media.size.height * 0.9),
-      decoration: BoxDecoration(color: colors.background, borderRadius: const BorderRadius.vertical(top: Radius.circular(20))),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 12),
-            Center(
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: colors.mutedForeground, borderRadius: BorderRadius.circular(2))),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                child: AnimatedSize(duration: Motion.base, curve: Motion.enter, child: _body(context)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AnimatedSize(duration: Motion.base, curve: Motion.enter, child: _body(context));
 
   Widget _body(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

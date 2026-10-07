@@ -129,6 +129,12 @@ body[data-scroll-locked][data-scroll-locked] {
    short and soft so a column of cards reads calm rather than stacked */
 :root {
   --slab-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.28);
+  /* The dock's slab and action as the page resolves them, for a sheet: it is set in the dark
+     scheme, where --slab and --primary would resolve to the dark page's own (components/ui/ninja-sheet) */
+  --dock-slab: var(--slab);
+  --dock-slab-ink: var(--slab-ink);
+  --dock-primary: var(--primary);
+  --dock-primary-foreground: var(--primary-foreground);
 }
 
 /* Shadows vanish on dark: surfaces take a hairline there instead */

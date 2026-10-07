@@ -125,16 +125,16 @@ export function ScanSheet({
           className='gap-0 px-2 pb-2'
         >
           {/* The place on its card, as the tab shows it */}
-          <SheetHeader className='bg-primary text-primary-foreground relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
+          <SheetHeader className='bg-foreground/[0.07] relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
             <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-            <SheetTitle className='heading text-primary-foreground text-headline pe-8'>
+            <SheetTitle className='heading text-headline pe-8'>
               {localized(place.name)}
             </SheetTitle>
-            <SheetDescription className='text-primary-foreground/80'>
+            <SheetDescription className='text-muted-foreground'>
               <TariffLine place={place} />
             </SheetDescription>
             {running && memberCount != null && (
-              <span className='bg-primary-foreground/15 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold'>
+              <span className='bg-foreground/10 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold'>
                 <Users className='size-3.5' />
                 {t('memberCountFormat', { count: Number(memberCount) })}
               </span>

@@ -29,11 +29,8 @@ const _statusPatience = Duration(minutes: 2);
 /// Opens the guest's pay sheet on a bill: its paid and remaining money and
 /// the ways to pay it. [split] opens straight on the ways to split it.
 Future<void> showPaySheet(BuildContext context, PaySource source, {bool split = false}) {
-  return showModalBottomSheet<void>(
+  return showNinjaSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
     builder: (context) => PaySheet(source: source, startSplit: split),
   );
 }
@@ -364,43 +361,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
   }
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final media = MediaQuery.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-      child: Container(
-        constraints: BoxConstraints(maxHeight: media.size.height * 0.9),
-        decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(color: colors.mutedForeground, borderRadius: BorderRadius.circular(2)),
-                ),
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  child: _body(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _body(context);
 
   Widget _body(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
