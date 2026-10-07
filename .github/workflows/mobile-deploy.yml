@@ -104,6 +104,15 @@ jobs:
       # A record with an APP_ID is a business's own app: its Firebase file goes
       # in place and the native folders take its id, name, host and icon. One
       # without builds as the folders are. Either way APP_ID reaches Fastlane.
+      # A version code the store has seen is refused, and Chillax's builds
+      # from before Ninja (its own repo) went up to 183: a run's number is
+      # offset by 1000 for the stores, which leaves that repo room to the
+      # cutover. A build_number given in the run's form is taken as it is.
+      - name: Build number
+        env:
+          GIVEN: ${{ github.event.inputs.build_number }}
+        run: echo "CLIENT_BUILD_NUMBER=${GIVEN:-$((GITHUB_RUN_NUMBER + 1000))}" >> "$GITHUB_ENV"
+
       - name: Stamp the business's own app
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -132,7 +141,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-        run: bundle exec fastlane beta track:"$TRACK" build_number:"$BUILD_NUMBER"
+        run: bundle exec fastlane beta track:"$TRACK" build_number:"$CLIENT_BUILD_NUMBER"
 
       # Kept even when the Play upload fails (a brand-new app refuses API
       # uploads until its first bundle goes in by hand), so the signed bundle
@@ -151,7 +160,7 @@ jobs:
       # to test with where Play's signing key is not registered yet. A
       # business's app reaches its customers through its stores alone.
       - name: Build APK
-        run: flutter build apk --release --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
+        run: flutter build apk --release --build-number="$CLIENT_BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -531,8 +540,14 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: bash ../../tenants/match-env.sh "$TENANT"
 
+      # As on Android: TestFlight refuses a build number it has seen for a version
+      - name: Build number
+        env:
+          GIVEN: ${{ github.event.inputs.build_number }}
+        run: echo "CLIENT_BUILD_NUMBER=${GIVEN:-$((GITHUB_RUN_NUMBER + 1000))}" >> "$GITHUB_ENV"
+
       - name: Build Flutter (no codesign)
-        run: flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
+        run: flutter build ios --release --no-codesign --build-number="$CLIENT_BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
