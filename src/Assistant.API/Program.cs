@@ -77,6 +77,9 @@ builder.Services.AddScoped<NinjaApiClient>();
 builder.Services.AddSingleton<Ninja.Assistant.API.Context.Persona>();
 builder.Services.AddScoped<TenantContext>();
 builder.Services.AddSingleton<AuditLog>();
+builder.Services.AddSingleton<DraftSigner>();
+builder.Services.AddSingleton<Ninja.Assistant.API.Tools.WriteLimiter>();
+builder.Services.AddScoped<Ninja.Assistant.API.Tools.WriteFlow>();
 
 builder.Services.AddMcpServer(o =>
     {

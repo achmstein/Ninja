@@ -28,6 +28,9 @@ public sealed class AssistantOptions
 
     public TokenExchangeOptions TokenExchange { get; set; } = new();
 
+    /// <summary>The secret previews are signed with (Auth/DraftSigner); unset, one is drawn at start and drafts expire on a restart.</summary>
+    public string DraftKey { get; set; } = "";
+
     public Uri PublicUri => new(PublicUrl, UriKind.Absolute);
 
     /// <summary>RFC 9728's path-aware document: https://api.chillax.site/.well-known/oauth-protected-resource/mcp.</summary>
