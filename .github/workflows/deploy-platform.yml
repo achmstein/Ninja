@@ -167,7 +167,9 @@ jobs:
           # Push: the stacks mount it read-only; without it their pushes are only logged
           FIREBASE_CREDENTIALS_PATH=""
           if [ -n "$FIREBASE_CREDENTIALS_JSON" ]; then
-            ( umask 077 && printf '%s' "$FIREBASE_CREDENTIALS_JSON" > platform-artifacts/firebase-credentials.json )
+            # Readable on the runner, as .env is: the copy step tars it as another user, and the box
+            # locks it down to the notification services' user when it lands (Bring the platform up)
+            printf '%s' "$FIREBASE_CREDENTIALS_JSON" > platform-artifacts/firebase-credentials.json
             FIREBASE_CREDENTIALS_PATH="$DEPLOY_DIR/firebase-credentials.json"
           fi
 
