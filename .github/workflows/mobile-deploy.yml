@@ -44,7 +44,9 @@ on:
 
 env:
   FLUTTER_VERSION: '3.41.2'
-  JAVA_VERSION: '17'
+  # The JDK Gradle runs on: maplibre_gl compiles for Java 21 (the apps still target 17), as
+  # Android Studio's own JDK does on a dev machine
+  JAVA_VERSION: '21'
   # The record the customer app's builds are given (see tenants/README.md).
   # The till and the kitchen display take none: one generic build serves
   # every café, and a tablet connects to its own from inside the app.
