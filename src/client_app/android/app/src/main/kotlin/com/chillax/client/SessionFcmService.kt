@@ -2,16 +2,19 @@ package com.chillax.client
 
 import android.app.NotificationManager
 import android.content.Context
-import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService
 
 /**
  * Handles session_ended FCM messages natively to dismiss the notification
  * immediately, even when the Flutter engine is not running.
  *
- * All other FCM messages are handled by Flutter's firebase_messaging plugin.
+ * It is the app's one FCM service, the firebase_messaging plugin's own
+ * extended (its registration is removed in the manifest): Android hands each
+ * message to a single MESSAGING_EVENT service, so this one has to pass every
+ * message and every new token on to Flutter through the plugin's.
  */
-class SessionFcmService : FirebaseMessagingService() {
+class SessionFcmService : FlutterFirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         val type = message.data["type"]
@@ -29,8 +32,7 @@ class SessionFcmService : FirebaseMessagingService() {
             }
         }
 
-        // Let Flutter's plugin handle everything else (including session_ended
-        // for Dart-side state refresh)
+        // On to Flutter's plugin: everything else, and session_ended for the Dart side's refresh
         super.onMessageReceived(message)
     }
 }

@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -71,7 +72,8 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />
-        <!-- Native FCM handler for session_ended (dismisses notification immediately) -->
+        <!-- The one FCM service: dismisses a session_ended notification natively, then hands
+             every message and token to Flutter's plugin, whose own registration is removed below -->
         <service
             android:name=".SessionFcmService"
             android:exported="false">
@@ -79,6 +81,9 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            tools:node="remove" />
         <!-- Session foreground service -->
         <service
             android:name=".SessionForegroundService"
