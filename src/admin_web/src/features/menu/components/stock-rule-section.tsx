@@ -66,6 +66,7 @@ import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
 import { menuOptionsOf, type MenuOptions } from '../menu-options'
 import { toMenuItemToTrack } from '../track-items'
+import { RecipeBriefSheet } from './recipe-brief-sheet'
 import { RecipeBuilder } from './recipe-builder'
 import {
   DeductionPreview,
@@ -123,14 +124,17 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   const propose = useMutation(proposeRecipesMutation())
   const languages = useContentLanguages()
   const [proposal, setProposal] = useState<RecipesProposal | null>(null)
-  const askAssistant = async () => {
+  // The owner says what the recipe is first (or leaves it to the assistant's guess)
+  const [briefOpen, setBriefOpen] = useState(false)
+  const askAssistant = async (brief: string) => {
     try {
       setProposal(
         await propose.mutateAsync({
-          body: { items: [toMenuItemToTrack(item)], languages },
+          body: { items: [toMenuItemToTrack(item, brief)], languages },
           query: { 'api-version': API_VERSION },
         })
       )
+      setBriefOpen(false)
     } catch (error) {
       toast.error(assistErrorMessage(error))
     }
@@ -142,9 +146,18 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getStockItems' }] })
   }
   const proposeButton = assistAvailable && (
-    <AiButton pending={propose.isPending} onClick={askAssistant}>
+    <AiButton pending={propose.isPending} onClick={() => setBriefOpen(true)}>
       {t('proposeRecipe')}
     </AiButton>
+  )
+  const briefSheet = (
+    <RecipeBriefSheet
+      open={briefOpen}
+      onOpenChange={setBriefOpen}
+      itemName={localized(item.name)}
+      pending={propose.isPending}
+      onPropose={(brief) => void askAssistant(brief)}
+    />
   )
   const reviewSheet = proposal && (
     <RecipeReviewSheet
@@ -221,6 +234,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
             </div>
           }
         />
+        {briefSheet}
         {reviewSheet}
       </>
     )
@@ -273,7 +287,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
                 {assistAvailable && (
                   <DropdownMenuItem
                     disabled={propose.isPending}
-                    onSelect={askAssistant}
+                    onSelect={() => setBriefOpen(true)}
                   >
                     <Sparkles />
                     {t('proposeRecipe')}
@@ -299,6 +313,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
         </>
       )}
       <CostAndMargin item={item} />
+      {briefSheet}
       {reviewSheet}
 
       <ConfirmDialog

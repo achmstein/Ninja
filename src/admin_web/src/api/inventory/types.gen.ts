@@ -38,6 +38,7 @@ export type MenuItemToTrack = {
     category: null | string;
     price: number | string;
     options: null | Array<MenuOptionToTrack>;
+    brief?: null | string;
 };
 
 export type MenuOptionToTrack = {
@@ -124,6 +125,7 @@ export type ProposedRecipeLine = {
     quantity: number | string;
     optionIds: Array<number | string>;
     slot: number | string;
+    none?: boolean;
 };
 
 export type ProposeRecipesRequest = {

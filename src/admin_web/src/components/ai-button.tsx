@@ -5,7 +5,7 @@ import { Spinner } from '@/components/ui/spinner'
 
 /**
  * The one look of "let the AI do it": an outline button in the main colour
- * with the sparkle, its label a verb and "with AI". While it works, the
+ * with the sparkle, its label a verb and "with Ninja". While it works, the
  * sparkle turns into a spinner and the label stays. `why` says what it is
  * waiting for when it cannot run yet ("Type the name first").
  */

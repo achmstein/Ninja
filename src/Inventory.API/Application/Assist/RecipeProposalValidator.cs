@@ -175,8 +175,17 @@ public static class RecipeProposalValidator
                         continue;
                     }
 
-                    var quantity = Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero);
-                    if (quantity <= 0)
+                    var quantity = line.None ? 0 : Math.Round(line.Quantity, 3, MidpointRounding.AwayFromZero);
+                    if (line.None)
+                    {
+                        // Nothing of the slot for its options: an override, never the slot's default
+                        if ((line.OptionIds ?? []).All(id => id <= 0))
+                        {
+                            itemWarnings.Add($"\"{label}\": \"none\" with no option; dropped.");
+                            continue;
+                        }
+                    }
+                    else if (quantity <= 0)
                     {
                         itemWarnings.Add($"\"{label}\": no quantity; dropped.");
                         continue;
@@ -207,7 +216,15 @@ public static class RecipeProposalValidator
                         continue;
                     }
 
-                    lines.Add(new ProposedRecipeLine(stockItemId, newKey, quantity, options, Math.Max(0, line.Slot)));
+                    lines.Add(new ProposedRecipeLine(stockItemId, newKey, quantity, options, Math.Max(0, line.Slot), line.None));
+                }
+
+                // A slot of "none" lines only would take nothing on any sale; the domain refuses it
+                var hollow = lines.GroupBy(l => l.Slot).Where(g => g.All(l => l.None)).Select(g => g.Key).ToHashSet();
+                if (hollow.Count > 0)
+                {
+                    lines.RemoveAll(l => hollow.Contains(l.Slot));
+                    itemWarnings.Add("A \"none\" choice with nothing to take it from was dropped.");
                 }
 
                 if (lines.Count == 0)

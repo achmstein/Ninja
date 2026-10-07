@@ -12,13 +12,16 @@ namespace Ninja.Inventory.API.Application.Assist;
 public sealed record ProposeRecipesRequest(IReadOnlyList<MenuItemToTrack> Items, string? Languages = null);
 
 /// <param name="Options">The item's customization options (id, group and name) so a line can be tied to one.</param>
+/// <param name="Brief">The owner's own words for the recipe ("a double shot, 200 ml milk, oat milk instead for the oat
+/// option, no sugar when plain"), which win over typical quantities. Null when the assistant is to guess.</param>
 public sealed record MenuItemToTrack(
     int CatalogItemId,
     LocalizedText Name,
     LocalizedText? Description,
     string? Category,
     decimal Price,
-    IReadOnlyList<MenuOptionToTrack>? Options);
+    IReadOnlyList<MenuOptionToTrack>? Options,
+    string? Brief = null);
 
 public sealed record MenuOptionToTrack(int Id, string Group, LocalizedText Name);
 
@@ -58,7 +61,8 @@ public sealed record ProposedRecipe(
 /// <param name="Quantity">Per unit sold, in the ingredient's base unit.</param>
 /// <param name="OptionIds">Empty for the slot's default; else every option the override needs chosen.</param>
 /// <param name="Slot">Lines sharing a slot are one thing a sale takes: the default and its overrides.</param>
-public sealed record ProposedRecipeLine(int? StockItemId, string? NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot);
+/// <param name="None">An override that takes nothing of the slot for its options ("plain" with no sugar); Quantity is 0.</param>
+public sealed record ProposedRecipeLine(int? StockItemId, string? NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool None = false);
 
 public static class RecipeKinds
 {
@@ -76,11 +80,11 @@ public sealed record ExtractedIngredient(string Key, string NameEn, string NameA
 
 public sealed record ExtractedRecipe(int CatalogItemId, string Kind, IReadOnlyList<ExtractedRecipeLine> Lines);
 
-public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot);
+public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool None);
 
 /// <summary>The prompt: the menu items to track and what is already on the shelf.</summary>
 internal sealed record RecipesPrompt(IReadOnlyList<PromptMenuItem> Items, IReadOnlyList<CandidateItem> Shelf, string Languages = ContentLanguages.Both);
 
-internal sealed record PromptMenuItem(int Id, string? En, string? Ar, string Description, string Category, decimal Price, IReadOnlyList<PromptOption> Options);
+internal sealed record PromptMenuItem(int Id, string? En, string? Ar, string Description, string Category, decimal Price, IReadOnlyList<PromptOption> Options, string Brief);
 
 internal sealed record PromptOption(int Id, string Group, string? En, string? Ar);

@@ -33,11 +33,11 @@ public class RecipeProposalValidatorTest
             [
                 new ExtractedRecipe(Latte, "recipe",
                 [
-                    new ExtractedRecipeLine(1, "", 18, [], 0),
-                    new ExtractedRecipeLine(2, "", 200, [], 0),
-                    new ExtractedRecipeLine(0, "cup", 1, [], 0),
-                    new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 0),
-                    new ExtractedRecipeLine(1, "", 6, [Large], 0),
+                    new ExtractedRecipeLine(1, "", 18, [], 0, false),
+                    new ExtractedRecipeLine(2, "", 200, [], 0, false),
+                    new ExtractedRecipeLine(0, "cup", 1, [], 0, false),
+                    new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 0, false),
+                    new ExtractedRecipeLine(1, "", 6, [Large], 0, false),
                 ]),
                 new ExtractedRecipe(Cola, "unit", []),
             ],
@@ -73,7 +73,7 @@ public class RecipeProposalValidatorTest
     {
         var extraction = new RecipesExtraction(
             [Ingredient("milk", "whole  milk"), Ingredient("beans-ar", "Coffee Beans", "بُن", "g", 250, "bag")],
-            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "milk", 200, [], 0), new ExtractedRecipeLine(0, "beans-ar", 18, [], 0)])],
+            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "milk", 200, [], 0, false), new ExtractedRecipeLine(0, "beans-ar", 18, [], 0, false)])],
             "");
 
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
@@ -92,12 +92,12 @@ public class RecipeProposalValidatorTest
             [Ingredient("syrup", "Vanilla Syrup", unit: "bottle")],
             [new ExtractedRecipe(Latte, "recipe",
             [
-                new ExtractedRecipeLine(99, "", 10, [], 0),          // unknown shelf id
-                new ExtractedRecipeLine(0, "ghost", 10, [], 0),      // unknown key
-                new ExtractedRecipeLine(0, "syrup", 0, [], 0),       // no quantity
-                new ExtractedRecipeLine(2, "", 1000, [777], 0),      // unknown option, and a litre of milk per latte? no: 1000 ml is under the bar
-                new ExtractedRecipeLine(1, "", 5000, [], 0),         // 5 kg of beans per sale
-                new ExtractedRecipeLine(1, "", 18, [], 0),           // the same beans, base, again
+                new ExtractedRecipeLine(99, "", 10, [], 0, false),          // unknown shelf id
+                new ExtractedRecipeLine(0, "ghost", 10, [], 0, false),      // unknown key
+                new ExtractedRecipeLine(0, "syrup", 0, [], 0, false),       // no quantity
+                new ExtractedRecipeLine(2, "", 1000, [777], 0, false),      // unknown option, and a litre of milk per latte? no: 1000 ml is under the bar
+                new ExtractedRecipeLine(1, "", 5000, [], 0, false),         // 5 kg of beans per sale
+                new ExtractedRecipeLine(1, "", 18, [], 0, false),           // the same beans, base, again
             ])],
             "");
 
@@ -125,7 +125,7 @@ public class RecipeProposalValidatorTest
             [],
             [
                 new ExtractedRecipe(Cola, "unit", []),
-                new ExtractedRecipe(Cola, "recipe", [new ExtractedRecipeLine(1, "", 1, [], 0)]),
+                new ExtractedRecipe(Cola, "recipe", [new ExtractedRecipeLine(1, "", 1, [], 0, false)]),
                 new ExtractedRecipe(999, "unit", []),
             ],
             "Some of these are not drinks");
@@ -152,10 +152,10 @@ public class RecipeProposalValidatorTest
             [Ingredient("oat-milk", "Oat Milk", "لبن شوفان")],
             [new ExtractedRecipe(Latte, "recipe",
             [
-                new ExtractedRecipeLine(1, "", 18, [], 1),
-                new ExtractedRecipeLine(2, "", 200, [], 2),
-                new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 2),
-                new ExtractedRecipeLine(1, "", 27, [Large], 1),
+                new ExtractedRecipeLine(1, "", 18, [], 1, false),
+                new ExtractedRecipeLine(2, "", 200, [], 2, false),
+                new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 2, false),
+                new ExtractedRecipeLine(1, "", 27, [Large], 1, false),
             ])],
             "");
 
@@ -174,8 +174,8 @@ public class RecipeProposalValidatorTest
             [Ingredient("oat-milk", "Oat Milk", "لبن شوفان")],
             [new ExtractedRecipe(Latte, "recipe",
             [
-                new ExtractedRecipeLine(2, "", 200, [], 2),
-                new ExtractedRecipeLine(0, "oat-milk", 200, [], 2),
+                new ExtractedRecipeLine(2, "", 200, [], 2, false),
+                new ExtractedRecipeLine(0, "oat-milk", 200, [], 2, false),
             ])],
             "");
 
@@ -184,6 +184,30 @@ public class RecipeProposalValidatorTest
         Assert.HasCount(1, latte.Lines);
         Assert.AreEqual(2, latte.Lines[0].StockItemId, "the first default is the milk");
         Assert.IsTrue(latte.Warnings.Any(w => w.Contains("second default")), string.Join("; ", latte.Warnings));
+    }
+
+    [TestMethod]
+    public void A_none_override_takes_nothing_for_its_option_and_needs_an_option_and_a_default()
+    {
+        var extraction = new RecipesExtraction(
+            [],
+            [new ExtractedRecipe(Latte, "recipe",
+            [
+                new ExtractedRecipeLine(2, "", 200, [], 2, false),
+                new ExtractedRecipeLine(2, "", 50, [Oat], 2, true),   // the oat option takes no milk
+                new ExtractedRecipeLine(1, "", 18, [], 3, true),      // none with no option: dropped
+                new ExtractedRecipeLine(1, "", 0, [Large], 4, true),  // a slot of none only: dropped
+            ])],
+            "");
+
+        var latte = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []).Recipes[0];
+
+        Assert.HasCount(2, latte.Lines, string.Join("; ", latte.Warnings));
+        Assert.IsTrue(latte.Lines[1].None);
+        Assert.AreEqual(0m, latte.Lines[1].Quantity, "a none line takes nothing, whatever the model said");
+        CollectionAssert.AreEqual(new[] { Oat }, latte.Lines[1].OptionIds.ToList());
+        Assert.IsTrue(latte.Warnings.Any(w => w.Contains("with no option")), string.Join("; ", latte.Warnings));
+        Assert.IsTrue(latte.Warnings.Any(w => w.Contains("nothing to take it from")), string.Join("; ", latte.Warnings));
     }
 
     [TestMethod]
@@ -199,7 +223,7 @@ public class RecipeProposalValidatorTest
     {
         var extraction = new RecipesExtraction(
             [Ingredient("oat-milk", "Oat Milk", "لبن شوفان"), Ingredient("milk", "Full Cream Milk", "لبن كامل الدسم")],
-            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "oat-milk", 200, [], 1), new ExtractedRecipeLine(0, "milk", 200, [], 2)])],
+            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "oat-milk", 200, [], 1, false), new ExtractedRecipeLine(0, "milk", 200, [], 2, false)])],
             "");
 
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, [], "en");

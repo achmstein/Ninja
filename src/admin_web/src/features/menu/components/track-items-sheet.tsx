@@ -152,7 +152,10 @@ export function TrackItemsSheet({
     const answers: RecipesProposal[] = []
     try {
       for (const [index, batch] of batches.entries()) {
-        const body = { items: batch.map(toMenuItemToTrack), languages }
+        const body = {
+          items: batch.map((item) => toMenuItemToTrack(item)),
+          languages,
+        }
         // A busy assistant says how long to wait: wait and send the batch again, twice at most
         for (let attempt = 0; ; attempt++) {
           try {

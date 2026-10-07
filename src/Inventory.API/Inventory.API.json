@@ -2020,6 +2020,12 @@
             "items": {
               "$ref": "#/components/schemas/MenuOptionToTrack"
             }
+          },
+          "brief": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2484,6 +2490,10 @@
               "string"
             ],
             "format": "int32"
+          },
+          "none": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

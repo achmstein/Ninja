@@ -25,9 +25,16 @@ import { menuOptionsOf } from './menu-options'
  */
 export const PROPOSE_BATCH = 10
 
-/** A menu item as the proposer wants it: names, options, price; Inventory keeps no copy of the menu */
-export function toMenuItemToTrack(item: CatalogItemDto): MenuItemToTrack {
+/**
+ * A menu item as the proposer wants it: names, options, price; Inventory keeps no copy of the menu.
+ * `brief`: the owner's own words for the recipe, which the assistant follows over typical amounts
+ */
+export function toMenuItemToTrack(
+  item: CatalogItemDto,
+  brief?: string
+): MenuItemToTrack {
   return {
+    brief: brief?.trim() || null,
     catalogItemId: toNumber(item.id),
     name: { en: item.name?.en ?? null, ar: item.name?.ar ?? null },
     description: item.description
@@ -118,9 +125,10 @@ function draftOf(
       overrides: overrides.map((line) => ({
         key: draftKey(),
         optionIds: line.optionIds.map((id) => String(toNumber(id))),
-        stockItemId: ingredientOf(line),
-        quantity: String(toNumber(line.quantity)),
-        none: false,
+        // A "none" override takes nothing of the slot for its options ("plain": no sugar)
+        stockItemId: line.none ? null : ingredientOf(line),
+        quantity: line.none ? '' : String(toNumber(line.quantity)),
+        none: line.none ?? false,
       })),
     })
   }

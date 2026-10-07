@@ -41,13 +41,13 @@ public static class RecipeProposerFake
             // Slot 2: the syrup, less of it for the first option.
             var lines = new List<ExtractedRecipeLine>();
             if (shelfId > 0)
-                lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity, [], 1));
-            lines.Add(new ExtractedRecipeLine(0, SyrupKey, SyrupQuantity, [], 2));
+                lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity, [], 1, false));
+            lines.Add(new ExtractedRecipeLine(0, SyrupKey, SyrupQuantity, [], 2, false));
             if (item.Options.Count > 0)
             {
-                lines.Add(new ExtractedRecipeLine(0, SyrupKey, OptionQuantity, [item.Options[0].Id], 2));
+                lines.Add(new ExtractedRecipeLine(0, SyrupKey, OptionQuantity, [item.Options[0].Id], 2, false));
                 if (item.Options.Count > 1 && shelfId > 0)
-                    lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity * SizeMultiplier, [item.Options[1].Id], 1));
+                    lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity * SizeMultiplier, [item.Options[1].Id], 1, false));
             }
             recipes.Add(new ExtractedRecipe(item.Id, RecipeKinds.Recipe, lines));
         }

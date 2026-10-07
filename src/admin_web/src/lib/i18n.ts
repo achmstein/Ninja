@@ -80,7 +80,7 @@ const webExtras = {
   payDemoBadge: { en: "Demo payments", ar: "مدفوعات تجريبية" },
   payDemoNotice: { en: "Demo mode: guests can try paying online with pretend payments. Enter your Paymob account to take real payments.", ar: "وضع التجربة: يمكن للضيوف تجربة الدفع أونلاين بمدفوعات وهمية. أدخل حساب Paymob الخاص بك لاستقبال مدفوعات حقيقية." },
   // The owner's AI assistant (Administration → AI assistant): the business's MCP server in Claude or ChatGPT
-  assistantNav: { en: "AI assistant", ar: "مساعد نينجا" },
+  assistantNav: { en: "Ninja assistant", ar: "مساعد نينجا" },
   assistantDescription: { en: "Ask Claude or ChatGPT about your business in your own words: sales, profit, stock, staff. It reads your numbers live and changes something only when you confirm.", ar: "اسأل Claude أو ChatGPT عن نشاطك بكلامك: المبيعات والأرباح والمخزون والموظفين. يقرأ أرقامك مباشرةً، ولا يغيّر شيئًا إلا بعد تأكيدك." },
   assistantAddressTitle: { en: "Your business's connector address", ar: "عنوان الربط الخاص بنشاطك" },
   assistantAddressHint: { en: "Add it once in Claude or ChatGPT and sign in with your owner account. That's all the setup there is.", ar: "أضِفه مرة واحدة في Claude أو ChatGPT وسجّل الدخول بحساب المالك. هذا كل الإعداد المطلوب." },
@@ -525,7 +525,7 @@ const webExtras = {
   lowStockTitle: { en: "Running low", ar: "أصناف ناقصة" },
   photoStudio: { en: "Photo studio", ar: "استوديو الصور" },
   photoStudioHint: { en: "A photo of the dish, drawn for your menu", ar: "صورة للصنف تُرسم لقائمتك" },
-  studioOpen: { en: "Create with AI", ar: "إنشاء بالذكاء الاصطناعي" },
+  studioOpen: { en: "Create with Ninja", ar: "إنشاء بنينجا" },
   studioNameFirst: { en: "Name the dish first", ar: "اكتب اسم الصنف أولًا" },
   studioLook: { en: "Look", ar: "الطابع" },
   lookStudio: { en: "Studio", ar: "استوديو" },
@@ -1320,11 +1320,11 @@ const webExtras = {
   assistFillOtherLanguage: { en: "Fill in the other language", ar: "أكمل اللغة الأخرى" },
   assistNeedsOneSide: { en: "Type the name in one language first", ar: "اكتب الاسم بإحدى اللغتين أولًا" },
   // AI assistant: the one button on the item form
-  assistFillIn: { en: "Fill in with AI", ar: "أكمل بالذكاء الاصطناعي" },
+  assistFillIn: { en: "Fill in with Ninja", ar: "أكمل بنينجا" },
   assistNeedsName: { en: "Type the name first", ar: "اكتب الاسم أولًا" },
   assistNothingMissing: { en: "Nothing is missing", ar: "لا يوجد شيء ناقص" },
   assistTypeSomethingFirst: { en: "Type something first: the rest is filled in from it", ar: "اكتب شيئًا أولًا: يُكمَل الباقي منه" },
-  assistOtherLanguage: { en: "Write the other language with AI", ar: "اكتب اللغة الأخرى بالذكاء الاصطناعي" },
+  assistOtherLanguage: { en: "Write the other language with Ninja", ar: "اكتب اللغة الأخرى بنينجا" },
   assistFilledCount: { plural: "count", en: { one: "Filled in 1 field: check it before saving", other: "Filled in {count} fields: check them before saving" }, ar: { zero: "لم يُكمَل أي حقل", one: "أُكمل حقل واحد: راجعه قبل الحفظ", two: "أُكمل حقلان: راجعهما قبل الحفظ", few: "أُكملت {count} حقول: راجعها قبل الحفظ", other: "أُكمل {count} حقلًا: راجعها قبل الحفظ" } },
   assistFilledNone: { en: "Nothing more to fill in from what is typed", ar: "لا شيء آخر يمكن إكماله مما كُتب" },
   assistProposedCustomizations: { en: "Proposed by the assistant", ar: "مقترح من مساعد نينجا" },
@@ -1341,7 +1341,7 @@ const webExtras = {
   assistSuggested: { en: "Suggested by the assistant", ar: "مقترح من مساعد نينجا" },
   assistCategorySuggested: { en: "Suggested category; change it if it is wrong", ar: "قسم مقترح؛ غيّره إن لم يكن صحيحًا" },
   assistBusy: { en: "The assistant is busy; try again in a minute", ar: "مساعد نينجا مشغول؛ حاول مجددًا بعد دقيقة" },
-  assistQuota: { en: "The AI's allowance is used up for now; it comes back in about {wait}", ar: "رصيد مساعد نينجا نفد حاليًا؛ يعود خلال {wait} تقريبًا" },
+  assistQuota: { en: "Ninja's allowance is used up for now; it comes back in about {wait}", ar: "رصيد مساعد نينجا نفد حاليًا؛ يعود خلال {wait} تقريبًا" },
   assistUnavailable: { en: "The assistant is not set up on this server", ar: "مساعد نينجا غير مُهيّأ على هذا الخادم" },
   assistFailed: { en: "The assistant could not answer; try again", ar: "تعذّر على مساعد نينجا الرد؛ حاول مجددًا" },
   assistTimedOut: { en: "The assistant took too long; try again", ar: "استغرق مساعد نينجا وقتًا طويلًا؛ حاول مجددًا" },
@@ -1387,7 +1387,20 @@ const webExtras = {
   // Recipe builder: one question per option group
   simpleEditor: { en: "Back to the simple editor", ar: "العودة إلى التحرير البسيط" },
   advancedEditor: { en: "Advanced editor", ar: "تحرير متقدم" },
-  proposeRecipe: { en: "Propose with AI", ar: "اقترح بالذكاء الاصطناعي" },
+  proposeRecipe: { en: "Propose with Ninja", ar: "اقترح بنينجا" },
+  describeRecipe: { en: "Describe the recipe", ar: "اوصف الوصفة" },
+  describeRecipeHint: {
+    en: "Say it the way you'd tell a new barista: what goes in, how much, and what each option changes. Ninja builds it from your stock, and adds what's missing in grams, ml or pieces.",
+    ar: "اكتبها زي ما تقولها لباريستا جديد: إيه اللي بيدخل فيها، قد إيه، وكل اختيار بيغيّر إيه. نينجا هيبنيها من مخزونك، ويضيف الناقص بالجرام أو المللي أو بالقطعة.",
+  },
+  describeRecipeExample: {
+    en: "Double shot espresso, 200 ml milk, a 12 oz cup and a lid. Large: 300 ml milk. Oat milk instead of milk for the oat option. Plain: no sugar.",
+    ar: "دبل شوت إسبريسو، ٢٠٠ مللي لبن، كوباية ١٢ أونص وغطا. الكبير: ٣٠٠ مللي لبن. لبن شوفان بدل اللبن مع اختيار الشوفان. سادة: من غير سكر.",
+  },
+  describeRecipeEmpty: {
+    en: "Leave it empty and Ninja guesses from the dish's name and options. Nothing is saved until you check it.",
+    ar: "سيبها فاضية ونينجا هيخمّن من اسم الصنف واختياراته. مفيش حاجة بتتحفظ قبل ما تراجعها.",
+  },
   // Recipe editor: slots, overrides, size factors
   recipeSlotsHint: { en: "One row per thing a sale takes. Pick the choices a row depends on and say what each choice makes of it; an empty cell means the same as the default.", ar: "سطر لكل ما تستهلكه عملية البيع. اختر الاختيارات التي يعتمد عليها السطر وحدّد أثر كل اختيار عليه؛ الخانة الفارغة تعني القيمة الافتراضية نفسها." },
   nothingByDefault: { en: "Nothing unless chosen", ar: "لا شيء إلا إذا اختير" },
