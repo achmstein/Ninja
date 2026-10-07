@@ -21,6 +21,7 @@ import '../../features/service_request/services/service_request_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
 import '../../features/pay/widgets/pay_order_sheet.dart';
+import '../../features/cart/widgets/tray_model.dart' show trayOpensAfterDrag;
 
 /// The orders on their way with no open bill to land on (client_web's
 /// live-bills.ts `forming`): sent and waiting, or confirmed and not on a bill
@@ -137,9 +138,9 @@ class DockBill extends ConsumerWidget {
     return Semantics(
       button: true,
       label: label,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+      // Pulled up by its handle, as the tray's row is, it opens too; a tap the same
+      child: _PullUp(
+        onOpen: onTap,
         child: SizedBox(
           height: height,
           child: Padding(
@@ -266,6 +267,33 @@ class DockBill extends ConsumerWidget {
 }
 
 /// Rebuilds what it holds once a second: the room's clock in the row
+/// The row's pan and tap: a pull up past the tray's distance, or flicked up, opens what the row stands for
+class _PullUp extends StatefulWidget {
+  final VoidCallback onOpen;
+  final Widget child;
+
+  const _PullUp({required this.onOpen, required this.child});
+
+  @override
+  State<_PullUp> createState() => _PullUpState();
+}
+
+class _PullUpState extends State<_PullUp> {
+  double _dragged = 0;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onOpen,
+        onVerticalDragStart: (_) => _dragged = 0,
+        onVerticalDragUpdate: (d) => _dragged += d.delta.dy,
+        onVerticalDragEnd: (d) {
+          if (trayOpensAfterDrag(false, _dragged, d.primaryVelocity ?? 0)) widget.onOpen();
+        },
+        child: widget.child,
+      );
+}
+
 class _EverySecond extends StatefulWidget {
   final WidgetBuilder builder;
 
