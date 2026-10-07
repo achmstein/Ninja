@@ -30,11 +30,14 @@ if [ -z "${APP_BUILDER_SECRET:-}" ] || [ -z "${PLATFORM_DOMAIN:-}" ]; then
   keep_committed "No APP_BUILDER_SECRET or PLATFORM_DOMAIN"
 fi
 
+# python3 on the runners; plain python on a Windows machine
+python=$(command -v python3 || command -v python)
 token=$(curl -sS --fail-with-body --max-time 30 \
   -d grant_type=client_credentials -d client_id=app-builder --data-urlencode "client_secret=$APP_BUILDER_SECRET" \
   "https://auth.$PLATFORM_DOMAIN/realms/ninja/protocol/openid-connect/token" \
-  | python3 -c 'import json, sys; print(json.load(sys.stdin)["access_token"])')
-echo "::add-mask::$token"
+  | "$python" -c 'import json, sys; print(json.load(sys.stdin)["access_token"])' | tr -d '\r')
+# Kept out of the run's log; outside Actions nothing prints it
+if [ -n "${GITHUB_ACTIONS:-}" ]; then echo "::add-mask::$token"; fi
 
 answer=$(mktemp)
 code=$(curl -sS --max-time 30 -o "$answer" -w '%{http_code}' -H "Authorization: Bearer $token" \
