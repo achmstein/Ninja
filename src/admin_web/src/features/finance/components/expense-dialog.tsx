@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Paperclip, Sparkles, X } from 'lucide-react'
+import { Paperclip, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { formatDay } from '@/lib/business-day'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -21,6 +21,7 @@ import { AiButton } from '@/components/ai-button'
 import { DatePicker } from '@/components/date-picker'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid } from '@/components/field'
+import { NinjaMark } from '@/components/ninja-mark'
 import { FormFillButton } from '@/features/assist/form-fill-button'
 import { type FillField } from '@/features/assist/use-form-fill'
 import { PAID_FROM, paidFromLabel } from '../format'
@@ -373,7 +374,7 @@ function ExpenseForm({
           </div>
           {fromBill && suggested.size > 0 && (
             <p className='text-primary flex items-center gap-1 text-xs'>
-              <Sparkles className='size-3' aria-hidden />
+              <NinjaMark className='size-3' aria-hidden />
               {t('billFilledIn')}
             </p>
           )}

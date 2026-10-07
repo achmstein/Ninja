@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Check, Sparkles, Wand2 } from 'lucide-react'
+import { Check, Wand2 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { drawDishPhoto } from '@/api/catalog'
 import { API_VERSION } from '@/lib/api-client'
@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage } from '@/features/assist/errors'
 
 export type StudioDish = {
@@ -188,7 +189,7 @@ export function PhotoStudio({
       <DialogContent className='max-h-[92dvh] overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Sparkles className='text-primary size-4' />
+            <NinjaMark className='text-primary size-4' />
             {t('photoStudio')}
           </DialogTitle>
           <DialogDescription className='truncate'>
@@ -375,7 +376,7 @@ export function PhotoStudio({
             disabled={drawing || !name}
             onClick={() => void draw()}
           >
-            <Sparkles />
+            <NinjaMark />
             {drawing
               ? t('studioDrawing')
               : current

@@ -1,5 +1,4 @@
 import { createContext, useContext, useId, useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLanguage, useT } from '@/lib/i18n'
 import { type Lang, type LocalizedValue } from '@/lib/localized-value'
@@ -12,8 +11,8 @@ import {
   InputGroupTextarea,
 } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
-import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { NinjaMark } from '@/components/ninja-mark'
 import {
   localizedFields,
   mergeLocalized,
@@ -251,7 +250,7 @@ export function LocalizedInput({
       onClick={slot.onClick}
       className='text-primary'
     >
-      {slot.pending ? <Spinner /> : <Sparkles />}
+      <NinjaMark working={slot.pending} />
     </InputGroupButton>
   )
 
@@ -281,7 +280,7 @@ export function LocalizedInput({
       </InputGroup>
       {isSuggested && !error && (
         <p className='text-primary flex items-center gap-1 text-xs'>
-          <Sparkles className='size-3' aria-hidden />
+          <NinjaMark className='size-3' aria-hidden />
           {t('assistSuggested')}
         </p>
       )}
@@ -317,7 +316,7 @@ function LangItem({
     >
       {lang === 'en' ? 'EN' : 'ع'}
       {suggested ? (
-        <Sparkles className='text-primary size-3' aria-hidden />
+        <NinjaMark className='text-primary size-3' aria-hidden />
       ) : (
         !filled && (
           <span

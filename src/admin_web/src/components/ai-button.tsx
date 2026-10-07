@@ -1,12 +1,11 @@
-import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { NinjaMark } from '@/components/ninja-mark'
 
 /**
  * The one look of "let the AI do it": an outline button in the main colour
- * with the sparkle, its label a verb and "with Ninja". While it works, the
- * sparkle turns into a spinner and the label stays. `why` says what it is
+ * with Ninja's mark, its label a verb and "with Ninja". While it works, the
+ * mark's headband flutters and the label stays. `why` says what it is
  * waiting for when it cannot run yet ("Type the name first").
  */
 export function AiButton({
@@ -40,7 +39,7 @@ export function AiButton({
       title={disabled ? why : undefined}
       onClick={onClick}
     >
-      {pending ? <Spinner /> : <Sparkles />}
+      <NinjaMark working={pending} />
       {children}
     </Button>
   )

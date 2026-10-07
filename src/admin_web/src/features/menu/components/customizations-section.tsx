@@ -5,7 +5,6 @@ import {
   Pencil,
   Plus,
   SlidersHorizontal,
-  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
@@ -44,6 +43,7 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { NinjaMark } from '@/components/ninja-mark'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
 import {
   bodyFromDraft,
@@ -416,7 +416,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               >
                 <div className='flex items-center justify-between gap-2'>
                   <p className='text-primary flex items-center gap-1 text-xs'>
-                    <Sparkles className='size-3 shrink-0' aria-hidden />
+                    <NinjaMark className='size-3 shrink-0' aria-hidden />
                     {t('assistSuggestedCustomizations')}
                   </p>
                   <div className='flex shrink-0 gap-1'>

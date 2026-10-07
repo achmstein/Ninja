@@ -7,7 +7,6 @@ import {
   Info,
   MoreHorizontal,
   Package,
-  Sparkles,
   X,
 } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
@@ -46,6 +45,7 @@ import { AiButton } from '@/components/ai-button'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { SheetActions } from '@/components/entity-sheet'
+import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
 import { formatQuantity } from '@/features/inventory/format'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
@@ -289,7 +289,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
                     disabled={propose.isPending}
                     onSelect={() => setBriefOpen(true)}
                   >
-                    <Sparkles />
+                    <NinjaMark />
                     {t('proposeRecipe')}
                   </DropdownMenuItem>
                 )}

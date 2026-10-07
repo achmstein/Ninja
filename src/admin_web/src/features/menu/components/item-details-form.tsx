@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Sparkles, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import {
   type CatalogItemDto,
   type CatalogTypeDto,
@@ -45,6 +45,7 @@ import {
   useDefaultLang,
   useOnlyLang,
 } from '@/components/localized-input'
+import { NinjaMark } from '@/components/ninja-mark'
 import { halfFilled, hasText } from '@/features/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
 import {
@@ -552,7 +553,7 @@ export function ItemDetailsForm({
             </Select>
             {suggested.category && (
               <p className='text-primary flex items-center gap-1 text-xs'>
-                <Sparkles className='size-3' aria-hidden />
+                <NinjaMark className='size-3' aria-hidden />
                 {t('assistCategorySuggested')}
               </p>
             )}
@@ -655,7 +656,7 @@ export function ItemDetailsForm({
           <div className='border-primary/30 bg-primary/5 space-y-3 rounded-lg border p-3'>
             <div className='flex items-center justify-between gap-2'>
               <p className='text-primary flex items-center gap-1 text-xs'>
-                <Sparkles className='size-3 shrink-0' aria-hidden />
+                <NinjaMark className='size-3 shrink-0' aria-hidden />
                 {t('assistProposedCustomizations')}
               </p>
               <Button
