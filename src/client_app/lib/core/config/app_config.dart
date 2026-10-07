@@ -93,5 +93,5 @@ class AppConfig {
   ];
 
   // App info (the name comes from the tenant brand)
-  static const String appVersion = '1.0.2';
+  static const String appVersion = '1.1.0';
 }
