@@ -139,7 +139,8 @@ function ProfilePage() {
               {signedIn ? (displayName || '?')[0]?.toUpperCase() : guestContact ? guestContact.name[0]?.toUpperCase() : <User className='size-7 opacity-70' />}
             </div>
             <div className='min-w-0 flex-1'>
-              <div className='heading truncate text-headline'>
+              {/* Two lines for a long name: beside the avatar and the points ring one line cut it short */}
+              <div className='heading line-clamp-2 text-headline break-words'>
                 {signedIn ? displayName : guestContact ? guestContact.name : t('guestUser')}
               </div>
               {signedIn && myProfileQuery.data?.phoneNumber && (

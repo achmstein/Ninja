@@ -116,7 +116,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             BrandHeading(
                               signedIn ? (name ?? l10n.guestUser) : l10n.guestUser,
                               style: theme.typography.headline.copyWith(color: ink),
-                              maxLines: 1,
+                              // Two lines for a long name: beside the avatar and the points ring one line cut it short
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (signedIn && authState.hasPhone)
