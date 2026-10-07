@@ -105,4 +105,52 @@ public sealed class RecordScenarios
         (status, detail) = await api.RefusedAsync(HttpMethod.Post, "/api/control/tenants", new { nameEn = "Taken", ownerEmail = "o@x.test", slug, provision = false });
         Assert.AreEqual(HttpStatusCode.Conflict, status, "a slug is one tenant's");
     }
+
+    /// <summary>
+    /// A business's own app: the build reads its record as the app-builder client and can do nothing else
+    /// with that login, and its customer host answers the app's link files once the record says enough.
+    /// </summary>
+    [TestMethod]
+    public async Task The_build_reads_the_apps_record_and_its_host_serves_the_apps_links()
+    {
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("ownapp");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter);
+        var fingerprint = string.Join(':', Enumerable.Repeat("AB", 32));
+        await api.UpdateAsync(slug, Record("Blue Café") with { AppId = $"net.ninjapp.{slug.Replace('-', '_')}", AppleTeamId = "ABCDE12345", AndroidCertFingerprints = fingerprint });
+
+        var build = api.As("AppBuilder");
+        using (var config = await build.GetAsync($"/api/control/tenants/{slug}/app-config"))
+        {
+            Assert.AreEqual(HttpStatusCode.OK, config.StatusCode, "the build reads the record");
+            var record = System.Text.Json.Nodes.JsonNode.Parse(await config.Content.ReadAsStringAsync())!;
+            Assert.AreEqual(slug, record["REALM"]!.GetValue<string>());
+            Assert.AreEqual("ABCDE12345", record["APPLE_TEAM_ID"]!.GetValue<string>());
+        }
+        using (var other = await build.GetAsync($"/api/control/tenants/{slug}"))
+            Assert.AreEqual(HttpStatusCode.Forbidden, other.StatusCode, "and nothing else");
+        using (var nobody = await api.Anonymous().GetAsync($"/api/control/tenants/{slug}/app-config"))
+            Assert.AreEqual(HttpStatusCode.Unauthorized, nobody.StatusCode);
+        using (var missing = await build.GetAsync("/api/control/tenants/nobody-here/app-config"))
+            Assert.AreEqual(HttpStatusCode.NotFound, missing.StatusCode, "a business not on the platform: the build keeps the record it has");
+
+        // The edge passes the customer host on; nobody signs in for these
+        var anonymous = api.Anonymous();
+        using var assetLinks = new HttpRequestMessage(HttpMethod.Get, "/api/control/app-links/assetlinks.json") { Headers = { Host = $"{slug}.ninja.test" } };
+        using (var android = await anonymous.SendAsync(assetLinks))
+        {
+            Assert.AreEqual(HttpStatusCode.OK, android.StatusCode);
+            StringAssert.Contains(await android.Content.ReadAsStringAsync(), fingerprint);
+        }
+        using var association = new HttpRequestMessage(HttpMethod.Get, "/api/control/app-links/apple-app-site-association") { Headers = { Host = $"{slug}.ninja.test" } };
+        using (var ios = await anonymous.SendAsync(association))
+        {
+            Assert.AreEqual(HttpStatusCode.OK, ios.StatusCode);
+            Assert.AreEqual("application/json", ios.Content.Headers.ContentType?.MediaType, "Apple takes the file only as JSON");
+            StringAssert.Contains(await ios.Content.ReadAsStringAsync(), $"ABCDE12345.net.ninjapp.{slug.Replace('-', '_')}");
+        }
+        using var adminHost = new HttpRequestMessage(HttpMethod.Get, "/api/control/app-links/assetlinks.json") { Headers = { Host = $"admin.{slug}.ninja.test" } };
+        using (var staff = await anonymous.SendAsync(adminHost))
+            Assert.AreEqual(HttpStatusCode.NotFound, staff.StatusCode, "a staff host serves no customer app");
+    }
 }

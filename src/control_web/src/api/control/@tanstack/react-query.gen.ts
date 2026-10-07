@@ -549,7 +549,7 @@ export const putTenantSeedMenuMutation = (options?: Partial<Options<PutTenantSee
 export const getTenantAppConfigQueryKey = (options: Options<GetTenantAppConfigData>) => createQueryKey('getTenantAppConfig', options);
 
 /**
- * The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file
+ * The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file; mobile-deploy.yml fetches it as the app-builder client
  */
 export const getTenantAppConfigOptions = (options: Options<GetTenantAppConfigData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantAppConfigQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

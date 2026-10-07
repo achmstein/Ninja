@@ -30,6 +30,14 @@ public sealed class Api
         return client;
     }
 
+    /// <summary>The same client signed in with another realm role instead of PlatformAdmin.</summary>
+    public HttpClient As(string role)
+    {
+        var client = ControlPlane.Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuth.RoleHeader, role);
+        return client;
+    }
+
     /// <summary>A slug nobody else in the run uses: the prefix and eight hex characters, within the platform's naming rules.</summary>
     public static string Slug(string prefix) => $"{prefix}-{Guid.NewGuid():N}"[..(prefix.Length + 9)];
 

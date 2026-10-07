@@ -113,6 +113,8 @@ public sealed class TestAuth(IOptionsMonitor<AuthenticationSchemeOptions> option
 {
     public const string Scheme = "Test";
     public const string AnonymousHeader = "X-Test-Anonymous";
+    /// <summary>The realm role the caller holds instead of PlatformAdmin (the app build's own client holds AppBuilder)</summary>
+    public const string RoleHeader = "X-Test-Role";
     public const string UserId = "00000000-0000-4000-8000-000000000001";
     public const string Email = "admin@ninja.test";
 
@@ -125,7 +127,7 @@ public sealed class TestAuth(IOptionsMonitor<AuthenticationSchemeOptions> option
             new Claim("sub", UserId),
             new Claim("email", Email),
             new Claim("preferred_username", "platform"),
-            new Claim("role", "PlatformAdmin"),
+            new Claim("role", Request.Headers.TryGetValue(RoleHeader, out var role) ? role.ToString() : "PlatformAdmin"),
         ], Scheme, nameType: "preferred_username", roleType: "role");
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme)));
     }

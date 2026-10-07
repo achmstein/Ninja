@@ -9,10 +9,16 @@ without a record fails at first use and says which key is missing.
 flutter build apk --release --dart-define-from-file=../../tenants/chillax.json
 ```
 
-A platform tenant's record is not written by hand: the control plane's tenant
-page has it under Customer app, App config (`GET
+A platform tenant's record is neither written by hand nor committed: the build
+fetches it from the control plane (`fetch-record.sh`, `GET
 /api/control/tenants/{slug}/app-config`), made from the tenant's record and the
-platform's settings. Save it here as `<slug>.json` and commit it.
+platform's settings as they are at that moment. It signs in as the
+`app-builder` client of the `ninja` realm, whose one role, `AppBuilder`, reads
+that and nothing else; `deploy-platform.yml` keeps the client and its secret,
+the repository secret `APP_BUILDER_SECRET`. A business the control plane does
+not have builds with its file committed here, as Chillax does until it moves
+onto the platform; once it is on, that file can go. The tenant page's Customer
+app row still offers App config, to read or to build with by hand.
 
 `mobile-deploy.yml` passes the record named by its `tenant` input to the
 customer app's builds. In debug, hosts default to the Aspire AppHost on the
@@ -68,7 +74,7 @@ it), and everything that signs and uploads comes from the GitHub environment
    signing key, and on iOS takes the iOS client the Firebase file names.
 4. **The record.** "Own customer app" set to the id on the control plane,
    and the Apple team ID beside it (the business's developer account, under
-   Membership), then App config downloaded here as `<slug>.json`. Beside it,
+   Membership); the build reads them from there. In this folder only
    `tenants/<slug>/icon.png` (1024x1024, no transparency) and, for Android's
    adaptive icon, `tenants/<slug>/icon-foreground.png` (the mark inside the
    middle two thirds); without an icon the build keeps the cup.

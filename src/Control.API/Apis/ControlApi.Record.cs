@@ -14,7 +14,7 @@ public static partial class ControlApi
     private static void MapRecordApi(RouteGroupBuilder api)
     {
         api.MapPut("/tenants/{slug}", UpdateTenant).WithName("UpdateTenant").WithSummary("The record: contact, plan, notes, own domain, and what the business was created with; a running stack takes its name, locale, Arabic, starting theme and kind of place at once").RequireAuthorization("Platform");
-        api.MapGet("/tenants/{slug}/app-config", GetAppConfig).WithName("GetTenantAppConfig").WithSummary("The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file").RequireAuthorization("Platform");
+        api.MapGet("/tenants/{slug}/app-config", GetAppConfig).WithName("GetTenantAppConfig").WithSummary("The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file; mobile-deploy.yml fetches it as the app-builder client").RequireAuthorization(Extensions.Extensions.AppBuildPolicy);
         // The edge hands /.well-known/ on a customer host here (deploy/platform/Caddyfile, app_links), the host as it was asked
         api.MapGet("/app-links/assetlinks.json", GetAssetLinks).WithName("GetAssetLinks").WithSummary("Android's App Links file for the customer host asked: the business's own app and its signing certificates; 404 without them").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
         api.MapGet("/app-links/apple-app-site-association", GetSiteAssociation).WithName("GetAppleSiteAssociation").WithSummary("iOS's Universal Links file for the customer host asked: the business's own app under its team; 404 without them").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);

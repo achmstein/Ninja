@@ -260,7 +260,7 @@ export const putTenantSeedMenu = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
- * The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file
+ * The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file; mobile-deploy.yml fetches it as the app-builder client
  */
 export const getTenantAppConfig = <ThrowOnError extends boolean = false>(options: Options<GetTenantAppConfigData, ThrowOnError>): RequestResult<unknown, GetTenantAppConfigErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantAppConfigErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/app-config', ...options });
 

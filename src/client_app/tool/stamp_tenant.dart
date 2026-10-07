@@ -63,7 +63,7 @@ Future<void> _run(List<String> args) async {
   final name = _required(record, 'APP_NAME');
   final host = _required(record, 'CUSTOMER_HOST');
   if (record['REDIRECT_SCHEME'] != appId) {
-    throw _Refused('REDIRECT_SCHEME must be $appId, the scheme the app is stamped with; download the record again');
+    throw _Refused('REDIRECT_SCHEME must be $appId, the scheme the app is stamped with; the record is not the control plane\'s (tenants/fetch-record.sh)');
   }
 
   final stamp = _Stamp(root);
@@ -77,7 +77,7 @@ Future<void> _run(List<String> args) async {
     final given = Platform.environment['APPLE_TEAM_ID'] ?? '';
     final team = given.isNotEmpty ? given : (record['APPLE_TEAM_ID'] as String? ?? '');
     if (!_team.hasMatch(team)) {
-      throw _Refused('no Apple team: give the business\'s on the control plane (Apple team ID) and download the record again');
+      throw _Refused('no Apple team: give the business\'s on the control plane (Apple team ID) and run the build again');
     }
     _ios(stamp, appId, name, host, team);
     await _iosIcons(root, assets);
@@ -200,7 +200,7 @@ void _passOn(String key, String value) {
 String _required(Map<String, dynamic> record, String key) {
   final value = record[key];
   if (value is! String || value.trim().isEmpty) {
-    throw _Refused('the record has APP_ID but no $key; download it again from the control plane');
+    throw _Refused('the record has APP_ID but no $key; the record is not the control plane\'s (tenants/fetch-record.sh)');
   }
   return value.trim();
 }

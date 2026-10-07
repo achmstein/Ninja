@@ -183,7 +183,10 @@ public static class Extensions
 
         // The people who run the platform hold PlatformAdmin in the ninja realm
         builder.Services.AddAuthorizationBuilder()
-            .AddPolicy("Platform", policy => policy.RequireRole("PlatformAdmin"));
+            .AddPolicy("Platform", policy => policy.RequireRole("PlatformAdmin"))
+            // The record a business's own app is built from: the people above, or the build itself (the app-builder
+            // client's service account, set up by deploy-platform.yml), which may read that and nothing else
+            .AddPolicy(AppBuildPolicy, policy => policy.RequireRole("PlatformAdmin", AppBuilderRole));
 
         // A token for the control API only: the ninja realm mints aud=control for control-web (the shared defaults leave the audience unchecked)
         var audience = builder.Configuration["Identity:Audience"];
@@ -212,6 +215,12 @@ public static class Extensions
 
     /// <summary>The policy the anonymous endpoints carry.</summary>
     public const string AnonymousRateLimit = "anonymous";
+
+    /// <summary>Who may read the record a business's own app is built from.</summary>
+    public const string AppBuildPolicy = "AppBuild";
+
+    /// <summary>The ninja realm's role for the build's own client: reads that record, nothing else.</summary>
+    public const string AppBuilderRole = "AppBuilder";
 }
 
 /// <summary>Dry run: the user and the vhost exist as soon as they are asked for.</summary>

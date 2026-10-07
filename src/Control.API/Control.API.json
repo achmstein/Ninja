@@ -1555,7 +1555,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file",
+        "summary": "The record a Flutter build of the customer app is given (tenants/{slug}.json, see tenants/README.md), as a file; mobile-deploy.yml fetches it as the app-builder client",
         "operationId": "GetTenantAppConfig",
         "parameters": [
           {

@@ -12,6 +12,8 @@ name: Deploy Platform
 #   PLATFORM_KEYCLOAK_CONTROL_PASSWORD (its own master-realm user),
 #   PLATFORM_ENCRYPTION_KEY (openssl rand -base64 32: the tenants' secrets at rest),
 #   PLATFORM_ADMIN_PASSWORD (first password of the `platform` user, temporary),
+#   APP_BUILDER_SECRET (optional, a repository secret: the app-builder client
+#   mobile-deploy.yml reads a business's app record as; openssl rand -hex 32),
 #   GEMINI_API_KEY (optional), FIREBASE_WEB_* (optional, web push), GHCR_TOKEN
 #   (optional: the run's own GITHUB_TOKEN pulls this repo's images otherwise).
 # Variables: PLATFORM_DOMAIN (e.g. ninja.app), PLATFORM_SLUG_LABEL (2 for a
@@ -133,6 +135,9 @@ jobs:
           SOCIAL_APPLE_CLIENT_SECRET: ${{ secrets.PLATFORM_SOCIAL_APPLE_CLIENT_SECRET }}
           # Optional: the Firebase service account every stack's notification service pushes with (riders, customers, staff)
           FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+          # Optional: the app-builder client's secret, which mobile-deploy.yml signs in with to read a
+          # business's app record; a repository secret, so both workflows see the one value
+          APP_BUILDER_SECRET: ${{ secrets.APP_BUILDER_SECRET }}
           ACME_EMAIL: ${{ vars.ACME_EMAIL }}
           PLATFORM_SLUG_LABEL: ${{ vars.PLATFORM_SLUG_LABEL }}
           IMAGE_TAG: ${{ inputs.image_tag }}
@@ -196,6 +201,7 @@ jobs:
           SOCIAL_APPLE_CLIENT_ID=$SOCIAL_APPLE_CLIENT_ID
           SOCIAL_APPLE_CLIENT_SECRET=$SOCIAL_APPLE_CLIENT_SECRET
           FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH
+          APP_BUILDER_SECRET=$APP_BUILDER_SECRET
           IMAGE_REGISTRY=ghcr.io/${{ github.repository_owner }}/ninja
           IMAGE_TAG=${IMAGE_TAG:-latest}
           EOF
@@ -435,6 +441,27 @@ jobs:
               echo "Keycloak: $KC_CONTROL_USER created with the admin role"
             fi
             docker compose exec -T keycloak $KC set-password -r master --username "$KC_CONTROL_USER" --new-password "$KC_CONTROL_PASSWORD"
+
+            # The app build's own login (mobile-deploy.yml): a client that signs in by itself, whose token
+            # the control API takes (aud=control) and whose one role, AppBuilder, reads a business's app
+            # record and nothing else. Idempotent; the secret follows APP_BUILDER_SECRET on every deploy
+            APP_BUILDER_SECRET=$(grep -oP '^APP_BUILDER_SECRET=\K.*' .env || true)
+            if [ -n "$APP_BUILDER_SECRET" ]; then
+              if ! docker compose exec -T keycloak $KC get roles/AppBuilder -r ninja >/dev/null 2>&1; then
+                docker compose exec -T keycloak $KC create roles -r ninja -s name=AppBuilder -s "description=Builds the businesses' own apps: reads their app record, nothing else"
+              fi
+              BUILDER_ID=$(docker compose exec -T keycloak $KC get clients -r ninja -q clientId=app-builder --fields id --format csv --noquotes | tr -d '\r')
+              if [ -z "$BUILDER_ID" ]; then
+                BUILDER_ID=$(docker compose exec -T keycloak $KC create clients -r ninja -s clientId=app-builder -s enabled=true -s publicClient=false \
+                  -s serviceAccountsEnabled=true -s standardFlowEnabled=false -s directAccessGrantsEnabled=false -i | tr -d '\r')
+                docker compose exec -T keycloak $KC create clients/$BUILDER_ID/protocol-mappers/models -r ninja -s name=audience-mapper \
+                  -s protocol=openid-connect -s protocolMapper=oidc-audience-mapper \
+                  -s 'config."included.client.audience"=control' -s 'config."access.token.claim"=true' -s 'config."id.token.claim"=false'
+                echo "Keycloak: app-builder client created"
+              fi
+              docker compose exec -T keycloak $KC update clients/$BUILDER_ID -r ninja -s "secret=$APP_BUILDER_SECRET"
+              docker compose exec -T keycloak $KC add-roles -r ninja --uusername service-account-app-builder --rolename AppBuilder
+            fi
             docker compose up -d control-api
 
       # Through the edge, so DNS, certificates, Caddy, Keycloak and the control

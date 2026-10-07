@@ -93,6 +93,14 @@ jobs:
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
+      # The record as the control plane has it now (tenants/README.md); a
+      # business not on the platform keeps the one committed in tenants/
+      - name: Fetch the business's record
+        env:
+          APP_BUILDER_SECRET: ${{ secrets.APP_BUILDER_SECRET }}
+          PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+        run: bash ../../tenants/fetch-record.sh "$TENANT"
+
       # A record with an APP_ID is a business's own app: its Firebase file goes
       # in place and the native folders take its id, name, host and icon. One
       # without builds as the folders are. Either way APP_ID reaches Fastlane.
@@ -507,6 +515,12 @@ jobs:
 
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Fetch the business's record
+        env:
+          APP_BUILDER_SECRET: ${{ secrets.APP_BUILDER_SECRET }}
+          PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+        run: bash ../../tenants/fetch-record.sh "$TENANT"
 
       # As on Android. The Apple team is the record's (the stamp passes it on
       # to Fastlane); the certificates repo is the business's own, and only

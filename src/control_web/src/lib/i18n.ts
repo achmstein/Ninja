@@ -501,7 +501,7 @@ const dictionary = {
   customerApp: "Customer app",
   sharedApp: "Ninja's shared app",
   appConfig: "App config",
-  appConfigHint: "The record the customer app's Flutter build is given, as tenants/<slug>.json: its hosts, realm and sign-in providers, from this record",
+  appConfigHint: "What the customer app's Flutter build is given (it fetches this itself): its hosts, realm, sign-in providers and own app, from this record",
 
   // Brand
   brand: "Brand",
