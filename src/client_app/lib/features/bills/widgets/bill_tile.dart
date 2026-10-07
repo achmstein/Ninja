@@ -252,8 +252,11 @@ class _BillTileState extends ConsumerState<BillTile> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                _StatusChip(bill: bill),
+                // Nothing is owed until the till confirms a round: a forming bill says nothing of paying
+                if (!widget.forming) ...[
+                  const SizedBox(width: 8),
+                  _StatusChip(bill: bill),
+                ],
               ],
             ),
             const SizedBox(height: 16),
