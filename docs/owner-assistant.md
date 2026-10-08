@@ -38,7 +38,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 **Realms are imported once.** A realm that exists is never re-read, so:
 
-- Stamped tenants: the provisioner's realm step calls `IKeycloakAdmin.EnsureAssistantClientsAsync` when the realm is already there (a re-provision, secure or upgrade), which adds everything above from the template. The credentials step gives a tenant without one an `AssistantSecret`.
+- Stamped tenants: the provisioner's realm step calls `IKeycloakAdmin.EnsureRealmUpToDateAsync` when the realm is already there (a re-provision, secure or upgrade), which adds everything above from the template. The credentials step gives a tenant without one an `AssistantSecret`.
 - The single Chillax stack: `deploy/keycloak-assistant.py` does the same through the admin REST API; the deploy runs it after the token-exchange step. By hand:
 
   ```
@@ -61,9 +61,28 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 ## Tools
 
-Read: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_stock_levels`, `get_inventory_usage`, `get_staff`, `get_attendance`.
+72 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
 
-Write (preview, then confirm): `record_expense`, `set_item_availability`, `pause_online_ordering`.
+**Read**
+- Sales and money: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_open_tickets`, `get_orders`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_pricing_rules`.
+- Menu: `get_menu`, `get_menu_item`, `get_recipes`, `get_food_cost` (cost and margin per dish, worst first), `get_promo_codes`.
+- Stock: `get_stock_levels`, `get_inventory_usage`, `get_stock_movements`, `get_purchases`, `get_stock_counts`, `get_transfers`.
+- People and places: `get_staff`, `get_attendance`, `get_payslips`, `get_reservations`, `get_place_usage`, `get_deliveries`, `get_loyalty_overview`, `get_customer_tabs`, `get_branch_settings`, `get_announcements`.
+
+**Write** (setup and operations only: never a delete, never a refund, void, payslip payment, pay change or loyalty points)
+- Menu: `create_menu_item` (the dish, its choices, its stock recipe with any new stock items, a photo, in one go), `update_menu_item`, `set_item_offer`, `set_branch_price`, `set_item_availability`, `create_category`, `rename_category`, `add_customizations`, `edit_customization`, `set_recipe`, `create_promo_code`, `update_promo_code`, `set_promo_active`.
+- Stock: `create_stock_item`, `update_stock_item`, `set_reorder_level`, `record_waste`, `adjust_stock`, `record_purchase`, `record_stock_count`, `transfer_stock`.
+- Books: `record_expense`, `create_expense_category`, `set_recurring_expense`, `save_supplier`, `record_supplier_payment`.
+- Staff and places: `add_employee`, `update_employee`, `mark_attendance`, `create_place`, `update_place`, `set_place_tariff`, `set_place_reservable`, `set_place_active`.
+- Business: `update_branch`, `set_pricing_rules`, `pause_online_ordering`, `send_announcement`.
+
+**How a write runs** (`Tools/WriteFlow.cs`)
+- A call with `confirm=false` previews and writes nothing; the same call with `confirm=true` and the same `requestId` writes. Every confirm is audited and capped at 30 per person in 10 minutes.
+- Each step of a confirm sends its own `x-requestid` (SHA-256 of user, tool, request and step), so a confirm that stopped part way, called again, redoes only what did not land. Endpoints with no idempotency (Catalog categories, promos, places, suppliers) are guarded by finding the record by name first.
+- A preview built with AI (`create_menu_item`, `set_recipe`, `add_customizations`, `create_category`) returns a `draft`: the plan, signed with HMAC over the plan, user, tool and request (`Auth/DraftSigner.cs`, key `Assistant:DraftKey`, else one drawn at start), valid 30 minutes. The confirm applies exactly that plan and refuses one changed, expired or another's; the server keeps no state.
+- `create_menu_item` confirms through Catalog's `POST /api/catalog/items/compose` (item, category and options in one transaction, keyed by `x-requestid`), then Inventory's stock items and recipe with the options' real ids, then the photo.
+
+Routines (MCP prompts): `morning_briefing`, `close_the_day`, `weekly_review`, `restock_check`, `add_a_dish`, `menu_margins`.
 
 Periods are business days in the tenant's zone, each branch from its own `dayStartTime`; `today` at 02:00 in a business whose day starts at 17:00 is still yesterday. Leave `branch` out for every active branch, with a total and a line per branch. Answers are JSON, Arabic kept readable, lists trimmed to `top`, and a reply over 60 000 characters is refused with a hint rather than cut.
 

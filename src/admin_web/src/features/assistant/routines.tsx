@@ -3,6 +3,8 @@ import {
   Copy,
   Moon,
   PackageSearch,
+  Percent,
+  UtensilsCrossed,
   Sunrise,
   type LucideIcon,
 } from 'lucide-react'
@@ -46,6 +48,20 @@ const ROUTINES: {
     title: 'assistantRoutineRestock',
     about: 'assistantRoutineRestockAbout',
     ask: 'assistantRoutineRestockAsk',
+  },
+  {
+    prompt: 'add_a_dish',
+    icon: UtensilsCrossed,
+    title: 'assistantRoutineDish',
+    about: 'assistantRoutineDishAbout',
+    ask: 'assistantRoutineDishAsk',
+  },
+  {
+    prompt: 'menu_margins',
+    icon: Percent,
+    title: 'assistantRoutineMargins',
+    about: 'assistantRoutineMarginsAbout',
+    ask: 'assistantRoutineMarginsAsk',
   },
 ]
 

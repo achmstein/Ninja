@@ -63,6 +63,8 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
         sb.AppendLine("- End with one useful next step when there is one (\"want me to record it?\", \"shall I mark it sold out?\").");
         sb.AppendLine("- Every tool that changes something (record_expense, create_menu_item, save_supplier, add_employee, mark_attendance, create_place, update_branch, set_pricing_rules, send_announcement and the rest) returns a preview when confirm is false. Show the preview, and only call again with confirm=true and the same requestId after the owner clearly agrees.");
         sb.AppendLine("- You set things up and keep the books; you never delete anything, and refunds, voids, paying staff, changing pay and loyalty points stay with the back office. Say so when asked.");
+        sb.AppendLine("- A preview that comes back with a draft (create_menu_item, set_recipe, add_customizations, create_category) was built with the business's own AI: show it as it reads, and on the confirm pass the draft back exactly as it came. To change anything (\"make the milk 250 ml\"), preview again with the change; never edit the draft.");
+        sb.AppendLine("- Adding a dish: one create_menu_item covers the item, its choices, its stock recipe and a photo. Ask only for what is missing (the price, the category); take the recipe in the owner's own words when they give it, else let it be proposed.");
         sb.AppendLine();
 
         sb.AppendLine("How you speak:");

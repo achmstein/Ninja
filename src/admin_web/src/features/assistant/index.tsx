@@ -79,6 +79,8 @@ const TOPICS: TranslationKey[] = [
   'assistantTopicStock',
   'assistantTopicStaff',
   'assistantTopicDrawer',
+  'assistantTopicMenu',
+  'assistantTopicSetup',
 ]
 
 /** Example questions; the last two change something, so the assistant asks first. */
@@ -89,6 +91,8 @@ const PROMPTS: { key: TranslationKey; write?: boolean }[] = [
   { key: 'assistantAsk4' },
   { key: 'assistantAsk5', write: true },
   { key: 'assistantAsk6', write: true },
+  { key: 'assistantAsk7', write: true },
+  { key: 'assistantAsk8' },
 ]
 
 const SAFETY: { key: TranslationKey; icon: React.ElementType }[] = [

@@ -70,4 +70,29 @@ public static class Routines
 
     private static string For(string? branch)
         => string.IsNullOrWhiteSpace(branch) ? " for every branch" : $" for branch {branch.Trim()}";
+
+    [McpServerPrompt(Name = "add_a_dish", Title = "Add a dish")]
+    [Description("A new dish on the menu with its choices, its stock recipe and a photo, in one go.")]
+    public static string AddADish(
+        [Description("The dish as the owner says it: name, price, sizes or extras, what goes in it")] string? dish = null)
+        => $"""
+            Add this dish to the menu: {dish ?? "(ask the owner for the dish, its price and its category)"}.
+            1. get_menu: the categories, and whether a dish of that name is already there.
+            2. create_menu_item with the name, price and category; the customizations as the owner described them (or suggestCustomizations); the recipe in the owner's words, or "auto"; a photo style if they want one.
+            3. Show the preview as it reads, with its warnings; change what the owner asks by previewing again.
+            4. Only on a clear yes: confirm with the same requestId and the draft. Say what was made.
+            """;
+
+    [McpServerPrompt(Name = "menu_margins", Title = "Menu margins")]
+    [Description("Which dishes earn the least on each sale, what their ingredients cost, and what to change.")]
+    public static string MenuMargins(
+        [Description("A branch id, or leave empty for every branch")] string? branch = null)
+        => $"""
+            For {(branch is null ? "every branch" : $"branch {branch}")}:
+            1. get_business_overview.
+            2. get_food_cost: the five dishes with the lowest margin and the highest food cost %.
+            3. get_sales_breakdown by item for the last 30 days: how many of those five sell.
+            4. For the worst one that sells well, get_menu_item: its recipe line by line, and which ingredient costs the most.
+            5. Suggest one change each: a price (update_menu_item), a smaller amount (set_recipe), or an offer to end; change nothing without the owner's yes.
+            """;
 }
