@@ -262,7 +262,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             // Catalog takes no request id here: a confirm repeated after it landed finds the category by name
             if (categories.Value!.FirstOrDefault(c => MenuWriteTools.Same(c.Name, plan.Name)) is { } made)
                 return ToolResults.Ok(new { done = true, categoryId = made.Id, category = made.Name?.Display, categoryAr = made.Name?.Arabic, note = "It was already there; nothing was made twice." });
-            var created = await api.SendAsync<CategoryDto>(HttpMethod.Post, Catalog, "/api/catalog/categories", null, new CategoryRequest(plan.Name, plan.DisplayOrder), null, ct);
+            var created = await api.SendAsync<CategoryDto>(HttpMethod.Post, Catalog, "/api/catalog/categories", null, new MenuCategoryRequest(plan.Name, plan.DisplayOrder), null, ct);
             flow.Audit(CreateCategoryTool, new { category = plan.Name.Display, requestId }, created.IsOk ? $"category {created.Value!.Id}" : created.Error!);
             if (!created.IsOk) return ToolResults.Fail(created.Error!);
             return ToolResults.Ok(new { done = true, categoryId = created.Value!.Id, category = plan.Name.Display, categoryAr = plan.Name.Arabic });
@@ -323,7 +323,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
 
-        var result = await api.SendAsync<CategoryDto>(HttpMethod.Put, Catalog, $"/api/catalog/categories/{picked.Id}", null, new CategoryRequest(renamed, picked.DisplayOrder), null, ct);
+        var result = await api.SendAsync<CategoryDto>(HttpMethod.Put, Catalog, $"/api/catalog/categories/{picked.Id}", null, new MenuCategoryRequest(renamed, picked.DisplayOrder), null, ct);
         flow.Audit(RenameCategoryTool, new { categoryId = picked.Id, from = old.Display, to = renamed.Display, requestId }, result.IsOk ? "renamed" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
         return ToolResults.Ok(new { done = true, categoryId = picked.Id, category = renamed.Display, categoryAr = renamed.Arabic });

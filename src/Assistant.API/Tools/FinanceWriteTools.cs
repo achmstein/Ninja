@@ -51,7 +51,7 @@ public sealed class FinanceWriteTools(TenantContext tenant, NinjaApiClient api, 
 
         // Last on the list, where the back office puts a new one
         var result = await api.SendAsync<CreatedResponse>(HttpMethod.Post, "finance-api", "/api/finance/categories", null,
-            new CategoryRequest(null, label, categories.Value!.Count + 1, true), null, ct);
+            new ExpenseCategoryRequest(null, label, categories.Value!.Count + 1, true), null, ct);
         flow.Audit(CategoryTool, new { name = label.En, nameAr = label.Ar, requestId }, result.IsOk ? $"category {result.Value!.Id}" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
         return ToolResults.Ok(new { done = true, categoryId = result.Value!.Id, preview });

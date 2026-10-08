@@ -56,7 +56,7 @@ public sealed record BranchItemOverrideRequest(bool IsAvailable, decimal? PriceO
 // --- Catalog: categories and customizations ----------------------------------
 
 /// <summary>Catalog binds a category's create and update to its CatalogType: the name and the order</summary>
-public sealed record CategoryRequest(LocalizedText Name, int DisplayOrder);
+public sealed record MenuCategoryRequest(LocalizedText Name, int DisplayOrder);
 
 public sealed record CustomizationDto(int Id, LocalizedText? Name, bool IsRequired, bool AllowMultiple, int DisplayOrder, List<CustomizationOptionDto>? Options);
 

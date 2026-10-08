@@ -8,7 +8,7 @@ namespace Ninja.Assistant.API.Downstream;
 // --- Finance -----------------------------------------------------------------
 
 /// <summary>Finance's CategoryRequest: no id adds a category, an id edits one.</summary>
-public sealed record CategoryRequest(int? Id, LocalizedText Name, int DisplayOrder, bool? IsActive = null);
+public sealed record ExpenseCategoryRequest(int? Id, LocalizedText Name, int DisplayOrder, bool? IsActive = null);
 
 /// <summary>A supplier as Finance lists them, with what they were saved with, so an edit keeps what it does not change.</summary>
 public sealed record SupplierDetails(int Id, string? Name, string? Phone, string? Notes, bool IsActive, decimal Balance)
