@@ -275,10 +275,10 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
     }
 
     /// <summary>What the owner gave wins; the assistant fills the side left empty</summary>
-    private static LocalizedText Merge(LocalizedText given, LocalizedText filled)
+    internal static LocalizedText Merge(LocalizedText given, LocalizedText filled)
         => new(string.IsNullOrWhiteSpace(given.En) ? filled.En : given.En, string.IsNullOrWhiteSpace(given.Ar) ? filled.Ar : given.Ar);
 
-    private static string? Clean(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+    internal static string? Clean(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 
     private static bool Hit(LocalizedText? name, string text, bool exact)
     {
@@ -287,7 +287,7 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         return One(name?.En, text, exact) || One(name?.Ar, text, exact);
     }
 
-    private static bool Same(LocalizedText? a, LocalizedText b)
+    internal static bool Same(LocalizedText? a, LocalizedText b)
         => (!string.IsNullOrEmpty(b.En) && string.Equals(a?.En, b.En, StringComparison.OrdinalIgnoreCase))
            || (!string.IsNullOrEmpty(b.Ar) && string.Equals(a?.Ar, b.Ar, StringComparison.Ordinal));
 
@@ -307,20 +307,28 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
             sb.AppendLine($"Choice \"{g.Name.Both}\" ({(g.Required ? "must pick" : "optional")}{(g.Multiple ? ", several" : "")}): {options}");
         }
 
-        var r = dish.Recipe;
+        DescribeRecipe(sb, dish.Recipe, optionName, shelf);
+
+        if (dish.PhotoStyle is { } style) sb.AppendLine($"A {style} photo will be drawn for it.");
+        return sb.ToString().TrimEnd();
+    }
+
+    /// <summary>A recipe in plain lines, per sale: "Large: Milk 300 ml", "Plain: no Sugar", and the stock items it adds</summary>
+    internal static void DescribeRecipe(StringBuilder sb, DraftRecipe r, IReadOnlyDictionary<int, string> optionName, IReadOnlyList<StockItemDto> shelf)
+    {
         if (r.Kind == "unit") sb.AppendLine("Stock: counted as a unit of its own, one per sale.");
         else if (r.Kind == "recipe" && r.Lines.Count > 0)
         {
-            string Ingredient(DraftLine l)
+            (string What, string Unit) Ingredient(DraftLine l)
             {
-                if (l.NewItemKey is { } key && r.NewStock.FirstOrDefault(s => s.Key == key) is { } fresh) return $"{fresh.Name.Display}|{fresh.Unit}";
+                if (l.NewItemKey is { } key && r.NewStock.FirstOrDefault(s => s.Key == key) is { } fresh) return (fresh.Name.Display, fresh.Unit);
                 var onShelf = shelf.FirstOrDefault(s => s.Id == l.StockItemId);
-                return $"{onShelf?.Name?.Display ?? $"stock item {l.StockItemId}"}|{onShelf?.Unit ?? ""}";
+                return (onShelf?.Name?.Display ?? $"stock item {l.StockItemId}", onShelf?.Unit ?? "");
             }
             sb.AppendLine("Recipe, per sale:");
             foreach (var l in r.Lines.OrderBy(l => l.Slot).ThenBy(l => l.OptionRefs.Count))
             {
-                var (what, unit) = Ingredient(l).Split('|') is [var w, var u] ? (w, u) : (Ingredient(l), "");
+                var (what, unit) = Ingredient(l);
                 var when = l.OptionRefs.Count == 0 ? "" : string.Join(" + ", l.OptionRefs.Select(o => optionName.GetValueOrDefault(o, "?"))) + ": ";
                 sb.AppendLine(l.None ? $"- {when}no {what}" : $"- {when}{what} {l.Quantity:0.###} {unit}".TrimEnd());
             }
@@ -328,9 +336,6 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
                 sb.AppendLine("New stock items: " + string.Join(", ", r.NewStock.Select(s => $"{s.Name.Both} (in {s.Unit})")) + ".");
         }
         else sb.AppendLine("No stock recipe.");
-
-        if (dish.PhotoStyle is { } style) sb.AppendLine($"A {style} photo will be drawn for it.");
-        return sb.ToString().TrimEnd();
     }
 }
 
