@@ -39,7 +39,7 @@ void main() {
     expect(find.text('Delivered'), findsWidgets);
     expect(find.text("Couldn't deliver"), findsOneWidget);
     // The street on its own line (isolated, so a Latin street keeps its order on an Arabic screen), the door under it
-    expect(find.text('⁨Tahrir St⁩'), findsOneWidget);
+    expect(find.text('\u2068Tahrir St\u2069'), findsOneWidget);
     expect(find.text('Bldg 12, Floor 3'), findsOneWidget, reason: 'an English comma in English');
   });
 

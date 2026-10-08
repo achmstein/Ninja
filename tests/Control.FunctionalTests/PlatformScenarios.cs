@@ -40,7 +40,7 @@ public sealed class PlatformScenarios
         CollectionAssert.AreEquivalent(Enum.GetValues<Module>(), plans.Modules);
         var free = plans.Plans.Single(p => p.Plan == TenantPlan.Free);
         CollectionAssert.AreEqual(new[] { Module.Kds }, free.Included);
-        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery }, free.Addons);
+        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai }, free.Addons);
         var pro = plans.Plans.Single(p => p.Plan == TenantPlan.Pro);
         CollectionAssert.AreEquivalent(Enum.GetValues<Module>().Where(m => m is not (Module.OnlinePayments or Module.Delivery)).ToArray(), pro.Included);
         CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery }, pro.Addons, "online payments and delivery are bought on their own, whatever the plan");

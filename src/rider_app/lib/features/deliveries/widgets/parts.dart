@@ -10,7 +10,7 @@ const tabular = [FontFeature.tabularFigures()];
 /// What the customer or the cashier typed, in whichever script: read in its
 /// own direction (a Latin "7 El Nasr St" keeps its number first on an Arabic
 /// screen) while the line keeps the screen's alignment. A first-strong isolate.
-String typed(String text) => '⁨$text⁩';
+String typed(String text) => '\u2068$text\u2069';
 
 /// A screen's own list: padded for a phone and always scrollable, so a
 /// pull refreshes it whatever it shows

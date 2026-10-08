@@ -10,7 +10,7 @@ DeliveryOrder _order(int number, {String stage = 'Waiting', String? rider, doubl
         'phone': '01001234567',
         'stage': stage,
         'riderUserId': rider,
-        'riderName': rider == null ? null : rider.toUpperCase(),
+        'riderName': rider?.toUpperCase(),
         'cashHandedInAt': cashIn,
       },
     });
