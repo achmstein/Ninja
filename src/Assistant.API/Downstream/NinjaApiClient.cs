@@ -26,10 +26,13 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
     };
 
-    /// <summary>Tenant, Spaces and Notification are not versioned; the rest reject a call without api-version.</summary>
+    /// <summary>
+    /// The services whose routes are versioned reject a call without api-version.
+    /// Tenant, Spaces, Accounts and Notification map plain groups and take none.
+    /// </summary>
     private static readonly HashSet<string> Versioned = new(StringComparer.Ordinal)
     {
-        "sales-api", "finance-api", "inventory-api", "ordering-api", "payroll-api", "catalog-api",
+        "sales-api", "finance-api", "inventory-api", "ordering-api", "payroll-api", "catalog-api", "loyalty-api",
     };
 
     public Task<ApiResult<T>> GetAsync<T>(string service, string path, int? branchId, CancellationToken ct)
@@ -129,7 +132,9 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         "payroll-api" => "Payroll",
         "catalog-api" => "the menu",
         "tenant-api" => "Branches",
-        "spaces-api" => "Places",
+        "spaces-api" => "Rooms and tables",
+        "loyalty-api" => "Loyalty",
+        "accounts-api" => "Customer tabs",
         "notification-api" => "Notifications",
         _ => service,
     };

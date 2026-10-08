@@ -98,6 +98,3 @@ public sealed record TransferRequest(string? Note, List<TransferLineInput> Lines
 
 public sealed record TransferLineInput(int StockItemId, decimal Quantity);
 
-public sealed record RecipeView(int CatalogItemId, List<RecipeLineView>? Lines);
-
-public sealed record RecipeLineView(int StockItemId, LocalizedText? Name, string? Unit, decimal Quantity, List<int>? OptionIds, int Slot, bool IsNone);
