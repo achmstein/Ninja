@@ -169,4 +169,17 @@ public sealed class SalesToolsTests
         Assert.IsFalse(text.Contains("\\u", StringComparison.Ordinal));
         Assert.AreEqual(JsonValueKind.Object, JsonDocument.Parse(text).RootElement.ValueKind);
     }
+
+    [TestMethod]
+    public async Task The_daily_trend_sends_the_zone_offset_as_javascript_spells_it()
+    {
+        var bench = new Bench().WithTenant();
+        bench.Handler.OnJson("GET", "ordering-api/api/orders/stats", _ => new { days = Array.Empty<object>(), topItems = Array.Empty<object>() });
+        var tools = new SalesTools(bench.Tenant, bench.Api, bench.Clock);
+
+        await tools.GetDailySalesTrend(branch: "Maadi");
+
+        var stats = bench.Handler.Requests.Single(r => r.Url.AbsolutePath == "/api/orders/stats");
+        StringAssert.Contains(stats.Url.Query, "tzOffsetMinutes=-180", "Cairo is UTC+3, which getTimezoneOffset calls -180");
+    }
 }

@@ -135,8 +135,10 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
         top = ToolResults.ClampTop(top);
 
         var fan = await PerBranchWithPeriodAsync(snap!, branches!, period, from, to, clock.GetUtcNow(),
+            // Ordering reads the offset as JavaScript's getTimezoneOffset (Cairo is -180), the opposite
+            // sign of the zone's own; sent as it is, each day's orders landed six hours off their day
             (b, p) => api.GetAsync<OrderStats>("ordering-api",
-                $"/api/orders/stats?fromDate={Utc(p.FromUtc)}&toDate={Utc(p.ToUtc)}&tzOffsetMinutes={p.OffsetMinutes}", b.Id, ct));
+                $"/api/orders/stats?fromDate={Utc(p.FromUtc)}&toDate={Utc(p.ToUtc)}&tzOffsetMinutes={-p.OffsetMinutes}", b.Id, ct));
         if (!fan.AnyOk) return ToolResults.Fail(string.Join("\n", fan.Errors));
 
         var stats = fan.Ok.Select(x => x.Value.Value).ToList();
