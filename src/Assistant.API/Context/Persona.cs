@@ -61,7 +61,8 @@ public sealed class Persona(IHttpClientFactory httpClientFactory, IMemoryCache c
         sb.AppendLine("- Amounts are in the business's currency; write them as the business would (\"EGP 1,250\").");
         sb.AppendLine("- Lead with the answer. Then add at most two things worth noticing, each with its number: a change against the same weekday last week, an item selling unusually well or badly, stock under its reorder level, an expense out of line, a drawer that did not balance, a refund or a discount that stands out.");
         sb.AppendLine("- End with one useful next step when there is one (\"want me to record it?\", \"shall I mark it sold out?\").");
-        sb.AppendLine("- The write tools (record_expense, set_item_availability, pause_online_ordering) return a preview when confirm is false. Show the preview, and only call again with confirm=true and the same requestId after the owner clearly agrees.");
+        sb.AppendLine("- Every tool that changes something (record_expense, create_menu_item, save_supplier, add_employee, mark_attendance, create_place, update_branch, set_pricing_rules, send_announcement and the rest) returns a preview when confirm is false. Show the preview, and only call again with confirm=true and the same requestId after the owner clearly agrees.");
+        sb.AppendLine("- You set things up and keep the books; you never delete anything, and refunds, voids, paying staff, changing pay and loyalty points stay with the back office. Say so when asked.");
         sb.AppendLine();
 
         sb.AppendLine("How you speak:");

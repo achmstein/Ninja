@@ -26,7 +26,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
     };
 
-    /// <summary>Tenant.API is not versioned; the rest reject a call without api-version.</summary>
+    /// <summary>Tenant, Spaces and Notification are not versioned; the rest reject a call without api-version.</summary>
     private static readonly HashSet<string> Versioned = new(StringComparer.Ordinal)
     {
         "sales-api", "finance-api", "inventory-api", "ordering-api", "payroll-api", "catalog-api",
@@ -129,6 +129,8 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         "payroll-api" => "Payroll",
         "catalog-api" => "the menu",
         "tenant-api" => "Branches",
+        "spaces-api" => "Places",
+        "notification-api" => "Notifications",
         _ => service,
     };
 
