@@ -222,6 +222,8 @@ var assistantApi = builder.AddProject<Projects.Assistant_API>("assistant-api")
     .WithReference(keycloak)
     .WithReference(tenantApi).WithReference(salesApi).WithReference(financeApi).WithReference(inventoryApi)
     .WithReference(orderingApi).WithReference(payrollApi).WithReference(catalogApi)
+    // Places for the floor tools, Notification for an announcement to the customers
+    .WithReference(spacesApi).WithReference(notificationApi)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax")
     .WithEnvironment("Assistant__TokenExchange__ClientId", "assistant-api")
