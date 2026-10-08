@@ -540,7 +540,7 @@ public static partial class Templates
                     sb.AppendLine("      Assistant__TokenExchange__ClientSecret: \"${ASSISTANT_SECRET}\"");
                     // It calls the other services by their Aspire names; service discovery reads these. A service the plan
                     // leaves out gets no line, so its name does not resolve and the tools say "not in this business's plan".
-                    foreach (var target in new[] { "tenant", "sales", "finance", "inventory", "ordering", "payroll", "catalog" })
+                    foreach (var target in new[] { "tenant", "sales", "finance", "inventory", "ordering", "payroll", "catalog", "spaces", "loyalty", "accounts", "notification" })
                         if (services.Contains(target))
                             sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;

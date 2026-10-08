@@ -346,6 +346,11 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "ConnectionStrings__tenantdb: \"Host=");
         StringAssert.Contains(yaml, "Database=blue_tenantdb;");
         StringAssert.Contains(yaml, "services__tenant-api__http__0: \"http://blue-tenant-api:8080\"");
+        // The assistant's read tools also reach the floor, loyalty, tabs and announcements
+        StringAssert.Contains(yaml, "services__spaces-api__http__0: \"http://blue-spaces-api:8080\"");
+        StringAssert.Contains(yaml, "services__loyalty-api__http__0: \"http://blue-loyalty-api:8080\"");
+        StringAssert.Contains(yaml, "services__accounts-api__http__0: \"http://blue-accounts-api:8080\"");
+        StringAssert.Contains(yaml, "services__notification-api__http__0: \"http://blue-notification-api:8080\"");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH");
         Assert.IsFalse(Regex.IsMatch(yaml, "branch-api|ninja-branch|branchdb"), "nothing runs under the old service's name");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH: \"/api/catalog/items/{id}/pic\"");
