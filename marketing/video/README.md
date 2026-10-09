@@ -13,7 +13,8 @@ The fonts follow the apps:
 
 | Composition | Size | Length | For |
 |---|---|---|---|
-| **Tour** | 1920 × 1080 | 2:04 | Café owners: every feature idea, chapter by chapter (YouTube, the website, sales calls) |
+| **Tour** | 1920 × 1080 | 2:05 | Café owners: every feature idea, chapter by chapter (YouTube, the website, sales calls) |
+| **TourAr** | 1920 × 1080 | 2:05 | The same tour with every caption in Egyptian Arabic, right to left (IBM Plex Sans Arabic); the app screens stay as they are |
 | **Promo** | 1080 × 1920 | 0:22 | Reels, TikTok, Shorts: order → kitchen → rider → ask your café |
 
 ## The tour (`src/tour/`)
@@ -22,11 +23,11 @@ Each chapter has the copy on the left (number, who it is for, title, one line, c
 
 | # | Chapter | Shows |
 |---|---|---|
-| — | Intro | "How many apps did you open today?" Eight app tiles fold into the N mark |
+| — | Intro | "Five apps. One café.": the lineup of every app (owner dashboard, till, kitchen display, guest app on iOS/Android/web, rider app), each labelled, and the features in one line |
 | 01 | Your brand | The Theme card recolours the guest app; the list menu becomes the photo grid |
-| 02 | Table ordering | QR scan → menu → two dishes → Order → Place Order → "Sent · #42" → "Being made" |
-| 03 | Pay & split | Pay the bill → Equally, 3 people → Pay EGP 150 → "Paid, thank you!" |
-| 04 | Rooms & tables | Book → Room 1 → "10 minutes to arrive" → Reserve Now → "Held for you" |
+| 02 | Table ordering | On the web, nothing to install: QR scan → menu → each dish's photo flies into the dock → "Your order" rises from the dock → Place Order → "Sent · #42" → "Being made" |
+| 03 | Pay & split | As the mobile app does it: the dock's bill row opens "Your bill" in a floating slab sheet → Split bill → Divide equally → Pay EGP 150.00 → "Paid, thank you!" |
+| 04 | Reservations | As the mobile app does it: Table 4's card opens the hold form, Reserve Now morphs to a spinner and a tick, and the Book tab becomes the "Held for you" face: a 10-minute ring with rolling digits, the dock tab counting down too |
 | 05 | Loyalty | Points ring and tier, recent activity |
 | 06 | Till | Three taps into the current sale, Charge → paid |
 | 07 | Kitchen | Table 3's ticket lands among aged tickets; Ready |
@@ -36,7 +37,11 @@ Each chapter has the copy on the left (number, who it is for, title, one line, c
 | 11 | Stock & food cost | A supplier's receipt into stock; Menu cost with margins and "Over target" |
 | 12 | Profit & payroll | Profit & loss waterfall: "Where the money went" |
 | 13 | Ask your café | Claude or ChatGPT connected to ninja: lowest margins, then a drafted and confirmed change |
-| — | End card | Every chapter's name, then N mark, `ninja`, ninjapp.net |
+| — | End card | A bento grid of every feature (two photo tiles), folding into the N mark, `ninja` and ninjapp.net |
+
+Every chapter carries the Ninja badge (N mark and `ninja`) top left, the owner's dashboard says "Powered by ninja", and the guest app wears the café's own brand. A label over each phone says whether it is the mobile app or the web. Chapters cut with `pushCut` (a quick zoom-cut with a soft flash). Devices face the viewer flat with a light glare.
+
+The Egyptian Arabic words live in `src/tour/lang.ts`; `<Tour lang="ar">` switches every caption.
 
 `ui.tsx` holds the app kit (guest phone, dock, bill row, admin shell, stat strip, device screens, taps). `menu-screen.tsx` holds the guest menu, `chapter.tsx` the chapter layout, `Frame.tsx` the backdrops and the copy column. `Tour.tsx` strings the chapters together.
 
@@ -52,6 +57,7 @@ The video says Ninja, never "AI", for Ninja's own smarts (the owner's rule).
 npm i
 npm run dev                                       # Remotion Studio: preview, scrub, edit each chapter's text
 npx remotion render Tour out/ninja-tour.mp4       # out/ is git-ignored
+npx remotion render TourAr out/ninja-tour-ar.mp4
 npx remotion render Promo out/ninja-promo.mp4
 npx remotion still TourStock out/frame.png --frame=160
 ```

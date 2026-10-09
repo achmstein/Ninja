@@ -1,7 +1,9 @@
 import type React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, type InteractivitySchema } from "remotion";
-import { clamp, land } from "../theme";
+import { NMark, Wordmark } from "../parts";
+import { C, clamp, land } from "../theme";
 import { Copy, Stage, type Look } from "./Frame";
+import { AR_CHAPTERS, useLang } from "./lang";
 
 export type ChapterProps = {
   readonly title: string;
@@ -27,34 +29,45 @@ export const Chapter: React.FC<{
   style?: React.CSSProperties;
   copyWidth?: number;
   children: React.ReactNode;
-}> = ({ look, n, eyebrow, title, mark, line, chips, style, copyWidth, children }) => (
+}> = ({ look, n, eyebrow, title, mark, line, chips, style, copyWidth, children }) => {
+  // In the Arabic tour every chapter's words come from lang.ts.
+  const ar = useLang() === "ar" ? AR_CHAPTERS[n] : undefined;
+  return (
   <AbsoluteFill style={style}>
     <Stage look={look}>
+      <Badge dark={look === "dark"} />
       {children}
       <Copy
         n={n}
-        eyebrow={eyebrow}
-        title={title}
-        mark={mark}
-        line={line}
-        chips={chips}
+        eyebrow={ar?.eyebrow ?? eyebrow}
+        title={ar?.title ?? title}
+        mark={ar?.mark ?? mark}
+        line={ar?.line ?? line}
+        chips={ar?.chips ?? chips}
         dark={look === "dark"}
         width={copyWidth}
+        rtl={ar !== undefined}
       />
     </Stage>
   </AbsoluteFill>
+  );
+};
+
+// Ninja's corner badge on every chapter, as a channel keeps its logo on screen.
+const Badge: React.FC<{ dark?: boolean }> = ({ dark }) => (
+  <div style={{ position: "absolute", top: 64, left: 130, display: "flex", alignItems: "center", gap: 14, opacity: 0.9 }}>
+    <NMark size={44} />
+    <Wordmark size={46} color={dark ? "#fff" : C.ink} />
+  </div>
 );
 
-// Devices come in from the right on a spring, turned a little toward the copy (a 3D
-// product shot), and sway gently while on screen.
-export const useEnter = (at = 4, from = 260, tilt = 9) => {
+// Devices come in from the right on a spring, face the viewer flat, and float gently.
+export const useEnter = (at = 4, from = 260) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const turn = interpolate(frame, [at, at + 1.2 * fps], [tilt * 2.4, tilt], { ...clamp, easing: land });
   return {
     opacity: interpolate(frame, [at, at + 0.3 * fps], [0, 1], clamp),
     translate: `${interpolate(frame, [at, at + 0.9 * fps], [from, 0], { ...clamp, easing: land })}px ${Math.sin(frame / 45) * 6}px`,
-    transform: `perspective(2600px) rotateY(${turn + Math.sin(frame / 70) * 1.5}deg) rotateX(${Math.sin(frame / 90) * 1}deg)`,
   } as const;
 };
 

@@ -1,6 +1,7 @@
 import type React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { C, clamp, glide, inter, land } from "../theme";
+import { plexArabic } from "./lang";
 
 // The tour's looks, one per kind of chapter (from the shortlist):
 // light = Apple-style launch, glass = liquid glass, dark = the till/kitchen reel.
@@ -71,7 +72,8 @@ export const Copy: React.FC<{
   dark?: boolean;
   at?: number;
   width?: number;
-}> = ({ n, eyebrow, title, mark, line, chips = [], dark, at = 0, width = 720 }) => {
+  rtl?: boolean;
+}> = ({ n, eyebrow, title, mark, line, chips = [], dark, at = 0, width = 720, rtl }) => {
   const frame = useCurrentFrame();
   const words = title.split(" ");
   const strip = (s: string) => s.replace(/[.,!?]/g, "");
@@ -90,7 +92,8 @@ export const Copy: React.FC<{
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        fontFamily: inter,
+        fontFamily: rtl ? plexArabic : inter,
+        direction: rtl ? "rtl" : "ltr",
       }}
     >
       <div
@@ -102,7 +105,7 @@ export const Copy: React.FC<{
           fontWeight: 600,
           color: soft,
           opacity: interpolate(frame, [at, at + 8], [0, 1], clamp),
-          translate: interpolate(frame, [at, at + 14], ["-30px 0px", "0px 0px"], { ...clamp, easing: glide }),
+          translate: interpolate(frame, [at, at + 14], [rtl ? "30px 0px" : "-30px 0px", "0px 0px"], { ...clamp, easing: glide }),
         }}
       >
         <span
@@ -129,10 +132,10 @@ export const Copy: React.FC<{
           display: "flex",
           flexWrap: "wrap",
           columnGap: "0.25em",
-          fontSize: 92,
-          fontWeight: 800,
-          letterSpacing: "-0.04em",
-          lineHeight: 1.02,
+          fontSize: rtl ? 84 : 92,
+          fontWeight: rtl ? 700 : 800,
+          letterSpacing: rtl ? 0 : "-0.04em",
+          lineHeight: rtl ? 1.3 : 1.02,
           color: ink,
         }}
       >
@@ -148,7 +151,7 @@ export const Copy: React.FC<{
                 translate: interpolate(frame, [s, s + 14], ["0px 56px", "0px 0px"], { ...clamp, easing: glide }),
                 backgroundImage: isMark ? `linear-gradient(${C.highlight}, ${C.highlight})` : undefined,
                 backgroundRepeat: "no-repeat",
-                backgroundPosition: "0 88%",
+                backgroundPosition: rtl ? "100% 88%" : "0 88%",
                 backgroundSize: isMark
                   ? `${interpolate(frame, [titleEnd, titleEnd + 12], [0, 100], { ...clamp, easing: glide })}% 0.3em`
                   : undefined,
@@ -162,9 +165,9 @@ export const Copy: React.FC<{
       <div
         style={{
           marginTop: 30,
-          fontSize: 38,
+          fontSize: rtl ? 36 : 38,
           fontWeight: 500,
-          lineHeight: 1.35,
+          lineHeight: rtl ? 1.6 : 1.35,
           color: soft,
           opacity: interpolate(frame, [titleEnd, titleEnd + 10], [0, 1], clamp),
           translate: interpolate(frame, [titleEnd, titleEnd + 16], ["0px 24px", "0px 0px"], { ...clamp, easing: glide }),

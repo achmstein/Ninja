@@ -1,8 +1,9 @@
-// Chapters 01–05: what the guest sees (brand, table ordering, pay & split, rooms, loyalty).
-import { Armchair, Award, Check, ChefHat, Clock, Gamepad2, Lock, Send, Trophy } from "lucide-react";
+// Chapters 01, 02 and 05: what the guest sees (brand, table ordering, loyalty).
+import { Award, Check, ChefHat, Send } from "lucide-react";
 import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotion";
 import { clamp, glide, jakarta, land } from "../theme";
+import type { Dishkey } from "./menu-screen";
 import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
 import { MenuScreen } from "./menu-screen";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
@@ -36,7 +37,7 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       style={style}
       copyWidth={680}
     >
-      <GuestPhone {...PHONE} style={useEnter(4)}>
+      <GuestPhone {...PHONE} label="Mobile app & web" style={useEnter(4)}>
         <MenuScreen
           layout={grid ? "grid" : "row"}
           primary={theme.primary}
@@ -160,6 +161,80 @@ const TrayRow: React.FC<{ items: string[]; count: number; total: number; button:
   </div>
 );
 
+// The dish photo flies from its row into the dock (client_app tray_flights: 620 ms,
+// closes to a circle, arcs up, lands at thumbnail size with a bump).
+const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
+  const frame = useCurrentFrame();
+  const t = interpolate(frame, [at + 1, at + 20], [0, 1], { ...clamp, easing: (x) => 1 - Math.pow(1 - x, 2.4) });
+  if (frame < at + 1 || frame > at + 22) return null;
+  const from = { x: 16, y: 152 + row * 96, s: 80 };
+  const to = { x: 24 + slot * 32, y: 712 + 12, s: 44 };
+  const arc = Math.min(90, Math.abs(to.y - from.y) * 0.25) * Math.sin(Math.PI * t);
+  const size = from.s + (to.s - from.s) * t;
+  return (
+    <Dish
+      img={DISHES[dish].img}
+      size={size}
+      radius={interpolate(t, [0, 0.45], [20, size / 2], clamp)}
+      style={{
+        position: "absolute",
+        left: from.x + (to.x - from.x) * t,
+        top: from.y + (to.y - from.y) * t - arc,
+        zIndex: 30,
+        boxShadow: "0 12px 30px -8px rgba(0,0,0,0.45)",
+      }}
+    />
+  );
+};
+
+// "Your order" rises out of the dock (client_app tray.dart), clipped at the row's top.
+const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }> = ({ openAt, closeAt, lines }) => {
+  const frame = useCurrentFrame();
+  const up =
+    interpolate(frame, [openAt, openAt + 12], [0, 1], { ...clamp, easing: land }) *
+    interpolate(frame, [closeAt - 8, closeAt], [1, 0], clamp);
+  if (up <= 0) return null;
+  return (
+    <>
+      <AbsoluteFill style={{ backgroundColor: `rgba(0,0,0,${0.4 * up})` }} />
+      <div
+        style={{
+          position: "absolute",
+          left: 8,
+          right: 8,
+          bottom: 8 + 124 - 28,
+          height: 210 * up + 28,
+          borderRadius: "28px 28px 0 0",
+          backgroundColor: S.slab,
+          color: "#fff",
+          overflow: "hidden",
+          padding: "20px 18px 0",
+        }}
+      >
+        <div style={{ fontSize: 20, fontWeight: 800 }}>Your order</div>
+        {lines.map((k) => {
+          const d = DISHES[k];
+          return (
+            <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+              <Dish img={d.img} size={48} radius={24} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{d.name}</div>
+                <div style={{ fontSize: 13, opacity: 0.6 }}>{d.note}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{d.price}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700 }}>
+                <span style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "grid", placeItems: "center" }}>−</span>
+                1
+                <span style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "grid", placeItems: "center" }}>+</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+};
+
 const OrderInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
   const scanned = 54;
@@ -200,9 +275,12 @@ const OrderInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       chips={["No app to install", "No account", "Notes & options", "Arabic & English"]}
       style={style}
     >
-      <GuestPhone {...PHONE} style={useEnter(4)}>
+      <GuestPhone {...PHONE} label="Web · nothing to install" style={useEnter(4)}>
         <MenuScreen counts={counts} enterAt={scanned} offer="cappuccino" />
-        <Dock row={row} rowAt={addLatte} />
+        <Dock row={row} rowAt={addLatte + 10} />
+        <Flight dish="latte" row={0} slot={0} at={addLatte} />
+        <Flight dish="waffle" row={3} slot={1} at={addClub} />
+        <TraySheet openAt={order + 2} closeAt={sent} lines={["latte", "waffle"]} />
         <Touch x={352} y={192} at={addLatte} />
         <Touch x={352} y={480} at={addClub} />
         <Touch x={318} y={746} at={order} />
@@ -269,415 +347,6 @@ export const Order = Interactive.withSchema({
   wrapInSequence: true,
 });
 
-// ——— 03 Pay & split ——————————————————————————————————————————————
-
-const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
-  const frame = useCurrentFrame();
-  const equally = 74;
-  const pay = 150;
-  const paid = 196;
-  const mode = frame >= equally + 2 ? 2 : 0;
-  const share = mode === 2 ? 150 : 450;
-  const paidSoFar = interpolate(frame, [paid, paid + 16], [0, 150], { ...clamp, easing: glide });
-  const pending = frame >= pay + 2 && frame < paid;
-
-  return (
-    <Chapter
-      look="glass"
-      n="03"
-      eyebrow="For your guests"
-      title={title}
-      mark="split"
-      line={line}
-      chips={["Pay it all", "My items", "Split equally", "Any amount"]}
-      style={style}
-    >
-      <GuestPhone {...PHONE} style={useEnter(4)}>
-        <TopBar />
-        <div style={{ position: "absolute", top: 116, left: 16, right: 16 }}>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Pay the bill</div>
-          <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 2 }}>Table 3 · 2 rounds</div>
-          <div
-            style={{
-              marginTop: 16,
-              borderRadius: 28,
-              padding: 20,
-              backgroundColor: S.slab,
-              color: "#fff",
-            }}
-          >
-            <div style={{ fontSize: 13, opacity: 0.7 }}>Remaining</div>
-            <div style={{ fontSize: 30, fontWeight: 800 }}>EGP {Math.round(450 - paidSoFar)}</div>
-            <div style={{ fontSize: 13, color: S.emerald, fontWeight: 600, marginTop: 4 }}>
-              Paid so far EGP {Math.round(paidSoFar)}
-            </div>
-            <div
-              style={{
-                marginTop: 14,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: "rgba(255,255,255,0.14)",
-                overflow: "hidden",
-                display: "flex",
-              }}
-            >
-              <div style={{ width: `${(paidSoFar / 450) * 100}%`, backgroundColor: S.emerald }} />
-              <div
-                style={{
-                  width: pending ? `${interpolate(frame, [pay, pay + 30], [0, 33.3], clamp)}%` : 0,
-                  backgroundColor: S.amber400,
-                }}
-              />
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: 18,
-              display: "flex",
-              padding: 4,
-              borderRadius: 999,
-              backgroundColor: S.muted,
-            }}
-          >
-            {["All", "My items", "Equally", "Amount"].map((m, i) => (
-              <div
-                key={m}
-                style={{
-                  flex: 1,
-                  height: 38,
-                  borderRadius: 999,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  backgroundColor: i === mode ? "#fff" : "transparent",
-                  boxShadow: i === mode ? "0 1px 3px rgb(0 0 0 / .12)" : undefined,
-                  color: i === mode ? S.fg : S.mutedFg,
-                }}
-              >
-                {m}
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              marginTop: 18,
-              padding: 18,
-              borderRadius: 24,
-              backgroundColor: S.muted,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              opacity: interpolate(frame, [equally + 2, equally + 10], [0, 1], clamp),
-            }}
-          >
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Split between</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 20, fontWeight: 800 }}>
-              <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "#fff", display: "grid", placeItems: "center" }}>−</span>3
-              <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "#fff", display: "grid", placeItems: "center" }}>+</span>
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            padding: "16px 16px 28px",
-            borderTop: `1px solid ${S.border}`,
-            backgroundColor: "#fff",
-          }}
-        >
-          {[
-            ["Your share", `EGP ${share}`],
-            ["Online payment fee", "EGP 0"],
-          ].map(([a, b]) => (
-            <div key={a} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: S.mutedFg, marginBottom: 6 }}>
-              <span>{a}</span>
-              <span>{b}</span>
-            </div>
-          ))}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>You pay</span>
-            <span style={{ fontSize: 20, fontWeight: 800 }}>EGP {share}</span>
-          </div>
-          <div
-            style={{
-              marginTop: 14,
-              height: 52,
-              borderRadius: 26,
-              backgroundColor: S.primary,
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              fontSize: 16,
-              fontWeight: 700,
-              scale: interpolate(frame, [pay, pay + 3, pay + 12], [1, 0.95, 1], clamp),
-            }}
-          >
-            <Lock size={16} /> Pay EGP {share}
-          </div>
-        </div>
-        <Touch x={239} y={354} at={equally} />
-        <Touch x={195} y={790} at={pay} />
-
-        {/* Paid */}
-        <AbsoluteFill
-          style={{
-            backgroundColor: "rgba(255,255,255,0.97)",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 14,
-            opacity: interpolate(frame, [paid + 18, paid + 26], [0, 1], clamp),
-          }}
-        >
-          <div
-            style={{
-              width: 96,
-              height: 96,
-              borderRadius: "50%",
-              backgroundColor: S.emerald,
-              display: "grid",
-              placeItems: "center",
-              scale: interpolate(frame, [paid + 20, paid + 36], [0, 1], { ...clamp, easing: land }),
-            }}
-          >
-            <Check size={52} color="#fff" strokeWidth={3} />
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Paid, thank you!</div>
-          <div style={{ fontSize: 15, color: S.mutedFg }}>EGP 150 charged · EGP 300 left for your friends</div>
-        </AbsoluteFill>
-      </GuestPhone>
-    </Chapter>
-  );
-};
-
-export const Pay = Interactive.withSchema({
-  Component: PayInner,
-  componentName: "<Pay>",
-  schema: copySchema(
-    "Pay at the table, split any way.",
-    "Each friend pays their share from their own phone. You see the bill fill up at the till.",
-  ),
-  wrapInSequence: true,
-});
-
-// ——— 04 Rooms & tables ————————————————————————————————————————————
-
-const PLACES = [
-  { name: "Room 1", Icon: Gamepad2, free: true, rate: "PS5 60/hr" },
-  { name: "Room 2", Icon: Gamepad2, free: false, rate: "Occupied" },
-  { name: "Table 4", Icon: Armchair, free: true, rate: "4 seats" },
-  { name: "Arena", Icon: Trophy, free: false, rate: "Reserved" },
-];
-
-const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
-  const frame = useCurrentFrame();
-  const open = 76;
-  const reserve = 156;
-  const held = reserve + 6;
-  const sheetY = interpolate(frame, [open + 2, open + 18], [520, 0], { ...clamp, easing: glide });
-
-  return (
-    <Chapter
-      look="light"
-      n="04"
-      eyebrow="For your guests"
-      title={title}
-      mark="booked"
-      line={line}
-      chips={["Rooms", "Tables", "Hourly rates", "Held 10 minutes"]}
-      style={style}
-    >
-      <GuestPhone {...PHONE} style={useEnter(4)}>
-        <TopBar />
-        <PageTitle title="Book" sub="2 free now" />
-        <div
-          style={{
-            position: "absolute",
-            top: 196,
-            left: 16,
-            right: 16,
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 12,
-          }}
-        >
-          {PLACES.map((p, i) => (
-            <div
-              key={p.name}
-              style={{
-                position: "relative",
-                minHeight: 176,
-                padding: 18,
-                borderRadius: 24,
-                overflow: "hidden",
-                backgroundColor: p.free ? S.slab : "#fff",
-                color: p.free ? "#fff" : S.fg,
-                boxShadow: p.free ? undefined : S.surface,
-                opacity: interpolate(frame, [6 + i * 4, 14 + i * 4], [0, 1], clamp),
-                scale: interpolate(frame, [6 + i * 4, 20 + i * 4], [0.85, 1], { ...clamp, easing: land }),
-              }}
-            >
-              <p.Icon
-                size={110}
-                style={{ position: "absolute", right: -16, bottom: -16, opacity: 0.12, rotate: "-12deg" }}
-              />
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  backgroundColor: p.free ? "rgba(52,211,153,0.2)" : "rgba(220,38,38,0.1)",
-                  color: p.free ? "#6ee7b7" : S.red,
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "currentColor" }} />
-                {p.free ? "Available" : p.rate}
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 800, marginTop: 34 }}>{p.name}</div>
-              {p.free ? (
-                <div
-                  style={{
-                    display: "inline-block",
-                    marginTop: 8,
-                    padding: "5px 10px",
-                    borderRadius: 999,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    backgroundColor: "rgba(255,255,255,0.12)",
-                  }}
-                >
-                  {p.rate}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-        <Dock active="Book" />
-        <Touch x={100} y={280} at={open} />
-
-        {/* Hold sheet, then the held state */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 470,
-            borderRadius: "28px 28px 0 0",
-            backgroundColor: "#fff",
-            boxShadow: "0 -20px 60px rgba(15,23,42,0.18)",
-            padding: "22px 20px",
-            translate: `0px ${sheetY}px`,
-          }}
-        >
-          {frame < held ? (
-            <>
-              <div style={{ fontSize: 22, fontWeight: 800 }}>Room 1</div>
-              <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 2 }}>PS5 · 60 per hour</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 22 }}>
-                <div style={{ width: 40, height: 40, borderRadius: "50%", backgroundColor: S.muted, display: "grid", placeItems: "center" }}>
-                  <Clock size={18} />
-                </div>
-                <div style={{ fontSize: 16, fontWeight: 600 }}>10 minutes to arrive</div>
-              </div>
-              <div
-                style={{
-                  marginTop: 18,
-                  padding: 16,
-                  borderRadius: 20,
-                  backgroundColor: S.muted,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                Start the time now, don't wait for me
-                <div style={{ width: 44, height: 26, borderRadius: 13, backgroundColor: S.border, padding: 3 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: "#fff" }} />
-                </div>
-              </div>
-              <div
-                style={{
-                  marginTop: 26,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: S.primary,
-                  color: "#fff",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 16,
-                  fontWeight: 700,
-                }}
-              >
-                Reserve Now
-              </div>
-            </>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-              <div
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  backgroundColor: "rgba(251,191,36,0.18)",
-                  color: "#b45309",
-                }}
-              >
-                Held for you · 9:58
-              </div>
-              <div style={{ marginTop: 22, scale: interpolate(frame, [held, held + 16], [0.4, 1], { ...clamp, easing: land }) }}>
-                <Gamepad2 size={64} />
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 800, marginTop: 10 }}>Room 1</div>
-              <div style={{ fontSize: 15, color: S.mutedFg, marginTop: 6 }}>Walk over and show this at the counter</div>
-              <div
-                style={{
-                  marginTop: 28,
-                  height: 48,
-                  padding: "0 22px",
-                  borderRadius: 24,
-                  border: `1px solid ${S.border}`,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: S.red,
-                }}
-              >
-                Cancel Reservation
-              </div>
-            </div>
-          )}
-        </div>
-        <Touch x={195} y={626} at={reserve} />
-      </GuestPhone>
-    </Chapter>
-  );
-};
-
-export const Book = Interactive.withSchema({
-  Component: BookInner,
-  componentName: "<Book>",
-  schema: copySchema(
-    "Rooms and tables, booked ahead.",
-    "Guests see what's free and hold it from their phone. The till keeps it for them.",
-  ),
-  wrapInSequence: true,
-});
-
 // ——— 05 Loyalty ——————————————————————————————————————————————————
 
 const LoyaltyInner: React.FC<ChapterProps> = ({ title, line, style }) => {
@@ -704,7 +373,7 @@ const LoyaltyInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       chips={["Points", "Tiers", "Rewards you choose"]}
       style={style}
     >
-      <GuestPhone {...PHONE} style={useEnter(4)}>
+      <GuestPhone {...PHONE} label="Mobile app" style={useEnter(4)}>
         <TopBar />
         <PageTitle title="Loyalty Rewards" />
         <div

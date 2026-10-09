@@ -650,7 +650,7 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       n="09"
       eyebrow="For your business"
       title={title}
-      mark="branch,"
+      mark="dashboard."
       line={line}
       chips={["Prices per branch", "Hours per branch", "Nearest branch"]}
       style={style}
@@ -734,7 +734,7 @@ export const Branches = Interactive.withSchema({
   Component: BranchesInner,
   componentName: "<Branches>",
   schema: copySchema(
-    "One app, every branch, one place.",
+    "Every branch, one dashboard.",
     "Each branch keeps its own prices and hours. Guests are sent to the one nearest them.",
   ),
   wrapInSequence: true,

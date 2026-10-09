@@ -7,7 +7,9 @@ import { Order } from "./scenes/Order";
 import { Outro } from "./scenes/Outro";
 import { Rider } from "./scenes/Rider";
 import { Finale } from "./tour/Finale";
-import { Book, Brand, Loyalty, Order as TourOrder, Pay } from "./tour/guests";
+import { Book } from "./tour/book";
+import { Brand, Loyalty, Order as TourOrder } from "./tour/guests";
+import { Pay } from "./tour/pay";
 import { Intro } from "./tour/Intro";
 import { AiMenu, Assistant as TourAssistant, Profit, Stock } from "./tour/owner";
 import { Branches, Delivery, Kitchen as TourKitchen, Till } from "./tour/team";
@@ -77,16 +79,33 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       </Folder>
-      <Composition id="Tour" component={Tour} durationInFrames={3720} fps={30} width={1920} height={1080} />
+      <Composition
+        id="Tour"
+        component={Tour}
+        durationInFrames={3750}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const }}
+      />
+      <Composition
+        id="TourAr"
+        component={Tour}
+        durationInFrames={3750}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "ar" as const }}
+      />
       <Folder name="Tour-Scenes">
         <Composition
           id="TourIntro"
           component={Intro}
-          durationInFrames={210}
+          durationInFrames={240}
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ question: "How many apps did you open today?", answer: "One app runs your whole café." }}
+          defaultProps={{ headline: "Your whole café, in one place.", features: "Ordering · Payments · Reservations · Loyalty · Delivery · Stock · Profit" }}
         />
         <Composition
           id="TourBrand"
@@ -113,7 +132,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "Pay at the table, split any way.", line: "Each friend pays their share from their own phone. You see the bill fill up at the till." }}
+          defaultProps={{ title: "Pay at the table, split any way.", line: "The bill is in the dock. Each friend opens it and pays their share from their own phone." }}
         />
         <Composition
           id="TourBook"
@@ -122,7 +141,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "Rooms and tables, booked ahead.", line: "Guests see what's free and hold it from their phone. The till keeps it for them." }}
+          defaultProps={{ title: "Rooms and tables, booked ahead.", line: "Guests hold a table from their phone and watch the countdown while they walk over." }}
         />
         <Composition
           id="TourLoyalty"
@@ -167,7 +186,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "Every branch, in one place.", line: "Each branch keeps its own prices and hours. Guests are sent to the one nearest them." }}
+          defaultProps={{ title: "Every branch, one dashboard.", line: "Each branch keeps its own prices and hours. Guests are sent to the one nearest them." }}
         />
         <Composition
           id="TourAiMenu"
@@ -212,7 +231,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ recap: "Your brand · Table ordering · Pay & split · Rooms & tables · Loyalty · Till · Kitchen · Own delivery · Branches · Menu scan · Photo studio · Stock & recipes · Food cost · Profit · Payroll · Ask your café", tagline: "Everything your café runs on.", url: "ninjapp.net" }}
+          defaultProps={{ headline: "Everything your café runs on.", tagline: "One app for your whole café.", url: "ninjapp.net" }}
         />
       </Folder>
     </>

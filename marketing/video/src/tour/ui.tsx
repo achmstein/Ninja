@@ -32,7 +32,8 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { clamp, geist, jakarta, lift } from "../theme";
+import { clamp, geist, jakarta, lift, surfer } from "../theme";
+import { AR, plexArabic, useLang } from "./lang";
 
 export const S = {
   bg: "#ffffff",
@@ -117,7 +118,9 @@ export const GuestPhone: React.FC<{
   font?: string;
   screen?: string;
   darkStatus?: boolean;
-}> = ({ x, y, height, children, style, font = jakarta, screen = S.bg, darkStatus }) => {
+  label?: string;
+}> = ({ x, y, height, children, style, font = jakarta, screen = S.bg, darkStatus, label }) => {
+  const ar = useLang() === "ar";
   const bezel = height * 0.018;
   const inner = height - bezel * 2;
   const k = inner / 844;
@@ -137,6 +140,35 @@ export const GuestPhone: React.FC<{
         ...style,
       }}
     >
+      {label ? (
+        <div
+          style={{
+            position: "absolute",
+            top: -46,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <span
+            style={{
+              padding: "6px 16px",
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.85)",
+              border: "1px solid #fff",
+              boxShadow: "0 8px 20px -10px rgba(15,23,42,0.3)",
+              fontFamily: ar ? plexArabic : geist,
+              fontSize: 18,
+              fontWeight: 600,
+              color: S.fg,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {ar ? (AR.labels[label] ?? label) : label}
+          </span>
+        </div>
+      ) : null}
       <div
         style={{
           position: "relative",
@@ -623,7 +655,7 @@ export const AdminShell: React.FC<{
                   display: "flex",
                   alignItems: "center",
                   gap: 9,
-                  height: 28,
+                  height: 26,
                   padding: "0 8px",
                   borderRadius: 8,
                   fontSize: 13,
@@ -640,6 +672,20 @@ export const AdminShell: React.FC<{
           })}
         </div>
       ))}
+    </div>
+    <div
+      style={{
+        position: "absolute",
+        left: 18,
+        bottom: 14,
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 11,
+        color: S.mutedFg,
+      }}
+    >
+      Powered by <span style={{ fontFamily: surfer, fontSize: 17, color: S.fg }}>ninja</span>
     </div>
     <div
       style={{
