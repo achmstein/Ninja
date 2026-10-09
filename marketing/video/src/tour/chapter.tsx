@@ -30,11 +30,13 @@ export const Chapter: React.FC<{
   style?: React.CSSProperties;
   copyWidth?: number;
   children: React.ReactNode;
-}> = ({ look, n, eyebrow, title, mark, line, style, copyWidth, children }) => {
+}> = ({ look: baseLook, n, eyebrow, title, mark, line, style, copyWidth, children }) => {
   // In the Arabic tour every chapter's words come from lang.ts.
   const lang = useLang();
   const ar = lang === "ar" ? AR_CHAPTERS[n] : EN_CHAPTERS[n];
   const hero = useHero();
+  const look: Look = hero?.look ?? baseLook;
+  const isDark = look === "dark" || look === "neon";
   const { style: camera, zoom } = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar", hero?.rate ?? 1);
   const devices =
     lang === "ar" ? (
@@ -49,9 +51,9 @@ export const Chapter: React.FC<{
     return (
       <AbsoluteFill style={style}>
         <Stage look={look} backdropBlur={Math.max(0, zoom - 1) * 18}>
-          <Badge dark={look === "dark"} rtl={lang === "ar"} />
+          <Badge dark={isDark} rtl={lang === "ar"} />
           <AbsoluteFill style={camera}>{devices}</AbsoluteFill>
-          <HeroTitle text={lang === "ar" ? hero.titleAr : hero.title} />
+          <HeroTitle text={lang === "ar" ? hero.titleAr : hero.title} dark={isDark} />
         </Stage>
       </AbsoluteFill>
     );
@@ -59,7 +61,7 @@ export const Chapter: React.FC<{
   return (
   <AbsoluteFill style={style}>
     <Stage look={look}>
-      <Badge dark={look === "dark"} rtl={lang === "ar"} />
+      <Badge dark={isDark} rtl={lang === "ar"} />
       {devices}
       <Copy
         n={n}
@@ -68,7 +70,7 @@ export const Chapter: React.FC<{
         mark={ar?.mark ?? mark}
         line={ar?.line ?? line}
         chips={[]}
-        dark={look === "dark"}
+        dark={isDark}
         width={copyWidth}
         rtl={lang === "ar"}
       />

@@ -15,6 +15,7 @@ import { Intro } from "./tour/Intro";
 import { AiMenu, Assistant as TourAssistant, Profit, Stock } from "./tour/owner";
 import { Branches } from "./tour/team";
 import { Fast } from "./tour/Fast";
+import { Gaming, GAMING_FRAMES } from "./tour/gaming";
 import { Tour } from "./tour/Tour";
 
 export const RemotionRoot: React.FC = () => {
@@ -81,6 +82,24 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       </Folder>
+      <Composition
+        id="Gaming"
+        component={Gaming}
+        durationInFrames={GAMING_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const }}
+      />
+      <Composition
+        id="GamingAr"
+        component={Gaming}
+        durationInFrames={GAMING_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "ar" as const }}
+      />
       <Composition
         id="Hero"
         component={Fast}

@@ -42,6 +42,7 @@ import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp, geist, inter, jakarta, lift, surfer } from "../theme";
 import { alexandria, AR, DeviceContext, kufi, plexArabic, useLang, useT, useUnmirror } from "./lang";
 import { Sfx } from "./sfx";
+import { useBiz } from "./businesses";
 import { loadFont as loadPacifico } from "@remotion/google-fonts/Pacifico";
 
 const { fontFamily: pacifico } = loadPacifico("normal", { weights: ["400"], subsets: ["latin"] });
@@ -413,7 +414,10 @@ export const TopBar: React.FC<{
   brand?: string;
   color?: string;
   logo?: (color: string, height: number) => React.ReactNode;
-}> = ({ color = S.fg, logo }) => {
+}> = ({ color: c, logo: l }) => {
+  const biz = useBiz();
+  const logo = l ?? biz.logo;
+  const color = c ?? biz.primary ?? S.fg;
   return (
   <div
     style={{
@@ -466,11 +470,13 @@ const TABS: { label: Tab; Icon: LucideIcon }[] = [
 // The floating slab dock: an optional top row (tray or bill) above the three tabs.
 export const Dock: React.FC<{ active?: Tab; slab?: string; row?: React.ReactNode; rowAt?: number }> = ({
   active = "Menu",
-  slab = S.slab,
+  slab: sl,
   row,
   rowAt = 0,
 }) => {
   const frame = useCurrentFrame();
+  const biz = useBiz();
+  const slab = sl ?? biz.slab ?? S.slab;
   const t = useT();
   const rowH = row ? interpolate(frame, [rowAt, rowAt + 10], [0, 68], clamp) : 0;
   return (

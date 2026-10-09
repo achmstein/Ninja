@@ -5,6 +5,7 @@ import { loadFont as loadAnton } from "@remotion/google-fonts/Anton";
 import { loadFont as loadBungee } from "@remotion/google-fonts/Bungee";
 import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
 import type React from "react";
+import { createContext, useContext } from "react";
 import { DISHES } from "./ui";
 
 const { fontFamily: anton } = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
@@ -20,6 +21,13 @@ export type Business = {
   items: Item[];
   // A wordmark drawn in the brand colour (the café's is CafeLogo in ui.tsx).
   logo?: (color: string, height: number) => React.ReactNode;
+  // The brand colour the app wears, and its dock's deep shade.
+  primary?: string;
+  slab?: string;
+  // What its Book tab lists; the first free one is the one booked.
+  places?: { name: string; free: boolean; note: string; rate?: string; status?: string }[];
+  // The bill the pay scene shows: who had what; `mine` are ticked for this customer.
+  bill?: { where: string; lines: { name: string; price: number; mine?: boolean }[] };
 };
 
 const fromDishes = (k: keyof typeof DISHES): Item => ({ key: k, ...DISHES[k] });
@@ -72,9 +80,26 @@ export const BUSINESSES: Business[] = [
   },
   {
     id: "levelup",
-    kind: "Game station",
+    kind: "PlayStation lounge",
     name: "Level Up",
+    primary: "#7c3aed",
+    slab: "#1a0b33",
     categories: ["Snacks", "Drinks", "Combos", "Sweets"],
+    places: [
+      { name: "PS5 Room 1", free: true, note: "PS5 · up to 4 players", rate: "60/hour" },
+      { name: "PS5 Room 2", free: false, note: "PS5 · up to 4 players", status: "Occupied" },
+      { name: "VIP Room", free: true, note: "PS5 · 75-inch screen", rate: "90/hour" },
+      { name: "PS4 Room 3", free: false, note: "PS4 · up to 4 players", status: "Reserved" },
+    ],
+    bill: {
+      where: "PS5 Room 1",
+      lines: [
+        { name: "PS5 Room 1 · 2 hours", price: 120 },
+        { name: "1x Mini Pizza", price: 120, mine: true },
+        { name: "1x Milkshake", price: 95, mine: true },
+        { name: "1x Loaded Nachos", price: 110 },
+      ],
+    },
     items: [
       { key: "pizza", name: "Mini Pizza", note: "Mozzarella, pepperoni", price: 120, img: "pizza" },
       { key: "nachos", name: "Loaded Nachos", note: "Cheese, salsa, jalapeño", price: 110, img: "nachos" },
@@ -90,3 +115,7 @@ export const BUSINESSES: Business[] = [
 ];
 
 export const businessById = (id: Business["id"]) => BUSINESSES.find((b) => b.id === id) ?? CHILLAX;
+
+// The business the screens show; a film sets it once for all of its scenes.
+export const BizContext = createContext<Business>(CHILLAX);
+export const useBiz = () => useContext(BizContext);

@@ -1,10 +1,11 @@
 // Chapter 04: the Book tab as the mobile app draws it (client_app places_screen,
 // hold_form, reservation_panel, live_visit): pick a room, reserve, and the tab
 // becomes the "Held for you" face with its ring and rolling countdown.
-import { CalendarCheck, Check, Clock, Coffee, DoorOpen, Footprints, Plus, User, X, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Gamepad2, Check, Clock, Coffee, DoorOpen, Footprints, Plus, User, X, type LucideIcon } from "lucide-react";
 import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { clamp, land } from "../theme";
+import { useBiz } from "./businesses";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
 import { plexArabic, useLang } from "./lang";
 import { jakarta } from "../theme";
@@ -58,13 +59,13 @@ const PLACES: Place[] = [
 ];
 
 // The floating dock with the Book tab turned into the hold's live countdown.
-const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: number }> = ({ held, secs, share, tick }) => {
+const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: number; heldName?: string }> = ({ held, secs, share, tick, heldName = "Room 1" }) => {
   const tr = useT();
   const r = 11;
   const c = 2 * Math.PI * r;
   const tabs: { label: string; Icon: LucideIcon; on: boolean }[] = [
     { label: "Menu", Icon: Coffee, on: false },
-    { label: held ? "Room 1" : "Book", Icon: held ? DoorOpen : CalendarCheck, on: true },
+    { label: held ? heldName : "Book", Icon: held ? DoorOpen : CalendarCheck, on: true },
     { label: "You", Icon: User, on: false },
   ];
   return (
@@ -136,6 +137,9 @@ const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: num
 
 const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const biz = useBiz();
+  const places: Place[] = biz.places ? biz.places.map((p) => ({ ...p, Icon: biz.id === "levelup" ? Gamepad2 : DoorOpen })) : PLACES;
+  const first = places[0];
   const ar = useLang() === "ar";
   const tr = useT();
   const { fps } = useVideoConfig();
@@ -176,7 +180,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         <div style={{ opacity: interpolate(frame, [face - 4, face + 4], [1, 0], clamp) }}>
           <PageTitle title="Book" sub="2 free now" />
           <div style={{ position: "absolute", top: 186, left: 16, right: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-            {PLACES.map((p, i) => {
+            {places.map((p, i) => {
               const first = i === 0;
               return (
                 <div
@@ -404,8 +408,8 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               </div>
             </div>
             <div style={{ ...beat(0.3) }}>
-              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr("Room 1")}</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{tr("Up to 6 guests")}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr(first.name)}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{tr(first.note)}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 600, ...beat(0.45) }}>
               <Footprints size={18} /> {tr("Walk over and show this at the counter")}
@@ -430,7 +434,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           </div>
         ) : null}
 
-        <BookDock held={held} secs={secs} share={share} tick={tick} />
+        <BookDock held={held} secs={secs} share={share} tick={tick} heldName={first.name} />
         <Sfx name="success" at={done} />
         <Sfx name="open" at={face} />
         {[1, 2, 3, 4].map((k) => (

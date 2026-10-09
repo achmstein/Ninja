@@ -2,7 +2,7 @@ import { LayoutGrid } from "lucide-react";
 import type React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { clamp, glide } from "../theme";
-import { CHILLAX, type Business, type Item } from "./businesses";
+import { useBiz, type Business, type Item } from "./businesses";
 import { AddButton, Dish, DISHES, S, TopBar } from "./ui";
 import { useT } from "./lang";
 
@@ -27,11 +27,14 @@ export const MenuScreen: React.FC<{
   primary?: string;
   brand?: string;
   brandColor?: string;
-  counts?: Partial<Record<Dishkey, number>>;
+  counts?: Partial<Record<string, number>>;
   enterAt?: number;
   offer?: Dishkey;
   biz?: Business;
-}> = ({ layout = "row", primary = S.primary, brand, brandColor, counts = {}, enterAt = -100, offer, biz = CHILLAX }) => {
+}> = ({ layout = "row", primary: p, brand, brandColor, counts = {}, enterAt = -100, offer, biz: b }) => {
+  const ctx = useBiz();
+  const biz = b ?? ctx;
+  const primary = p ?? biz.primary ?? S.primary;
   const it = biz.items;
   const ROWS = it.slice(0, 5);
   const GRID = [it[0], it[1], it[3], it[4]];

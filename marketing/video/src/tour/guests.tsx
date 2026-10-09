@@ -5,7 +5,7 @@ import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotio
 import { clamp, glide, land } from "../theme";
 import type { Dishkey } from "./menu-screen";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
-import { BUSINESSES } from "./businesses";
+import { BUSINESSES, useBiz } from "./businesses";
 import { MenuScreen, type MenuLayout } from "./menu-screen";
 import { Sfx } from "./sfx";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
@@ -110,11 +110,12 @@ export const TrayRow: React.FC<{ items: string[]; count: number; total: number; 
   button,
 }) => {
   const tr = useT();
+  const biz = useBiz();
   return (
   <div style={{ height: 68, display: "flex", alignItems: "center", gap: 12, padding: "0 12px" }}>
     <div style={{ display: "flex" }}>
       {items.map((k, i) => {
-        const d = DISHES[k as keyof typeof DISHES];
+        const d = biz.items.find((x) => x.key === k) ?? DISHES[k as keyof typeof DISHES];
         return (
           <Dish key={k} img={d.img} size={44} radius={22} style={{ marginLeft: i ? -12 : 0, border: "2px solid #020617" }} />
         );
@@ -149,7 +150,8 @@ export const TrayRow: React.FC<{ items: string[]; count: number; total: number; 
 
 // The dish photo flies from its row into the dock (client_app tray_flights: 620 ms,
 // closes to a circle, arcs up, lands at thumbnail size with a bump).
-export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
+export const Flight: React.FC<{ dish: string; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
+  const biz = useBiz();
   const frame = useCurrentFrame();
   const ar = useLang() === "ar";
   const t = interpolate(frame, [at + 1, at + 20], [0, 1], { ...clamp, easing: (x) => 1 - Math.pow(1 - x, 2.4) });
@@ -168,7 +170,7 @@ export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: nu
     <>
       {sound}
     <Dish
-      img={DISHES[dish].img}
+      img={(biz.items.find((x) => x.key === dish) ?? DISHES[dish as Dishkey]).img}
       size={size}
       radius={interpolate(t, [0, 0.45], [20, size / 2], clamp)}
       style={{
@@ -184,8 +186,9 @@ export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: nu
 };
 
 // "Your order" rises out of the dock (client_app tray.dart), clipped at the row's top.
-export const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }> = ({ openAt, closeAt, lines }) => {
+export const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: string[] }> = ({ openAt, closeAt, lines }) => {
   const frame = useCurrentFrame();
+  const biz = useBiz();
   const tr = useT();
   const up =
     interpolate(frame, [openAt, openAt + 12], [0, 1], { ...clamp, easing: land }) *
@@ -210,7 +213,7 @@ export const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishk
       >
         <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Your order")}</div>
         {lines.map((k) => {
-          const d = DISHES[k];
+          const d = biz.items.find((x) => x.key === k) ?? DISHES[k as Dishkey];
           return (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
               <Dish img={d.img} size={48} radius={24} />

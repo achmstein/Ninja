@@ -6,7 +6,7 @@ import { clamp, inter, land } from "../theme";
 import { plexArabic, useLang } from "./lang";
 import { Sfx } from "./sfx";
 
-type Bubble = { en: string; ar: string; who: string; whoAr: string; x: number; y: number; r: number; tone: string };
+export type Bubble = { en: string; ar: string; who: string; whoAr: string; x: number; y: number; r: number; tone: string };
 const BUBBLES: Bubble[] = [
   { who: "Table 4", whoAr: "ترابيزة 4", en: "Still waiting for our order…", ar: "لسه مستنيين الطلب…", x: 180, y: 170, r: -3, tone: "#ef4444" },
   { who: "Table 7", whoAr: "ترابيزة 7", en: "Can we get the bill?", ar: "ممكن الحساب؟", x: 1120, y: 120, r: 4, tone: "#f59e0b" },
@@ -15,15 +15,26 @@ const BUBBLES: Bubble[] = [
   { who: "Kitchen", whoAr: "المطبخ", en: "Is that order paid?", ar: "الطلب ده اتدفع؟", x: 640, y: 360, r: -2, tone: "#0d9488" },
 ];
 
-export const Hook: React.FC<{ question: string; questionAr: string }> = ({ question, questionAr }) => {
+export const Hook: React.FC<{ question: string; questionAr: string; bubbles?: Bubble[]; neon?: boolean }> = ({
+  question,
+  questionAr,
+  bubbles = BUBBLES,
+  neon,
+}) => {
   const frame = useCurrentFrame();
   const ar = useLang() === "ar";
   const font = ar ? plexArabic : inter;
   const ask = 67;
   const blur = interpolate(frame, [ask - 4, ask + 6], [0, 10], clamp);
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0b0d12" }}>
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, #1a1d26 0%, #0b0d12 70%)" }} />
+    <AbsoluteFill style={{ backgroundColor: neon ? "#04060d" : "#0b0d12" }}>
+      <AbsoluteFill
+        style={{
+          background: neon
+            ? "radial-gradient(ellipse 70% 60% at 75% 20%, rgba(37,99,235,0.3), transparent 70%), radial-gradient(ellipse 60% 50% at 15% 85%, rgba(14,165,233,0.12), transparent 70%)"
+            : "radial-gradient(ellipse 70% 60% at 50% 50%, #1a1d26 0%, #0b0d12 70%)",
+        }}
+      />
       <AbsoluteFill
         style={{
           filter: `blur(${blur}px)`,
@@ -31,7 +42,7 @@ export const Hook: React.FC<{ question: string; questionAr: string }> = ({ quest
           scale: `${interpolate(frame, [0, ask + 30], [1.04, 1])}`,
         }}
       >
-        {BUBBLES.map((b, i) => {
+        {bubbles.map((b, i) => {
           const at = 7 + i * 12;
           const k = interpolate(frame, [at, at + 10], [0, 1], { ...clamp, easing: land });
           return (

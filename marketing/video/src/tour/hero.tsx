@@ -10,7 +10,7 @@ import { Sfx } from "./sfx";
 
 // A camera keyframe in the chapter's own frames: zoom `s` on the stage point (x, y).
 export type Cam = { f: number; s: number; x: number; y: number };
-export type Hero = { title: string; titleAr: string; cam: Cam[]; rate?: number };
+export type Hero = { title: string; titleAr: string; cam: Cam[]; rate?: number; look?: "neon" };
 
 // The music's grid inside a chapter: a beat is 12 frames, a bar 48, and the cut into the
 // chapter falls 7 frames after its start. `beat(k, rate)` is the chapter's own frame of
@@ -45,7 +45,7 @@ export const useCamera = (cam: Cam[], mirrored: boolean, rate = 1): { style: Rea
 };
 
 // The hero title: a few words, big, rising in on the chapter's first beat.
-export const HeroTitle: React.FC<{ text: string }> = ({ text }) => {
+export const HeroTitle: React.FC<{ text: string; dark?: boolean }> = ({ text, dark }) => {
   const frame = useCurrentFrame();
   const ar = useLang() === "ar";
   const words = text.split(" ");
@@ -67,7 +67,8 @@ export const HeroTitle: React.FC<{ text: string }> = ({ text }) => {
         fontWeight: ar ? 700 : 800,
         letterSpacing: ar ? 0 : "-0.045em",
         lineHeight: ar ? 1.25 : 1,
-        color: C.ink,
+        color: dark ? "#fff" : C.ink,
+        textShadow: dark ? "0 2px 30px rgba(37,99,235,0.35)" : undefined,
         zIndex: 30,
       }}
     >

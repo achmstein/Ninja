@@ -5,6 +5,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronUp, CreditCard, Split, Utensils }
 import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotion";
 import { clamp, land } from "../theme";
+import { useBiz } from "./businesses";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
 import { plexArabic, useLang } from "./lang";
 import { jakarta } from "../theme";
@@ -66,7 +67,20 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
     scale: `${interpolate(frame, [at, at + 8], [0.96, 1], { ...clamp, ...enter })}`,
   });
   const stage = frame >= pay + 2 ? "status" : frame >= split + 2 ? "pay" : "bill";
-  const paidAmount = frame >= paid ? 185 : 0;
+  const biz = useBiz();
+  const bill = biz.bill ?? {
+    where: "Table 3",
+    lines: [
+      { name: "1x Latte", price: 75, mine: true },
+      { name: "1x Waffle", price: 110, mine: true },
+      { name: "1x Latte", price: 75 },
+      { name: "2x Iced Mocha", price: 190 },
+    ],
+  };
+  const total = bill.lines.reduce((a, l) => a + l.price, 0);
+  const share = bill.lines.filter((l) => l.mine).reduce((a, l) => a + l.price, 0);
+  const money = (n: number) => `EGP ${n.toFixed(2)}`;
+  const paidAmount = frame >= paid ? share : 0;
 
   return (
     <Chapter
@@ -82,7 +96,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       <GuestPhone x={1330} y={70} height={940} label="Mobile app" style={useEnter(4)}>
         <MenuScreen />
         <Dock
-          row={<BillRow Icon={Check} tone={S.emerald} line="Confirmed · #42" total="EGP 450" pill="Your bill" />}
+          row={<BillRow Icon={Check} tone={S.emerald} line="Confirmed · #42" total={`EGP ${total}`} pill="Your bill" />}
           rowAt={-20}
         />
         <Touch x={330} y={746} at={open} />
@@ -116,7 +130,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Your bill")}</div>
                 <div style={{ marginTop: 14, padding: 20, borderRadius: 28, backgroundColor: ink.tile }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: ink.mutedFg }}>
-                    <Utensils size={14} /> Table 3 · 8:12 PM
+                    <Utensils size={14} /> {tr(bill.where)} · {tr("8:12 PM")}
                     <span
                       style={{
                         marginLeft: "auto",
@@ -136,7 +150,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   </div>
                   <div style={{ fontSize: 13, color: ink.mutedFg, marginTop: 14 }}>{tr("Total")}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: 30, fontWeight: 800 }}>{tr("EGP 450.00")}</div>
+                    <div style={{ fontSize: 30, fontWeight: 800 }}>{tr(money(total))}</div>
                     <div
                       style={{
                         height: 32,
@@ -159,9 +173,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     <div style={{ position: "absolute", left: 6, right: 6, bottom: -6, height: 20, borderRadius: 20, backgroundColor: "#171b29" }} />
                     <div style={{ position: "relative", padding: 12, borderRadius: 20, backgroundColor: "#1d2232", fontSize: 14 }}>
                       {[
-                        ["2x Latte", "150.00"],
-                        ["1x Waffle", "110.00"],
-                        ["2x Iced Mocha", "190.00"],
+                        ...bill.lines.map((l) => [l.name, l.price.toFixed(2)]),
                       ].map(([a, b]) => (
                         <div key={a} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
                           <span>{tr(a)}</span>
@@ -173,7 +185,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 26, fontSize: 14 }}>
                   <span style={{ color: "#34D399" }}>{tr("Paid so far EGP 0.00")}</span>
-                  <span style={{ fontWeight: 700, fontSize: 15 }}>{tr("Remaining EGP 450.00")}</span>
+                  <span style={{ fontWeight: 700, fontSize: 15 }}>{tr(`Remaining ${money(total)}`)}</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
                   <PillButton primary>
@@ -190,7 +202,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   <ArrowLeft size={20} />
                   <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Split bill")}</div>
                 </div>
-                <div style={{ fontSize: 14, color: ink.mutedFg, marginTop: 4, marginLeft: 30 }}>{tr("Remaining: EGP 450.00")}</div>
+                <div style={{ fontSize: 14, color: ink.mutedFg, marginTop: 4, marginLeft: 30 }}>{tr(`Remaining: ${money(total)}`)}</div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginTop: 22 }}>{tr("How do you want to split?")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
                   {["Pay for your items", "Divide equally", "Custom amount"].map((m, i) => (
@@ -202,10 +214,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 {/* Pay for your items: the guest's own items come ticked */}
                 <div style={{ marginTop: 14 }}>
                   {[
-                    { name: "1x Latte", price: "75.00", mine: true },
-                    { name: "1x Waffle", price: "110.00", mine: true },
-                    { name: "1x Latte", price: "75.00", mine: false },
-                    { name: "2x Iced Mocha", price: "190.00", mine: false },
+                    ...bill.lines.map((l) => ({ name: l.name, price: l.price.toFixed(2), mine: !!l.mine })),
                   ].map((it, k) => (
                     <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, padding: "7px 0", fontSize: 14 }}>
                       <span
@@ -230,7 +239,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 <div>
                   <div style={{ borderTop: `1px solid ${ink.border}`, marginTop: 10, paddingTop: 12, fontSize: 14 }}>
                     {[
-                      ["Your share", "EGP 185.00"],
+                      ["Your share", money(share)],
                       ["Online payment fee", "EGP 0.00"],
                     ].map(([a, b]) => (
                       <div key={a} style={{ display: "flex", justifyContent: "space-between", color: ink.mutedFg, padding: "3px 0" }}>
@@ -240,13 +249,13 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     ))}
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
                       <span style={{ fontSize: 18, fontWeight: 700 }}>{tr("You pay")}</span>
-                      <span style={{ fontSize: 18, fontWeight: 700 }}>{tr("EGP 185.00")}</span>
+                      <span style={{ fontSize: 18, fontWeight: 700 }}>{tr(money(share))}</span>
                     </div>
                     <div style={{ fontSize: 12, color: ink.mutedFg, marginTop: 4 }}>{tr("You'll pay on a secure payment page")}</div>
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <PillButton primary press={pay}>
-                      {tr("Pay EGP 185.00")}
+                      {tr(`Pay ${money(share)}`)}
                     </PillButton>
                   </div>
                 </div>
@@ -286,7 +295,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     </div>
                     <div style={{ marginTop: 16, fontSize: 22, fontWeight: 800 }}>{tr("Paid, thank you!")}</div>
                     <div style={{ marginTop: 6, fontSize: 15, color: ink.mutedFg }}>{tr(`EGP ${paidAmount}.00 charged`)}</div>
-                    <div style={{ marginTop: 2, fontSize: 15, color: ink.mutedFg }}>{tr("EGP 265.00 left for your friends")}</div>
+                    <div style={{ marginTop: 2, fontSize: 15, color: ink.mutedFg }}>{tr(`${money(total - share)} left for your friends`)}</div>
                   </div>
                 )}
               </div>
@@ -320,7 +329,7 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             </div>
             <div>
               <div style={{ fontSize: 30, fontWeight: 800 }}>{tr("Paid, thank you!")}</div>
-              <div style={{ fontSize: 20, color: S.mutedFg, marginTop: 2 }}>{tr("EGP 185.00 charged")}</div>
+              <div style={{ fontSize: 20, color: S.mutedFg, marginTop: 2 }}>{tr(`${money(share)} charged`)}</div>
             </div>
           </div>
       </PopOut>

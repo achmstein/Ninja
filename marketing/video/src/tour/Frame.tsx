@@ -6,7 +6,8 @@ import { Sfx } from "./sfx";
 
 // The tour's looks, one per kind of chapter (from the shortlist):
 // light = Apple-style launch, glass = liquid glass, dark = the till/kitchen reel.
-export type Look = "light" | "glass" | "dark";
+// neon = the game lounge at night: deep navy-black, a soft blue key light, drifting dust.
+export type Look = "light" | "glass" | "dark" | "neon";
 
 export const Stage: React.FC<{ look: Look; children: React.ReactNode; backdropBlur?: number }> = ({
   look,
@@ -17,9 +18,16 @@ export const Stage: React.FC<{ look: Look; children: React.ReactNode; backdropBl
   const drift = Math.sin(frame / 50) * 40;
   const dark = look === "dark";
   return (
-    <AbsoluteFill style={{ backgroundColor: dark ? C.night : look === "glass" ? "#eef0f6" : C.page, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor: look === "neon" ? "#04060d" : dark ? C.night : look === "glass" ? "#eef0f6" : C.page,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill style={{ filter: backdropBlur > 0.5 ? `blur(${backdropBlur}px)` : undefined }}>
-      {look === "glass" ? (
+      {look === "neon" ? (
+        <NightLights />
+      ) : look === "glass" ? (
         <>
           <Blob color="99 102 241" alpha={0.45} size={1100} left={1000 + drift} top={-300} />
           <Blob color="245 158 11" alpha={0.4} size={900} left={1400} top={400 - drift} />
@@ -46,6 +54,73 @@ export const Stage: React.FC<{ look: Look; children: React.ReactNode; backdropBl
       </AbsoluteFill>
       {children}
     </AbsoluteFill>
+  );
+};
+
+// The lounge at night, lit like a console launch film: a deep navy-black room, one
+// soft blue key light, a faint cool rim, slow drifting dust in the light, and a floor
+// that catches a little of it. Restrained on purpose: the screens are the light source.
+const NightLights: React.FC = () => {
+  const frame = useCurrentFrame();
+  const t = frame / 30;
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+          right: -300 + Math.sin(t * 0.25) * 60,
+          top: -500,
+          width: 1700,
+          height: 1300,
+          background: "radial-gradient(ellipse at center, rgba(37,99,235,0.42) 0%, rgba(30,58,138,0.18) 35%, transparent 65%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          left: -500,
+          bottom: -600 + Math.cos(t * 0.3) * 40,
+          width: 1500,
+          height: 1100,
+          background: "radial-gradient(ellipse at center, rgba(14,165,233,0.16) 0%, transparent 60%)",
+        }}
+      />
+      {/* Dust in the light */}
+      {Array.from({ length: 34 }, (_, k) => {
+        const seed = (k * 9301 + 49297) % 233280;
+        const r = (n: number) => ((seed * (n + 1) * 16807) % 2147483647) / 2147483647;
+        const x = (r(1) * 1920 + t * (6 + r(2) * 10)) % 1920;
+        const y = (r(3) * 1080 - t * (4 + r(4) * 8) + 1080) % 1080;
+        const size = 1.5 + r(5) * 3.5;
+        return (
+          <div
+            key={k}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              width: size,
+              height: size,
+              borderRadius: "50%",
+              backgroundColor: "rgba(191,219,254,0.9)",
+              opacity: 0.15 + 0.35 * Math.abs(Math.sin(t * (0.6 + r(6)) + k)),
+              filter: size > 3.5 ? "blur(1.5px)" : undefined,
+            }}
+          />
+        );
+      })}
+      {/* The floor */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 340,
+          background: "linear-gradient(to top, rgba(30,64,175,0.22), transparent)",
+        }}
+      />
+    </>
   );
 };
 
