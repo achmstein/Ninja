@@ -7,7 +7,7 @@ import {
   type InteractivitySchema,
 } from "remotion";
 import { Backdrop, Headline, Phone, Step, Tap, useRise } from "../parts";
-import { C, clamp, glide, land } from "../theme";
+import { C, clamp, geist, glide, land } from "../theme";
 
 const MARGINS = [
   { name: "Iced Mocha", pct: 38 },
@@ -38,7 +38,7 @@ const AssistantInner: React.FC<Props> = ({ headline, question, style }) => {
       <Step n="04" label="Ninja AI" />
       <Headline text={headline} mark="anything." at={2} />
 
-      <Phone style={{ ...phone }} screen="#f8fafc">
+      <Phone style={{ ...phone }} screen="#f8fafc" font={geist}>
         <div
           style={{
             position: "absolute",

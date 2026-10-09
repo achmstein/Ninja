@@ -157,7 +157,8 @@ export const Phone: React.FC<{
   children: React.ReactNode;
   style?: React.CSSProperties;
   screen?: string;
-}> = ({ children, style, screen = "#fff" }) => (
+  font?: string;
+}> = ({ children, style, screen = "#fff", font = inter }) => (
   <div
     style={{
       position: "absolute",
@@ -180,7 +181,7 @@ export const Phone: React.FC<{
         borderRadius: 76,
         overflow: "hidden",
         backgroundColor: screen,
-        fontFamily: inter,
+        fontFamily: font,
       }}
     >
       {children}
