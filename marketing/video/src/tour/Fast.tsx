@@ -16,11 +16,11 @@ import { Pay } from "./pay";
 import { Sfx } from "./sfx";
 import { Branches } from "./team";
 
-// The fast cut (~68 s): the hero moments with the camera on the action, one short title
+// The fast cut (~69 s): the hero moments with the camera on the action, one short title
 // each, a word beat, a montage of the back office at double speed, every cut on a bar
 // of the 150 BPM track (12 frames a beat). The long tour is Tour.tsx.
 const next = () => springTiming({ config: { damping: 200 }, durationInFrames: 15 });
-const CUTS = [151, 343, 391, 823, 1015, 1207, 1303, 1399, 1495, 1591, 1831];
+const CUTS = [151, 343, 391, 823, 1015, 1207, 1303, 1447, 1543, 1639, 1879];
 
 const H: Record<string, Hero> = {
   brand: { title: "Any place. Your look.", titleAr: "أي مكان، بشكلك.", cam: [{ f: 0, s: 1.08, x: 1556, y: 540 }] },
@@ -50,7 +50,7 @@ const H: Record<string, Hero> = {
   },
   branches: { rate: 2.2, title: "Every branch.", titleAr: "كل الفروع.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
   menu: {
-    rate: 2.2,
+    rate: 1.8,
     title: "Menu from a photo.",
     titleAr: "المنيو من صورة.",
     cam: [
@@ -137,9 +137,9 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={111} premountFor={fps}>
+        <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={159} premountFor={fps}>
           <HeroContext.Provider value={H.menu}>
-            <AiMenu {...P} playbackRate={2.2} />
+            <AiMenu {...P} playbackRate={1.8} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={pan()} timing={next()} />

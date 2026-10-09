@@ -12,15 +12,17 @@ import { PopOut } from "./hero";
 import { Sfx } from "./sfx";
 
 // A photo of paper (a printed menu, a supplier's receipt) with the scan beam passing over it.
-const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: number; scanFrom: number }> = ({
+const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: number; scanFrom: number; until?: number }> = ({
   x,
   y,
   w,
   src,
   rotate,
   scanFrom,
+  until = 99999,
 }) => {
   const frame = useCurrentFrame();
+  const enter: React.CSSProperties = useEnter(2, -200);
   const unmirror = useUnmirror();
   return (
     <div
@@ -33,8 +35,9 @@ const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: nu
         overflow: "hidden",
         boxShadow: "0 40px 80px -30px rgba(15,23,42,0.55)",
         rotate: `${rotate}deg`,
-        ...useEnter(2, -200),
+        ...enter,
         ...unmirror,
+        opacity: (typeof enter.opacity === "number" ? enter.opacity : 1) * interpolate(frame, [until, until + 10], [1, 0], clamp),
       }}
     >
       <Img src={staticFile(src)} style={{ width: "100%", display: "block" }} />
@@ -228,7 +231,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         </AdminShell>
       </Screen>
 
-      <Paper x={800} y={450} w={360} src="paper-menu.jpg" rotate={-5} scanFrom={20} />
+      <Paper x={800} y={450} w={360} src="paper-menu.jpg" rotate={-5} scanFrom={20} until={studio - 6} />
 
       {/* Photo studio: the owner's quick phone snap, then the studio's shot */}
       <Glass

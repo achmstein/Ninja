@@ -23,6 +23,7 @@ import {
 } from "remotion";
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, glide, inter, land } from "../theme";
+import { AppIconRow } from "./AppIcons";
 import { Stage } from "./Frame";
 import { AR, plexArabic, useLang } from "./lang";
 import { Sfx } from "./sfx";
@@ -262,6 +263,7 @@ const FinaleInner: React.FC<Props> = ({ headline: h, tagline: tl, url, style }) 
           >
             {url}
           </div>
+          <AppIconRow at={fold + 48} size={76} gap={34} style={{ marginTop: 56 }} />
         </AbsoluteFill>
       </Stage>
     </AbsoluteFill>

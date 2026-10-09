@@ -3,6 +3,7 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, inter } from "../theme";
+import { AppIconRow } from "./AppIcons";
 import { plexArabic, useLang } from "./lang";
 
 const ease = Easing.bezier(0.22, 1, 0.36, 1);
@@ -12,7 +13,7 @@ export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, line
   const ar = useLang() === "ar";
   const text = ar ? lineAr : line;
   return (
-    <AbsoluteFill style={{ backgroundColor: "#fafaf9", justifyContent: "center", alignItems: "center" }}>
+    <AbsoluteFill style={{ backgroundColor: "#fafaf9", justifyContent: "center", alignItems: "center", paddingBottom: 170 }}>
       <AbsoluteFill style={{ background: "radial-gradient(ellipse 60% 50% at 50% 45%, #ffffff 0%, #fafaf9 70%, #f0efed 100%)" }} />
       <div
         style={{
@@ -47,6 +48,8 @@ export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, line
           {text}
         </div>
       </div>
+      {/* The apps, one per beat */}
+      <AppIconRow at={80} size={92} gap={40} style={{ position: "absolute", top: 800 }} />
     </AbsoluteFill>
   );
 };
