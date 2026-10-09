@@ -15,7 +15,13 @@ The fonts follow the apps:
 |---|---|---|---|
 | **Tour** | 1920 × 1080 | 1:57 | Café owners: every feature idea, chapter by chapter (YouTube, the website, sales calls) |
 | **TourAr** | 1920 × 1080 | 1:57 | The same tour in Arabic, right to left: the stage is mirrored and every app shows its own Arabic interface (strings from the apps' translation files, each app's Arabic font, prices as ج.م) |
+| **Hero** | 1920 × 1080 | 1:08 | The fast cut: the app lineup, the drop, "Any place. Your look.", a word beat (Order. Cook. Deliver.), one order through every app at 1.75×, the camera pushing into the bill and the countdown, a double-speed montage of the back office, Ask your café, the end card |
+| **HeroAr** | 1920 × 1080 | 1:08 | The fast cut in Arabic, right to left |
 | **Promo** | 1080 × 1920 | 0:22 | Reels, TikTok, Shorts: order → kitchen → rider → ask your café |
+
+## The fast cut (`src/tour/Fast.tsx`)
+
+The same chapters in "hero" mode (`src/tour/hero.tsx`): no copy column, one short title, and a camera that pushes in on the action (keyframes per chapter in `Fast.tsx`). The back office plays at 2.2× as a montage. Every cut lands on a bar of the music, and the drop hits the first cut.
 
 ## The tour (`src/tour/`)
 
@@ -55,6 +61,8 @@ npm i
 npm run dev                                       # Remotion Studio: preview, scrub, edit each chapter's text
 npx remotion render Tour out/ninja-tour.mp4       # out/ is git-ignored
 npx remotion render TourAr out/ninja-tour-ar.mp4
+npx remotion render Hero out/ninja-hero.mp4
+npx remotion render HeroAr out/ninja-hero-ar.mp4
 npx remotion render Promo out/ninja-promo.mp4
 npx remotion still TourStock out/frame.png --frame=160
 ```

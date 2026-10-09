@@ -1,0 +1,162 @@
+import { Audio } from "@remotion/media";
+import { springTiming, TransitionSeries } from "@remotion/transitions";
+import { pushCut } from "@remotion/transitions/push-cut";
+import type React from "react";
+import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { Book } from "./book";
+import { Finale } from "./Finale";
+import { Brand } from "./guests";
+import { HeroContext, WordBeat, type Hero } from "./hero";
+import { Intro } from "./Intro";
+import { Journey } from "./journey";
+import { LangContext, type Lang } from "./lang";
+import { AiMenu, Assistant, Profit, Stock } from "./owner";
+import { Pay } from "./pay";
+import { Sfx } from "./sfx";
+import { Branches } from "./team";
+
+// The fast cut (~68 s): the hero moments with the camera on the action, one short title
+// each, a word beat, a montage of the back office at double speed, every cut on a bar
+// of the 150 BPM track (12 frames a beat). The long tour is Tour.tsx.
+const next = () => springTiming({ config: { damping: 200 }, durationInFrames: 15 });
+const CUTS = [151, 343, 391, 823, 1015, 1207, 1303, 1399, 1495, 1591, 1831];
+
+const H: Record<string, Hero> = {
+  brand: { title: "Any place. Your look.", titleAr: "أي مكان، بشكلك.", cam: [{ f: 0, s: 1.08, x: 1556, y: 540 }] },
+  pay: {
+    title: "Split the bill.",
+    titleAr: "قسّم الحساب.",
+    cam: [
+      { f: 0, s: 1, x: 1556, y: 540 },
+      { f: 30, s: 1, x: 1556, y: 540 },
+      { f: 50, s: 1.45, x: 1556, y: 600 },
+      { f: 260, s: 1.45, x: 1556, y: 600 },
+    ],
+  },
+  book: {
+    title: "Hold a table.",
+    titleAr: "احجز ترابيزة.",
+    cam: [
+      { f: 0, s: 1, x: 1556, y: 540 },
+      { f: 40, s: 1.35, x: 1556, y: 400 },
+      { f: 150, s: 1.35, x: 1556, y: 400 },
+      { f: 172, s: 1.6, x: 1556, y: 420 },
+      { f: 260, s: 1.6, x: 1556, y: 420 },
+    ],
+  },
+  branches: { title: "Every branch.", titleAr: "كل الفروع.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
+  menu: {
+    title: "Menu from a photo.",
+    titleAr: "المنيو من صورة.",
+    cam: [
+      { f: 0, s: 0.92, x: 1130, y: 520 },
+      { f: 150, s: 0.92, x: 1130, y: 520 },
+      { f: 176, s: 1.35, x: 1520, y: 740 },
+      { f: 300, s: 1.35, x: 1520, y: 740 },
+    ],
+  },
+  stock: { title: "Every dish costed.", titleAr: "تكلفة كل صنف.", cam: [{ f: 0, s: 0.95, x: 1150, y: 520 }] },
+  profit: { title: "Profit, live.", titleAr: "مكسبك لايف.", cam: [{ f: 0, s: 1.1, x: 1320, y: 470 }] },
+  ask: {
+    title: "Ask your café.",
+    titleAr: "اسأل الكافيه بتاعك.",
+    cam: [
+      { f: 0, s: 1, x: 1320, y: 540 },
+      { f: 60, s: 1.2, x: 1320, y: 430 },
+      { f: 170, s: 1.2, x: 1320, y: 430 },
+      { f: 200, s: 1.2, x: 1320, y: 650 },
+    ],
+  },
+};
+
+const P = { title: "", line: "" };
+
+export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
+  const { fps, durationInFrames } = useVideoConfig();
+  const frame = useCurrentFrame();
+  return (
+    <LangContext.Provider value={lang}>
+      {/* The same track as the tour, started 235 frames in so its drop hits the first cut. */}
+      <Audio
+        name="Music"
+        src={staticFile("tour-music-hype.mp3")}
+        trimBefore={235}
+        premountFor={fps}
+        volume={interpolate(frame, [0, 0.3 * fps, durationInFrames - 2 * fps, durationInFrames - 1], [0, 0.85, 0.85, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        })}
+      />
+      <Sfx name="riser" at={CUTS[0] - 44} />
+      <Sfx name="impact" at={CUTS[0] - 1} />
+      {CUTS.map((c) => (
+        <Sfx key={c} name="whoosh" at={c - 9} />
+      ))}
+      <TransitionSeries>
+        <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
+          <Intro headline="Your whole café, in one place." features="Ordering · Payments · Reservations · Loyalty · Delivery · Stock · Profit" />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Any place" durationInFrames={207} premountFor={fps}>
+          <HeroContext.Provider value={H.brand}>
+            <Brand {...P} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Order. Cook. Deliver." durationInFrames={63} premountFor={fps}>
+          <WordBeat words={["Order.", "Cook.", "Deliver."]} wordsAr={["اطلب.", "جهّز.", "وصّل."]} />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="One order" durationInFrames={447} premountFor={fps}>
+          <Journey headline="" minimal playbackRate={1.75} />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Split the bill" durationInFrames={207} premountFor={fps}>
+          <HeroContext.Provider value={H.pay}>
+            <Pay {...P} playbackRate={1.25} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Hold a table" durationInFrames={207} premountFor={fps}>
+          <HeroContext.Provider value={H.book}>
+            <Book {...P} playbackRate={1.25} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Every branch" durationInFrames={111} premountFor={fps}>
+          <HeroContext.Provider value={H.branches}>
+            <Branches {...P} playbackRate={2.2} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={111} premountFor={fps}>
+          <HeroContext.Provider value={H.menu}>
+            <AiMenu {...P} playbackRate={2.2} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Every dish costed" durationInFrames={111} premountFor={fps}>
+          <HeroContext.Provider value={H.stock}>
+            <Stock {...P} playbackRate={2.2} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Profit, live" durationInFrames={111} premountFor={fps}>
+          <HeroContext.Provider value={H.profit}>
+            <Profit {...P} playbackRate={2.2} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="Ask your café" durationInFrames={255} premountFor={fps}>
+          <HeroContext.Provider value={H.ask}>
+            <Assistant {...P} playbackRate={1.25} />
+          </HeroContext.Provider>
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
+          <Finale headline="Everything your café runs on." tagline="One app for your whole café." url="ninjapp.net" />
+        </TransitionSeries.Sequence>
+      </TransitionSeries>
+    </LangContext.Provider>
+  );
+};

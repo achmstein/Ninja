@@ -14,6 +14,7 @@ import { Pay } from "./tour/pay";
 import { Intro } from "./tour/Intro";
 import { AiMenu, Assistant as TourAssistant, Profit, Stock } from "./tour/owner";
 import { Branches } from "./tour/team";
+import { Fast } from "./tour/Fast";
 import { Tour } from "./tour/Tour";
 
 export const RemotionRoot: React.FC = () => {
@@ -80,6 +81,24 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       </Folder>
+      <Composition
+        id="Hero"
+        component={Fast}
+        durationInFrames={2034}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const }}
+      />
+      <Composition
+        id="HeroAr"
+        component={Fast}
+        durationInFrames={2034}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "ar" as const }}
+      />
       <Composition
         id="Tour"
         component={Tour}

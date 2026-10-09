@@ -334,9 +334,9 @@ const GuestStatus: React.FC = () => {
   );
 };
 
-type Props = { readonly headline: string; readonly style?: React.CSSProperties };
+type Props = { readonly headline: string; readonly minimal?: boolean; readonly style?: React.CSSProperties };
 
-const JourneyInner: React.FC<Props> = ({ headline, style }) => {
+const JourneyInner: React.FC<Props> = ({ headline, minimal, style }) => {
   const frame = useCurrentFrame();
   const tr = useT();
   const ar = useLang() === "ar";
@@ -504,7 +504,7 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
             direction: ar ? "rtl" : "ltr",
           }}
         >
-          <div style={{ fontSize: 28, fontWeight: 600, color: C.muted }}>{head}</div>
+          {minimal ? null : <div style={{ fontSize: 28, fontWeight: 600, color: C.muted }}>{head}</div>}
           <div key={station} style={{ marginTop: 22 }}>
             <div
               style={{
@@ -535,6 +535,7 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
                 {cap.title}
               </span>
             </div>
+            {minimal ? null : (
             <div
               style={{
                 marginTop: 22,
@@ -547,6 +548,7 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
             >
               {cap.line}
             </div>
+            )}
           </div>
           {/* Progress: four dots, one per app */}
           <div style={{ display: "flex", gap: 10, marginTop: 44 }}>

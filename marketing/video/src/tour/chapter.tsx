@@ -3,6 +3,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, type Intera
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, land } from "../theme";
 import { Copy, Stage, type Look } from "./Frame";
+import { HeroTitle, useCamera, useHero } from "./hero";
 import { AR_CHAPTERS, DeviceContext, MirrorContext, plexArabic, useLang, useUnmirror } from "./lang";
 
 export type ChapterProps = {
@@ -31,18 +32,35 @@ export const Chapter: React.FC<{
   children: React.ReactNode;
 }> = ({ look, n, eyebrow, title, mark, line, style, copyWidth, children }) => {
   // In the Arabic tour every chapter's words come from lang.ts.
-  const ar = useLang() === "ar" ? AR_CHAPTERS[n] : undefined;
+  const lang = useLang();
+  const ar = lang === "ar" ? AR_CHAPTERS[n] : undefined;
+  const hero = useHero();
+  const camera = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar");
+  const devices =
+    lang === "ar" ? (
+      <MirrorContext.Provider value>
+        <AbsoluteFill style={{ transform: "scaleX(-1)" }}>{children}</AbsoluteFill>
+      </MirrorContext.Provider>
+    ) : (
+      children
+    );
+  if (hero) {
+    // The fast cut: one short title, the camera on the action, no copy column.
+    return (
+      <AbsoluteFill style={style}>
+        <Stage look={look}>
+          <Badge dark={look === "dark"} rtl={lang === "ar"} />
+          <AbsoluteFill style={camera}>{devices}</AbsoluteFill>
+          <HeroTitle text={lang === "ar" ? hero.titleAr : hero.title} />
+        </Stage>
+      </AbsoluteFill>
+    );
+  }
   return (
   <AbsoluteFill style={style}>
     <Stage look={look}>
       <Badge dark={look === "dark"} rtl={ar !== undefined} />
-      {ar ? (
-        <MirrorContext.Provider value>
-          <AbsoluteFill style={{ transform: "scaleX(-1)" }}>{children}</AbsoluteFill>
-        </MirrorContext.Provider>
-      ) : (
-        children
-      )}
+      {devices}
       <Copy
         n={n}
         eyebrow={ar?.eyebrow ?? eyebrow}
