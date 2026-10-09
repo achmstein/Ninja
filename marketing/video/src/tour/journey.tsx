@@ -48,16 +48,16 @@ const camAt = (f: number) =>
 type Caption = { step: string; title: string; line: string; chips: string[] };
 const CAPTIONS: Record<"en" | "ar", Caption[]> = {
   en: [
-    { step: "1", title: "The guest orders.", line: "From the app or the web: photo menu, notes, delivery or the table.", chips: ["Photo menu", "Delivery", "Pay online or cash"] },
-    { step: "2", title: "The till confirms.", line: "The order pops up on the till: one tap to confirm, one to send a rider.", chips: ["One-tap confirm", "Assign a rider", "Receipt printed"] },
-    { step: "3", title: "The kitchen cooks.", line: "The ticket lands instantly and counts its wait time.", chips: ["Live tickets", "Notes in amber", "Ready in a tap"] },
-    { step: "4", title: "Your rider delivers.", line: "Your own rider, no commission. The guest follows every step to the door.", chips: ["Rider app", "Cash to collect", "Live status"] },
+    { step: "1", title: "Customers order from the table.", line: "They scan the table's code and send the order, without waiting to catch a waiter.", chips: ["Photo menu", "Delivery", "Pay online or cash"] },
+    { step: "2", title: "The till takes it.", line: "The order arrives at the till. Confirm it and pick a rider.", chips: ["One-tap confirm", "Assign a rider", "Receipt printed"] },
+    { step: "3", title: "The kitchen screen gets it.", line: "The kitchen screen shows it right away, with its notes.", chips: ["Live tickets", "Notes in amber", "Ready in a tap"] },
+    { step: "4", title: "Your rider delivers it.", line: "Your own rider takes it, and the customer follows it to the door.", chips: ["Rider app", "Cash to collect", "Live status"] },
   ],
   ar: [
-    { step: "1", title: "العميل يطلب.", line: "من الأبلكيشن أو الويب: منيو بالصور، ملاحظات، دليفري أو على الترابيزة.", chips: ["منيو بالصور", "دليفري", "دفع أونلاين أو كاش"] },
-    { step: "2", title: "الكاشير يأكد.", line: "الطلب بيظهر على الكاشير: لمسة يأكده، ولمسة يبعت طيار.", chips: ["تأكيد بلمسة", "اختيار الطيار", "الإيصال بيتطبع"] },
-    { step: "3", title: "المطبخ يجهّز.", line: "التذكرة بتوصل في ساعتها وبتعدّ وقت الانتظار.", chips: ["تذاكر لايف", "الملاحظات واضحة", "جاهز بلمسة"] },
-    { step: "4", title: "الطيار بتاعك يوصّل.", line: "طيارك إنت ومن غير عمولة، والعميل يتابع كل خطوة لحد الباب.", chips: ["أبلكيشن الطيار", "الكاش المطلوب", "حالة لايف"] },
+    { step: "1", title: "العميل بيطلب من الترابيزة.", line: "بيعمل سكان لكود الترابيزة ويبعت الطلب، من غير ما يستنى حد.", chips: ["منيو بالصور", "دليفري", "دفع أونلاين أو كاش"] },
+    { step: "2", title: "الكاشير بيستلمه.", line: "الطلب بيوصل للكاشير، يأكده ويختار المندوب.", chips: ["تأكيد بلمسة", "اختيار الطيار", "الإيصال بيتطبع"] },
+    { step: "3", title: "شاشة المطبخ بتستقبله.", line: "شاشة المطبخ بتعرضه على طول بملاحظاته.", chips: ["تذاكر لايف", "الملاحظات واضحة", "جاهز بلمسة"] },
+    { step: "4", title: "المندوب بيوصّله.", line: "المندوب بتاعك بياخده، والعميل بيتابعه لحد الباب.", chips: ["أبلكيشن الطيار", "الكاش المطلوب", "حالة لايف"] },
   ],
 };
 
@@ -519,6 +519,7 @@ const JourneyInner: React.FC<Props> = ({ headline, minimal, style }) => {
                 style={{
                   width: 64,
                   height: 64,
+                  flexShrink: 0,
                   borderRadius: "50%",
                   backgroundColor: C.ink,
                   color: "#fff",
@@ -571,7 +572,7 @@ const JourneyInner: React.FC<Props> = ({ headline, minimal, style }) => {
 };
 
 const schema = {
-  headline: { type: "text-content", default: "Follow one order through every app.", description: "Line over the steps" },
+  headline: { type: "text-content", default: "One order, from the table to the door.", description: "Line over the steps" },
 } as const satisfies InteractivitySchema;
 
 export const JOURNEY_FRAMES = T.end;

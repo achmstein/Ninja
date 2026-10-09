@@ -23,10 +23,10 @@ const next = () => springTiming({ config: { damping: 200 }, durationInFrames: 15
 const CUTS = [151, 343, 391, 823, 1015, 1207, 1303, 1447, 1543, 1639, 1879];
 
 const H: Record<string, Hero> = {
-  brand: { title: "Any place. Your look.", titleAr: "أي مكان، بشكلك.", cam: [{ f: 0, s: 1.08, x: 1556, y: 540 }] },
+  brand: { title: "Your app, in your name and colours.", titleAr: "أبلكيشن باسمك وبألوانك.", cam: [{ f: 0, s: 1.08, x: 1556, y: 540 }] },
   pay: {
-    title: "Split the bill.",
-    titleAr: "قسّم الحساب.",
+    title: "Pay at the table.",
+    titleAr: "الدفع من على الترابيزة.",
     rate: 1.25,
     cam: [
       { f: beat(0, 1.25), s: 1, x: 1556, y: 540 },
@@ -36,8 +36,8 @@ const H: Record<string, Hero> = {
     ],
   },
   book: {
-    title: "Book a room.",
-    titleAr: "احجز اوضة.",
+    title: "Book a room from the phone.",
+    titleAr: "احجز اوضة من موبايلك.",
     rate: 1.25,
     cam: [
       { f: beat(0, 1.25), s: 1, x: 1556, y: 540 },
@@ -48,11 +48,11 @@ const H: Record<string, Hero> = {
       { f: beat(13, 1.25), s: 1.3, x: 1460, y: 400 },
     ],
   },
-  branches: { rate: 2.2, title: "Every branch.", titleAr: "كل الفروع.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
+  branches: { rate: 2.2, title: "All your branches.", titleAr: "كل فروعك.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
   menu: {
     rate: 1.8,
-    title: "Menu from a photo.",
-    titleAr: "المنيو من صورة.",
+    title: "Your menu, from a photo.",
+    titleAr: "المنيو بتاعك من صورة.",
     cam: [
       { f: 0, s: 0.92, x: 1130, y: 520 },
       { f: 150, s: 0.92, x: 1130, y: 520 },
@@ -60,11 +60,11 @@ const H: Record<string, Hero> = {
       { f: 300, s: 1.35, x: 1520, y: 740 },
     ],
   },
-  stock: { rate: 2.2, title: "Every dish costed.", titleAr: "تكلفة كل صنف.", cam: [{ f: 0, s: 0.95, x: 1150, y: 520 }] },
-  profit: { rate: 2.2, title: "Profit, live.", titleAr: "مكسبك لايف.", cam: [{ f: 0, s: 1.1, x: 1320, y: 470 }] },
+  stock: { rate: 2.2, title: "Stock and recipes.", titleAr: "المخزون والوصفات.", cam: [{ f: 0, s: 0.95, x: 1150, y: 520 }] },
+  profit: { rate: 2.2, title: "Expenses, pay and profit.", titleAr: "المصروفات والمرتبات والأرباح.", cam: [{ f: 0, s: 1.1, x: 1320, y: 470 }] },
   ask: {
-    title: "Ask your café.",
-    titleAr: "اسأل الكافيه بتاعك.",
+    title: "Ask about your café.",
+    titleAr: "اسأل عن الكافيه بتاعك.",
     rate: 1.25,
     cam: [
       { f: beat(0, 1.25), s: 1, x: 1320, y: 540 },
@@ -102,7 +102,7 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       ))}
       <TransitionSeries>
         <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
-          <Opening line="Your whole café, in one place." lineAr="كافيهك كله في مكان واحد." />
+          <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Any place" durationInFrames={207} premountFor={fps}>
@@ -112,7 +112,7 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Order. Cook. Deliver." durationInFrames={63} premountFor={fps}>
-          <WordBeat words={["Order.", "Cook.", "Deliver."]} wordsAr={["اطلب.", "جهّز.", "وصّل."]} />
+          <WordBeat words={["Order.", "Prepare.", "Deliver."]} wordsAr={["اطلب.", "حضّر.", "وصّل."]} />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="One order" durationInFrames={447} premountFor={fps}>
@@ -162,7 +162,7 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
-          <Finale headline="Everything your café runs on." tagline="One app for your whole café." url="ninjapp.net" />
+          <Finale headline="One place for the whole café." tagline="Get Ninja for your café." url="ninjapp.net" />
         </TransitionSeries.Sequence>
       </TransitionSeries>
     </LangContext.Provider>

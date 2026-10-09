@@ -60,7 +60,7 @@ export const HeroTitle: React.FC<{ text: string }> = ({ text }) => {
         columnGap: "0.24em",
         direction: ar ? "rtl" : "ltr",
         fontFamily: ar ? plexArabic : inter,
-        fontSize: ar ? 104 : 116,
+        fontSize: text.length > 24 ? (ar ? 84 : 92) : ar ? 104 : 116,
         fontWeight: ar ? 700 : 800,
         letterSpacing: ar ? 0 : "-0.045em",
         lineHeight: ar ? 1.25 : 1,

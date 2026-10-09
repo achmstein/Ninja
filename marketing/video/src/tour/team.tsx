@@ -758,7 +758,7 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           <MapPin size={30} color="#fff" />
         </div>
         <div>
-          <div style={{ fontSize: 20, color: S.mutedFg, fontWeight: 600 }}>{tr("Guest's nearest branch")}</div>
+          <div style={{ fontSize: 20, color: S.mutedFg, fontWeight: 600 }}>{tr("Customer's nearest branch")}</div>
           <div style={{ fontSize: 32, fontWeight: 800, color: S.fg }}>{tr("Maadi · 1.2 km")}</div>
         </div>
       </Glass>

@@ -49,7 +49,7 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       ))}
       <TransitionSeries>
       <TransitionSeries.Sequence name="Intro" durationInFrames={240} premountFor={fps}>
-        <Opening line="Your whole café, in one place." lineAr="كافيهك كله في مكان واحد." />
+        <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="01 Your brand" durationInFrames={303} premountFor={fps}>
@@ -60,7 +60,7 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="02 One order, every app" durationInFrames={784} premountFor={fps}>
-        <Journey headline="Follow one order through every app." />
+        <Journey headline="One order, from the table to the door." />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="03 Pay & split" durationInFrames={304} premountFor={fps}>
@@ -121,8 +121,8 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
         <Finale
-          headline="Everything your café runs on."
-          tagline="One app for your whole café."
+          headline="One place for the whole café."
+          tagline="Get Ninja for your café."
           url="ninjapp.net"
         />
       </TransitionSeries.Sequence>

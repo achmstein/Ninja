@@ -237,6 +237,7 @@ export const AR_UI: Record<string, string> = {
   "QR orders off": "طلبات QR متوقفة",
   "Reservations Enabled": "الحجوزات مفعّلة",
   "Guest's nearest branch": "أقرب فرع للعميل",
+  "Customer's nearest branch": "أقرب فرع للعميل",
   "Maadi · 1.2 km": "المعادي · 1.2 كم",
   "Add item": "إضافة صنف",
   "Scan menu": "تصوير المنيو",

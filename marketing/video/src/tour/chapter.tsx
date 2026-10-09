@@ -4,7 +4,7 @@ import { NMark, Wordmark } from "../parts";
 import { C, clamp, glide } from "../theme";
 import { Copy, Stage, type Look } from "./Frame";
 import { HeroTitle, useCamera, useHero } from "./hero";
-import { AR_CHAPTERS, DeviceContext, MirrorContext, plexArabic, useLang, useUnmirror } from "./lang";
+import { AR_CHAPTERS, EN_CHAPTERS, DeviceContext, MirrorContext, plexArabic, useLang, useUnmirror } from "./lang";
 
 export type ChapterProps = {
   readonly title: string;
@@ -33,7 +33,7 @@ export const Chapter: React.FC<{
 }> = ({ look, n, eyebrow, title, mark, line, style, copyWidth, children }) => {
   // In the Arabic tour every chapter's words come from lang.ts.
   const lang = useLang();
-  const ar = lang === "ar" ? AR_CHAPTERS[n] : undefined;
+  const ar = lang === "ar" ? AR_CHAPTERS[n] : EN_CHAPTERS[n];
   const hero = useHero();
   const camera = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar", hero?.rate ?? 1);
   const devices =
@@ -59,7 +59,7 @@ export const Chapter: React.FC<{
   return (
   <AbsoluteFill style={style}>
     <Stage look={look}>
-      <Badge dark={look === "dark"} rtl={ar !== undefined} />
+      <Badge dark={look === "dark"} rtl={lang === "ar"} />
       {devices}
       <Copy
         n={n}
@@ -70,7 +70,7 @@ export const Chapter: React.FC<{
         chips={[]}
         dark={look === "dark"}
         width={copyWidth}
-        rtl={ar !== undefined}
+        rtl={lang === "ar"}
       />
     </Stage>
   </AbsoluteFill>
