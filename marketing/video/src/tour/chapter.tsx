@@ -1,7 +1,7 @@
 import type React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, type InteractivitySchema } from "remotion";
 import { NMark, Wordmark } from "../parts";
-import { C, clamp, land } from "../theme";
+import { C, clamp, glide } from "../theme";
 import { Copy, Stage, type Look } from "./Frame";
 import { HeroTitle, useCamera, useHero } from "./hero";
 import { AR_CHAPTERS, DeviceContext, MirrorContext, plexArabic, useLang, useUnmirror } from "./lang";
@@ -85,13 +85,16 @@ const Badge: React.FC<{ dark?: boolean; rtl?: boolean }> = ({ dark, rtl }) => (
   </div>
 );
 
-// Devices come in from the right on a spring, face the viewer flat, and float gently.
+// Devices come in from the right on an ease with no overshoot, and then hold still.
+// In the fast cut the camera does the moving, so they are simply there.
 export const useEnter = (at = 4, from = 260) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const hero = useHero();
+  if (hero) return {} as const;
   return {
     opacity: interpolate(frame, [at, at + 0.3 * fps], [0, 1], clamp),
-    translate: `${interpolate(frame, [at, at + 0.9 * fps], [from, 0], { ...clamp, easing: land })}px ${Math.sin(frame / 45) * 6}px`,
+    translate: `${interpolate(frame, [at, at + 0.8 * fps], [from, 0], { ...clamp, easing: glide })}px 0px`,
   } as const;
 };
 

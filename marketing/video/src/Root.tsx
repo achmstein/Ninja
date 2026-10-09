@@ -161,7 +161,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "Rooms and tables, booked ahead.", line: "Guests hold a table from their phone and watch the countdown while they walk over." }}
+          defaultProps={{ title: "Rooms, booked ahead.", line: "Guests hold a room from their phone and watch the countdown while they walk over." }}
         />
         <Composition
           id="TourLoyalty"

@@ -1,5 +1,5 @@
 import { springTiming, TransitionSeries } from "@remotion/transitions";
-import { pushCut } from "@remotion/transitions/push-cut";
+import { fade } from "@remotion/transitions/fade";
 import { Audio } from "@remotion/media";
 import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Finale } from "./Finale";
@@ -8,7 +8,7 @@ import { Brand, Loyalty } from "./guests";
 import { Journey } from "./journey";
 import { Sfx } from "./sfx";
 import { Pay } from "./pay";
-import { Intro } from "./Intro";
+import { Opening } from "./Opening";
 import { LangContext, type Lang } from "./lang";
 import { AiMenu, Assistant, Profit, Stock } from "./owner";
 import { Branches } from "./team";
@@ -49,79 +49,76 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       ))}
       <TransitionSeries>
       <TransitionSeries.Sequence name="Intro" durationInFrames={240} premountFor={fps}>
-        <Intro
-          headline="Your whole café, in one place."
-          features="Ordering · Payments · Reservations · Loyalty · Delivery · Stock · Profit"
-        />
+        <Opening line="Your whole café, in one place." lineAr="كافيهك كله في مكان واحد." />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="01 Your brand" durationInFrames={303} premountFor={fps}>
         <Brand
           title="It looks like your place."
           line="Café, restaurant, burger kitchen or game station: your logo, your colours, your menu layout."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="02 One order, every app" durationInFrames={784} premountFor={fps}>
         <Journey headline="Follow one order through every app." />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="03 Pay & split" durationInFrames={304} premountFor={fps}>
         <Pay
           title="Pay at the table, split any way."
           line="The bill is in the dock. Each friend opens it and pays their share from their own phone."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="04 Rooms & tables" durationInFrames={255} premountFor={fps}>
         <Book
-          title="Rooms and tables, booked ahead."
-          line="Guests hold a table from their phone and watch the countdown while they walk over."
+          title="Rooms, booked ahead."
+          line="Guests hold a room from their phone and watch the countdown while they walk over."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="05 Loyalty" durationInFrames={207} premountFor={fps}>
         <Loyalty
           title="Every visit earns points."
           line="Guests watch their points and tier grow, and come back for the rewards you choose."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="06 Branches" durationInFrames={207} premountFor={fps}>
         <Branches
           title="Every branch, one dashboard."
           line="Each branch keeps its own prices and hours. Guests are sent to the one nearest them."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="07 Menu scan" durationInFrames={304} premountFor={fps}>
         <AiMenu
           title="Photograph your menu. It's online in minutes."
           line="Ninja reads your printed menu into categories and prices, and the photo studio makes every dish look its best."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="08 Stock & food cost" durationInFrames={303} premountFor={fps}>
         <Stock
           title="Know what every dish really costs."
           line="Snap a supplier's receipt to fill your stock. Recipes turn it into each dish's cost and margin."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="09 Profit & payroll" durationInFrames={255} premountFor={fps}>
         <Profit
           title="Your profit, without a spreadsheet."
           line="Sales, refunds, stock, wages and expenses add up on their own, month by month."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="10 Ask your café" durationInFrames={304} premountFor={fps}>
         <Assistant
           title="Ask your café anything."
           line="Connect Claude or ChatGPT to Ninja, then ask about sales, profit, stock or staff, or have it make the change."
         />
       </TransitionSeries.Sequence>
-      <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+      <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
         <Finale
           headline="Everything your café runs on."

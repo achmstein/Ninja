@@ -1,13 +1,13 @@
 import { Audio } from "@remotion/media";
 import { springTiming, TransitionSeries } from "@remotion/transitions";
-import { pushCut } from "@remotion/transitions/push-cut";
+import { fade } from "@remotion/transitions/fade";
 import type React from "react";
 import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Book } from "./book";
 import { Finale } from "./Finale";
 import { Brand } from "./guests";
 import { HeroContext, WordBeat, type Hero } from "./hero";
-import { Intro } from "./Intro";
+import { Opening } from "./Opening";
 import { Journey } from "./journey";
 import { LangContext, type Lang } from "./lang";
 import { AiMenu, Assistant, Profit, Stock } from "./owner";
@@ -34,8 +34,8 @@ const H: Record<string, Hero> = {
     ],
   },
   book: {
-    title: "Hold a table.",
-    titleAr: "احجز ترابيزة.",
+    title: "Book a room.",
+    titleAr: "احجز اوضة.",
     cam: [
       { f: 0, s: 1, x: 1556, y: 540 },
       { f: 40, s: 1.35, x: 1556, y: 400 },
@@ -94,65 +94,65 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       ))}
       <TransitionSeries>
         <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
-          <Intro headline="Your whole café, in one place." features="Ordering · Payments · Reservations · Loyalty · Delivery · Stock · Profit" />
+          <Opening line="Your whole café, in one place." lineAr="كافيهك كله في مكان واحد." />
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Any place" durationInFrames={207} premountFor={fps}>
           <HeroContext.Provider value={H.brand}>
             <Brand {...P} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Order. Cook. Deliver." durationInFrames={63} premountFor={fps}>
           <WordBeat words={["Order.", "Cook.", "Deliver."]} wordsAr={["اطلب.", "جهّز.", "وصّل."]} />
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="One order" durationInFrames={447} premountFor={fps}>
           <Journey headline="" minimal playbackRate={1.75} />
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Split the bill" durationInFrames={207} premountFor={fps}>
           <HeroContext.Provider value={H.pay}>
             <Pay {...P} playbackRate={1.25} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
-        <TransitionSeries.Sequence name="Hold a table" durationInFrames={207} premountFor={fps}>
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Sequence name="Book a room" durationInFrames={207} premountFor={fps}>
           <HeroContext.Provider value={H.book}>
             <Book {...P} playbackRate={1.25} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Every branch" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.branches}>
             <Branches {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.menu}>
             <AiMenu {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Every dish costed" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.stock}>
             <Stock {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Profit, live" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.profit}>
             <Profit {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Ask your café" durationInFrames={255} premountFor={fps}>
           <HeroContext.Provider value={H.ask}>
             <Assistant {...P} playbackRate={1.25} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pushCut()} timing={next()} />
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
           <Finale headline="Everything your café runs on." tagline="One app for your whole café." url="ninjapp.net" />
         </TransitionSeries.Sequence>

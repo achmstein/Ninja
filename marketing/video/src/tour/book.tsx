@@ -1,7 +1,7 @@
 // Chapter 04: the Book tab as the mobile app draws it (client_app places_screen,
 // hold_form, reservation_panel, live_visit): pick a room, reserve, and the tab
 // becomes the "Held for you" face with its ring and rolling countdown.
-import { Armchair, CalendarCheck, Check, Clock, Coffee, DoorOpen, Footprints, Plus, User, X, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Check, Clock, Coffee, DoorOpen, Footprints, Plus, User, X, type LucideIcon } from "lucide-react";
 import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { clamp, land } from "../theme";
@@ -46,12 +46,12 @@ const Rolling: React.FC<{ now: string; before: string; p: number; size: number }
 const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 type Place = { name: string; Icon: LucideIcon; free: boolean; note: string; rate?: string; status?: string };
-// Any business's places: tables first; rooms and their hourly rates are just one option.
+// The place's rooms: free ones on the dark slab, busy ones light.
 const PLACES: Place[] = [
-  { name: "Table 4", Icon: Armchair, free: true, note: "By the window · 4 seats" },
-  { name: "Table 7", Icon: Armchair, free: false, note: "Terrace · 6 seats", status: "Occupied" },
+  { name: "Room 1", Icon: DoorOpen, free: true, note: "Up to 6 guests" },
+  { name: "Room 2", Icon: DoorOpen, free: false, note: "Up to 4 guests", status: "Occupied" },
   { name: "Private room", Icon: DoorOpen, free: true, note: "Up to 10 guests", rate: "Minimum EGP 500" },
-  { name: "Table 2", Icon: Armchair, free: false, note: "Garden · 2 seats", status: "Reserved" },
+  { name: "Room 3", Icon: DoorOpen, free: false, note: "Up to 8 guests", status: "Reserved" },
 ];
 
 // The floating dock with the Book tab turned into the hold's live countdown.
@@ -61,7 +61,7 @@ const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: num
   const c = 2 * Math.PI * r;
   const tabs: { label: string; Icon: LucideIcon; on: boolean }[] = [
     { label: "Menu", Icon: Coffee, on: false },
-    { label: held ? "Table 4" : "Book", Icon: held ? Armchair : CalendarCheck, on: true },
+    { label: held ? "Room 1" : "Book", Icon: held ? DoorOpen : CalendarCheck, on: true },
     { label: "You", Icon: User, on: false },
   ];
   return (
@@ -163,7 +163,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       title={title}
       mark="booked"
       line={line}
-      chips={["Tables", "Rooms", "Held while they come", "Live countdown"]}
+      chips={[]}
       style={style}
     >
       <GuestPhone x={1330} y={70} height={940} label="Mobile app" style={useEnter(4)}>
@@ -400,8 +400,8 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               </div>
             </div>
             <div style={{ ...beat(0.3) }}>
-              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr("Table 4")}</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{tr("By the window · 4 seats")}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr("Room 1")}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{tr("Up to 6 guests")}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 600, ...beat(0.45) }}>
               <Footprints size={18} /> {tr("Walk over and show this at the counter")}
@@ -445,7 +445,7 @@ export const Book = Interactive.withSchema({
   componentName: "<Book>",
   schema: copySchema(
     "Rooms and tables, booked ahead.",
-    "Guests hold a table from their phone and watch the countdown while they walk over.",
+    "Guests hold a room from their phone and watch the countdown while they walk over.",
   ),
   wrapInSequence: true,
 });

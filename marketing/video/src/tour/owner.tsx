@@ -513,8 +513,8 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
   title,
   line,
   style,
-  question: q = "Which dishes have the lowest margin, and what makes them cost so much?",
-  action: act = "Mark the chocolate cake as sold out.",
+  question: q = "What's running low in stock?",
+  action: act = "Record 420 for milk from Fresh Dairy, paid from the drawer.",
 }) => {
   const frame = useCurrentFrame();
   const tr = useT();
@@ -530,10 +530,11 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
   const ask2 = reply + 70;
   const tool2 = ask2 + 10;
   const reply2 = ask2 + 24;
+  // What is left of each, against what the café keeps on hand.
   const bars = [
-    { name: "Iced Mocha", margin: 62 },
-    { name: "Waffle", margin: 66 },
-    { name: "Chocolate Cake", margin: 72 },
+    { name: "Whole milk", margin: 15, left: "4 L" },
+    { name: "Espresso beans", margin: 28, left: "1.4 kg" },
+    { name: "Chocolate sauce", margin: 40, left: "0.8 kg" },
   ];
   const fade = (at: number) => ({
     opacity: interpolate(frame, [at, at + 8], [0, 1], clamp),
@@ -630,11 +631,11 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
           >
             {question}
           </div>
-          <ToolChip text="Used ninja · menu cost" at={tool} />
+          <ToolChip text="Used ninja · stock" at={tool} />
           <Sfx name="ding" at={reply} />
           <Sfx name="success" at={reply2 + 34} />
           <div style={{ fontSize: 21, lineHeight: 1.45, ...fade(reply) }}>
-            {tr("Your lowest margins this month:")}
+            {tr("Running low right now:")}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14, maxWidth: 600 }}>
               {bars.map((b, i) => {
                 const at = reply + 8 + i * 5;
@@ -652,13 +653,13 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
                         }}
                       />
                     </div>
-                    <span style={{ width: 50, fontWeight: 800 }}>{Math.round(w)}%</span>
+                    <span style={{ width: 90, fontWeight: 800, direction: "ltr", textAlign: "end" }}>{tr(b.left)}</span>
                   </div>
                 );
               })}
             </div>
             <div style={{ marginTop: 14, color: "#334155", ...fade(reply + 30) }}>
-              {tr("The Iced Mocha's chocolate sauce cost more on your last receipt, so its cost per sale rose to 36.10.")}
+              {tr("At today's pace the milk runs out tomorrow. You owe Fresh Dairy 1,280.")}
             </div>
           </div>
           <div
@@ -685,7 +686,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
               ...fade(reply2),
             }}
           >
-            {tr("Chocolate Cake → sold out. Confirm?")}
+            {tr("Expense: milk, 420.00 from the drawer. Confirm?")}
             <span
               style={{
                 padding: "8px 18px",
@@ -722,7 +723,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
             >
               <Check size={20} color="#fff" strokeWidth={3} />
             </span>
-            {tr("Done. The chocolate cake shows as sold out on your menu.")}
+            {tr("Done. The expense is recorded and the drawer is updated.")}
           </div>
         </div>
 
