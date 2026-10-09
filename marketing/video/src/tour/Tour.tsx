@@ -6,6 +6,7 @@ import { Finale } from "./Finale";
 import { Book } from "./book";
 import { Brand, Loyalty } from "./guests";
 import { Journey } from "./journey";
+import { FilmFinish } from "./finish";
 import { Sfx } from "./sfx";
 import { Pay } from "./pay";
 import { Opening } from "./Opening";
@@ -36,8 +37,8 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
         premountFor={fps}
         volume={interpolate(
           frame,
-          [0, 0.4 * fps, durationInFrames - 3 * fps, durationInFrames - 1],
-          [0, 0.85, 0.85, 0],
+          [0, 0.4 * fps, CUTS[0] - 9, CUTS[0] - 7, CUTS[0] - 1, CUTS[0], durationInFrames - 3 * fps, durationInFrames - 1],
+          [0, 0.85, 0.85, 0, 0, 0.85, 0.85, 0],
           { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
         )}
       />
@@ -49,7 +50,7 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       ))}
       <TransitionSeries>
       <TransitionSeries.Sequence name="Intro" durationInFrames={240} premountFor={fps}>
-        <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." />
+        <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." exitAt={209} />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={next()} />
       <TransitionSeries.Sequence name="01 Your brand" durationInFrames={303} premountFor={fps}>
@@ -127,6 +128,7 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
         />
       </TransitionSeries.Sequence>
       </TransitionSeries>
+      <FilmFinish leaks={[CUTS[0], CUTS[1], CUTS[CUTS.length - 1]]} mirrored={lang === "ar"} />
     </LangContext.Provider>
   );
 };

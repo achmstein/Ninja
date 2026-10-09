@@ -23,7 +23,8 @@ import {
 } from "remotion";
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, glide, inter, land } from "../theme";
-import { AppIconRow } from "./AppIcons";
+import { evolvePath } from "@remotion/paths";
+import { AppIconRow, N_PATH } from "./AppIcons";
 import { Stage } from "./Frame";
 import { AR, plexArabic, useLang } from "./lang";
 import { Sfx } from "./sfx";
@@ -77,6 +78,7 @@ const FinaleInner: React.FC<Props> = ({ headline: h, tagline: tl, url, style }) 
   const font = ar ? plexArabic : inter;
   const fold = 118;
   const words = headline.split(" ");
+  const drawn = evolvePath(interpolate(frame, [fold + 16, fold + 34], [0, 1], { ...clamp, easing: glide }), N_PATH);
 
   return (
     <AbsoluteFill style={style}>
@@ -221,7 +223,20 @@ const FinaleInner: React.FC<Props> = ({ headline: h, tagline: tl, url, style }) 
               scale: `${interpolate(frame, [fold + 12, fold + 34], [0, 1], { ...clamp, easing: land })}`,
             }}
           >
-            <NMark size={190} style={{ filter: "drop-shadow(0 40px 70px rgba(15,23,42,0.35))" }} />
+            {/* The signature: the N draws itself on its tile, then fills */}
+            <svg width={190} height={190} viewBox="0 0 64 64" style={{ filter: "drop-shadow(0 40px 70px rgba(15,23,42,0.35))", overflow: "visible" }}>
+              <rect width="64" height="64" rx="14" fill="#18181b" />
+              <path
+                d={N_PATH}
+                fill="#fafafa"
+                fillOpacity={interpolate(frame, [fold + 30, fold + 38], [0, 1], clamp)}
+                stroke="#fafafa"
+                strokeWidth={0.8}
+                strokeLinejoin="round"
+                strokeDasharray={drawn.strokeDasharray}
+                strokeDashoffset={drawn.strokeDashoffset}
+              />
+            </svg>
           </div>
           <Wordmark
             size={130}

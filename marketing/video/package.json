@@ -9,6 +9,7 @@
     "@remotion/cli": "4.0.534",
     "@remotion/google-fonts": "4.0.534",
     "@remotion/media": "4.0.534",
+    "@remotion/motion-blur": "4.0.534",
     "@remotion/paths": "4.0.534",
     "@remotion/transitions": "4.0.534",
     "lucide-react": "^1.54.0",

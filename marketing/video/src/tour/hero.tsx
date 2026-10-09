@@ -23,7 +23,7 @@ export const useHero = () => useContext(HeroContext);
 const AIM = { x: 1250, y: 540 };
 const ease = Easing.bezier(0.65, 0, 0.35, 1);
 
-export const useCamera = (cam: Cam[], mirrored: boolean, rate = 1): React.CSSProperties => {
+export const useCamera = (cam: Cam[], mirrored: boolean, rate = 1): { style: React.CSSProperties; zoom: number } => {
   const frame = useCurrentFrame();
   // A small punch on every bar's downbeat, decaying over a few frames.
   const local = frame / rate - 7;
@@ -36,8 +36,11 @@ export const useCamera = (cam: Cam[], mirrored: boolean, rate = 1): React.CSSPro
   const x = mirrored ? 1920 - at("x") : at("x");
   const aimX = mirrored ? 1920 - AIM.x : AIM.x;
   return {
-    transformOrigin: "0 0",
-    transform: `translate(${aimX}px, ${AIM.y}px) scale(${s}) translate(${-x}px, ${-at("y")}px)`,
+    zoom: at("s"),
+    style: {
+      transformOrigin: "0 0",
+      transform: `translate(${aimX}px, ${AIM.y}px) scale(${s}) translate(${-x}px, ${-at("y")}px)`,
+    },
   };
 };
 
@@ -111,7 +114,7 @@ export const WordBeat: React.FC<{ words: string[]; wordsAr: string[]; style?: Re
               letterSpacing: ar ? 0 : "-0.055em",
               color: idx === words.length - 1 ? C.amber : "#fff",
               direction: ar ? "rtl" : "ltr",
-              scale: `${interpolate(since, [0, 4, 10], [1.25, 0.98, 1], { ...clamp, easing: land })}`,
+              scale: `${interpolate(since, [0, 4, 10], [1.25, 0.98, 1], { ...clamp, easing: land }) * (idx === words.length - 1 ? interpolate(frame, [7 + words.length * BEAT + 2, 7 + words.length * BEAT + 14], [1, 14], { ...clamp, easing: Easing.bezier(0.7, 0, 0.84, 0) }) : 1)}`,
               opacity: interpolate(since, [0, 2], [0, 1], clamp),
             }}
           >

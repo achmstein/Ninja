@@ -1,10 +1,12 @@
 import { Audio } from "@remotion/media";
+import { HtmlInCanvasMotionBlur } from "@remotion/motion-blur";
 import { springTiming, TransitionSeries } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import type React from "react";
 import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Book } from "./book";
 import { Finale } from "./Finale";
+import { FilmFinish } from "./finish";
 import { Hook } from "./Hook";
 import { Brand } from "./guests";
 import { beat, HeroContext, WordBeat, type Hero } from "./hero";
@@ -80,11 +82,82 @@ const H: Record<string, Hero> = {
 
 const P = { title: "", line: "" };
 
-export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
+export const Fast: React.FC<{ readonly lang?: Lang; readonly blur?: boolean }> = ({ lang = "en", blur = true }) => {
   // A sideways camera pan between hero scenes, in reading direction.
   const pan = () => slide({ direction: lang === "ar" ? "from-left" : "from-right" });
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
   const frame = useCurrentFrame();
+  const scenes = (
+      <TransitionSeries>
+          <TransitionSeries.Sequence name="Hook" durationInFrames={111} premountFor={fps}>
+            <Hook question="Sound familiar?" questionAr="الكلام ده مألوف؟" />
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
+            <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." exitAt={128} />
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="Any place" durationInFrames={207} premountFor={fps}>
+            <HeroContext.Provider value={H.brand}>
+              <Brand {...P} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="Order. Cook. Deliver." durationInFrames={63} premountFor={fps}>
+            <WordBeat words={["Order.", "Prepare.", "Deliver."]} wordsAr={["اطلب.", "حضّر.", "وصّل."]} />
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="One order" durationInFrames={447} premountFor={fps}>
+            <Journey headline="" minimal playbackRate={1.75} />
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="Split the bill" durationInFrames={207} premountFor={fps}>
+            <HeroContext.Provider value={H.pay}>
+              <Pay {...P} playbackRate={1.25} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Book a room" durationInFrames={207} premountFor={fps}>
+            <HeroContext.Provider value={H.book}>
+              <Book {...P} playbackRate={1.25} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Every branch" durationInFrames={111} premountFor={fps}>
+            <HeroContext.Provider value={H.branches}>
+              <Branches {...P} playbackRate={2.2} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={159} premountFor={fps}>
+            <HeroContext.Provider value={H.menu}>
+              <AiMenu {...P} playbackRate={1.8} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Every dish costed" durationInFrames={111} premountFor={fps}>
+            <HeroContext.Provider value={H.stock}>
+              <Stock {...P} playbackRate={2.2} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Profit, live" durationInFrames={111} premountFor={fps}>
+            <HeroContext.Provider value={H.profit}>
+              <Profit {...P} playbackRate={2.2} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={pan()} timing={next()} />
+          <TransitionSeries.Sequence name="Ask your café" durationInFrames={255} premountFor={fps}>
+            <HeroContext.Provider value={H.ask}>
+              <Assistant {...P} playbackRate={1.25} />
+            </HeroContext.Provider>
+          </TransitionSeries.Sequence>
+          <TransitionSeries.Transition presentation={fade()} timing={next()} />
+          <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
+            <Finale headline="One place for the whole café." tagline="Get Ninja for your café." url="ninjapp.net" />
+          </TransitionSeries.Sequence>
+        </TransitionSeries>
+  );
   return (
     <LangContext.Provider value={lang}>
       {/* The same track as the tour, started 139 frames in so its build plays under the hook and its drop hits the first cut after the opening. */}
@@ -93,7 +166,8 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
         src={staticFile("tour-music-hype.mp3")}
         trimBefore={139}
         premountFor={fps}
-        volume={interpolate(frame, [0, 0.3 * fps, durationInFrames - 2 * fps, durationInFrames - 1], [0, 0.85, 0.85, 0], {
+        // Half a beat of silence just before the drop, then everything at once.
+        volume={interpolate(frame, [0, 0.3 * fps, CUTS[0] - 9, CUTS[0] - 7, CUTS[0] - 1, CUTS[0], durationInFrames - 2 * fps, durationInFrames - 1], [0, 0.85, 0.85, 0, 0, 0.85, 0.85, 0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         })}
@@ -104,75 +178,15 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       {CUTS.map((c) => (
         <Sfx key={c} name="whoosh" at={c - 9} />
       ))}
-      <TransitionSeries>
-        <TransitionSeries.Sequence name="Hook" durationInFrames={111} premountFor={fps}>
-          <Hook question="Still running your café on paper?" questionAr="لسه بتشغّل الكافيه بالورق؟" />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
-          <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="Any place" durationInFrames={207} premountFor={fps}>
-          <HeroContext.Provider value={H.brand}>
-            <Brand {...P} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="Order. Cook. Deliver." durationInFrames={63} premountFor={fps}>
-          <WordBeat words={["Order.", "Prepare.", "Deliver."]} wordsAr={["اطلب.", "حضّر.", "وصّل."]} />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="One order" durationInFrames={447} premountFor={fps}>
-          <Journey headline="" minimal playbackRate={1.75} />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="Split the bill" durationInFrames={207} premountFor={fps}>
-          <HeroContext.Provider value={H.pay}>
-            <Pay {...P} playbackRate={1.25} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Book a room" durationInFrames={207} premountFor={fps}>
-          <HeroContext.Provider value={H.book}>
-            <Book {...P} playbackRate={1.25} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Every branch" durationInFrames={111} premountFor={fps}>
-          <HeroContext.Provider value={H.branches}>
-            <Branches {...P} playbackRate={2.2} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={159} premountFor={fps}>
-          <HeroContext.Provider value={H.menu}>
-            <AiMenu {...P} playbackRate={1.8} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Every dish costed" durationInFrames={111} premountFor={fps}>
-          <HeroContext.Provider value={H.stock}>
-            <Stock {...P} playbackRate={2.2} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Profit, live" durationInFrames={111} premountFor={fps}>
-          <HeroContext.Provider value={H.profit}>
-            <Profit {...P} playbackRate={2.2} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={pan()} timing={next()} />
-        <TransitionSeries.Sequence name="Ask your café" durationInFrames={255} premountFor={fps}>
-          <HeroContext.Provider value={H.ask}>
-            <Assistant {...P} playbackRate={1.25} />
-          </HeroContext.Provider>
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
-        <TransitionSeries.Sequence name="End card" durationInFrames={210} premountFor={fps}>
-          <Finale headline="One place for the whole café." tagline="Get Ninja for your café." url="ninjapp.net" />
-        </TransitionSeries.Sequence>
-      </TransitionSeries>
+      {blur ? (
+        // A camera shutter: each frame blends samples across half a frame, so fast moves smear.
+        <HtmlInCanvasMotionBlur width={width} height={height} samples={6} shutterAngle={180}>
+          {scenes}
+        </HtmlInCanvasMotionBlur>
+      ) : (
+        scenes
+      )}
+      <FilmFinish leaks={[CUTS[0], CUTS[2], CUTS[CUTS.length - 1]]} mirrored={lang === "ar"} />
     </LangContext.Provider>
   );
 };

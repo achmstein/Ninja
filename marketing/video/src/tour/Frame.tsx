@@ -8,12 +8,17 @@ import { Sfx } from "./sfx";
 // light = Apple-style launch, glass = liquid glass, dark = the till/kitchen reel.
 export type Look = "light" | "glass" | "dark";
 
-export const Stage: React.FC<{ look: Look; children: React.ReactNode }> = ({ look, children }) => {
+export const Stage: React.FC<{ look: Look; children: React.ReactNode; backdropBlur?: number }> = ({
+  look,
+  children,
+  backdropBlur = 0,
+}) => {
   const frame = useCurrentFrame();
   const drift = Math.sin(frame / 50) * 40;
   const dark = look === "dark";
   return (
     <AbsoluteFill style={{ backgroundColor: dark ? C.night : look === "glass" ? "#eef0f6" : C.page, overflow: "hidden" }}>
+      <AbsoluteFill style={{ filter: backdropBlur > 0.5 ? `blur(${backdropBlur}px)` : undefined }}>
       {look === "glass" ? (
         <>
           <Blob color="99 102 241" alpha={0.45} size={1100} left={1000 + drift} top={-300} />
@@ -38,6 +43,7 @@ export const Stage: React.FC<{ look: Look; children: React.ReactNode }> = ({ loo
           }}
         />
       ) : null}
+      </AbsoluteFill>
       {children}
     </AbsoluteFill>
   );

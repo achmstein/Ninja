@@ -8,8 +8,12 @@ import { plexArabic, useLang } from "./lang";
 
 const ease = Easing.bezier(0.22, 1, 0.36, 1);
 
-export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, lineAr }) => {
+export const Opening: React.FC<{ line: string; lineAr: string; exitAt?: number }> = ({ line, lineAr, exitAt = 9999 }) => {
   const frame = useCurrentFrame();
+  // At the end the camera dives into the mark: it grows past the frame and its dark
+  // fills the screen, and the next scene opens out of it.
+  const dive = interpolate(frame, [exitAt, exitAt + 14], [0, 1], { ...clamp, easing: Easing.bezier(0.7, 0, 0.84, 0) });
+  const rest = 1 - interpolate(frame, [exitAt, exitAt + 6], [0, 1], clamp);
   const ar = useLang() === "ar";
   const text = ar ? lineAr : line;
   return (
@@ -18,7 +22,8 @@ export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, line
       <div
         style={{
           opacity: interpolate(frame, [8, 22], [0, 1], clamp),
-          scale: `${interpolate(frame, [8, 40], [0.9, 1], { ...clamp, easing: ease })}`,
+          scale: `${interpolate(frame, [8, 40], [0.9, 1], { ...clamp, easing: ease }) * (1 + dive * 34)}`,
+          zIndex: 5,
           filter: `blur(${interpolate(frame, [8, 24], [8, 0], clamp)}px)`,
         }}
       >
@@ -29,11 +34,12 @@ export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, line
         color={C.ink}
         style={{
           marginTop: 26,
+          visibility: rest > 0 ? "visible" : "hidden",
           opacity: interpolate(frame, [26, 40], [0, 1], clamp),
           translate: `0px ${interpolate(frame, [26, 48], [24, 0], { ...clamp, easing: ease })}px`,
         }}
       />
-      <div style={{ overflow: "hidden", marginTop: 34, paddingBottom: "0.1em" }}>
+      <div style={{ overflow: "hidden", marginTop: 34, paddingBottom: "0.1em", opacity: rest }}>
         <div
           style={{
             fontFamily: ar ? plexArabic : inter,
@@ -49,7 +55,7 @@ export const Opening: React.FC<{ line: string; lineAr: string }> = ({ line, line
         </div>
       </div>
       {/* The apps, one per beat */}
-      <AppIconRow at={80} size={92} gap={40} style={{ position: "absolute", top: 800 }} />
+      <AppIconRow at={80} size={92} gap={40} style={{ position: "absolute", top: 800, opacity: rest }} />
     </AbsoluteFill>
   );
 };

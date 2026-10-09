@@ -35,7 +35,7 @@ export const Chapter: React.FC<{
   const lang = useLang();
   const ar = lang === "ar" ? AR_CHAPTERS[n] : EN_CHAPTERS[n];
   const hero = useHero();
-  const camera = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar", hero?.rate ?? 1);
+  const { style: camera, zoom } = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar", hero?.rate ?? 1);
   const devices =
     lang === "ar" ? (
       <MirrorContext.Provider value>
@@ -48,7 +48,7 @@ export const Chapter: React.FC<{
     // The fast cut: one short title, the camera on the action, no copy column.
     return (
       <AbsoluteFill style={style}>
-        <Stage look={look}>
+        <Stage look={look} backdropBlur={Math.max(0, zoom - 1) * 18}>
           <Badge dark={look === "dark"} rtl={lang === "ar"} />
           <AbsoluteFill style={camera}>{devices}</AbsoluteFill>
           <HeroTitle text={lang === "ar" ? hero.titleAr : hero.title} />
