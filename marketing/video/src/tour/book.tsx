@@ -7,13 +7,14 @@ import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig
 import { clamp, land } from "../theme";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
 import { GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
+import { useT } from "./lang";
 
 const enter = { easing: (t: number) => 1 - Math.pow(1 - t, 3) } as const; // the app's enter curve, close enough
 const AMBER = "#FBBF24";
 
 // Digits that roll like the app's RollingNumber: a changed digit slides up out, the new one in.
 const Rolling: React.FC<{ now: string; before: string; p: number; size: number }> = ({ now, before, p, size }) => (
-  <span style={{ display: "inline-flex", fontVariantNumeric: "tabular-nums" }}>
+  <span style={{ display: "inline-flex", direction: "ltr", fontVariantNumeric: "tabular-nums" }}>
     {now.split("").map((ch, i) => {
       const old = before[i] ?? ch;
       const moving = old !== ch;
@@ -54,6 +55,7 @@ const PLACES: Place[] = [
 
 // The floating dock with the Book tab turned into the hold's live countdown.
 const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: number }> = ({ held, secs, share, tick }) => {
+  const tr = useT();
   const r = 11;
   const c = 2 * Math.PI * r;
   const tabs: { label: string; Icon: LucideIcon; on: boolean }[] = [
@@ -116,7 +118,7 @@ const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: num
           ) : (
             <Icon size={18} style={{ scale: on ? "1.12" : "1" }} />
           )}
-          {label}
+          {tr(label)}
           {on && held ? (
             <span style={{ opacity: 0.85 }}>
               <Rolling now={mmss(secs).slice(1)} before={mmss(secs + 1).slice(1)} p={tick} size={13} />
@@ -130,6 +132,7 @@ const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: num
 
 const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const { fps } = useVideoConfig();
   const open = 52;
   const reserve = 112;
@@ -187,7 +190,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 >
                   <p.Icon
                     size={176}
-                    style={{ position: "absolute", right: -24, bottom: -32, opacity: 0.12, rotate: "-12deg" }}
+                    style={{ position: "absolute", insetInlineEnd: -24, bottom: -32, opacity: 0.12, rotate: "-12deg" }}
                   />
                   <div style={{ padding: 20, position: "relative" }}>
                     <div
@@ -211,7 +214,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                         style={{
                           position: "absolute",
                           top: 16,
-                          right: 16,
+                          insetInlineEnd: 16,
                           width: 40,
                           height: 40,
                           borderRadius: "50%",
@@ -225,8 +228,8 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                         <Plus size={20} strokeWidth={2.5} />
                       </div>
                     ) : null}
-                    <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 14 }}>{p.name}</div>
-                    <div style={{ fontSize: 14, opacity: 0.8, marginTop: 2 }}>{p.note}</div>
+                    <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 14 }}>{tr(p.name)}</div>
+                    <div style={{ fontSize: 14, opacity: 0.8, marginTop: 2 }}>{tr(p.note)}</div>
                     {p.rate ? (
                       <div
                         style={{
@@ -239,7 +242,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                           backgroundColor: "rgba(255,255,255,0.12)",
                         }}
                       >
-                        {p.rate}
+                        {tr(p.rate)}
                       </div>
                     ) : null}
                   </div>
@@ -305,7 +308,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                                 }}
                               />
                             ) : (
-                              <span style={{ opacity: 1 - morph * 2 }}>Reserve Now</span>
+                              <span style={{ opacity: 1 - morph * 2 }}>{tr("Reserve Now")}</span>
                             )}
                           </div>
                         </div>
@@ -364,7 +367,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   boxShadow: `0 0 0 ${interpolate(frame % 30, [0, 29], [0, 7])}px rgba(245,158,11,${interpolate(frame % 30, [0, 29], [0.5, 0])})`,
                 }}
               />
-              Held for you
+              {tr("Held for you")}
             </div>
             <div style={{ position: "relative", width: 216, height: 216, ...beat(0.1) }}>
               <svg width={216} height={216} style={{ position: "absolute", inset: 0, rotate: "-90deg" }}>
@@ -396,11 +399,11 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               </div>
             </div>
             <div style={{ ...beat(0.3) }}>
-              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>Table 4</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>By the window · 4 seats</div>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr("Table 4")}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{tr("By the window · 4 seats")}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 600, ...beat(0.45) }}>
-              <Footprints size={18} /> Walk over and show this at the counter
+              <Footprints size={18} /> {tr("Walk over and show this at the counter")}
             </div>
             <div
               style={{
@@ -417,7 +420,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 ...beat(0.6),
               }}
             >
-              <X size={16} /> Cancel Reservation
+              <X size={16} /> {tr("Cancel Reservation")}
             </div>
           </div>
         ) : null}

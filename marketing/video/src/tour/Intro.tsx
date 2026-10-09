@@ -10,7 +10,7 @@ import {
 } from "remotion";
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, inter } from "../theme";
-import { AR, plexArabic, useLang } from "./lang";
+import { AR, plexArabic, useLang, useT } from "./lang";
 import { MenuScreen } from "./menu-screen";
 import { AdminShell, Dish, DISHES, Dock, GuestPhone, S, Screen, StatStrip } from "./ui";
 
@@ -40,26 +40,27 @@ const useRiseIn = (at: number) => {
 // ——— Static screens of each app ————————————————————————————————————
 
 const TillMini: React.FC = () => {
+  const tr = useT();
   const items = [DISHES.latte, DISHES.mocha, DISHES.cappuccino, DISHES.waffle, DISHES.cake, DISHES.lemonade];
   return (
     <>
       <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 20px", borderBottom: `1px solid ${S.border}`, fontSize: 20, fontWeight: 800 }}>
-        Till
+        {tr("Till")}
       </div>
       <div style={{ position: "absolute", top: 80, left: 16, width: 870, display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
         {[...items, ...items.slice(0, 4)].map((d, i) => (
           <div key={i} style={{ padding: 8, borderRadius: 14, border: `1px solid ${S.border}` }}>
             <Dish img={d.img} size="100%" ratio="4 / 3" radius={10} />
-            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8 }}>{d.name}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8 }}>{tr(d.name)}</div>
             <div style={{ fontSize: 13, color: S.mutedFg }}>{d.price}</div>
           </div>
         ))}
       </div>
       <div style={{ position: "absolute", top: 64, right: 0, bottom: 0, width: 370, borderLeft: `1px solid ${S.border}`, padding: 18 }}>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>Current sale</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{tr("Current sale")}</div>
         {[DISHES.latte, DISHES.waffle].map((d) => (
           <div key={d.name} style={{ display: "flex", justifyContent: "space-between", fontSize: 16, fontWeight: 600, marginTop: 16 }}>
-            <span>{d.name}</span>
+            <span>{tr(d.name)}</span>
             <span>{d.price}</span>
           </div>
         ))}
@@ -81,8 +82,8 @@ const TillMini: React.FC = () => {
             fontWeight: 700,
           }}
         >
-          <span>Charge</span>
-          <span>EGP 185</span>
+          <span>{tr("Charge")}</span>
+          <span>{tr("EGP 185")}</span>
         </div>
       </div>
     </>
@@ -90,6 +91,7 @@ const TillMini: React.FC = () => {
 };
 
 const KitchenMini: React.FC = () => {
+  const tr = useT();
   const tickets = [
     { n: "#42", ch: "Table 3", t: "0:12", lines: ["1  Latte", "1  Waffle"], band: "rgba(241,245,249,0.6)", fg: S.fg },
     { n: "#41", ch: "Counter", t: "2:35", lines: ["2  Flat White", "1  Espresso"], band: "rgba(241,245,249,0.6)", fg: S.fg },
@@ -99,24 +101,24 @@ const KitchenMini: React.FC = () => {
   return (
     <div style={{ position: "absolute", inset: 0, backgroundColor: "#f8fafc" }}>
       <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 20px", backgroundColor: "#fff", borderBottom: `1px solid ${S.border}`, fontSize: 20, fontWeight: 800 }}>
-        Kitchen
+        {tr("Kitchen")}
       </div>
       <div style={{ display: "flex", gap: 12, padding: 16 }}>
         {tickets.map((k) => (
           <div key={k.n} style={{ width: 260, borderRadius: 14, border: `1px solid ${S.border}`, backgroundColor: "#fff", overflow: "hidden" }}>
             <div style={{ padding: "12px 14px", backgroundColor: k.band, color: k.fg, display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 800 }}>
               <span>
-                {k.n} <span style={{ fontSize: 13, color: S.fg }}>{k.ch}</span>
+                {k.n} <span style={{ fontSize: 13, color: S.fg }}>{tr(k.ch)}</span>
               </span>
               <span>{k.t}</span>
             </div>
             <div style={{ padding: "12px 14px", fontSize: 16, fontWeight: 600, display: "flex", flexDirection: "column", gap: 8 }}>
               {k.lines.map((l) => (
-                <span key={l}>{l}</span>
+                <span key={l}>{tr(l)}</span>
               ))}
             </div>
             <div style={{ margin: "0 14px 14px", height: 46, borderRadius: 12, backgroundColor: S.primary, color: "#fff", display: "grid", placeItems: "center", fontSize: 15, fontWeight: 700 }}>
-              Ready
+              {tr("Ready")}
             </div>
           </div>
         ))}
@@ -125,7 +127,9 @@ const KitchenMini: React.FC = () => {
   );
 };
 
-const AdminMini: React.FC = () => (
+const AdminMini: React.FC = () => {
+  const tr = useT();
+  return (
   <AdminShell active="Dashboard" crumb="Today" title="Dashboard">
     <StatStrip
       stats={[
@@ -136,7 +140,7 @@ const AdminMini: React.FC = () => (
       ]}
     />
     <div style={{ marginTop: 16, borderRadius: 14, border: `1px solid ${S.border}`, padding: 18, height: 360 }}>
-      <div style={{ fontSize: 15, fontWeight: 600 }}>Sales this week</div>
+      <div style={{ fontSize: 15, fontWeight: 600 }}>{tr("Sales this week")}</div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 22, height: 280, marginTop: 16 }}>
         {[52, 64, 48, 71, 80, 96, 88].map((h, i) => (
           <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 8, backgroundColor: i === 5 ? S.fg : "#cbd5e1" }} />
@@ -144,29 +148,32 @@ const AdminMini: React.FC = () => (
       </div>
     </div>
   </AdminShell>
-);
+  );
+};
 
-const RiderMini: React.FC = () => (
+const RiderMini: React.FC = () => {
+  const tr = useT();
+  return (
   <div style={{ position: "absolute", inset: 0, backgroundColor: "#f8fafc" }}>
     <div style={{ position: "absolute", top: 60, left: 16, right: 16 }}>
-      <div style={{ fontSize: 26, fontWeight: 800 }}>Deliveries</div>
+      <div style={{ fontSize: 26, fontWeight: 800 }}>{tr("Deliveries")}</div>
       <div style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#fff", border: "1px solid #0284c7" }}>
-        <div style={{ fontSize: 13, color: S.mutedFg }}>Order #1042</div>
+        <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>Mona Adel</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Mona Adel")}</div>
           <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 700, backgroundColor: "rgba(2,132,199,0.12)", color: "#0284c7" }}>
-            On the way
+            {tr("On the way")}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, fontSize: 14 }}>
           <MapPin size={16} /> 12 Brazil St, Zamalek
         </div>
         <div style={{ marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: S.muted }}>
-          <div style={{ fontSize: 12, color: S.mutedFg }}>Cash to collect</div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>EGP 210</div>
+          <div style={{ fontSize: 12, color: S.mutedFg }}>{tr("Cash to collect")}</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("EGP 210")}</div>
         </div>
         <div style={{ marginTop: 12, height: 60, borderRadius: 14, backgroundColor: S.primary, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 17, fontWeight: 700 }}>
-          <Check size={18} /> Delivered
+          <Check size={18} /> {tr("Delivered ✓".replace(" ✓", ""))}
         </div>
       </div>
     </div>
@@ -178,12 +185,13 @@ const RiderMini: React.FC = () => (
       ].map(({ Icon, t }, i) => (
         <span key={t} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, color: i ? S.mutedFg : S.fg }}>
           <Icon size={22} />
-          {t}
+          {tr(t)}
         </span>
       ))}
     </div>
   </div>
-);
+  );
+};
 
 // ——— The scene ————————————————————————————————————————————————————
 
@@ -194,7 +202,7 @@ type Props = {
 };
 
 const LABELS_AR: Record<string, string> = {
-  "Owner dashboard": "لوحة صاحب المكان",
+  Dashboard: "لوحة التحكم",
   Till: "الكاشير",
   "Kitchen display": "شاشة المطبخ",
   "Guest app · iOS, Android, web": "أبلكيشن العميل · آيفون وأندرويد وويب",
@@ -283,7 +291,7 @@ const IntroInner: React.FC<Props> = ({ headline: h, features: f, style }) => {
           <RiderMini />
         </GuestPhone>
 
-        <Tag text="Owner dashboard" x={960} y={232} at={26} />
+        <Tag text="Dashboard" x={960} y={232} at={26} />
         <Tag text="Till" x={390} y={364} at={36} />
         <Tag text="Kitchen display" x={1530} y={364} at={44} />
         <Tag text="Guest app · iOS, Android, web" x={616} y={1012} at={54} />

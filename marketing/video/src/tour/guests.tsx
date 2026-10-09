@@ -7,6 +7,7 @@ import type { Dishkey } from "./menu-screen";
 import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
 import { MenuScreen } from "./menu-screen";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
+import { useLang, useT } from "./lang";
 
 const PHONE = { x: 1330, y: 70, height: 940 } as const;
 
@@ -22,6 +23,7 @@ const THEMES = [
 
 const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const pick = frame >= 152 ? 2 : frame >= 92 ? 1 : 0;
   const theme = THEMES[pick];
   const grid = frame >= 212;
@@ -48,8 +50,8 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       </GuestPhone>
 
       <Glass style={{ left: 880, top: 270, width: 420, padding: 30, fontFamily: jakarta, ...useEnter(14, 160) }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: S.fg }}>Theme</div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 22 }}>Brand color</div>
+        <div style={{ fontSize: 26, fontWeight: 700, color: S.fg }}>{tr("Theme")}</div>
+        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 22 }}>{tr("Brand color")}</div>
         <div style={{ display: "flex", gap: 14, marginTop: 12 }}>
           {THEMES.map((t, i) => (
             <div
@@ -64,9 +66,9 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             />
           ))}
         </div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>Dock</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: S.fg, marginTop: 6 }}>A deep shade of the brand colour</div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>Menu</div>
+        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Dock")}</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: S.fg, marginTop: 6 }}>{tr("A deep shade of the brand colour")}</div>
+        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Menu")}</div>
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           {["Classic list", "Photo grid"].map((m, i) => {
             const on = (i === 1) === grid;
@@ -82,7 +84,7 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   color: on ? "#fff" : S.fg,
                 }}
               >
-                {m}
+                {tr(m)}
               </div>
             );
           })}
@@ -125,7 +127,9 @@ const TrayRow: React.FC<{ items: string[]; count: number; total: number; button:
   count,
   total,
   button,
-}) => (
+}) => {
+  const tr = useT();
+  return (
   <div style={{ height: 68, display: "flex", alignItems: "center", gap: 12, padding: "0 12px" }}>
     <div style={{ display: "flex" }}>
       {items.map((k, i) => {
@@ -137,9 +141,9 @@ const TrayRow: React.FC<{ items: string[]; count: number; total: number; button:
     </div>
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 13, opacity: 0.7 }}>
-        {count} {count === 1 ? "item" : "items"}
+        {tr(`${count} ${count === 1 ? "item" : "items"}`)}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700 }}>EGP {total}</div>
+      <div style={{ fontSize: 16, fontWeight: 700 }}>{tr(`EGP ${total}`)}</div>
     </div>
     <div
       style={{
@@ -156,19 +160,21 @@ const TrayRow: React.FC<{ items: string[]; count: number; total: number; button:
       }}
     >
       {button === "Place Order" ? <Check size={16} /> : null}
-      {button}
+      {tr(button)}
     </div>
   </div>
-);
+  );
+};
 
 // The dish photo flies from its row into the dock (client_app tray_flights: 620 ms,
 // closes to a circle, arcs up, lands at thumbnail size with a bump).
 const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
   const frame = useCurrentFrame();
+  const ar = useLang() === "ar";
   const t = interpolate(frame, [at + 1, at + 20], [0, 1], { ...clamp, easing: (x) => 1 - Math.pow(1 - x, 2.4) });
   if (frame < at + 1 || frame > at + 22) return null;
-  const from = { x: 16, y: 152 + row * 96, s: 80 };
-  const to = { x: 24 + slot * 32, y: 712 + 12, s: 44 };
+  const from = { x: ar ? 390 - 16 - 80 : 16, y: 152 + row * 96, s: 80 };
+  const to = { x: ar ? 390 - 24 - slot * 32 - 44 : 24 + slot * 32, y: 712 + 12, s: 44 };
   const arc = Math.min(90, Math.abs(to.y - from.y) * 0.25) * Math.sin(Math.PI * t);
   const size = from.s + (to.s - from.s) * t;
   return (
@@ -190,6 +196,7 @@ const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }>
 // "Your order" rises out of the dock (client_app tray.dart), clipped at the row's top.
 const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }> = ({ openAt, closeAt, lines }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const up =
     interpolate(frame, [openAt, openAt + 12], [0, 1], { ...clamp, easing: land }) *
     interpolate(frame, [closeAt - 8, closeAt], [1, 0], clamp);
@@ -211,15 +218,15 @@ const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }>
           padding: "20px 18px 0",
         }}
       >
-        <div style={{ fontSize: 20, fontWeight: 800 }}>Your order</div>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Your order")}</div>
         {lines.map((k) => {
           const d = DISHES[k];
           return (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
               <Dish img={d.img} size={48} radius={24} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{d.name}</div>
-                <div style={{ fontSize: 13, opacity: 0.6 }}>{d.note}</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{tr(d.name)}</div>
+                <div style={{ fontSize: 13, opacity: 0.6 }}>{tr(d.note)}</div>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>{d.price}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700 }}>
@@ -237,6 +244,7 @@ const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }>
 
 const OrderInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const scanned = 54;
   const addLatte = 100;
   const addClub = 140;
@@ -277,10 +285,10 @@ const OrderInner: React.FC<ChapterProps> = ({ title, line, style }) => {
     >
       <GuestPhone {...PHONE} label="Web · nothing to install" style={useEnter(4)}>
         <MenuScreen counts={counts} enterAt={scanned} offer="cappuccino" />
+        <TraySheet openAt={order + 2} closeAt={sent} lines={["latte", "waffle"]} />
         <Dock row={row} rowAt={addLatte + 10} />
         <Flight dish="latte" row={0} slot={0} at={addLatte} />
         <Flight dish="waffle" row={3} slot={1} at={addClub} />
-        <TraySheet openAt={order + 2} closeAt={sent} lines={["latte", "waffle"]} />
         <Touch x={352} y={192} at={addLatte} />
         <Touch x={352} y={480} at={addClub} />
         <Touch x={318} y={746} at={order} />
@@ -324,7 +332,7 @@ const OrderInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               }}
             />
           </div>
-          <div style={{ color: "#fff", fontSize: 18, fontWeight: 600, marginTop: 26 }}>Table 3</div>
+          <div style={{ color: "#fff", fontSize: 18, fontWeight: 600, marginTop: 26 }}>{tr("Table 3")}</div>
         </AbsoluteFill>
         <AbsoluteFill
           style={{
@@ -351,6 +359,7 @@ export const Order = Interactive.withSchema({
 
 const LoyaltyInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const grow = interpolate(frame, [30, 90], [0, 1], { ...clamp, easing: glide });
   const points = Math.round(interpolate(grow, [0, 1], [1100, 1320]));
   const ring = interpolate(grow, [0, 1], [0.55, 0.88]);
@@ -409,7 +418,7 @@ const LoyaltyInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center" }}>
               <div>
                 <div style={{ fontSize: 24, fontWeight: 800 }}>{points.toLocaleString("en-US")}</div>
-                <div style={{ fontSize: 13, opacity: 0.7 }}>pts</div>
+                <div style={{ fontSize: 13, opacity: 0.7 }}>{tr("pts")}</div>
               </div>
             </div>
           </div>
@@ -427,14 +436,14 @@ const LoyaltyInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               color: "#fcd34d",
             }}
           >
-            <Award size={14} /> GOLD
+            <Award size={14} /> {tr("GOLD")}
           </div>
           <div style={{ fontSize: 14, opacity: 0.7, marginTop: 10 }}>
             {Math.max(0, 1500 - points)} pts to Platinum
           </div>
         </div>
         <div style={{ position: "absolute", top: 470, left: 16, right: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: S.mutedFg, marginBottom: 10 }}>Recent Activity</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: S.mutedFg, marginBottom: 10 }}>{tr("Recent Activity")}</div>
           <div style={{ borderRadius: 24, backgroundColor: S.muted, padding: "6px 16px" }}>
             {activity.map((a, i) => (
               <div

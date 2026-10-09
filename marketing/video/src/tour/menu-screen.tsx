@@ -3,6 +3,7 @@ import type React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { clamp, glide } from "../theme";
 import { AddButton, Dish, DISHES, S, TopBar } from "./ui";
+import { useT } from "./lang";
 
 export type Dishkey = keyof typeof DISHES;
 const ROWS: Dishkey[] = ["latte", "mocha", "cappuccino", "waffle", "cake"];
@@ -19,6 +20,7 @@ export const MenuScreen: React.FC<{
   offer?: Dishkey;
 }> = ({ layout = "row", primary = S.primary, brand, brandColor, counts = {}, enterAt = -100, offer }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const rise = (i: number) => ({
     opacity: interpolate(frame, [enterAt + i * 3, enterAt + i * 3 + 8], [0, 1], clamp),
     translate: interpolate(frame, [enterAt + i * 3, enterAt + i * 3 + 16], ["0px 30px", "0px 0px"], {
@@ -31,7 +33,7 @@ export const MenuScreen: React.FC<{
       <TopBar brand={brand} color={brandColor} />
       <div style={{ position: "absolute", top: 116, left: 16, right: 16 }}>
         <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12, ...rise(0) }}>
-          Coffee
+          {tr("Coffee")}
         </div>
         {layout === "row" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -42,18 +44,18 @@ export const MenuScreen: React.FC<{
                 <div key={k} style={{ display: "flex", gap: 14, alignItems: "center", ...rise(i + 1) }}>
                   <Dish img={d.img} size={80} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700 }}>{d.name}</div>
-                    <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 2 }}>{d.note}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700 }}>{tr(d.name)}</div>
+                    <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 2 }}>{tr(d.note)}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, display: "flex", gap: 6 }}>
                       {isOffer ? (
                         <>
-                          <span style={{ color: primary }}>EGP {Math.round(d.price * 0.8)}</span>
+                          <span style={{ color: primary }}>{tr(`EGP ${Math.round(d.price * 0.8)}`)}</span>
                           <span style={{ color: S.mutedFg, textDecoration: "line-through", fontWeight: 500 }}>
                             {d.price}
                           </span>
                         </>
                       ) : (
-                        <span>EGP {d.price}</span>
+                        <span>{tr(`EGP ${d.price}`)}</span>
                       )}
                     </div>
                   </div>
@@ -73,11 +75,11 @@ export const MenuScreen: React.FC<{
                     <AddButton
                       count={counts[k] ?? 0}
                       primary={primary}
-                      style={{ position: "absolute", right: 8, bottom: 8 }}
+                      style={{ position: "absolute", insetInlineEnd: 8, bottom: 8 }}
                     />
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginTop: 8 }}>{d.name}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: S.mutedFg }}>EGP {d.price}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, marginTop: 8 }}>{tr(d.name)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: S.mutedFg }}>{tr(`EGP ${d.price}`)}</div>
                 </div>
               );
             })}
@@ -114,7 +116,7 @@ export const MenuScreen: React.FC<{
               color: i === 0 ? "#fff" : S.mutedFg,
             }}
           >
-            {c}
+            {tr(c)}
           </div>
         ))}
         <div

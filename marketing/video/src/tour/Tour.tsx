@@ -21,11 +21,11 @@ export const Tour: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
 
   return (
     <LangContext.Provider value={lang}>
-      {/* Lyria 3 Pro instrumental (Artlist), past its 1.5 s of lead-in silence; fades out over the end card */}
+      {/* Lyria 3 Pro instrumental (Artlist): high-energy tech-launch, 126 BPM; fades out over the end card.
+          The calmer first track is public/tour-music.mp3. */}
       <Audio
         name="Music"
-        src={staticFile("tour-music.mp3")}
-        trimBefore={1.5 * fps}
+        src={staticFile("tour-music-hype.mp3")}
         premountFor={fps}
         volume={interpolate(
           frame,

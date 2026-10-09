@@ -85,7 +85,7 @@ export const Copy: React.FC<{
     <div
       style={{
         position: "absolute",
-        left: 130,
+        [rtl ? "right" : "left"]: 130,
         top: 0,
         bottom: 0,
         width,

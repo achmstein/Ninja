@@ -113,9 +113,10 @@ const FinaleInner: React.FC<Props> = ({ headline: h, tagline: tl, url, style }) 
 
         {TILES.map((t, i) => {
           const at = 10 + (t.col + t.row) * 4;
-          const x = LEFT + t.col * (W + GAP);
+          const x0 = LEFT + t.col * (W + GAP);
           const y = TOP + t.row * (H + GAP);
           const w = (t.span ?? 1) * W + ((t.span ?? 1) - 1) * GAP;
+          const x = ar ? 1920 - x0 - w : x0;
           // On the fold every tile glides to the centre and shrinks into the mark.
           const f = interpolate(frame, [fold + i * 0.6, fold + 16 + i * 0.6], [0, 1], { ...clamp, easing: glide });
           const dx = (960 - (x + w / 2)) * f;

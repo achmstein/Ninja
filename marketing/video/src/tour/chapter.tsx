@@ -3,7 +3,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, type Intera
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, land } from "../theme";
 import { Copy, Stage, type Look } from "./Frame";
-import { AR_CHAPTERS, useLang } from "./lang";
+import { AR_CHAPTERS, DeviceContext, MirrorContext, plexArabic, useLang, useUnmirror } from "./lang";
 
 export type ChapterProps = {
   readonly title: string;
@@ -35,8 +35,14 @@ export const Chapter: React.FC<{
   return (
   <AbsoluteFill style={style}>
     <Stage look={look}>
-      <Badge dark={look === "dark"} />
-      {children}
+      <Badge dark={look === "dark"} rtl={ar !== undefined} />
+      {ar ? (
+        <MirrorContext.Provider value>
+          <AbsoluteFill style={{ transform: "scaleX(-1)" }}>{children}</AbsoluteFill>
+        </MirrorContext.Provider>
+      ) : (
+        children
+      )}
       <Copy
         n={n}
         eyebrow={ar?.eyebrow ?? eyebrow}
@@ -54,8 +60,8 @@ export const Chapter: React.FC<{
 };
 
 // Ninja's corner badge on every chapter, as a channel keeps its logo on screen.
-const Badge: React.FC<{ dark?: boolean }> = ({ dark }) => (
-  <div style={{ position: "absolute", top: 64, left: 130, display: "flex", alignItems: "center", gap: 14, opacity: 0.9 }}>
+const Badge: React.FC<{ dark?: boolean; rtl?: boolean }> = ({ dark, rtl }) => (
+  <div style={{ position: "absolute", top: 64, [rtl ? "right" : "left"]: 130, display: "flex", alignItems: "center", gap: 14, opacity: 0.9 }}>
     <NMark size={44} />
     <Wordmark size={46} color={dark ? "#fff" : C.ink} />
   </div>
@@ -71,19 +77,30 @@ export const useEnter = (at = 4, from = 260) => {
   } as const;
 };
 
-// A frosted card floating over the stage (the liquid-glass look).
-export const Glass: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <div
-    style={{
-      position: "absolute",
-      borderRadius: 32,
-      backgroundColor: "rgba(255,255,255,0.62)",
-      border: "1.5px solid rgba(255,255,255,0.9)",
-      backdropFilter: "blur(24px)",
-      boxShadow: "0 30px 80px -30px rgba(15,23,42,0.35)",
-      ...style,
-    }}
-  >
-    {children}
-  </div>
+// Anything inside the chapter's devices layer that must read the right way round in Arabic.
+export const Unmirror: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <div style={{ ...style, ...useUnmirror() }}>{children}</div>
 );
+
+// A frosted card floating over the stage (the liquid-glass look).
+export const Glass: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => {
+  const unmirror = useUnmirror();
+  const ar = useLang() === "ar";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        borderRadius: 32,
+        backgroundColor: "rgba(255,255,255,0.62)",
+        border: "1.5px solid rgba(255,255,255,0.9)",
+        backdropFilter: "blur(24px)",
+        boxShadow: "0 30px 80px -30px rgba(15,23,42,0.35)",
+        ...style,
+        ...unmirror,
+        ...(ar ? { direction: "rtl", fontFamily: plexArabic } : {}),
+      }}
+    >
+      <DeviceContext.Provider value={ar ? Number(style?.width ?? 0) : 0}>{children}</DeviceContext.Provider>
+    </div>
+  );
+};

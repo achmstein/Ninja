@@ -31,9 +31,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type React from "react";
+import { useContext } from "react";
 import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
-import { clamp, geist, jakarta, lift, surfer } from "../theme";
-import { AR, plexArabic, useLang } from "./lang";
+import { clamp, geist, inter, jakarta, lift, surfer } from "../theme";
+import { alexandria, AR, DeviceContext, kufi, plexArabic, useLang, useT, useUnmirror } from "./lang";
+
+// Each app's Arabic font: the guest app IBM Plex Sans Arabic, the admin Noto Kufi Arabic,
+// the till, kitchen and rider Alexandria.
+const arabicFor = (font: string) => (font === geist ? kufi : font === inter ? alexandria : plexArabic);
 
 export const S = {
   bg: "#ffffff",
@@ -121,6 +126,7 @@ export const GuestPhone: React.FC<{
   label?: string;
 }> = ({ x, y, height, children, style, font = jakarta, screen = S.bg, darkStatus, label }) => {
   const ar = useLang() === "ar";
+  const unmirror = useUnmirror();
   const bezel = height * 0.018;
   const inner = height - bezel * 2;
   const k = inner / 844;
@@ -138,6 +144,7 @@ export const GuestPhone: React.FC<{
         backgroundColor: "#18181b",
         boxShadow: `${lift}, inset 0 0 0 2px #3f3f46`,
         ...style,
+        ...unmirror,
       }}
     >
       {label ? (
@@ -188,11 +195,12 @@ export const GuestPhone: React.FC<{
             height: 844,
             scale: `${k}`,
             transformOrigin: "0 0",
-            fontFamily: font,
+            fontFamily: ar ? arabicFor(font) : font,
+            direction: ar ? "rtl" : "ltr",
             color: S.fg,
           }}
         >
-          {children}
+          <DeviceContext.Provider value={390}>{children}</DeviceContext.Provider>
           <StatusBar dark={darkStatus} />
           <div
             style={{
@@ -224,6 +232,8 @@ export const Screen: React.FC<{
   bezel?: number;
   screen?: string;
 }> = ({ x, y, width, logical, children, style, font = geist, bezel = 14, screen = S.bg }) => {
+  const ar = useLang() === "ar";
+  const unmirror = useUnmirror();
   const k = (width - bezel * 2) / logical[0];
   return (
     <div
@@ -238,6 +248,7 @@ export const Screen: React.FC<{
         backgroundColor: "#18181b",
         boxShadow: `${lift}, inset 0 0 0 2px #3f3f46`,
         ...style,
+        ...unmirror,
       }}
     >
       <div
@@ -259,11 +270,12 @@ export const Screen: React.FC<{
             height: logical[1],
             scale: `${k}`,
             transformOrigin: "0 0",
-            fontFamily: font,
+            fontFamily: ar ? arabicFor(font) : font,
+            direction: ar ? "rtl" : "ltr",
             color: S.fg,
           }}
         >
-          {children}
+          <DeviceContext.Provider value={logical[0]}>{children}</DeviceContext.Provider>
         </div>
         <Glare />
       </div>
@@ -272,8 +284,10 @@ export const Screen: React.FC<{
 };
 
 // A finger tap in logical px.
-export const Touch: React.FC<{ x: number; y: number; at: number; size?: number }> = ({ x, y, at, size = 44 }) => {
+export const Touch: React.FC<{ x: number; y: number; at: number; size?: number }> = ({ x: x0, y, at, size = 44 }) => {
   const frame = useCurrentFrame();
+  const W = useContext(DeviceContext);
+  const x = useLang() === "ar" && W ? W - x0 : x0;
   const t = frame - at;
   if (t < -8 || t > 22) return null;
   return (
@@ -344,7 +358,29 @@ export const DISHES = {
 
 // ——— Guest app chrome ————————————————————————————————————————————
 
-export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ brand = "Layla", color = S.fg }) => (
+// The café's own logo (Chillax's, from client_app/assets), painted in the brand colour
+// like the app's wordmark. The brand keeps its Latin logo in Arabic too.
+export const CafeLogo: React.FC<{ height: number; color?: string }> = ({ height, color = S.fg }) => {
+  const src = staticFile("brand/chillax-en.png");
+  return (
+    <div
+      style={{
+        height,
+        width: height * (605 / 240),
+        backgroundColor: color,
+        WebkitMaskImage: `url(${src})`,
+        maskImage: `url(${src})`,
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+      }}
+    />
+  );
+};
+
+export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ color = S.fg }) => {
+  return (
   <div
     style={{
       position: "absolute",
@@ -359,7 +395,7 @@ export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ brand = "
       backgroundColor: S.bg,
     }}
   >
-    <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", color }}>{brand}</div>
+    <CafeLogo height={28} color={color} />
     <div
       style={{
         width: 40,
@@ -373,14 +409,18 @@ export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ brand = "
       <ScanLine size={18} color={S.fg} />
     </div>
   </div>
-);
+  );
+};
 
-export const PageTitle: React.FC<{ title: string; sub?: string; top?: number }> = ({ title, sub, top = 116 }) => (
-  <div style={{ position: "absolute", top, left: 16, right: 16 }}>
-    <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{title}</div>
-    {sub ? <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4, fontWeight: 500 }}>{sub}</div> : null}
-  </div>
-);
+export const PageTitle: React.FC<{ title: string; sub?: string; top?: number }> = ({ title, sub, top = 116 }) => {
+  const t = useT();
+  return (
+    <div style={{ position: "absolute", top, left: 16, right: 16 }}>
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{t(title)}</div>
+      {sub ? <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4, fontWeight: 500 }}>{t(sub)}</div> : null}
+    </div>
+  );
+};
 
 type Tab = "Menu" | "Book" | "You";
 const TABS: { label: Tab; Icon: LucideIcon }[] = [
@@ -397,6 +437,7 @@ export const Dock: React.FC<{ active?: Tab; slab?: string; row?: React.ReactNode
   rowAt = 0,
 }) => {
   const frame = useCurrentFrame();
+  const t = useT();
   const rowH = row ? interpolate(frame, [rowAt, rowAt + 10], [0, 68], clamp) : 0;
   return (
     <div
@@ -445,7 +486,7 @@ export const Dock: React.FC<{ active?: Tab; slab?: string; row?: React.ReactNode
               }}
             >
               <Icon size={18} />
-              {label}
+              {t(label)}
             </div>
           );
         })}
@@ -462,7 +503,9 @@ export const BillRow: React.FC<{
   total: string;
   pill?: string;
   iconColor?: string;
-}> = ({ Icon, tone, line, total, pill = "Your table", iconColor = "#fff" }) => (
+}> = ({ Icon, tone, line, total, pill = "Your table", iconColor = "#fff" }) => {
+  const t = useT();
+  return (
   <div style={{ height: 68, display: "flex", alignItems: "center", gap: 12, padding: "0 14px", position: "relative" }}>
     <div
       style={{
@@ -489,8 +532,8 @@ export const BillRow: React.FC<{
       <Icon size={20} color={iconColor} />
     </div>
     <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 13, opacity: 0.7, fontWeight: 500 }}>{line}</div>
-      <div style={{ fontSize: 16, fontWeight: 700 }}>{total}</div>
+      <div style={{ fontSize: 13, opacity: 0.7, fontWeight: 500 }}>{t(line)}</div>
+      <div style={{ fontSize: 16, fontWeight: 700 }}>{t(total)}</div>
     </div>
     <div
       style={{
@@ -505,11 +548,12 @@ export const BillRow: React.FC<{
         fontWeight: 600,
       }}
     >
-      {pill}
+      {t(pill)}
       <ChevronUp size={16} />
     </div>
   </div>
-);
+  );
+};
 
 export const AddButton: React.FC<{ count?: number; primary?: string; style?: React.CSSProperties }> = ({
   count = 0,
@@ -608,7 +652,9 @@ export const AdminShell: React.FC<{
   description?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ cafe = "Café Layla", branch = "Zamalek", active, crumb, title, description, actions, children }) => (
+}> = ({ cafe = "Chillax", branch = "Zamalek", active, crumb, title, description, actions, children }) => {
+  const t = useT();
+  return (
   <div style={{ position: "absolute", inset: 0, backgroundColor: "#f8fafc", display: "flex", fontFamily: geist }}>
     <div style={{ width: 232, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px 8px" }}>
@@ -628,8 +674,8 @@ export const AdminShell: React.FC<{
           {cafe.replace(/^(The|Café) /, "").charAt(0)}
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>{cafe}</div>
-          <div style={{ fontSize: 11, color: S.mutedFg }}>{branch}</div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{t(cafe)}</div>
+          <div style={{ fontSize: 11, color: S.mutedFg }}>{t(branch)}</div>
         </div>
       </div>
       {SIDEBAR.map((g) => (
@@ -644,7 +690,7 @@ export const AdminShell: React.FC<{
               padding: "0 8px 4px",
             }}
           >
-            {g.group}
+            {t(g.group)}
           </div>
           {g.items.map(({ label, Icon }) => {
             const on = label === active;
@@ -666,7 +712,7 @@ export const AdminShell: React.FC<{
                 }}
               >
                 <Icon size={15} />
-                {label}
+                {t(label)}
               </div>
             );
           })}
@@ -676,7 +722,7 @@ export const AdminShell: React.FC<{
     <div
       style={{
         position: "absolute",
-        left: 18,
+        insetInlineStart: 18,
         bottom: 14,
         display: "flex",
         alignItems: "center",
@@ -685,7 +731,7 @@ export const AdminShell: React.FC<{
         color: S.mutedFg,
       }}
     >
-      Powered by <span style={{ fontFamily: surfer, fontSize: 17, color: S.fg }}>ninja</span>
+      {t("Powered by")} <span style={{ fontFamily: surfer, fontSize: 17, color: S.fg }}>ninja</span>
     </div>
     <div
       style={{
@@ -710,9 +756,9 @@ export const AdminShell: React.FC<{
           fontSize: 14,
         }}
       >
-        <span style={{ color: S.mutedFg }}>{crumb}</span>
-        <span style={{ color: S.mutedFg }}>›</span>
-        <span style={{ fontWeight: 500 }}>{title}</span>
+        <span style={{ color: S.mutedFg }}>{t(crumb)}</span>
+        <span style={{ color: S.mutedFg }}>{useLang() === "ar" ? "‹" : "›"}</span>
+        <span style={{ fontWeight: 500 }}>{t(title)}</span>
         <div
           style={{
             marginLeft: "auto",
@@ -728,7 +774,7 @@ export const AdminShell: React.FC<{
             fontSize: 13,
           }}
         >
-          Go to…
+          {t("Go to…")}
           <span
             style={{
               marginLeft: "auto",
@@ -745,9 +791,9 @@ export const AdminShell: React.FC<{
       <div style={{ padding: "18px 24px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em" }}>{title}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em" }}>{t(title)}</div>
             {description ? (
-              <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4 }}>{description}</div>
+              <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4 }}>{t(description)}</div>
             ) : null}
           </div>
           <div style={{ display: "flex", gap: 8 }}>{actions}</div>
@@ -756,13 +802,16 @@ export const AdminShell: React.FC<{
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export const AdminButton: React.FC<{ children: React.ReactNode; primary?: boolean; style?: React.CSSProperties }> = ({
   children,
   primary,
   style,
-}) => (
+}) => {
+  const t = useT();
+  return (
   <div
     style={{
       height: 36,
@@ -780,12 +829,15 @@ export const AdminButton: React.FC<{ children: React.ReactNode; primary?: boolea
       ...style,
     }}
   >
-    {children}
+    {typeof children === "string" ? t(children) : children}
   </div>
-);
+  );
+};
 
 // One bordered row of stats (stat-strip.tsx).
-export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?: string }[] }> = ({ stats }) => (
+export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?: string }[] }> = ({ stats }) => {
+  const t = useT();
+  return (
   <div style={{ display: "flex", border: `1px solid ${S.border}`, borderRadius: 10, overflow: "hidden" }}>
     {stats.map((s, i) => (
       <div
@@ -793,10 +845,10 @@ export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?:
         style={{
           flex: 1,
           padding: "12px 16px",
-          borderLeft: i ? `1px solid ${S.border}` : undefined,
+          borderInlineStart: i ? `1px solid ${S.border}` : undefined,
         }}
       >
-        <div style={{ fontSize: 12, color: S.mutedFg }}>{s.label}</div>
+        <div style={{ fontSize: 12, color: S.mutedFg }}>{t(s.label)}</div>
         <div
           style={{
             fontSize: 20,
@@ -806,9 +858,10 @@ export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?:
             color: s.tone ?? S.fg,
           }}
         >
-          {s.value}
+          {t(s.value)}
         </div>
       </div>
     ))}
   </div>
-);
+  );
+};

@@ -5,8 +5,9 @@ import type React from "react";
 import { Img, Interactive, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { NMark } from "../parts";
 import { C, clamp, glide, inter, land } from "../theme";
-import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
+import { Chapter, copySchema, Glass, Unmirror, useEnter, type ChapterProps } from "./chapter";
 import { AdminButton, AdminShell, Dish, DISHES, S, Screen, StatStrip } from "./ui";
+import { useT, useUnmirror } from "./lang";
 
 // A photo of paper (a printed menu, a supplier's receipt) with the scan beam passing over it.
 const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: number; scanFrom: number }> = ({
@@ -18,6 +19,7 @@ const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: nu
   scanFrom,
 }) => {
   const frame = useCurrentFrame();
+  const unmirror = useUnmirror();
   return (
     <div
       style={{
@@ -30,6 +32,7 @@ const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: nu
         boxShadow: "0 40px 80px -30px rgba(15,23,42,0.55)",
         rotate: `${rotate}deg`,
         ...useEnter(2, -200),
+        ...unmirror,
       }}
     >
       <Img src={staticFile(src)} style={{ width: "100%", display: "block" }} />
@@ -63,6 +66,7 @@ const SCANNED: { name: string; cat: string; note?: string; price: number; img?: 
 
 const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const found = 74;
   const studio = 170;
   const reveal = interpolate(frame, [studio + 30, studio + 60], [0, 100], { ...clamp, easing: glide });
@@ -89,9 +93,9 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           actions={
             <>
               <AdminButton>
-                <NMark size={16} /> Scan menu
+                <NMark size={16} /> {tr("Scan menu")}
               </AdminButton>
-              <AdminButton primary>+ Add item</AdminButton>
+              <AdminButton primary>{tr("+ Add item")}</AdminButton>
             </>
           }
         >
@@ -109,7 +113,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               opacity: interpolate(frame, [found, found + 6], [0, 1], clamp),
             }}
           >
-            <NMark size={16} /> Ninja read your photo · 6 items in 2 categories
+            <NMark size={16} /> {tr("Ninja read your photo · 6 items in 2 categories")}
           </div>
           <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${S.border}`, overflow: "hidden" }}>
             {SCANNED.map((d, i) => {
@@ -151,10 +155,10 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     ) : null}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{d.name}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{tr(d.name)}</div>
                     <div style={{ fontSize: 12, color: S.mutedFg }}>
-                      {d.cat}
-                      {d.note ? ` · ${d.note}` : ""}
+                      {tr(d.cat)}
+                      {d.note ? ` · ${tr(d.note)}` : ""}
                     </div>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{d.price}</div>
@@ -183,8 +187,8 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 22, fontWeight: 800, color: S.fg }}>
-          <NMark size={26} /> Photo studio
-          <span style={{ marginLeft: "auto", fontSize: 16, fontWeight: 600, color: S.mutedFg }}>Spanish Latte</span>
+          <NMark size={26} /> {tr("Photo studio")}
+          <span style={{ marginLeft: "auto", fontSize: 16, fontWeight: 600, color: S.mutedFg }}>{tr("Spanish Latte")}</span>
         </div>
         <div style={{ position: "relative", marginTop: 16, height: 260, borderRadius: 20, overflow: "hidden", backgroundColor: "#2b2520" }}>
           <Dish
@@ -228,7 +232,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               fontWeight: 700,
             }}
           >
-            {reveal > 50 ? "After" : "Your phone photo"}
+            {tr(reveal > 50 ? "After" : "Your phone photo")}
           </div>
         </div>
       </Glass>
@@ -257,6 +261,7 @@ const COSTS = [
 
 const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const table = 70;
   return (
     <Chapter
@@ -285,7 +290,7 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 color: S.mutedFg,
               }}
             >
-              Food-cost target
+              {tr("Food-cost target")}
               <span style={{ border: `1px solid ${S.border}`, borderRadius: 8, padding: "6px 10px", color: S.fg, fontWeight: 600 }}>
                 30
               </span>
@@ -313,11 +318,11 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 fontWeight: 500,
               }}
             >
-              <span>Menu item</span>
-              <span>Price</span>
-              <span>Cost per sale</span>
-              <span>Margin</span>
-              <span>Food cost</span>
+              <span>{tr("Menu item")}</span>
+              <span>{tr("Price")}</span>
+              <span>{tr("Cost per sale")}</span>
+              <span>{tr("Margin")}</span>
+              <span>{tr("Food cost")}</span>
             </div>
             {COSTS.map((c, i) => {
               const at = table + i * 6;
@@ -334,7 +339,7 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     opacity: interpolate(frame, [at, at + 6], [0, 1], clamp),
                   }}
                 >
-                  <span style={{ fontWeight: 500 }}>{DISHES[c.k].name}</span>
+                  <span style={{ fontWeight: 500 }}>{tr(DISHES[c.k].name)}</span>
                   <span>{DISHES[c.k].price}</span>
                   <span>{c.cost}</span>
                   <span>{c.margin}%</span>
@@ -352,7 +357,7 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                           opacity: interpolate(frame, [at + 20, at + 26], [0, 1], clamp),
                         }}
                       >
-                        Over target
+                        {tr("Over target")}
                       </span>
                     ) : null}
                   </span>
@@ -366,7 +371,7 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       <Paper x={790} y={440} w={380} src="supplier-receipt.jpg" rotate={4} scanFrom={18} />
 
       {/* What the receipt added to stock */}
-      <div style={{ position: "absolute", left: 1010, top: 740, display: "flex", gap: 14 }}>
+      <Unmirror style={{ position: "absolute", left: 1010, top: 740, display: "flex", gap: 14 }}>
         {["+4 kg espresso beans", "+24 L whole milk", "+2 kg chocolate sauce"].map((t, i) => {
           const at = 56 + i * 6;
           return (
@@ -386,11 +391,11 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 scale: interpolate(frame, [at, at + 16], [0.5, 1], { ...clamp, easing: land }),
               }}
             >
-              {t}
+              {tr(t)}
             </div>
           );
         })}
-      </div>
+      </Unmirror>
     </Chapter>
   );
 };
@@ -420,6 +425,7 @@ const WATERFALL: { label: string; from: number; to: number; kind: "total" | "cos
 
 const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   return (
     <Chapter
       look="light"
@@ -439,8 +445,8 @@ const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           title="Profit & loss"
           actions={
             <>
-              <AdminButton>‹ September 2026 ›</AdminButton>
-              <AdminButton>Export</AdminButton>
+              <AdminButton>{tr("‹ September 2026 ›")}</AdminButton>
+              <AdminButton>{tr("Export")}</AdminButton>
             </>
           }
         >
@@ -452,7 +458,7 @@ const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             ]}
           />
           <div style={{ marginTop: 16, borderRadius: 14, border: `1px solid ${S.border}`, padding: "16px 20px" }}>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Where the money went</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{tr("Where the money went")}</div>
             {WATERFALL.map((w, i) => {
               const at = 20 + i * 7;
               const grow = interpolate(frame, [at, at + 18], [0, 1], { ...clamp, easing: glide });
@@ -468,7 +474,7 @@ const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                         position: "absolute",
                         top: 0,
                         bottom: 0,
-                        left: `${(w.from / 420) * 100}%`,
+                        insetInlineStart: `${(w.from / 420) * 100}%`,
                         width: `${((w.to - w.from) / 420) * 100 * grow}%`,
                         borderRadius: 6,
                         backgroundColor: color,
@@ -508,6 +514,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
   action = "Mark the chocolate cake as sold out.",
 }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const typeFrom = 14;
   const perChar = 0.75;
   const sent = Math.ceil(typeFrom + question.length * perChar) + 4;
@@ -581,7 +588,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
             borderBottom: `1px solid ${S.border}`,
           }}
         >
-          <div style={{ fontSize: 22, fontWeight: 700 }}>Claude or ChatGPT</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Claude or ChatGPT")}</div>
           <div
             style={{
               marginLeft: "auto",
@@ -626,7 +633,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
                 const w = interpolate(frame, [at, at + 18], [0, b.margin], { ...clamp, easing: glide });
                 return (
                   <div key={b.name} style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 18 }}>
-                    <span style={{ width: 160, fontWeight: 600 }}>{b.name}</span>
+                    <span style={{ width: 160, fontWeight: 600 }}>{tr(b.name)}</span>
                     <div style={{ flex: 1, height: 14, borderRadius: 7, backgroundColor: S.muted }}>
                       <div
                         style={{
@@ -643,7 +650,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
               })}
             </div>
             <div style={{ marginTop: 14, color: "#334155", ...fade(reply + 30) }}>
-              The Iced Mocha's chocolate sauce cost more on your last receipt, so its cost per sale rose to 36.10.
+              {tr("The Iced Mocha's chocolate sauce cost more on your last receipt, so its cost per sale rose to 36.10.")}
             </div>
           </div>
           <div
@@ -670,7 +677,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
               ...fade(reply2),
             }}
           >
-            Chocolate Cake → sold out. Confirm?
+            {tr("Chocolate Cake → sold out. Confirm?")}
             <span
               style={{
                 padding: "8px 18px",
@@ -682,7 +689,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
                 scale: interpolate(frame, [reply2 + 24, reply2 + 27, reply2 + 34], [1, 0.9, 1], clamp),
               }}
             >
-              Confirm
+              {tr("Confirm")}
             </span>
           </div>
           <div
@@ -707,7 +714,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
             >
               <Check size={20} color="#fff" strokeWidth={3} />
             </span>
-            Done. The chocolate cake shows as sold out on your menu.
+            {tr("Done. The chocolate cake shows as sold out on your menu.")}
           </div>
         </div>
 

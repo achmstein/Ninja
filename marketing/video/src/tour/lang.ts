@@ -1,8 +1,11 @@
 // The tour's words in Egyptian Arabic. The app screens stay as they are; every
 // caption around them (chapter copy, chips, phone labels, intro, features grid)
 // switches when the tour runs with lang="ar".
+import { loadFont as loadAlexandria } from "@remotion/google-fonts/Alexandria";
 import { loadFont } from "@remotion/google-fonts/IBMPlexSansArabic";
-import { createContext, useContext } from "react";
+import { loadFont as loadKufi } from "@remotion/google-fonts/NotoKufiArabic";
+import { createContext, useContext, type CSSProperties } from "react";
+import { toArabic } from "./ar-ui";
 
 export type Lang = "en" | "ar";
 export const LangContext = createContext<Lang>("en");
@@ -13,6 +16,27 @@ export const { fontFamily: plexArabic } = loadFont("normal", {
   weights: ["400", "500", "600", "700"],
   subsets: ["arabic", "latin"],
 });
+
+// The other apps' Arabic fonts: the admin's Noto Kufi Arabic, the till's and kitchen's Alexandria.
+export const { fontFamily: kufi } = loadKufi("normal", { weights: ["400", "500", "600", "700"], subsets: ["arabic"] });
+export const { fontFamily: alexandria } = loadAlexandria("normal", {
+  weights: ["400", "500", "600", "700"],
+  subsets: ["arabic", "latin"],
+});
+
+// In the Arabic tour the stage is mirrored: devices sit on the left, the copy on the right.
+// A device inside the mirror flips back so its own screen reads the right way round.
+export const MirrorContext = createContext(false);
+export const useUnmirror = (): CSSProperties => (useContext(MirrorContext) ? { transform: "scaleX(-1)" } : {});
+
+// The logical width of the screen we are drawing inside (0 outside any device), so taps can mirror.
+export const DeviceContext = createContext(0);
+
+// The apps' own Arabic strings (ar-ui.ts); English stays the key.
+export const useT = () => {
+  const ar = useLang() === "ar";
+  return (s: string) => (ar ? toArabic(s) : s);
+};
 
 export type ChapterText = { eyebrow: string; title: string; mark: string; line: string; chips: string[] };
 

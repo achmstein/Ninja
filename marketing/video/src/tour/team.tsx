@@ -20,6 +20,7 @@ import { clamp, glide, inter, land } from "../theme";
 import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
 import { MenuScreen } from "./menu-screen";
 import { AdminButton, AdminShell, BillRow, Dish, DISHES, Dock, GuestPhone, S, Screen, Touch } from "./ui";
+import { useT } from "./lang";
 
 // ——— 06 Till ————————————————————————————————————————————————————
 
@@ -41,6 +42,7 @@ const cardAt = (i: number) => ({ x: 16 + (i % 6) * 152, y: 80 + Math.floor(i / 6
 
 const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const taps = [
     { i: 0, at: 40 },
     { i: 2, at: 70 },
@@ -73,7 +75,7 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             borderBottom: `1px solid ${S.border}`,
           }}
         >
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Till</div>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Till")}</div>
           <div style={{ display: "flex", gap: 6, padding: 4, borderRadius: 12, backgroundColor: S.muted }}>
             {["Sale", "Open bills"].map((t, i) => (
               <div
@@ -87,11 +89,11 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   color: i === 0 ? S.fg : S.mutedFg,
                 }}
               >
-                {t}
+                {tr(t)}
               </div>
             ))}
           </div>
-          <div style={{ marginLeft: "auto", fontSize: 14, color: S.mutedFg }}>Nour · Shift open since 9:00 AM</div>
+          <div style={{ marginLeft: "auto", fontSize: 14, color: S.mutedFg }}>{tr("Nour · Shift open since 9:00 AM")}</div>
         </div>
         {PRODUCTS.map((p, i) => {
           const { x, y } = cardAt(i);
@@ -101,7 +103,7 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               key={p.name}
               style={{
                 position: "absolute",
-                left: x,
+                insetInlineStart: x,
                 top: y,
                 width: 140,
                 padding: 8,
@@ -113,7 +115,7 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               }}
             >
               <Dish img={p.img} size="100%" ratio="4 / 3" radius={10} />
-              <div style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>{p.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>{tr(p.name)}</div>
               <div style={{ fontSize: 13, color: S.mutedFg }}>{p.price}</div>
             </div>
           );
@@ -122,22 +124,22 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           style={{
             position: "absolute",
             top: 64,
-            right: 0,
+            insetInlineEnd: 0,
             bottom: 0,
             width: 370,
-            borderLeft: `1px solid ${S.border}`,
+            borderInlineStart: `1px solid ${S.border}`,
             padding: 18,
             display: "flex",
             flexDirection: "column",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Current sale</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{tr("Current sale")}</div>
             <div style={{ fontSize: 13, color: S.mutedFg }}>
               {lines.length} {lines.length === 1 ? "line" : "lines"}
             </div>
           </div>
-          <div style={{ fontSize: 13, color: S.mutedFg, marginTop: 14 }}>Whose round?</div>
+          <div style={{ fontSize: 13, color: S.mutedFg, marginTop: 14 }}>{tr("Whose round?")}</div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             {["Table 3", "Someone else"].map((c, i) => (
               <div
@@ -151,14 +153,14 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   color: i === 0 ? "#fff" : S.fg,
                 }}
               >
-                {c}
+                {tr(c)}
               </div>
             ))}
           </div>
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
             {lines.map((p) => (
               <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{p.name}</div>
+                <div style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{tr(p.name)}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 700 }}>
                   <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: S.muted, display: "grid", placeItems: "center" }}>−</span>
                   1
@@ -182,7 +184,7 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 fontWeight: 600,
               }}
             >
-              <Bike size={16} /> Delivery
+              <Bike size={16} /> {tr("Delivery")}
             </div>
             <div
               style={{
@@ -200,8 +202,8 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 scale: interpolate(frame, [charge, charge + 3, charge + 12], [1, 0.96, 1], clamp),
               }}
             >
-              <span>Charge</span>
-              <span>EGP {total}</span>
+              <span>{tr("Charge")}</span>
+              <span>{tr(`EGP ${total}`)}</span>
             </div>
           </div>
         </div>
@@ -231,8 +233,8 @@ const TillInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           >
             <Check size={52} color="#fff" strokeWidth={3} />
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>Paid · EGP {total}</div>
-          <div style={{ fontSize: 16, color: S.mutedFg }}>Cash · receipt printed</div>
+          <div style={{ fontSize: 28, fontWeight: 800 }}>{tr(`Paid · EGP ${total}`)}</div>
+          <div style={{ fontSize: 16, color: S.mutedFg }}>{tr("Cash · receipt printed")}</div>
         </AbsoluteFill>
       </Screen>
     </Chapter>
@@ -273,6 +275,7 @@ const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProper
   pressAt,
 }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const band = ready
     ? { bg: "rgba(16,185,129,0.15)", fg: "#047857" }
     : t.age === "late"
@@ -306,22 +309,22 @@ const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProper
               color: S.fg,
             }}
           >
-            {t.channel}
+            {tr(t.channel)}
           </span>
           <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
             {ready ? "Ready" : t.time}
           </span>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: S.fg, marginTop: 4 }}>{t.name}</div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: S.fg, marginTop: 4 }}>{tr(t.name)}</div>
       </div>
       <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         {t.lines.map(([q, name]) => (
           <div key={name} style={{ display: "flex", gap: 10, fontSize: 16 }}>
             <span style={{ fontWeight: 800, width: 18 }}>{q}</span>
-            <span style={{ fontWeight: 600 }}>{name}</span>
+            <span style={{ fontWeight: 600 }}>{tr(name)}</span>
           </div>
         ))}
-        {t.note ? <div style={{ fontSize: 14, fontWeight: 600, color: "#b45309" }}>{t.note}</div> : null}
+        {t.note ? <div style={{ fontSize: 14, fontWeight: 600, color: "#b45309" }}>{tr(t.note)}</div> : null}
       </div>
       <div style={{ padding: "0 14px 14px" }}>
         <div
@@ -341,7 +344,7 @@ const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProper
           }}
         >
           {ready ? <Undo2 size={16} /> : <Check size={16} />}
-          {ready ? "Bring back" : "Ready"}
+          {tr(ready ? "Bring back" : "Ready")}
         </div>
       </div>
     </div>
@@ -350,6 +353,7 @@ const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProper
 
 const KitchenInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const { fps } = useVideoConfig();
   const arrive = 26;
   const ready = 140;
@@ -393,20 +397,20 @@ const KitchenInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           }}
         >
           <ChefHat size={22} />
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Kitchen</div>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Kitchen")}</div>
           <div style={{ marginLeft: "auto", fontSize: 14, color: S.mutedFg }}>
             {frame >= arrive ? 4 : 3} to prepare
           </div>
         </div>
         {TICKETS.map((t, i) => (
-          <TicketCard key={t.n} t={t} style={{ left: 16 + i * 268 + push }} />
+          <TicketCard key={t.n} t={t} style={{ insetInlineStart: 16 + i * 268 + push }} />
         ))}
         <TicketCard
           t={fresh}
           ready={frame >= ready + 2}
           pressAt={ready}
           style={{
-            left: 16,
+            insetInlineStart: 16,
             opacity: interpolate(frame, [arrive, arrive + 6], [0, 1], clamp),
             translate: interpolate(frame, [arrive, arrive + 18], ["0px -200px", "0px 0px"], { ...clamp, easing: land }),
             boxShadow: `0 0 ${interpolate(frame, [arrive + 10, arrive + 24, arrive + 50], [0, 40, 0], clamp)}px rgba(245,158,11,0.9)`,
@@ -432,6 +436,7 @@ export const Kitchen = Interactive.withSchema({
 
 const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   const onTheWay = 96;
   const delivered = 214;
   const out = frame >= onTheWay + 2;
@@ -464,7 +469,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       {/* The rider's phone (rider_app, Flutter, slate) */}
       <GuestPhone x={880} y={90} height={900} font={inter} screen="#f8fafc" style={useEnter(4)}>
         <div style={{ position: "absolute", top: 60, left: 16, right: 16 }}>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Deliveries</div>
+          <div style={{ fontSize: 26, fontWeight: 800 }}>{tr("Deliveries")}</div>
           <div
             style={{
               marginTop: 12,
@@ -479,8 +484,8 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           >
             <span style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: S.emerald }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#059669" }}>On duty</div>
-              <div style={{ fontSize: 12, color: S.mutedFg }}>While you are on duty the till can give you deliveries.</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#059669" }}>{tr("On duty")}</div>
+              <div style={{ fontSize: 12, color: S.mutedFg }}>{tr("While you are on duty the till can give you deliveries.")}</div>
             </div>
           </div>
           <div
@@ -493,9 +498,9 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
             }}
           >
-            <div style={{ fontSize: 13, color: S.mutedFg }}>Order #1042</div>
+            <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>Mona Adel</div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Mona Adel")}</div>
               <div
                 style={{
                   padding: "4px 10px",
@@ -506,7 +511,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   color: stage.fg,
                 }}
               >
-                {stage.label}
+                {tr(stage.label)}
               </div>
             </div>
             {[
@@ -517,20 +522,20 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 <span style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: S.muted, display: "grid", placeItems: "center" }}>
                   <Icon size={16} />
                 </span>
-                {text}
+                {tr(text)}
               </div>
             ))}
-            <div style={{ fontSize: 12, color: S.mutedFg, marginTop: 12 }}>In the bag</div>
+            <div style={{ fontSize: 12, color: S.mutedFg, marginTop: 12 }}>{tr("In the bag")}</div>
             <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
               {["1× Latte", "1× Waffle"].map((c) => (
                 <span key={c} style={{ padding: "4px 10px", borderRadius: 999, backgroundColor: S.muted, fontSize: 12, fontWeight: 600 }}>
-                  {c}
+                  {tr(c)}
                 </span>
               ))}
             </div>
             <div style={{ marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: S.muted }}>
-              <div style={{ fontSize: 12, color: S.mutedFg }}>Cash to collect</div>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>EGP 210</div>
+              <div style={{ fontSize: 12, color: S.mutedFg }}>{tr("Cash to collect")}</div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("EGP 210")}</div>
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
               {[
@@ -552,7 +557,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                     fontWeight: 600,
                   }}
                 >
-                  <Icon size={15} /> {t}
+                  <Icon size={15} /> {tr(t)}
                 </div>
               ))}
             </div>
@@ -569,7 +574,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                 fontWeight: 700,
               }}
             >
-              {done ? "Delivered ✓" : out ? "Delivered" : "I'm on the way"}
+              {tr(done ? "Delivered ✓" : out ? "Delivered" : "I'm on the way")}
             </div>
           </div>
         </div>
@@ -607,7 +612,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               >
                 <Icon size={22} />
               </span>
-              {t}
+              {tr(t)}
             </div>
           ))}
         </div>
@@ -644,6 +649,7 @@ const BRANCHES = [
 
 const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const tr = useT();
   return (
     <Chapter
       look="light"
@@ -661,7 +667,7 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           active="Branches"
           crumb="Business"
           title="Branches"
-          actions={<AdminButton primary>+ Create Branch</AdminButton>}
+          actions={<AdminButton primary>{tr("+ Create Branch")}</AdminButton>}
         >
           <div style={{ borderRadius: 14, border: `1px solid ${S.border}`, overflow: "hidden" }}>
             {BRANCHES.map((b, i) => (
@@ -681,9 +687,9 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                   <Building2 size={18} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{tr(b.name)}</div>
                   <div style={{ display: "flex", gap: 12, fontSize: 13, color: S.mutedFg, marginTop: 2 }}>
-                    <span style={{ color: b.status === "Taking orders" ? S.success : S.mutedFg, fontWeight: 600 }}>{b.status}</span>
+                    <span style={{ color: b.status === "Taking orders" ? S.success : S.mutedFg, fontWeight: 600 }}>{tr(b.status)}</span>
                     {b.facts.map((f) => (
                       <span key={f}>· {f}</span>
                     ))}
@@ -722,8 +728,8 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           <MapPin size={30} color="#fff" />
         </div>
         <div>
-          <div style={{ fontSize: 20, color: S.mutedFg, fontWeight: 600 }}>Guest's nearest branch</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: S.fg }}>Maadi · 1.2 km</div>
+          <div style={{ fontSize: 20, color: S.mutedFg, fontWeight: 600 }}>{tr("Guest's nearest branch")}</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: S.fg }}>{tr("Maadi · 1.2 km")}</div>
         </div>
       </Glass>
     </Chapter>
