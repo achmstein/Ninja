@@ -5,6 +5,7 @@ import type React from "react";
 import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Book } from "./book";
 import { Finale } from "./Finale";
+import { Hook } from "./Hook";
 import { Brand } from "./guests";
 import { beat, HeroContext, WordBeat, type Hero } from "./hero";
 import { slide } from "@remotion/transitions/slide";
@@ -16,11 +17,13 @@ import { Pay } from "./pay";
 import { Sfx } from "./sfx";
 import { Branches } from "./team";
 
-// The fast cut (~69 s): the hero moments with the camera on the action, one short title
+// The fast cut (~73 s): a two-bar hook, then: the hero moments with the camera on the action, one short title
 // each, a word beat, a montage of the back office at double speed, every cut on a bar
 // of the 150 BPM track (12 frames a beat). The long tour is Tour.tsx.
 const next = () => springTiming({ config: { damping: 200 }, durationInFrames: 15 });
-const CUTS = [151, 343, 391, 823, 1015, 1207, 1303, 1447, 1543, 1639, 1879];
+// The hook is two bars before the opening; its cut into the opening is HOOK_CUT.
+const HOOK_CUT = 103;
+const CUTS = [247, 439, 487, 919, 1111, 1303, 1399, 1543, 1639, 1735, 1975];
 
 const H: Record<string, Hero> = {
   brand: { title: "Your app, in your name and colours.", titleAr: "أبلكيشن باسمك وبألوانك.", cam: [{ f: 0, s: 1.08, x: 1556, y: 540 }] },
@@ -84,11 +87,11 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
   const frame = useCurrentFrame();
   return (
     <LangContext.Provider value={lang}>
-      {/* The same track as the tour, started 235 frames in so its drop hits the first cut. */}
+      {/* The same track as the tour, started 139 frames in so its build plays under the hook and its drop hits the first cut after the opening. */}
       <Audio
         name="Music"
         src={staticFile("tour-music-hype.mp3")}
-        trimBefore={235}
+        trimBefore={139}
         premountFor={fps}
         volume={interpolate(frame, [0, 0.3 * fps, durationInFrames - 2 * fps, durationInFrames - 1], [0, 0.85, 0.85, 0], {
           extrapolateLeft: "clamp",
@@ -97,10 +100,15 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
       />
       <Sfx name="riser" at={CUTS[0] - 44} />
       <Sfx name="impact" at={CUTS[0] - 1} />
+      <Sfx name="whoosh" at={HOOK_CUT - 9} />
       {CUTS.map((c) => (
         <Sfx key={c} name="whoosh" at={c - 9} />
       ))}
       <TransitionSeries>
+        <TransitionSeries.Sequence name="Hook" durationInFrames={111} premountFor={fps}>
+          <Hook question="Still running your café on paper?" questionAr="لسه بتشغّل الكافيه بالورق؟" />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition presentation={fade()} timing={next()} />
         <TransitionSeries.Sequence name="Lineup" durationInFrames={159} premountFor={fps}>
           <Opening line="Everything your café runs on." lineAr="كل اللي الكافيه بتاعك محتاجه." />
         </TransitionSeries.Sequence>
