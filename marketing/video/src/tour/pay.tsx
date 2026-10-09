@@ -6,6 +6,7 @@ import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotion";
 import { clamp, land } from "../theme";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
+import { Sfx } from "./sfx";
 import { MenuScreen } from "./menu-screen";
 import { BillRow, Dock, GuestPhone, S, Touch } from "./ui";
 import { useT } from "./lang";
@@ -288,6 +289,8 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             )}
           </div>
         </div>
+        <Sfx name="open" at={open + 2} />
+        <Sfx name="success" at={paid} />
         <Touch x={274} y={844 - 8 - 640 + 28 + 344} at={split} />
         <Touch x={195} y={844 - 8 - 640 + 28 + 540} at={pay} />
         <div style={{ display: "none" }}>

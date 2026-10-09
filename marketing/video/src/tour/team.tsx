@@ -312,7 +312,7 @@ export const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CS
             {tr(t.channel)}
           </span>
           <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-            {ready ? "Ready" : t.time}
+            {ready ? tr("Ready") : t.time}
           </span>
         </div>
         <div style={{ fontSize: 18, fontWeight: 600, color: S.fg, marginTop: 4 }}>{tr(t.name)}</div>
@@ -500,7 +500,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           >
             <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina")}</div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina Ahmed")}</div>
               <div
                 style={{
                   padding: "4px 10px",

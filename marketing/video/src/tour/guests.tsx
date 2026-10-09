@@ -2,10 +2,12 @@
 import { Award, Check, ChefHat, Send } from "lucide-react";
 import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotion";
-import { clamp, glide, jakarta, land } from "../theme";
+import { clamp, glide, land } from "../theme";
 import type { Dishkey } from "./menu-screen";
-import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
-import { LAYOUT_NAMES, MenuScreen, type MenuLayout } from "./menu-screen";
+import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
+import { BUSINESSES } from "./businesses";
+import { MenuScreen, type MenuLayout } from "./menu-screen";
+import { Sfx } from "./sfx";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
 import { useLang, useT } from "./lang";
 
@@ -23,36 +25,36 @@ const THEMES = [
 
 const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
-  const tr = useT();
-  // Each cut changes the colour and the menu layout together, landing on the photo grid.
-  const run: { layout: MenuLayout; theme: number }[] = [
-    { layout: "row", theme: 0 },
-    { layout: "grid", theme: 1 },
-    { layout: "compact", theme: 2 },
-    { layout: "hero", theme: 3 },
-    { layout: "deck", theme: 4 },
-    { layout: "tiles", theme: 1 },
-    { layout: "grid", theme: 2 },
+  // Each cut changes the business, its colours and the menu layout together; no labels,
+  // the phone itself shows it. It lands back on Mellow.
+  const run: { layout: MenuLayout; theme: number; biz: number }[] = [
+    { layout: "row", theme: 0, biz: 0 },
+    { layout: "grid", theme: 2, biz: 1 },
+    { layout: "compact", theme: 4, biz: 2 },
+    { layout: "hero", theme: 3, biz: 2 },
+    { layout: "deck", theme: 1, biz: 3 },
+    { layout: "tiles", theme: 2, biz: 1 },
+    { layout: "grid", theme: 0, biz: 0 },
   ];
-  const cutAt = (i: number) => 70 + (i - 1) * 24;
+  const cutAt = (i: number) => 40 + (i - 1) * 30;
   const idx = run.reduce((acc, _, i) => (i > 0 && frame >= cutAt(i) ? i : acc), 0);
-  const layout = run[idx].layout;
-  const pick = run[idx].theme;
-  const theme = THEMES[pick];
+  const { layout } = run[idx];
+  const theme = THEMES[run[idx].theme];
+  const biz = BUSINESSES[run[idx].biz];
   const since = idx > 0 ? frame - cutAt(idx) : 99;
   return (
     <Chapter
       look="glass"
       n="01"
-      eyebrow="Your café, your look"
+      eyebrow="Your place, your look"
       title={title}
-      mark="your café."
+      mark="your place."
       line={line}
-      chips={["Your logo", "Your colours", "6 menu layouts", "Arabic & English"]}
+      chips={["Cafés", "Restaurants", "Burger kitchens", "Game stations"]}
       style={style}
       copyWidth={680}
     >
-      <GuestPhone {...PHONE} label="Mobile app & web" style={useEnter(4)}>
+      <GuestPhone {...PHONE} label={`${biz.kind} · ${biz.name}`} style={useEnter(4)}>
         <div
           style={{
             position: "absolute",
@@ -61,52 +63,17 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             scale: `${interpolate(since, [0, 7], [1.04, 1], { ...clamp, easing: glide })}`,
           }}
         >
-          <MenuScreen layout={layout} primary={theme.primary} brandColor={theme.primary} enterAt={idx > 0 ? cutAt(idx) - 6 : -100} />
+          <MenuScreen
+            biz={biz}
+            layout={layout}
+            primary={theme.primary}
+            brandColor={theme.primary}
+            enterAt={idx > 0 ? cutAt(idx) - 6 : -100}
+          />
         </div>
         <Dock slab={theme.slab} />
+        <Sfx name="swish" at={idx > 0 ? cutAt(idx) - 2 : -1} />
       </GuestPhone>
-
-      <Glass style={{ left: 880, top: 200, width: 420, padding: 30, fontFamily: jakarta, ...useEnter(14, 160) }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: S.fg }}>{tr("Theme")}</div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 22 }}>{tr("Brand color")}</div>
-        <div style={{ display: "flex", gap: 14, marginTop: 12 }}>
-          {THEMES.map((t, i) => (
-            <div
-              key={t.name}
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: "50%",
-                backgroundColor: t.primary,
-                boxShadow: i === pick ? `0 0 0 4px #fff, 0 0 0 7px ${t.primary}` : undefined,
-              }}
-            />
-          ))}
-        </div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Dock")}</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: S.fg, marginTop: 6 }}>{tr("A deep shade of the brand colour")}</div>
-        <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Menu")}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-          {(["row", "grid", "compact", "hero", "deck", "tiles"] as MenuLayout[]).map((m) => {
-            const on = m === layout;
-            return (
-              <div
-                key={m}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 999,
-                  fontSize: 17,
-                  fontWeight: 700,
-                  backgroundColor: on ? theme.primary : "rgba(255,255,255,0.7)",
-                  color: on ? "#fff" : S.fg,
-                }}
-              >
-                {tr(LAYOUT_NAMES[m])}
-              </div>
-            );
-          })}
-        </div>
-      </Glass>
     </Chapter>
   );
 };
@@ -115,8 +82,8 @@ export const Brand = Interactive.withSchema({
   Component: BrandInner,
   componentName: "<Brand>",
   schema: copySchema(
-    "It looks like your café.",
-    "Set your logo, colours and menu layout. The guest app changes as you choose.",
+    "It looks like your place.",
+    "Café, restaurant, burger kitchen or game station: your logo, your colours, your menu layout.",
   ),
   wrapInSequence: true,
 });
@@ -186,12 +153,20 @@ export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: nu
   const frame = useCurrentFrame();
   const ar = useLang() === "ar";
   const t = interpolate(frame, [at + 1, at + 20], [0, 1], { ...clamp, easing: (x) => 1 - Math.pow(1 - x, 2.4) });
-  if (frame < at + 1 || frame > at + 22) return null;
+  const sound = (
+    <>
+      <Sfx name="swish" at={at + 1} />
+      <Sfx name="pop" at={at + 19} volume={2} />
+    </>
+  );
+  if (frame < at + 1 || frame > at + 22) return sound;
   const from = { x: ar ? 390 - 16 - 80 : 16, y: 152 + row * 96, s: 80 };
   const to = { x: ar ? 390 - 24 - slot * 32 - 44 : 24 + slot * 32, y: 712 + 12, s: 44 };
   const arc = Math.min(90, Math.abs(to.y - from.y) * 0.25) * Math.sin(Math.PI * t);
   const size = from.s + (to.s - from.s) * t;
   return (
+    <>
+      {sound}
     <Dish
       img={DISHES[dish].img}
       size={size}
@@ -204,6 +179,7 @@ export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: nu
         boxShadow: "0 12px 30px -8px rgba(0,0,0,0.45)",
       }}
     />
+    </>
   );
 };
 

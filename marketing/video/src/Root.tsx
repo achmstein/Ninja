@@ -83,7 +83,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="Tour"
         component={Tour}
-        durationInFrames={3495}
+        durationInFrames={3511}
         fps={30}
         width={1920}
         height={1080}
@@ -92,7 +92,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="TourAr"
         component={Tour}
-        durationInFrames={3495}
+        durationInFrames={3511}
         fps={30}
         width={1920}
         height={1080}
@@ -115,7 +115,7 @@ export const RemotionRoot: React.FC = () => {
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "It looks like your café.", line: "Set your logo, colours and menu layout. The guest app changes as you choose." }}
+          defaultProps={{ title: "It looks like your place.", line: "Café, restaurant, burger kitchen or game station: your logo, your colours, your menu layout." }}
         />
         <Composition
           id="TourJourney"

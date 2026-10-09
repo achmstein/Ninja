@@ -2,12 +2,12 @@ import { LayoutGrid } from "lucide-react";
 import type React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { clamp, glide } from "../theme";
+import { CHILLAX, type Business, type Item } from "./businesses";
 import { AddButton, Dish, DISHES, S, TopBar } from "./ui";
 import { useT } from "./lang";
 
 export type Dishkey = keyof typeof DISHES;
-const ROWS: Dishkey[] = ["latte", "mocha", "cappuccino", "waffle", "cake"];
-const GRID: Dishkey[] = ["latte", "mocha", "waffle", "cake"];
+
 
 // The menu layouts the brand page offers (menu-style.ts): Classic list (row), Photo grid,
 // Compact (no photos), Magazine (hero, big photos), Cards to swipe (deck) and Card grid (tiles).
@@ -30,7 +30,12 @@ export const MenuScreen: React.FC<{
   counts?: Partial<Record<Dishkey, number>>;
   enterAt?: number;
   offer?: Dishkey;
-}> = ({ layout = "row", primary = S.primary, brand, brandColor, counts = {}, enterAt = -100, offer }) => {
+  biz?: Business;
+}> = ({ layout = "row", primary = S.primary, brand, brandColor, counts = {}, enterAt = -100, offer, biz = CHILLAX }) => {
+  const it = biz.items;
+  const ROWS = it.slice(0, 5);
+  const GRID = [it[0], it[1], it[3], it[4]];
+  const count = (d: Item) => (counts as Record<string, number>)[d.key] ?? 0;
   const frame = useCurrentFrame();
   const tr = useT();
   const rise = (i: number) => ({
@@ -42,15 +47,15 @@ export const MenuScreen: React.FC<{
   });
   return (
     <>
-      <TopBar brand={brand} color={brandColor} />
+      <TopBar brand={brand} color={brandColor} logo={biz.logo} />
       <div style={{ position: "absolute", top: 116, left: 16, right: 16 }}>
         <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12, ...rise(0) }}>
-          {tr("Coffee")}
+          {tr(biz.categories[0])}
         </div>
         {layout === "row" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {ROWS.map((k, i) => {
-              const d = DISHES[k];
+            {ROWS.map((d, i) => {
+              const k = d.key;
               const isOffer = k === offer;
               return (
                 <div key={k} style={{ display: "flex", gap: 14, alignItems: "center", ...rise(i + 1) }}>
@@ -71,21 +76,21 @@ export const MenuScreen: React.FC<{
                       )}
                     </div>
                   </div>
-                  <AddButton count={counts[k] ?? 0} primary={primary} />
+                  <AddButton count={count(d)} primary={primary} />
                 </div>
               );
             })}
           </div>
         ) : layout === "grid" ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 12, rowGap: 20 }}>
-            {GRID.map((k, i) => {
-              const d = DISHES[k];
+            {GRID.map((d, i) => {
+              const k = d.key;
               return (
                 <div key={k} style={{ ...rise(i + 1) }}>
                   <div style={{ position: "relative" }}>
                     <Dish img={d.img} size="100%" ratio="4 / 5" radius={24} />
                     <AddButton
-                      count={counts[k] ?? 0}
+                      count={count(d)}
                       primary={primary}
                       style={{ position: "absolute", insetInlineEnd: 8, bottom: 8 }}
                     />
@@ -98,8 +103,7 @@ export const MenuScreen: React.FC<{
           </div>
         ) : layout === "compact" ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {[...ROWS, "lemonade" as Dishkey, "cappuccino" as Dishkey].map((k, i) => {
-              const d = DISHES[k];
+            {[...it, it[2]].map((d, i) => {
               return (
                 <div
                   key={i}
@@ -124,10 +128,9 @@ export const MenuScreen: React.FC<{
           </div>
         ) : layout === "hero" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {(["mocha", "waffle"] as Dishkey[]).map((k, i) => {
-              const d = DISHES[k];
+            {[it[1], it[3]].map((d, i) => {
               return (
-                <div key={k} style={{ position: "relative", borderRadius: 28, overflow: "hidden", ...rise(i + 1) }}>
+                <div key={d.key} style={{ position: "relative", borderRadius: 28, overflow: "hidden", ...rise(i + 1) }}>
                   <Dish img={d.img} size="100%" ratio="16 / 11" radius={0} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent 55%)" }} />
                   <div style={{ position: "absolute", insetInlineStart: 18, bottom: 16, color: "#fff" }}>
@@ -152,16 +155,16 @@ export const MenuScreen: React.FC<{
                 opacity: 0.5,
               }}
             >
-              <Dish img={DISHES.cake.img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
+              <Dish img={it[4].img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
             </div>
             <div style={{ position: "absolute", inset: 0, borderRadius: 28, overflow: "hidden", ...rise(1) }}>
-              <Dish img={DISHES.latte.img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
+              <Dish img={it[0].img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%)" }} />
               <div style={{ position: "absolute", insetInlineStart: 24, insetInlineEnd: 24, bottom: 24, color: "#fff" }}>
-                <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr(DISHES.latte.name)}</div>
-                <div style={{ fontSize: 15, opacity: 0.85, marginTop: 4 }}>{tr(DISHES.latte.note)}</div>
+                <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr(it[0].name)}</div>
+                <div style={{ fontSize: 15, opacity: 0.85, marginTop: 4 }}>{tr(it[0].note)}</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-                  <span style={{ fontSize: 18, fontWeight: 800 }}>{tr(`EGP ${DISHES.latte.price}`)}</span>
+                  <span style={{ fontSize: 18, fontWeight: 800 }}>{tr(`EGP ${it[0].price}`)}</span>
                   <AddButton primary="#fff" style={{ color: S.fg }} />
                 </div>
               </div>
@@ -169,11 +172,10 @@ export const MenuScreen: React.FC<{
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {(["latte", "mocha", "waffle", "cake", "cappuccino", "lemonade"] as Dishkey[]).map((k, i) => {
-              const d = DISHES[k];
+            {it.map((d, i) => {
               return (
                 <div
-                  key={k}
+                  key={d.key}
                   style={{ padding: 8, borderRadius: 24, backgroundColor: "#fff", boxShadow: S.surface, ...rise(i + 1) }}
                 >
                   <Dish img={d.img} size="100%" ratio="1 / 1" radius={18} />
@@ -205,7 +207,7 @@ export const MenuScreen: React.FC<{
           backgroundColor: "rgba(255,255,255,0.92)",
         }}
       >
-        {["Coffee", "Iced", "Food", "Desserts"].map((c, i) => (
+        {biz.categories.map((c, i) => (
           <div
             key={c}
             style={{

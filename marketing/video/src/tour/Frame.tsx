@@ -2,6 +2,7 @@ import type React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { C, clamp, glide, inter, land } from "../theme";
 import { plexArabic } from "./lang";
+import { Sfx } from "./sfx";
 
 // The tour's looks, one per kind of chapter (from the shortlist):
 // light = Apple-style launch, glass = liquid glass, dark = the till/kitchen reel.
@@ -183,6 +184,7 @@ export const Copy: React.FC<{
               <div
                 key={c}
                 style={{
+                  position: "relative",
                   padding: "14px 24px",
                   borderRadius: 999,
                   fontSize: 26,
@@ -196,6 +198,7 @@ export const Copy: React.FC<{
                 }}
               >
                 {c}
+                <Sfx name="pop" at={s} />
               </div>
             );
           })}

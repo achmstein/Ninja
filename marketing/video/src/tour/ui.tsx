@@ -35,6 +35,10 @@ import { useContext } from "react";
 import { Img, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { clamp, geist, inter, jakarta, lift, surfer } from "../theme";
 import { alexandria, AR, DeviceContext, kufi, plexArabic, useLang, useT, useUnmirror } from "./lang";
+import { Sfx } from "./sfx";
+import { loadFont as loadPacifico } from "@remotion/google-fonts/Pacifico";
+
+const { fontFamily: pacifico } = loadPacifico("normal", { weights: ["400"], subsets: ["latin"] });
 
 // Each app's Arabic font: the guest app IBM Plex Sans Arabic, the admin Noto Kufi Arabic,
 // the till, kitchen and rider Alexandria.
@@ -289,9 +293,10 @@ export const Touch: React.FC<{ x: number; y: number; at: number; size?: number }
   const W = useContext(DeviceContext);
   const x = useLang() === "ar" && W ? W - x0 : x0;
   const t = frame - at;
-  if (t < -8 || t > 22) return null;
+  if (t < -8 || t > 22) return <Sfx name="tap" at={at} />;
   return (
     <>
+      <Sfx name="tap" at={at} />
       <div
         style={{
           position: "absolute",
@@ -358,28 +363,18 @@ export const DISHES = {
 
 // ——— Guest app chrome ————————————————————————————————————————————
 
-// The café's own logo (Chillax's, from client_app/assets), painted in the brand colour
-// like the app's wordmark. The brand keeps its Latin logo in Arabic too.
-export const CafeLogo: React.FC<{ height: number; color?: string }> = ({ height, color = S.fg }) => {
-  const src = staticFile("brand/chillax-en.png");
-  return (
-    <div
-      style={{
-        height,
-        width: height * (605 / 240),
-        backgroundColor: color,
-        WebkitMaskImage: `url(${src})`,
-        maskImage: `url(${src})`,
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-      }}
-    />
-  );
-};
+// The café's logo: Mellow, a made-up café, as a script wordmark in the brand colour.
+export const CafeLogo: React.FC<{ height: number; color?: string }> = ({ height, color = S.fg }) => (
+  <span style={{ fontFamily: pacifico, fontSize: height * 0.95, lineHeight: 1.2, color, direction: "ltr", display: "inline-block" }}>
+    Mellow
+  </span>
+);
 
-export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ color = S.fg }) => {
+export const TopBar: React.FC<{
+  brand?: string;
+  color?: string;
+  logo?: (color: string, height: number) => React.ReactNode;
+}> = ({ color = S.fg, logo }) => {
   return (
   <div
     style={{
@@ -395,7 +390,7 @@ export const TopBar: React.FC<{ brand?: string; color?: string }> = ({ color = S
       backgroundColor: S.bg,
     }}
   >
-    <CafeLogo height={28} color={color} />
+    {logo ? <div style={{ direction: "ltr" }}>{logo(color, 28)}</div> : <CafeLogo height={28} color={color} />}
     <div
       style={{
         width: 40,
@@ -652,7 +647,7 @@ export const AdminShell: React.FC<{
   description?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ cafe = "Chillax", branch = "Zamalek", active, crumb, title, description, actions, children }) => {
+}> = ({ cafe = "Mellow", branch = "Zamalek", active, crumb, title, description, actions, children }) => {
   const t = useT();
   return (
   <div style={{ position: "absolute", inset: 0, backgroundColor: "#f8fafc", display: "flex", fontFamily: geist }}>

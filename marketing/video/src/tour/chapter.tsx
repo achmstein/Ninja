@@ -29,7 +29,7 @@ export const Chapter: React.FC<{
   style?: React.CSSProperties;
   copyWidth?: number;
   children: React.ReactNode;
-}> = ({ look, n, eyebrow, title, mark, line, chips, style, copyWidth, children }) => {
+}> = ({ look, n, eyebrow, title, mark, line, style, copyWidth, children }) => {
   // In the Arabic tour every chapter's words come from lang.ts.
   const ar = useLang() === "ar" ? AR_CHAPTERS[n] : undefined;
   return (
@@ -49,7 +49,7 @@ export const Chapter: React.FC<{
         title={ar?.title ?? title}
         mark={ar?.mark ?? mark}
         line={ar?.line ?? line}
-        chips={ar?.chips ?? chips}
+        chips={[]}
         dark={look === "dark"}
         width={copyWidth}
         rtl={ar !== undefined}

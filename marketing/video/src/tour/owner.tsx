@@ -8,6 +8,7 @@ import { C, clamp, glide, inter, land } from "../theme";
 import { Chapter, copySchema, Glass, Unmirror, useEnter, type ChapterProps } from "./chapter";
 import { AdminButton, AdminShell, Dish, DISHES, S, Screen, StatStrip } from "./ui";
 import { useT, useUnmirror } from "./lang";
+import { Sfx } from "./sfx";
 
 // A photo of paper (a printed menu, a supplier's receipt) with the scan beam passing over it.
 const Paper: React.FC<{ x: number; y: number; w: number; src: string; rotate: number; scanFrom: number }> = ({
@@ -114,6 +115,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
             }}
           >
             <NMark size={16} /> {tr("Ninja read your photo · 6 items in 2 categories")}
+            <Sfx name="ding" at={found} />
           </div>
           <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${S.border}`, overflow: "hidden" }}>
             {SCANNED.map((d, i) => {
@@ -188,6 +190,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 22, fontWeight: 800, color: S.fg }}>
           <NMark size={26} /> {tr("Photo studio")}
+          <Sfx name="swish" at={studio + 30} />
           <span style={{ marginLeft: "auto", fontSize: 16, fontWeight: 600, color: S.mutedFg }}>{tr("Spanish Latte")}</span>
         </div>
         <div style={{ position: "relative", marginTop: 16, height: 260, borderRadius: 20, overflow: "hidden", backgroundColor: "#2b2520" }}>
@@ -510,11 +513,14 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
   title,
   line,
   style,
-  question = "Which dishes have the lowest margin, and what makes them cost so much?",
-  action = "Mark the chocolate cake as sold out.",
+  question: q = "Which dishes have the lowest margin, and what makes them cost so much?",
+  action: act = "Mark the chocolate cake as sold out.",
 }) => {
   const frame = useCurrentFrame();
   const tr = useT();
+  // The owner types in the video's language.
+  const question = tr(q);
+  const action = tr(act);
   const typeFrom = 14;
   const perChar = 0.75;
   const sent = Math.ceil(typeFrom + question.length * perChar) + 4;
@@ -549,7 +555,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
         ...fade(at),
       }}
     >
-      <Wrench size={14} /> {text}
+      <Wrench size={14} /> {tr(text)}
     </div>
   );
 
@@ -602,7 +608,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
               fontWeight: 600,
             }}
           >
-            <NMark size={24} /> ninja · connected
+            <NMark size={24} /> ninja · {tr("connected")}
             <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: S.emerald }} />
           </div>
         </div>
@@ -625,8 +631,10 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
             {question}
           </div>
           <ToolChip text="Used ninja · menu cost" at={tool} />
+          <Sfx name="ding" at={reply} />
+          <Sfx name="success" at={reply2 + 34} />
           <div style={{ fontSize: 21, lineHeight: 1.45, ...fade(reply) }}>
-            Your lowest margins this month:
+            {tr("Your lowest margins this month:")}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 14, maxWidth: 600 }}>
               {bars.map((b, i) => {
                 const at = reply + 8 + i * 5;
@@ -736,7 +744,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
           }}
         >
           <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {frame < sent && typed.length > 0 ? typed : "Ask about your café…"}
+            {frame < sent && typed.length > 0 ? typed : tr("Ask about your café…")}
             {frame < sent && frame >= typeFrom && Math.floor(frame / 8) % 2 === 0 ? "|" : ""}
           </span>
         </div>

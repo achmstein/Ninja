@@ -6,6 +6,7 @@ import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { clamp, land } from "../theme";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
+import { Sfx } from "./sfx";
 import { GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
 import { useT } from "./lang";
 
@@ -207,7 +208,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                       }}
                     >
                       <span style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "currentColor" }} />
-                      {p.free ? "Available" : p.status}
+                      {tr(p.free ? "Available" : (p.status ?? ""))}
                     </div>
                     {p.free ? (
                       <div
@@ -274,7 +275,7 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
                           >
                             <Clock size={18} />
                           </div>
-                          <div style={{ fontSize: 15, fontWeight: 600 }}>10 minutes to arrive</div>
+                          <div style={{ fontSize: 15, fontWeight: 600 }}>{tr("10 minutes to arrive")}</div>
                         </div>
                         {/* Reserve Now: a pill that shrinks to a spinner, then a green tick */}
                         <div style={{ marginTop: 14, display: "flex", justifyContent: "center" }}>
@@ -426,6 +427,11 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         ) : null}
 
         <BookDock held={held} secs={secs} share={share} tick={tick} />
+        <Sfx name="success" at={done} />
+        <Sfx name="open" at={face} />
+        {[1, 2, 3, 4].map((k) => (
+          <Sfx key={k} name="tick" at={done + k * 30} />
+        ))}
         <Touch x={338} y={222} at={open} />
         <Touch x={195} y={186 + 136 + 16 + 40 + 14 + 24} at={reserve} />
         <AbsoluteFill style={{ pointerEvents: "none" }} />

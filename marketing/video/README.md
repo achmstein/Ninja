@@ -38,7 +38,7 @@ Each chapter has the copy on the left (number, who it is for, title, one line, c
 
 Every chapter carries the Ninja badge (N mark and `ninja`) top left, the owner's dashboard says "Powered by ninja", and the guest app wears the café's own brand. A label over each phone says whether it is the mobile app or the web. Chapters cut with `pushCut` (a quick zoom-cut with a soft flash). Devices face the viewer flat with a light glare.
 
-The Arabic captions live in `src/tour/lang.ts` and the apps' Arabic interface in `src/tour/ar-ui.ts` (from the apps' own translation files); `<Tour lang="ar">` switches both and mirrors the stage. The café is Chillax (its own logo, in both languages); the guest is Lina.
+The Arabic captions live in `src/tour/lang.ts` and the apps' Arabic interface in `src/tour/ar-ui.ts` (from the apps' own translation files); `<Tour lang="ar">` switches both and mirrors the stage. The café is Mellow, a made-up brand (Pacifico wordmark, Latin in both languages), and the menu run adds three more made-up businesses (Smash Lab, Zaytoun, Level Up); the guest is Lina.
 
 `ui.tsx` holds the app kit (guest phone, dock, bill row, admin shell, stat strip, device screens, taps). `menu-screen.tsx` holds the guest menu, `chapter.tsx` the chapter layout, `Frame.tsx` the backdrops and the copy column. `Tour.tsx` strings the chapters together.
 

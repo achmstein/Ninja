@@ -25,6 +25,7 @@ import { NMark, Wordmark } from "../parts";
 import { C, clamp, glide, inter, land } from "../theme";
 import { Stage } from "./Frame";
 import { AR, plexArabic, useLang } from "./lang";
+import { Sfx } from "./sfx";
 
 // The recap as a bento grid: 5 columns × 3 rows, two wide tiles, two photo tiles.
 type Tile = {
@@ -209,7 +210,10 @@ const FinaleInner: React.FC<Props> = ({ headline: h, tagline: tl, url, style }) 
           );
         })}
 
-        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", fontFamily: inter }}>
+<Sfx name="whoosh" at={fold - 4} />
+        <Sfx name="impact" at={fold + 12} />
+        <Sfx name="success" at={fold + 40} />
+                <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", fontFamily: inter }}>
           <div
             style={{
               marginTop: -50,

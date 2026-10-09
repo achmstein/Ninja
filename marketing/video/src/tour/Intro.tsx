@@ -11,6 +11,7 @@ import {
 import { NMark, Wordmark } from "../parts";
 import { C, clamp, inter } from "../theme";
 import { AR, plexArabic, useLang, useT } from "./lang";
+import { Sfx } from "./sfx";
 import { MenuScreen } from "./menu-screen";
 import { AdminShell, Dish, DISHES, Dock, GuestPhone, S, Screen, StatStrip } from "./ui";
 
@@ -160,7 +161,7 @@ const RiderMini: React.FC = () => {
       <div style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#fff", border: "1px solid #0284c7" }}>
         <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina")}</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina Ahmed")}</div>
           <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 700, backgroundColor: "rgba(2,132,199,0.12)", color: "#0284c7" }}>
             {tr("On the way")}
           </div>
@@ -291,6 +292,9 @@ const IntroInner: React.FC<Props> = ({ headline: h, features: f, style }) => {
           <RiderMini />
         </GuestPhone>
 
+        {[12, 22, 30, 40, 48].map((f) => (
+          <Sfx key={f} name="swish" at={f} volume={0.7} />
+        ))}
         <Tag text="Dashboard" x={960} y={232} at={26} />
         <Tag text="Till" x={390} y={364} at={36} />
         <Tag text="Kitchen display" x={1530} y={364} at={44} />

@@ -8,6 +8,7 @@ import { C, clamp, inter, land } from "../theme";
 import { Stage } from "./Frame";
 import { Flight, TrayRow, TraySheet } from "./guests";
 import { AR, MirrorContext, plexArabic, useLang, useT, useUnmirror } from "./lang";
+import { Sfx } from "./sfx";
 import { MenuScreen } from "./menu-screen";
 import { TICKETS, TicketCard, type Ticket } from "./team";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, S, Screen, Touch } from "./ui";
@@ -22,18 +23,19 @@ const T = {
   order: 120,
   place: 152,
   sent: 168,
-  fly1: 186, // the order leaves the phone…
-  arrive1: 232, // …and lands on the till
-  confirm: 280,
-  assign: 326,
-  fly2: 360,
-  arrive2: 404,
-  ready: 480,
-  fly3: 512,
-  arrive3: 556,
-  onTheWay: 600,
-  delivered: 690,
-  end: 780,
+  // From here every landing and tap is on a beat (7 + 12k in the scene).
+  fly1: 189, // the order leaves the phone…
+  arrive1: 235, // …and lands on the till
+  confirm: 283,
+  assign: 331,
+  fly2: 359,
+  arrive2: 403,
+  ready: 488,
+  fly3: 516,
+  arrive3: 560,
+  onTheWay: 608,
+  delivered: 692,
+  end: 784,
 };
 
 // The camera: one station at a time, gliding to the next as the order flies.
@@ -89,7 +91,7 @@ const OrderCard: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 15, opacity: 0.7 }}>{tr("Order #1042")} · {tr("Delivery")}</div>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Lina")}</div>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Lina Ahmed")}</div>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800 }}>{tr("EGP 210")}</div>
     </div>
@@ -140,7 +142,7 @@ const TillIncoming: React.FC<{ arrive: number; confirm: number; assign: number }
             {tr("Order #1042")} · {tr("Delivery")}
           </span>
         </div>
-        <div style={{ fontSize: 26, fontWeight: 800, marginTop: 12 }}>{tr("Lina")}</div>
+        <div style={{ fontSize: 26, fontWeight: 800, marginTop: 12 }}>{tr("Lina Ahmed")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 15, color: S.mutedFg, marginTop: 4 }}>
           <MapPin size={15} /> {tr("12 Brazil St, Zamalek · 2nd floor")}
         </div>
@@ -238,7 +240,7 @@ const RiderScreen: React.FC<{ onTheWay: number; delivered: number }> = ({ onTheW
         <div style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#fff", border: `1px solid ${out && !done ? "#0284c7" : S.border}`, boxShadow: "0 4px 12px rgba(15,23,42,0.08)" }}>
           <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina")}</div>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina Ahmed")}</div>
             <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 700, backgroundColor: stage.bg, color: stage.fg }}>{tr(stage.label)}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, fontSize: 14 }}>
@@ -327,7 +329,7 @@ const GuestStatus: React.FC = () => {
         scale: `${interpolate(since, [0, 4, 12], [0.85, 1.06, 1], clamp)}`,
       }}
     >
-      {tr("Lina")} · {tr(cur[1])}
+      {tr("Lina Ahmed")} · {tr(cur[1])}
     </div>
   );
 };
@@ -383,7 +385,7 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
     n: "#1042",
     channel: "Delivery",
     time: `0:${String(Math.max(0, Math.floor((frame - T.arrive2) / 30))).padStart(2, "0")}`,
-    name: "Lina",
+    name: "Lina Ahmed",
     lines: [
       [1, "Latte"],
       [1, "Waffle"],
@@ -443,9 +445,24 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
       {card}
     </AbsoluteFill>
   );
+  const sounds = (
+    <>
+      <Sfx name="open" at={T.order + 2} />
+      {[T.fly1, T.fly2, T.fly3].map((f) => (
+        <Sfx key={f} name="whoosh" at={f - 6} volume={0.9} />
+      ))}
+      {[T.arrive1, T.arrive2, T.arrive3].map((f) => (
+        <Sfx key={f} name="land" at={f} />
+      ))}
+      <Sfx name="ding" at={T.arrive1 + 2} />
+      <Sfx name="ding" at={T.arrive2 + 2} />
+      <Sfx name="success" at={T.delivered + 2} />
+    </>
+  );
 
   return (
     <AbsoluteFill style={style}>
+      {sounds}
       <Stage look="light">
         {ar ? (
           <MirrorContext.Provider value>
@@ -529,27 +546,6 @@ const JourneyInner: React.FC<Props> = ({ headline, style }) => {
               }}
             >
               {cap.line}
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 30 }}>
-              {cap.chips.map((c, i) => (
-                <div
-                  key={c}
-                  style={{
-                    padding: "12px 22px",
-                    borderRadius: 999,
-                    fontSize: 25,
-                    fontWeight: 700,
-                    color: C.ink,
-                    backgroundColor: "rgba(255,255,255,0.8)",
-                    border: "1px solid #fff",
-                    boxShadow: "0 10px 30px -12px rgba(15,23,42,0.25)",
-                    opacity: interpolate(frame, [stationStart + 16 + i * 4, stationStart + 22 + i * 4], [0, 1], clamp),
-                    scale: `${interpolate(frame, [stationStart + 16 + i * 4, stationStart + 30 + i * 4], [0.6, 1], { ...clamp, easing: land })}`,
-                  }}
-                >
-                  {c}
-                </div>
-              ))}
             </div>
           </div>
           {/* Progress: four dots, one per app */}

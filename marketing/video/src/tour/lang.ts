@@ -45,11 +45,11 @@ const YOU = "ليك إنت";
 
 export const AR_CHAPTERS: Record<string, ChapterText> = {
   "01": {
-    eyebrow: "كافيهك بشكلك",
-    title: "شكله شكل الكافيه بتاعك.",
-    mark: "الكافيه بتاعك.",
-    line: "حط اللوجو والألوان وشكل المنيو، والأبلكيشن بيتغيّر قدامك.",
-    chips: ["اللوجو بتاعك", "ألوانك", "٦ أشكال للمنيو", "عربي وإنجليزي"],
+    eyebrow: "مكانك بشكلك",
+    title: "شكله شكل المكان بتاعك.",
+    mark: "المكان بتاعك.",
+    line: "كافيه أو مطعم أو مطبخ برجر أو بلايستيشن: اللوجو بتاعك وألوانك وشكل المنيو اللي يناسبك.",
+    chips: ["كافيهات", "مطاعم", "مطابخ برجر", "بلايستيشن"],
   },
   "02": {
     eyebrow: GUESTS,
@@ -123,6 +123,10 @@ export const AR = {
   tagline: "أبلكيشن واحد للكافيه كله.",
   journeyHeadline: "تابع طلب واحد من أول ما يتطلب لحد ما يوصل.",
   labels: {
+    "Café · Mellow": "كافيه · Mellow",
+    "Burger kitchen · Smash Lab": "مطبخ برجر · Smash Lab",
+    "Restaurant · Zaytoun": "مطعم · Zaytoun",
+    "Game station · Level Up": "بلايستيشن · Level Up",
     "Rider app": "أبلكيشن الطيار",
     "The guest's phone": "موبايل العميل",
     "Mobile app": "أبلكيشن الموبايل",
