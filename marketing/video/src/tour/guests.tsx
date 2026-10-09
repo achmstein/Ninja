@@ -5,7 +5,7 @@ import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotio
 import { clamp, glide, jakarta, land } from "../theme";
 import type { Dishkey } from "./menu-screen";
 import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
-import { MenuScreen } from "./menu-screen";
+import { LAYOUT_NAMES, MenuScreen, type MenuLayout } from "./menu-screen";
 import { BillRow, Dish, DISHES, Dock, GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
 import { useLang, useT } from "./lang";
 
@@ -24,9 +24,22 @@ const THEMES = [
 const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
   const tr = useT();
-  const pick = frame >= 152 ? 2 : frame >= 92 ? 1 : 0;
+  // Each cut changes the colour and the menu layout together, landing on the photo grid.
+  const run: { layout: MenuLayout; theme: number }[] = [
+    { layout: "row", theme: 0 },
+    { layout: "grid", theme: 1 },
+    { layout: "compact", theme: 2 },
+    { layout: "hero", theme: 3 },
+    { layout: "deck", theme: 4 },
+    { layout: "tiles", theme: 1 },
+    { layout: "grid", theme: 2 },
+  ];
+  const cutAt = (i: number) => 70 + (i - 1) * 24;
+  const idx = run.reduce((acc, _, i) => (i > 0 && frame >= cutAt(i) ? i : acc), 0);
+  const layout = run[idx].layout;
+  const pick = run[idx].theme;
   const theme = THEMES[pick];
-  const grid = frame >= 212;
+  const since = idx > 0 ? frame - cutAt(idx) : 99;
   return (
     <Chapter
       look="glass"
@@ -40,16 +53,20 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       copyWidth={680}
     >
       <GuestPhone {...PHONE} label="Mobile app & web" style={useEnter(4)}>
-        <MenuScreen
-          layout={grid ? "grid" : "row"}
-          primary={theme.primary}
-          brandColor={theme.primary}
-          enterAt={grid ? 212 : -100}
-        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            filter: `blur(${interpolate(since, [0, 5], [6, 0], clamp)}px)`,
+            scale: `${interpolate(since, [0, 7], [1.04, 1], { ...clamp, easing: glide })}`,
+          }}
+        >
+          <MenuScreen layout={layout} primary={theme.primary} brandColor={theme.primary} enterAt={idx > 0 ? cutAt(idx) - 6 : -100} />
+        </div>
         <Dock slab={theme.slab} />
       </GuestPhone>
 
-      <Glass style={{ left: 880, top: 270, width: 420, padding: 30, fontFamily: jakarta, ...useEnter(14, 160) }}>
+      <Glass style={{ left: 880, top: 200, width: 420, padding: 30, fontFamily: jakarta, ...useEnter(14, 160) }}>
         <div style={{ fontSize: 26, fontWeight: 700, color: S.fg }}>{tr("Theme")}</div>
         <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 22 }}>{tr("Brand color")}</div>
         <div style={{ display: "flex", gap: 14, marginTop: 12 }}>
@@ -69,29 +86,26 @@ const BrandInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Dock")}</div>
         <div style={{ fontSize: 20, fontWeight: 600, color: S.fg, marginTop: 6 }}>{tr("A deep shade of the brand colour")}</div>
         <div style={{ fontSize: 17, color: S.mutedFg, marginTop: 26 }}>{tr("Menu")}</div>
-        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-          {["Classic list", "Photo grid"].map((m, i) => {
-            const on = (i === 1) === grid;
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+          {(["row", "grid", "compact", "hero", "deck", "tiles"] as MenuLayout[]).map((m) => {
+            const on = m === layout;
             return (
               <div
                 key={m}
                 style={{
-                  padding: "12px 18px",
+                  padding: "8px 16px",
                   borderRadius: 999,
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: 700,
-                  backgroundColor: on ? theme.primary : "rgba(255,255,255,0.8)",
+                  backgroundColor: on ? theme.primary : "rgba(255,255,255,0.7)",
                   color: on ? "#fff" : S.fg,
                 }}
               >
-                {tr(m)}
+                {tr(LAYOUT_NAMES[m])}
               </div>
             );
           })}
         </div>
-        <Touch x={122} y={141} at={90} size={56} />
-        <Touch x={188} y={141} at={150} size={56} />
-        <Touch x={246} y={322} at={210} size={56} />
       </Glass>
     </Chapter>
   );

@@ -9,9 +9,21 @@ export type Dishkey = keyof typeof DISHES;
 const ROWS: Dishkey[] = ["latte", "mocha", "cappuccino", "waffle", "cake"];
 const GRID: Dishkey[] = ["latte", "mocha", "waffle", "cake"];
 
-// The guest menu in the Ninja style: "row" (default) or "grid" (photo tiles), chips above the dock.
+// The menu layouts the brand page offers (menu-style.ts): Classic list (row), Photo grid,
+// Compact (no photos), Magazine (hero, big photos), Cards to swipe (deck) and Card grid (tiles).
+export type MenuLayout = "row" | "grid" | "compact" | "hero" | "deck" | "tiles";
+export const LAYOUT_NAMES: Record<MenuLayout, string> = {
+  row: "Classic list",
+  grid: "Photo grid",
+  compact: "Compact, no photos",
+  hero: "Magazine, big photos",
+  deck: "Cards to swipe",
+  tiles: "Card grid",
+};
+
+// The guest menu in the Ninja style, in any of its layouts, chips above the dock.
 export const MenuScreen: React.FC<{
-  layout?: "row" | "grid";
+  layout?: MenuLayout;
   primary?: string;
   brand?: string;
   brandColor?: string;
@@ -64,7 +76,7 @@ export const MenuScreen: React.FC<{
               );
             })}
           </div>
-        ) : (
+        ) : layout === "grid" ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 12, rowGap: 20 }}>
             {GRID.map((k, i) => {
               const d = DISHES[k];
@@ -80,6 +92,98 @@ export const MenuScreen: React.FC<{
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 700, marginTop: 8 }}>{tr(d.name)}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: S.mutedFg }}>{tr(`EGP ${d.price}`)}</div>
+                </div>
+              );
+            })}
+          </div>
+        ) : layout === "compact" ? (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {[...ROWS, "lemonade" as Dishkey, "cappuccino" as Dishkey].map((k, i) => {
+              const d = DISHES[k];
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "14px 0",
+                    borderTop: i ? `1px solid ${S.border}` : undefined,
+                    ...rise(i + 1),
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700 }}>{tr(d.name)}</div>
+                    <div style={{ fontSize: 13, color: S.mutedFg, marginTop: 2 }}>{tr(d.note)}</div>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{tr(`EGP ${d.price}`)}</div>
+                  <AddButton primary={primary} style={{ width: 36, height: 36 }} />
+                </div>
+              );
+            })}
+          </div>
+        ) : layout === "hero" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {(["mocha", "waffle"] as Dishkey[]).map((k, i) => {
+              const d = DISHES[k];
+              return (
+                <div key={k} style={{ position: "relative", borderRadius: 28, overflow: "hidden", ...rise(i + 1) }}>
+                  <Dish img={d.img} size="100%" ratio="16 / 11" radius={0} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent 55%)" }} />
+                  <div style={{ position: "absolute", insetInlineStart: 18, bottom: 16, color: "#fff" }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr(d.name)}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.9 }}>{tr(`EGP ${d.price}`)}</div>
+                  </div>
+                  <AddButton primary="#fff" style={{ position: "absolute", insetInlineEnd: 14, bottom: 14, color: S.fg }} />
+                </div>
+              );
+            })}
+          </div>
+        ) : layout === "deck" ? (
+          <div style={{ position: "relative", height: 560 }}>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: 28,
+                overflow: "hidden",
+                scale: "0.92",
+                translate: "0px -22px",
+                opacity: 0.5,
+              }}
+            >
+              <Dish img={DISHES.cake.img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
+            </div>
+            <div style={{ position: "absolute", inset: 0, borderRadius: 28, overflow: "hidden", ...rise(1) }}>
+              <Dish img={DISHES.latte.img} size="100%" ratio="auto" radius={0} style={{ height: "100%" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%)" }} />
+              <div style={{ position: "absolute", insetInlineStart: 24, insetInlineEnd: 24, bottom: 24, color: "#fff" }}>
+                <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em" }}>{tr(DISHES.latte.name)}</div>
+                <div style={{ fontSize: 15, opacity: 0.85, marginTop: 4 }}>{tr(DISHES.latte.note)}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800 }}>{tr(`EGP ${DISHES.latte.price}`)}</span>
+                  <AddButton primary="#fff" style={{ color: S.fg }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {(["latte", "mocha", "waffle", "cake", "cappuccino", "lemonade"] as Dishkey[]).map((k, i) => {
+              const d = DISHES[k];
+              return (
+                <div
+                  key={k}
+                  style={{ padding: 8, borderRadius: 24, backgroundColor: "#fff", boxShadow: S.surface, ...rise(i + 1) }}
+                >
+                  <Dish img={d.img} size="100%" ratio="1 / 1" radius={18} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 4px 2px" }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{tr(d.name)}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: S.mutedFg }}>{tr(`EGP ${d.price}`)}</div>
+                    </div>
+                    <AddButton primary={primary} style={{ width: 32, height: 32 }} />
+                  </div>
                 </div>
               );
             })}
