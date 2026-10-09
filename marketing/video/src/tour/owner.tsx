@@ -74,7 +74,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   return (
     <Chapter
       look="glass"
-      n="10"
+      n="07"
       eyebrow="For you"
       title={title}
       mark="minutes."
@@ -266,7 +266,7 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   return (
     <Chapter
       look="light"
-      n="11"
+      n="08"
       eyebrow="For you"
       title={title}
       mark="costs."
@@ -429,7 +429,7 @@ const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   return (
     <Chapter
       look="light"
-      n="12"
+      n="09"
       eyebrow="For you"
       title={title}
       mark="spreadsheet."
@@ -556,7 +556,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
   return (
     <Chapter
       look="glass"
-      n="13"
+      n="10"
       eyebrow="For you"
       title={title}
       mark="anything."

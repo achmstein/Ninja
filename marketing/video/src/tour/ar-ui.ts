@@ -110,7 +110,7 @@ export const AR_UI: Record<string, string> = {
   Call: "اتصل",
   "I'm on the way": "أنا في الطريق",
   "Delivered ✓": "اتسلّم ✓",
-  "Mona Adel": "منى عادل",
+  Lina: "لينا",
   "12 Brazil St, Zamalek · 2nd floor": "12 شارع البرازيل، الزمالك · الدور التاني",
   "12 Brazil St, Zamalek": "12 شارع البرازيل، الزمالك",
   "Ring twice, please": "اضرب الجرس مرتين لو سمحت",
@@ -244,6 +244,13 @@ export const AR_UI: Record<string, string> = {
   "Done. The chocolate cake shows as sold out on your menu.": "تمام. كيكة الشوكولاتة ظاهرة خلصانة في المنيو.",
   "Ask about your café…": "اسأل عن الكافيه بتاعك…",
   connected: "متصل",
+  // The pipeline (the till's formal Arabic, the rider's Egyptian)
+  "New order": "طلب جديد",
+  Reject: "رفض",
+  "Assign a rider": "اختر المندوب",
+  "Delivery fee": "رسوم التوصيل",
+  Mostafa: "مصطفى",
+  Youssef: "يوسف",
 };
 
 // Prices after the number, as the apps write them: "185.00 ج.م".

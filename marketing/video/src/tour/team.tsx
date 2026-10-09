@@ -253,7 +253,7 @@ export const Till = Interactive.withSchema({
 
 // ——— 07 Kitchen ——————————————————————————————————————————————————
 
-type Ticket = {
+export type Ticket = {
   n: string;
   channel: string;
   time: string;
@@ -262,13 +262,13 @@ type Ticket = {
   note?: string;
   age: "fresh" | "amber" | "late";
 };
-const TICKETS: Ticket[] = [
+export const TICKETS: Ticket[] = [
   { n: "#41", channel: "Counter", time: "2:35", name: "Walk-in", lines: [[2, "Flat White"], [1, "Espresso"]], age: "fresh" },
   { n: "#38", channel: "Table 7", time: "6:10", name: "Karim", lines: [[2, "Iced Mocha"], [1, "Chocolate Cake"]], age: "amber" },
   { n: "#35", channel: "Pickup", time: "11:02", name: "Salma", lines: [[1, "Waffle"], [1, "Lemonade"]], age: "late" },
 ];
 
-const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProperties; pressAt?: number }> = ({
+export const TicketCard: React.FC<{ t: Ticket; ready?: boolean; style?: React.CSSProperties; pressAt?: number }> = ({
   t,
   ready,
   style,
@@ -500,7 +500,7 @@ const DeliveryInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           >
             <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Mona Adel")}</div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina")}</div>
               <div
                 style={{
                   padding: "4px 10px",
@@ -653,7 +653,7 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   return (
     <Chapter
       look="light"
-      n="09"
+      n="06"
       eyebrow="For your business"
       title={title}
       mark="dashboard."

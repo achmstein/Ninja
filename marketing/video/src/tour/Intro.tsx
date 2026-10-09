@@ -160,7 +160,7 @@ const RiderMini: React.FC = () => {
       <div style={{ marginTop: 14, padding: 16, borderRadius: 20, backgroundColor: "#fff", border: "1px solid #0284c7" }}>
         <div style={{ fontSize: 13, color: S.mutedFg }}>{tr("Order #1042")}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Mona Adel")}</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{tr("Lina")}</div>
           <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 12, fontWeight: 700, backgroundColor: "rgba(2,132,199,0.12)", color: "#0284c7" }}>
             {tr("On the way")}
           </div>

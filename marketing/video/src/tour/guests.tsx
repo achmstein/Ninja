@@ -136,7 +136,7 @@ const QR = Array.from({ length: 21 * 21 }, (_, k) => {
   return f !== null ? f : (x * 7 + y * 13 + x * y * 3) % 5 < 2;
 });
 
-const TrayRow: React.FC<{ items: string[]; count: number; total: number; button: string }> = ({
+export const TrayRow: React.FC<{ items: string[]; count: number; total: number; button: string }> = ({
   items,
   count,
   total,
@@ -182,7 +182,7 @@ const TrayRow: React.FC<{ items: string[]; count: number; total: number; button:
 
 // The dish photo flies from its row into the dock (client_app tray_flights: 620 ms,
 // closes to a circle, arcs up, lands at thumbnail size with a bump).
-const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
+export const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }> = ({ dish, row, slot, at }) => {
   const frame = useCurrentFrame();
   const ar = useLang() === "ar";
   const t = interpolate(frame, [at + 1, at + 20], [0, 1], { ...clamp, easing: (x) => 1 - Math.pow(1 - x, 2.4) });
@@ -208,7 +208,7 @@ const Flight: React.FC<{ dish: Dishkey; row: number; slot: number; at: number }>
 };
 
 // "Your order" rises out of the dock (client_app tray.dart), clipped at the row's top.
-const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }> = ({ openAt, closeAt, lines }) => {
+export const TraySheet: React.FC<{ openAt: number; closeAt: number; lines: Dishkey[] }> = ({ openAt, closeAt, lines }) => {
   const frame = useCurrentFrame();
   const tr = useT();
   const up =

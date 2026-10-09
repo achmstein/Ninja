@@ -8,11 +8,12 @@ import { Outro } from "./scenes/Outro";
 import { Rider } from "./scenes/Rider";
 import { Finale } from "./tour/Finale";
 import { Book } from "./tour/book";
-import { Brand, Loyalty, Order as TourOrder } from "./tour/guests";
+import { Journey, JOURNEY_FRAMES } from "./tour/journey";
+import { Brand, Loyalty } from "./tour/guests";
 import { Pay } from "./tour/pay";
 import { Intro } from "./tour/Intro";
 import { AiMenu, Assistant as TourAssistant, Profit, Stock } from "./tour/owner";
-import { Branches, Delivery, Kitchen as TourKitchen, Till } from "./tour/team";
+import { Branches } from "./tour/team";
 import { Tour } from "./tour/Tour";
 
 export const RemotionRoot: React.FC = () => {
@@ -82,7 +83,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="Tour"
         component={Tour}
-        durationInFrames={3750}
+        durationInFrames={3495}
         fps={30}
         width={1920}
         height={1080}
@@ -91,7 +92,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="TourAr"
         component={Tour}
-        durationInFrames={3750}
+        durationInFrames={3495}
         fps={30}
         width={1920}
         height={1080}
@@ -117,13 +118,13 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{ title: "It looks like your café.", line: "Set your logo, colours and menu layout. The guest app changes as you choose." }}
         />
         <Composition
-          id="TourOrder"
-          component={TourOrder}
-          durationInFrames={330}
+          id="TourJourney"
+          component={Journey}
+          durationInFrames={JOURNEY_FRAMES}
           fps={30}
           width={1920}
           height={1080}
-          defaultProps={{ title: "Guests order from the table.", line: "They scan the QR on the table and order in seconds. It lands on the till and in the kitchen." }}
+          defaultProps={{ headline: "Follow one order through every app." }}
         />
         <Composition
           id="TourPay"
@@ -151,33 +152,6 @@ export const RemotionRoot: React.FC = () => {
           width={1920}
           height={1080}
           defaultProps={{ title: "Every visit earns points.", line: "Guests watch their points and tier grow, and come back for the rewards you choose." }}
-        />
-        <Composition
-          id="TourTill"
-          component={Till}
-          durationInFrames={240}
-          fps={30}
-          width={1920}
-          height={1080}
-          defaultProps={{ title: "A till your staff learn in a minute.", line: "Tap to sell, split rounds by who's paying, and close the shift with the drawer counted." }}
-        />
-        <Composition
-          id="TourKitchen"
-          component={TourKitchen}
-          durationInFrames={210}
-          fps={30}
-          width={1920}
-          height={1080}
-          defaultProps={{ title: "The kitchen sees it instantly.", line: "Tickets change colour as they wait, so nothing is forgotten on a busy night." }}
-        />
-        <Composition
-          id="TourDelivery"
-          component={Delivery}
-          durationInFrames={300}
-          fps={30}
-          width={1920}
-          height={1080}
-          defaultProps={{ title: "Deliver with your own riders.", line: "No commission. Riders get their own app, and guests watch their order come to the door." }}
         />
         <Composition
           id="TourBranches"
