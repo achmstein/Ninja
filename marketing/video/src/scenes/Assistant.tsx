@@ -11,8 +11,8 @@ import { C, clamp, geist, glide, land } from "../theme";
 
 const MARGINS = [
   { name: "Iced Mocha", pct: 38 },
-  { name: "Club Sandwich", pct: 41 },
-  { name: "Cheesecake", pct: 44 },
+  { name: "Waffle", pct: 41 },
+  { name: "Chocolate Cake", pct: 44 },
 ];
 
 type Props = {
@@ -35,7 +35,7 @@ const AssistantInner: React.FC<Props> = ({ headline, question, style }) => {
   return (
     <AbsoluteFill style={style}>
       <Backdrop />
-      <Step n="04" label="Ninja AI" />
+      <Step n="04" label="Ask your café" />
       <Headline text={headline} mark="anything." at={2} />
 
       <Phone style={{ ...phone }} screen="#f8fafc" font={geist}>
@@ -68,8 +68,8 @@ const AssistantInner: React.FC<Props> = ({ headline, question, style }) => {
             ✦
           </div>
           <div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: C.ink }}>Ninja AI</div>
-            <div style={{ fontSize: 22, fontWeight: 500, color: C.muted }}>Knows your menu, sales and stock</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: C.ink }}>Claude or ChatGPT</div>
+            <div style={{ fontSize: 22, fontWeight: 500, color: C.muted }}>Connected to ninja</div>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ const AssistantInner: React.FC<Props> = ({ headline, question, style }) => {
             })}
           </div>
           <div style={{ fontSize: 24, fontWeight: 500, color: C.muted, marginTop: 24, lineHeight: 1.4 }}>
-            Milk went up 12% — the Iced Mocha recipe costs more now.
+            Chocolate sauce went up on your last receipt, so the Iced Mocha costs more now.
           </div>
         </div>
 

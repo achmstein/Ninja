@@ -25,7 +25,7 @@ const OutroInner: React.FC<Props> = ({ features, tagline, url, style }) => {
     <AbsoluteFill style={style}>
       <Backdrop dark />
 
-      {/* Order. Kitchen. Delivery. AI. — one per beat, then they clear */}
+      {/* Order. Cook. Deliver. Ask. — one per beat, then they clear */}
       <AbsoluteFill
         style={{
           justifyContent: "center",
@@ -112,7 +112,7 @@ const OutroInner: React.FC<Props> = ({ features, tagline, url, style }) => {
 };
 
 const schema = {
-  features: { type: "text-content", default: "Order. Kitchen. Delivery. AI.", description: "Feature words" },
+  features: { type: "text-content", default: "Order. Cook. Deliver. Ask.", description: "Feature words" },
   tagline: { type: "text-content", default: "One app for your whole café.", description: "Tagline" },
   url: { type: "text-content", default: "ninjapp.net", description: "Website" },
 } as const satisfies InteractivitySchema;

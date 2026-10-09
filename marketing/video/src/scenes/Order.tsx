@@ -2,18 +2,21 @@ import type React from "react";
 import {
   AbsoluteFill,
   Interactive,
+  Img,
   interpolate,
+  staticFile,
   useCurrentFrame,
   type InteractivitySchema,
 } from "remotion";
 import { Backdrop, Headline, Phone, Step, Tap, useRise } from "../parts";
 import { C, clamp, glide, land } from "../theme";
 
+// The app's own menu photos (public/dishes, from src/Catalog.API/Pics).
 const DISHES = [
-  { name: "Spanish Latte", price: 85, from: "#c08a5b", to: "#6b3f22" },
-  { name: "Iced Mocha", price: 95, from: "#a87a5c", to: "#3b2416" },
-  { name: "Club Sandwich", price: 140, from: "#f2c46d", to: "#c46a2b" },
-  { name: "Cheesecake", price: 110, from: "#f7d9c4", to: "#e0795f" },
+  { name: "Latte", price: 75, img: "latte" },
+  { name: "Iced Mocha", price: 95, img: "mocha" },
+  { name: "Waffle", price: 110, img: "waffle" },
+  { name: "Chocolate Cake", price: 120, img: "cake" },
 ];
 const TILE_W = 238;
 const tileX = (i: number) => 36 + (i % 2) * (TILE_W + 20);
@@ -47,7 +50,7 @@ const OrderInner: React.FC<Props> = ({ headline, style }) => {
   const tapClub = 86;
   const tapSend = 112;
   const count = frame >= tapClub + 2 ? 2 : frame >= tapLatte + 2 ? 1 : 0;
-  const total = count === 2 ? 225 : count === 1 ? 85 : 0;
+  const total = count === 2 ? 185 : count === 1 ? 75 : 0;
 
   return (
     <AbsoluteFill style={style}>
@@ -99,13 +102,9 @@ const OrderInner: React.FC<Props> = ({ headline, style }) => {
                 }),
               }}
             >
-              <div
-                style={{
-                  height: 190,
-                  borderRadius: 28,
-                  background: `radial-gradient(circle at 35% 30%, ${d.from}, ${d.to})`,
-                  boxShadow: "inset 0 -30px 60px rgba(0,0,0,0.18)",
-                }}
+              <Img
+                src={staticFile(`dishes/${d.img}.jpg`)}
+                style={{ width: "100%", height: 190, borderRadius: 28, objectFit: "cover", display: "block" }}
               />
               <div style={{ fontSize: 26, fontWeight: 700, color: C.ink, marginTop: 14 }}>{d.name}</div>
               <div style={{ fontSize: 24, fontWeight: 600, color: C.muted, marginTop: 4 }}>EGP {d.price}</div>

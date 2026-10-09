@@ -1,9 +1,16 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
+import { loadFont as loadJakarta } from "@remotion/google-fonts/PlusJakartaSans";
 import { loadFont as loadSurfer } from "@remotion/google-fonts/OriginalSurfer";
 import { Easing } from "remotion";
 
 export const { fontFamily: inter } = loadInter("normal", {
+  weights: ["400", "500", "600", "700", "800"],
+  subsets: ["latin"],
+});
+
+// The guest app's font in the Ninja style (the till and kitchen use Inter).
+export const { fontFamily: jakarta } = loadJakarta("normal", {
   weights: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
 });

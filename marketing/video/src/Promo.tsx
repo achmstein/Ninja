@@ -10,7 +10,7 @@ import { Order } from "./scenes/Order";
 import { Outro } from "./scenes/Outro";
 import { Rider } from "./scenes/Rider";
 
-// 22 s vertical promo: hook → QR order → kitchen → rider → Ninja AI → end card.
+// 22 s vertical promo: hook → QR order → kitchen → rider → ask your café → end card.
 // Six scenes of 90+150+110+110+150+110 frames, minus five 12-frame transitions = 660.
 export const Promo = () => {
   const { fps } = useVideoConfig();
@@ -45,7 +45,7 @@ export const Promo = () => {
         presentation={slide({ direction: "from-right" })}
         timing={springTiming({ config: { damping: 200 }, durationInFrames: 12 })}
       />
-      <TransitionSeries.Sequence name="Ninja AI" durationInFrames={150} premountFor={fps}>
+      <TransitionSeries.Sequence name="Ask your café" durationInFrames={150} premountFor={fps}>
         <Assistant headline="Ask your café anything." question="Which dishes have my lowest margins?" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
@@ -53,7 +53,7 @@ export const Promo = () => {
         timing={springTiming({ config: { damping: 200 }, durationInFrames: 12 })}
       />
       <TransitionSeries.Sequence name="End card" durationInFrames={110} premountFor={fps}>
-        <Outro features="Order. Kitchen. Delivery. AI." tagline="One app for your whole café." url="ninjapp.net" />
+        <Outro features="Order. Cook. Deliver. Ask." tagline="One app for your whole café." url="ninjapp.net" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
   );

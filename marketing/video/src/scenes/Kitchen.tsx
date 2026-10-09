@@ -105,21 +105,21 @@ const KitchenInner: React.FC<Props> = ({ headline, style }) => {
 
         <Ticket
           title="Table 7"
-          items={["2× Iced Mocha", "1× Cheesecake"]}
+          items={["2× Iced Mocha", "1× Chocolate Cake"]}
           minutes="4:10"
           accent={C.slate700}
           style={{ left: 24 + push }}
         />
         <Ticket
           title="Takeaway 41"
-          items={["1× Flat White", "2× Croissant"]}
+          items={["1× Flat White", "2× Espresso"]}
           minutes="2:35"
           accent={C.slate700}
           style={{ left: 24 + TICKET_W + 24 + push }}
         />
         <Ticket
           title="Table 3"
-          items={["1× Spanish Latte", "1× Club Sandwich"]}
+          items={["1× Latte", "1× Waffle"]}
           minutes={`0:${String(seconds).padStart(2, "0")}`}
           accent={ready ? C.green : C.amber}
           style={{
