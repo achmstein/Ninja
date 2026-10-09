@@ -35,7 +35,7 @@ export const Chapter: React.FC<{
   const lang = useLang();
   const ar = lang === "ar" ? AR_CHAPTERS[n] : undefined;
   const hero = useHero();
-  const camera = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar");
+  const camera = useCamera(hero?.cam ?? [{ f: 0, s: 1, x: 1250, y: 540 }], lang === "ar", hero?.rate ?? 1);
   const devices =
     lang === "ar" ? (
       <MirrorContext.Provider value>

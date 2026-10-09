@@ -279,7 +279,7 @@ const IntroInner: React.FC<Props> = ({ headline: h, features: f, style }) => {
         <Screen x={1250} y={410} width={560} logical={[1280, 800]} font={inter} style={useRiseIn(30)}>
           <KitchenMini />
         </Screen>
-        <Screen x={600} y={278} width={720} logical={[1280, 800]} style={useRiseIn(12)}>
+        <Screen x={600} y={278} width={720} logical={[1280, 800]} browser="admin.mellow.ninjapp.net" style={useRiseIn(12)}>
           <AdminMini />
         </Screen>
 

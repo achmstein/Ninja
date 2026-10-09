@@ -6,6 +6,9 @@ import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from "remotion";
 import { clamp, land } from "../theme";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
+import { plexArabic, useLang } from "./lang";
+import { jakarta } from "../theme";
+import { PopOut } from "./hero";
 import { Sfx } from "./sfx";
 import { MenuScreen } from "./menu-screen";
 import { BillRow, Dock, GuestPhone, S, Touch } from "./ui";
@@ -49,6 +52,7 @@ const PillButton: React.FC<{ children: React.ReactNode; primary?: boolean; on?: 
 
 const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const ar = useLang() === "ar";
   const tr = useT();
   const open = 34;
   const split = 96;
@@ -297,6 +301,29 @@ const PayInner: React.FC<ChapterProps> = ({ title, line, style }) => {
           <ChevronUp />
         </div>
       </GuestPhone>
+      <PopOut at={paid + 8} x={1080} y={470}>
+        <div
+            style={{
+              padding: "22px 26px",
+              borderRadius: 30,
+              backgroundColor: "#fff",
+              color: S.fg,
+              fontFamily: ar ? plexArabic : jakarta,
+              direction: ar ? "rtl" : "ltr",
+              display: "flex",
+              alignItems: "center",
+              gap: 18,
+            }}
+          >
+            <div style={{ width: 64, height: 64, borderRadius: "50%", backgroundColor: "#10B981", display: "grid", placeItems: "center" }}>
+              <Check size={36} color="#fff" strokeWidth={3} />
+            </div>
+            <div>
+              <div style={{ fontSize: 30, fontWeight: 800 }}>{tr("Paid, thank you!")}</div>
+              <div style={{ fontSize: 20, color: S.mutedFg, marginTop: 2 }}>{tr("EGP 185.00 charged")}</div>
+            </div>
+          </div>
+      </PopOut>
     </Chapter>
   );
 };

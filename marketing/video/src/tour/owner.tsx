@@ -1,13 +1,14 @@
 // Chapters 10–13: the owner's side (AI menu setup + photo studio, stock & food cost,
 // profit & payroll, and the assistant in Claude or ChatGPT).
-import { Check, UtensilsCrossed, Wrench } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Coffee, Download, GripVertical, Plus, Search, Wrench } from "lucide-react";
 import type React from "react";
 import { Img, Interactive, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { NMark } from "../parts";
 import { C, clamp, glide, inter, land } from "../theme";
 import { Chapter, copySchema, Glass, Unmirror, useEnter, type ChapterProps } from "./chapter";
-import { AdminButton, AdminShell, Dish, DISHES, S, Screen, StatStrip } from "./ui";
-import { useT, useUnmirror } from "./lang";
+import { A, AdminButton, AdminShell, Dish, DISHES, S, Screen, StatStrip } from "./ui";
+import { plexArabic, useLang, useT, useUnmirror } from "./lang";
+import { PopOut } from "./hero";
 import { Sfx } from "./sfx";
 
 // A photo of paper (a printed menu, a supplier's receipt) with the scan beam passing over it.
@@ -84,7 +85,7 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       style={style}
       copyWidth={640}
     >
-      <Screen x={1000} y={130} width={840} logical={[1280, 800]} style={useEnter(4)}>
+      <Screen x={1000} y={130} width={840} logical={[1280, 800]} browser="admin.mellow.ninjapp.net" style={useEnter(4)}>
         <AdminShell
           cafe="The Corner Café"
           branch="Downtown"
@@ -96,80 +97,133 @@ const AiMenuInner: React.FC<ChapterProps> = ({ title, line, style }) => {
               <AdminButton>
                 <NMark size={16} /> {tr("Scan menu")}
               </AdminButton>
-              <AdminButton primary>{tr("+ Add item")}</AdminButton>
+              <AdminButton primary>
+                <Plus size={16} /> {tr("Add item")}
+              </AdminButton>
             </>
           }
         >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 14px",
-              borderRadius: 10,
-              backgroundColor: "rgba(99,102,241,0.1)",
-              color: "#4338ca",
-              fontSize: 14,
-              fontWeight: 600,
-              opacity: interpolate(frame, [found, found + 6], [0, 1], clamp),
-            }}
-          >
-            <NMark size={16} /> {tr("Ninja read your photo · 6 items in 2 categories")}
-            <Sfx name="ding" at={found} />
-          </div>
-          <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${S.border}`, overflow: "hidden" }}>
-            {SCANNED.map((d, i) => {
-              const at = found + 4 + i * 5;
-              const shot = studio + 44 + i * 4;
-              return (
-                <div
-                  key={d.name}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "inline-flex", alignSelf: "flex-start", height: 36, padding: 3, borderRadius: 10, backgroundColor: A.muted }}>
+              {["Dishes", "Offers & codes"].map((tab, k) => (
+                <span
+                  key={tab}
                   style={{
+                    padding: "0 12px",
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: "10px 16px",
-                    borderTop: i ? `1px solid ${S.border}` : undefined,
-                    opacity: interpolate(frame, [at, at + 6], [0, 1], clamp),
-                    translate: interpolate(frame, [at, at + 14], ["-24px 0px", "0px 0px"], { ...clamp, easing: glide }),
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: k === 0 ? A.fg : A.mutedFg,
+                    backgroundColor: k === 0 ? "#fff" : "transparent",
+                    boxShadow: k === 0 ? A.elev1 : undefined,
                   }}
                 >
-                  <div
-                    style={{
-                      position: "relative",
-                      width: 40,
-                      height: 40,
-                      borderRadius: 6,
-                      backgroundColor: S.muted,
-                      display: "grid",
-                      placeItems: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <UtensilsCrossed size={16} color={S.mutedFg} />
-                    {d.img ? (
-                      <Dish
-                        img={d.img}
-                        size={40}
-                        radius={6}
-                        style={{ position: "absolute", inset: 0, opacity: interpolate(frame, [shot, shot + 8], [0, 1], clamp) }}
-                      />
-                    ) : null}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{tr(d.name)}</div>
-                    <div style={{ fontSize: 12, color: S.mutedFg }}>
-                      {tr(d.cat)}
-                      {d.note ? ` · ${tr(d.note)}` : ""}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{d.price}</div>
-                  <div style={{ width: 36, height: 20, borderRadius: 10, backgroundColor: S.primary, padding: 2 }}>
-                    <div style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: "#fff", marginLeft: 16 }} />
-                  </div>
+                  {tr(tab)}
+                </span>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 320,
+                  height: 36,
+                  borderRadius: 8,
+                  border: `1px solid ${A.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "0 10px",
+                  fontSize: 14,
+                  color: A.mutedFg,
+                }}
+              >
+                <Search size={16} /> {tr("Search items…")}
+              </div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: 32,
+                  padding: "0 12px",
+                  borderRadius: 999,
+                  backgroundColor: "rgba(79,96,224,0.08)",
+                  color: "#3f4fc8",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  boxShadow: "inset 0 0 0 1px rgba(79,96,224,0.22)",
+                  opacity: interpolate(frame, [found, found + 6], [0, 1], clamp),
+                }}
+              >
+                <NMark size={14} /> {tr("Ninja read your photo · 6 items in 2 categories")}
+                <Sfx name="ding" at={found} />
+              </div>
+            </div>
+            {[
+              { cat: "Hot drinks", rows: SCANNED.filter((d) => d.cat === "Hot drinks") },
+              { cat: "Sweets", rows: SCANNED.filter((d) => d.cat === "Sweets") },
+            ].map((sec, si) => (
+              <div key={sec.cat}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 8, borderBottom: `1px solid ${A.border}` }}>
+                  <GripVertical size={16} color={A.mutedFg} />
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{tr(sec.cat)}</span>
+                  <span style={{ fontSize: 14, color: A.mutedFg }}>{sec.rows.length}</span>
                 </div>
-              );
-            })}
+                {sec.rows.map((d, ri) => {
+                  const i = si * 3 + ri;
+                  const at = found + 4 + i * 5;
+                  const shot = studio + 44 + i * 4;
+                  return (
+                    <div
+                      key={d.name}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "8px 0",
+                        borderTop: ri ? "1px solid #edf1f6" : undefined,
+                        opacity: interpolate(frame, [at, at + 6], [0, 1], clamp),
+                        translate: interpolate(frame, [at, at + 14], ["-24px 0px", "0px 0px"], { ...clamp, easing: glide }),
+                      }}
+                    >
+                      <GripVertical size={16} color="#cbd5e1" />
+                      <div
+                        style={{
+                          position: "relative",
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          backgroundColor: A.muted,
+                          display: "grid",
+                          placeItems: "center",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Coffee size={16} color={A.mutedFg} />
+                        {d.img ? (
+                          <Dish
+                            img={d.img}
+                            size={40}
+                            radius={8}
+                            style={{ position: "absolute", inset: 0, opacity: interpolate(frame, [shot, shot + 8], [0, 1], clamp) }}
+                          />
+                        ) : null}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>{tr(d.name)}</div>
+                        <div style={{ fontSize: 12, color: A.mutedFg }}>{d.note ? tr(d.note) : tr(sec.cat)}</div>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{tr(`${d.price}.00 EGP`)}</div>
+                      <div style={{ width: 32, height: 18, borderRadius: 9, backgroundColor: A.primary, padding: 1, marginInlineEnd: 4 }}>
+                        <div style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: "#fff", marginInlineStart: 14 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </AdminShell>
       </Screen>
@@ -256,10 +310,10 @@ export const AiMenu = Interactive.withSchema({
 // ——— 11 Stock & food cost ————————————————————————————————————————
 
 const COSTS = [
-  { k: "latte", cost: "18.40", margin: 75, food: 25 },
-  { k: "mocha", cost: "36.10", margin: 62, food: 38 },
-  { k: "waffle", cost: "37.40", margin: 66, food: 34 },
-  { k: "cake", cost: "33.60", margin: 72, food: 28 },
+  { k: "latte", cat: "Coffee", cost: "18.40", margin: 75, food: 25 },
+  { k: "mocha", cat: "Iced", cost: "36.10", margin: 62, food: 38 },
+  { k: "waffle", cat: "Desserts", cost: "37.40", margin: 66, food: 34 },
+  { k: "cake", cat: "Desserts", cost: "33.60", margin: 72, food: 28 },
 ] as const;
 
 const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
@@ -278,95 +332,118 @@ const StockInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       style={style}
       copyWidth={640}
     >
-      <Screen x={1000} y={140} width={840} logical={[1280, 800]} style={useEnter(4)}>
+      <Screen x={1000} y={140} width={840} logical={[1280, 800]} browser="admin.mellow.ninjapp.net" style={useEnter(4)}>
         <AdminShell
           active="Stock"
           crumb="Menu & stock"
-          title="Menu cost"
+          title="Stock"
           actions={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 13,
-                color: S.mutedFg,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: A.mutedFg }}>
               {tr("Food-cost target")}
-              <span style={{ border: `1px solid ${S.border}`, borderRadius: 8, padding: "6px 10px", color: S.fg, fontWeight: 600 }}>
-                30
+              <span style={{ height: 36, width: 80, borderRadius: 8, border: `1px solid ${A.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 10px", color: A.fg }}>
+                30 <span style={{ color: A.mutedFg }}>%</span>
               </span>
-              %
             </div>
           }
         >
-          <StatStrip
-            stats={[
-              { label: "Tracked items", value: "24" },
-              { label: "Average food cost", value: "29%" },
-              { label: "Over 30%", value: "6", tone: S.red },
-              { label: "With uncosted ingredients", value: "0" },
-            ]}
-          />
-          <div style={{ marginTop: 16, borderRadius: 12, border: `1px solid ${S.border}`, overflow: "hidden", fontSize: 14 }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2fr 1fr 1.2fr 1fr 1.4fr",
-                padding: "10px 16px",
-                backgroundColor: "#f8fafc",
-                color: S.mutedFg,
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              <span>{tr("Menu item")}</span>
-              <span>{tr("Price")}</span>
-              <span>{tr("Cost per sale")}</span>
-              <span>{tr("Margin")}</span>
-              <span>{tr("Food cost")}</span>
-            </div>
-            {COSTS.map((c, i) => {
-              const at = table + i * 6;
-              const over = c.food > 30;
-              return (
-                <div
-                  key={c.k}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "inline-flex", alignSelf: "flex-start", height: 36, padding: 3, borderRadius: 10, backgroundColor: A.muted }}>
+              {["Stock", "History", "Reports", "Menu cost"].map((tab) => (
+                <span
+                  key={tab}
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "2fr 1fr 1.2fr 1fr 1.4fr",
+                    padding: "0 12px",
+                    display: "flex",
                     alignItems: "center",
-                    padding: "12px 16px",
-                    borderTop: `1px solid ${S.border}`,
-                    opacity: interpolate(frame, [at, at + 6], [0, 1], clamp),
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: tab === "Menu cost" ? A.fg : A.mutedFg,
+                    backgroundColor: tab === "Menu cost" ? "#fff" : "transparent",
+                    boxShadow: tab === "Menu cost" ? A.elev1 : undefined,
                   }}
                 >
-                  <span style={{ fontWeight: 500 }}>{tr(DISHES[c.k].name)}</span>
-                  <span>{DISHES[c.k].price}</span>
-                  <span>{c.cost}</span>
-                  <span>{c.margin}%</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {Math.round(interpolate(frame, [at, at + 20], [0, c.food], { ...clamp, easing: glide }))}%
-                    {over ? (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                          backgroundColor: "rgba(220,38,38,0.1)",
-                          color: S.red,
-                          opacity: interpolate(frame, [at + 20, at + 26], [0, 1], clamp),
-                        }}
-                      >
-                        {tr("Over target")}
-                      </span>
-                    ) : null}
-                  </span>
-                </div>
-              );
-            })}
+                  {tr(tab)}
+                </span>
+              ))}
+            </div>
+            <StatStrip
+              stats={[
+                { label: "Tracked items", value: "24" },
+                { label: "Average food cost", value: "29%" },
+                { label: "Over 30%", value: "6", tone: A.danger },
+                { label: "With uncosted ingredients", value: "0" },
+              ]}
+            />
+            <div style={{ borderRadius: 14, boxShadow: A.elev1, overflow: "hidden", backgroundColor: "#fff" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "2fr 1fr 1.2fr 1fr 1.3fr",
+                  height: 36,
+                  alignItems: "center",
+                  padding: "0 16px",
+                  backgroundColor: "#f9fafc",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: A.mutedFg,
+                }}
+              >
+                <span>{tr("Menu item")}</span>
+                <span style={{ textAlign: "end" }}>{tr("Price")}</span>
+                <span style={{ textAlign: "end" }}>{tr("Cost per sale")}</span>
+                <span style={{ textAlign: "end" }}>{tr("Margin")}</span>
+                <span style={{ textAlign: "end" }}>{tr("Food cost")}</span>
+              </div>
+              {COSTS.map((c, i) => {
+                const at = table + i * 6;
+                const over = c.food > 30;
+                return (
+                  <div
+                    key={c.k}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1.2fr 1fr 1.3fr",
+                      alignItems: "center",
+                      padding: "12px 16px",
+                      borderTop: "1px solid #edf1f6",
+                      fontSize: 14,
+                      fontVariantNumeric: "tabular-nums",
+                      opacity: interpolate(frame, [at, at + 6], [0, 1], clamp),
+                    }}
+                  >
+                    <span>
+                      <div style={{ fontWeight: 500 }}>{tr(DISHES[c.k].name)}</div>
+                      <div style={{ fontSize: 12, color: A.mutedFg }}>{tr(c.cat)}</div>
+                    </span>
+                    <span style={{ textAlign: "end" }}>{DISHES[c.k].price}.00</span>
+                    <span style={{ textAlign: "end" }}>{c.cost}</span>
+                    <span style={{ textAlign: "end" }}>{c.margin}%</span>
+                    <span style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
+                      {over ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            padding: "2px 8px",
+                            borderRadius: 8,
+                            backgroundColor: "rgba(231,0,11,.08)",
+                            color: A.danger,
+                            boxShadow: "inset 0 0 0 1px rgba(231,0,11,.22)",
+                            opacity: interpolate(frame, [at + 20, at + 26], [0, 1], clamp),
+                          }}
+                        >
+                          {tr("Over target")}
+                        </span>
+                      ) : null}
+                      {Math.round(interpolate(frame, [at, at + 20], [0, c.food], { ...clamp, easing: glide }))}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </AdminShell>
       </Screen>
@@ -441,55 +518,59 @@ const ProfitInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       style={style}
       copyWidth={640}
     >
-      <Screen x={830} y={150} width={980} logical={[1280, 800]} style={useEnter(4)}>
+      <Screen x={830} y={150} width={980} logical={[1280, 800]} browser="admin.mellow.ninjapp.net" style={useEnter(4)}>
         <AdminShell
           active="Profit & loss"
           crumb="Money"
           title="Profit & loss"
           actions={
-            <>
-              <AdminButton>{tr("‹ September 2026 ›")}</AdminButton>
-              <AdminButton>{tr("Export")}</AdminButton>
-            </>
+            <AdminButton small>
+              <Download size={16} /> {tr("Export")}
+            </AdminButton>
           }
         >
-          <StatStrip
-            stats={[
-              { label: "Profit", value: "EGP 86,400", tone: S.success },
-              { label: "Net sales", value: "EGP 412,000" },
-              { label: "Prime cost", value: "58%" },
-            ]}
-          />
-          <div style={{ marginTop: 16, borderRadius: 14, border: `1px solid ${S.border}`, padding: "16px 20px" }}>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{tr("Where the money went")}</div>
-            {WATERFALL.map((w, i) => {
-              const at = 20 + i * 7;
-              const grow = interpolate(frame, [at, at + 18], [0, 1], { ...clamp, easing: glide });
-              const color = w.kind === "total" ? S.fg : w.kind === "profit" ? S.success : "rgba(220,38,38,0.7)";
-              return (
-                <div key={w.label} style={{ display: "flex", alignItems: "center", gap: 14, height: 40 }}>
-                  <div style={{ width: 120, fontSize: 13, color: w.kind === "cost" ? S.mutedFg : S.fg, fontWeight: w.kind === "cost" ? 400 : 600 }}>
-                    {w.label}
-                  </div>
-                  <div style={{ flex: 1, height: 28, borderRadius: 6, backgroundColor: "rgba(241,245,249,0.5)", position: "relative" }}>
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        bottom: 0,
-                        insetInlineStart: `${(w.from / 420) * 100}%`,
-                        width: `${((w.to - w.from) / 420) * 100 * grow}%`,
-                        borderRadius: 6,
-                        backgroundColor: color,
-                      }}
-                    />
-                  </div>
-                  <div style={{ width: 90, textAlign: "right", fontSize: 13, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-                    {w.amount}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 14, fontWeight: 500 }}>
+              <ChevronLeft size={18} color={A.mutedFg} style={{ margin: 9 }} />
+              <span style={{ minWidth: 144, textAlign: "center" }}>{tr("September 2026")}</span>
+              <ChevronRight size={18} color={A.mutedFg} style={{ margin: 9 }} />
+            </div>
+            <StatStrip
+              stats={[
+                { label: "Profit", value: "86,400.00 EGP", tone: A.success },
+                { label: "Net sales", value: "412,000.00 EGP" },
+                { label: "Prime cost", value: "58%" },
+              ]}
+            />
+            <div style={{ borderRadius: 14, boxShadow: A.elev1, backgroundColor: "#fff", padding: "20px 24px" }}>
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 18 }}>{tr("Where the money went")}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {WATERFALL.map((w, i) => {
+                  const at = 20 + i * 7;
+                  const grow = interpolate(frame, [at, at + 18], [0, 1], { ...clamp, easing: glide });
+                  const color = w.kind === "total" ? A.fg : w.kind === "profit" ? A.success : "rgba(231,0,11,0.7)";
+                  return (
+                    <div key={w.label} style={{ display: "grid", gridTemplateColumns: "128px 1fr 112px", alignItems: "center", gap: 12, fontSize: 14 }}>
+                      <span style={{ color: w.kind === "cost" ? A.mutedFg : A.fg, fontWeight: w.kind === "cost" ? 400 : 500 }}>{tr(w.label)}</span>
+                      <div style={{ height: 28, borderRadius: 8, backgroundColor: "rgba(241,245,249,0.5)", position: "relative" }}>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            bottom: 0,
+                            insetInlineStart: `${(w.from / 420) * 100}%`,
+                            width: `${((w.to - w.from) / 420) * 100 * grow}%`,
+                            borderRadius: 8,
+                            backgroundColor: color,
+                          }}
+                        />
+                      </div>
+                      <span style={{ textAlign: "end", fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>{w.amount}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </AdminShell>
       </Screen>
@@ -518,6 +599,7 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
 }) => {
   const frame = useCurrentFrame();
   const tr = useT();
+  const ar = useLang() === "ar";
   // The owner types in the video's language.
   const question = tr(q);
   const action = tr(act);
@@ -750,6 +832,33 @@ const AssistantInner: React.FC<ChapterProps & { question?: string; action?: stri
           </span>
         </div>
       </Glass>
+      <PopOut at={reply + 20} until={ask2 - 4} x={700} y={600}>
+        <div
+          style={{
+            width: 430,
+            padding: "22px 24px",
+            borderRadius: 28,
+            backgroundColor: "#fff",
+            fontFamily: ar ? plexArabic : inter,
+            direction: ar ? "rtl" : "ltr",
+            color: S.fg,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 20, fontWeight: 800 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#ef4444" }} />
+            {tr("Running low right now:")}
+          </div>
+          {bars.map((b, i) => (
+            <div key={b.name} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, fontSize: 18 }}>
+              <span style={{ flex: 1, fontWeight: 600 }}>{tr(b.name)}</span>
+              <div style={{ width: 120, height: 10, borderRadius: 5, backgroundColor: S.muted }}>
+                <div style={{ width: `${b.margin}%`, height: "100%", borderRadius: 5, backgroundColor: i === 0 ? "#ef4444" : S.fg }} />
+              </div>
+              <span style={{ width: 70, textAlign: "end", fontWeight: 800, direction: "ltr" }}>{tr(b.left)}</span>
+            </div>
+          ))}
+        </div>
+      </PopOut>
     </Chapter>
   );
 };

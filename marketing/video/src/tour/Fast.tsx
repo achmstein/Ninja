@@ -6,7 +6,8 @@ import { interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remoti
 import { Book } from "./book";
 import { Finale } from "./Finale";
 import { Brand } from "./guests";
-import { HeroContext, WordBeat, type Hero } from "./hero";
+import { beat, HeroContext, WordBeat, type Hero } from "./hero";
+import { slide } from "@remotion/transitions/slide";
 import { Opening } from "./Opening";
 import { Journey } from "./journey";
 import { LangContext, type Lang } from "./lang";
@@ -26,26 +27,30 @@ const H: Record<string, Hero> = {
   pay: {
     title: "Split the bill.",
     titleAr: "قسّم الحساب.",
+    rate: 1.25,
     cam: [
-      { f: 0, s: 1, x: 1556, y: 540 },
-      { f: 30, s: 1, x: 1556, y: 540 },
-      { f: 50, s: 1.45, x: 1556, y: 600 },
-      { f: 260, s: 1.45, x: 1556, y: 600 },
+      { f: beat(0, 1.25), s: 1, x: 1556, y: 540 },
+      { f: beat(2, 1.25), s: 1.45, x: 1556, y: 600 },
+      { f: beat(13, 1.25), s: 1.45, x: 1556, y: 600 },
+      { f: beat(14, 1.25), s: 1.2, x: 1440, y: 560 },
     ],
   },
   book: {
     title: "Book a room.",
     titleAr: "احجز اوضة.",
+    rate: 1.25,
     cam: [
-      { f: 0, s: 1, x: 1556, y: 540 },
-      { f: 40, s: 1.35, x: 1556, y: 400 },
-      { f: 150, s: 1.35, x: 1556, y: 400 },
-      { f: 172, s: 1.6, x: 1556, y: 420 },
-      { f: 260, s: 1.6, x: 1556, y: 420 },
+      { f: beat(0, 1.25), s: 1, x: 1556, y: 540 },
+      { f: beat(3, 1.25), s: 1.35, x: 1556, y: 400 },
+      { f: beat(9, 1.25), s: 1.35, x: 1556, y: 400 },
+      { f: beat(10, 1.25), s: 1.6, x: 1556, y: 420 },
+      { f: beat(12, 1.25), s: 1.6, x: 1556, y: 420 },
+      { f: beat(13, 1.25), s: 1.3, x: 1460, y: 400 },
     ],
   },
-  branches: { title: "Every branch.", titleAr: "كل الفروع.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
+  branches: { rate: 2.2, title: "Every branch.", titleAr: "كل الفروع.", cam: [{ f: 0, s: 1.1, x: 1320, y: 480 }] },
   menu: {
+    rate: 2.2,
     title: "Menu from a photo.",
     titleAr: "المنيو من صورة.",
     cam: [
@@ -55,16 +60,17 @@ const H: Record<string, Hero> = {
       { f: 300, s: 1.35, x: 1520, y: 740 },
     ],
   },
-  stock: { title: "Every dish costed.", titleAr: "تكلفة كل صنف.", cam: [{ f: 0, s: 0.95, x: 1150, y: 520 }] },
-  profit: { title: "Profit, live.", titleAr: "مكسبك لايف.", cam: [{ f: 0, s: 1.1, x: 1320, y: 470 }] },
+  stock: { rate: 2.2, title: "Every dish costed.", titleAr: "تكلفة كل صنف.", cam: [{ f: 0, s: 0.95, x: 1150, y: 520 }] },
+  profit: { rate: 2.2, title: "Profit, live.", titleAr: "مكسبك لايف.", cam: [{ f: 0, s: 1.1, x: 1320, y: 470 }] },
   ask: {
     title: "Ask your café.",
     titleAr: "اسأل الكافيه بتاعك.",
+    rate: 1.25,
     cam: [
-      { f: 0, s: 1, x: 1320, y: 540 },
-      { f: 60, s: 1.2, x: 1320, y: 430 },
-      { f: 170, s: 1.2, x: 1320, y: 430 },
-      { f: 200, s: 1.2, x: 1320, y: 650 },
+      { f: beat(0, 1.25), s: 1, x: 1320, y: 540 },
+      { f: beat(4, 1.25), s: 1.22, x: 1240, y: 460 },
+      { f: beat(10, 1.25), s: 1.22, x: 1240, y: 460 },
+      { f: beat(11, 1.25), s: 1.22, x: 1320, y: 650 },
     ],
   },
 };
@@ -72,6 +78,8 @@ const H: Record<string, Hero> = {
 const P = { title: "", line: "" };
 
 export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
+  // A sideways camera pan between hero scenes, in reading direction.
+  const pan = () => slide({ direction: lang === "ar" ? "from-left" : "from-right" });
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
   return (
@@ -116,37 +124,37 @@ export const Fast: React.FC<{ readonly lang?: Lang }> = ({ lang = "en" }) => {
             <Pay {...P} playbackRate={1.25} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Book a room" durationInFrames={207} premountFor={fps}>
           <HeroContext.Provider value={H.book}>
             <Book {...P} playbackRate={1.25} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Every branch" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.branches}>
             <Branches {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Menu from a photo" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.menu}>
             <AiMenu {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Every dish costed" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.stock}>
             <Stock {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Profit, live" durationInFrames={111} premountFor={fps}>
           <HeroContext.Provider value={H.profit}>
             <Profit {...P} playbackRate={2.2} />
           </HeroContext.Provider>
         </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={next()} />
+        <TransitionSeries.Transition presentation={pan()} timing={next()} />
         <TransitionSeries.Sequence name="Ask your café" durationInFrames={255} premountFor={fps}>
           <HeroContext.Provider value={H.ask}>
             <Assistant {...P} playbackRate={1.25} />

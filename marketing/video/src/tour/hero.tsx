@@ -5,12 +5,17 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import { C, clamp, inter, land } from "../theme";
 import { Stage } from "./Frame";
-import { plexArabic, useLang } from "./lang";
+import { plexArabic, useLang, useUnmirror } from "./lang";
 import { Sfx } from "./sfx";
 
 // A camera keyframe in the chapter's own frames: zoom `s` on the stage point (x, y).
 export type Cam = { f: number; s: number; x: number; y: number };
-export type Hero = { title: string; titleAr: string; cam: Cam[] };
+export type Hero = { title: string; titleAr: string; cam: Cam[]; rate?: number };
+
+// The music's grid inside a chapter: a beat is 12 frames, a bar 48, and the cut into the
+// chapter falls 7 frames after its start. `beat(k, rate)` is the chapter's own frame of
+// beat k when it plays at `rate`; author camera keyframes on these.
+export const beat = (k: number, rate = 1) => Math.round((7 + 12 * k) * rate);
 export const HeroContext = createContext<Hero | null>(null);
 export const useHero = () => useContext(HeroContext);
 
@@ -18,12 +23,16 @@ export const useHero = () => useContext(HeroContext);
 const AIM = { x: 1250, y: 540 };
 const ease = Easing.bezier(0.65, 0, 0.35, 1);
 
-export const useCamera = (cam: Cam[], mirrored: boolean): React.CSSProperties => {
+export const useCamera = (cam: Cam[], mirrored: boolean, rate = 1): React.CSSProperties => {
   const frame = useCurrentFrame();
+  // A small punch on every bar's downbeat, decaying over a few frames.
+  const local = frame / rate - 7;
+  const sinceBar = ((local % 48) + 48) % 48;
+  const punch = local >= 0 ? 1 + 0.03 * Math.exp(-sinceBar / 3.5) : 1;
   const fs = cam.map((k) => k.f);
   const at = (key: "s" | "x" | "y") =>
     cam.length === 1 ? cam[0][key] : interpolate(frame, fs, cam.map((k) => k[key]), { ...clamp, easing: ease });
-  const s = at("s");
+  const s = at("s") * punch;
   const x = mirrored ? 1920 - at("x") : at("x");
   const aimX = mirrored ? 1920 - AIM.x : AIM.x;
   return {
@@ -111,5 +120,46 @@ export const WordBeat: React.FC<{ words: string[]; wordsAr: string[]; style?: Re
         </AbsoluteFill>
       </Stage>
     </AbsoluteFill>
+  );
+};
+
+// The key piece of a screen, lifted out of the device: rises in front of it on a beat,
+// bigger, with a deep shadow and a pop. Lives inside the devices layer, so it moves with
+// the camera; it flips back to read the right way round in the Arabic mirror.
+export const PopOut: React.FC<{
+  at: number;
+  until?: number;
+  x: number;
+  y: number;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}> = ({ at, until = 99999, x, y, children, style }) => {
+  const frame = useCurrentFrame();
+  const unmirror = useUnmirror();
+  const hero = useHero();
+  if (!hero) return null;
+  if (frame < at - 1 || frame > until + 10) return <Sfx name="pop" at={at} volume={2.2} />;
+  const k = interpolate(frame, [at, at + 10], [0, 1], { ...clamp, easing: land });
+  const out = interpolate(frame, [until, until + 8], [1, 0], clamp);
+  return (
+    <>
+      <Sfx name="pop" at={at} volume={2.2} />
+      <div
+        style={{
+          position: "absolute",
+          left: x,
+          top: y,
+          zIndex: 80,
+          opacity: Math.min(k * 3, 1) * out,
+          scale: `${0.6 + 0.4 * k}`,
+          translate: `0px ${(1 - k) * 40}px`,
+          filter: "drop-shadow(0 40px 60px rgba(2,6,23,0.35)) drop-shadow(0 8px 16px rgba(2,6,23,0.18))",
+          ...style,
+          ...unmirror,
+        }}
+      >
+        {children}
+      </div>
+    </>
   );
 };

@@ -6,6 +6,9 @@ import type React from "react";
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { clamp, land } from "../theme";
 import { Chapter, copySchema, useEnter, type ChapterProps } from "./chapter";
+import { plexArabic, useLang } from "./lang";
+import { jakarta } from "../theme";
+import { PopOut } from "./hero";
 import { Sfx } from "./sfx";
 import { GuestPhone, PageTitle, S, TopBar, Touch } from "./ui";
 import { useT } from "./lang";
@@ -133,6 +136,7 @@ const BookDock: React.FC<{ held: boolean; secs: number; share: number; tick: num
 
 const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
   const frame = useCurrentFrame();
+  const ar = useLang() === "ar";
   const tr = useT();
   const { fps } = useVideoConfig();
   const open = 52;
@@ -436,6 +440,34 @@ const BookInner: React.FC<ChapterProps> = ({ title, line, style }) => {
         <Touch x={195} y={186 + 136 + 16 + 40 + 14 + 24} at={reserve} />
         <AbsoluteFill style={{ pointerEvents: "none" }} />
       </GuestPhone>
+      <PopOut at={face + 24} x={1040} y={230}>
+        <div
+            style={{
+              padding: "22px 26px",
+              borderRadius: 30,
+              backgroundColor: "#020617",
+              color: "#fff",
+              fontFamily: ar ? plexArabic : jakarta,
+              direction: ar ? "rtl" : "ltr",
+              display: "flex",
+              alignItems: "center",
+              gap: 18,
+            }}
+          >
+            <div style={{ position: "relative", width: 70, height: 70 }}>
+              <svg width={70} height={70} style={{ position: "absolute", inset: 0, rotate: "-90deg" }}>
+                <circle cx={35} cy={35} r={29} stroke="rgba(255,255,255,0.14)" strokeWidth={6} fill="none" />
+                <circle cx={35} cy={35} r={29} stroke={AMBER} strokeWidth={6} fill="none" strokeLinecap="round" strokeDasharray={182.2} strokeDashoffset={182.2 * (1 - share)} />
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#F59E0B" }}>{tr("Held for you")}</div>
+              <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: -1 }}>
+                <Rolling now={mmss(secs)} before={mmss(Math.min(600, secs + 1))} p={tick} size={46} />
+              </div>
+            </div>
+          </div>
+      </PopOut>
     </Chapter>
   );
 };

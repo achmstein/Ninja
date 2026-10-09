@@ -5,7 +5,13 @@ import {
   Armchair,
   Bike,
   Building2,
+  ChevronRight,
   ChevronUp,
+  Info,
+  Languages,
+  PanelLeft,
+  Search,
+  Sun,
   ClipboardList,
   Coffee,
   Contact,
@@ -235,9 +241,13 @@ export const Screen: React.FC<{
   font?: string;
   bezel?: number;
   screen?: string;
-}> = ({ x, y, width, logical, children, style, font = geist, bezel = 14, screen = S.bg }) => {
+  // Show it in a browser window at this address instead of a tablet.
+  browser?: string;
+}> = ({ x, y, width, logical, children, style, font = geist, bezel: b = 14, screen = S.bg, browser }) => {
   const ar = useLang() === "ar";
   const unmirror = useUnmirror();
+  const bezel = browser ? 0 : b;
+  const bar = browser ? 40 : 0;
   const k = (width - bezel * 2) / logical[0];
   return (
     <div
@@ -246,21 +256,50 @@ export const Screen: React.FC<{
         left: x,
         top: y,
         width,
-        height: logical[1] * k + bezel * 2,
+        height: logical[1] * k + bezel * 2 + bar,
         padding: bezel,
-        borderRadius: 28,
-        backgroundColor: "#18181b",
-        boxShadow: `${lift}, inset 0 0 0 2px #3f3f46`,
+        borderRadius: browser ? 14 : 28,
+        backgroundColor: browser ? "#eef0f3" : "#18181b",
+        boxShadow: browser
+          ? "0 0 0 1px rgba(2,6,24,.08), 0 40px 80px -24px rgba(2,6,24,.35), 0 16px 32px -20px rgba(2,6,24,.25)"
+          : `${lift}, inset 0 0 0 2px #3f3f46`,
+        overflow: browser ? "hidden" : undefined,
         ...style,
         ...unmirror,
       }}
     >
+      {browser ? (
+        <div style={{ height: bar, display: "flex", alignItems: "center", gap: 7, padding: "0 14px", direction: "ltr" }}>
+          {["#ff5f57", "#febc2e", "#28c840"].map((c) => (
+            <span key={c} style={{ width: 11, height: 11, borderRadius: "50%", backgroundColor: c }} />
+          ))}
+          <div
+            style={{
+              margin: "0 auto",
+              height: 24,
+              minWidth: 300,
+              padding: "0 14px",
+              borderRadius: 7,
+              backgroundColor: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: geist,
+              fontSize: 12,
+              color: "#62748e",
+            }}
+          >
+            {browser}
+          </div>
+          <span style={{ width: 47 }} />
+        </div>
+      ) : null}
       <div
         style={{
           position: "relative",
           width: logical[0] * k,
           height: logical[1] * k,
-          borderRadius: 16,
+          borderRadius: browser ? 0 : 16,
           overflow: "hidden",
           backgroundColor: screen,
         }}
@@ -638,6 +677,27 @@ const SIDEBAR: { group: string; items: { label: string; Icon: LucideIcon }[] }[]
 ];
 
 // The owner's dashboard at 1280 × 800: inset sidebar, header with breadcrumb, a page.
+// ——— The owner's dashboard, as admin_web draws it (shadcn, Geist 400–600, slate) ———
+
+// Admin tokens (admin_web/src/styles/theme.css).
+export const A = {
+  fg: "#020618",
+  primary: "#0f172b",
+  muted: "#f1f5f9",
+  mutedFg: "#62748e",
+  border: "#e2e8f0",
+  sidebarFg: "#314158",
+  success: "#12a05a",
+  warning: "#eea02a",
+  danger: "#e7000b",
+  chart1: "#4f60e0",
+  chart2: "#10a58a",
+  chart3: "#e2893a",
+  elev1: "0 0 0 1px rgba(2,6,24,.06), 0 1px 2px rgba(2,6,24,.04), 0 2px 6px -2px rgba(2,6,24,.04)",
+  float: "0 0 0 1px rgba(2,6,24,.06), 0 24px 48px -12px rgba(2,6,24,.25), 0 12px 24px -16px rgba(2,6,24,.18)",
+} as const;
+
+// The inset sidebar layout: white page, 256px sidebar, the content panel lifted by a shadow ring.
 export const AdminShell: React.FC<{
   cafe?: string;
   branch?: string;
@@ -647,216 +707,307 @@ export const AdminShell: React.FC<{
   description?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ cafe = "Mellow", branch = "Zamalek", active, crumb, title, description, actions, children }) => {
+}> = ({ cafe = "Mellow", branch, active, crumb, title, actions, children }) => {
   const t = useT();
+  const ar = useLang() === "ar";
   return (
-  <div style={{ position: "absolute", inset: 0, backgroundColor: "#f8fafc", display: "flex", fontFamily: geist }}>
-    <div style={{ width: 232, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px 8px" }}>
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            backgroundColor: S.primary,
-            color: "#fff",
-            display: "grid",
-            placeItems: "center",
-            fontSize: 14,
-            fontWeight: 800,
-          }}
-        >
-          {cafe.replace(/^(The|Café) /, "").charAt(0)}
-        </div>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>{t(cafe)}</div>
-          <div style={{ fontSize: 11, color: S.mutedFg }}>{t(branch)}</div>
-        </div>
-      </div>
-      {SIDEBAR.map((g) => (
-        <div key={g.group}>
-          <div
-            style={{
-              fontSize: 10.5,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              opacity: 0.55,
-              padding: "0 8px 4px",
-            }}
-          >
-            {t(g.group)}
-          </div>
-          {g.items.map(({ label, Icon }) => {
-            const on = label === active;
-            return (
-              <div
-                key={label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  height: 26,
-                  padding: "0 8px",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: on ? 600 : 500,
-                  color: on ? S.fg : "#334155",
-                  backgroundColor: on ? S.muted : "transparent",
-                  boxShadow: on ? "0 1px 2px rgb(0 0 0 / .05)" : undefined,
-                }}
-              >
-                <Icon size={15} />
-                {t(label)}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
     <div
       style={{
         position: "absolute",
-        insetInlineStart: 18,
-        bottom: 14,
+        inset: 0,
+        backgroundColor: "#fff",
         display: "flex",
-        alignItems: "center",
-        gap: 6,
-        fontSize: 11,
-        color: S.mutedFg,
+        fontFamily: ar ? kufi : geist,
+        fontSize: 14,
+        letterSpacing: ar ? 0 : "-0.006em",
+        color: A.fg,
+        WebkitFontSmoothing: "antialiased",
       }}
     >
-      {t("Powered by")} <span style={{ fontFamily: surfer, fontSize: 17, color: S.fg }}>ninja</span>
-    </div>
-    <div
-      style={{
-        flex: 1,
-        margin: 8,
-        marginLeft: 0,
-        borderRadius: 14,
-        backgroundColor: S.bg,
-        boxShadow: "0 1px 3px rgb(0 0 0 / .08)",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          padding: "0 24px",
-          borderBottom: `1px solid ${S.border}`,
-          fontSize: 14,
-        }}
-      >
-        <span style={{ color: S.mutedFg }}>{t(crumb)}</span>
-        <span style={{ color: S.mutedFg }}>{useLang() === "ar" ? "‹" : "›"}</span>
-        <span style={{ fontWeight: 500 }}>{t(title)}</span>
-        <div
-          style={{
-            marginLeft: "auto",
-            marginRight: "auto",
-            width: 360,
-            height: 36,
-            borderRadius: 10,
-            border: `1px solid ${S.border}`,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 12px",
-            color: S.mutedFg,
-            fontSize: 13,
-          }}
-        >
-          {t("Go to…")}
-          <span
+      <div style={{ width: 256, padding: 8, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div style={{ height: 48, padding: 8, display: "flex", alignItems: "center", gap: 8 }}>
+          <div
             style={{
-              marginLeft: "auto",
-              fontSize: 11,
-              border: `1px solid ${S.border}`,
-              borderRadius: 5,
-              padding: "1px 5px",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: A.fg,
+              color: "#fff",
+              display: "grid",
+              placeItems: "center",
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: geist,
             }}
           >
-            ⌘K
-          </span>
+            {cafe.charAt(0)}
+          </div>
+          <div style={{ lineHeight: 1.15 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{t(cafe)}</div>
+            {branch ? <div style={{ fontSize: 12, color: A.mutedFg }}>{t(branch)}</div> : null}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+          {SIDEBAR.map((g) => (
+            <div key={g.group} style={{ padding: "0 8px" }}>
+              <div
+                style={{
+                  height: 28,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0 8px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: ar ? 0 : "0.05em",
+                  textTransform: "uppercase",
+                  color: "#8e96a3",
+                }}
+              >
+                {t(g.group)}
+              </div>
+              {g.items.map(({ label, Icon }) => {
+                const on = label === active;
+                return (
+                  <div
+                    key={label}
+                    style={{
+                      height: 30,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "0 8px",
+                      marginBottom: 2,
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: on ? 500 : 400,
+                      color: on ? A.primary : A.sidebarFg,
+                      backgroundColor: on ? A.muted : "transparent",
+                      boxShadow: on ? A.elev1 : undefined,
+                    }}
+                  >
+                    <Icon size={16} strokeWidth={1.8} />
+                    {t(label)}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            marginTop: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            paddingBottom: 6,
+            fontSize: 11,
+            color: A.mutedFg,
+          }}
+        >
+          {t("Powered by")} <span style={{ fontFamily: surfer, fontSize: 15, color: A.mutedFg, opacity: 0.8 }}>ninja</span>
         </div>
       </div>
-      <div style={{ padding: "18px 24px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em" }}>{t(title)}</div>
-            {description ? (
-              <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4 }}>{t(description)}</div>
-            ) : null}
+      <div
+        style={{
+          flex: 1,
+          margin: 8,
+          marginInlineStart: 0,
+          borderRadius: 14,
+          backgroundColor: "#fff",
+          boxShadow: A.elev1,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* Header: trigger + breadcrumb · Go to… · language, theme, avatar */}
+        <div
+          style={{
+            height: 56,
+            display: "grid",
+            gridTemplateColumns: "1fr minmax(0, 448px) 1fr",
+            alignItems: "center",
+            gap: 12,
+            padding: "0 16px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 14 }}>
+            <PanelLeft size={16} color={A.mutedFg} />
+            <span style={{ color: A.mutedFg }}>{t(crumb)}</span>
+            <ChevronRight size={14} color="rgba(98,116,142,0.6)" style={{ rotate: ar ? "180deg" : undefined }} />
+            <span style={{ fontWeight: 500 }}>{t(title)}</span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>{actions}</div>
+          <div
+            style={{
+              height: 36,
+              borderRadius: 10,
+              backgroundColor: "#f6f8fb",
+              boxShadow: A.elev1,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "0 12px",
+              color: A.mutedFg,
+              fontSize: 14,
+            }}
+          >
+            <Search size={16} />
+            <span style={{ flex: 1 }}>{t("Go to…")}</span>
+            <span
+              style={{
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 11,
+                padding: "1px 6px",
+                borderRadius: 4,
+                border: `1px solid ${A.border}`,
+                backgroundColor: "#fff",
+                direction: "ltr",
+              }}
+            >
+              Ctrl K
+            </span>
+          </div>
+          <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: 8, color: A.mutedFg }}>
+            <Languages size={19} />
+            <Sun size={19} style={{ marginInline: 6 }} />
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                backgroundColor: A.muted,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 13,
+                fontWeight: 500,
+                color: A.fg,
+                fontFamily: geist,
+              }}
+            >
+              SM
+            </div>
+          </div>
         </div>
-        <div style={{ marginTop: 20 }}>{children}</div>
+        <div style={{ padding: "24px 16px", display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontSize: 24, lineHeight: "32px", fontWeight: 600, letterSpacing: ar ? 0 : "-0.025em" }}>{t(title)}</div>
+              <Info size={14} color={A.mutedFg} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>{actions}</div>
+          </div>
+          {children}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 
-export const AdminButton: React.FC<{ children: React.ReactNode; primary?: boolean; style?: React.CSSProperties }> = ({
+// shadcn Button: default (slate navy) or outline (white with a hairline ring).
+export const AdminButton: React.FC<{
+  children: React.ReactNode;
+  primary?: boolean;
+  small?: boolean;
+  style?: React.CSSProperties;
+}> = ({ children, primary, small, style }) => {
+  const t = useT();
+  return (
+    <div
+      style={{
+        height: small ? 36 : 40,
+        padding: small ? "0 12px" : "0 16px",
+        borderRadius: 8,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 14,
+        fontWeight: 500,
+        backgroundColor: primary ? A.primary : "#fff",
+        color: primary ? "#f8fafc" : A.fg,
+        boxShadow: primary ? `inset 0 1px 0 rgba(255,255,255,.14), ${A.elev1}` : A.elev1,
+        whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      {typeof children === "string" ? t(children) : children}
+    </div>
+  );
+};
+
+// The stat strip (stat-strip.tsx): one bordered row, cells divided by hairlines.
+export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?: string }[] }> = ({ stats }) => {
+  const t = useT();
+  return (
+    <div style={{ display: "flex", border: `1px solid ${A.border}`, borderRadius: 10, overflow: "hidden", backgroundColor: "#fff" }}>
+      {stats.map((s, i) => (
+        <div key={s.label} style={{ flex: 1, padding: 16, borderInlineStart: i ? `1px solid ${A.border}` : undefined }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: A.mutedFg }}>{t(s.label)}</div>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 600,
+              letterSpacing: "-0.025em",
+              marginTop: 4,
+              fontVariantNumeric: "tabular-nums",
+              color: s.tone ?? A.fg,
+            }}
+          >
+            {t(s.value)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Card: rounded-xl with a shadow ring, no border.
+export const AdminCard: React.FC<{ title?: string; right?: React.ReactNode; children: React.ReactNode; style?: React.CSSProperties }> = ({
+  title,
+  right,
   children,
-  primary,
   style,
 }) => {
   const t = useT();
   return (
-  <div
-    style={{
-      height: 36,
-      padding: "0 14px",
-      borderRadius: 10,
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      fontSize: 13,
-      fontWeight: 600,
-      backgroundColor: primary ? S.primary : S.bg,
-      color: primary ? "#fff" : S.fg,
-      border: primary ? undefined : `1px solid ${S.border}`,
-      whiteSpace: "nowrap",
-      ...style,
-    }}
-  >
-    {typeof children === "string" ? t(children) : children}
-  </div>
+    <div style={{ borderRadius: 14, boxShadow: A.elev1, backgroundColor: "#fff", padding: "20px 24px", ...style }}>
+      {title ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1 }}>{t(title)}</div>
+          {right}
+        </div>
+      ) : null}
+      {children}
+    </div>
   );
 };
 
-// One bordered row of stats (stat-strip.tsx).
-export const StatStrip: React.FC<{ stats: { label: string; value: string; tone?: string }[] }> = ({ stats }) => {
+// StatusChip: soft badge, rounded-full, leading dot.
+export const StatusChip: React.FC<{ tone: "success" | "danger" | "warning" | "muted"; children: string }> = ({ tone, children }) => {
   const t = useT();
+  const c = {
+    success: { bg: "rgba(18,160,90,.1)", fg: A.success, ring: "rgba(18,160,90,.25)" },
+    danger: { bg: "rgba(231,0,11,.08)", fg: A.danger, ring: "rgba(231,0,11,.22)" },
+    warning: { bg: "rgba(238,160,42,.15)", fg: "#4f2508", ring: "rgba(238,160,42,.35)" },
+    muted: { bg: A.muted, fg: A.mutedFg, ring: A.border },
+  }[tone];
   return (
-  <div style={{ display: "flex", border: `1px solid ${S.border}`, borderRadius: 10, overflow: "hidden" }}>
-    {stats.map((s, i) => (
-      <div
-        key={s.label}
-        style={{
-          flex: 1,
-          padding: "12px 16px",
-          borderInlineStart: i ? `1px solid ${S.border}` : undefined,
-        }}
-      >
-        <div style={{ fontSize: 12, color: S.mutedFg }}>{t(s.label)}</div>
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 600,
-            marginTop: 2,
-            fontVariantNumeric: "tabular-nums",
-            color: s.tone ?? S.fg,
-          }}
-        >
-          {t(s.value)}
-        </div>
-      </div>
-    ))}
-  </div>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "2px 8px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 500,
+        backgroundColor: c.bg,
+        color: c.fg,
+        boxShadow: `inset 0 0 0 1px ${c.ring}`,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "currentColor" }} />
+      {t(children)}
+    </span>
   );
 };

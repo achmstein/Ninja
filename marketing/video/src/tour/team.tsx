@@ -1,5 +1,8 @@
 // Chapters 06–09: the team's side (till, kitchen, delivery with the rider app, branches).
 import {
+  MoreHorizontal,
+  Plus,
+  Search,
   Bike,
   Building2,
   Check,
@@ -19,7 +22,7 @@ import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig
 import { clamp, glide, inter, land } from "../theme";
 import { Chapter, copySchema, Glass, useEnter, type ChapterProps } from "./chapter";
 import { MenuScreen } from "./menu-screen";
-import { AdminButton, AdminShell, BillRow, Dish, DISHES, Dock, GuestPhone, S, Screen, Touch } from "./ui";
+import { A, AdminButton, AdminShell, BillRow, Dish, DISHES, Dock, GuestPhone, S, Screen, StatusChip, Touch } from "./ui";
 import { useT } from "./lang";
 
 // ——— 06 Till ————————————————————————————————————————————————————
@@ -642,9 +645,9 @@ export const Delivery = Interactive.withSchema({
 // ——— 09 Branches ————————————————————————————————————————————————
 
 const BRANCHES = [
-  { name: "Zamalek", status: "Taking orders", facts: ["Reservations Enabled", "Day starts 6:00 AM"] },
-  { name: "Maadi", status: "Taking orders", facts: ["Reservations Enabled", "Day starts 7:00 AM"] },
-  { name: "New Cairo", status: "QR orders off", facts: ["Day starts 8:00 AM"] },
+  { name: "Zamalek", area: "26 July St, Zamalek", status: "Taking orders", facts: ["Reservations Enabled", "Day starts 08:00"] },
+  { name: "Maadi", area: "Road 9, Maadi", status: "Taking orders", facts: ["Reservations Enabled", "Day starts 07:00"] },
+  { name: "New Cairo", area: "90th St, New Cairo", status: "QR orders off", facts: ["Day starts 09:00"] },
 ];
 
 const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
@@ -662,42 +665,69 @@ const BranchesInner: React.FC<ChapterProps> = ({ title, line, style }) => {
       style={style}
       copyWidth={640}
     >
-      <Screen x={830} y={170} width={980} logical={[1280, 800]} style={useEnter(4)}>
+      <Screen x={830} y={170} width={980} logical={[1280, 800]} browser="admin.mellow.ninjapp.net" style={useEnter(4)}>
         <AdminShell
           active="Branches"
           crumb="Business"
           title="Branches"
-          actions={<AdminButton primary>{tr("+ Create Branch")}</AdminButton>}
+          actions={
+            <AdminButton primary small>
+              <Plus size={16} /> {tr("Create Branch")}
+            </AdminButton>
+          }
         >
-          <div style={{ borderRadius: 14, border: `1px solid ${S.border}`, overflow: "hidden" }}>
-            {BRANCHES.map((b, i) => (
-              <div
-                key={b.name}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "16px 20px",
-                  borderTop: i ? `1px solid ${S.border}` : undefined,
-                  opacity: interpolate(frame, [14 + i * 6, 22 + i * 6], [0, 1], clamp),
-                  translate: interpolate(frame, [14 + i * 6, 30 + i * 6], ["0px 16px", "0px 0px"], { ...clamp, easing: glide }),
-                }}
-              >
-                <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: S.muted, display: "grid", placeItems: "center" }}>
-                  <Building2 size={18} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{tr(b.name)}</div>
-                  <div style={{ display: "flex", gap: 12, fontSize: 13, color: S.mutedFg, marginTop: 2 }}>
-                    <span style={{ color: b.status === "Taking orders" ? S.success : S.mutedFg, fontWeight: 600 }}>{tr(b.status)}</span>
-                    {b.facts.map((f) => (
-                      <span key={f}>· {f}</span>
-                    ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                width: 288,
+                height: 36,
+                borderRadius: 8,
+                border: `1px solid ${A.border}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "0 10px",
+                fontSize: 14,
+                color: A.mutedFg,
+                boxShadow: "0 1px 2px rgba(2,6,24,.04)",
+              }}
+            >
+              <Search size={16} /> {tr("Search by name, area or phone")}
+            </div>
+            <div style={{ borderRadius: 14, boxShadow: A.elev1, backgroundColor: "#fff", overflow: "hidden" }}>
+              {BRANCHES.map((b, i) => (
+                <div
+                  key={b.name}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "14px 20px",
+                    borderTop: i ? "1px solid #edf1f6" : undefined,
+                    opacity: interpolate(frame, [14 + i * 6, 22 + i * 6], [0, 1], clamp),
+                    translate: interpolate(frame, [14 + i * 6, 30 + i * 6], ["0px 16px", "0px 0px"], { ...clamp, easing: glide }),
+                  }}
+                >
+                  <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: A.muted, display: "grid", placeItems: "center" }}>
+                    <Building2 size={16} color={A.mutedFg} />
                   </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 500 }}>{tr(b.name)}</span>
+                      <StatusChip tone={b.status === "Taking orders" ? "success" : "muted"}>{b.status === "Taking orders" ? "Active" : "Paused"}</StatusChip>
+                    </div>
+                    <div style={{ fontSize: 12, color: A.mutedFg, marginTop: 2 }}>{tr(b.area)}</div>
+                    <div style={{ display: "flex", gap: 12, fontSize: 12, color: A.mutedFg, marginTop: 6 }}>
+                      {[b.status, ...b.facts].map((f) => (
+                        <span key={f}>{tr(f)}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <MoreHorizontal size={16} color={A.mutedFg} />
+                  <ChevronRight size={16} color={A.mutedFg} style={{ marginInlineStart: 8 }} />
                 </div>
-                <ChevronRight size={18} color={S.mutedFg} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </AdminShell>
       </Screen>

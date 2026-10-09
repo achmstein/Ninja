@@ -221,6 +221,18 @@ export const AR_UI: Record<string, string> = {
   "The Corner Café": "ذا كورنر كافيه",
   Downtown: "وسط البلد",
   "Create Branch": "إنشاء فرع",
+  "Search by name, area or phone": "ابحث بالاسم أو المنطقة أو الهاتف",
+  Active: "نشط",
+  Paused: "متوقف",
+  "26 July St, Zamalek": "شارع 26 يوليو، الزمالك",
+  "Road 9, Maadi": "شارع 9، المعادي",
+  "90th St, New Cairo": "شارع التسعين، القاهرة الجديدة",
+  Dishes: "الأصناف",
+  "Offers & codes": "العروض والأكواد",
+  "Search items…": "ابحث في الأصناف…",
+  History: "السجل",
+  Reports: "التقارير",
+  "September 2026": "سبتمبر 2026",
   "Taking orders": "يستقبل الطلبات",
   "QR orders off": "طلبات QR متوقفة",
   "Reservations Enabled": "الحجوزات مفعّلة",
@@ -327,6 +339,7 @@ export const toArabic = (s: string): string => {
   let m: RegExpMatchArray | null;
   if (s.includes(" · ")) return s.split(" · ").map(toArabic).join(" · ");
   if ((m = s.match(/^EGP ([\d.,]+)$/))) return money(m[1]);
+  if ((m = s.match(/^([−-]?[\d.,]+) EGP$/))) return money(m[1]);
   if ((m = s.match(/^EGP ([\d.,]+) (.+)$/))) return `${toArabic(m[2])} ${money(m[1])}`;
   if ((m = s.match(/^(.+?):? EGP ([\d.,]+)$/))) return `${toArabic(m[1])} ${money(m[2])}`;
   if ((m = s.match(/^(\d+)[x×] (.+)$/))) return `${m[1]}× ${toArabic(m[2])}`;
