@@ -11,10 +11,17 @@ const tuckSlack = 12.0;
 const tuckSettle = Duration(milliseconds: 300);
 
 /// The tuck a scroll to [y] (of [max]) makes, given where the last turn
-/// began and the tuck till now (client_web's use-tuck.ts `tuckAt`)
+/// began and the tuck till now (client_web's use-tuck.ts `tuckAt`). At the
+/// end it holds: a fling that reaches it is still running (and bounces, past
+/// it and back), and the dock growing then shortens the page under it, kept
+/// at its end on every frame of the growth while the fling and the bounce
+/// move it too, so the page shook; the dock comes back whole there once the
+/// scroll has ended ([TuckOnScroll])
 ({bool tucked, double from}) tuckAt(double y, double max, double from, bool tucked) {
-  // At the top, or at the end (nothing more to read), the dock is whole
-  if (y <= tuckAfter || y >= max - 2) return (tucked: false, from: y);
+  // At the top the dock is whole
+  if (y <= tuckAfter) return (tucked: false, from: y);
+  // At the end (or bounced past it), nothing changes till the scroll ends; the bounce back is not a scroll up
+  if (y >= max - 2) return (tucked: tucked, from: y < max ? y : max);
   // The anchor follows the scroll in the way the dock already agrees with
   if (tucked ? y > from : y < from) return (tucked: tucked, from: y);
   if ((y - from).abs() < tuckSlack) return (tucked: tucked, from: from);
@@ -23,8 +30,8 @@ const tuckSettle = Duration(milliseconds: 300);
 
 /// The dock tucked away while the customer reads on: scrolling down folds
 /// the tabs (the tray or the bill's row staying, as what can be acted on
-/// now), and the dock goes whole again on scrolling back up, or at the
-/// page's end. One flag for the whole app.
+/// now), and the dock goes whole again on scrolling back up, or once the
+/// scroll has ended at the page's end. One flag for the whole app.
 class DockTuck extends Notifier<bool> {
   @override
   bool build() => false;

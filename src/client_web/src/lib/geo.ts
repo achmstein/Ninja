@@ -39,6 +39,56 @@ const useGeo = create<GeoState>()(
 // Browsers give the position only to a secure page: over plain http (a phone on the LAN's address) the call is refused without a prompt
 const supported = () => typeof navigator !== 'undefined' && 'geolocation' in navigator && window.isSecureContext
 
+/** A fix this close, m, is the door: the GPS's watch stops there */
+const DOOR_ACCURACY = 20
+
+/** How long the GPS is watched for a better fix, ms, before the best one so far is the answer */
+const WATCH_MS = 15_000
+
+/** The precise watch running now, stopped by the next ask */
+let stopWatch: (() => void) | null = null
+
+/**
+ * The GPS's own fix for a door. The first fix a phone gives, even asked for
+ * high accuracy, is often its Wi-Fi or cell guess, hundreds of metres out:
+ * the position is watched instead, each closer fix taking the last one's
+ * place (the map follows it), until one is as close as a door or the time
+ * is up.
+ */
+function watchPrecise() {
+  const { set } = useGeo.getState()
+  stopWatch?.()
+  let best = Infinity
+  let id: number | null = null
+  let timer: number | null = null
+  const stop = () => {
+    if (id != null) navigator.geolocation.clearWatch(id)
+    if (timer != null) window.clearTimeout(timer)
+    id = timer = null
+    if (stopWatch === stop) stopWatch = null
+    if (useGeo.getState().status === 'locating') set({ status: useGeo.getState().here ? 'ok' : 'unavailable' })
+  }
+  stopWatch = stop
+  id = navigator.geolocation.watchPosition(
+    (pos) => {
+      const accuracy = pos.coords.accuracy || Infinity
+      if (accuracy >= best) return
+      best = accuracy
+      set({ status: accuracy <= DOOR_ACCURACY ? 'ok' : 'locating', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } })
+      if (accuracy <= DOOR_ACCURACY) stop()
+    },
+    (err) => {
+      if (err.code === err.PERMISSION_DENIED) {
+        set({ status: 'denied' })
+        stop()
+      }
+      // A timeout or a lost signal: the watch goes on until its time is up
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: WATCH_MS }
+  )
+  timer = window.setTimeout(stop, WATCH_MS)
+}
+
 /** One request for the device's position; the store learns the answer */
 function requestFix(precise = false) {
   const { set } = useGeo.getState()
@@ -47,15 +97,16 @@ function requestFix(precise = false) {
     return
   }
   set({ status: 'locating', asked: true })
+  if (precise) {
+    watchPrecise()
+    return
+  }
   navigator.geolocation.getCurrentPosition(
-    (pos) => set({ status: 'ok', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } }),
-    // A precise ask that fails keeps the coarse fix there was
+    // A coarse fix coming in while the GPS is watched for a door would put the pin back on the guess
+    (pos) => stopWatch == null && set({ status: 'ok', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } }),
     (err) => set({ status: err.code === err.PERMISSION_DENIED ? 'denied' : useGeo.getState().here ? 'ok' : 'unavailable' }),
-    precise
-      ? // A door for a rider: the GPS, fresh, given time to lock
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 20_000 }
-      : // A café a street away needs no GPS lock: a coarse fix, a recent one if there is, and soon
-        { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 }
+    // A café a street away needs no GPS lock: a coarse fix, a recent one if there is, and soon
+    { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 }
   )
 }
 

@@ -25,7 +25,13 @@ void main() {
     expect(tuckAt(500, _max, 600, false), (tucked: false, from: 500.0));
   });
 
-  test('brings the dock back at the end of the page', () {
-    expect(tuckAt(_max, _max, 1900, true).tucked, isFalse);
+  test('holds at the end of the page while the scroll runs, its end bringing the dock back', () {
+    expect(tuckAt(_max, _max, 1900, true), (tucked: true, from: _max));
+    expect(tuckAt(_max, _max, 1900, false), (tucked: false, from: _max));
+  });
+
+  test('takes a bounce back from past the end for no scroll up', () {
+    expect(tuckAt(_max + 40, _max, _max, true), (tucked: true, from: _max));
+    expect(tuckAt(_max - 1, _max, _max, true), (tucked: true, from: _max - 1));
   });
 }

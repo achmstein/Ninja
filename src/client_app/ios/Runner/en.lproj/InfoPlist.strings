@@ -1,2 +1,5 @@
 /* What iOS shows when the app asks for the position (the app says the same first, in its own sheet) */
 "NSLocationWhenInUseUsageDescription" = "Your location is used only to find the branch nearest you and to put the pin on your door for a delivery. It is never shared.";
+
+/* Why the app asks for the precise position when only the approximate one is allowed (iOS shows it for the purpose key) */
+"DeliveryPin" = "Your precise location puts the pin on your door, so the rider finds it.";

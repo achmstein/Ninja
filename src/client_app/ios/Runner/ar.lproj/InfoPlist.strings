@@ -1,2 +1,5 @@
 /* What iOS shows when the app asks for the position (the app says the same first, in its own sheet) */
 "NSLocationWhenInUseUsageDescription" = "يُستخدم موقعك فقط لمعرفة أقرب فرع إليك ولوضع الدبوس على بابك عند التوصيل. لا نشاركه مع أحد.";
+
+/* Why the app asks for the precise position when only the approximate one is allowed (iOS shows it for the purpose key) */
+"DeliveryPin" = "يُستخدم موقعك الدقيق لوضع الدبوس على بابك، ليصل إليك المندوب.";

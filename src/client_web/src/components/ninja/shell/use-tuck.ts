@@ -4,8 +4,8 @@ import { create } from 'zustand'
 /**
  * The dock tucked away while the customer reads on: scrolling down folds
  * the tabs (the tray or the bill's row staying, as what can be acted on
- * now), and the dock goes whole again on scrolling back up, or at the
- * page's end. One flag for the whole app, set by whichever scroller is
+ * now), and the dock goes whole again on scrolling back up, or once the
+ * page has come to rest at its end. One flag for the whole app, set by whichever scroller is
  * the page's.
  */
 export const useTuck = create<{ tucked: boolean }>(() => ({ tucked: false }))
@@ -22,10 +22,18 @@ export const SETTLE_MS = 300
 /** How long the page must be still at its end before the dock comes back, ms: a beat, so a flick past the end does not flash it */
 const REST_MS = 220
 
-/** The tuck a scroll to `y` (of `max`) makes, given where the last turn began and the tuck till now */
+/**
+ * The tuck a scroll to `y` (of `max`) makes, given where the last turn began and the tuck till now.
+ * At the end it holds: a flick that reaches it is still running (and bounces, past it and back), and the
+ * dock growing then shortens the menu's scroller under it, its scroll pinned to the end on every frame
+ * of the growth while the flick and the bounce move it too, so the page shook; the dock comes back
+ * whole there once the page is at rest (`useTuckOnScroll`)
+ */
 export function tuckAt(y: number, max: number, from: number, tucked: boolean): { tucked: boolean; from: number } {
-  // At the top, or at the end (nothing more to read), the dock is whole
-  if (y <= TUCK_AFTER || y >= max - 2) return { tucked: false, from: y }
+  // At the top the dock is whole
+  if (y <= TUCK_AFTER) return { tucked: false, from: y }
+  // At the end (or bounced past it), nothing changes till the page is still; the bounce back is not a scroll up
+  if (y >= max - 2) return { tucked, from: Math.min(y, max) }
   // The anchor follows the scroll in the way the dock already agrees with
   if (tucked ? y > from : y < from) return { tucked, from: y }
   if (Math.abs(y - from) < TUCK_SLACK) return { tucked, from }

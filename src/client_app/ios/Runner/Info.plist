@@ -80,6 +80,11 @@
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
 		</dict>
+		<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+		<dict>
+			<key>DeliveryPin</key>
+			<string>Your precise location puts the pin on your door, so the rider finds it.</string>
+		</dict>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Your location is used only to find the branch nearest you and to put the pin on your door for a delivery. It is never shared.</string>
 		<key>NSCameraUsageDescription</key>

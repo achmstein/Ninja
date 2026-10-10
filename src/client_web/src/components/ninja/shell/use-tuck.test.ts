@@ -24,7 +24,13 @@ describe('tuckAt', () => {
     expect(tuckAt(500, MAX, 600, false)).toEqual({ tucked: false, from: 500 })
   })
 
-  it('brings the dock back at the end of the page', () => {
-    expect(tuckAt(MAX, MAX, 1900, true).tucked).toBe(false)
+  it('holds at the end of the page while the scroll runs, the rest bringing the dock back', () => {
+    expect(tuckAt(MAX, MAX, 1900, true)).toEqual({ tucked: true, from: MAX })
+    expect(tuckAt(MAX, MAX, 1900, false)).toEqual({ tucked: false, from: MAX })
+  })
+
+  it('takes a bounce back from past the end for no scroll up', () => {
+    expect(tuckAt(MAX + 40, MAX, MAX, true)).toEqual({ tucked: true, from: MAX })
+    expect(tuckAt(MAX - 1, MAX, MAX, true)).toEqual({ tucked: true, from: MAX - 1 })
   })
 })

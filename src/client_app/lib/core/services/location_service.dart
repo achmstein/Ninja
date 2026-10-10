@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -98,17 +99,87 @@ class LocationNotifier extends Notifier<LocationState> {
           return;
         }
       }
+      if (precise) {
+        await _fullAccuracy();
+        await _watchPrecise();
+        return;
+      }
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(
-          accuracy: precise ? LocationAccuracy.best : LocationAccuracy.low,
-          timeLimit: Duration(seconds: precise ? 20 : 10),
-        ),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: Duration(seconds: 10)),
       );
+      // A coarse fix coming in while the GPS is watched for a door would put the pin back on the guess
+      if (_stopWatch != null) return;
       state = state.copyWith(status: LocationStatus.ok, here: (lat: position.latitude, lng: position.longitude));
     } catch (e) {
       debugPrint('Location: $e');
       state = state.copyWith(status: state.here != null ? LocationStatus.ok : LocationStatus.unavailable);
     }
+  }
+
+  /// A fix this close, m, is the door: the GPS's watch stops there
+  static const _doorAccuracy = 20.0;
+
+  /// How long the GPS is watched for a better fix before the best one so far is the answer
+  static const _watchFor = Duration(seconds: 15);
+
+  /// Stops the precise watch running now: the next one takes over from it
+  void Function()? _stopWatch;
+
+  /// The phone lets the app have only an approximate position (iOS's Precise Location off, Android's
+  /// Approximate chosen): kilometres out, no use for a door. iOS asks for the precise one for now, Android
+  /// offers the change to precise; a no keeps the approximate one
+  Future<void> _fullAccuracy() async {
+    if (kIsWeb) return;
+    try {
+      if (await Geolocator.getLocationAccuracy() != LocationAccuracyStatus.reduced) return;
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await Geolocator.requestTemporaryFullAccuracy(purposeKey: 'DeliveryPin');
+      } else {
+        await Geolocator.requestPermission();
+      }
+    } catch (e) {
+      debugPrint('Location accuracy: $e');
+    }
+  }
+
+  /// The GPS's own fix for a door. The first fix a phone gives, even asked
+  /// for the best accuracy, is often its Wi-Fi or cell guess, hundreds of
+  /// metres out: the position is watched instead, each closer fix taking the
+  /// last one's place (the map follows it), until one is as close as a door
+  /// or the time is up
+  Future<void> _watchPrecise() {
+    _stopWatch?.call();
+    final done = Completer<void>();
+    var best = double.infinity;
+    StreamSubscription<Position>? watch;
+    Timer? timer;
+    void stop() {
+      if (done.isCompleted) return;
+      watch?.cancel();
+      timer?.cancel();
+      _stopWatch = null;
+      if (state.locating) state = state.copyWith(status: state.here != null ? LocationStatus.ok : LocationStatus.unavailable);
+      done.complete();
+    }
+
+    _stopWatch = stop;
+    timer = Timer(_watchFor, stop);
+    watch = Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.best)).listen(
+      (position) {
+        final accuracy = position.accuracy > 0 ? position.accuracy : double.infinity;
+        if (accuracy >= best) return;
+        best = accuracy;
+        final atDoor = accuracy <= _doorAccuracy;
+        state = state.copyWith(status: atDoor ? LocationStatus.ok : LocationStatus.locating, here: (lat: position.latitude, lng: position.longitude));
+        if (atDoor) stop();
+      },
+      onError: (Object e) {
+        debugPrint('Location: $e');
+        stop();
+      },
+      cancelOnError: true,
+    );
+    return done.future;
   }
 
   /// The customer's own "Use my location". Refused for good: false, and the
