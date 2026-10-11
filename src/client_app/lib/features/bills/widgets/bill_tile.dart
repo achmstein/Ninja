@@ -168,15 +168,24 @@ class _BillTileState extends ConsumerState<BillTile> {
                   Row(
                     children: [
                       Text(DateFormat('h:mm a', locale.languageCode).format(round.order.date.toLocal()), style: small.copyWith(fontWeight: FontWeight.w600)),
-                      const Spacer(),
-                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: NinjaColors.warningSolid, shape: BoxShape.circle)),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          round.adding ? l10n.addingToBill : l10n.waitingToBeConfirmed,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: small.copyWith(fontWeight: FontWeight.w700, color: NinjaColors.warningSolid),
+                      const SizedBox(width: 8),
+                      // Where it has got to, at the line's end: a Spacer beside a Flexible split the room in two
+                      // and left it in the middle
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(width: 6, height: 6, decoration: const BoxDecoration(color: NinjaColors.warningSolid, shape: BoxShape.circle)),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                round.adding ? l10n.addingToBill : l10n.waitingToBeConfirmed,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: small.copyWith(fontWeight: FontWeight.w700, color: NinjaColors.warningSolid),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
