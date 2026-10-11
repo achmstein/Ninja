@@ -288,7 +288,84 @@ public static class AiGatewayApi
     {
         app.MapPost("/ai/v1/chat/completions", ChatAsync).AllowAnonymous().ExcludeFromDescription();
         app.MapPost("/ai/v1/images/generations", ImagesAsync).AllowAnonymous().ExcludeFromDescription();
+        app.MapPost("/ai/v1/images/edits", EditsAsync).AllowAnonymous().ExcludeFromDescription().DisableAntiforgery();
         return app;
+    }
+
+    /// <summary>The largest photo an edit takes, bytes</summary>
+    public const long MaxEditPhoto = 12 * 1024 * 1024;
+
+    /// <summary>
+    /// Pictures made from a photo the business sends (OpenAI's images/edits shape: a multipart form with the
+    /// image, the prompt, n and size), by the image role's model whatever the stack names; answered in
+    /// OpenAI's shape (base64). A size taller than wide asks for a portrait.
+    /// </summary>
+    public static async Task EditsAsync(
+        HttpContext http, AiImages images, ControlContext context, IOptions<PlatformOptions> options, CancellationToken ct)
+    {
+        var presented = http.Request.Headers.Authorization.ToString();
+        var slug = AiGatewayKeys.SlugOf(presented.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? presented[7..].Trim() : null, options.Value.EncryptionKey);
+        if (slug is null)
+        {
+            await ErrorAsync(http, StatusCodes.Status401Unauthorized, "invalid_api_key", "Not a key of this platform's AI gateway.", ct);
+            return;
+        }
+        if (await RefusalAsync(context, slug, ct) is { } refusal)
+        {
+            await ErrorAsync(http, refusal.Status, refusal.Code, refusal.Message, ct);
+            return;
+        }
+        if (!http.Request.HasFormContentType)
+        {
+            await ErrorAsync(http, StatusCodes.Status400BadRequest, "invalid_request_error", "The body must be a multipart form with an image and a prompt.", ct);
+            return;
+        }
+
+        var form = await http.Request.ReadFormAsync(ct);
+        var file = form.Files.GetFile("image") ?? form.Files.GetFile("image[]") ?? form.Files.FirstOrDefault();
+        var prompt = form["prompt"].ToString();
+        if (file is null || file.Length == 0 || string.IsNullOrWhiteSpace(prompt))
+        {
+            await ErrorAsync(http, StatusCodes.Status400BadRequest, "invalid_request_error", "An edit needs an image and a prompt.", ct);
+            return;
+        }
+        if (file.Length > MaxEditPhoto)
+        {
+            await ErrorAsync(http, StatusCodes.Status400BadRequest, "invalid_request_error", "The image is too large.", ct);
+            return;
+        }
+        var count = int.TryParse(form["n"], out var n) ? n : 1;
+        var portrait = form["size"].ToString().Split('x') is [var w, var h] && int.TryParse(w, out var width) && int.TryParse(h, out var height) && height > width;
+
+        if (!await images.IsConfiguredAsync(ct))
+        {
+            await ErrorAsync(http, StatusCodes.Status503ServiceUnavailable, "not_configured", "The platform has no image model: set one on the AI tab.", ct);
+            return;
+        }
+
+        try
+        {
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream, ct);
+            // A client that names no type (OpenAI's SDK sends a file as octet-stream) is read by the file's name
+            var mediaType = file.ContentType is { Length: > 0 } type && type.StartsWith("image/", StringComparison.Ordinal)
+                ? type
+                : Path.GetExtension(file.FileName).ToLowerInvariant() switch { ".png" => "image/png", ".webp" => "image/webp", _ => "image/jpeg" };
+            var pictures = await images.EditAsync(stream.ToArray(), mediaType, prompt, count, portrait, slug, ct);
+            await http.Response.WriteAsJsonAsync(new
+            {
+                created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                data = pictures.Select(p => new { b64_json = Convert.ToBase64String(p) }).ToArray(),
+            }, ct);
+        }
+        catch (AiImageException ex)
+        {
+            await ErrorAsync(http, ex.Status, "provider_error", ex.Message, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await ErrorAsync(http, StatusCodes.Status502BadGateway, "provider_unreachable", ex.Message, ct);
+        }
     }
 
     /// <summary>

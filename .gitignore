@@ -514,10 +514,12 @@ ios-signing/
 **/fastlane/README.md
 
 # Catalog picture uploads land next to the seeded product images
-# ({id}_{ticks}.ext for items, bundle_{id}_{ticks}.ext for bundles).
+# ({id}_{ticks}.ext for items, bundle_{id}_{ticks}.ext for bundles, promo_{id}_{ticks}.ext for promotions).
 # They are runtime data from whoever is running the app, not source.
 src/Catalog.API/Pics/[0-9]*_[0-9]*.*
 src/Catalog.API/Pics/bundle_[0-9]*_[0-9]*.*
+src/Catalog.API/Pics/promo_[0-9]*_[0-9]*.*
+src/Catalog.API/Pics/sizes/*/promo_[0-9]*_[0-9]*.*
 
 # Tenant logo and icons written by Tenant.API in dev
 src/Tenant.API/uploads/

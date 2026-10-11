@@ -17,6 +17,7 @@ public static class CatalogApi
 
         api.MapCatalogAssistApi();
         api.MapPromoApi();
+        api.MapPromotionApi();
         api.MapMenuImportApi();
         api.MapComposeItemApi();
 
@@ -1210,7 +1211,7 @@ public static class CatalogApi
     public static string GetFullPath(string contentRootPath, string pictureFileName) =>
         Path.Combine(PicsRoot(contentRootPath), pictureFileName);
 
-    private static string PicsRoot(string contentRootPath) => Path.Combine(contentRootPath, "Pics");
+    internal static string PicsRoot(string contentRootPath) => Path.Combine(contentRootPath, "Pics");
 
     /// <summary>A picture and its smaller copies, when it is being replaced or removed.</summary>
     private static void DeletePicture(string contentRootPath, string? pictureFileName)
@@ -1239,6 +1240,9 @@ public static class CatalogApi
         to = t;
         return true;
     }
+
+    /// <summary>The public address picture links are built on (<see cref="GetBaseUrl"/>), for the other APIs here</summary>
+    internal static string PublicBaseUrl(HttpContext httpContext) => GetBaseUrl(httpContext);
 
     private static string GetBaseUrl(HttpContext httpContext)
     {

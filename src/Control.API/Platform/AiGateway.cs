@@ -273,6 +273,110 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
         }
     }
 
+    /// <summary>How many designs one edit may ask for</summary>
+    public const int MaxEdits = 3;
+
+    /// <summary>
+    /// Pictures made from the owner's own photo by the image role's model, as <paramref name="prompt"/> asks
+    /// (a promotion designed around a dish's real photo), <paramref name="count"/> of them, counted under
+    /// <paramref name="slug"/>. Gemini's image models take a photo through their own generateContent, which
+    /// its OpenAI-style layer does not offer for edits; any other provider gets OpenAI's images/edits.
+    /// <paramref name="portrait"/> asks for a tall picture (a popup's), else a square.
+    /// </summary>
+    public async Task<IReadOnlyList<byte[]>> EditAsync(byte[] photo, string mediaType, string prompt, int count, bool portrait, string slug, CancellationToken ct)
+    {
+        var route = await router.RouteExactAsync(AiRoles.Image, ct) ?? throw new AIUnavailableException();
+        var client = clients.CreateClient(Apis.ControlApi.AiProviderClient);
+        count = Math.Clamp(count, 1, MaxEdits);
+        try
+        {
+            var pictures = IsGemini(route)
+                ? await GeminiEditAsync(client, route, photo, mediaType, prompt, count, portrait, ct)
+                : await OpenAIEditAsync(client, route, photo, mediaType, prompt, count, portrait, ct);
+            _ = usage.RecordAsync(slug, route, true, 0, 0);
+            return pictures;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException && ex is not AIUnavailableException)
+        {
+            _ = usage.RecordAsync(slug, route, false, 0, 0);
+            throw ex is InvalidOperationException ? ex : new InvalidOperationException($"{route.ProviderName} could not be reached: {ex.Message}", ex);
+        }
+    }
+
+    private static bool IsGemini(AiRoute route) => route.BaseUrl.Contains("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>One generateContent per picture: the photo and the words in, a picture out</summary>
+    private static async Task<IReadOnlyList<byte[]>> GeminiEditAsync(
+        HttpClient client, AiRoute route, byte[] photo, string mediaType, string prompt, int count, bool portrait, CancellationToken ct)
+    {
+        // The native API sits beside the OpenAI-style layer: …/v1beta/openai/ → …/v1beta/
+        var native = route.BaseUrl.TrimEnd('/');
+        if (native.EndsWith("/openai", StringComparison.OrdinalIgnoreCase)) native = native[..^"/openai".Length];
+        var model = route.Model.StartsWith("models/", StringComparison.Ordinal) ? route.Model["models/".Length..] : route.Model;
+        var body = new JsonObject
+        {
+            ["contents"] = new JsonArray(new JsonObject
+            {
+                ["parts"] = new JsonArray(
+                    new JsonObject { ["text"] = prompt },
+                    new JsonObject { ["inline_data"] = new JsonObject { ["mime_type"] = mediaType, ["data"] = Convert.ToBase64String(photo) } }),
+            }),
+            ["generationConfig"] = new JsonObject
+            {
+                ["responseModalities"] = new JsonArray("TEXT", "IMAGE"),
+                ["imageConfig"] = new JsonObject { ["aspectRatio"] = portrait ? "4:5" : "1:1" },
+            },
+        };
+        var tasks = Enumerable.Range(0, count).Select(async _ =>
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{native}/models/{model}:generateContent")
+            {
+                Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
+            };
+            request.Headers.TryAddWithoutValidation("x-goog-api-key", route.ApiKey);
+            using var response = await client.SendAsync(request, ct);
+            var text = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                throw new AiImageException((int)response.StatusCode, $"{route.ProviderName} drew nothing ({(int)response.StatusCode}): {(text.Length > 300 ? text[..300] : text)}");
+            var parts = JsonNode.Parse(text)?["candidates"]?[0]?["content"]?["parts"] as JsonArray ?? [];
+            foreach (var part in parts)
+            {
+                var data = (part?["inlineData"] ?? part?["inline_data"])?["data"]?.GetValue<string>();
+                if (data is { Length: > 0 }) return Convert.FromBase64String(data);
+            }
+            return null;
+        });
+        var pictures = (await Task.WhenAll(tasks)).OfType<byte[]>().ToList();
+        return pictures.Count > 0 ? pictures : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+    }
+
+    /// <summary>OpenAI's images/edits: the photo as a file, the words, how many and how big</summary>
+    private static async Task<IReadOnlyList<byte[]>> OpenAIEditAsync(
+        HttpClient client, AiRoute route, byte[] photo, string mediaType, string prompt, int count, bool portrait, CancellationToken ct)
+    {
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(photo);
+        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType);
+        form.Add(file, "image", mediaType switch { "image/png" => "photo.png", "image/webp" => "photo.webp", _ => "photo.jpg" });
+        form.Add(new StringContent(route.Model), "model");
+        form.Add(new StringContent(prompt), "prompt");
+        form.Add(new StringContent(count.ToString(System.Globalization.CultureInfo.InvariantCulture)), "n");
+        form.Add(new StringContent(portrait ? "1024x1536" : "1024x1024"), "size");
+        using var request = new HttpRequestMessage(HttpMethod.Post, Apis.ControlApi.Endpoint(route.BaseUrl, "images/edits")) { Content = form };
+        Apis.ControlApi.Authorize(request, route.ApiKey);
+        using var response = await client.SendAsync(request, ct);
+        var text = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new AiImageException((int)response.StatusCode, $"{route.ProviderName} drew nothing ({(int)response.StatusCode}): {(text.Length > 300 ? text[..300] : text)}");
+        var pictures = new List<byte[]>();
+        foreach (var item in JsonNode.Parse(text)?["data"] as JsonArray ?? [])
+        {
+            if (item?["b64_json"]?.GetValue<string>() is { Length: > 0 } b64) pictures.Add(Convert.FromBase64String(b64));
+            else if (item?["url"]?.GetValue<string>() is { Length: > 0 } url) pictures.Add(await client.GetByteArrayAsync(url, ct));
+        }
+        return pictures.Count > 0 ? pictures : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+    }
+
     private static async Task<(int Status, string Text)> PostAsync(HttpClient client, AiRoute route, JsonObject body, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, Apis.ControlApi.Endpoint(route.BaseUrl, "images/generations"))
