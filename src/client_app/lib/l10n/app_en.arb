@@ -914,5 +914,9 @@
   "orderPaidCancelledNote": "{name} could not take this order. What you paid goes back to you.",
   "@orderPaidCancelledNote": {"placeholders":{"name":{"type":"String"}}},
   "orderUnpaidCancelledNote": "Cancelled before it was paid. Nothing was charged.",
-  "payWhyAtDoor": "Paid to the rider at the door"
+  "payWhyAtDoor": "Paid to the rider at the door",
+  "promoOrderNow": "Order now",
+  "promoSeeMenu": "See the menu",
+  "promoBookNow": "Book now",
+  "promoShowAgain": "See what's on"
 }

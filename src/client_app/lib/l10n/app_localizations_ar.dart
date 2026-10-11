@@ -1855,6 +1855,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payWhyAtDoor => 'بيتدفع للمندوب عند الباب';
+
+  @override
+  String get promoOrderNow => 'اطلب دلوقتي';
+
+  @override
+  String get promoSeeMenu => 'شوف المنيو';
+
+  @override
+  String get promoBookNow => 'احجز دلوقتي';
+
+  @override
+  String get promoShowAgain => 'شوف العرض';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -3355,4 +3367,16 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get payWhyAtDoor => 'يُدفع للمندوب عند الباب';
+
+  @override
+  String get promoOrderNow => 'اطلب الآن';
+
+  @override
+  String get promoSeeMenu => 'تصفّح القائمة';
+
+  @override
+  String get promoBookNow => 'احجز الآن';
+
+  @override
+  String get promoShowAgain => 'اعرض العرض';
 }

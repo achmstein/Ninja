@@ -437,5 +437,9 @@
   "orderPaidOnTheWayRiderNote": "{rider} في الطريق إليك. الطلب مدفوع، لا شيء تدفعه عند الباب.",
   "orderPaidCancelledNote": "لم يتمكن {name} من قبول هذا الطلب. سيُعاد إليك ما دفعته.",
   "orderUnpaidCancelledNote": "أُلغي قبل الدفع. لم يُخصم أي مبلغ.",
-  "payWhyAtDoor": "يُدفع للمندوب عند الباب"
+  "payWhyAtDoor": "يُدفع للمندوب عند الباب",
+  "promoOrderNow": "اطلب الآن",
+  "promoSeeMenu": "تصفّح القائمة",
+  "promoBookNow": "احجز الآن",
+  "promoShowAgain": "اعرض العرض"
 }

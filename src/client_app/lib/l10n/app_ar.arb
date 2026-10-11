@@ -600,5 +600,9 @@
   "orderPaidOnTheWayRiderNote": "{rider} في الطريق ليك. مدفوع، مفيش حاجة تدفعها عند الباب.",
   "orderPaidCancelledNote": "{name} مقدرش ياخد الطلب ده. فلوسك هترجعلك.",
   "orderUnpaidCancelledNote": "اتلغى قبل الدفع. محدش خصم حاجة.",
-  "payWhyAtDoor": "بيتدفع للمندوب عند الباب"
+  "payWhyAtDoor": "بيتدفع للمندوب عند الباب",
+  "promoOrderNow": "اطلب دلوقتي",
+  "promoSeeMenu": "شوف المنيو",
+  "promoBookNow": "احجز دلوقتي",
+  "promoShowAgain": "شوف العرض"
 }

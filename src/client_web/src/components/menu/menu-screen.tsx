@@ -2,7 +2,8 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from 'motion/react'
 import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
 import { useStore } from 'zustand'
-import type { CatalogItemDto } from '@/api/catalog'
+import { useNavigate } from '@tanstack/react-router'
+import type { CatalogItemDto, PromotionDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart, type CartLine } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -37,6 +38,7 @@ import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu
 import { useMenuStyle } from './menu-style'
 import { MAX_ON_SHEET, menuById, pairedFor } from './paired-items'
 import { NearestBranchPrimer } from '@/components/nearest-branch-primer'
+import { PromoChip, PromoPopup, useLivePromotion } from '@/components/promotions/promo-popup'
 import { OrderingPausedNote } from './paused-note'
 import { cornerOf } from './photo-corner'
 import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
@@ -162,10 +164,20 @@ export function MenuScreen({ menu }: HomeProps) {
   const zoomHint = useHint('zoom')
   const holdHint = useHint('holdAdd')
   const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
+  // The promotion running at the branch: shown once on its own as the menu settles, with nothing open over
+  // it and no cue on screen, before any cue; after that its chip in the top bar opens it again
+  const live = useLivePromotion()
+  const [promoOpen, setPromoOpen] = useState(false)
+  const promoWaiting = live.promotion != null && !live.seen && !promoOpen
+  const promoBlocked = useStore(store, (s) => promoWaiting && (s.tuning != null || s.expanded))
+  useTimeout(promoWaiting && !loading && columns.length > 0 && !promoBlocked && !current?.showing, 900, () => {
+    setPromoOpen(true)
+    live.markSeen()
+  })
   // A dish or the order open over the deck is something going on. Only a cue still to show asks: with
   // none left, or on the whole menu (which has none), opening either does not render the screen
   const covered = useStore(store, (s) => current != null && mode === 'deck' && (s.tuning != null || s.expanded))
-  const idle = !loading && columns.length > 0 && mode === 'deck' && !covered
+  const idle = !loading && columns.length > 0 && mode === 'deck' && !covered && !promoOpen && !promoWaiting
   // One cue on screen at a time (the tray's pull may be up); and one showing as a dish or the order
   // opens is over, so no fingertip or words are left over what opened
   const noCue = useNoCueOnScreen()
@@ -313,6 +325,30 @@ export function MenuScreen({ menu }: HomeProps) {
 
   // Every dish by id, for what a dish goes well with
   const byId = useMemo(() => menuById(menu.sections.flatMap((s) => s.items)), [menu.sections])
+
+  // The promotion's button: its dish opened in place, its category turned to, or booking
+  const navigate = useNavigate()
+  const goPromotion = useHandler((promotion: PromotionDto) => {
+    if (promotion.link === 'Book') {
+      void navigate({ to: '/places' })
+      return
+    }
+    if (promotion.link === 'Item') {
+      const item = byId.get(String(promotion.linkId))
+      if (item) store.setState({ tuning: { item, from: null } })
+      return
+    }
+    if (promotion.link !== 'Category') return
+    const of = (cols: typeof columns) =>
+      cols.findIndex((c) => c.kind === 'category' && c.items.some((i) => String(i.catalogTypeId) === String(promotion.linkId)))
+    if (mode === 'deck') {
+      const index = of(columns)
+      if (index >= 0) selectColumn(index)
+    } else {
+      const index = of(gridCategories)
+      if (index >= 0) store.setState((s) => ({ jump: { index, n: (s.jump?.n ?? 0) + 1 } }))
+    }
+  })
 
   // A dish the open one goes well with: in with its defaults when nothing needs choosing, else open it in its place
   const onSuggest = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
@@ -464,7 +500,16 @@ export function MenuScreen({ menu }: HomeProps) {
             ref={bar}
             className='absolute inset-x-0 top-0'
             style={{ y: barY }}
-            end={classic ? undefined : <MenuSearch sections={menu.sections} onOpen={openDish} />}
+            end={
+              live.promotion && (live.seen || promoOpen) ? (
+                <span className='flex items-center gap-2'>
+                  <PromoChip promotion={live.promotion} onOpen={() => setPromoOpen(true)} />
+                  {!classic && <MenuSearch sections={menu.sections} onOpen={openDish} />}
+                </span>
+              ) : classic ? undefined : (
+                <MenuSearch sections={menu.sections} onOpen={openDish} />
+              )
+            }
             start={
               mode === 'grid' && !classic ? (
                 <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
@@ -538,6 +583,7 @@ export function MenuScreen({ menu }: HomeProps) {
       </div>
 
       <Flights store={store} />
+      {live.promotion && <PromoPopup promotion={live.promotion} open={promoOpen} onOpenChange={setPromoOpen} onGo={goPromotion} />}
       <Announcer store={store} />
     </MotionConfig>
   )

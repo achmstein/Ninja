@@ -24,6 +24,7 @@ import '../widgets/deck.dart';
 import '../widgets/dish.dart';
 import '../widgets/pinch.dart';
 import '../widgets/zoom_flight.dart';
+import '../../promotions/promotion.dart';
 
 /// One of the menu's sections: a category and its dishes
 typedef MenuSection = ({String label, List<MenuItem> items});
@@ -127,10 +128,14 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     }
     cueOnScreen.addListener(_onHints);
     dishOpen.addListener(_onHints);
+    pendingCategory.addListener(_turnToCategory);
+    ref.listenManual(livePromotionProvider, (_, next) => _offerPromotion(next.value), fireImmediately: true);
   }
 
   @override
   void dispose() {
+    pendingCategory.removeListener(_turnToCategory);
+    _promoTimer?.cancel();
     _positions.itemPositions.removeListener(_spy);
     _section.dispose();
     cueOnScreen.removeListener(_onHints);
@@ -232,6 +237,40 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       if (p.index > 0 && p.itemLeadingEdge <= line && p.index - 1 > index) index = p.index - 1;
     }
     if (_section.value != index) _section.value = index;
+  }
+
+  /// The menu's sections as last built, for a promotion's button to turn to one
+  List<MenuSection> _sectionList = const [];
+
+  /// A promotion's button asked for a category: the deck turns to it, the whole menu scrolls to it
+  void _turnToCategory() {
+    final id = pendingCategory.value;
+    if (id == null || !mounted || _sectionList.isEmpty) return;
+    pendingCategory.value = null;
+    bool holds(List<MenuItem> items) => items.any((i) => i.catalogTypeId == id);
+    if (_deckLayout && !_grid && _columns.isNotEmpty) {
+      final index = _columns.indexWhere((c) => !c.usuals && holds(c.items));
+      if (index >= 0) _selectColumn(index);
+    } else {
+      final index = _sectionList.indexWhere((s) => holds(s.items));
+      if (index >= 0) _jump(index);
+    }
+  }
+
+  /// The promotion running at the branch: shown once on its own as the menu settles, with nothing open
+  /// over it and no cue on screen; after that its chip in the top bar opens it again
+  Timer? _promoTimer;
+  void _offerPromotion(Promotion? promotion) {
+    _promoTimer?.cancel();
+    if (promotion == null || ref.read(seenPromotionsProvider).contains(promotion.seenKey)) return;
+    _promoTimer = Timer(const Duration(milliseconds: 900), () {
+      // Seen asked again now: the device's list comes in from storage a moment after a launch
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true) || ref.read(seenPromotionsProvider).contains(promotion.seenKey)) return;
+      // Something open over the menu: asked again a moment later
+      if (dishOpen.value || ref.read(orderOpenProvider) || cueOnScreen.value != null) return _offerPromotion(promotion);
+      ref.read(seenPromotionsProvider.notifier).see(promotion);
+      showPromotion(context, promotion);
+    });
   }
 
   /// A category turned to on the deck (a swipe sideways, a chip, the "up next" card)
@@ -426,6 +465,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final grouped = ref.watch(groupedMenuItemsProvider((locale, branchId)));
     final sections = menuSections(grouped.value ?? const {}, locale);
     _sections = sections.length;
+    _sectionList = sections;
+    // A promotion's category asked for before the menu came in: turned to now it has
+    if (pendingCategory.value != null && sections.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => _turnToCategory());
     // The deck: the customer's usuals first, then each category
     final deck = layout == MenuItemLayout.deck;
     _deckLayout = deck;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/places/screens/qr_scan_screen.dart';
+import '../../features/promotions/promotion.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_mark.dart';
 import '../brand/brand_provider.dart';
@@ -68,6 +69,8 @@ class NinjaTopBar extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // The promotion running, once shown, to open again
+                  const PromotionChip(),
                   NinjaIconButton(
                     size: 36,
                     semanticLabel: l10n.claimScan,

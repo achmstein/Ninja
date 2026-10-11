@@ -1867,4 +1867,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payWhyAtDoor => 'Paid to the rider at the door';
+
+  @override
+  String get promoOrderNow => 'Order now';
+
+  @override
+  String get promoSeeMenu => 'See the menu';
+
+  @override
+  String get promoBookNow => 'Book now';
+
+  @override
+  String get promoShowAgain => 'See what\'s on';
 }

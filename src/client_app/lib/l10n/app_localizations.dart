@@ -3368,6 +3368,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid to the rider at the door'**
   String get payWhyAtDoor;
+
+  /// No description provided for @promoOrderNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Order now'**
+  String get promoOrderNow;
+
+  /// No description provided for @promoSeeMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'See the menu'**
+  String get promoSeeMenu;
+
+  /// No description provided for @promoBookNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Book now'**
+  String get promoBookNow;
+
+  /// No description provided for @promoShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'See what\'s on'**
+  String get promoShowAgain;
 }
 
 class _AppLocalizationsDelegate
