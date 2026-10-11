@@ -125,3 +125,44 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
         child: NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child),
       );
 }
+
+/// How much of the page's bottom the dock covers this moment: its row and
+/// its tabs, or the row alone while the tabs are tucked away. The page's
+/// own bottom padding is the whole dock's, whatever the tuck, so a tuck never
+/// changes a page's length; the menu's categories, which stand on the dock,
+/// read this to go down and up with it
+class DockCover extends InheritedWidget {
+  final double height;
+
+  const DockCover({super.key, required this.height, required super.child});
+
+  static double? of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<DockCover>()?.height;
+
+  @override
+  bool updateShouldNotify(DockCover old) => old.height != height;
+}
+
+/// A list at rest at its end stays at its end as its viewport changes size
+/// (the dock coming back shortens the menu's), in the same layout: kept
+/// there a frame later instead ([TuckOnScroll]'s jump), the list's end
+/// slid under the dock and back on every other frame, and the page juddered
+class StayAtEndPhysics extends ScrollPhysics {
+  const StayAtEndPhysics({super.parent});
+
+  @override
+  StayAtEndPhysics applyTo(ScrollPhysics? ancestor) => StayAtEndPhysics(parent: buildParent(ancestor));
+
+  @override
+  double adjustPositionForNewDimensions({
+    required ScrollMetrics oldPosition,
+    required ScrollMetrics newPosition,
+    required bool isScrolling,
+    required double velocity,
+  }) {
+    final atEnd = oldPosition.maxScrollExtent > oldPosition.minScrollExtent && oldPosition.pixels >= oldPosition.maxScrollExtent - 0.5;
+    if (!isScrolling && atEnd && oldPosition.viewportDimension != newPosition.viewportDimension) {
+      return newPosition.maxScrollExtent;
+    }
+    return super.adjustPositionForNewDimensions(oldPosition: oldPosition, newPosition: newPosition, isScrolling: isScrolling, velocity: velocity);
+  }
+}

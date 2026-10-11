@@ -227,6 +227,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
         : stuck
             ? rowHeight + safeBottom
             : rowHeight + metrics.tabs + floating;
+    // The page's room at its end: the whole dock's, whatever the tuck, so tucking never changes a page's
+    // length (the menu's categories follow the dock itself, through DockCover)
+    final dockRoom = rowHeight + metrics.tabs + floating;
     final c = context.theme.colors;
 
     final dock = AnimatedContainer(
@@ -312,11 +315,14 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
                           const TopBarSlot(),
                           Expanded(
                             child: MediaQuery(
-                              data: media.copyWith(padding: media.padding.copyWith(top: 0, bottom: dockHeight)),
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: Ninja.maxWidth),
-                                  child: widget.child,
+                              data: media.copyWith(padding: media.padding.copyWith(top: 0, bottom: dockRoom)),
+                              child: DockCover(
+                                height: dockHeight,
+                                child: Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: Ninja.maxWidth),
+                                    child: widget.child,
+                                  ),
                                 ),
                               ),
                             ),

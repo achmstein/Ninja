@@ -87,9 +87,13 @@ class NinjaTopBar extends ConsumerWidget {
 /// Whether the top bar has gone up after a scroll to [y], given where the
 /// last turn began: down past the bar's own height it goes, back up it
 /// comes, and at the top it is always there (client_web's bar is the top of
-/// the page it is on). A finger's jitter ([tuckSlack]) moves nothing.
-({bool hidden, double from}) topBarAt(double y, double bar, double from, bool hidden) {
+/// the page it is on). A finger's jitter ([tuckSlack]) moves nothing. At
+/// the page's end ([max]) it holds, as the dock does ([tuckAt]): the bounce
+/// back from past the end is no scroll up, and the bar coming back there
+/// pushed the page down while the dock coming back pulled it up.
+({bool hidden, double from}) topBarAt(double y, double bar, double from, bool hidden, {double max = double.infinity}) {
   if (y <= bar) return (hidden: false, from: y);
+  if (y >= max - 2) return (hidden: hidden, from: y < max ? y : max);
   // The anchor follows the scroll in the way the bar already agrees with
   if (hidden ? y > from : y < from) return (hidden: hidden, from: y);
   if ((y - from).abs() < tuckSlack) return (hidden: hidden, from: from);
@@ -147,7 +151,7 @@ class _TopBarOnScrollState extends ConsumerState<TopBarOnScroll> {
       _from = y;
       return false;
     }
-    final next = topBarAt(y, topBarSize(ref.read(brandProvider).theme.headerSize).bar, _from, hidden);
+    final next = topBarAt(y, topBarSize(ref.read(brandProvider).theme.headerSize).bar, _from, hidden, max: n.metrics.maxScrollExtent);
     _from = next.from;
     if (next.hidden != hidden) {
       _quietUntil = DateTime.now().add(tuckSettle);

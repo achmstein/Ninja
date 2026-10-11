@@ -41,8 +41,10 @@ void main() {
     expect(topBarAt(580, _bar, 600, true), (hidden: false, from: 580.0));
   });
 
-  test('stays up at the end of the page, unlike the dock', () {
-    expect(topBarAt(2000, _bar, 1900, true).hidden, isTrue);
+  test('holds at the end of the page, a bounce back from past it no scroll up', () {
+    expect(topBarAt(2000, _bar, 1900, true, max: 2000), (hidden: true, from: 2000.0));
+    expect(topBarAt(2040, _bar, 2000, true, max: 2000), (hidden: true, from: 2000.0));
+    expect(topBarAt(1999, _bar, 2000, true, max: 2000), (hidden: true, from: 1999.0));
   });
 
   testWidgets('a list scrolled down sends it up, and back up brings it back', (tester) async {

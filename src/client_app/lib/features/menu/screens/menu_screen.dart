@@ -443,7 +443,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final tabsOver = _tabsOver;
     final holdHintId = deck ? _hints(ready: staged && grouped.hasValue) : null;
     // The dock over the bottom of the page: the categories sit on it
-    final dock = MediaQuery.paddingOf(context).bottom;
+    final dock = DockCover.of(context) ?? MediaQuery.paddingOf(context).bottom;
 
     final body = grouped.when(
       skipLoadingOnRefresh: true,
@@ -485,7 +485,8 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
                   child: ScrollablePositionedList.builder(
                     itemScrollController: _scroll,
                     itemPositionsListener: _positions,
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    // The dock coming back at the end shortens the list: it stays at its end in the same frame
+                    physics: const StayAtEndPhysics(parent: AlwaysScrollableScrollPhysics()),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     itemCount: sections.length + 1,
                     itemBuilder: (context, index) {
