@@ -123,6 +123,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     _tray.addListener(() {
       if (_tray.expanded == _wasExpanded) return;
       _wasExpanded = _tray.expanded;
+      // The dock follows the order: opened while the tabs were tucked away, the dock goes whole and the
+      // page stops tucking it, where the shell kept its tucked layout and the sheet stood half under the dock
+      setState(() {});
       ref.read(orderOpenProvider.notifier).set(_tray.expanded);
       if (!_tray.expanded) return;
       ref.read(checkoutProvider.notifier).reset();
@@ -283,7 +286,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
 
     // The order sheet: rising out of the dock, clipped at the row's top so it seems to come from inside it
     final sheetClipHeight = math.min(media.size.height * 0.68, 544.0);
-    final sheetBottom = dockBottom + tabsHeight + metrics.row - DockMetrics.tuck;
+    // The row's top: on the bottom edge (stuck), the dock stands on the phone's inset under the row
+    final sheetBottom = dockBottom + (stuck ? safeBottom : 0) + tabsHeight + metrics.row - DockMetrics.tuck;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -354,7 +358,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
                   builder: (context, sheet) {
                     if (!_tray.sheetShown) return const SizedBox.shrink();
                     final h = _tray.sheetHeight > 0 ? _tray.sheetHeight : sheetClipHeight;
-                    return Positioned(
+                    // Rising with the dock's row as the tabs come back
+                    return AnimatedPositioned(
+                      duration: tuckSettle,
+                      curve: Curves.easeOut,
                       left: DockMetrics.inset,
                       right: DockMetrics.inset,
                       bottom: sheetBottom,

@@ -81,7 +81,12 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   @override
   void didUpdateWidget(TuckOnScroll old) {
     super.didUpdateWidget(old);
-    if (!widget.enabled && old.enabled) ref.read(dockTuckProvider.notifier).set(false);
+    // Off (the order opened): the dock whole, once this build is done, as a provider is not changed mid-build
+    if (!widget.enabled && old.enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !widget.enabled) ref.read(dockTuckProvider.notifier).set(false);
+      });
+    }
   }
 
   bool _onScroll(ScrollNotification n) {
