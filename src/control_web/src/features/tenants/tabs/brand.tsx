@@ -169,6 +169,11 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   const data = brand.data
   const version = String(data.version)
   if (version !== formKey && !quietVersions.current.has(version)) setFormKey(version)
+  // The phone starts over on the versions the form does: a style picked on its own (saved at once) is posted
+  // into the app as it stands instead, so the page being looked at (the Book tab) changes in place rather than
+  // the app reloading onto its menu
+  const frameVersion = formKey ?? version
+  const savedQuietly = version !== frameVersion
   return (
     <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]'>
       <div className='flex flex-col gap-6'>
@@ -194,10 +199,16 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
         </div>
         <LivePreview
           customerUrl={withScheme(data.customerUrl ?? tenant.hosts.customer)}
-          version={data.version}
+          version={frameVersion}
           language={preview.language}
           scheme={preview.scheme}
-          draft={draft && { primaryColor: draft.primaryColor, theme: draft.theme }}
+          draft={
+            draft
+              ? { primaryColor: draft.primaryColor, theme: draft.theme }
+              : savedQuietly
+                ? { primaryColor: data.primaryColor ?? null, theme: data.theme }
+                : null
+          }
         />
       </div>
     </div>
