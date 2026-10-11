@@ -1,13 +1,18 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import '../shell/tuck.dart';
 import '../motion/motion.dart';
 import '../theme/ninja_theme.dart';
 import '../theme/theme_provider.dart';
 
 /// The one way the customer app shows a sheet, a dialog or a question
 /// (client_web's components/ui/ninja-sheet.tsx): a dark slab floating off
-/// the screen's edges at the dock's margins, rising where the thumb already
-/// is and going back down. It is pulled away by its handle (past 96 px, or
+/// the screen's edges at the dock's margins, grown out of the dock itself: it
+/// opens as the dock's slab, clipped to the dock's shape where the dock
+/// stands, and grows up into the sheet, what it holds fading in; closed, it
+/// folds back down into the dock. With no dock on screen (tucked away, a page
+/// pushed over the tabs) it rises from the bottom and goes back down. It is pulled away by its handle (past 96 px, or
 /// flicked), or closed by a tap on the dimmed page. Everything in it is set
 /// in the dark scheme, so any part used inside reads on it. The keyboard
 /// lifts it.
@@ -108,6 +113,27 @@ class _SheetFrameState extends State<_SheetFrame> {
   double _drag = 0;
   bool _dragging = false;
 
+  /// The dock it grew out of, on the screen, as it opened: null with no dock to grow from
+  Rect? _dock;
+  bool _looked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_looked) return;
+    _looked = true;
+    _dock = _dockNow();
+  }
+
+  /// The dock where it stands now: none while it is tucked away below the screen's edge
+  Rect? _dockNow() {
+    final box = dockSlabKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    if (rect.height < 24 || rect.top >= MediaQuery.sizeOf(context).height - 8) return null;
+    return rect;
+  }
+
   void _end(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     setState(() => _dragging = false);
@@ -125,6 +151,7 @@ class _SheetFrameState extends State<_SheetFrame> {
     final bottom = keyboard > 0 ? keyboard + 8 : (media.viewPadding.bottom > 8 ? media.viewPadding.bottom : 8.0);
     final animation = widget.route.animation!;
     final reduced = reduceMotion(context);
+    final morph = !reduced && _dock != null;
 
     final sheet = DarkScope(
       child: Builder(
@@ -140,7 +167,11 @@ class _SheetFrameState extends State<_SheetFrame> {
                 boxShadow: Ninja.sheetShadow,
               ),
               clipBehavior: Clip.antiAlias,
-              child: Column(
+              // Out of the dock, what it holds comes in once the slab has grown some way, and goes first
+              child: _fadeInside(
+                morph,
+                animation,
+                Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -172,6 +203,7 @@ class _SheetFrameState extends State<_SheetFrame> {
                   ),
                 ],
               ),
+              ),
             ),
           );
         },
@@ -198,6 +230,11 @@ class _SheetFrameState extends State<_SheetFrame> {
               final forward = animation.status != AnimationStatus.reverse;
               final t = (forward ? Motion.enter : Motion.exit.flipped).transform(animation.value.clamp(0.0, 1.0));
               if (reduced) return Opacity(opacity: t, child: child);
+              if (morph) {
+                // Folding back, into wherever the dock stands now (the tabs back, a row come)
+                final dock = forward ? _dock! : (_dockNow() ?? _dock!);
+                return _DockMorph(grown: t, dock: dock, dockRadius: Ninja.cardRadius, radius: Ninja.sheetRadius, child: child);
+              }
               return Transform.translate(
                 offset: Offset(0, 72 * (1 - t)),
                 child: Transform.scale(
@@ -210,6 +247,98 @@ class _SheetFrameState extends State<_SheetFrame> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// What the sheet holds, faded in behind the slab growing out of the dock
+Widget _fadeInside(bool morph, Animation<double> animation, Widget child) =>
+    morph ? FadeTransition(opacity: CurvedAnimation(parent: animation, curve: const Interval(0.35, 1)), child: child) : child;
+
+/// The sheet clipped to the dock's box ([grown] 0) growing to its own (1),
+/// the corners easing from the dock's to its own: the dock's slab opening
+/// up into the sheet
+class _DockMorph extends SingleChildRenderObjectWidget {
+  final double grown;
+
+  /// The dock's box on the screen
+  final Rect dock;
+  final double dockRadius;
+  final double radius;
+
+  const _DockMorph({required this.grown, required this.dock, required this.dockRadius, required this.radius, required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderDockMorph(grown, dock, dockRadius, radius);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderDockMorph renderObject) => renderObject
+    ..grown = grown
+    ..dock = dock
+    ..dockRadius = dockRadius
+    ..radius = radius;
+}
+
+class _RenderDockMorph extends RenderProxyBox {
+  _RenderDockMorph(this._grown, this._dock, this._dockRadius, this._radius);
+
+  double _grown;
+  set grown(double v) {
+    if (v == _grown) return;
+    _grown = v;
+    markNeedsPaint();
+  }
+
+  Rect _dock;
+  set dock(Rect v) {
+    if (v == _dock) return;
+    _dock = v;
+    markNeedsPaint();
+  }
+
+  double _dockRadius;
+  set dockRadius(double v) {
+    if (v == _dockRadius) return;
+    _dockRadius = v;
+    markNeedsPaint();
+  }
+
+  double _radius;
+  set radius(double v) {
+    if (v == _radius) return;
+    _radius = v;
+    markNeedsPaint();
+  }
+
+  Rect _clip() {
+    final own = Offset.zero & size;
+    final dock = _dock.shift(-localToGlobal(Offset.zero));
+    return Rect.lerp(dock.intersect(own.inflate(0.5)), own, _grown)!;
+  }
+
+  @override
+  bool hitTestSelf(Offset position) => false;
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) => _clip().contains(position) && super.hitTest(result, position: position);
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+    // Grown, the sheet whole, its shadow too
+    if (_grown >= 1) {
+      layer = null;
+      super.paint(context, offset);
+      return;
+    }
+    final corner = Radius.circular(lerpDouble(_dockRadius, _radius, _grown)!);
+    layer = context.pushClipRRect(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      RRect.fromRectAndRadius(_clip(), corner),
+      super.paint,
+      oldLayer: layer as ClipRRectLayer?,
     );
   }
 }

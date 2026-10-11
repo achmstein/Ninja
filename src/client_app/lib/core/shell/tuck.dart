@@ -166,3 +166,7 @@ class StayAtEndPhysics extends ScrollPhysics {
     return super.adjustPositionForNewDimensions(oldPosition: oldPosition, newPosition: newPosition, isScrolling: isScrolling, velocity: velocity);
   }
 }
+
+/// The dock's slab, for a sheet to grow out of (ninja_sheet.dart): there is
+/// one dock, in the shell
+final dockSlabKey = GlobalKey(debugLabel: 'dock slab');

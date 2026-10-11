@@ -736,6 +736,8 @@ function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDiv
         marginBottom: stuck ? 0 : docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)',
         paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined,
       }}
+      // A sheet grows out of it (components/ui/ninja-sheet.tsx)
+      data-dock-slab
     >
       {children}
       {/* Scrolling down the whole menu folds the tabs, the tray staying: the order is what is at hand */}

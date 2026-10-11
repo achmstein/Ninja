@@ -113,6 +113,8 @@ export function NinjaNavDock() {
         )}
         style={{ paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined }}
         inert={gone || undefined}
+        // A sheet grows out of it (components/ui/ninja-sheet.tsx)
+        data-dock-slab
       >
         {/* The bill and the order on its way, above the tabs, on every tab */}
         <DockRow />

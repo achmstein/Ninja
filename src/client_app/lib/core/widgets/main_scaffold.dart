@@ -233,6 +233,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     final c = context.theme.colors;
 
     final dock = AnimatedContainer(
+      // A sheet grows out of it (core/ui/ninja_sheet.dart)
+      key: dockSlabKey,
       duration: tuckSettle,
       curve: Curves.easeOut,
       margin: EdgeInsets.symmetric(horizontal: stuck ? 0 : DockMetrics.inset),

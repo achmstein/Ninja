@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react'
+import { animate, AnimatePresence, motion, useDragControls, useMotionValue, usePresence, useReducedMotion, useTransform } from 'motion/react'
 import { ease, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
@@ -69,14 +69,7 @@ type PrimitiveParts = {
   Content: React.ComponentType<Record<string, unknown> & { forceMount?: true; asChild?: boolean; children?: React.ReactNode }>
 }
 
-export function SheetFrame({
-  parts: { Portal, Overlay, Content },
-  from = 'bottom',
-  className,
-  style,
-  children,
-  contentProps,
-}: {
+type FrameProps = {
   parts: PrimitiveParts
   from?: SheetFrom
   className?: string
@@ -84,74 +77,158 @@ export function SheetFrame({
   children: React.ReactNode
   /** Passed through to Radix's Content (aria labels, event handlers) */
   contentProps?: Record<string, unknown>
-}) {
+}
+
+export function SheetFrame(props: FrameProps) {
+  const { open } = React.useContext(SheetOpen)
+  return <AnimatePresence>{open && <SheetLayer {...props} />}</AnimatePresence>
+}
+
+/** The sheet's corners, px, as its rounded-[1.75rem] */
+const SHEET_RADIUS = 28
+
+/** How far in from each of the sheet's edges the dock stands, px, and the dock's corners */
+type DockInset = { top: number; right: number; bottom: number; left: number; radius: number }
+
+/** The dock on screen now, as a box: none while it is tucked away below the screen's edge or not there at all */
+function dockBox(): { box: DOMRect; radius: number } | null {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-dock-slab]')) {
+    const box = el.getBoundingClientRect()
+    if (box.height < 24 || box.top >= window.innerHeight - 8) continue
+    return { box, radius: parseFloat(getComputedStyle(el).borderTopLeftRadius) || SHEET_RADIUS }
+  }
+  return null
+}
+
+function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', className, style, children, contentProps }: FrameProps) {
   const { open, setOpen } = React.useContext(SheetOpen)
   const reduced = useReducedMotion()
   const drag = useDragControls()
   const body = React.useRef<HTMLDivElement>(null)
+  // The sheet's own element: Radix's portal mounts it a render after this one, so it is followed as it comes
+  const [frame, setFrame] = React.useState<HTMLDivElement | null>(null)
   // From anywhere on its body too, while that is scrolled to its top (lib/use-pull-down.ts)
   usePullDown(body, open && from === 'bottom' && !reduced, { onStart: (e) => drag.start(e) })
   // iOS never resizes the layout viewport for the keyboard, so a sheet held
   // to the bottom would sit behind it; lift it by however much is covered
   const keyboardInset = useKeyboardInset(open && from === 'bottom')
+
+  // Out of the dock: the dock's box inside the sheet's, found once the sheet is laid out, and how far it
+  // has grown from there (0 the dock, 1 the sheet). With no dock to grow from, it rises as it always did
+  const [isPresent, safeToRemove] = usePresence()
+  const [dock] = React.useState(() => (from === 'bottom' && !reduced ? dockBox() : null))
+  const morph = dock != null
+  const inset = React.useRef<DockInset | null>(null)
+  const grown = useMotionValue(morph ? 0 : 1)
+  const clipPath = useTransform(grown, (g) => {
+    const i = inset.current
+    // Not yet measured, all of it held back, so it never shows at full size for a frame
+    if (!i) return morph ? 'inset(100% 0 0 0)' : 'none'
+    if (g >= 1) return 'none'
+    const q = 1 - g
+    return `inset(${i.top * q}px ${i.right * q}px ${i.bottom * q}px ${i.left * q}px round ${SHEET_RADIUS + (i.radius - SHEET_RADIUS) * q}px)`
+  })
+  // What it holds comes in once the slab has grown some way, and goes first on the way back
+  const inside = useTransform(grown, [0.35, 1], [0, 1])
+
+  React.useLayoutEffect(() => {
+    if (!morph || !dock || !frame) return
+    const sheet = frame.getBoundingClientRect()
+    inset.current = {
+      top: Math.max(0, dock.box.top - sheet.top),
+      right: Math.max(0, sheet.right - dock.box.right),
+      bottom: Math.max(0, sheet.bottom - dock.box.bottom),
+      left: Math.max(0, dock.box.left - sheet.left),
+      radius: dock.radius,
+    }
+    grown.set(0.0001)
+    const run = animate(grown, 1, springSoft)
+    return () => run.stop()
+  }, [morph, dock, grown, frame])
+
+  // Closed, it folds back into the dock before it goes
+  React.useEffect(() => {
+    if (isPresent) return
+    if (!morph) {
+      safeToRemove?.()
+      return
+    }
+    // The dock may have moved while it was open (the tabs back, a row come): fold into where it is now
+    const now = dockBox()
+    if (now && frame && inset.current) {
+      const sheet = frame.getBoundingClientRect()
+      inset.current = {
+        top: Math.max(0, now.box.top - sheet.top),
+        right: Math.max(0, sheet.right - now.box.right),
+        bottom: Math.max(0, sheet.bottom - now.box.bottom),
+        left: Math.max(0, now.box.left - sheet.left),
+        radius: now.radius,
+      }
+    }
+    const run = animate(grown, 0, { duration: 0.24, ease: ease.exit })
+    void run.then(() => safeToRemove?.())
+    return () => run.stop()
+  }, [isPresent, morph, grown, safeToRemove, frame])
+
   const away = from === 'bottom' ? { y: 72, scale: 0.96, opacity: 0 } : { y: -32, scale: 0.96, opacity: 0 }
 
   return (
-    <AnimatePresence>
-      {open && (
-        <Portal forceMount>
-          <Overlay asChild forceMount>
-            <motion.div
-              className='fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.22 } }}
-              exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            />
-          </Overlay>
-          <Content asChild forceMount {...contentProps}>
-            <motion.div
-              className={cn(
-                'dark bg-background text-foreground fixed z-50 mx-auto flex flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
-                from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'
-              )}
-              style={{
-                ...SLAB_SCHEME,
-                // As wide as the dock it opens over
-                ...DOCK_EDGES,
-                ...(from === 'bottom' && { bottom: keyboardInset > 0 ? keyboardInset + 8 : 'max(8px, env(safe-area-inset-bottom))' }),
-                ...(keyboardInset > 0 && { maxHeight: `calc(100svh - ${keyboardInset + 16}px)` }),
-                originY: from === 'bottom' ? 1 : 0,
-              }}
-              initial={reduced ? { opacity: 0 } : away}
-              animate={{ y: 0, scale: 1, opacity: 1, transition: springSoft }}
-              exit={reduced ? { opacity: 0 } : { ...away, transition: { duration: 0.2, ease: ease.exit } }}
-              drag={from === 'bottom' && !reduced ? 'y' : false}
-              dragListener={false}
-              dragControls={drag}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0.04, bottom: 0.7 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 96 || info.velocity.y > 600) setOpen(false)
-              }}
-            >
-              {from === 'bottom' && (
-                // The handle the sheet is pulled down by; the rest of it scrolls and types as usual
-                <div className='flex h-7 shrink-0 cursor-grab touch-none items-center justify-center' onPointerDown={(e) => drag.start(e)}>
-                  <span className='bg-foreground/25 h-1 w-10 rounded-full' />
-                </div>
-              )}
-              <div
-                ref={body}
-                className={cn('flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5', from === 'top' && 'pt-5', className)}
-                style={style}
-              >
-                {children}
+    <Portal forceMount>
+      <Overlay asChild forceMount>
+        <motion.div
+          className='fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: 0.22 } }}
+          exit={{ opacity: 0, transition: { duration: 0.2 } }}
+        />
+      </Overlay>
+      <Content asChild forceMount {...contentProps}>
+        <motion.div
+          ref={setFrame}
+          className={cn(
+            'dark bg-background text-foreground fixed z-50 mx-auto flex flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
+            from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'
+          )}
+          style={{
+            ...SLAB_SCHEME,
+            // As wide as the dock it opens over
+            ...DOCK_EDGES,
+            ...(from === 'bottom' && { bottom: keyboardInset > 0 ? keyboardInset + 8 : 'max(8px, env(safe-area-inset-bottom))' }),
+            ...(keyboardInset > 0 && { maxHeight: `calc(100svh - ${keyboardInset + 16}px)` }),
+            originY: from === 'bottom' ? 1 : 0,
+            ...(morph && { clipPath }),
+          }}
+          // Out of the dock the clip does the moving; otherwise it rises (or drops) and fades
+          initial={morph ? false : reduced ? { opacity: 0 } : away}
+          animate={morph ? undefined : { y: 0, scale: 1, opacity: 1, transition: springSoft }}
+          exit={morph ? undefined : reduced ? { opacity: 0 } : { ...away, transition: { duration: 0.2, ease: ease.exit } }}
+          drag={from === 'bottom' && !reduced ? 'y' : false}
+          dragListener={false}
+          dragControls={drag}
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0.04, bottom: 0.7 }}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 96 || info.velocity.y > 600) setOpen(false)
+          }}
+        >
+          <motion.div className='flex min-h-0 flex-1 flex-col' style={morph ? { opacity: inside } : undefined}>
+            {from === 'bottom' && (
+              // The handle the sheet is pulled down by; the rest of it scrolls and types as usual
+              <div className='flex h-7 shrink-0 cursor-grab touch-none items-center justify-center' onPointerDown={(e) => drag.start(e)}>
+                <span className='bg-foreground/25 h-1 w-10 rounded-full' />
               </div>
-            </motion.div>
-          </Content>
-        </Portal>
-      )}
-    </AnimatePresence>
+            )}
+            <div
+              ref={body}
+              className={cn('flex min-h-0 flex-col gap-4 overflow-y-auto px-5 pb-5', from === 'top' && 'pt-5', className)}
+              style={style}
+            >
+              {children}
+            </div>
+          </motion.div>
+        </motion.div>
+      </Content>
+    </Portal>
   )
 }
 
