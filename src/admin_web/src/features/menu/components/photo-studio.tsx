@@ -28,31 +28,41 @@ export type StudioDish = {
 type Look = 'studio' | 'rustic' | 'overhead' | 'moody' | 'fresh'
 
 /** Each look as a swatch that hints at it: its surface, its light */
-const LOOKS: { value: Look; key: TranslationKey; swatch: string }[] = [
+const LOOKS: {
+  value: Look
+  key: TranslationKey
+  hint: TranslationKey
+  swatch: string
+}[] = [
   {
     value: 'studio',
     key: 'lookStudio',
+    hint: 'lookStudioHint',
     swatch: 'bg-gradient-to-br from-zinc-50 via-white to-zinc-200',
   },
   {
     value: 'rustic',
     key: 'lookRustic',
+    hint: 'lookRusticHint',
     swatch: 'bg-gradient-to-br from-amber-200 via-amber-700 to-amber-950',
   },
   {
     value: 'overhead',
     key: 'lookOverhead',
+    hint: 'lookOverheadHint',
     swatch:
       'bg-[radial-gradient(circle_at_center,white_0_32%,#e7e0d6_33%_100%)]',
   },
   {
     value: 'moody',
     key: 'lookMoody',
+    hint: 'lookMoodyHint',
     swatch: 'bg-gradient-to-br from-zinc-600 via-zinc-900 to-black',
   },
   {
     value: 'fresh',
     key: 'lookFresh',
+    hint: 'lookFreshHint',
     swatch: 'bg-gradient-to-br from-white via-emerald-50 to-emerald-200',
   },
 ]
@@ -321,7 +331,12 @@ export function PhotoStudio({
         )}
 
         <div className='space-y-2'>
-          <span className='text-sm font-medium'>{t('studioLook')}</span>
+          <div>
+            <span className='text-sm font-medium'>{t('studioLook')}</span>
+            <p className='text-muted-foreground text-xs'>
+              {t('studioLookHint')}
+            </p>
+          </div>
           <div className='-mx-1 flex gap-2 overflow-x-auto px-1 pb-1'>
             {LOOKS.map((l) => (
               <button
@@ -353,6 +368,10 @@ export function PhotoStudio({
             ))}
           </div>
         </div>
+
+        <p className='text-muted-foreground -mt-2 text-xs' aria-live='polite'>
+          {t(LOOKS.find((l) => l.value === look)!.hint)}
+        </p>
 
         <Input
           value={note}
