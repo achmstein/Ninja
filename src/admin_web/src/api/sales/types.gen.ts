@@ -201,6 +201,7 @@ export type OrderPayView = {
     paymentKey: null | string;
     paymentStatus: null | string;
     simulated: boolean;
+    holdsCards?: boolean;
 };
 
 export type PagedResultOfPaymentRow = {
@@ -238,6 +239,7 @@ export type PayAheadOptionsView = {
     feePercent: number | string;
     feeFixed: number | string;
     simulated: boolean;
+    holdsCards?: boolean;
 };
 
 export type PayLineView = {

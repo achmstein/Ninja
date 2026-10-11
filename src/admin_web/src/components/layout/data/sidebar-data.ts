@@ -59,7 +59,10 @@ export const sidebarData: SidebarData = {
           title: 'menuItems',
           url: '/menu',
           icon: Coffee,
-          tabs: [{ title: 'offersTab', url: '/promos' }],
+          tabs: [
+            { title: 'offersTab', url: '/promos' },
+            { title: 'promotionsTab', url: '/promotions' },
+          ],
         },
         // What the branch has, the ledger behind it, what the menu takes out
         // of it. Every posting is made from Stock.

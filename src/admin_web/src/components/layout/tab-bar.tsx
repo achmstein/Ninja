@@ -45,7 +45,11 @@ function isActive(pathname: string, to: Tab['to']) {
   // Orders is the list; Live (/orders/live) is its own page behind More
   if (to === '/orders') return pathname === '/orders'
   if (to === '/menu')
-    return pathname.startsWith('/menu') || pathname.startsWith('/promos')
+    return (
+      pathname.startsWith('/menu') ||
+      pathname.startsWith('/promos') ||
+      pathname.startsWith('/promotions')
+    )
   return pathname === to || pathname.startsWith(`${to}/`)
 }
 

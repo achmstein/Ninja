@@ -1,8 +1,12 @@
 import { useT } from '@/lib/i18n'
 import { PageTabs } from '@/components/page-tabs'
 
-/** The menu is its dishes and the offers on them: one page of two tabs */
-export function MenuTabs({ value }: { value: 'dishes' | 'offers' }) {
+/** The menu is its dishes, the offers on them and what the app promotes: one page of three tabs */
+export function MenuTabs({
+  value,
+}: {
+  value: 'dishes' | 'offers' | 'promotions'
+}) {
   const t = useT()
   return (
     <PageTabs
@@ -10,6 +14,7 @@ export function MenuTabs({ value }: { value: 'dishes' | 'offers' }) {
       tabs={[
         { value: 'dishes', label: t('dishesTab'), to: '/menu' },
         { value: 'offers', label: t('offersTab'), to: '/promos' },
+        { value: 'promotions', label: t('promotionsTab'), to: '/promotions' },
       ]}
     />
   )

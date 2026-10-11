@@ -25,6 +25,7 @@ import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRidersIndexRouteImport } from './routes/_authenticated/riders/index'
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
+import { Route as AuthenticatedPromotionsIndexRouteImport } from './routes/_authenticated/promotions/index'
 import { Route as AuthenticatedPromosIndexRouteImport } from './routes/_authenticated/promos/index'
 import { Route as AuthenticatedPlacesIndexRouteImport } from './routes/_authenticated/places/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
@@ -148,6 +149,12 @@ const AuthenticatedRequestsIndexRoute =
   AuthenticatedRequestsIndexRouteImport.update({
     id: '/requests/',
     path: '/requests/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPromotionsIndexRoute =
+  AuthenticatedPromotionsIndexRouteImport.update({
+    id: '/promotions/',
+    path: '/promotions/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPromosIndexRoute =
@@ -437,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
+  '/promotions': typeof AuthenticatedPromotionsIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/riders': typeof AuthenticatedRidersIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -495,6 +503,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
   '/promos': typeof AuthenticatedPromosIndexRoute
+  '/promotions': typeof AuthenticatedPromotionsIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/riders': typeof AuthenticatedRidersIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -555,6 +564,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/places/': typeof AuthenticatedPlacesIndexRoute
   '/_authenticated/promos/': typeof AuthenticatedPromosIndexRoute
+  '/_authenticated/promotions/': typeof AuthenticatedPromotionsIndexRoute
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
   '/_authenticated/riders/': typeof AuthenticatedRidersIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -615,6 +625,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/places'
     | '/promos'
+    | '/promotions'
     | '/requests'
     | '/riders'
     | '/settings'
@@ -673,6 +684,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/places'
     | '/promos'
+    | '/promotions'
     | '/requests'
     | '/riders'
     | '/settings'
@@ -732,6 +744,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/'
     | '/_authenticated/places/'
     | '/_authenticated/promos/'
+    | '/_authenticated/promotions/'
     | '/_authenticated/requests/'
     | '/_authenticated/riders/'
     | '/_authenticated/settings/'
@@ -869,6 +882,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/requests'
       preLoaderRoute: typeof AuthenticatedRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/promotions/': {
+      id: '/_authenticated/promotions/'
+      path: '/promotions'
+      fullPath: '/promotions'
+      preLoaderRoute: typeof AuthenticatedPromotionsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/promos/': {
@@ -1199,6 +1219,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPlacesIndexRoute: typeof AuthenticatedPlacesIndexRoute
   AuthenticatedPromosIndexRoute: typeof AuthenticatedPromosIndexRoute
+  AuthenticatedPromotionsIndexRoute: typeof AuthenticatedPromotionsIndexRoute
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
   AuthenticatedRidersIndexRoute: typeof AuthenticatedRidersIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -1250,6 +1271,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPlacesIndexRoute: AuthenticatedPlacesIndexRoute,
   AuthenticatedPromosIndexRoute: AuthenticatedPromosIndexRoute,
+  AuthenticatedPromotionsIndexRoute: AuthenticatedPromotionsIndexRoute,
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
   AuthenticatedRidersIndexRoute: AuthenticatedRidersIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,

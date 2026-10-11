@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, createPromo, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, drawDishPhoto, fillForm, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, DrawDishPhotoData, DrawDishPhotoError, FillFormData, FillFormError, FillFormResponse2, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, composeItem, createCategory, createCustomization, createItem, createPromo, createPromotion, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, deletePromotion, designPromotion, drawDishPhoto, fillForm, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getLivePromotion, getMyTopItems, getPromotionPicture, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, listPromotions, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, updatePromotion, uploadItemPicture, uploadPromotionPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, ComposeItemData, ComposeItemError, ComposeItemResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, CreatePromotionData, CreatePromotionError, CreatePromotionResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, DeletePromotionData, DeletePromotionResponse, DesignPromotionData, DesignPromotionError, DesignPromotionResponse, DrawDishPhotoData, DrawDishPhotoError, FillFormData, FillFormError, FillFormResponse2, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetLivePromotionData, GetLivePromotionResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetPromotionPictureData, GetPromotionPictureResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, ListPromotionsData, ListPromotionsResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UpdatePromotionData, UpdatePromotionError, UpdatePromotionResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse, UploadPromotionPictureData, UploadPromotionPictureError, UploadPromotionPictureResponse } from '../types.gen';
 
 /**
  * Fill in what a menu text is missing
@@ -241,6 +241,151 @@ export const setPromoActiveMutation = (options?: Partial<Options<SetPromoActiveD
     return mutationOptions;
 };
 
+export const getLivePromotionQueryKey = (options?: Options<GetLivePromotionData>) => createQueryKey('getLivePromotion', options);
+
+/**
+ * The promotion running now at a branch
+ *
+ * The newest promotion switched on, with a picture, inside its dates, days and hours, at the branch (any branch when none is named). No content when none runs. The app shows it once to each customer, by its id and picture.
+ */
+export const getLivePromotionOptions = (options?: Options<GetLivePromotionData>) => queryOptions<GetLivePromotionResponse, AxiosError<DefaultError>, GetLivePromotionResponse, ReturnType<typeof getLivePromotionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLivePromotion({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLivePromotionQueryKey(options)
+});
+
+export const getPromotionPictureQueryKey = (options: Options<GetPromotionPictureData>) => createQueryKey('getPromotionPicture', options);
+
+/**
+ * A promotion's picture
+ *
+ * With w (320, 640 or 1280) a copy that wide; with v, the picture's version as its pictureUri carries it, the answer is immutable
+ */
+export const getPromotionPictureOptions = (options: Options<GetPromotionPictureData>) => queryOptions<GetPromotionPictureResponse, AxiosError<DefaultError>, GetPromotionPictureResponse, ReturnType<typeof getPromotionPictureQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPromotionPicture({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPromotionPictureQueryKey(options)
+});
+
+/**
+ * Set a promotion's picture: the owner's own design, or one the image model made (Admin only)
+ */
+export const uploadPromotionPictureMutation = (options?: Partial<Options<UploadPromotionPictureData>>): UseMutationOptions<UploadPromotionPictureResponse, AxiosError<UploadPromotionPictureError>, Options<UploadPromotionPictureData>> => {
+    const mutationOptions: UseMutationOptions<UploadPromotionPictureResponse, AxiosError<UploadPromotionPictureError>, Options<UploadPromotionPictureData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadPromotionPicture({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listPromotionsQueryKey = (options?: Options<ListPromotionsData>) => createQueryKey('listPromotions', options);
+
+/**
+ * Every promotion, newest first (Admin only)
+ */
+export const listPromotionsOptions = (options?: Options<ListPromotionsData>) => queryOptions<ListPromotionsResponse, AxiosError<DefaultError>, ListPromotionsResponse, ReturnType<typeof listPromotionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listPromotions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listPromotionsQueryKey(options)
+});
+
+/**
+ * Create a promotion; upload its picture next (Admin only)
+ */
+export const createPromotionMutation = (options?: Partial<Options<CreatePromotionData>>): UseMutationOptions<CreatePromotionResponse, AxiosError<CreatePromotionError>, Options<CreatePromotionData>> => {
+    const mutationOptions: UseMutationOptions<CreatePromotionResponse, AxiosError<CreatePromotionError>, Options<CreatePromotionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createPromotion({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete a promotion and its picture (Admin only)
+ */
+export const deletePromotionMutation = (options?: Partial<Options<DeletePromotionData>>): UseMutationOptions<DeletePromotionResponse, AxiosError<DefaultError>, Options<DeletePromotionData>> => {
+    const mutationOptions: UseMutationOptions<DeletePromotionResponse, AxiosError<DefaultError>, Options<DeletePromotionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deletePromotion({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Change a promotion (Admin only)
+ */
+export const updatePromotionMutation = (options?: Partial<Options<UpdatePromotionData>>): UseMutationOptions<UpdatePromotionResponse, AxiosError<UpdatePromotionError>, Options<UpdatePromotionData>> => {
+    const mutationOptions: UseMutationOptions<UpdatePromotionResponse, AxiosError<UpdatePromotionError>, Options<UpdatePromotionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updatePromotion({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Design a promotion's picture from a real photo
+ *
+ * The image model designs a tall promotional picture around the owner's photo (kept as it is), with the headline drawn in, in the brand's colours: up to three to pick from, as data: URLs. Nothing is saved: keep one by uploading it as the promotion's picture. The words may come out misspelled; ask again with a note (Admin only).
+ */
+export const designPromotionMutation = (options?: Partial<Options<DesignPromotionData>>): UseMutationOptions<DesignPromotionResponse, AxiosError<DesignPromotionError>, Options<DesignPromotionData>> => {
+    const mutationOptions: UseMutationOptions<DesignPromotionResponse, AxiosError<DesignPromotionError>, Options<DesignPromotionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await designPromotion({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 /**
  * Save a menu in one go
  *
@@ -250,6 +395,25 @@ export const importMenuMutation = (options?: Partial<Options<ImportMenuData>>): 
     const mutationOptions: UseMutationOptions<ImportMenuResponse, AxiosError<ImportMenuError>, Options<ImportMenuData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await importMenu({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Create a menu item with its customizations in one go
+ *
+ * Creates the item (and its category when it names a new one) with its customization groups and options in one transaction, and answers the id each option got for the reference the caller gave it. Repeating a request id returns the first call's result (Admin only).
+ */
+export const composeItemMutation = (options?: Partial<Options<ComposeItemData>>): UseMutationOptions<ComposeItemResponse, AxiosError<ComposeItemError>, Options<ComposeItemData>> => {
+    const mutationOptions: UseMutationOptions<ComposeItemResponse, AxiosError<ComposeItemError>, Options<ComposeItemData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await composeItem({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

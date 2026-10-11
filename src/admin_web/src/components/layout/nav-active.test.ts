@@ -116,6 +116,7 @@ describe('every page tab keeps its sidebar entry lit', () => {
     '/requests',
     '/menu',
     '/promos',
+    '/promotions',
     '/till/tickets',
     '/till/shifts',
     '/till/breakdown',
