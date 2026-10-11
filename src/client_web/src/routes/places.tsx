@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -109,12 +109,23 @@ function groupByKind(places: PlaceViewModel[], look: PlacesStyle): { heading?: T
   }))
 }
 
+/**
+ * The list's places in one panel, a hairline between them: many to a screen, read down like a list, where
+ * a card each made a stack of boxes. The cards and the grid's tiles stand on their own
+ */
+function PanelOf({ look, children }: { look: PlacesStyle; children: ReactNode }) {
+  if (look !== 'list') return <>{children}</>
+  return <div className='surface divide-border/60 flex flex-col divide-y overflow-hidden rounded-3xl'>{children}</div>
+}
+
 function PlaceSkeletons({ look, count }: { look: PlacesStyle; count: number }) {
   return (
     <div className={LIST_CLASS[look]}>
-      {Array.from({ length: count }, (_, i) => (
-        <PlaceCardSkeleton key={i} look={look} />
-      ))}
+      <PanelOf look={look}>
+        {Array.from({ length: count }, (_, i) => (
+          <PlaceCardSkeleton key={i} look={look} />
+        ))}
+      </PanelOf>
     </div>
   )
 }
@@ -316,6 +327,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                             </Recede>
                           </RiseItem>
                         )}
+                        <PanelOf look={look}>
                         {group.places.map((place) => (
                           <RiseItem
                             key={String(place.id)}
@@ -339,6 +351,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                             </Recede>
                           </RiseItem>
                         ))}
+                        </PanelOf>
                       </div>
                     ))}
                   </div>

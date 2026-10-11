@@ -266,7 +266,7 @@ const webExtras = {
   placesLayoutCards: { en: "Big cards", ar: "بطاقات كبيرة" },
   placesLayoutList: { en: "List", ar: "قائمة" },
   placesLayoutGrid: { en: "Grid, two a row", ar: "شبكة، اثنان في الصف" },
-  placesLayoutHint: { en: "How the places to book are shown. Big cards suit a few places; the list and the grid fit many on one screen, grouped by kind when there are rooms and tables.", ar: "طريقة عرض الأماكن المتاحة للحجز. البطاقات الكبيرة تناسب الأماكن القليلة؛ القائمة والشبكة تعرضان أماكن كثيرة في شاشة واحدة، مجمّعة حسب النوع عند وجود غرف وطاولات." },
+  placesLayoutHint: { en: "How the places to book are shown. Big cards suit a few places; the grid, light tiles two a row, a handful; the list, one panel of lines, many on one screen. The grid and the list group places by kind when there are rooms and tables.", ar: "طريقة عرض الأماكن المتاحة للحجز. البطاقات الكبيرة تناسب الأماكن القليلة؛ والشبكة، مربعات خفيفة اثنان في الصف، تناسب عددًا متوسطًا؛ والقائمة، لوحة واحدة من الأسطر، تعرض أماكن كثيرة في شاشة واحدة. الشبكة والقائمة تجمعان الأماكن حسب النوع عند وجود غرف وطاولات." },
   accentColor: { en: "Secondary", ar: "اللون الثانوي" },
   surfaceColor: { en: "Page", ar: "الصفحة" },
   brandColorHint: { en: "Buttons and highlights; the dock and dark cards take a deep shade of it. Text on it is picked for contrast, not set.", ar: "الأزرار والتمييز، ويأخذ الشريط السفلي والبطاقات الداكنة درجة عميقة منه. يُحدَّد لون النص عليه تلقائيًا ليبقى مقروءًا." },

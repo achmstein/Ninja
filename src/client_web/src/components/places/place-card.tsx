@@ -75,17 +75,18 @@ export function PlaceCard({
       layoutCrossfade={false}
       layout
       transition={springOpen}
-      style={{ borderRadius: look === 'list' ? 20 : look === 'grid' ? 24 : 28 }}
+      style={{ borderRadius: look === 'list' ? 0 : look === 'grid' ? 24 : 28 }}
       className={cn(
         'relative isolate overflow-hidden',
-        // A row is light whether free or not: its plus says it can be booked, where a whole list on the slab would shout
-        free && look !== 'list' ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
+        // A line of the list has no box of its own: the panel it is in is the card. A tile is light whether
+        // free or not (its green dot and its plus say it can be booked); a big card that is free is on the slab
+        look === 'list' ? 'text-foreground' : free && look === 'cards' ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
       )}
     >
       {look === 'list' ? (
         <PlaceRow place={place} tappable={tappable} open={open} onToggle={onToggle} />
       ) : look === 'grid' ? (
-        <PlaceTile place={place} free={free} tappable={tappable} open={open} onToggle={onToggle} />
+        <PlaceTile place={place} tappable={tappable} open={open} onToggle={onToggle} />
       ) : (
       <motion.button
         layout='position'
@@ -184,12 +185,13 @@ type FaceProps = {
 }
 
 /**
- * The place as a row: its kind in a square, then the name, where it stands, what it is and its rates, each
- * on its own line and whole (a name or a price cut short is no use), the plus at the end
+ * The place as a line of the list's panel: where it stands as a dot, the name over its rate, then the plus
+ * when it can be booked, or where it stands in words when it cannot
  */
 function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
   const t = useT()
   const localized = useLocalized()
+  const free = canHold(place)
   const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
   return (
     <motion.button
@@ -198,36 +200,41 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       disabled={!tappable}
       aria-expanded={tappable ? open : undefined}
       onClick={() => onToggle(place)}
-      whileTap={tappable && !open ? { scale: 0.98 } : undefined}
+      whileTap={tappable && !open ? { scale: 0.99 } : undefined}
       transition={spring}
-      className='flex min-h-16 w-full items-start gap-3 p-3 text-start disabled:cursor-default'
+      className='flex min-h-15 w-full items-center gap-3 ps-4 pe-3 py-3 text-start disabled:cursor-default'
     >
-      <span className='bg-muted grid size-11 shrink-0 place-items-center rounded-2xl'>
-        <PlaceIcon kind={Number(place.kind)} className='size-5' />
-      </span>
-      <span className='flex min-w-0 flex-1 flex-col gap-1'>
-        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full text-lg leading-tight break-words'>
+      <span className={cn('size-2 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
+      <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
+        <motion.span
+          layoutId={placeNameId(place.id)}
+          transition={springOpen}
+          className={cn('w-fit max-w-full truncate text-name font-bold', !free && 'text-muted-foreground')}
+        >
           {localized(place.name)}
         </motion.span>
-        <span className={cn('flex items-center gap-1.5 text-caption font-semibold', status.className)}>
-          <span className='size-1.5 rounded-full bg-current' />
-          {t(status.key)}
+        <span className='text-muted-foreground truncate text-caption tabular-nums'>
+          <TariffLine place={place} />
         </span>
-        {place.description && <span className='text-muted-foreground text-note'>{localized(place.description)}</span>}
-        <RateChips place={place} free={false} />
       </span>
-      {tappable && <OpenToggle open={open} className='slab mt-1 size-9' />}
+      {tappable ? (
+        <OpenToggle open={open} className='slab size-8' />
+      ) : (
+        <span className={cn('shrink-0 text-caption font-semibold', free ? 'text-emerald-600 dark:text-emerald-400' : status.className)}>{t(status.key)}</span>
+      )}
     </motion.button>
   )
 }
 
 /**
- * The place as a tile, two a row: where it stands and the plus on top, then the name, what it is and its
- * rates, whole, its kind faint behind
+ * The place as a small light tile, two a row: its kind in a circle and the plus on top, the name over where
+ * it stands and its rate at the foot. Every tile on the same light surface, a free one told by its green
+ * dot and its plus, so a handful of places read calm side by side
  */
-function PlaceTile({ place, free, tappable, open, onToggle }: FaceProps & { free: boolean }) {
+function PlaceTile({ place, tappable, open, onToggle }: FaceProps) {
   const t = useT()
   const localized = useLocalized()
+  const free = canHold(place)
   const status = placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
   return (
     <motion.button
@@ -238,32 +245,29 @@ function PlaceTile({ place, free, tappable, open, onToggle }: FaceProps & { free
       onClick={() => onToggle(place)}
       whileTap={tappable && !open ? { scale: 0.97 } : undefined}
       transition={spring}
-      className='relative flex min-h-31 w-full flex-col justify-between gap-3 p-4 text-start disabled:cursor-default'
+      className='flex min-h-37 w-full flex-col justify-between gap-4 p-4 text-start disabled:cursor-default'
     >
-      <PlaceIcon
-        kind={Number(place.kind)}
-        className={cn('pointer-events-none absolute -end-4 -bottom-5 -z-10 size-24 -rotate-12', free ? 'opacity-[0.12]' : 'opacity-[0.06]')}
-      />
       <span className='flex w-full items-center justify-between gap-2'>
-        <span
-          className={cn(
-            'flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-caption font-bold',
-            free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
-          )}
-        >
-          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
-          <span className='truncate'>{t(status.key)}</span>
+        <span className={cn('bg-muted grid size-10 shrink-0 place-items-center rounded-full', !free && 'text-muted-foreground')}>
+          <PlaceIcon kind={Number(place.kind)} className='size-4.5' />
         </span>
-        {tappable && <OpenToggle open={open} className='bg-background text-foreground size-8' />}
+        {tappable && <OpenToggle open={open} className='slab size-8' />}
       </span>
-      <span className='flex min-w-0 flex-col gap-1'>
-        <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading w-fit max-w-full text-lg leading-tight break-words'>
+      <span className='flex min-w-0 flex-col gap-0.5'>
+        <motion.span
+          layoutId={placeNameId(place.id)}
+          transition={springOpen}
+          className={cn('w-fit max-w-full text-name leading-tight font-bold break-words', !free && 'text-muted-foreground')}
+        >
           {localized(place.name)}
         </motion.span>
-        {place.description && (
-          <span className={cn('text-caption', free ? 'opacity-75' : 'text-muted-foreground')}>{localized(place.description)}</span>
-        )}
-        <RateChips place={place} free={free} />
+        <span className='text-muted-foreground flex min-w-0 items-center gap-1.5 text-caption'>
+          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
+          <span className={cn('shrink-0 font-semibold', free ? 'text-emerald-600 dark:text-emerald-400' : status.className)}>{t(status.key)}</span>
+          <span className='truncate tabular-nums'>
+            {place.tariff && tariffOptions(place.tariff).length > 0 && <>· <TariffLine place={place} /></>}
+          </span>
+        </span>
       </span>
     </motion.button>
   )
@@ -317,19 +321,19 @@ export function TariffLine({ place }: { place: Pick<PlaceViewModel, 'tariff'> })
 export function PlaceCardSkeleton({ look = 'cards' }: { look?: PlacesStyle }) {
   if (look === 'list') {
     return (
-      <div className='surface flex min-h-16 items-center gap-3 rounded-[1.25rem] p-3'>
-        <Skeleton className='size-11 rounded-2xl' />
+      <div className='flex min-h-15 items-center gap-3 ps-4 pe-3 py-3'>
+        <Skeleton className='size-2 rounded-full' />
         <div className='flex flex-1 flex-col gap-1.5'>
-          <Skeleton className='h-5 w-32' />
-          <Skeleton className='h-3.5 w-24' />
+          <Skeleton className='h-4 w-32' />
+          <Skeleton className='h-3 w-20' />
         </div>
       </div>
     )
   }
   if (look === 'grid') {
     return (
-      <div className='surface flex min-h-31 flex-col justify-between rounded-3xl p-4'>
-        <Skeleton className='h-5 w-16 rounded-full' />
+      <div className='surface flex min-h-37 flex-col justify-between rounded-3xl p-4'>
+        <Skeleton className='size-10 rounded-full' />
         <div className='flex flex-col gap-1.5'>
           <Skeleton className='h-5 w-24' />
           <Skeleton className='h-3.5 w-16' />

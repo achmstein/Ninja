@@ -222,14 +222,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                 for (var i = 0; i < 3; i++)
                   Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
               ],
+            // One panel, as the list is
             PlacesLayout.list => [
-                Column(
-                  spacing: 8,
-                  children: [
-                    for (var i = 0; i < 5; i++)
-                      Container(height: 64, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(20))),
-                  ],
-                ),
+                Container(height: 5 * 60, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(24))),
               ],
             PlacesLayout.grid => [
                 Column(
@@ -1264,7 +1259,25 @@ class PlacesLaidOut extends StatelessWidget {
 
   Widget _group(List<Place> group) {
     if (layout == PlacesLayout.list) {
-      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: 8, children: [for (final place in group) _row(place)]);
+      // One panel for the kind, a hairline between its places: many to a screen, read down like a list
+      return Builder(
+        builder: (context) {
+          final theme = context.theme;
+          return Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: theme.surface(radius: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (i, place) in group.indexed) ...[
+                  if (i > 0) Divider(height: 1, thickness: 1, indent: 36, color: theme.colors.border.withValues(alpha: 0.6)),
+                  _row(place),
+                ],
+              ],
+            ),
+          );
+        },
+      );
     }
     // Two a row; the open one takes a row to itself, its booking beneath it, and the rest pair on after it
     final rows = <Widget>[];
@@ -1396,10 +1409,11 @@ class _PlaceMeta extends ConsumerWidget {
   }
 }
 
-/// One place as a slim row: its kind in a rounded square, its name over its
-/// status and rate, and the plus when it can be booked. A tap opens the
-/// booking beneath the row, as the card does. A busy one reads quieter.
-class PlaceRow extends StatelessWidget {
+/// One place as a line of the list's panel: where it stands as a dot, its
+/// name over its rate, and the plus when it can be booked (its status in
+/// words when it cannot). No card of its own: the panel is the card, so a
+/// long list reads as one. A tap opens the booking beneath the line.
+class PlaceRow extends ConsumerWidget {
   final Place room;
   final bool canReserve;
   final bool open;
@@ -1409,27 +1423,24 @@ class PlaceRow extends StatelessWidget {
   const PlaceRow({super.key, required this.room, this.canReserve = true, this.open = false, this.onToggle, this.onDone});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final c = theme.colors;
     final free = room.canBookNow;
     final tappable = free && canReserve;
     final ink = free ? c.foreground : c.mutedForeground;
+    final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
+    final statusColor = free ? NinjaColors.success : placeStatusColor(room, canReserve, c);
     final top = Pressable(
       onTap: tappable ? onToggle : null,
-      scale: open ? 1 : 0.98,
+      scale: open ? 1 : 0.99,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 64),
+        constraints: const BoxConstraints(minHeight: 60),
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 12, 10),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(14)),
-                child: Icon(room.kind.icon, size: 20, color: ink),
-              ),
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1442,28 +1453,60 @@ class PlaceRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: ink)),
                     ),
-                    const SizedBox(height: 2),
-                    _PlaceMeta(room: room, canReserve: canReserve),
+                    if (rate.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        rate,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground, fontFeatures: NinjaTypography.tabular)),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              if (tappable) ...[
-                const SizedBox(width: 12),
-                _BookToggle(open: open, size: 36, fill: c.slab, ink: c.slabInk),
-              ],
+              const SizedBox(width: 12),
+              if (tappable)
+                _BookToggle(open: open, size: 32, fill: c.slab, ink: c.slabInk)
+              else
+                Text(
+                  placeStatusLabel(context, room.displayStatus),
+                  style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: statusColor)),
+                ),
             ],
           ),
         ),
       ),
     );
-    return _WithBooking(room: room, top: top, open: open, decoration: theme.surface(radius: 20), radius: 20, onDone: onDone);
+    return AnimatedSize(
+      duration: Motion.slow,
+      curve: Motion.enter,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          top,
+          if (open)
+            Reveal(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: c.background, borderRadius: BorderRadius.circular(18)),
+                child: HoldForm(place: room, onDone: (booked) => onDone?.call(booked)),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
-/// One place as a small tile, two a row: its status and the plus at the top,
-/// its name and rate at the foot, its kind drawn faint behind. A free one on
-/// the slab, as the card; open, it takes the row to itself, the booking beneath.
-class PlaceTile extends ConsumerWidget {
+/// One place as a small light tile, two a row: its kind in a circle and the
+/// plus on top, its name over where it stands and its rate at the foot. All
+/// the tiles on the same light surface, a free one told by its green dot and
+/// its plus, so a handful of places read calm side by side. Open, it takes
+/// the row to itself, the booking beneath.
+class PlaceTile extends StatelessWidget {
   final Place room;
   final bool canReserve;
   final bool open;
@@ -1473,107 +1516,56 @@ class PlaceTile extends ConsumerWidget {
   const PlaceTile({super.key, required this.room, this.canReserve = true, this.open = false, this.onToggle, this.onDone});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final c = theme.colors;
     final free = room.canBookNow;
     final tappable = free && canReserve;
-    final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
-    final face = Builder(
-      builder: (context) {
-        final theme = context.theme;
-        final c = theme.colors;
-        final statusColor = free ? NinjaColors.successOnSlab : placeStatusColor(room, canReserve, c);
-        return Stack(
-          clipBehavior: Clip.none,
-          // Passed through, so a tile stretched to its neighbour's height sets its name at the foot
-          fit: StackFit.passthrough,
-          children: [
-            PositionedDirectional(
-              end: -16,
-              bottom: -24,
-              child: Transform.rotate(
-                angle: -0.21,
-                child: Icon(room.kind.icon, size: 96, color: c.foreground.withValues(alpha: free ? 0.12 : 0.06)),
-              ),
-            ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 92),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: ShapeDecoration(color: free ? NinjaColors.success.withValues(alpha: 0.2) : c.muted, shape: const StadiumBorder()),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(width: 6, height: 6, decoration: BoxDecoration(color: free ? NinjaColors.success : statusColor, shape: BoxShape.circle)),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  placeStatusLabel(context, room.displayStatus),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: context.localeText(theme.typography.micro.copyWith(fontWeight: FontWeight.w700, color: statusColor)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      if (tappable) _BookToggle(open: open, size: 32, fill: c.foreground, ink: c.background),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        room.name.localized(context),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground)),
-                      ),
-                      if (rate.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          rate,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground, fontFeatures: NinjaTypography.tabular)),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    final theme = context.theme;
+    final ink = free ? c.foreground : c.mutedForeground;
     final top = Pressable(
       onTap: tappable ? onToggle : null,
-      scale: open ? 1 : 0.98,
-      child: Padding(padding: const EdgeInsets.all(16), child: free ? SlabInk(child: face) : face),
+      scale: open ? 1 : 0.97,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 116),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: c.muted, shape: BoxShape.circle),
+                    child: Icon(room.kind.icon, size: 18, color: ink),
+                  ),
+                  const Spacer(),
+                  if (tappable) _BookToggle(open: open, size: 32, fill: c.slab, ink: c.slabInk),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    room.name.localized(context),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: ink)),
+                  ),
+                  const SizedBox(height: 2),
+                  _PlaceMeta(room: room, canReserve: canReserve),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
-    return _WithBooking(
-      room: room,
-      top: top,
-      open: open,
-      decoration: free
-          ? BoxDecoration(color: theme.colors.slab, borderRadius: BorderRadius.circular(24), boxShadow: Ninja.slabShadow)
-          : theme.surface(radius: 24),
-      radius: 24,
-      onDone: onDone,
-    );
+    return _WithBooking(room: room, top: top, open: open, decoration: theme.surface(radius: 24), radius: 24, onDone: onDone);
   }
 }
 
