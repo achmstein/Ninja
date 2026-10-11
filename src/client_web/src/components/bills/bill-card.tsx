@@ -147,19 +147,6 @@ export function BillCard({
               <Odometer value={price(headline)} />
             </span>
           </div>
-          {stackSize > 0 && (
-            <button
-              type='button'
-              aria-expanded={fanned}
-              onClick={() => setFanned((f) => !f)}
-              className='bg-muted flex shrink-0 items-center gap-1 rounded-full py-1.5 ps-3 pe-2 text-caption font-semibold'
-            >
-              {rounds.length > 0 && t('ninjaRoundCount', { count: String(rounds.length) })}
-              <motion.span animate={{ rotate: fanned ? 180 : 0 }} transition={spring} className='grid place-items-center'>
-                <ChevronDown className='size-4' />
-              </motion.span>
-            </button>
-          )}
         </div>
 
         {stackSize > 0 && (
@@ -288,6 +275,25 @@ export function BillCard({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* The way to open and close it, where it opens: under the orders while they are stacked, under all of it once open */}
+        {stackSize > 0 && (
+          <button
+            type='button'
+            aria-expanded={fanned}
+            onClick={() => setFanned((f) => !f)}
+            className='text-muted-foreground -mt-1 flex h-9 items-center justify-center gap-1.5 rounded-full text-caption font-semibold'
+          >
+            {fanned
+              ? t('billHideDetails')
+              : rounds.length > 1
+                ? `${t('ninjaRoundCount', { count: String(rounds.length) })} · ${t('billShowDetails')}`
+                : t('billShowDetails')}
+            <motion.span animate={{ rotate: fanned ? 180 : 0 }} transition={spring} className='grid place-items-center'>
+              <ChevronDown className='size-4' />
+            </motion.span>
+          </button>
+        )}
       </Surface>
 
       {/* Paying from the phone, where the business takes it: tucked under the slab, as the order sheet tucks under the dock */}

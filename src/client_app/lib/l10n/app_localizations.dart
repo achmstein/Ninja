@@ -3392,6 +3392,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See what\'s on'**
   String get promoShowAgain;
+
+  /// No description provided for @billShowDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get billShowDetails;
+
+  /// No description provided for @billHideDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get billHideDetails;
 }
 
 class _AppLocalizationsDelegate

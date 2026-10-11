@@ -441,5 +441,7 @@
   "promoOrderNow": "اطلب الآن",
   "promoSeeMenu": "تصفّح القائمة",
   "promoBookNow": "احجز الآن",
-  "promoShowAgain": "اعرض العرض"
+  "promoShowAgain": "اعرض العرض",
+  "billShowDetails": "عرض التفاصيل",
+  "billHideDetails": "إخفاء التفاصيل"
 }

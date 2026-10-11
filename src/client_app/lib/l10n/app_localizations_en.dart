@@ -1879,4 +1879,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promoShowAgain => 'See what\'s on';
+
+  @override
+  String get billShowDetails => 'Show details';
+
+  @override
+  String get billHideDetails => 'Hide details';
 }

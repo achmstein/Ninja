@@ -557,6 +557,8 @@ export const messages = {
   promoSeeMenu: { en: "See the menu", ar: "شوف المنيو" },
   promoBookNow: { en: "Book now", ar: "احجز دلوقتي" },
   promoShowAgain: { en: "See what's on", ar: "شوف العرض" },
+  billShowDetails: { en: "Show details", ar: "اعرض التفاصيل" },
+  billHideDetails: { en: "Hide details", ar: "اخفي التفاصيل" },
 } as const satisfies Record<string, Message>
 
 /** Modern Standard Arabic, read instead of `ar` when the business speaks it. */
@@ -1003,4 +1005,6 @@ export const messagesArStandard: Partial<Record<keyof typeof messages, string | 
   promoSeeMenu: "تصفّح القائمة",
   promoBookNow: "احجز الآن",
   promoShowAgain: "اعرض العرض",
+  billShowDetails: "عرض التفاصيل",
+  billHideDetails: "إخفاء التفاصيل",
 }

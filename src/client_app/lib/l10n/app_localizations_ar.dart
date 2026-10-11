@@ -1867,6 +1867,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get promoShowAgain => 'شوف العرض';
+
+  @override
+  String get billShowDetails => 'اعرض التفاصيل';
+
+  @override
+  String get billHideDetails => 'اخفي التفاصيل';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -3379,4 +3385,10 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get promoShowAgain => 'اعرض العرض';
+
+  @override
+  String get billShowDetails => 'عرض التفاصيل';
+
+  @override
+  String get billHideDetails => 'إخفاء التفاصيل';
 }

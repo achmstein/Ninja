@@ -82,15 +82,17 @@ void main() {
     await tester.pumpWidget(_host(_bill(settled: true)));
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
-    expect(find.text('2 rounds'), findsOneWidget);
+    // The way to open it under the stack, saying how many it holds
+    expect(find.text('2 rounds · Show details'), findsOneWidget);
     // The newest round in full; the older one folded away
     expect(find.text('Waffle'), findsOneWidget);
     expect(find.text('Latte'), findsNothing);
     expect(find.text('Receipt'), findsNothing);
 
-    await tester.tap(find.text('2 rounds'));
+    await tester.tap(find.text('2 rounds · Show details'));
     await tester.pumpAndSettle();
     expect(find.text('Latte'), findsOneWidget);
+    expect(find.text('Hide details'), findsOneWidget);
     // Opened, the way to its receipt
     expect(find.text('Receipt'), findsOneWidget);
   });
@@ -118,7 +120,8 @@ void main() {
     await tester.pumpWidget(_host(_bill(settled: false), pending: [PendingRound(order, adding: false)]));
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
-    expect(find.text('3 rounds'), findsOneWidget);
+    // An open bill stands open: the way to fold it up
+    expect(find.text('Hide details'), findsOneWidget);
     expect(find.text('Waiting to be confirmed'), findsOneWidget);
     expect(find.text('Mint tea'), findsOneWidget);
   });

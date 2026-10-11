@@ -918,5 +918,7 @@
   "promoOrderNow": "Order now",
   "promoSeeMenu": "See the menu",
   "promoBookNow": "Book now",
-  "promoShowAgain": "See what's on"
+  "promoShowAgain": "See what's on",
+  "billShowDetails": "Show details",
+  "billHideDetails": "Hide details"
 }

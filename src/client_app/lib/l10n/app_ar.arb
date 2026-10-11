@@ -604,5 +604,7 @@
   "promoOrderNow": "اطلب دلوقتي",
   "promoSeeMenu": "شوف المنيو",
   "promoBookNow": "احجز دلوقتي",
-  "promoShowAgain": "شوف العرض"
+  "promoShowAgain": "شوف العرض",
+  "billShowDetails": "اعرض التفاصيل",
+  "billHideDetails": "اخفي التفاصيل"
 }
