@@ -66,6 +66,11 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
   final _section = ValueNotifier(0);
   int _sections = 0;
 
+  /// The whole menu's height and how much of its bottom the categories and the whole dock cover: the
+  /// list runs on under them, so what is read is the part above
+  double _listHeight = 0;
+  double _listCover = 0;
+
   /// The deck's column in view, and whether the deck is zoomed out to the whole menu
   int _column = 0;
   bool _grid = false;
@@ -226,11 +231,13 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     if (positions.isEmpty) return;
     // The line a heading must reach to light its chip: near the top, until the last half-screen of the
     // list, over which it slides down to the bottom. The last categories, whose headings can never reach
-    // the top, each light in turn as the list's end comes up, the last one at the end itself
+    // the top, each light in turn as the list's end comes up, the last one at the end itself. In the
+    // list's fractions of the part above the categories (seen), the rest being under them and the dock
+    final seen = _listHeight > 0 ? ((_listHeight - _listCover) / _listHeight).clamp(0.1, 1.0) : 1.0;
     final last = positions.where((p) => p.index == _sections).firstOrNull;
-    final left = last == null ? double.infinity : (last.itemTrailingEdge - 1).clamp(0.0, double.infinity);
+    final left = last == null ? double.infinity : ((last.itemTrailingEdge - seen) / seen).clamp(0.0, double.infinity);
     final ramp = (1 - left / 0.5).clamp(0.0, 1.0);
-    final line = 0.08 + (0.92 - 0.08) * ramp;
+    final line = (0.08 + (0.92 - 0.08) * ramp) * seen;
     var index = 0;
     for (final p in positions) {
       // Item 0 is the title; the sections follow it
@@ -486,6 +493,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final holdHintId = deck ? _hints(ready: staged && grouped.hasValue) : null;
     // The dock over the bottom of the page: the categories sit on it
     final dock = DockCover.of(context) ?? MediaQuery.paddingOf(context).bottom;
+    // Over the cards' peek while the tabs are asked back on the compact deck; else the deck stops above them
+    final under = sections.isEmpty ? 0.0 : (tabsOver ? _chipsHeight - DockMetrics.of(MediaQuery.sizeOf(context).height).tabs : _chipsHeight);
+    // The whole menu runs on under the categories and the dock, its end clear of them with the dock
+    // whole: its height never changes with the dock's tuck, which moved its end (the list's end kept at
+    // the end on every frame of the dock coming back, fighting a fling or a finger, and shook)
+    _listCover = MediaQuery.paddingOf(context).bottom + under;
 
     final body = grouped.when(
       skipLoadingOnRefresh: true,
@@ -524,24 +537,37 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
                     }
                     return false;
                   },
-                  child: ScrollablePositionedList.builder(
-                    itemScrollController: _scroll,
-                    itemPositionsListener: _positions,
-                    // The dock coming back at the end shortens the list: it stays at its end in the same frame
-                    physics: const StayAtEndPhysics(parent: AlwaysScrollableScrollPhysics()),
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    itemCount: sections.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        // The deck zoomed out has the way back to its cards by its title
-                        return deck ? _Head(title: l10n.ninjaWholeMenu, paused: !ordering, onBack: _zoomIn) : _Head(title: l10n.menu, paused: !ordering);
-                      }
-                      return _Section(section: sections[index - 1], layout: layout);
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      _listHeight = box.maxHeight;
+                      return ScrollablePositionedList.builder(
+                        itemScrollController: _scroll,
+                        itemPositionsListener: _positions,
+                        // The top bar coming back at the end shortens the list: it stays at its end in the same frame
+                        physics: const StayAtEndPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        padding: EdgeInsets.fromLTRB(16, 12, 16, 24 + _listCover),
+                        itemCount: sections.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            // The deck zoomed out has the way back to its cards by its title
+                            return deck ? _Head(title: l10n.ninjaWholeMenu, paused: !ordering, onBack: _zoomIn) : _Head(title: l10n.menu, paused: !ordering);
+                          }
+                          return _Section(section: sections[index - 1], layout: layout);
+                        },
+                      );
                     },
                   ),
                 ),
               ),
             ),
+    );
+
+    // The cards and their cues stand on the categories, which stand on the dock, going down and up with
+    // it; under the tabs, too, when they are asked back over the compact deck's peek
+    Widget onDock(Widget child) => Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [AnimatedPositioned(duration: tuckSettle, curve: Curves.easeOut, left: 0, right: 0, top: 0, bottom: dock + under, child: child)],
     );
 
     Widget fade(ZoomView view, Widget child) => IgnorePointer(
@@ -579,42 +605,44 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
                         if (showDeck)
                           fade(
                             ZoomView.deck,
-                            Column(
-                              children: [
-                                // On the cards, over the first one, and gone with the chrome past there
-                                if (!ordering)
-                                  AnimatedSize(
-                                    duration: tuckSettle,
-                                    curve: Curves.easeOut,
-                                    child: AnimatedOpacity(
-                                      opacity: compact ? 0 : 1,
+                            onDock(
+                              Column(
+                                children: [
+                                  // On the cards, over the first one, and gone with the chrome past there
+                                  if (!ordering)
+                                    AnimatedSize(
                                       duration: tuckSettle,
-                                      child: compact ? const SizedBox(width: double.infinity) : PausedNotice(title: l10n.orderingPausedTitle),
+                                      curve: Curves.easeOut,
+                                      child: AnimatedOpacity(
+                                        opacity: compact ? 0 : 1,
+                                        duration: tuckSettle,
+                                        child: compact ? const SizedBox(width: double.infinity) : PausedNotice(title: l10n.orderingPausedTitle),
+                                      ),
                                     ),
-                                  ),
-                                Expanded(
-                                  // The deck moves the dock itself (by the card it is on), not by how far it has scrolled
-                                  child: NotificationListener<ScrollNotification>(
-                                    onNotification: (_) => true,
-                                    // Two fingers closing on the cards zoom out to the whole menu
-                                    child: PinchWatch(
-                                      watch: Pinch.close,
-                                      onPinch: _zoomOut,
-                                      child: Deck(
-                                        columns: _columns,
-                                        column: _column.clamp(0, _columns.length - 1),
-                                        onColumnChange: _selectColumn,
-                                        rows: _rows,
-                                        onRowChange: _onRowChange,
-                                        holdHintId: holdHintId,
-                                        onQuickAdd: (_) {
-                                          if (_holdHint.pending) _holdHint.done();
-                                        },
+                                  Expanded(
+                                    // The deck moves the dock itself (by the card it is on), not by how far it has scrolled
+                                    child: NotificationListener<ScrollNotification>(
+                                      onNotification: (_) => true,
+                                      // Two fingers closing on the cards zoom out to the whole menu
+                                      child: PinchWatch(
+                                        watch: Pinch.close,
+                                        onPinch: _zoomOut,
+                                        child: Deck(
+                                          columns: _columns,
+                                          column: _column.clamp(0, _columns.length - 1),
+                                          onColumnChange: _selectColumn,
+                                          rows: _rows,
+                                          onRowChange: _onRowChange,
+                                          holdHintId: holdHintId,
+                                          onQuickAdd: (_) {
+                                            if (_holdHint.pending) _holdHint.done();
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         if (_flights.isNotEmpty)
@@ -627,15 +655,17 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
                 ),
                 // The fingertip acting the cue out over the cards, and its words under the top
                 Positioned.fill(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: _swipeHint.showing
-                        ? const GestureHint(key: ValueKey('swipe-tip'), kind: GestureKind.swipe)
-                        : _zoomHint.showing
-                        ? const GestureHint(key: ValueKey('pinch-tip'), kind: GestureKind.pinch)
-                        : holdHintId != null
-                        ? const GestureHint(key: ValueKey('hold-tip'), kind: GestureKind.hold)
-                        : const SizedBox.shrink(),
+                  child: onDock(
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: _swipeHint.showing
+                          ? const GestureHint(key: ValueKey('swipe-tip'), kind: GestureKind.swipe)
+                          : _zoomHint.showing
+                          ? const GestureHint(key: ValueKey('pinch-tip'), kind: GestureKind.pinch)
+                          : holdHintId != null
+                          ? const GestureHint(key: ValueKey('hold-tip'), kind: GestureKind.hold)
+                          : const SizedBox.shrink(),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -664,20 +694,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
         if (mounted && h != null && h != _chipsHeight) setState(() => _chipsHeight = h);
       });
     }
-    // Over the cards' peek while the tabs are asked back on the compact deck; else the deck stops above them
-    final under = sections.isEmpty ? 0.0 : (tabsOver ? _chipsHeight - DockMetrics.of(MediaQuery.sizeOf(context).height).tabs : _chipsHeight);
-
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Between the loading page and the menu, one fades out as the other fades in
-        AnimatedPositioned(
-          duration: tuckSettle,
-          curve: Curves.easeOut,
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: sections.isEmpty ? 0 : dock + under,
+        // Between the loading page and the menu, one fades out as the other fades in. The whole page:
+        // the list runs on under the categories and the dock, the cards stand on them
+        Positioned.fill(
           child: AnimatedSwitcher(duration: Motion.base, switchInCurve: Motion.enter, switchOutCurve: Motion.exit, child: content),
         ),
         if (sections.isNotEmpty)

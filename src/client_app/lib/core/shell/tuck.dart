@@ -60,23 +60,11 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   double _from = 0;
   DateTime _quietUntil = DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// Whether the page was last read at its end (client_web's use-tuck.ts `atEnd`)
-  bool _atEnd = false;
-
-  /// The tabs coming back at the end make the page's room under the dock grow (or, on the menu, its
-  /// list shorter): read at its end, the page stays at its end, so the last card or dish and its price
-  /// are not left under the dock
-  bool _onMetrics(ScrollMetricsNotification n) {
-    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
-    if (!_atEnd || n.metrics.pixels >= n.metrics.maxScrollExtent - 0.5) return false;
-    final position = Scrollable.maybeOf(n.context)?.position;
-    if (position == null) return false;
-    _quietUntil = DateTime.now().add(tuckSettle);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (position.hasPixels && position.pixels < position.maxScrollExtent) position.jumpTo(position.maxScrollExtent);
-    });
-    return false;
-  }
+  // No page is moved to its end here: the dock never changes a page's length or its list's height
+  // (DockCover), so there is nothing to keep. Kept here a frame after the layout, the page's end slid
+  // under the dock and back on every frame of a change; and, held across pages, the flag that the last
+  // one was at its end jumped the next one (the booking page after the menu's end) to its own end on
+  // every frame of the top bar coming back
 
   @override
   void didUpdateWidget(TuckOnScroll old) {
@@ -93,7 +81,6 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
     if (!widget.enabled || n.metrics.axis != Axis.vertical) return false;
     final y = n.metrics.pixels;
     final max = n.metrics.maxScrollExtent;
-    if (n.depth == 0) _atEnd = max > 0 && y >= max - 2;
     final tuck = ref.read(dockTuckProvider.notifier);
     final tucked = ref.read(dockTuckProvider);
     // Come to rest at the top or the end: the dock is whole again
@@ -120,17 +107,15 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   }
 
   @override
-  Widget build(BuildContext context) => NotificationListener<ScrollMetricsNotification>(
-        onNotification: _onMetrics,
-        child: NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child),
-      );
+  Widget build(BuildContext context) => NotificationListener<ScrollNotification>(onNotification: _onScroll, child: widget.child);
 }
 
 /// How much of the page's bottom the dock covers this moment: its row and
 /// its tabs, or the row alone while the tabs are tucked away. The page's
 /// own bottom padding is the whole dock's, whatever the tuck, so a tuck never
 /// changes a page's length; the menu's categories, which stand on the dock,
-/// read this to go down and up with it
+/// read this to go down and up with it, while its list runs on under them
+/// at the same height whatever the tuck
 class DockCover extends InheritedWidget {
   final double height;
 
@@ -143,9 +128,9 @@ class DockCover extends InheritedWidget {
 }
 
 /// A list at rest at its end stays at its end as its viewport changes size
-/// (the dock coming back shortens the menu's), in the same layout: kept
-/// there a frame later instead ([TuckOnScroll]'s jump), the list's end
-/// slid under the dock and back on every other frame, and the page juddered
+/// (the top bar coming back over the menu), in the same layout: kept there
+/// a frame later instead, the list's end slid under the dock and back on
+/// every other frame, and the page juddered
 class StayAtEndPhysics extends ScrollPhysics {
   const StayAtEndPhysics({super.parent});
 

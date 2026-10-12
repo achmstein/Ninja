@@ -62,6 +62,52 @@ MenuItem _dish(int id) => MenuItem(
 
 late ProviderContainer _container;
 
+/// Another tab in the menu's place (the booking page), a page longer than the screen
+final _onBooking = ValueNotifier(false);
+final _bookingScroll = ScrollController();
+
+class _Booking extends StatelessWidget {
+  const _Booking();
+  @override
+  Widget build(BuildContext context) => ListView(
+    controller: _bookingScroll,
+    padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+    children: [for (var i = 0; i < 30; i++) SizedBox(height: 80, child: Text('Place $i'))],
+  );
+}
+
+/// Flings the menu down until a fling reaches its end and the dock has come back there, checking every
+/// frame on the way: once the dock is coming back the page only goes up with it, the top bar stays up,
+/// and the list runs to the page's bottom whatever the dock does (its height never follows the tuck)
+Future<int> _flingToEnd(WidgetTester tester) async {
+  final last = find.text('Dish 48');
+  final list = find.descendant(of: find.byType(MenuScreen), matching: find.byType(Scrollable)).first;
+  var ends = 0;
+  for (var k = 0; k < 5; k++) {
+    // The dock's quiet window after it moves runs on the wall clock
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 350)));
+    await tester.fling(find.byType(MenuScreen), const Offset(0, -900), 6000);
+    double? was;
+    var tucked = false;
+    var back = false;
+    for (var f = 0; f < 360; f++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(tester.getBottomLeft(list).dy, tester.getBottomLeft(find.byType(MenuScreen)).dy, reason: 'frame $f of fling $k: the list follows the dock');
+      if (_container.read(dockTuckProvider)) tucked = true;
+      if (last.evaluate().isEmpty) continue;
+      final y = tester.getTopLeft(last).dy;
+      if (tucked && !_container.read(dockTuckProvider)) {
+        if (back && was != null) expect(y, lessThanOrEqualTo(was + 0.5), reason: 'frame $f of fling $k moved the page back down');
+        back = true;
+        expect(_container.read(topBarHiddenProvider), isTrue, reason: 'the bar came back at the end');
+      }
+      was = y;
+    }
+    if (back) ends++;
+  }
+  return ends;
+}
+
 /// The shell's part that moves with a scroll (main_scaffold.dart): the top bar's slot above the page,
 /// the dock's room under it, tucking and coming back
 class _Shell extends ConsumerWidget {
@@ -79,7 +125,13 @@ class _Shell extends ConsumerWidget {
             Expanded(
               child: MediaQuery(
                 data: media.copyWith(padding: media.padding.copyWith(top: 0, bottom: 68.0 + 56 + 8)),
-                child: DockCover(height: dockHeight, child: const MenuScreen()),
+                child: DockCover(
+                  height: dockHeight,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _onBooking,
+                    builder: (context, booking, _) => booking ? const _Booking() : const MenuScreen(),
+                  ),
+                ),
               ),
             ),
           ],
@@ -127,40 +179,38 @@ Widget _host(TargetPlatform platform) {
 }
 
 void main() {
+  setUp(() {
+    _onBooking.value = false;
+    SharedPreferences.setMockInitialValues({hintsStorageKey: ['swipe', 'zoom', 'holdAdd']});
+  });
+
   for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
     testWidgets('a fling to the end settles without shaking (${platform.name})', (tester) async {
-      SharedPreferences.setMockInitialValues({hintsStorageKey: ['swipe', 'zoom', 'holdAdd']});
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(_host(platform));
       await tester.pump(const Duration(milliseconds: 800));
-      final last = find.text('Dish 48');
-      var ends = 0;
-      // Flings down until the end is reached: each one that tucks the dock and comes to the end is watched
-      for (var k = 0; k < 5; k++) {
-        // The dock's quiet window after it moves runs on the wall clock
-        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 350)));
-        await tester.fling(find.byType(MenuScreen), const Offset(0, -900), 6000);
-        double? was;
-        var tucked = false;
-        var back = false;
-        for (var f = 0; f < 360; f++) {
-          await tester.pump(const Duration(milliseconds: 16));
-          if (_container.read(dockTuckProvider)) tucked = true;
-          if (last.evaluate().isEmpty) continue;
-          final y = tester.getTopLeft(last).dy;
-          // Once the dock is coming back the page only goes up with it, and the top bar stays up
-          if (tucked && !_container.read(dockTuckProvider)) {
-            if (back && was != null) expect(y, lessThanOrEqualTo(was + 0.5), reason: 'frame $f of fling $k moved the page back down');
-            back = true;
-            expect(_container.read(topBarHiddenProvider), isTrue, reason: 'the bar came back at the end');
-          }
-          was = y;
-        }
-        if (back) ends++;
-      }
-      expect(ends, greaterThan(0), reason: 'no fling reached the end');
+      expect(await _flingToEnd(tester), greaterThan(0), reason: 'no fling reached the end');
       expect(_container.read(dockTuckProvider), isFalse);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+    });
+
+    // The shell outlives its pages: that the menu was last read at its end once jumped the next page to
+    // its own end on every frame of the top bar coming back
+    testWidgets('the page opened after the menu\'s end stays where it starts (${platform.name})', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(_host(platform));
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(await _flingToEnd(tester), greaterThan(0), reason: 'no fling reached the end');
+      // Another tab: it starts with its bar (main_scaffold.dart)
+      _onBooking.value = true;
+      _container.read(topBarHiddenProvider.notifier).set(false);
+      for (var f = 0; f < 60; f++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(_bookingScroll.offset, 0, reason: 'frame $f moved the booking page');
+      }
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 3));
     });
