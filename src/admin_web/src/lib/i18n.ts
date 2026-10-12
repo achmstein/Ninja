@@ -576,7 +576,7 @@ const webExtras = {
   liveDescription: { en: "What needs someone right now: orders to confirm and tables calling.", ar: "ما يحتاج أحدًا الآن: طلبات للتأكيد وطاولات تنادي." },
   waiterCalls: { en: "Waiter calls", ar: "نداءات الويتر" },
   accountsNav: { en: "Suppliers & partners", ar: "الموردون والشركاء" },
-  dishesTab: { en: "Dishes", ar: "الأصناف" },
+  dishesTab: { en: "Items", ar: "الأصناف" },
   offersTab: { en: "Offers & codes", ar: "العروض والأكواد" },
   // Promotions: the popup the customer app opens with, a picture designed from the owner's real photo
   promotionsTab: { en: "Promotions", ar: "الإعلانات" },
