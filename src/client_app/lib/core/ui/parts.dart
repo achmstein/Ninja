@@ -17,9 +17,19 @@ class SlabCard extends StatelessWidget {
 
   const SlabCard({super.key, required this.child, this.padding = const EdgeInsets.all(20)});
 
+  /// Whether [context] is on the slab's own colour already (a sheet, the dock, a slab card), where a slab
+  /// card has no edge to show
+  static bool on(BuildContext context) {
+    final c = context.theme.colors;
+    return c.background == c.slab;
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.theme.colors;
+    // On the slab already (the room's sheet, the bills' sheet) a slab card showed only as its padding: what
+    // is in it stands flat, in line with what is beside it (the room's request tiles, the sheet's title)
+    if (on(context)) return child;
     return Container(
       padding: padding,
       decoration: BoxDecoration(color: c.slab, borderRadius: BorderRadius.circular(Ninja.cardRadius), boxShadow: Ninja.slabShadow),

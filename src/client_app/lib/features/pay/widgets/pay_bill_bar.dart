@@ -55,7 +55,8 @@ class PayBillBar extends ConsumerWidget {
         );
 
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 18, top: 8),
+      // Under the bill's slab on a page; on a sheet, where the bill stands flat, in line with it
+      padding: EdgeInsetsDirectional.only(start: SlabCard.on(context) ? 0 : 18, top: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
