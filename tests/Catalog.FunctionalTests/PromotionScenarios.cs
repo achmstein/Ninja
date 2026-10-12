@@ -111,7 +111,7 @@ public sealed class PromotionScenarios
         var branch = NewBranch();
         var (status, detail) = await Admin.RefusedAsync(HttpMethod.Post, Promotions(), Request(branch, link: "Item", linkId: 987654));
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
-        Assert.Contains("dish", detail);
+        Assert.Contains("item", detail);
 
         (status, detail) = await Admin.RefusedAsync(HttpMethod.Post, Promotions(), new { headline = new { en = " " }, branchIds = new[] { branch } });
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
