@@ -290,7 +290,7 @@ public static class PromotionApi
         if (link is null)
             return "That is not somewhere the button can go.";
         if (link == PromotionLink.Item && (request.LinkId is not { } item || !await context.CatalogItems.AnyAsync(i => i.Id == item)))
-            return "Pick the dish the button opens.";
+            return "Pick the item the button opens.";
         if (link == PromotionLink.Category && (request.LinkId is not { } category || !await context.CatalogTypes.AnyAsync(c => c.Id == category)))
             return "Pick the category the button opens.";
         return null;
