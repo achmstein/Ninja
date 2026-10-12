@@ -462,6 +462,7 @@ export type SuggestCustomizationsRequest = {
     price?: number | string;
     existingGroups?: null | Array<LocalizedText>;
     languages?: null | string;
+    note?: null | string;
 };
 
 export type SuggestCustomizationsResponse = {

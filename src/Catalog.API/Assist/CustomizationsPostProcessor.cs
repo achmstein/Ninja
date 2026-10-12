@@ -16,6 +16,7 @@ public static partial class CustomizationsPostProcessor
     public const int MaxGroups = 5;
     public const int MaxOptions = 8;
     public const int MaxNameLength = 60;
+    public const int MaxNoteLength = 300;
 
     /// <summary>The name has text and is within the cap; the reason when not.</summary>
     public static string? Validate(SuggestCustomizationsRequest request)
@@ -25,6 +26,9 @@ public static partial class CustomizationsPostProcessor
 
         if ((request.Name.En?.Length ?? 0) > LocalizerPostProcessor.MaxNameLength || (request.Name.Ar?.Length ?? 0) > LocalizerPostProcessor.MaxNameLength)
             return $"The name is longer than {LocalizerPostProcessor.MaxNameLength} characters.";
+
+        if ((request.Note?.Length ?? 0) > MaxNoteLength)
+            return $"Keep the instructions under {MaxNoteLength} characters.";
 
         return null;
     }

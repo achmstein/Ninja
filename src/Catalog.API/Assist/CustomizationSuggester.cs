@@ -44,7 +44,8 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
                 request.Price),
             ExistingGroups: (request.ExistingGroups ?? []).Select(Label).ToList(),
             Examples: PickExamples(examples).Select(c => new CustomizationExample(Label(c.CatalogItem?.Name ?? new LocalizedText()), ToResult(c))).ToList(),
-            Languages: ContentLanguages.Normalize(request.Languages));
+            Languages: ContentLanguages.Normalize(request.Languages),
+            Note: request.Note?.Trim() ?? string.Empty);
 
         var agent = factory.Create(Definition);
         var messages = new List<ChatMessage>
@@ -91,9 +92,13 @@ public sealed class CustomizationSuggester(INinjaAgentFactory factory)
         You propose the customization groups a customer picks from when ordering one item from the menu of a café, restaurant or kitchen in
         Egypt: size, sugar level, roast, milk, type, flavor, extras. The user message is a JSON object with the item
         (name, description, category, price in Egyptian pounds), the names of the groups the item already has,
-        examples of groups from other items on the same menu, and "languages".
+        examples of groups from other items on the same menu, "languages", and "note": the owner's own instructions,
+        often empty.
         {ContentLanguages.PromptRule}
         Rules:
+        - When "note" has text, it comes first: propose the groups, options, defaults and prices it asks for, as it
+          words them, even where the examples or the rules below would differ, and leave out what it says to leave
+          out. Fill in only what it does not say. It may be in Arabic or English; the groups still follow "languages".
         - Propose only what makes sense for this item: a Turkish coffee gets roast, sugar and cup; a juice gets size
           and ice; a bottled drink or a slice of cake may need nothing — then answer with an empty groups list.
         - Follow the examples: their voice, their wording, their prices. Reuse an example group as it is when it fits

@@ -107,6 +107,8 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   // asking again replaces them
   const assist = useCustomizationsAssist()
   const [drafts, setDrafts] = useState<DraftGroup[]>([])
+  // The owner's own word to the assistant: what to propose, followed over the menu's examples
+  const [note, setNote] = useState('')
   const [addingDraft, setAddingDraft] = useState<number | 'all' | null>(null)
   const editingDraft =
     editing !== null && typeof editing === 'object' ? editing.draft : null
@@ -163,6 +165,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
         catalogTypeId: toNumber(item.catalogTypeId),
         price: toNumber(base.price),
         existingGroups: groups.map((group) => group.name),
+        note,
       })
       setDrafts(result.groups.map(fromProposal))
       setEditing(null)
@@ -511,6 +514,21 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               </AiButton>
             )}
           </div>
+        )}
+        {editing !== 'new' && assist.available && (
+          <Input
+            className='mt-2'
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 300))}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return
+              e.preventDefault()
+              if (!assist.isPending && addingDraft == null) void askAssistant()
+            }}
+            placeholder={t('assistCustomizationsNotePlaceholder')}
+            aria-label={t('assistCustomizationsNote')}
+            disabled={assist.isPending}
+          />
         )}
       </div>
 

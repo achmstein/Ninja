@@ -595,6 +595,8 @@ const webExtras = {
   promotionUploadOwn: { en: "Upload my own design", ar: "ارفع تصميمي" },
   promotionYourPhoto: { en: "Your photo", ar: "صورتك" },
   promotionWriteHeadlineFirst: { en: "Write the headline first", ar: "اكتب العنوان أولًا" },
+  assistCustomizationsNote: { en: "What should Ninja suggest?", ar: "ماذا يقترح نينجا؟" },
+  assistCustomizationsNotePlaceholder: { en: "Optional: “sizes small, medium, large; oat milk +15”", ar: "اختياري: «صغير ووسط وكبير؛ حليب شوفان +١٥»" },
   promotionNotePlaceholder: { en: "Anything to change? “warmer”, “fix the spelling”…", ar: "تريد تغيير شيء؟ «ألوان أدفأ»، «صحّح الإملاء»…" },
   promotionDesign: { en: "Design", ar: "صمّم" },
   promotionDesignAgain: { en: "Design again", ar: "صمّم مرة أخرى" },

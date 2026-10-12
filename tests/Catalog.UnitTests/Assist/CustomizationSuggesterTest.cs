@@ -86,6 +86,14 @@ public class CustomizationSuggesterTest
     }
 
     [TestMethod]
+    public void The_owners_instructions_ride_along_while_short()
+    {
+        var espresso = new LocalizedText("Espresso", null);
+        Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(espresso, Note: "Single and double only, no sugar group")));
+        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(espresso, Note: new string('x', CustomizationsPostProcessor.MaxNoteLength + 1))));
+    }
+
+    [TestMethod]
     public void Off_without_a_chat_client()
     {
         var services = new ServiceCollection().BuildServiceProvider();

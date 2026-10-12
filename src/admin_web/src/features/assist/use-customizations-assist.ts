@@ -22,6 +22,8 @@ type SuggestArgs = {
   price?: number
   /** Groups the item already has, so none is proposed twice */
   existingGroups?: (LocalizedText | null | undefined)[]
+  /** The owner's own instructions, followed over the menu's examples */
+  note?: string
 }
 
 /**
@@ -54,6 +56,7 @@ export function useCustomizationsAssist() {
         name ? [name] : []
       ),
       languages,
+      note: args.note?.trim() || null,
     }
     return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
   }
