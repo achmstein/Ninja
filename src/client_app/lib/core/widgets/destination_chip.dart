@@ -92,10 +92,9 @@ class DestinationChip extends ConsumerWidget {
 
 /// Waiter or the bill, from a table: the room's tiles, for the customer who
 /// scanned a table sticker, each saying where its request stands
-Future<void> showPlaceRequests(BuildContext context, OrderDestination destination, {RowOpen? fromRow}) {
+Future<void> showPlaceRequests(BuildContext context, OrderDestination destination) {
   return showNinjaSheet<void>(
     context: context,
-    fromRow: fromRow,
     // The table first (where, the waiter, the bill, the way to pay), then its bills
     builder: (context) => Consumer(
       builder: (context, ref, _) => Column(

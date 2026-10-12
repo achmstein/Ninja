@@ -1,9 +1,6 @@
-import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
-import '../../features/cart/widgets/tray_model.dart' show DockMetrics, trayOpensAfterDrag;
 import '../shell/tuck.dart';
 import '../motion/motion.dart';
 import '../theme/ninja_theme.dart';
@@ -18,14 +15,12 @@ import '../theme/theme_provider.dart';
 /// pushed over the tabs) it rises from the bottom and goes back down. It is pulled away by its handle (past 96 px, or
 /// flicked), or closed by a tap on the dimmed page. Everything in it is set
 /// in the dark scheme, so any part used inside reads on it. The keyboard
-/// lifts it. Opened from the dock's row ([fromRow]) it comes out of the row
-/// as the order comes out of the tray's ([RowOpen]).
+/// lifts it.
 Future<T?> showNinjaSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool dismissible = true,
   EdgeInsetsGeometry padding = const EdgeInsets.fromLTRB(20, 0, 20, 20),
-  RowOpen? fromRow,
 }) {
   // Over everything, the dock too: on a tab's own navigator the sheet would open under the dock
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -33,44 +28,9 @@ Future<T?> showNinjaSheet<T>({
     builder: builder,
     dismissible: dismissible,
     padding: padding,
-    row: fromRow,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
   ));
-}
-
-/// A sheet opened out of the dock's row (the bill's, dock_bill.dart) moves as
-/// the order does out of the tray's row: it rises out of the row's top edge
-/// on the order's spring, the dock under it as it was, and folds back down
-/// into it. Tapped, it springs open; pulled up by the row ([held]), it
-/// follows the finger from the first pixel and on letting go settles open
-/// or shut by the order's own rule ([trayOpensAfterDrag]).
-class RowOpen {
-  /// Opened under a finger: it stands where [update] puts it until [end]
-  final bool held;
-
-  RowOpen({this.held = false});
-
-  _NinjaSheetRoute<dynamic>? _route;
-  double _dragged = 0;
-
-  /// The finger moved [dy] (down positive)
-  void update(double dy) {
-    _dragged += dy;
-    _route?._follow(dy);
-  }
-
-  /// The finger let go at [velocity] (down positive)
-  void end(double velocity) => _route?._settle(trayOpensAfterDrag(false, _dragged, velocity), velocity);
-}
-
-/// The dock's slab where it stands on the screen: none while it is tucked away below the screen's edge
-Rect? _dockRect(double screenHeight) {
-  final box = dockSlabKey.currentContext?.findRenderObject();
-  if (box is! RenderBox || !box.attached || !box.hasSize) return null;
-  final rect = box.localToGlobal(Offset.zero) & box.size;
-  if (rect.height < 24 || rect.top >= screenHeight - 8) return null;
-  return rect;
 }
 
 class _NinjaSheetRoute<T> extends PopupRoute<T> {
@@ -79,91 +39,15 @@ class _NinjaSheetRoute<T> extends PopupRoute<T> {
   final EdgeInsetsGeometry padding;
   final CapturedThemes capturedThemes;
 
-  /// Opened out of the dock's row, and the dock where it stood then: none, it opens as any sheet
-  final RowOpen? row;
-  Rect? _rowDock;
-
   _NinjaSheetRoute({
     required this.builder,
     required this.dismissible,
     required this.padding,
     required this.capturedThemes,
     required String barrierLabel,
-    this.row,
   }) : _barrierLabel = barrierLabel;
 
   final String _barrierLabel;
-
-  /// The sheet itself, whose height is how far a finger takes it from shut to open
-  final _sheet = GlobalKey(debugLabel: 'sheet');
-  double get _travel => _sheet.currentContext?.size?.height ?? 320;
-
-  /// How fast the finger let go (down positive), for the spring shutting it to start from
-  double _letGo = 0;
-
-  /// Out of the row and moving under the order's spring: not under reduced motion, where it simply fades
-  bool get _fromRow => _rowDock != null;
-  bool get _springs => _fromRow && !(MediaQuery.maybeDisableAnimationsOf(navigator!.context) ?? false);
-
-  void _springTo(double target, double velocity) {
-    final spring = SpringSimulation(Motion.springTray, controller!.value, target, velocity, tolerance: const Tolerance(distance: 0.001, velocity: 0.01));
-    if (target <= 0) {
-      controller!.animateBackWith(spring);
-      return;
-    }
-    // Come to rest within the spring's tolerance: the last hair of the way, so it stands where it belongs
-    controller!.animateWith(spring).whenComplete(() {
-      if (isActive && controller!.value != 1) controller!.value = 1;
-    });
-  }
-
-  @override
-  TickerFuture didPush() {
-    final pushed = super.didPush();
-    final row = this.row;
-    if (row != null) {
-      row._route = this;
-      _rowDock = _dockRect(MediaQuery.sizeOf(navigator!.context).height);
-      if (row.held) {
-        // Under the finger from its first pixel
-        controller!
-          ..stop()
-          ..value = 0;
-        navigator!.didStartUserGesture();
-      } else if (_springs) {
-        _springTo(1, 0);
-      }
-    }
-    return pushed;
-  }
-
-  @override
-  bool didPop(T? result) {
-    final popped = super.didPop(result);
-    if (_springs) _springTo(0, -_letGo / _travel);
-    _letGo = 0;
-    return popped;
-  }
-
-  /// A finger on the row or the sheet's handle moved it [dy] (down positive)
-  void _follow(double dy) {
-    if (!isActive) return;
-    controller!.value = (controller!.value - dy / _travel).clamp(0.0, 1.0);
-  }
-
-  /// The finger let go: [open] it springs up, else it folds back into the row
-  void _settle(bool open, double velocity) {
-    if (!isActive) return;
-    if (navigator!.userGestureInProgress) navigator!.didStopUserGesture();
-    if (open && _springs) {
-      _springTo(1, -velocity / _travel);
-    } else if (open) {
-      controller!.value = 1;
-    } else {
-      _letGo = velocity;
-      isCurrent ? navigator!.pop() : navigator!.removeRoute(this);
-    }
-  }
 
   @override
   Color? get barrierColor => null;
@@ -198,55 +82,24 @@ class _Scrim extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final animation = route.animation!;
-    // Out of the dock's row, the dock stays as it was under it, as under the open order
-    final dock = route is _NinjaSheetRoute ? (route as _NinjaSheetRoute)._rowDock : null;
     return GestureDetector(
       onTap: dismissible ? () => Navigator.of(context).maybePop() : null,
       child: AnimatedBuilder(
         animation: animation,
         builder: (context, _) {
           final t = animation.value.clamp(0.0, 1.0);
-          final scrim = BackdropFilter(
+          return BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 2 * t, sigmaY: 2 * t),
             child: ColoredBox(color: Ninja.sheetScrim.withValues(alpha: Ninja.sheetScrim.a * t), child: const SizedBox.expand()),
           );
-          return dock == null ? scrim : ClipPath(clipper: _AllBut(dock), child: scrim);
         },
       ),
     );
   }
 }
 
-/// The whole screen but the dock's slab
-class _AllBut extends CustomClipper<Path> {
-  final Rect hole;
-
-  const _AllBut(this.hole);
-
-  @override
-  Path getClip(Size size) => Path()
-    ..fillType = PathFillType.evenOdd
-    ..addRect(Offset.zero & size)
-    ..addRRect(RRect.fromRectAndRadius(hole, const Radius.circular(Ninja.cardRadius)));
-
-  @override
-  bool shouldReclip(_AllBut old) => old.hole != hole;
-}
-
-/// The sheet's own box, and all round it but under it: what is lower than its bottom edge (the row it
-/// comes out of) is not drawn, its shadow above and at the sides is
-class _ClipUnder extends CustomClipper<Rect> {
-  const _ClipUnder();
-
-  @override
-  Rect getClip(Size size) => Rect.fromLTRB(-64, -64, size.width + 64, size.height);
-
-  @override
-  bool shouldReclip(_ClipUnder old) => false;
-}
-
 class _SheetFrame extends StatefulWidget {
-  final _NinjaSheetRoute<dynamic> route;
+  final PopupRoute<dynamic> route;
   final EdgeInsetsGeometry padding;
   final WidgetBuilder builder;
 
@@ -273,36 +126,16 @@ class _SheetFrameState extends State<_SheetFrame> {
   }
 
   /// The dock where it stands now: none while it is tucked away below the screen's edge
-  Rect? _dockNow() => _dockRect(MediaQuery.sizeOf(context).height);
-
-  /// Out of the row, the handle moves the sheet itself, as the open order's does: down it goes with the
-  /// finger, and let go it shuts or springs back up by the order's rule
-  double _pulled = 0;
-
-  void _start(DragStartDetails _) {
-    if (widget.route._fromRow) {
-      _pulled = 0;
-      widget.route.navigator?.didStartUserGesture();
-      return;
-    }
-    setState(() => _dragging = true);
-  }
-
-  void _update(DragUpdateDetails d) {
-    if (widget.route._fromRow) {
-      _pulled += d.delta.dy;
-      widget.route._follow(d.delta.dy);
-      return;
-    }
-    setState(() => _drag = (_drag + d.delta.dy).clamp(-4, double.infinity));
+  Rect? _dockNow() {
+    final box = dockSlabKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    if (rect.height < 24 || rect.top >= MediaQuery.sizeOf(context).height - 8) return null;
+    return rect;
   }
 
   void _end(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    if (widget.route._fromRow) {
-      widget.route._settle(trayOpensAfterDrag(true, _pulled, velocity), velocity);
-      return;
-    }
     setState(() => _dragging = false);
     if (_drag > 96 || velocity > 600) {
       Navigator.of(context).maybePop();
@@ -318,13 +151,7 @@ class _SheetFrameState extends State<_SheetFrame> {
     final bottom = keyboard > 0 ? keyboard + 8 : (media.viewPadding.bottom > 8 ? media.viewPadding.bottom : 8.0);
     final animation = widget.route.animation!;
     final reduced = reduceMotion(context);
-    // Out of the dock's row: on the row's top edge, as wide as the dock, a gap over it
-    final row = widget.route._rowDock;
-    final rowBottom = row == null ? 0.0 : math.max(media.size.height - row.top + DockMetrics.inset, keyboard + 8);
-    final maxHeight = row != null
-        ? media.size.height - rowBottom - media.padding.top - 8
-        : (media.size.height - bottom) * 0.88 - (keyboard > 0 ? 8 : 0);
-    final morph = !reduced && _dock != null && row == null;
+    final morph = !reduced && _dock != null;
 
     final sheet = DarkScope(
       child: Builder(
@@ -333,8 +160,7 @@ class _SheetFrameState extends State<_SheetFrame> {
           return Material(
             type: MaterialType.transparency,
             child: Container(
-              key: widget.route._sheet,
-              constraints: BoxConstraints(maxHeight: maxHeight),
+              constraints: BoxConstraints(maxHeight: (media.size.height - bottom) * 0.88 - (keyboard > 0 ? 8 : 0)),
               decoration: BoxDecoration(
                 color: c.background,
                 borderRadius: BorderRadius.circular(Ninja.sheetRadius),
@@ -352,8 +178,8 @@ class _SheetFrameState extends State<_SheetFrame> {
                   // The handle the sheet is pulled down by
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onVerticalDragStart: _start,
-                    onVerticalDragUpdate: _update,
+                    onVerticalDragStart: (_) => setState(() => _dragging = true),
+                    onVerticalDragUpdate: (d) => setState(() => _drag = (_drag + d.delta.dy).clamp(-4, double.infinity)),
                     onVerticalDragEnd: _end,
                     child: SizedBox(
                       height: 28,
@@ -383,27 +209,6 @@ class _SheetFrameState extends State<_SheetFrame> {
         },
       ),
     );
-
-    if (row != null) {
-      // Out of the row, under the order's spring: drawn down by how far it is from open, and nothing of it
-      // under its bottom edge, so it rises out of the row's top as the order does
-      return Align(
-        alignment: Alignment.bottomCenter,
-        child: Padding(
-          padding: EdgeInsets.only(left: row.left, right: media.size.width - row.right, bottom: rowBottom),
-          child: AnimatedBuilder(
-            animation: animation,
-            child: sheet,
-            builder: (context, child) => reduced
-                ? Opacity(opacity: animation.value.clamp(0.0, 1.0), child: child)
-                : ClipRect(
-                    clipper: const _ClipUnder(),
-                    child: FractionalTranslation(translation: Offset(0, 1 - animation.value), child: child),
-                  ),
-          ),
-        ),
-      );
-    }
 
     return Align(
       alignment: Alignment.bottomCenter,

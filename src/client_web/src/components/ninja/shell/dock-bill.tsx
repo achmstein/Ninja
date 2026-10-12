@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Bike, Check, ChefHat, ChevronUp, CircleHelp, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
@@ -15,7 +14,7 @@ import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { TableView } from '@/components/places/table-view'
 import { RoomView } from '@/components/places/room-view'
 import { formatClock, useSecondTick } from '@/lib/clock'
-import { rowPull, useDockSheet } from '@/lib/dock-sheet'
+import { useDockSheet } from '@/lib/dock-sheet'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { trayOpensAfterDrag } from '@/components/tray/tray-model'
@@ -53,9 +52,7 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = {
  * with the bills under it. A room is a table with a clock: the same row
  * with its time ticking, the same tiles, and the clock as the sheet's hero.
  * The sheet is one for the app (lib/dock-sheet.ts): the Book tab's "you're
- * in" card opens it too. Out of the row it moves as the tray's order does:
- * a tap springs it up out of the row, a pull up has it under the finger from
- * the first pixel and, let go, it goes up or back by the tray's own rule. Nothing at all while there is no bill, no order and no
+ * in" card opens it too. Nothing at all while there is no bill, no order and no
  * place.
  */
 export function DockBill({ live, trayEmpty, className }: { live: LiveBills; trayEmpty: boolean; className?: string }) {
@@ -64,14 +61,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const price = usePrice()
   const language = useLanguage((s) => s.language)
   const standard = useArabicStyle((s) => s.standard)
-  const reduced = useReducedMotion()
-  const swap = blurSwap(reduced)
+  const swap = blurSwap(useReducedMotion())
   const open = useDockSheet((s) => s.open)
   const setOpen = useDockSheet((s) => s.setOpen)
-  const fromRow = useDockSheet((s) => s.fromRow)
-  const openFromRow = useDockSheet((s) => s.openFromRow)
-  // A pull on the row is not also a tap: a mouse lets go of a pull with a click
-  const pulled = useRef(false)
   const { stage, orderNumber } = useLiveOrder()
   const navigate = useNavigate()
   // Waiting for its payment ahead: the row is the way to pay it, not the bill
@@ -117,37 +109,10 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           <motion.button
             key='bill'
             type='button'
-            onPointerDown={() => (pulled.current = false)}
-            onClick={() => {
-              if (pulled.current) return
-              if (toPay) return void navigate(payOrderLink(orderNumber))
-              rowPull.phase.set('open')
-              openFromRow()
-            }}
-            // Pulled up by its handle, as the tray's row is, it opens too, under the finger from the first
-            // pixel (lib/dock-sheet.ts); let go, it goes up or back into the row by the tray's rule
-            onPanStart={() => {
-              if (toPay || reduced) return
-              pulled.current = true
-              rowPull.offset.set(0)
-              rowPull.velocity.set(0)
-              rowPull.phase.set('pulling')
-              openFromRow()
-            }}
-            onPan={(_, info) => {
-              if (rowPull.phase.get() === 'pulling') rowPull.offset.set(info.offset.y)
-            }}
-            onPanEnd={(_, info) => {
-              const opens = trayOpensAfterDrag(false, info.offset.y, info.velocity.y)
-              if (rowPull.phase.get() !== 'pulling') {
-                // Under reduced motion the sheet only fades in, once the pull is done
-                if (opens && !toPay) setOpen(true)
-                return
-              }
-              rowPull.velocity.set(info.velocity.y)
-              rowPull.phase.set(opens ? 'open' : 'shut')
-              if (!opens) setOpen(false)
-            }}
+            onClick={() => (toPay ? void navigate(payOrderLink(orderNumber)) : setOpen(true))}
+            // Pulled up by its handle, as the tray's row is, it opens too: it had only the tap, so a pull on
+            // the handle it draws did nothing while an order was waiting
+            onPanEnd={(_, info) => trayOpensAfterDrag(false, info.offset.y, info.velocity.y) && setOpen(true)}
             aria-label={label}
             {...swap}
             // Over the tray's own row, in the dock's colour, so the empty tray does not show under it
@@ -247,7 +212,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       <Sheet open={open} onOpenChange={setOpen}>
         {stay ? (
           // The room: its clock, what to ask for, its bills, the way out
-          <SheetContent rise={fromRow ? rowPull : undefined}>
+          <SheetContent>
             <SheetHeader>
               <SheetTitle>{localized(stay.placeName)}</SheetTitle>
             </SheetHeader>
@@ -255,7 +220,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           </SheetContent>
         ) : table ? (
           // The table first (the waiter, the bill, the way out), then its bills
-          <SheetContent className='gap-0 p-0' rise={fromRow ? rowPull : undefined}>
+          <SheetContent className='gap-0 p-0'>
             <SheetTitle className='sr-only'>{localized(table.name)}</SheetTitle>
             <div className='max-h-[85svh] overflow-y-auto'>
               <TableView place={table} onClose={() => setOpen(false)} />
@@ -267,7 +232,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             </div>
           </SheetContent>
         ) : (
-          <SheetContent rise={fromRow ? rowPull : undefined}>
+          <SheetContent>
             <SheetHeader>
               <SheetTitle>{t('ninjaBillOpen')}</SheetTitle>
             </SheetHeader>
