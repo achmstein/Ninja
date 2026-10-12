@@ -42,7 +42,8 @@ class Promotion {
   String get seenKey => '$id:${pictureUri ?? ''}';
 
   /// The picture this many pixels wide (320, 640 or 1280)
-  String? pictureAt(int width) => pictureUri == null ? null : '$pictureUri&w=$width';
+  // The gateway passes only the dishes' pictures without an api-version
+  String? pictureAt(int width) => pictureUri == null ? null : '$pictureUri&api-version=1.0&w=$width';
 }
 
 /// The promotion running now at the customer's branch, or null

@@ -725,6 +725,7 @@ public static partial class Templates
         (string, string)[][] none = [];
         string[] v1 = ["1.0", "1"];
         yield return ("/api/catalog/items/{id}/pic", "catalog", null, forwarded);
+        yield return ("/api/catalog/promotions/{id}/pic", "catalog", null, forwarded);
         yield return ("/api/catalog/{*any}", "catalog", ["1.0", "1", "2.0"], forwarded);
         yield return ("/api/orders/{*any}", "ordering", v1, none);
         // The kitchen's stations and its printers' queue live in Ordering too

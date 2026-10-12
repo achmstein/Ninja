@@ -7,6 +7,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { useBranchStore } from '@/stores/branch-store'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { pillAction } from '@/components/ui/ninja-sheet'
+import { promotionPictureUrl } from '@/components/menu/item-picture'
 
 /** How many promotions the device remembers having shown: older ones are long over */
 const KEEP_SEEN = 30
@@ -71,7 +72,7 @@ export function PromoPopup({
         <SheetTitle className='sr-only'>{localized(promotion.headline)}</SheetTitle>
         {promotion.pictureUri && (
           <img
-            src={`${promotion.pictureUri}&w=1280`}
+            src={promotionPictureUrl(promotion, 1280)}
             alt=''
             className='aspect-[4/5] max-h-[62svh] w-full rounded-[1.4rem] object-cover'
           />
@@ -103,7 +104,7 @@ export function PromoChip({ promotion, onOpen }: { promotion: PromotionDto; onOp
       aria-label={t('promoShowAgain')}
       className='ring-primary/70 size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-offset-2 ring-offset-background transition-transform active:scale-95'
     >
-      {promotion.pictureUri && <img src={`${promotion.pictureUri}&w=320`} alt='' className='size-full object-cover' />}
+      {promotion.pictureUri && <img src={promotionPictureUrl(promotion, 320)} alt='' className='size-full object-cover' />}
     </button>
   )
 }

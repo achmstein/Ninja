@@ -119,7 +119,7 @@ void main() {
     });
     expect(read.link, PromotionLink.category);
     expect(read.linkId, 5);
-    expect(read.pictureAt(320), 'https://x.test/api/catalog/promotions/3/pic?v=a.webp&w=320');
+    expect(read.pictureAt(320), 'https://x.test/api/catalog/promotions/3/pic?v=a.webp&api-version=1.0&w=320');
     expect(read.seenKey, '3:https://x.test/api/catalog/promotions/3/pic?v=a.webp');
     expect(Promotion.fromJson({'id': 4, 'headline': {}, 'pictureUri': null, 'link': 'Nope'}).link, PromotionLink.none);
   });

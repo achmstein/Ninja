@@ -39,6 +39,7 @@ import { LocalizedInput } from '@/components/localized-input'
 import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage } from '@/features/assist/errors'
 import { useAiAvailable } from '@/features/assist/use-ai-available'
+import { promotionPictureUrl } from '@/features/menu/pictures'
 
 type Link = 'None' | 'Item' | 'Category' | 'Book'
 
@@ -123,7 +124,11 @@ function PromotionForm({
   const [picture, setPicture] = useState<{ file: File; url: string } | null>(
     null
   )
-  const shown = picture?.url ?? promotion?.pictureUri ?? null
+  const shown =
+    picture?.url ??
+    (promotion?.pictureUri
+      ? promotionPictureUrl(promotion.id, promotion.pictureUri, 640)
+      : null)
   const [error, setError] = useState('')
 
   const items = useQuery({

@@ -21,6 +21,7 @@ import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { MenuTabs } from '@/features/menu/menu-tabs'
+import { promotionPictureUrl } from '@/features/menu/pictures'
 import { PromotionSheet } from './components/promotion-sheet'
 
 /** The request that saves a promotion as it is, with only its switch changed */
@@ -151,7 +152,7 @@ export function PromotionsManagement() {
                 >
                   {p.pictureUri ? (
                     <img
-                      src={`${p.pictureUri}&w=640`}
+                      src={promotionPictureUrl(p.id, p.pictureUri, 640)}
                       alt={localized(p.headline)}
                       className={`size-full object-cover ${p.isActive ? '' : 'opacity-50 grayscale'}`}
                     />

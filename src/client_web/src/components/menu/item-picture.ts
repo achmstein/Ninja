@@ -24,6 +24,21 @@ export function itemPictureUrl(item: Pictured, width?: PictureWidth): string {
   return `/api/catalog/items/${item.id}/pic${qs ? `?${qs}` : ''}`
 }
 
+/**
+ * A promotion's picture on this site's own address, as a dish photo's is: the
+ * pictureUri the catalog sends is absolute, built from the proxy's headers,
+ * and only its version is kept
+ */
+export function promotionPictureUrl(promotion: Pictured, width: 320 | 640 | 1280): string {
+  const query = new URLSearchParams()
+  const version = versionOf(promotion.pictureUri)
+  if (version) query.set('v', version)
+  // The gateway passes only the dishes' pictures without an api-version
+  query.set('api-version', '1.0')
+  query.set('w', String(width))
+  return `/api/catalog/promotions/${promotion.id}/pic?${query}`
+}
+
 /** A full-width photo's choices, for srcset with sizes='100vw' */
 export function itemPictureSrcSet(item: Pictured): string {
   return ([640, 1280] as const).map((w) => `${itemPictureUrl(item, w)} ${w}w`).join(', ')
