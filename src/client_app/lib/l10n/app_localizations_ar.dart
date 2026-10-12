@@ -956,6 +956,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billTotal => 'إجمالي الحساب';
 
   @override
+  String billOfCount(int index, int count) {
+    return 'حساب $index من $count';
+  }
+
+  @override
+  String get billPrev => 'الحساب اللي قبله';
+
+  @override
+  String get billNext => 'الحساب اللي بعده';
+
+  @override
   String get paidSeveralWays => 'اتدفع بأكتر من طريقة';
 
   @override
@@ -2494,6 +2505,17 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get billTotal => 'إجمالي الفاتورة';
+
+  @override
+  String billOfCount(int index, int count) {
+    return 'فاتورة $index من $count';
+  }
+
+  @override
+  String get billPrev => 'الفاتورة السابقة';
+
+  @override
+  String get billNext => 'الفاتورة التالية';
 
   @override
   String get paidSeveralWays => 'دُفع بأكثر من طريقة';

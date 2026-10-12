@@ -1845,6 +1845,24 @@ abstract class AppLocalizations {
   /// **'Bill total'**
   String get billTotal;
 
+  /// No description provided for @billOfCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill {index} of {count}'**
+  String billOfCount(int index, int count);
+
+  /// No description provided for @billPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous bill'**
+  String get billPrev;
+
+  /// No description provided for @billNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next bill'**
+  String get billNext;
+
   /// No description provided for @paidSeveralWays.
   ///
   /// In en, this message translates to:

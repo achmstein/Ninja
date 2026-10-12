@@ -1,72 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/features/bills/widgets/bill_swipe.dart';
+import 'package:ninja_client/l10n/app_localizations.dart';
 
-/// Two open bills: one in view with a sliver of the other at its side, a
-/// swipe or a tap on the sliver brings that one in, the dots say which.
+/// Two open bills: one in view the whole width, nothing of the other beside
+/// it; a line over them says Bill 1 of 2, and a swipe or its steps bring the
+/// other in.
 
-Widget _host(TextDirection direction) => MaterialApp(
+Widget _host(TextDirection direction, {List<Widget>? bills}) => MaterialApp(
+      locale: const Locale('en'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
       home: Directionality(
         textDirection: direction,
-        child: const Scaffold(
+        child: Scaffold(
           body: SizedBox(
             width: 390,
-            child: BillSwipe(children: [
-              SizedBox(height: 120, child: Text('First bill')),
-              SizedBox(height: 300, child: Text('Second bill')),
-            ]),
+            child: BillSwipe(
+              children: bills ??
+                  const [
+                    SizedBox(height: 120, child: Text('First bill')),
+                    SizedBox(height: 300, child: Text('Second bill')),
+                  ],
+            ),
           ),
         ),
       ),
     );
 
-/// The bill in view stands at the row's start (the left, or the right in Arabic); a sliver stands at its edge
-bool _inView(WidgetTester tester, String bill, {bool rtl = false}) {
-  final box = tester.getRect(find.text(bill));
-  return rtl ? box.right > 300 : box.left < 90;
-}
-
 void main() {
-  testWidgets('one bill in view, the next one showing at the end as a sliver; a swipe brings it in, and back', (tester) async {
+  testWidgets('one bill in view, nothing of the other showing; the line over it says which of how many', (tester) async {
     await tester.pumpWidget(_host(TextDirection.ltr));
-    expect(_inView(tester, 'First bill'), isTrue);
-    // The next one is there, but only its edge, at the end
-    expect(tester.getRect(find.text('Second bill')).left, greaterThan(390 - 30));
+    expect(find.text('First bill'), findsOneWidget);
+    expect(find.text('Second bill'), findsNothing);
+    expect(find.text('Bill 1 of 2'), findsOneWidget);
 
     await tester.fling(find.text('First bill'), const Offset(-300, 0), 1000);
     await tester.pumpAndSettle();
-    expect(_inView(tester, 'Second bill'), isTrue);
-    // On the last one the sliver is the one before, at the start
-    expect(tester.getRect(find.text('First bill')).right, lessThan(30));
+    expect(find.text('Second bill'), findsOneWidget);
+    expect(find.text('First bill'), findsNothing);
+    expect(find.text('Bill 2 of 2'), findsOneWidget);
 
     await tester.fling(find.text('Second bill'), const Offset(300, 0), 1000);
     await tester.pumpAndSettle();
-    expect(_inView(tester, 'First bill'), isTrue);
+    expect(find.text('First bill'), findsOneWidget);
   });
 
-  testWidgets('a tap on the sliver brings that bill in', (tester) async {
+  testWidgets('the steps bring the next bill in and the one before back', (tester) async {
     await tester.pumpWidget(_host(TextDirection.ltr));
-    await tester.tapAt(const Offset(390 - 8, 40));
+    await tester.tap(find.bySemanticsLabel('Next bill'));
     await tester.pumpAndSettle();
-    expect(_inView(tester, 'Second bill'), isTrue);
+    expect(find.text('Second bill'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Previous bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('First bill'), findsOneWidget);
   });
 
-  testWidgets('in Arabic the next bill comes from the left', (tester) async {
+  testWidgets('the bill in view takes the whole width', (tester) async {
+    await tester.pumpWidget(_host(TextDirection.ltr, bills: const [
+      SizedBox(height: 120, width: double.infinity, child: ColoredBox(key: Key('first'), color: Colors.red)),
+      SizedBox(height: 120, child: Text('Second bill')),
+    ]));
+    expect(tester.getSize(find.byKey(const Key('first'))).width, 390);
+  });
+
+  testWidgets('in Arabic the next bill comes with a swipe to the right', (tester) async {
     await tester.pumpWidget(_host(TextDirection.rtl));
-    expect(_inView(tester, 'First bill', rtl: true), isTrue);
     await tester.fling(find.text('First bill'), const Offset(300, 0), 1000);
     await tester.pumpAndSettle();
-    expect(_inView(tester, 'Second bill', rtl: true), isTrue);
+    expect(find.text('Second bill'), findsOneWidget);
   });
 
-  testWidgets('one bill stands alone, the full width, with no sliver and no dots', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      theme: materialThemeFor(NinjaTheme.neutral(Brightness.light)),
-      home: const Scaffold(body: BillSwipe(children: [Text('Only bill')])),
-    ));
+  testWidgets('one bill stands alone, with no line over it', (tester) async {
+    await tester.pumpWidget(_host(TextDirection.ltr, bills: const [Text('Only bill')]));
     expect(find.text('Only bill'), findsOneWidget);
+    expect(find.textContaining('of'), findsNothing);
     expect(find.byType(AnimatedContainer), findsNothing);
   });
 }

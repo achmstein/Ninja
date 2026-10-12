@@ -450,6 +450,7 @@ const webExtras = {
   ninjaHideReceipt: { en: 'Hide the receipt', ar: 'اخفي الإيصال' },
   ninjaBillPrev: { en: 'Previous bill', ar: 'الحساب اللي قبله' },
   ninjaBillNext: { en: 'Next bill', ar: 'الحساب اللي بعده' },
+  ninjaBillOf: { en: 'Bill {index} of {count}', ar: 'حساب {index} من {count}' },
   // Branches by where the customer is: the closest first, how far, and the way there
   ninjaBranch: { en: 'Branch', ar: 'الفرع' },
   ninjaChangeBranch: { en: 'Change branch', ar: 'غيّر الفرع' },

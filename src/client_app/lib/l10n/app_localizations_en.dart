@@ -965,6 +965,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get billTotal => 'Bill total';
 
   @override
+  String billOfCount(int index, int count) {
+    return 'Bill $index of $count';
+  }
+
+  @override
+  String get billPrev => 'Previous bill';
+
+  @override
+  String get billNext => 'Next bill';
+
+  @override
   String get paidSeveralWays => 'Paid several ways';
 
   @override
