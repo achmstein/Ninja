@@ -3,10 +3,12 @@ import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { cn } from '@/lib/utils'
 import { dialogParts, SheetCloseButton } from '@/components/ui/dialog'
 import { SheetFrame, SheetOpen, sheetTitleClass, useSheetRoot } from '@/components/ui/ninja-sheet'
+import type { RowPull } from '@/lib/dock-sheet'
 
 /**
  * A sheet: the dock's slab rising out of the dock, or, for one opened from
  * the top bar (`side='top'`), dropping from the bar (components/ui/ninja-sheet).
+ * One opened from the dock's row (`rise`) comes out of the row as the tray's order does.
  */
 function Sheet({ open, defaultOpen, onOpenChange, ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   const root = useSheetRoot(open, defaultOpen, onOpenChange)
@@ -30,12 +32,14 @@ function SheetContent({
   style,
   children,
   side = 'bottom',
+  rise,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & { side?: 'top' | 'bottom' }) {
+}: React.ComponentProps<typeof SheetPrimitive.Content> & { side?: 'top' | 'bottom'; rise?: RowPull }) {
   return (
     <SheetFrame
       parts={dialogParts}
       from={side}
+      rise={rise}
       className={className}
       style={style}
       contentProps={{ 'data-slot': 'sheet-content', ...props }}

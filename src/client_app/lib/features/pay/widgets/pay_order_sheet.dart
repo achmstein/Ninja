@@ -19,9 +19,10 @@ import '../services/pay_service.dart';
 /// Opens the order's pay sheet: an order paid ahead online while it waits for
 /// its payment (a delivery or an order to collect). [start]: just placed, so
 /// straight on to the provider's checkout once Sales has it priced.
-Future<void> showPayOrderSheet(BuildContext context, int orderId, {bool start = false}) {
+Future<void> showPayOrderSheet(BuildContext context, int orderId, {bool start = false, RowOpen? fromRow}) {
   return showNinjaSheet<void>(
     context: context,
+    fromRow: fromRow,
     builder: (context) => PayOrderSheet(orderId: orderId, start: start),
   );
 }

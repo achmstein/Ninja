@@ -1,19 +1,24 @@
 import * as React from 'react'
-import { animate, AnimatePresence, motion, useDragControls, useMotionValue, usePresence, useReducedMotion, useTransform } from 'motion/react'
+import { animate, AnimatePresence, motion, useDragControls, useMotionValue, useMotionValueEvent, usePresence, useReducedMotion, useTransform, type PanInfo } from 'motion/react'
 import { ease, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { usePullDown } from '@/lib/use-pull-down'
+import { dockHole, pulledLift, type RowPhase, type RowPull } from '@/lib/dock-sheet'
 import { DOCK_EDGES } from '@/components/ninja/shell/chrome'
+import { trayOpensAfterDrag } from '@/components/tray/tray-model'
 
 /**
  * The one way the customer app shows a sheet, a dialog or a question: the
  * menu dock's dark slab, floating off the screen's edges at the dock's own
  * margins. It rises out of the dock on a spring, where the thumb already
  * is, and goes back down into it; one opened from the top bar drops from
- * the bar instead. It is pulled away by its handle, or from anywhere on it
- * while what is in it is scrolled to the top. Everything in it is set in
- * the dark scheme (the `dark` class), so any part used inside reads on it.
+ * the bar instead. One opened from the dock's row (`rise`) moves as the
+ * tray's order does: out of the row's top edge, under the finger that pulls
+ * it up, the dock left clear of the dimming. It is pulled away by its
+ * handle, or from anywhere on it while what is in it is scrolled to the top.
+ * Everything in it is set in the dark scheme (the `dark` class), so any
+ * part used inside reads on it.
  *
  * Radix keeps the focus trap, the escape key and the labels; this only
  * owns the movement, which is why each root keeps its open state here
@@ -77,7 +82,12 @@ type FrameProps = {
   children: React.ReactNode
   /** Passed through to Radix's Content (aria labels, event handlers) */
   contentProps?: Record<string, unknown>
+  /** Out of the dock's row, under the finger pulling it up there (lib/dock-sheet.ts) */
+  rise?: RowPull
 }
+
+/** The tray's own spring (components/tray/tray.tsx), for a sheet out of the dock's row */
+const ROW_SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 
 export function SheetFrame(props: FrameProps) {
   const { open } = React.useContext(SheetOpen)
@@ -91,24 +101,24 @@ const SHEET_RADIUS = 28
 type DockInset = { top: number; right: number; bottom: number; left: number; radius: number }
 
 /** The dock on screen now, as a box: none while it is tucked away below the screen's edge or not there at all */
-function dockBox(): { box: DOMRect; radius: number } | null {
+function dockBox(): { box: DOMRect; radius: number; bottomRadius: number } | null {
   for (const el of document.querySelectorAll<HTMLElement>('[data-dock-slab]')) {
     const box = el.getBoundingClientRect()
     if (box.height < 24 || box.top >= window.innerHeight - 8) continue
-    return { box, radius: parseFloat(getComputedStyle(el).borderTopLeftRadius) || SHEET_RADIUS }
+    const css = getComputedStyle(el)
+    const radius = parseFloat(css.borderTopLeftRadius) || SHEET_RADIUS
+    return { box, radius, bottomRadius: parseFloat(css.borderBottomLeftRadius) || 0 }
   }
   return null
 }
 
-function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', className, style, children, contentProps }: FrameProps) {
+function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', className, style, children, contentProps, rise }: FrameProps) {
   const { open, setOpen } = React.useContext(SheetOpen)
   const reduced = useReducedMotion()
   const drag = useDragControls()
   const body = React.useRef<HTMLDivElement>(null)
   // The sheet's own element: Radix's portal mounts it a render after this one, so it is followed as it comes
   const [frame, setFrame] = React.useState<HTMLDivElement | null>(null)
-  // From anywhere on its body too, while that is scrolled to its top (lib/use-pull-down.ts)
-  usePullDown(body, open && from === 'bottom' && !reduced, { onStart: (e) => drag.start(e) })
   // iOS never resizes the layout viewport for the keyboard, so a sheet held
   // to the bottom would sit behind it; lift it by however much is covered
   const keyboardInset = useKeyboardInset(open && from === 'bottom')
@@ -117,7 +127,9 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
   // has grown from there (0 the dock, 1 the sheet). With no dock to grow from, it rises as it always did
   const [isPresent, safeToRemove] = usePresence()
   const [dock] = React.useState(() => (from === 'bottom' && !reduced ? dockBox() : null))
-  const morph = dock != null
+  // Out of the dock's row instead (the bill's, the table's, the room's): it rises out of the row's top edge
+  const row = rise && dock ? dock : null
+  const morph = dock != null && row == null
   const inset = React.useRef<DockInset | null>(null)
   const grown = useMotionValue(morph ? 0 : 1)
   const clipPath = useTransform(grown, (g) => {
@@ -130,6 +142,72 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
   })
   // What it holds comes in once the slab has grown some way, and goes first on the way back
   const inside = useTransform(grown, [0.35, 1], [0, 1])
+
+  // Out of the row: how far below open it stands, px, the row's top edge clipping it so it seems to come
+  // from inside the row, as the tray's order does. All of it held back until it is measured
+  const lift = useMotionValue(row ? 1e4 : 0)
+  const height = React.useRef(0)
+  const rowClip = useTransform(lift, (v) => `inset(0 0 ${Math.max(0, v)}px 0 round ${SHEET_RADIUS}px ${SHEET_RADIUS}px 0 0)`)
+  // The finger on the row, or stand-ins with none to follow
+  const still = { offset: useMotionValue(0), phase: useMotionValue<RowPhase>('open'), velocity: useMotionValue(0) }
+  const pull = rise ?? still
+  // How fast the pull down that closed it was going, for the spring back into the row
+  const closing = React.useRef(0)
+
+  React.useLayoutEffect(() => {
+    if (!row || !frame) return
+    height.current = frame.offsetHeight
+    const observer = new ResizeObserver(() => {
+      if (frame.offsetHeight) height.current = frame.offsetHeight
+    })
+    observer.observe(frame)
+    // Under the finger it stands where the finger has pulled it; tapped, it springs up out of the row
+    let run: ReturnType<typeof animate> | null = null
+    if (pull.phase.get() === 'pulling') lift.set(pulledLift(height.current, pull.offset.get()))
+    else {
+      lift.set(height.current)
+      run = animate(lift, 0, ROW_SPRING)
+    }
+    return () => {
+      run?.stop()
+      observer.disconnect()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once the sheet is there, then the finger has it
+  }, [row, frame, lift])
+
+  useMotionValueEvent(pull.offset, 'change', (v) => {
+    if (row && isPresent && pull.phase.get() === 'pulling' && height.current) lift.set(pulledLift(height.current, v))
+  })
+  // Let go open, it springs the rest of the way at the finger's speed; let go shut is the way out, below
+  useMotionValueEvent(pull.phase, 'change', (phase) => {
+    if (row && isPresent && phase === 'open') animate(lift, 0, { ...ROW_SPRING, velocity: pull.velocity.get() })
+  })
+
+  // Its own handle, or a pull down from anywhere on it: it follows the finger and, let go, goes back
+  // up or down into the row by the tray's rule
+  const rowPan = React.useRef(0)
+  const rowDrag = {
+    start: () => {
+      lift.stop()
+      rowPan.current = lift.get()
+    },
+    move: (offsetY: number) => lift.set(Math.max(0, Math.min(height.current, rowPan.current + offsetY))),
+    end: (offsetY: number, velocityY: number) => {
+      if (trayOpensAfterDrag(true, offsetY, velocityY)) {
+        animate(lift, 0, { ...ROW_SPRING, velocity: velocityY })
+        return
+      }
+      closing.current = velocityY
+      setOpen(false)
+    },
+  }
+
+  // From anywhere on its body too, while that is scrolled to its top (lib/use-pull-down.ts)
+  usePullDown(
+    body,
+    open && from === 'bottom' && !reduced,
+    row ? { onStart: rowDrag.start, onMove: rowDrag.move, onEnd: rowDrag.end } : { onStart: (e) => drag.start(e) }
+  )
 
   React.useLayoutEffect(() => {
     if (!morph || !dock || !frame) return
@@ -149,6 +227,13 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
   // Closed, it folds back into the dock before it goes
   React.useEffect(() => {
     if (isPresent) return
+    // Out of the row, it springs back down into the row, at the speed of the pull that closed it
+    if (row) {
+      const velocity = pull.phase.get() === 'shut' ? pull.velocity.get() : closing.current
+      const run = animate(lift, height.current || frame?.offsetHeight || 0, { ...ROW_SPRING, velocity })
+      void run.then(() => safeToRemove?.())
+      return () => run.stop()
+    }
     if (!morph) {
       safeToRemove?.()
       return
@@ -168,7 +253,8 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
     const run = animate(grown, 0, { duration: 0.24, ease: ease.exit })
     void run.then(() => safeToRemove?.())
     return () => run.stop()
-  }, [isPresent, morph, grown, safeToRemove, frame])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the pull is read as it stands when it closes
+  }, [isPresent, morph, row, grown, lift, safeToRemove, frame])
 
   const away = from === 'bottom' ? { y: 72, scale: 0.96, opacity: 0 } : { y: -32, scale: 0.96, opacity: 0 }
 
@@ -177,6 +263,8 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
       <Overlay asChild forceMount>
         <motion.div
           className='fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]'
+          // Out of the row the dock stays clear of the dimming, as the tray leaves it
+          style={row ? { clipPath: dockHole(window.innerWidth, window.innerHeight, row.box, row.radius, row.bottomRadius) } : undefined}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: 0.22 } }}
           exit={{ opacity: 0, transition: { duration: 0.2 } }}
@@ -187,7 +275,9 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
           ref={setFrame}
           className={cn(
             'dark bg-background text-foreground fixed z-50 mx-auto flex flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
-            from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'
+            from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]',
+            // Out of the row it stands on the row's top edge, square there as the tray's order is
+            row && 'rounded-b-none'
           )}
           style={{
             ...SLAB_SCHEME,
@@ -197,12 +287,23 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
             ...(keyboardInset > 0 && { maxHeight: `calc(100svh - ${keyboardInset + 16}px)` }),
             originY: from === 'bottom' ? 1 : 0,
             ...(morph && { clipPath }),
+            // On the row's top edge, exactly as wide as the dock, below it the clip
+            ...(row && {
+              left: row.box.left,
+              right: 'auto',
+              width: row.box.width,
+              maxWidth: 'none',
+              bottom: window.innerHeight - row.box.top,
+              maxHeight: `min(88svh, calc(${row.box.top - 16}px - env(safe-area-inset-top)))`,
+              clipPath: rowClip,
+              y: lift,
+            }),
           }}
-          // Out of the dock the clip does the moving; otherwise it rises (or drops) and fades
-          initial={morph ? false : reduced ? { opacity: 0 } : away}
-          animate={morph ? undefined : { y: 0, scale: 1, opacity: 1, transition: springSoft }}
-          exit={morph ? undefined : reduced ? { opacity: 0 } : { ...away, transition: { duration: 0.2, ease: ease.exit } }}
-          drag={from === 'bottom' && !reduced ? 'y' : false}
+          // Out of the dock (or its row) the clip does the moving; otherwise it rises (or drops) and fades
+          initial={morph || row ? false : reduced ? { opacity: 0 } : away}
+          animate={morph || row ? undefined : { y: 0, scale: 1, opacity: 1, transition: springSoft }}
+          exit={morph || row ? undefined : reduced ? { opacity: 0 } : { ...away, transition: { duration: 0.2, ease: ease.exit } }}
+          drag={from === 'bottom' && !reduced && !row ? 'y' : false}
           dragListener={false}
           dragControls={drag}
           dragConstraints={{ top: 0, bottom: 0 }}
@@ -214,9 +315,15 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
           <motion.div className='flex min-h-0 flex-1 flex-col' style={morph ? { opacity: inside } : undefined}>
             {from === 'bottom' && (
               // The handle the sheet is pulled down by; the rest of it scrolls and types as usual
-              <div className='flex h-7 shrink-0 cursor-grab touch-none items-center justify-center' onPointerDown={(e) => drag.start(e)}>
+              <motion.div
+                className='flex h-7 shrink-0 cursor-grab touch-none items-center justify-center'
+                onPointerDown={row ? undefined : (e) => drag.start(e)}
+                onPanStart={row ? rowDrag.start : undefined}
+                onPan={row ? (_, info: PanInfo) => rowDrag.move(info.offset.y) : undefined}
+                onPanEnd={row ? (_, info: PanInfo) => rowDrag.end(info.offset.y, info.velocity.y) : undefined}
+              >
                 <span className='bg-foreground/25 h-1 w-10 rounded-full' />
-              </div>
+              </motion.div>
             )}
             <div
               ref={body}

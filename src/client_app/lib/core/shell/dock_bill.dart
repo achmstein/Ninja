@@ -21,7 +21,6 @@ import '../../features/service_request/services/service_request_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
 import '../../features/pay/widgets/pay_order_sheet.dart';
-import '../../features/cart/widgets/tray_model.dart' show trayOpensAfterDrag;
 
 /// The orders on their way with no open bill to land on (client_web's
 /// live-bills.ts `forming`): sent and waiting, or confirmed and not on a bill
@@ -121,26 +120,28 @@ class DockBill extends ConsumerWidget {
       null => (destination?.placeKind.icon ?? LucideIcons.receiptText, c.foreground.withValues(alpha: 0.12), c.foreground),
     };
 
-    void onTap() {
+    // What the row stands for, out of the row as the order comes out of the tray's: tapped it springs up,
+    // pulled it follows the finger ([RowOpen])
+    void openOut(RowOpen row) {
       if (toPay) {
-        showPayOrderSheet(context, live!.orderId!);
+        showPayOrderSheet(context, live!.orderId!, fromRow: row);
       } else if (destination == null) {
-        showDockBills(context);
+        showDockBills(context, fromRow: row);
       } else if (destination.isStay) {
-        // The room, out of the dock: the same sheet the Book tab's card opens
+        // The room: the same sheet the Book tab's card opens
         final stay = ref.read(myStaysProvider).value?.where((s) => s.id == destination.sessionId).firstOrNull;
-        stay != null ? showRoomSheet(context, stay) : context.go('/places');
+        stay != null ? showRoomSheet(context, stay, fromRow: row) : context.go('/places');
       } else {
-        showPlaceRequests(context, destination);
+        showPlaceRequests(context, destination, fromRow: row);
       }
     }
 
     return Semantics(
       button: true,
       label: label,
-      // Pulled up by its handle, as the tray's row is, it opens too; a tap the same
+      // Pulled up by its handle, as the tray's row is, it opens under the finger; a tap the same
       child: _PullUp(
-        onOpen: onTap,
+        onOpen: openOut,
         child: SizedBox(
           height: height,
           child: Padding(
@@ -267,9 +268,10 @@ class DockBill extends ConsumerWidget {
 }
 
 /// Rebuilds what it holds once a second: the room's clock in the row
-/// The row's pan and tap: a pull up past the tray's distance, or flicked up, opens what the row stands for
+/// The row's pan and tap, as the tray's: a tap opens what the row stands for, and a pull up opens it under
+/// the finger from its first pixel upwards, settling open or shut on letting go by the tray's rule
 class _PullUp extends StatefulWidget {
-  final VoidCallback onOpen;
+  final ValueChanged<RowOpen> onOpen;
   final Widget child;
 
   const _PullUp({required this.onOpen, required this.child});
@@ -279,16 +281,25 @@ class _PullUp extends StatefulWidget {
 }
 
 class _PullUpState extends State<_PullUp> {
-  double _dragged = 0;
+  /// The sheet under the finger, once the finger has gone up: a pull down opens nothing
+  RowOpen? _row;
 
   @override
   Widget build(BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onOpen,
-        onVerticalDragStart: (_) => _dragged = 0,
-        onVerticalDragUpdate: (d) => _dragged += d.delta.dy,
+        onTap: () => widget.onOpen(RowOpen()),
+        onVerticalDragStart: (_) => _row = null,
+        onVerticalDragUpdate: (d) {
+          if (_row == null && d.delta.dy < 0) widget.onOpen(_row = RowOpen(held: true));
+          _row?.update(d.delta.dy);
+        },
         onVerticalDragEnd: (d) {
-          if (trayOpensAfterDrag(false, _dragged, d.primaryVelocity ?? 0)) widget.onOpen();
+          _row?.end(d.primaryVelocity ?? 0);
+          _row = null;
+        },
+        onVerticalDragCancel: () {
+          _row?.end(0);
+          _row = null;
         },
         child: widget.child,
       );
@@ -327,8 +338,9 @@ class _EverySecondState extends State<_EverySecond> {
 /// The bills running now on the slab sheet, out of the dock's row
 /// (client_web's dock-bill.tsx): titled "Your bill", the bill forming and the
 /// open ones, swiped between
-Future<void> showDockBills(BuildContext context) => showNinjaSheet<void>(
+Future<void> showDockBills(BuildContext context, {RowOpen? fromRow}) => showNinjaSheet<void>(
       context: context,
+      fromRow: fromRow,
       builder: (context) {
         final theme = context.theme;
         return Column(

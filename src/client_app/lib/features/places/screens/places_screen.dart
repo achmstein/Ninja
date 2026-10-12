@@ -576,8 +576,9 @@ class _StayBannerState extends State<StayBanner> {
 /// The room the customer is in, on the slab sheet: its clock, what can be
 /// asked for there, and the way out. The dock's row and the Book tab's
 /// card both open it, so the room lives in one place.
-Future<void> showRoomSheet(BuildContext context, Stay stay) => showNinjaSheet(
+Future<void> showRoomSheet(BuildContext context, Stay stay, {RowOpen? fromRow}) => showNinjaSheet(
       context: context,
+      fromRow: fromRow,
       builder: (context) => Consumer(
         builder: (context, ref, _) {
           // The stay as it is now, while the sheet is open
