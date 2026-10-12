@@ -27,8 +27,8 @@ export function StayBanner({ stay }: { stay: StayViewModel }) {
       <span className='bg-background/12 relative grid size-11 shrink-0 place-items-center rounded-full'>
         <PlaceIcon kind={Number(stay.placeKind)} className='size-5' />
         <span className='absolute end-0.5 top-0.5 grid size-2 place-items-center'>
-          <span className='absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none' />
-          <span className='size-1.5 rounded-full bg-emerald-400' />
+          <span className='bg-foreground/60 absolute inset-0 animate-ping rounded-full motion-reduce:animate-none' />
+          <span className='bg-foreground size-1.5 rounded-full' />
         </span>
       </span>
       <span className='flex min-w-0 flex-1 flex-col'>

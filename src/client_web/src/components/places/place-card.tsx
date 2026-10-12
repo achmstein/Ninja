@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react'
 import { type PlaceViewModel } from '@/api/spaces'
 import { spring, springOpen, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
-import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusMeta, tariffOptions } from '@/lib/places'
+import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusClass, placeStatusMeta, tariffOptions } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HoldForm } from './hold-form'
@@ -79,7 +79,7 @@ export function PlaceCard({
       className={cn(
         'relative isolate overflow-hidden',
         // A line of the list has no box of its own: the panel it is in is the card. A tile is light whether
-        // free or not (its green dot and its plus say it can be booked); a big card that is free is on the slab
+        // free or not (its ink and its plus say it can be booked); a big card that is free is on the slab
         look === 'list' ? 'text-foreground' : free && look === 'cards' ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
       )}
     >
@@ -108,10 +108,12 @@ export function PlaceCard({
           <span
             className={cn(
               'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-bold',
-              free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
+              // Free, a plain pill in the ink; anything else faded, the word saying which
+              free ? 'bg-foreground/12' : 'bg-muted',
+              placeStatusClass(place)
             )}
           >
-            <span className={cn('size-1.5 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
+            <span className={cn('size-1.5 rounded-full bg-current', free && 'animate-pulse motion-reduce:animate-none')} />
             {t(status.key)}
           </span>
           {tappable && (
@@ -204,7 +206,7 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       transition={spring}
       className='flex min-h-15 w-full items-center gap-3 ps-4 pe-3 py-3 text-start disabled:cursor-default'
     >
-      <span className={cn('size-2 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
+      <span className={cn('size-2 shrink-0 rounded-full bg-current', placeStatusClass(place))} />
       <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
         <motion.span
           layoutId={placeNameId(place.id)}
@@ -220,7 +222,7 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       {tappable ? (
         <OpenToggle open={open} className='slab size-8' />
       ) : (
-        <span className={cn('shrink-0 text-caption font-semibold', free ? 'text-emerald-600 dark:text-emerald-400' : status.className)}>{t(status.key)}</span>
+        <span className={cn('shrink-0 text-caption font-semibold', placeStatusClass(place))}>{t(status.key)}</span>
       )}
     </motion.button>
   )
@@ -228,8 +230,8 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
 
 /**
  * The place as a small light tile, two a row: its kind in a circle and the plus on top, the name over where
- * it stands and its rate at the foot. Every tile on the same light surface, a free one told by its green
- * dot and its plus, so a handful of places read calm side by side
+ * it stands and its rate at the foot. Every tile on the same light surface, a free one told by its ink
+ * and its plus, so a handful of places read calm side by side
  */
 function PlaceTile({ place, tappable, open, onToggle }: FaceProps) {
   const t = useT()
@@ -262,8 +264,8 @@ function PlaceTile({ place, tappable, open, onToggle }: FaceProps) {
           {localized(place.name)}
         </motion.span>
         <span className='text-muted-foreground flex min-w-0 items-center gap-1.5 text-caption'>
-          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
-          <span className={cn('shrink-0 font-semibold', free ? 'text-emerald-600 dark:text-emerald-400' : status.className)}>{t(status.key)}</span>
+          <span className={cn('size-1.5 shrink-0 rounded-full bg-current', placeStatusClass(place))} />
+          <span className={cn('shrink-0 font-semibold', placeStatusClass(place))}>{t(status.key)}</span>
           <span className='truncate tabular-nums'>
             {place.tariff && tariffOptions(place.tariff).length > 0 && <>· <TariffLine place={place} /></>}
           </span>

@@ -65,23 +65,21 @@ export function PlaceIcon({
   return createElement(Icon, { className })
 }
 
-export const placeStatusMeta: Record<
-  number,
-  { key: TranslationKey; className: string }
-> = {
-  [PLACE_AVAILABLE]: {
-    key: 'available',
-    className: 'text-green-600 dark:text-green-500',
-  },
-  [PLACE_OCCUPIED]: { key: 'occupied', className: 'text-destructive' },
-  [PLACE_HELD]: {
-    key: 'reserved',
-    className: 'text-amber-600 dark:text-amber-500',
-  },
-  [PLACE_OUT_OF_SERVICE]: {
-    key: 'maintenance',
-    className: 'text-muted-foreground',
-  },
+/** The word for where a place stands; its ink is [placeStatusClass]'s */
+export const placeStatusMeta: Record<number, { key: TranslationKey }> = {
+  [PLACE_AVAILABLE]: { key: 'available' },
+  [PLACE_OCCUPIED]: { key: 'occupied' },
+  [PLACE_HELD]: { key: 'reserved' },
+  [PLACE_OUT_OF_SERVICE]: { key: 'maintenance' },
+}
+
+/**
+ * The ink a place's status reads in, neutral: the page's own for one that
+ * can be booked now, faded for every other (taken, held, out of service, or
+ * free but not taking bookings). The word says which, not a colour
+ */
+export function placeStatusClass(place: PlaceViewModel | PlaceScanViewModel): string {
+  return canHold(place) ? 'text-foreground' : 'text-muted-foreground'
 }
 
 export function tariffOptions(tariff: TariffViewModel | null | undefined) {
