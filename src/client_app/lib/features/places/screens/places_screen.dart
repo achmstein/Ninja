@@ -422,7 +422,7 @@ class _YourRoomCardState extends State<YourRoomCard> {
                             children: [
                               const LiveDot(size: 6),
                               const SizedBox(width: 6),
-                              Text(l10n.bookClockRunning, style: caption.copyWith(color: NinjaColors.successOnSlab)),
+                              Text(l10n.bookClockRunning, style: caption.copyWith(color: NinjaColors.success)),
                             ],
                           ),
                         ),
@@ -518,7 +518,7 @@ class _StayBannerState extends State<StayBanner> {
       onTap: () => showRoomSheet(context, widget.stay),
       scale: 0.98,
       child: Container(
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
         decoration: BoxDecoration(color: c.slab, borderRadius: BorderRadius.circular(Ninja.panelRadius), boxShadow: Ninja.slabShadow),
         child: SlabInk(
           child: Builder(
@@ -1046,7 +1046,7 @@ class PlaceListItem extends ConsumerWidget {
       builder: (context) {
         final theme = context.theme;
         final c = theme.colors;
-        final statusColor = free ? NinjaColors.successOnSlab : placeStatusColor(room, canReserve, c);
+        final statusColor = free ? NinjaColors.success : placeStatusColor(room, canReserve, c);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1437,7 +1437,7 @@ class PlaceRow extends ConsumerWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 60),
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
           child: Row(
             children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),

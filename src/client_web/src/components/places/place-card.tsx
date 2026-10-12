@@ -108,7 +108,7 @@ export function PlaceCard({
           <span
             className={cn(
               'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-bold',
-              free ? 'bg-emerald-400/20 text-emerald-300' : cn('bg-muted', status.className)
+              free ? 'bg-emerald-400/20 text-emerald-400' : cn('bg-muted', status.className)
             )}
           >
             <span className={cn('size-1.5 rounded-full', free ? 'animate-pulse bg-emerald-400 motion-reduce:animate-none' : 'bg-current')} />
@@ -202,9 +202,9 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       onClick={() => onToggle(place)}
       whileTap={tappable && !open ? { scale: 0.99 } : undefined}
       transition={spring}
-      className='flex min-h-15 w-full items-center gap-3 ps-4 pe-3 py-3 text-start disabled:cursor-default'
+      className='flex min-h-15 w-full items-center gap-3 ps-4 pe-4 py-3 text-start disabled:cursor-default'
     >
-      <span className={cn('size-2 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
+      <span className={cn('size-2 shrink-0 rounded-full', free ? 'bg-emerald-400' : cn('bg-current', status.className))} />
       <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
         <motion.span
           layoutId={placeNameId(place.id)}
@@ -262,7 +262,7 @@ function PlaceTile({ place, tappable, open, onToggle }: FaceProps) {
           {localized(place.name)}
         </motion.span>
         <span className='text-muted-foreground flex min-w-0 items-center gap-1.5 text-caption'>
-          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'bg-emerald-500' : cn('bg-current', status.className))} />
+          <span className={cn('size-1.5 shrink-0 rounded-full', free ? 'bg-emerald-400' : cn('bg-current', status.className))} />
           <span className={cn('shrink-0 font-semibold', free ? 'text-emerald-600 dark:text-emerald-400' : status.className)}>{t(status.key)}</span>
           <span className='truncate tabular-nums'>
             {place.tariff && tariffOptions(place.tariff).length > 0 && <>· <TariffLine place={place} /></>}
@@ -321,7 +321,7 @@ export function TariffLine({ place }: { place: Pick<PlaceViewModel, 'tariff'> })
 export function PlaceCardSkeleton({ look = 'cards' }: { look?: PlacesStyle }) {
   if (look === 'list') {
     return (
-      <div className='flex min-h-15 items-center gap-3 ps-4 pe-3 py-3'>
+      <div className='flex min-h-15 items-center gap-3 ps-4 pe-4 py-3'>
         <Skeleton className='size-2 rounded-full' />
         <div className='flex flex-1 flex-col gap-1.5'>
           <Skeleton className='h-4 w-32' />

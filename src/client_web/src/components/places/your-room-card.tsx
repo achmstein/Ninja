@@ -39,7 +39,7 @@ export function YourRoomCard({
 
       <span className="flex w-full items-center justify-between gap-3">
         {/* Running now: the live dot and the words for it */}
-        <span className="flex items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-1 text-caption font-bold text-emerald-300">
+        <span className="flex items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-1 text-caption font-bold text-emerald-400">
           <span className="relative grid size-1.5 place-items-center">
             <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none" />
             <span className="size-1.5 rounded-full bg-emerald-400" />
