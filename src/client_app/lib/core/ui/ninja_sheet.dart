@@ -148,7 +148,11 @@ class _SheetFrameState extends State<_SheetFrame> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final keyboard = media.viewInsets.bottom;
-    final bottom = keyboard > 0 ? keyboard + 8 : (media.viewPadding.bottom > 8 ? media.viewPadding.bottom : 8.0);
+    // Off the bottom edge as the dock stands (main_scaffold's floating): on Android 8 above the gesture
+    // bar, which is its inset; iPhone's home indicator sits low in its inset, so the sheet rests on it
+    final safe = media.viewPadding.bottom;
+    final floating = Theme.of(context).platform == TargetPlatform.android ? safe + 8 : (safe > 8 ? safe : 8.0);
+    final bottom = keyboard > 0 ? keyboard + 8 : floating;
     final animation = widget.route.animation!;
     final reduced = reduceMotion(context);
     final morph = !reduced && _dock != null;
