@@ -416,13 +416,13 @@ class _YourRoomCardState extends State<YourRoomCard> {
                         // Running now: the live dot and the words for it
                         Container(
                           padding: const EdgeInsetsDirectional.fromSTEB(10, 4, 10, 4),
-                          decoration: ShapeDecoration(color: c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                          decoration: ShapeDecoration(color: NinjaColors.success.withValues(alpha: 0.2), shape: const StadiumBorder()),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              LiveDot(size: 6, color: c.foreground),
+                              const LiveDot(size: 6),
                               const SizedBox(width: 6),
-                              Text(l10n.bookClockRunning, style: caption.copyWith(color: c.foreground)),
+                              Text(l10n.bookClockRunning, style: caption.copyWith(color: NinjaColors.successOnSlab)),
                             ],
                           ),
                         ),
@@ -538,7 +538,7 @@ class _StayBannerState extends State<StayBanner> {
                         PositionedDirectional(
                           end: 3,
                           top: 3,
-                          child: Container(width: 6, height: 6, decoration: BoxDecoration(color: ink, shape: BoxShape.circle)),
+                          child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: NinjaColors.success, shape: BoxShape.circle)),
                         ),
                       ],
                     ),
@@ -876,7 +876,7 @@ class _StayClock extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: context.theme.colors.foreground, shape: BoxShape.circle)),
+                Container(width: 8, height: 8, decoration: const BoxDecoration(color: NinjaColors.success, shape: BoxShape.circle)),
                 const SizedBox(width: 8),
                 Expanded(child: Text(l10n.bookClockRunning, style: caption)),
                 if (stay.hasOptions && stay.currentOptionName != null)
@@ -1046,7 +1046,7 @@ class PlaceListItem extends ConsumerWidget {
       builder: (context) {
         final theme = context.theme;
         final c = theme.colors;
-        final statusColor = placeStatusColor(room, canReserve, c);
+        final statusColor = free ? NinjaColors.successOnSlab : placeStatusColor(room, canReserve, c);
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1069,13 +1069,13 @@ class PlaceListItem extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: ShapeDecoration(
-                          color: free ? c.foreground.withValues(alpha: 0.12) : c.muted,
+                          color: free ? NinjaColors.success.withValues(alpha: 0.2) : c.muted,
                           shape: const StadiumBorder(),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                            Container(width: 6, height: 6, decoration: BoxDecoration(color: free ? NinjaColors.success : statusColor, shape: BoxShape.circle)),
                             const SizedBox(width: 6),
                             Text(
                               placeStatusLabel(context, room.displayStatus),
@@ -1167,11 +1167,12 @@ class PlaceListItem extends ConsumerWidget {
 
 }
 
-/// The colour a place's status is said in, as its pill has it: in the page's own inks, not a signal's
-/// green and red. Free to book now in the ink, everything else faded; the word says which
+/// The colour a place's status is said in, as its pill has it
 Color placeStatusColor(Place room, bool canReserve, NinjaColors colors) => switch (room.displayStatus) {
-      PlaceStatus.available when canReserve || room.canBookNow => colors.foreground,
-      _ => colors.mutedForeground,
+      PlaceStatus.available => canReserve ? NinjaColors.success : colors.mutedForeground,
+      PlaceStatus.occupied => colors.destructive,
+      PlaceStatus.reserved => NinjaColors.warning,
+      PlaceStatus.maintenance => colors.mutedForeground,
     };
 
 /// A place's status in words
@@ -1385,8 +1386,9 @@ class _PlaceMeta extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final c = theme.colors;
+    final free = room.canBookNow;
     final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
-    final color = placeStatusColor(room, canReserve, c);
+    final color = free ? NinjaColors.success : placeStatusColor(room, canReserve, c);
     final caption = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground, fontFeatures: NinjaTypography.tabular));
     return Text.rich(
       TextSpan(children: [
@@ -1428,7 +1430,7 @@ class PlaceRow extends ConsumerWidget {
     final tappable = free && canReserve;
     final ink = free ? c.foreground : c.mutedForeground;
     final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
-    final statusColor = placeStatusColor(room, canReserve, c);
+    final statusColor = free ? NinjaColors.success : placeStatusColor(room, canReserve, c);
     final top = Pressable(
       onTap: tappable ? onToggle : null,
       scale: open ? 1 : 0.99,

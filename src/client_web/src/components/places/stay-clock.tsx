@@ -47,8 +47,8 @@ export function StayClock({
       <div className='flex items-center justify-between gap-3'>
         <span className='flex items-center gap-2 text-caption font-semibold'>
           <span className='relative grid size-2.5 place-items-center'>
-            <span className='bg-foreground/60 absolute inset-0 animate-ping rounded-full motion-reduce:animate-none' />
-            <span className='bg-foreground size-2 rounded-full' />
+            <span className='absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none' />
+            <span className='size-2 rounded-full bg-emerald-400' />
           </span>
           {t('bookClockRunning')}
         </span>

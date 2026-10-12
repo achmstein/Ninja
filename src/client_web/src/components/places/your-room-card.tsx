@@ -9,7 +9,7 @@ import { Odometer } from "@/components/ninja/odometer";
 /**
  * The room the customer is in, leading the Book tab: its own card made the
  * hero, on the slab with its kind drawn big behind it, the clock running
- * large under its name beside a live dot, and the way into the room
+ * large under its name beside a live green dot, and the way into the room
  * (the same sheet as the dock's row opens). The places after it are there
  * to read: while the clock runs another cannot be booked.
  */
@@ -39,10 +39,10 @@ export function YourRoomCard({
 
       <span className="flex w-full items-center justify-between gap-3">
         {/* Running now: the live dot and the words for it */}
-        <span className="bg-foreground/12 text-foreground flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-bold">
+        <span className="flex items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-1 text-caption font-bold text-emerald-300">
           <span className="relative grid size-1.5 place-items-center">
-            <span className="bg-foreground/60 absolute inset-0 animate-ping rounded-full motion-reduce:animate-none" />
-            <span className="bg-foreground size-1.5 rounded-full" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60 motion-reduce:animate-none" />
+            <span className="size-1.5 rounded-full bg-emerald-400" />
           </span>
           {t("bookClockRunning")}
         </span>

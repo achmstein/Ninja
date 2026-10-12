@@ -127,8 +127,7 @@ function DialChip({
  * Read out as its words by the chip's text, so it is hidden from screen readers.
  */
 export function SeatMeter({ free, total, selected }: { free: number; total: number; selected: boolean }) {
-  // Free in the ink, as the places' own status reads, not a colour
-  const lit = selected ? 'bg-primary-foreground' : 'bg-foreground'
+  const lit = selected ? 'bg-primary-foreground' : 'bg-emerald-500'
   const dim = selected ? 'bg-primary-foreground/25' : 'bg-muted'
   if (total === 0) return <span className={cn('relative h-1.5 rounded-full', dim)} aria-hidden />
   if (total > MAX_SEGMENTS) {
