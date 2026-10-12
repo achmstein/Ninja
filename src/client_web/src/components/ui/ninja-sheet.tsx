@@ -185,6 +185,8 @@ function SheetLayer({ parts: { Portal, Overlay, Content }, from = 'bottom', clas
       <Content asChild forceMount {...contentProps}>
         <motion.div
           ref={setFrame}
+          // The slab's own colour: a slab card in it has no edge to show and stands flat (bill-card)
+          data-on-slab=''
           className={cn(
             'dark bg-background text-foreground fixed z-50 mx-auto flex flex-col overflow-hidden rounded-[1.75rem] shadow-[0_24px_60px_-16px_rgb(0_0_0/0.55)] outline-none',
             from === 'bottom' ? 'max-h-[88svh]' : 'top-[calc(env(safe-area-inset-top)+4.5rem)] max-h-[calc(100svh-6rem)]'

@@ -128,7 +128,15 @@ export function BillCard({
 
   return (
     <div className='flex flex-col'>
-      <Surface className={cn('relative z-10 flex flex-col gap-4', !open && 'p-5')}>
+      {/* On a sheet, which is the slab's own colour, the slab had no edge to show, only its padding: it stands
+          flat there, in line with what is beside it (the room's request tiles, the sheet's title) */}
+      <Surface
+        className={cn(
+          'relative z-10 flex flex-col gap-4',
+          !open && 'p-5',
+          open && 'in-data-on-slab:rounded-none in-data-on-slab:bg-transparent in-data-on-slab:p-0 in-data-on-slab:shadow-none'
+        )}
+      >
         {/* Where and when, and what the till did with it */}
         <div className='flex items-center gap-2'>
           <span className='text-muted-foreground flex min-w-0 flex-1 items-center gap-1.5 text-caption font-semibold'>
@@ -298,7 +306,8 @@ export function BillCard({
 
       {/* Paying from the phone, where the business takes it: tucked under the slab, as the order sheet tucks under the dock */}
       {open && !forming && (
-        <div className='-mt-6 empty:hidden [&>*]:bg-muted [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9'>
+        // With the bill flat on a sheet there is no slab to tuck under: it stands under the bill, whole
+        <div className='in-data-on-slab:mt-4 in-data-on-slab:[&>*]:rounded-t-[1.5rem] in-data-on-slab:[&>*]:pt-4 -mt-6 empty:hidden [&>*]:bg-muted [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9'>
           <BillPayBar bill={bill} />
         </div>
       )}
