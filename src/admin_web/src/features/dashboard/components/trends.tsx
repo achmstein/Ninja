@@ -384,7 +384,7 @@ export function TopLists() {
               {t('noAnalyticsData')}
             </p>
           ) : (
-            <RankedList items={topItems} />
+            <RankedList items={topItems} className='divide-y-0' />
           )}
         </CardContent>
       </Card>
@@ -406,7 +406,7 @@ export function TopLists() {
                 {t('noAnalyticsData')}
               </p>
             ) : (
-              <RankedList items={placeRows} />
+              <RankedList items={placeRows} className='divide-y-0' />
             )}
           </CardContent>
         </Card>
