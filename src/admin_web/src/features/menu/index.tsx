@@ -598,7 +598,7 @@ export function MenuManagement() {
                               {t('emptyCategory')}
                             </p>
                           ) : photos ? (
-                            <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4'>
+                            <div className='mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4'>
                               {section.items.map((item) => (
                                 <MenuCard
                                   key={toNumber(item.id)}
