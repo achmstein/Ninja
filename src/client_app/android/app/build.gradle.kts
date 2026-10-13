@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -22,8 +23,9 @@ if (keystorePropertiesFile.exists()) {
 // draws the free map (lib/core/config/app_config.dart)
 val dartDefines: Map<String, String> = (project.findProperty("dart-defines") as String?)
     ?.split(",")
-    ?.mapNotNull { runCatching { String(java.util.Base64.getDecoder().decode(it)) }.getOrNull() }
-    ?.mapNotNull { it.split("=", limit = 2).takeIf { pair -> pair.size == 2 }?.let { pair -> pair[0] to pair[1] } }
+    // Base64 imported, not spelled java.util.Base64: in a build script `java` is the Java plugin's settings
+    ?.mapNotNull { encoded: String -> runCatching { String(Base64.getDecoder().decode(encoded)) }.getOrNull() }
+    ?.mapNotNull { define: String -> define.split("=", limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] } }
     ?.toMap()
     ?: emptyMap()
 
