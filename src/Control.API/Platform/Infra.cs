@@ -104,6 +104,12 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureAccountConsoleAsync(string realm, CancellationToken ct);
     /// <summary>
+    /// The login page's "Remember me" in a realm: ticked, the browser keeps its
+    /// sign-in, the authenticator code with it, for 30 days rather than the
+    /// realm's working day. Idempotent.
+    /// </summary>
+    Task EnsureRememberMeAsync(string realm, CancellationToken ct);
+    /// <summary>
     /// Signs the user in without their password, as the master admin may: a
     /// browser session in their realm, returned as the Set-Cookie headers a
     /// browser on <paramref name="publicAuthHost"/> would have received.
@@ -827,6 +833,20 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         }
     }
 
+    public async Task EnsureRememberMeAsync(string realm, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var body = new JsonObject
+        {
+            ["rememberMe"] = true,
+            ["ssoSessionIdleTimeoutRememberMe"] = Templates.RememberMeSeconds,
+            ["ssoSessionMaxLifespanRememberMe"] = Templates.RememberMeSeconds,
+        };
+        var response = await client.PutAsJsonAsync($"{Base}/admin/realms/{realm}", body, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Keycloak refused Remember me for {realm} ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
+    }
+
     public async Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
     {
         var client = await AdminClientAsync(ct);
@@ -1022,6 +1042,11 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     public Task EnsureTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} signs in through the hub", slug); return Task.CompletedTask; }
     public Task EnsureProfileFieldsAsync(string realm, string country, CancellationToken ct) { logger.LogInformation("(dry run) first and last name and the {Country} phone in {Realm}", country, realm); return Task.CompletedTask; }
     public Task RemoveTenantBrokersAsync(string slug, CancellationToken ct) { logger.LogInformation("(dry run) {Slug} off the hub", slug); return Task.CompletedTask; }
+    public Task EnsureRememberMeAsync(string realm, CancellationToken ct)
+    {
+        logger.LogInformation("(dry run) remember me in {Realm}", realm);
+        return Task.CompletedTask;
+    }
     public Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
     {
         AccountConsolesEnsured.Add(realm);

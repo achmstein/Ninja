@@ -41,6 +41,9 @@
   "accessTokenLifespan": 900,
   "ssoSessionIdleTimeout": 28800,
   "ssoSessionMaxLifespan": 86400,
+  "rememberMe": true,
+  "ssoSessionIdleTimeoutRememberMe": 2592000,
+  "ssoSessionMaxLifespanRememberMe": 2592000,
   "roles": {
     "realm": [
       {

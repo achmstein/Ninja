@@ -236,7 +236,8 @@ public sealed class DryRunOperatorDirectory(ILogger<DryRunOperatorDirectory> log
 /// The platform realm is imported once and never stamped, so what the
 /// template gained since is put on at start: Keycloak's account pages (the
 /// control app's "Authenticator &amp; sessions") given a token that says who
-/// is asking. Retried each minute until Keycloak answers, then done.
+/// is asking, and the login page's "Remember me". Retried each minute until
+/// Keycloak answers, then done.
 /// </summary>
 public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, ILogger<PlatformRealmService> logger) : BackgroundService
 {
@@ -248,7 +249,8 @@ public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, ILogger<Pla
             try
             {
                 await keycloak.EnsureAccountConsoleAsync(KeycloakOperatorDirectory.Realm, stoppingToken);
-                logger.LogInformation("Account console ensured in the {Realm} realm", KeycloakOperatorDirectory.Realm);
+                await keycloak.EnsureRememberMeAsync(KeycloakOperatorDirectory.Realm, stoppingToken);
+                logger.LogInformation("Account console and remember me ensured in the {Realm} realm", KeycloakOperatorDirectory.Realm);
                 return;
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)

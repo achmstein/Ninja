@@ -418,6 +418,9 @@ public static partial class Templates
         },
     };
 
+    /// <summary>How long a ticked "Remember me" keeps an operator signed in (as platform-realm.json says): 30 days.</summary>
+    public const int RememberMeSeconds = 2592000;
+
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
     public static string PlatformRealm(PlatformOptions platform, string initialPassword)
         => Render(Read("platform-realm.json"), new Dictionary<string, string>
