@@ -124,9 +124,9 @@ public static class ReceiptProposalValidator
                 }
 
                 decimal? packSize = raw.NewItem is { PackSize: > 0 } ? Round(raw.NewItem.PackSize, 3) : null;
-                var packName = AIJson.Clean(raw.NewItem?.PackName, 40);
                 var (keptEn, keptAr) = ContentLanguages.Keep(nameEn, nameAr, languages);
-                newItem = new ProposedNewItem(new LocalizedText(keptEn, keptAr), unit, packSize, packName.Length == 0 ? null : LocalizedText.InScriptOf(packName));
+                var (packEn, packAr) = ContentLanguages.Keep(AIJson.Clean(raw.NewItem?.PackNameEn, 40), AIJson.Clean(raw.NewItem?.PackNameAr, 40), languages);
+                newItem = new ProposedNewItem(new LocalizedText(keptEn, keptAr), unit, packSize, packEn is null && packAr is null ? null : new LocalizedText(packEn, packAr));
             }
 
             var suggestions = item is null ? StockItemMatcher.Suggest(rawText, candidates) : [];

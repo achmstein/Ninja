@@ -84,7 +84,8 @@ public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider time
           when the item is sold by the pack, else 0.
         - For an unmatched line fill newItem: nameEn (Title Case), nameAr (Egyptian Arabic, brands transliterated),
           unit (one of pcs, g, ml, kg, l — prefer g and ml for anything weighed or poured), packSize (base units per
-          pack, 0 if not sold by the pack) and packName ("bottle", "bag", "carton", "" if none). Matched lines have
+          pack, 0 if not sold by the pack), packNameEn and packNameAr (what the pack is called in each: "bottle" / "إزازة",
+          "bag" / "كيس", "carton" / "كرتونة"; both "" if none). Matched lines have
           newItem with empty strings and 0.
         - supplier and invoiceRef exactly as printed ("" when absent); date as yyyy-MM-dd when readable, else "";
           currency as an ISO code ("EGP" unless the receipt says otherwise).

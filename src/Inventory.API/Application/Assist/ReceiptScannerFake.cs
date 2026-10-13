@@ -22,7 +22,7 @@ public static class ReceiptScannerFake
         var prompt = JsonSerializer.Deserialize<ReceiptPrompt>(request.UserText, AIJson.Options)
             ?? throw new InvalidOperationException("The scanner prompt is not the expected JSON");
 
-        var none = new ExtractedNewItem(string.Empty, string.Empty, string.Empty, 0, string.Empty);
+        var none = new ExtractedNewItem(string.Empty, string.Empty, string.Empty, 0, string.Empty, string.Empty);
         var lines = new List<ExtractedLine>();
 
         if (prompt.Candidates.Count > 0)
@@ -40,7 +40,7 @@ public static class ReceiptScannerFake
         }
 
         lines.Add(new ExtractedLine(NewItemRawText, 12, 12, 8m, 96m, 0, 0,
-            new ExtractedNewItem(NewItemNameEn, "مياه معدنية 1.5 لتر", "pcs", 0, string.Empty)));
+            new ExtractedNewItem(NewItemNameEn, "مياه معدنية 1.5 لتر", "pcs", 0, string.Empty, string.Empty)));
 
         var extraction = new ReceiptExtraction(
             Supplier, InvoiceRef, prompt.Today, "EGP",

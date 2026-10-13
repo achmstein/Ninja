@@ -83,15 +83,15 @@ public static class RecipeProposalValidator
             else if (nameAr.Length > 0 && shelfByName.TryGetValue(TextFolding.Fold(nameAr), out var byAr)) existing = byAr;
 
             decimal? packSize = raw.PackSize > 0 ? Math.Round(raw.PackSize, 3, MidpointRounding.AwayFromZero) : null;
-            var packName = AIJson.Clean(raw.PackName, 40);
             // Matched to the shelf by either name above; proposed in the business's language
             var (keptEn, keptAr) = ContentLanguages.Keep(nameEn, nameAr, languages);
+            var (packEn, packAr) = ContentLanguages.Keep(AIJson.Clean(raw.PackNameEn, 40), AIJson.Clean(raw.PackNameAr, 40), languages);
             var ingredient = new ProposedIngredient(
                 key,
                 new LocalizedText(keptEn, keptAr),
                 unit,
                 packSize,
-                packName.Length == 0 ? null : LocalizedText.InScriptOf(packName),
+                packEn is null && packAr is null ? null : new LocalizedText(packEn, packAr),
                 raw.AutoSoldOut);
             byKey[key] = ingredient;
             if (existing is not null)

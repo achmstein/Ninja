@@ -109,8 +109,8 @@ public sealed class RecipeProposer(INinjaAgentFactory factory)
         - "newItems": every ingredient not on the shelf, once, with a short lowercase key ("whole-milk"), nameEn
           (Title Case), nameAr (Egyptian Arabic), unit (g for anything weighed, ml for poured, pcs for counted),
           packSize (base units per pack as bought: a 1 l carton of milk is 1000, a 250 g bag of beans 250; 0 when
-          bought loose) and packName ("carton", "bag", "bottle", ""), autoSoldOut true only for things sold by the
-          piece. Reuse one key across every recipe that needs it. Do not repeat anything already on the shelf; use
+          bought loose), packNameEn and packNameAr (what the pack is called in each: "carton" / "كرتونة", "bag" / "كيس",
+          "bottle" / "إزازة"; both "" when bought loose), autoSoldOut true only for things sold by the piece. Reuse one key across every recipe that needs it. Do not repeat anything already on the shelf; use
           its id instead.
         - A slot has at most one default line. A line's optionIds are only ids from that item's own options.
         - notes is "" unless the items do not look like a menu.

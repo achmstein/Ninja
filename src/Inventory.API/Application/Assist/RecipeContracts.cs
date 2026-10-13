@@ -76,7 +76,7 @@ public static class RecipeKinds
 
 public sealed record RecipesExtraction(IReadOnlyList<ExtractedIngredient> NewItems, IReadOnlyList<ExtractedRecipe> Recipes, string Notes);
 
-public sealed record ExtractedIngredient(string Key, string NameEn, string NameAr, string Unit, decimal PackSize, string PackName, bool AutoSoldOut);
+public sealed record ExtractedIngredient(string Key, string NameEn, string NameAr, string Unit, decimal PackSize, string PackNameEn, string PackNameAr, bool AutoSoldOut);
 
 public sealed record ExtractedRecipe(int CatalogItemId, string Kind, IReadOnlyList<ExtractedRecipeLine> Lines);
 

@@ -53,7 +53,7 @@ public static class RecipeProposerFake
         }
 
         var extraction = new RecipesExtraction(
-            [new ExtractedIngredient(SyrupKey, SyrupNameEn, SyrupNameAr, "ml", 1000, "bottle", false)],
+            [new ExtractedIngredient(SyrupKey, SyrupNameEn, SyrupNameAr, "ml", 1000, "bottle", "إزازة", false)],
             recipes,
             string.Empty);
 

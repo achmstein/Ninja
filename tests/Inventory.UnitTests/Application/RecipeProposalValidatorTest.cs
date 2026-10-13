@@ -22,14 +22,14 @@ public class RecipeProposalValidatorTest
         new(Cola, new LocalizedText("Cola", "كولا"), null, "Drinks", 20, null),
     ];
 
-    private static ExtractedIngredient Ingredient(string key, string en, string ar = "", string unit = "ml", decimal pack = 1000, string packName = "carton", bool auto = false)
-        => new(key, en, ar, unit, pack, packName, auto);
+    private static ExtractedIngredient Ingredient(string key, string en, string ar = "", string unit = "ml", decimal pack = 1000, string packName = "carton", string packNameAr = "كرتونة", bool auto = false)
+        => new(key, en, ar, unit, pack, packName, packNameAr, auto);
 
     [TestMethod]
     public void A_clean_answer_passes_through_with_the_shelf_resolved_and_the_syrup_new()
     {
         var extraction = new RecipesExtraction(
-            [Ingredient("oat-milk", "Oat Milk", "لبن شوفان"), Ingredient("cup", "Paper Cup", "كوب ورق", "pcs", 0, "", true)],
+            [Ingredient("oat-milk", "Oat Milk", "لبن شوفان"), Ingredient("cup", "Paper Cup", "كوب ورق", "pcs", 0, "", "", true)],
             [
                 new ExtractedRecipe(Latte, "recipe",
                 [
@@ -48,6 +48,9 @@ public class RecipeProposalValidatorTest
         Assert.IsEmpty(proposal.Warnings);
         Assert.IsNull(proposal.Notes);
         CollectionAssert.AreEqual(new[] { "oat-milk", "cup" }, proposal.NewItems.Select(i => i.Key).ToList());
+        Assert.AreEqual("carton", proposal.NewItems[0].PackName?.En);
+        Assert.AreEqual("كرتونة", proposal.NewItems[0].PackName?.Ar);
+        Assert.IsNull(proposal.NewItems[1].PackName);
         Assert.AreEqual("pcs", proposal.NewItems[1].Unit);
         Assert.IsNull(proposal.NewItems[1].PackSize);
         Assert.IsTrue(proposal.NewItems[1].AutoSoldOut);

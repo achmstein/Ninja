@@ -15,7 +15,7 @@ public class ReceiptProposalValidatorTest
         new(3, new LocalizedText("Red Bull", "ريد بول"), "pcs", null, null, true, true),
     ];
 
-    private static readonly ExtractedNewItem NoItem = new ExtractedNewItem("", "", "", 0, "");
+    private static readonly ExtractedNewItem NoItem = new ExtractedNewItem("", "", "", 0, "", "");
 
     private static ReceiptExtraction Receipt(params ExtractedLine[] lines)
         => new ReceiptExtraction("Metro", "INV-7", "2026-09-14", "EGP", lines.Sum(l => l.LineTotal), lines, "");
@@ -58,7 +58,7 @@ public class ReceiptProposalValidatorTest
     public void An_unknown_id_is_dropped_and_the_line_gets_suggestions_and_a_new_item()
     {
         var proposal = ReceiptProposalValidator.Validate(Receipt(
-            new ExtractedLine("سكر 1 كيلو", 1000, 1, 0.05m, 50, 99, 0.9, new ExtractedNewItem("Sugar 1 kg", "سكر", "g", 1000, "bag"))), Items, []);
+            new ExtractedLine("سكر 1 كيلو", 1000, 1, 0.05m, 50, 99, 0.9, new ExtractedNewItem("Sugar 1 kg", "سكر", "g", 1000, "bag", "كيس"))), Items, []);
 
         var line = proposal.Lines.Single();
         Assert.IsNull(line.StockItemId);
@@ -69,13 +69,14 @@ public class ReceiptProposalValidatorTest
         Assert.AreEqual("g", line.NewItem.Unit);
         Assert.AreEqual(1000m, line.NewItem.PackSize);
         Assert.AreEqual("bag", line.NewItem.PackName?.En);
+        Assert.AreEqual("كيس", line.NewItem.PackName?.Ar);
     }
 
     [TestMethod]
     public void A_new_item_read_in_arabic_only_keeps_its_names_on_the_arabic_side()
     {
         var proposal = ReceiptProposalValidator.Validate(Receipt(
-            new ExtractedLine("بن محوج 250 جم", 250, 1, 1.2m, 300, 0, 0.9, new ExtractedNewItem("", "بن محوج", "g", 250, "كيس"))), Items, []);
+            new ExtractedLine("بن محوج 250 جم", 250, 1, 1.2m, 300, 0, 0.9, new ExtractedNewItem("", "بن محوج", "g", 250, "", "كيس"))), Items, []);
 
         var item = proposal.Lines.Single().NewItem!;
         Assert.IsNull(item.Name.En);
@@ -88,7 +89,7 @@ public class ReceiptProposalValidatorTest
     public void A_new_item_gets_a_safe_unit_and_a_name_when_the_model_left_them_out()
     {
         var proposal = ReceiptProposalValidator.Validate(Receipt(
-            new ExtractedLine("Paper cups 12oz", 50, 0, 1, 50, 0, 0, new ExtractedNewItem("", "", "box", 0, ""))), Items, []);
+            new ExtractedLine("Paper cups 12oz", 50, 0, 1, 50, 0, 0, new ExtractedNewItem("", "", "box", 0, "", ""))), Items, []);
 
         var line = proposal.Lines.Single();
         Assert.AreEqual("Paper cups 12oz", line.NewItem!.Name.En);
@@ -185,7 +186,7 @@ public class ReceiptProposalValidatorTest
     [TestMethod]
     public void A_new_item_of_a_one_language_business_is_named_in_that_language_only()
     {
-        var line = new ExtractedLine("سكر 1 كيلو", 1000, 1, 0.05m, 50, 0, 0.9, new ExtractedNewItem("Sugar", "سكر", "g", 1000, "كيس"));
+        var line = new ExtractedLine("سكر 1 كيلو", 1000, 1, 0.05m, 50, 0, 0.9, new ExtractedNewItem("Sugar", "سكر", "g", 1000, "", "كيس"));
 
         var arabic = ReceiptProposalValidator.Validate(Receipt(line), Items, [], languages: "ar").Lines.Single().NewItem!;
         Assert.IsNull(arabic.Name.En);
