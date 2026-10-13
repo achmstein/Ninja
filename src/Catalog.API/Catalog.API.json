@@ -1194,6 +1194,14 @@
                         "format": "int32"
                       }
                     }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "logo": {
+                        "$ref": "#/components/schemas/IFormFile"
+                      }
+                    }
                   }
                 ]
               }

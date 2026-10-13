@@ -1235,6 +1235,8 @@ export type DesignPromotionData = {
         note?: string;
     } & {
         count?: number | string;
+    } & {
+        logo?: IFormFile;
     };
     path?: never;
     query?: {

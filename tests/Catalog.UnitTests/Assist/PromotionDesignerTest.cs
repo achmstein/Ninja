@@ -20,7 +20,51 @@ public class PromotionDesignerTest
         Assert.Contains("\"Mellow\"", prompt);
         Assert.Contains("#0EA5E9, #111827", prompt);
         Assert.Contains("Also: warmer light.", prompt);
+        Assert.Contains("no flat beige box", prompt);
         Assert.DoesNotContain("right to left", prompt);
+    }
+
+    [TestMethod]
+    public void With_a_logo_the_name_is_not_written_and_its_corner_is_kept_clear()
+    {
+        var request = new DesignPromotionRequest("Waffle Wednesday", "Mellow", null, null, 3, [1, 2, 3]);
+
+        var prompt = PromotionPrompt.For(request);
+
+        Assert.DoesNotContain("\"Mellow\"", prompt);
+        Assert.Contains("keep the bottom-left corner", prompt);
+        Assert.Contains("keep the bottom-right corner", PromotionPrompt.For(request with { Headline = "خصم الوافل" }));
+    }
+
+    [TestMethod]
+    public void Each_design_of_a_request_is_asked_for_in_its_own_style()
+    {
+        var request = new DesignPromotionRequest("Hi", null, null, null, 3);
+
+        var prompts = PromotionPrompt.Styles.Select(style => PromotionPrompt.For(request, style, logo: false)).ToList();
+
+        Assert.HasCount(PromotionDesigner.MaxDesigns, prompts.Distinct().ToList());
+        Assert.Contains("colour-block", prompts[0]);
+        Assert.Contains("editorial", prompts[1]);
+        Assert.Contains("playful", prompts[2]);
+    }
+
+    [TestMethod]
+    public void The_logo_is_put_on_a_white_plate_in_the_corner_it_was_given()
+    {
+        using var design = new SKBitmap(400, 600);
+        design.Erase(new SKColor(0x10, 0x10, 0x10));
+        using var logo = new SKBitmap(100, 50);
+        logo.Erase(new SKColor(0xE1, 0x1D, 0x48));
+        using var encoded = SKImage.FromBitmap(design).Encode(SKEncodedImageFormat.Png, 100);
+
+        using var left = SKBitmap.Decode(PromotionDesigner.WithLogo(encoded.ToArray(), logo, LogoCorner.BottomLeft));
+        using var right = SKBitmap.Decode(PromotionDesigner.WithLogo(encoded.ToArray(), logo, LogoCorner.BottomRight));
+
+        // The logo, a fifth of the width (80 px) on its plate, sits low in the corner asked; the other corner is the design
+        Assert.AreEqual(new SKColor(0xE1, 0x1D, 0x48), left.GetPixel(70, 560));
+        Assert.AreEqual(new SKColor(0x10, 0x10, 0x10), left.GetPixel(330, 560));
+        Assert.AreEqual(new SKColor(0xE1, 0x1D, 0x48), right.GetPixel(330, 560));
     }
 
     [TestMethod]
@@ -43,6 +87,9 @@ public class PromotionDesignerTest
 
         Assert.HasCount(2, await designer.DesignAsync(photo, new DesignPromotionRequest("Hi", null, null, null, 2), CancellationToken.None));
         Assert.HasCount(PromotionDesigner.MaxDesigns, await designer.DesignAsync(photo, new DesignPromotionRequest("Hi", null, null, null, 9), CancellationToken.None));
+        // A logo that is not a picture is left out: the designs still come
+        Assert.HasCount(1, await designer.DesignAsync(photo, new DesignPromotionRequest("Hi", null, null, null, 1, [1, 2, 3]), CancellationToken.None));
+        Assert.HasCount(1, await designer.DesignAsync(photo, new DesignPromotionRequest("Hi", null, null, null, 1, photo), CancellationToken.None));
     }
 
     [TestMethod]

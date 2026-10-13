@@ -37,6 +37,7 @@ import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid, SwitchRow } from '@/components/field'
 import { LocalizedInput } from '@/components/localized-input'
 import { NinjaMark } from '@/components/ninja-mark'
+import { ToggleChip } from '@/components/toggle-chip'
 import { assistErrorMessage } from '@/features/assist/errors'
 import { useAiAvailable } from '@/features/assist/use-ai-available'
 import { promotionPictureUrl } from '@/features/menu/pictures'
@@ -291,12 +292,10 @@ function PromotionForm({
               const on =
                 form.branchIds.length === 0 || form.branchIds.includes(id)
               return (
-                <Button
+                <ToggleChip
                   key={id}
-                  type='button'
-                  size='sm'
-                  variant={on ? 'secondary' : 'outline'}
-                  onClick={() => {
+                  on={on}
+                  onToggle={() => {
                     const all = branches.map((x) => Number(x.id))
                     const current =
                       form.branchIds.length === 0 ? all : form.branchIds
@@ -312,7 +311,7 @@ function PromotionForm({
                   }}
                 >
                   {localized(b.name)}
-                </Button>
+                </ToggleChip>
               )
             })}
           </div>
@@ -344,13 +343,12 @@ function PromotionForm({
               const bit = 1 << day
               const on = form.weekdays === 0 || (form.weekdays & bit) !== 0
               return (
-                <Button
+                <ToggleChip
                   key={day}
-                  type='button'
-                  size='sm'
-                  variant={on ? 'secondary' : 'outline'}
-                  className='h-8 w-11 px-0 text-xs'
-                  onClick={() => {
+                  on={on}
+                  compact
+                  className='w-11'
+                  onToggle={() => {
                     const all = 127
                     const next =
                       (form.weekdays === 0 ? all : form.weekdays) ^ bit
@@ -358,7 +356,7 @@ function PromotionForm({
                   }}
                 >
                   {weekdayName(day)}
-                </Button>
+                </ToggleChip>
               )
             })}
           </div>
@@ -416,6 +414,27 @@ function fileOf(dataUrl: string, name: string): File {
 }
 
 /**
+ * The brand's logo as a file to send with the photo, or undefined: none set,
+ * not reachable, or a vector one (the designer draws pixels and leaves an SVG
+ * out, writing the name instead)
+ */
+async function logoFile(
+  url: string | null | undefined
+): Promise<File | undefined> {
+  if (!url) return undefined
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return undefined
+    const blob = await response.blob()
+    if (!blob.type.startsWith('image/') || blob.type.includes('svg'))
+      return undefined
+    return new File([blob], 'logo', { type: blob.type })
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * The picture, the shape the popup shows it in: the owner's own design
  * uploaded as it is, or Ninja's designs from a real photo of theirs (the
  * dish, the room) with the headline drawn in. A few come back at once to
@@ -467,10 +486,13 @@ function PictureStage({
     setStep(0)
     setError(null)
     try {
+      // The real logo goes on each design as it is; without one the name is written small instead
+      const logo = await logoFile(brand?.logoUrl)
       const { data } = await designPromotion({
         query: { 'api-version': API_VERSION },
         body: {
           photo: photo.file as unknown as never,
+          logo: logo as unknown as never,
           headline: words,
           business:
             (language === 'ar' ? brand?.name.ar : brand?.name.en) ||

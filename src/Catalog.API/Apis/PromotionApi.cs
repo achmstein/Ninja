@@ -242,6 +242,7 @@ public static class PromotionApi
         [FromForm, Description("The brand's colours, hex, comma separated")] string? colors,
         [FromForm, Description("Anything to add or change")] string? note,
         [FromForm, Description("How many designs, 1 to 3")] int? count,
+        [Description("The business's logo, put on each design as it is (png, webp or jpeg)")] IFormFile? logo,
         CancellationToken ct)
     {
         if (!designer.IsEnabled)
@@ -258,7 +259,9 @@ public static class PromotionApi
             business,
             colors?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
             note,
-            count ?? PromotionDesigner.MaxDesigns);
+            count ?? PromotionDesigner.MaxDesigns,
+            // A logo too big to be one is left out rather than refused: the designs still come, with the name
+            logo is { Length: > 0 and <= ItemPictures.MaxUploadBytes } ? await ReadAsync(logo) : null);
         try
         {
             var designs = await designer.DesignAsync(await ReadAsync(photo), request, ct);
