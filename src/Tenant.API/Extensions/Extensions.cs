@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Ninja.Tenant.API.IntegrationEvents;
 using Ninja.Tenant.API.IntegrationEvents.EventHandling;
 using Ninja.Tenant.API.Services;
@@ -27,6 +29,17 @@ public static class Extensions
         // A shared map link is followed hop by hop, to Google hosts only (see MapLocation)
         builder.Services.AddMapLinkClient();
         builder.Services.AddSingleton<TenantCountry>();
+
+        // Address search through Google Places with the platform's server key, cached and capped
+        // per business; anonymous (guests check out), so each address is metered too
+        builder.Services.AddPlacesClient(builder.Configuration);
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(Apis.PlacesApi.RateLimit, http => RateLimitPartition.GetFixedWindowLimiter(
+                http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 40, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
 
         builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));
         builder.Services.AddSingleton<TenantBrandStore>();

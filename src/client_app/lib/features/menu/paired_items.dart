@@ -34,7 +34,7 @@ List<MenuItem> pairedFor(MenuItem item, Map<int, MenuItem> menu, List<CartItem> 
 /// Whether an item can go in with one tap (the plus, a held press): it is on,
 /// and either it has nothing to choose at all or the customer has a saved way
 /// of it that still answers every required choice. Anything else opens, so
-/// nobody gets a dish made a way they did not pick (client_web's canQuickAdd).
+/// nobody gets an item made a way they did not pick (client_web's canQuickAdd).
 bool canQuickAdd(MenuItem item, [UserItemPreference? preference]) {
   if (!item.isAvailable) return false;
   if (item.customizations.isEmpty) return true;
@@ -43,7 +43,7 @@ bool canQuickAdd(MenuItem item, [UserItemPreference? preference]) {
   return item.customizations.every((c) => !c.isRequired || picked.any((s) => s.customizationId == c.id));
 }
 
-/// What a dish goes in with untouched: per choice the customer's saved
+/// What an item goes in with untouched: per choice the customer's saved
 /// options where they still exist, else the business's defaults; nothing sold out
 List<SelectedCustomization> _quickChoices(MenuItem item, UserItemPreference? preference) => [
   for (final customization in item.customizations)
@@ -91,7 +91,7 @@ MenuItem? cartNudge(List<CartItem> cart, Map<int, MenuItem> menu, [Map<int, User
 CartItem suggestedLine(MenuItem item, String suggestion, [UserItemPreference? preference]) =>
     quickAddLine(item, preference).copyWith(suggestion: suggestion);
 
-/// The line a tap on a dish's plus (or a held press) adds: the customer's
+/// The line a tap on an item's plus (or a held press) adds: the customer's
 /// saved way (else the business's defaults), nothing sold out, one of it
 /// (client_web's quickAddChoice)
 CartItem quickAddLine(MenuItem item, [UserItemPreference? preference]) =>

@@ -172,6 +172,45 @@ public sealed class DeliveryScenarios
         Assert.IsEmpty(nowhere.Branches);
     }
 
+    /// <summary>A branch of its own at Tahrir that delivers to an area drawn north of it, and has no radius</summary>
+    private const int Drawn = 13;
+
+    [TestMethod]
+    public async Task A_drawn_area_decides_where_the_branch_delivers()
+    {
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var handler = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await handler.Handle(new BranchSettingsChangedIntegrationEvent(
+                Drawn, IsOrderingEnabled: true, IsReservationsEnabled: true, IsDeliveryEnabled: true,
+                Latitude: Lat, Longitude: Lng, DeliveryFee: 15,
+                DeliveryArea: [[30.05, 31.235], [30.10, 31.235], [30.10, 31.255], [30.05, 31.255]]));
+        }
+        var customer = Customer($"customer-{Guid.NewGuid():N}", Drawn);
+
+        // Some 5.6 km north, inside the area; and Garden City, a kilometre south, outside it
+        const double northLat = 30.095, northLng = 31.245;
+        const double southLat = 30.035, southLng = 31.232;
+
+        var north = await customer.GetAsync<DeliveryQuoteView>($"{Orders}/delivery/quote?latitude={northLat}&longitude={northLng}&{Version}");
+        Assert.IsTrue(north.Delivers);
+        Assert.IsTrue(north.InRange, "inside the area, however far");
+        Assert.IsGreaterThan(5000, north.DistanceMeters!.Value);
+
+        var south = await customer.GetAsync<DeliveryQuoteView>($"{Orders}/delivery/quote?latitude={southLat}&longitude={southLng}&{Version}");
+        Assert.IsFalse(south.InRange, "outside the area, however near");
+
+        var resolved = await Suite.Ordering.AsAnonymous().GetAsync<DeliveryResolution>($"{Orders}/delivery/resolve?latitude={northLat}&longitude={northLng}&{Version}");
+        CollectionAssert.Contains(resolved.Branches.Select(b => b.BranchId).ToList(), Drawn);
+
+        var (outside, outsideBody) = await PlaceAsync(customer, Order(southLat, southLng, 150));
+        Assert.AreEqual(HttpStatusCode.BadRequest, outside);
+        Assert.Contains("delivery.out_of_range", outsideBody);
+
+        var (inside, insideBody) = await PlaceAsync(customer, Order(northLat, northLng, 150));
+        Assert.AreEqual(HttpStatusCode.OK, inside, insideBody);
+    }
+
     [TestMethod]
     public async Task A_delivery_too_far_or_too_small_is_refused_before_it_stands()
     {
@@ -285,6 +324,15 @@ public sealed class DeliveryScenarios
 
         var words = await till.GetAsync<TillQuoteView>($"{Orders}/delivery/till-quote?location=Maadi%20road%209&{Version}");
         Assert.IsFalse(words.LocationRead, "words are not a location");
+
+        // The call centre's question, for the same pin: this branch is among those that
+        // reach it, paused and said so, since a phone order may still go there
+        var hotline = await till.GetAsync<StaffResolutionView>(
+            $"{Orders}/delivery/resolve-staff?location={Uri.EscapeDataString($"https://maps.google.com/?q={NearLat},{NearLng}")}&{Version}");
+        Assert.IsTrue(hotline.LocationRead);
+        Assert.IsTrue(hotline.Branches.Single(b => b.BranchId == PhoneOrders).Paused);
+        var (anonymous, _) = await ProblemAsync(Suite.Ordering.As(Persona.Customer()), HttpMethod.Get, $"{Orders}/delivery/resolve-staff?latitude={NearLat}&longitude={NearLng}&{Version}");
+        Assert.AreEqual(HttpStatusCode.Forbidden, anonymous, "staff only");
 
         // Words only, under the minimum: the cashier's call, not the server's
         var (ok, okBody) = await RingUpAsync(till, PhoneOrder(new { address = "Qasr El Nil St", building = "12", directions = "Blue gate", phone }));
@@ -615,5 +663,9 @@ public record BoardDelivery(string? RiderName, string Stage);
 public record BoardCard(int OrderNumber, decimal Total, decimal? CashDifference, BoardDelivery Delivery);
 
 public record TillQuoteView(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, double? Latitude, double? Longitude, bool LocationRead);
+
+public record StaffResolutionView(bool Delivers, double? Latitude, double? Longitude, bool LocationRead, List<StaffResolutionBranch> Branches);
+
+public record StaffResolutionBranch(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool Paused);
 
 public record KnownAddress(string? Label, double? Latitude, double? Longitude, string Address, string? Building, string? Phone, DateTime? LastDeliveredAt);

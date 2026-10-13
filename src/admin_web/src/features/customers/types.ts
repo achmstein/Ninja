@@ -12,6 +12,8 @@ export interface Customer {
   phoneNumber?: string
   /** Branch ids a staff account may work in (Owners hold all) */
   branches?: number[]
+  /** Given every branch, those opened later too (a call centre's account); branches is then empty */
+  allBranches?: boolean
   /** Added at the till by name and phone, not yet claimed in the app */
   addedAtCounter?: boolean
 }

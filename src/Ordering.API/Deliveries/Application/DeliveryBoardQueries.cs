@@ -16,8 +16,8 @@ public interface IDeliveryBoardQueries
 
     Task<List<DeliveryOrder>> GetMineAsync(string riderUserId);
 
-    /// <param name="branchId">Earlier deliveries are this branch's only; saved addresses are the customer's own.</param>
-    Task<List<KnownAddressView>> GetKnownAddressesAsync(int branchId, string? customerUserId, string? phone);
+    /// <param name="branchId">Earlier deliveries are this branch's only; saved addresses are the customer's own. Null is every branch's: the call centre's lookup.</param>
+    Task<List<KnownAddressView>> GetKnownAddressesAsync(int? branchId, string? customerUserId, string? phone);
 }
 
 public class DeliveryBoardQueries(
@@ -84,7 +84,7 @@ public class DeliveryBoardQueries(
             .ToList();
     }
 
-    public async Task<List<KnownAddressView>> GetKnownAddressesAsync(int branchId, string? customerUserId, string? phone)
+    public async Task<List<KnownAddressView>> GetKnownAddressesAsync(int? branchId, string? customerUserId, string? phone)
     {
         var userId = string.IsNullOrWhiteSpace(customerUserId) ? null : customerUserId.Trim();
         var number = string.IsNullOrWhiteSpace(phone) ? null : PhoneRules.Normalize(phone, country.Code);
@@ -122,10 +122,10 @@ public class DeliveryBoardQueries(
             .ToList();
     }
 
-    private Task<List<KnownAddressView>> DeliveredTo(System.Linq.Expressions.Expression<Func<DomainOrder, bool>> whose, int branchId) =>
+    private Task<List<KnownAddressView>> DeliveredTo(System.Linq.Expressions.Expression<Func<DomainOrder, bool>> whose, int? branchId) =>
         context.Orders
             .AsNoTracking()
-            .Where(o => o.Delivery != null && o.BranchId == branchId)
+            .Where(o => o.Delivery != null && (branchId == null || o.BranchId == branchId))
             .Where(whose)
             .OrderByDescending(o => o.OrderDate)
             .Take(Options.KnownAddressLookback)
@@ -150,6 +150,8 @@ public class DeliveryBoardQueries(
             ToCollect = o.ToCollect,
             CustomerName = o.Buyer?.Name ?? o.GuestName,
             CustomerNote = o.CustomerNote,
+            TakenByName = o.TakenByName,
+            TakenAtBranchId = o.TakenAtBranchId,
             Total = total,
             CashDifference = delivery.CashCollected is { } collected ? collected - total : null,
             Items = o.OrderItems.Select(oi => new Orderitem

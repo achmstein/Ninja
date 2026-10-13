@@ -1,4 +1,5 @@
 import { User, WebStorageStateStore } from 'oidc-client-ts'
+import { readBranchClaim } from '@/lib/branch-claim'
 import type { AuthProviderProps } from 'react-oidc-context'
 
 // OIDC configuration for Keycloak
@@ -82,12 +83,19 @@ export function isOwner(user: User | null | undefined): boolean {
 }
 
 // Branch ids from the `branches` claim (id_token + userinfo, merged into the
-// profile by loadUserInfo). A missing claim is no branch, never every branch.
+// profile by loadUserInfo). A missing claim is no branch, never every branch;
+// a `*` is every branch (holdsAllBranches), and names no id.
 export function getBranchClaim(user: User | null | undefined): number[] {
-  const raw = (user?.profile as Record<string, unknown> | undefined)?.branches
-  const values = Array.isArray(raw) ? raw : raw == null ? [] : [raw]
-  return values.map(Number).filter(Number.isInteger)
+  return readBranchClaim(branchesOf(user)).ids
 }
+
+// Given every branch, those opened later too: a call centre's account
+export function holdsAllBranches(user: User | null | undefined): boolean {
+  return readBranchClaim(branchesOf(user)).all
+}
+
+const branchesOf = (user: User | null | undefined) =>
+  (user?.profile as Record<string, unknown> | undefined)?.branches
 
 // The Keycloak page follows the app that sent the user there: language via
 // the standard ui_locales parameter, colour scheme via a `theme` parameter

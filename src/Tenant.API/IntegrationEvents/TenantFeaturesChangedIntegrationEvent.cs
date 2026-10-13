@@ -23,12 +23,14 @@ public record TenantFeaturesChangedIntegrationEvent(
     // When the switches were saved (ticks, UTC): a consumer keeps the newest it has seen
     long Version = 0,
     // Customers pay online for a delivery or an order they collect, before the business sees it
-    bool PayAhead = false) : IntegrationEvent
+    bool PayAhead = false,
+    // A call centre takes the business's phone orders: branch tills stop offering to send one elsewhere
+    bool CallCentre = false) : IntegrationEvent
 {
     public static TenantFeaturesChangedIntegrationEvent From(Model.Tenant tenant)
     {
         var f = tenant.Features;
         return new(f.Reservations, f.TimeBilling, f.Loyalty, f.Tabs, f.Inventory, f.Finance, f.Payroll, f.Kds, f.OnlinePayments, f.Delivery,
-            tenant.UpdatedAt.UtcTicks, f.PayAhead);
+            tenant.UpdatedAt.UtcTicks, f.PayAhead, f.CallCentre);
     }
 }

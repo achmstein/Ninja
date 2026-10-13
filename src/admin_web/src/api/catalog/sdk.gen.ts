@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, ComposeItemData, ComposeItemErrors, ComposeItemResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, CreatePromoData, CreatePromoErrors, CreatePromoResponses, CreatePromotionData, CreatePromotionErrors, CreatePromotionResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, DeletePromoData, DeletePromoErrors, DeletePromoResponses, DeletePromotionData, DeletePromotionErrors, DeletePromotionResponses, DesignPromotionData, DesignPromotionErrors, DesignPromotionResponses, DrawDishPhotoData, DrawDishPhotoErrors, FillFormData, FillFormErrors, FillFormResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPairingsData, GetItemPairingsErrors, GetItemPairingsResponses, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetLivePromotionData, GetLivePromotionResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetPromotionPictureData, GetPromotionPictureErrors, GetPromotionPictureResponses, GetTalabatData, GetTalabatErrors, GetTalabatResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ImportMenuData, ImportMenuErrors, ImportMenuResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, ListPromosData, ListPromosErrors, ListPromosResponses, ListPromotionsData, ListPromotionsErrors, ListPromotionsResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, PreviewTalabatMenuData, PreviewTalabatMenuErrors, PreviewTalabatMenuResponses, PushTalabatMenuData, PushTalabatMenuErrors, PushTalabatMenuResponses, QuotePromoData, QuotePromoErrors, QuotePromoResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveTalabatData, SaveTalabatErrors, SaveTalabatResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SetItemPairingsData, SetItemPairingsErrors, SetItemPairingsResponses, SetPromoActiveData, SetPromoActiveErrors, SetPromoActiveResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UpdatePromoData, UpdatePromoErrors, UpdatePromoResponses, UpdatePromotionData, UpdatePromotionErrors, UpdatePromotionResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses, UploadPromotionPictureData, UploadPromotionPictureErrors, UploadPromotionPictureResponses } from './types.gen';
+import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CheckBranchPricesData, CheckBranchPricesErrors, CheckBranchPricesResponses, ComposeItemData, ComposeItemErrors, ComposeItemResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, CreatePromoData, CreatePromoErrors, CreatePromoResponses, CreatePromotionData, CreatePromotionErrors, CreatePromotionResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, DeletePromoData, DeletePromoErrors, DeletePromoResponses, DeletePromotionData, DeletePromotionErrors, DeletePromotionResponses, DesignPromotionData, DesignPromotionErrors, DesignPromotionResponses, DrawItemPhotoData, DrawItemPhotoErrors, FillFormData, FillFormErrors, FillFormResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPairingsData, GetItemPairingsErrors, GetItemPairingsResponses, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetLivePromotionData, GetLivePromotionResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetPromotionPictureData, GetPromotionPictureErrors, GetPromotionPictureResponses, GetTalabatData, GetTalabatErrors, GetTalabatResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ImportMenuData, ImportMenuErrors, ImportMenuResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, ListPromosData, ListPromosErrors, ListPromosResponses, ListPromotionsData, ListPromotionsErrors, ListPromotionsResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, PreviewTalabatMenuData, PreviewTalabatMenuErrors, PreviewTalabatMenuResponses, PushTalabatMenuData, PushTalabatMenuErrors, PushTalabatMenuResponses, QuotePromoData, QuotePromoErrors, QuotePromoResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveTalabatData, SaveTalabatErrors, SaveTalabatResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SetItemPairingsData, SetItemPairingsErrors, SetItemPairingsResponses, SetPromoActiveData, SetPromoActiveErrors, SetPromoActiveResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, SuggestPairingsData, SuggestPairingsErrors, SuggestPairingsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UpdatePromoData, UpdatePromoErrors, UpdatePromoResponses, UpdatePromotionData, UpdatePromotionErrors, UpdatePromotionResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses, UploadPromotionPictureData, UploadPromotionPictureErrors, UploadPromotionPictureResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -36,7 +36,7 @@ export const localizeMenuText = <ThrowOnError extends boolean = false>(options: 
 /**
  * Fill in a form's empty fields
  *
- * Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).
+ * Given an admin form's fields as they stand (an item, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).
  */
 export const fillForm = <ThrowOnError extends boolean = false>(options: Options<FillFormData, ThrowOnError>): RequestResult<FillFormResponses, FillFormErrors, ThrowOnError> => (options.client ?? client).post<FillFormResponses, FillFormErrors, ThrowOnError>({
     responseType: 'json',
@@ -64,6 +64,21 @@ export const suggestCustomizations = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
+ * Propose what to suggest alongside an item
+ *
+ * The assistant proposes items for an item's "goes well with" list, from the menu, the owner's other lists and what the item is bought with (pass the sales pairs report). Only orderable items not on the list already, up to the room it has. Nothing is saved: keep the ones you want through the item's pairings (Admin only).
+ */
+export const suggestPairings = <ThrowOnError extends boolean = false>(options: Options<SuggestPairingsData, ThrowOnError>): RequestResult<SuggestPairingsResponses, SuggestPairingsErrors, ThrowOnError> => (options.client ?? client).post<SuggestPairingsResponses, SuggestPairingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/assist/pairings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Read a menu's photos into proposed categories and items
  *
  * The assistant transcribes the photos of a menu, one per page (up to 8) — sections, items, prices, the choices printed beside them (sizes), both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then save what you keep through the menu import (Admin only).
@@ -80,11 +95,11 @@ export const scanMenu = <ThrowOnError extends boolean = false>(options: Options<
 });
 
 /**
- * Draw a photo of a dish
+ * Draw a photo of an item
  *
- * The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).
+ * The image model draws a photo of the item as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).
  */
-export const drawDishPhoto = <ThrowOnError extends boolean = false>(options: Options<DrawDishPhotoData, ThrowOnError>): RequestResult<unknown, DrawDishPhotoErrors, ThrowOnError> => (options.client ?? client).post<unknown, DrawDishPhotoErrors, ThrowOnError>({
+export const drawItemPhoto = <ThrowOnError extends boolean = false>(options: Options<DrawItemPhotoData, ThrowOnError>): RequestResult<unknown, DrawItemPhotoErrors, ThrowOnError> => (options.client ?? client).post<unknown, DrawItemPhotoErrors, ThrowOnError>({
     url: '/api/catalog/assist/photo',
     ...options,
     headers: {
@@ -272,6 +287,21 @@ export const importMenu = <ThrowOnError extends boolean = false>(options: Option
 export const composeItem = <ThrowOnError extends boolean = false>(options: Options<ComposeItemData, ThrowOnError>): RequestResult<ComposeItemResponses, ComposeItemErrors, ThrowOnError> => (options.client ?? client).post<ComposeItemResponses, ComposeItemErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/catalog/items/compose',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Price a cart at another branch
+ *
+ * For each line, what it costs at the branch now (its own price and offer, the options' adjustments), whether the item is on there or sold out, which chosen options it ran out of, and whether the price differs from the one sent. The same pricing the order's check uses (Pos)
+ */
+export const checkBranchPrices = <ThrowOnError extends boolean = false>(options: Options<CheckBranchPricesData, ThrowOnError>): RequestResult<CheckBranchPricesResponses, CheckBranchPricesErrors, ThrowOnError> => (options.client ?? client).post<CheckBranchPricesResponses, CheckBranchPricesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/price-check',
     ...options,
     headers: {
         'Content-Type': 'application/json',

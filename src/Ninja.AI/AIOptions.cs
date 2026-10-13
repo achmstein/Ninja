@@ -56,7 +56,7 @@ public sealed class AIOptions
     public string? VisionModel { get; set; }
 
     /// <summary>
-    /// The model a dish photo is drawn by. Through the platform's gateway it is
+    /// The model an item photo is drawn by. Through the platform's gateway it is
     /// the image role ("image"), which the control panel points at a model;
     /// straight at a provider, that provider's image model.
     /// </summary>

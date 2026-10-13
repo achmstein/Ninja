@@ -17,4 +17,6 @@ public record BranchSettingsChangedIntegrationEvent(
     decimal? DeliveryRadiusKm = null,
     decimal DeliveryFee = 0,
     decimal DeliveryMinimumOrder = 0,
-    bool RequireSignInForDelivery = false) : IntegrationEvent;
+    bool RequireSignInForDelivery = false,
+    bool IsActive = true,
+    double[][] DeliveryArea = null) : IntegrationEvent;

@@ -138,6 +138,14 @@ export type DeliveringBranch = {
     signInRequired: boolean;
 };
 
+export type DeliveryAlternative = {
+    branchId: number | string;
+    distanceMeters: number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    paused: boolean;
+};
+
 export type DeliveryFailedRequest = {
     reason?: null | string;
 };
@@ -150,6 +158,8 @@ export type DeliveryOrder = {
     paidAt?: null | string;
     customerName?: null | string;
     customerNote?: null | string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     total?: number | string;
     paidOnline?: boolean;
     toCollect?: number | string;
@@ -382,6 +392,8 @@ export type Order = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     platform?: null | PlatformOrderView;
     delivery?: null | DeliveryView;
     customerNote?: null | string;
@@ -480,6 +492,8 @@ export type OrderSummary = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     platform?: null | PlatformOrderView;
     delivery?: null | DeliveryView;
     userName?: null | string;
@@ -557,6 +571,7 @@ export type PosOrderRequest = {
     placeName?: null | LocalizedText;
     replay?: boolean;
     delivery?: null | PosDeliveryRequest;
+    sendToBranchId?: null | number | string;
 };
 
 export type PosOrderResponse = {
@@ -665,6 +680,7 @@ export type TillDeliveryQuote = {
     latitude: null | number | string;
     longitude: null | number | string;
     locationRead: boolean;
+    alternatives: Array<DeliveryAlternative>;
 };
 
 export type GetOrdersByUserData = {

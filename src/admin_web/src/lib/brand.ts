@@ -36,6 +36,8 @@ export const ALL_FEATURES: TenantFeatures = {
   delivery: true,
   payAhead: true,
   ai: true,
+  // A call centre waits to be bought: branch tills keep offering the nearer branch
+  callCentre: false,
 }
 
 export const brandQueryOptions = () => ({

@@ -92,6 +92,10 @@ const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
   { key: 'kds', label: 'featureKds' },
   { key: 'onlinePayments', label: 'featureOnlinePayments' },
   { key: 'delivery', label: 'featureDelivery' },
+  // Paid when ordered: entitled with online payments
+  { key: 'payAhead', label: 'featurePayAhead' },
+  { key: 'ai', label: 'featureAi' },
+  { key: 'callCentre', label: 'featureCallCentre' },
 ]
 
 const withScheme = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`)
@@ -504,7 +508,7 @@ function BrandForm({
                     </Label>
                     <Switch
                       id={`feature-${key}`}
-                      checked={entitled && features[key]}
+                      checked={Boolean(entitled && features[key])}
                       disabled={!entitled}
                       onCheckedChange={(v) => setFeatures((f) => ({ ...f, [key]: v }))}
                     />

@@ -36,6 +36,9 @@ String describeDeliveryError(Object error, AppLocalizations l10n) {
     'delivery.conflict' => l10n.deliveryErrorConflict,
     'rider.unknown' => l10n.deliveryErrorUnknownRider,
     'order.paused' => l10n.deliveryErrorPaused,
+    'delivery.send_not_delivery' => l10n.deliveryErrorSendNotDelivery,
+    'delivery.send_with_ticket' => l10n.deliveryErrorSendWithTicket,
+    'delivery.send_branch_closed' => l10n.deliveryErrorSendBranchClosed,
     _ => l10n.deliveryActionFailed,
   };
 }

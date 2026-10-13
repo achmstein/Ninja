@@ -59,7 +59,7 @@ export function sortedOptions(customization: ItemCustomizationDto) {
   return [...(customization.options ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
 }
 
-/** What a dish goes in with untouched: the customer's saved way over the business's defaults, nothing sold out. */
+/** What an item goes in with untouched: the customer's saved way over the business's defaults, nothing sold out. */
 function quickSelections(item: CatalogItemDto, preference?: UserItemPreferenceDto) {
   return withoutOutOfStock(item.customizations, preferenceSelections(item.customizations, preference))
 }
@@ -67,7 +67,7 @@ function quickSelections(item: CatalogItemDto, preference?: UserItemPreferenceDt
 /**
  * Whether a held press (or the plus) may add the item straight away: it is on, and either it has
  * nothing to choose at all or the customer has a saved way of it that still answers every required
- * choice. Anything else opens, so nobody gets a dish made a way they did not pick.
+ * choice. Anything else opens, so nobody gets an item made a way they did not pick.
  */
 export function canQuickAdd(item: CatalogItemDto, preference?: UserItemPreferenceDto): boolean {
   if (item.isAvailable === false) return false

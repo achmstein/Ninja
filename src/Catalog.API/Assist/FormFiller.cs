@@ -6,7 +6,7 @@ using Microsoft.Extensions.AI;
 namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
-/// Fills in a form's empty fields from what is already typed in it (a dish's
+/// Fills in a form's empty fields from what is already typed in it (an item's
 /// name, a supplier's name, a stock item's unit): the other language, a
 /// description, the fitting choice. One agent call per form; the answer is
 /// checked by <see cref="FormFillPostProcessor"/> before it leaves.

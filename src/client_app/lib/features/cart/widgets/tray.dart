@@ -55,7 +55,7 @@ class TrayMotion extends ChangeNotifier {
   /// The order sheet's height, measured once it is laid out
   double sheetHeight = 0;
 
-  /// The order peeking out of the dock once, after the first dish
+  /// The order peeking out of the dock once, after the first item
   bool _peeking = false;
 
   TrayMotion(TickerProvider vsync) : _open = AnimationController.unbounded(vsync: vsync) {
@@ -77,7 +77,7 @@ class TrayMotion extends ChangeNotifier {
 
   void toggle() => setExpanded(!_expanded);
 
-  /// The first dish in: the order peeks out of the dock and tucks back, twice
+  /// The first item in: the order peeks out of the dock and tucks back, twice
   /// and smaller the second time (client_web's tray.tsx peek). A tap or a
   /// finger takes over from it at once.
   void peek() {
@@ -158,10 +158,10 @@ class _PeekSimulation extends Simulation {
   bool isDone(double time) => time >= _delay + _length;
 }
 
-/// The tray's row of the dock: the dishes' photos, how many, the total that
+/// The tray's row of the dock: the items' photos, how many, the total that
 /// rolls, and the way to the order where the thumb is. Dragged up or tapped
 /// it opens the order; the button beside it opens it too, and in the open
-/// order the same button places it. The first dish to land lets the order
+/// order the same button places it. The first item to land lets the order
 /// peek out once, with a word on dragging it up ([trayHint]).
 class TrayRow extends ConsumerStatefulWidget {
   final TrayMotion motion;
@@ -261,7 +261,7 @@ class _TrayRowState extends ConsumerState<TrayRow> {
                                 opacity: seats ? (open <= 0.001 ? 1 : 0) : (1 - open * 2).clamp(0.0, 1.0),
                                 child: Padding(
                                   padding: const EdgeInsetsDirectional.only(end: 12),
-                                  // Where a dish's photo lands, nudged as each does; a first dish lands on its empty place
+                                  // Where an item's photo lands, nudged as each does; a first item lands on its empty place
                                   child: KeyedSubtree(
                                     key: trayFlights.target,
                                     child: TrayBump(child: summary.thumbs.isEmpty ? const SizedBox.square(dimension: 44) : _Thumbs(summary: summary)),
@@ -271,7 +271,7 @@ class _TrayRowState extends ConsumerState<TrayRow> {
                             ),
                           ),
                           Expanded(
-                            // A first dish still on its way: the empty order says what it is for
+                            // A first item still on its way: the empty order says what it is for
                             child: summary.count == 0
                                 ? Text(
                                     l10n.ninjaEmptyTray,
@@ -382,7 +382,7 @@ class _Thumbs extends StatelessWidget {
                   child: ClipOval(
                     child: ColoredBox(
                       color: c.foreground.withValues(alpha: 0.15),
-                      child: SizedBox.expand(child: DishPhoto(url: thumbs[i].pictureUri)),
+                      child: SizedBox.expand(child: ItemPhoto(url: thumbs[i].pictureUri)),
                     ),
                   ),
                 ),
@@ -413,11 +413,11 @@ class _Thumbs extends StatelessWidget {
   }
 }
 
-/// A dish's photo filling its box, or a quiet fill where there is none
-class DishPhoto extends StatelessWidget {
+/// An item's photo filling its box, or a quiet fill where there is none
+class ItemPhoto extends StatelessWidget {
   final String? url;
 
-  const DishPhoto({super.key, this.url});
+  const ItemPhoto({super.key, this.url});
 
   @override
   Widget build(BuildContext context) {
@@ -594,7 +594,7 @@ class TraySheet extends ConsumerWidget {
   }
 }
 
-/// What the order comes to before any online fee: the dishes less what the code and points take off, the delivery fee on
+/// What the order comes to before any online fee: the items less what the code and points take off, the delivery fee on
 double _orderTotal(WidgetRef ref) =>
     (traySummary(ref.watch(cartProvider).items).total - _saved(ref)).clamp(0.0, double.infinity) + ref.watch(deliveryStateProvider.select((d) => d.fee));
 
@@ -683,7 +683,7 @@ class _SwipeLine extends ConsumerWidget {
                         width: 48,
                         height: 48,
                         color: c.foreground.withValues(alpha: 0.10),
-                        child: DishPhoto(url: item.pictureUri),
+                        child: ItemPhoto(url: item.pictureUri),
                       ),
                     ),
                   ),

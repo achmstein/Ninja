@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -11,7 +12,7 @@ import '../providers/branch_provider.dart';
 import '../providers/branch_switch.dart';
 import 'nearest_branch_primer.dart';
 import '../providers/current_place_provider.dart';
-import '../shell/dish_layer.dart';
+import '../shell/item_layer.dart';
 import '../shell/dock_bill.dart';
 import '../shell/live_visit.dart';
 import '../shell/top_bar.dart';
@@ -24,7 +25,8 @@ import '../../features/delivery/services/delivery_service.dart';
 import '../../features/cart/widgets/tray.dart';
 import '../../features/cart/widgets/tray_flights.dart';
 import '../../features/cart/widgets/tray_model.dart';
-import '../../features/menu/dish_link.dart';
+import '../../features/menu/item_link.dart';
+import '../../features/promotions/promotion.dart';
 import '../../features/orders/services/order_service.dart';
 import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';
@@ -54,7 +56,7 @@ typedef _Tab = ({String route, IconData icon, String label, Reservation? hold});
 /// them, the row of what can be acted on now: on the menu the order (the
 /// tray, which opens into it), else the order on its way, the table or room
 /// or the bill running. Scrolling down tucks the tabs away and sends the
-/// top bar up. A dish opens between the two ([DishLayer]): over the page and
+/// top bar up. An item opens between the two ([ItemLayer]): over the page and
 /// its bar, under the dock.
 class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
@@ -70,9 +72,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
   bool _wasExpanded = false;
   bool _primerScheduled = false;
 
-  /// The dishes' layer, and the page it was opened on
-  final _dishes = GlobalKey<NavigatorState>(debugLabel: 'dishes');
+  /// The items' layer, and the page it was opened on
+  final _items = GlobalKey<NavigatorState>(debugLabel: 'items');
   String? _location;
+
+  late final Timer _promotionAgain;
+  late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
@@ -119,6 +124,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
 
     trayFlights.addListener(_onFlights);
 
+    // The promotion asked again now and then and on coming back to the app, so one switched off goes without a
+    // restart. Kept here, with the frame, so it stops with it
+    _promotionAgain = Timer.periodic(promotionFresh, (_) => ref.invalidate(livePromotionProvider));
+    _lifecycle = AppLifecycleListener(onResume: () => ref.invalidate(livePromotionProvider));
+
     // The order opened: what it will be checked against is fresh (points earned since, no stale error)
     _tray.addListener(() {
       if (_tray.expanded == _wasExpanded) return;
@@ -137,6 +147,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
 
   @override
   void dispose() {
+    _promotionAgain.cancel();
+    _lifecycle.dispose();
     trayFlights.removeListener(_onFlights);
     _tray.dispose();
     super.dispose();
@@ -151,11 +163,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     Future.microtask(() {
       if (mounted) {
         ref.read(currentRouteProvider.notifier).setRoute(location);
-        // Another page: it starts with its bar, and a dish open on the last one goes with it
+        // Another page: it starts with its bar, and an item open on the last one goes with it
         if (moved) {
           ref.read(topBarHiddenProvider.notifier).set(false);
-          final dishes = _dishes.currentState;
-          if (dishes != null && dishes.canPop()) dishes.popUntil((route) => route.isFirst);
+          final items = _items.currentState;
+          if (items != null && items.canPop()) items.popUntil((route) => route.isFirst);
         }
       }
     });
@@ -197,7 +209,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
 
     // The dock's row: the order on the menu, else what is running
     final cartEmpty = ref.watch(cartProvider.select((c) => c.isEmpty));
-    // A first dish on its way into an empty tray brings the row up under it
+    // A first item on its way into an empty tray brings the row up under it
     final trayRow = onMenu && (!cartEmpty || trayFlights.inFlight);
     final billRow = !trayRow && ref.watch(dockRowShownProvider);
     final hasRow = trayRow || billRow;
@@ -297,9 +309,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     return Scaffold(
       resizeToAvoidBottomInset: false,
       // Filling the screen whatever is in it: the layers that are shut stand in as nothing
-      body: DishLayer(
-        navigator: _dishes,
-        child: DishLink(
+      body: ItemLayer(
+        navigator: _items,
+        child: ItemLink(
           onMenu: onMenu,
           child: Stack(
             fit: StackFit.expand,
@@ -336,11 +348,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
                 ),
               ),
 
-              // A dish open: over the page and its bar, clear of the dock, which stays over it with the tray in reach
+              // An item open: over the page and its bar, clear of the dock, which stays over it with the tray in reach
               Positioned.fill(
                 child: MediaQuery(
                   data: media.copyWith(padding: media.padding.copyWith(bottom: dockHeight)),
-                  child: DishNavigator(navigatorKey: _dishes),
+                  child: ItemNavigator(navigatorKey: _items),
                 ),
               ),
 

@@ -20,4 +20,8 @@ public record BranchSettingsChangedIntegrationEvent(
     // When the branch's settings were saved (ticks, UTC): a consumer keeps the newest it has seen
     long Version = 0,
     // Customers must be signed in to order delivery here (the till's phone orders are not)
-    bool RequireSignInForDelivery = false) : IntegrationEvent;
+    bool RequireSignInForDelivery = false,
+    // Still one of the business's branches: one switched off delivers nothing and is offered to nobody
+    bool IsActive = true,
+    // The area drawn on the map, [lat, lng] points round it; null for none. When there is one it, not the radius, says where the branch delivers
+    double[][]? DeliveryArea = null) : IntegrationEvent;

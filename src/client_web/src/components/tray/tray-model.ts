@@ -13,7 +13,7 @@ export type TraySummary = {
 export const TRAY_THUMBS = 2
 
 export function traySummary(lines: CartLine[], max = TRAY_THUMBS): TraySummary {
-  // The newest first, so the dish that just flew in sits at the front
+  // The newest first, so the item that just flew in sits at the front
   const newest = [...lines].reverse()
   return {
     thumbs: newest.slice(0, max).map((l) => ({ key: lineKey(l), pictureUrl: l.pictureUrl, name: l.nameEn || l.nameAr, nameAr: l.nameAr, quantity: l.quantity })),

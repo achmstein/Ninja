@@ -24,6 +24,11 @@ class TenantFeatures {
   /// (it delivered before delivery was sold on its own).
   final bool delivery;
 
+  /// A call centre takes the business's phone orders: an account given every
+  /// branch gets the till's call-centre mode, and a branch till stops offering
+  /// to send an order to another branch. An add-on; off until the brand says.
+  final bool callCentre;
+
   const TenantFeatures({
     this.reservations = true,
     this.timeBilling = true,
@@ -35,6 +40,7 @@ class TenantFeatures {
     this.kds = true,
     this.onlinePayments = false,
     this.delivery = true,
+    this.callCentre = false,
   });
 
   static const all = TenantFeatures();
@@ -52,6 +58,7 @@ class TenantFeatures {
         // A cache from before the rename says "payAtTable"
         onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
         delivery: json['delivery'] as bool? ?? true,
+        callCentre: json['callCentre'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -65,6 +72,7 @@ class TenantFeatures {
         'kds': kds,
         'onlinePayments': onlinePayments,
         'delivery': delivery,
+        'callCentre': callCentre,
       };
 }
 
@@ -158,6 +166,10 @@ class TenantBrand {
   final String? customerUrl;
   final int version;
 
+  /// Whether the business has address search (Google Maps on, with the
+  /// platform's key): the till's delivery form shows a search field
+  final bool addressSearch;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -169,6 +181,7 @@ class TenantBrand {
     this.businessType,
     this.customerUrl,
     this.version = 0,
+    this.addressSearch = false,
   });
 
   /// ISO 4217: what the business's money is counted in
@@ -206,6 +219,7 @@ class TenantBrand {
       businessType: json['businessType'] as String?,
       customerUrl: _origin(json['customerUrl']),
       version: (json['version'] as num?)?.toInt() ?? 0,
+      addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
     );
   }
 
@@ -226,6 +240,7 @@ class TenantBrand {
         businessType: json['businessType'] as String?,
         customerUrl: _origin(json['customerUrl']),
         version: (json['version'] as num?)?.toInt() ?? 0,
+        addressSearch: json['addressSearch'] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -239,6 +254,7 @@ class TenantBrand {
         'businessType': businessType,
         'customerUrl': customerUrl,
         'version': version,
+        'addressSearch': addressSearch,
       };
 
   Color? get primaryColor {

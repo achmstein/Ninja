@@ -21,6 +21,12 @@ public class TenantFeatures
     public bool PayAhead { get; set; }
 
     /// <summary>
+    /// A call centre takes the business's phone orders: a branch till's quote
+    /// then offers no other branch to send an order to. Off until said.
+    /// </summary>
+    public bool CallCentre { get; set; }
+
+    /// <summary>
     /// CreationDate of the last event applied: the out-of-order guard, so an
     /// older event arriving late does not undo a newer one.
     /// </summary>

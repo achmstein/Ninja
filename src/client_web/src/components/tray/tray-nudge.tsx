@@ -8,7 +8,7 @@ import { useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useItemPreferences } from '../menu/data/use-item-preferences'
 import { quickAddChoice } from '../menu/deck/deck-model'
-import { DishPhoto } from '../menu/dish-photo'
+import { ItemPhoto } from '../menu/item-photo'
 import { itemPictureUrl } from '../menu/item-picture'
 import { effectiveBasePrice } from '../menu/item-form'
 import { cartNudge, menuById } from '../menu/paired-items'
@@ -21,10 +21,10 @@ const useNotNow = create<{ said: boolean; say: () => void; reset: () => void }>(
 }))
 
 /**
- * The one thing the order suggests, under its dishes: what goes well with
- * the dish added last ("Add a waffle?"), one tap to add with its defaults,
+ * The one thing the order suggests, under its items: what goes well with
+ * the item added last ("Add a waffle?"), one tap to add with its defaults,
  * or "not now". Asked once an order: either answer ends it, and nothing
- * takes its place. Only dishes with nothing to choose are offered here.
+ * takes its place. Only items with nothing to choose are offered here.
  */
 export function TrayNudge() {
   const t = useT()
@@ -57,7 +57,7 @@ export function TrayNudge() {
         >
           <div className='border-background/15 mt-2 flex items-center gap-3 rounded-2xl border border-dashed px-2 py-2'>
             <span className='bg-background/10 grid size-10 shrink-0 place-items-center overflow-hidden rounded-full'>
-              <DishPhoto src={offer.pictureUri ? itemPictureUrl(offer, 320) : null} />
+              <ItemPhoto src={offer.pictureUri ? itemPictureUrl(offer, 320) : null} />
             </span>
             <span className='min-w-0 flex-1'>
               <span className='block truncate text-note font-semibold'>{t('addSuggestion', { name: localized(offer.name) })}</span>

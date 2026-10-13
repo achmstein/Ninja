@@ -3,16 +3,16 @@ import type { CatalogItemDto } from '@/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import { cartNudge, menuById, pairedFor } from './paired-items'
 
-const dish = (id: number, extra: Partial<CatalogItemDto> = {}): CatalogItemDto => ({ id, name: { en: `Dish ${id}` }, price: 10, isAvailable: true, ...extra })
+const item = (id: number, extra: Partial<CatalogItemDto> = {}): CatalogItemDto => ({ id, name: { en: `Item ${id}` }, price: 10, isAvailable: true, ...extra })
 
-const line = (productId: number): CartLine => ({ productId, nameEn: `Dish ${productId}`, nameAr: '', price: 10, quantity: 1, customizations: [] })
+const line = (productId: number): CartLine => ({ productId, nameEn: `Item ${productId}`, nameAr: '', price: 10, quantity: 1, customizations: [] })
 
 // A cappuccino goes with a waffle, then ice cream, then a cake that is sold out; a waffle goes with a milkshake that needs its size picked
-const cappuccino = dish(1, { pairedItemIds: [2, 3, 4] })
-const waffle = dish(2, { pairedItemIds: [5] })
-const iceCream = dish(3)
-const cake = dish(4, { isAvailable: false })
-const milkshake = dish(5, { customizations: [{ id: 50, isRequired: true, options: [] }] })
+const cappuccino = item(1, { pairedItemIds: [2, 3, 4] })
+const waffle = item(2, { pairedItemIds: [5] })
+const iceCream = item(3)
+const cake = item(4, { isAvailable: false })
+const milkshake = item(5, { customizations: [{ id: 50, isRequired: true, options: [] }] })
 const menu = menuById([cappuccino, waffle, iceCream, cake, milkshake])
 
 describe('pairedFor', () => {
@@ -24,14 +24,14 @@ describe('pairedFor', () => {
     expect(pairedFor(cappuccino, menu, [line(1), line(2)]).map((d) => d.id)).toEqual([3])
   })
 
-  it('suggests nothing for a dish that pairs with nothing, or with dishes gone from the menu', () => {
+  it('suggests nothing for an item that pairs with nothing, or with items gone from the menu', () => {
     expect(pairedFor(iceCream, menu, [])).toEqual([])
-    expect(pairedFor(dish(9, { pairedItemIds: [99] }), menu, [])).toEqual([])
+    expect(pairedFor(item(9, { pairedItemIds: [99] }), menu, [])).toEqual([])
   })
 })
 
 describe('cartNudge', () => {
-  it('offers a pairing of the dish added last', () => {
+  it('offers a pairing of the item added last', () => {
     expect(cartNudge([line(1)], menu)?.id).toBe(2)
   })
 

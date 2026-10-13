@@ -8,6 +8,8 @@ import '../../l10n/app_localizations.dart';
 import '../widgets/pos_shell.dart';
 import '../../features/deliveries/screens/deliveries_board_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/call_centre/call_centre_mode.dart';
+import '../../features/call_centre/call_centre_screen.dart';
 import '../../features/availability/screens/availability_screen.dart';
 import '../../features/floor/screens/floor_screen.dart';
 import '../../features/receipts/screens/receipts_screen.dart';
@@ -164,7 +166,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: FloorScreen(),
+              child: _Home(),
             ),
           ),
           GoRoute(
@@ -221,3 +223,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// The floor, or for a call centre the next caller: it works no floor of its own
+class _Home extends ConsumerWidget {
+  const _Home();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ref.watch(callCentreModeProvider) ? const CallCentreScreen() : const FloorScreen();
+}

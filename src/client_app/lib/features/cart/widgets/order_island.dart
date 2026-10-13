@@ -10,7 +10,7 @@ const orderAnnounce = Duration(milliseconds: 4200);
 
 /// The island opened out to say an order was turned down (client_web's
 /// order-pill.tsx): "Cancelled · #12", that the business could not take it,
-/// its dishes and what it came to, and the way to the bill. The rest of the
+/// its items and what it came to, and the way to the bill. The rest of the
 /// way (Sent, Confirmed) the dock's row says it quietly; this is the one
 /// stage worth interrupting for.
 /// Raised away from any page, its words are looked up where the island draws them.

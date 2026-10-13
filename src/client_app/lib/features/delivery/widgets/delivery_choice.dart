@@ -19,7 +19,7 @@ import 'address_sheet.dart';
 /// a table: collect it or have it brought (client_web's delivery-choice.tsx).
 /// Collected, from which branch, a tap from another. Brought, the address is
 /// a tap away; it picks the branch (the order moves there by itself), and
-/// under it what that branch says about it: the fee, how much more the dishes
+/// under it what that branch says about it: the fee, how much more the items
 /// must come to, or that no branch goes that far.
 class DeliveryChoiceView extends ConsumerWidget {
   const DeliveryChoiceView({super.key});

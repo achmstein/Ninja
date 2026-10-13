@@ -27,6 +27,16 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
             entity.OwnsOne(e => e.ReceiptFooter, b => b.ToJson());
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.DisplayOrder).IsRequired();
+            // The drawn delivery area: one jsonb document of [lat, lng] pairs, read whole
+            entity.Property(e => e.DeliveryArea)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    area => JsonSerializer.Serialize(area, (JsonSerializerOptions?)null),
+                    json => JsonSerializer.Deserialize<double[][]>(json, (JsonSerializerOptions?)null),
+                    new ValueComparer<double[][]?>(
+                        (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
+                        v => v == null ? null : v.Select(p => p.ToArray()).ToArray()));
 
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.DisplayOrder);

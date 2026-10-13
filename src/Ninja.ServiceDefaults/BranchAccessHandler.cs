@@ -7,7 +7,9 @@ namespace Ninja.ServiceDefaults;
 /// Branch membership travels in the token: the multivalued <c>branches</c>
 /// claim carries the ids a staff account may operate. A request that names a
 /// branch — the <c>X-Branch-Id</c> header, or a route value literally named
-/// <c>branchId</c> — must name one of them. Owners hold every branch. A
+/// <c>branchId</c> — must name one of them. Owners hold every branch, and so
+/// does an account whose claim is <c>*</c> (a call centre's), new branches
+/// included (<see cref="ClaimsPrincipalExtensions.GetBranchIds"/>). A
 /// request that names no branch passes: endpoints that need one answer 400
 /// on their own. A missing claim is an empty set, so a non-owner with no
 /// assignment is refused rather than let through.

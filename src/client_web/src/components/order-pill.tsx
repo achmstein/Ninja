@@ -72,7 +72,7 @@ const TYPES: Record<PillStage, IslandFace['type']> = {
  * to (Sent, Confirmed), for the dock to show quietly beside the bill
  * (useLiveOrder, components/ninja/dock-bill.tsx). When it is turned down,
  * the island (lib/island.ts) says so out loud for a moment, opened with the
- * dishes and the way to the bill. It is let go a little
+ * items and the way to the bill. It is let go a little
  * after the order is done with. Draws nothing itself; mounted once, in the
  * root layout.
  */
@@ -141,7 +141,7 @@ export function OrderPill() {
   useEffect(() => () => useLiveOrder.setState({ stage: null, orderNumber: null }), [])
 
   // What is worth interrupting for (turned down) the island says out loud, opened with the order's
-  // dishes; the rest of the way the dock's quiet change is enough
+  // items; the rest of the way the dock's quiet change is enough
   const say = (w: Parameters<typeof words>[0]) => words(w, language, standard, businessName)
   const items = order?.items ?? []
   const total = order?.total

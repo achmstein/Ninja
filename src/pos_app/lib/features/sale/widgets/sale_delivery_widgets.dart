@@ -7,13 +7,17 @@ import '../models/sale_delivery.dart';
 
 /// The delivery on the sale: where it goes and the number the rider calls
 /// (its digits alone left to right), whether it has a pin; a tap changes
-/// it, the cross makes it a counter sale again
+/// it, the cross makes it a counter sale again. One sent to the branch nearer
+/// the caller says which.
 class DeliverySummary extends StatelessWidget {
   final SaleDelivery delivery;
   final VoidCallback onEdit;
   final VoidCallback onRemove;
 
-  const DeliverySummary({super.key, required this.delivery, required this.onEdit, required this.onRemove});
+  /// The branch it is sent to, by name; null when it is made here
+  final String? sendToName;
+
+  const DeliverySummary({super.key, required this.delivery, required this.onEdit, required this.onRemove, this.sendToName});
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +59,21 @@ class DeliverySummary extends StatelessWidget {
                           ),
                       ],
                     ),
+                    if (sendToName != null)
+                      Row(
+                        children: [
+                          Icon(FIcons.store, size: 12, color: theme.colors.primary),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              l10n.deliveryWillSend(sendToName!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.typography.xs.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

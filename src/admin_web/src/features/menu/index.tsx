@@ -882,9 +882,9 @@ function MenuRow({
 }
 
 /**
- * A dish as customers see it, for the photos view: its photo (the offer's
+ * An item as customers see it, for the photos view: its photo (the offer's
  * saving on it), its name and price, and its availability switch on the
- * card. Unavailable, it fades; the card opens the dish.
+ * card. Unavailable, it fades; the card opens the item.
  */
 function MenuCard({
   item,

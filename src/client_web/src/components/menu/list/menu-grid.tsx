@@ -5,23 +5,23 @@ import { useHandler } from '@/lib/use-handler'
 import { PageTitle } from '@/components/ninja/page/page'
 import { TABS_H } from '@/components/ninja/shell/chrome'
 import { pinchIntent, type DeckColumn } from '../deck/deck-model'
-import { LIST_STYLES, type MenuList } from './dishes'
+import { LIST_STYLES, type MenuList } from './items'
 import { ZoomTile } from './zoom-tile'
 
-export type { MenuList } from './dishes'
+export type { MenuList } from './items'
 
 /** Below the top of the scroller's room (its top padding), how far a heading may sit and still be the one in view, px */
 const SPY_SLACK = 24
 
 /**
- * The menu as one scrolling page: each category a heading over its dishes.
+ * The menu as one scrolling page: each category a heading over its items.
  * Two menus use it. The business's own list (`list`: rows, a photo grid,
  * compact rows or magazine cards) opens under the page's large title, as
  * every tab does. The deck zoomed out shows its cards as small tiles, the
  * photos of the ones that were on screen flying into theirs; a pinch open, or the way
- * back in the bar, returns to the cards. Either way a tap opens a dish's
+ * back in the bar, returns to the cards. Either way a tap opens an item's
  * options grown out of it, and a held press puts one straight in the tray.
- * The usuals are not repeated here: each of them is a dish in its category.
+ * The usuals are not repeated here: each of them is an item in its category.
  * Memoised, as the deck is: the menu screen around it renders for its own
  * reasons (the chrome, the tray), and none of them is the list's.
  */
@@ -49,7 +49,7 @@ export const MenuGrid = memo(function MenuGrid({
   jump: { index: number; n: number } | null
   /** The category in view changed, as the jump bar lights it */
   onSection: (index: number) => void
-  /** The business's own menu (no deck behind it): a row per dish, a photo grid, compact text rows, or magazine cards */
+  /** The business's own menu (no deck behind it): a row per item, a photo grid, compact text rows, or magazine cards */
   list?: MenuList
   /** The page's large title over the business's own menu, as every tab has one */
   title?: string
@@ -69,8 +69,8 @@ export const MenuGrid = memo(function MenuGrid({
     return () => hand?.(null)
   }, [])
   const categories = columns.filter((c) => c.kind === 'category')
-  // The dishes keep the same two handlers from render to render, so a render of the list (a category
-  // asked for) passes every dish by
+  // The items keep the same two handlers from render to render, so a render of the list (a category
+  // asked for) passes every item by
   const open = useHandler(onOpen)
   const quickAdd = useHandler(onQuickAdd)
   const focusColumn = categories.find((c) => c.items.some((i) => Number(i.id) === focusId))?.id
@@ -130,7 +130,7 @@ export const MenuGrid = memo(function MenuGrid({
     }
   }, [jump])
 
-  // Arrive with the dish we were on in view, before its photo's flight measures it
+  // Arrive with the item we were on in view, before its photo's flight measures it
   useLayoutEffect(() => {
     const el = scroller.current
     if (!el || focusId == null) return
@@ -181,7 +181,7 @@ export const MenuGrid = memo(function MenuGrid({
           }}
           className='mb-7'
           // Off-screen categories are not drawn until scrolled to; the one the deck was on always is,
-          // so the grid can land on the dish it came from
+          // so the grid can land on the item it came from
           style={col.id === focusColumn ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 480px' }}
         >
           <motion.h2
@@ -196,7 +196,7 @@ export const MenuGrid = memo(function MenuGrid({
           {look ? (
             <div className={look.className}>
               {col.items.map((item) => (
-                <look.Dish
+                <look.Item
                   key={String(item.id)}
                   scroller={scroller}
                   item={item}

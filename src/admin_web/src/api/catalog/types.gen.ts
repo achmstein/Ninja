@@ -4,6 +4,11 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type BoughtTogether = {
+    catalogItemId: number | string;
+    together: number | string;
+};
+
 export type BranchItemOverrideDto = {
     id: number | string;
     branchId: number | string;
@@ -158,7 +163,7 @@ export type CustomizationOptionDto = {
     isOutOfStock?: boolean;
 };
 
-export type DrawDishPhotoRequest = {
+export type DrawItemPhotoRequest = {
     nameEn: null | string;
     nameAr: null | string;
     description: null | string;
@@ -306,6 +311,33 @@ export type PaginatedItemsDtoOfCatalogItemDto = {
     data: Array<CatalogItemDto>;
 };
 
+export type PriceCheckLine = {
+    itemId: number | string;
+    optionIds: null | Array<number | string>;
+    unitPrice: number | string;
+};
+
+export type PriceCheckRequest = {
+    branchId: number | string;
+    lines: null | Array<PriceCheckLine>;
+};
+
+export type PriceCheckResponse = {
+    branchId: number | string;
+    lines: Array<PriceCheckResult>;
+};
+
+export type PriceCheckResult = {
+    itemId: number | string;
+    price: number | string;
+    basePrice: number | string;
+    available: boolean;
+    outOfStock: boolean;
+    soldOutOptionIds: Array<number | string>;
+    changed: boolean;
+    wouldPass: boolean;
+};
+
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
@@ -421,6 +453,11 @@ export type ProposedOption = {
     isDefault: boolean;
 };
 
+export type ProposedPairing = {
+    catalogItemId: number | string;
+    reason: LocalizedText;
+};
+
 export type ReorderItemDto = {
     id?: number | string;
     displayOrder?: number | string;
@@ -467,6 +504,20 @@ export type SuggestCustomizationsRequest = {
 
 export type SuggestCustomizationsResponse = {
     groups: Array<ProposedCustomization>;
+    warnings: Array<string>;
+};
+
+export type SuggestPairingsRequest = {
+    itemId: number | string;
+    current?: null | Array<number | string>;
+    together?: null | Array<BoughtTogether>;
+    ticketsWithItem?: number | string;
+    languages?: null | string;
+    note?: null | string;
+};
+
+export type SuggestPairingsResponse = {
+    items: Array<ProposedPairing>;
     warnings: Array<string>;
 };
 
@@ -635,6 +686,48 @@ export type SuggestCustomizationsResponses = {
 
 export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyof SuggestCustomizationsResponses];
 
+export type SuggestPairingsData = {
+    body: SuggestPairingsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/pairings';
+};
+
+export type SuggestPairingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SuggestPairingsError = SuggestPairingsErrors[keyof SuggestPairingsErrors];
+
+export type SuggestPairingsResponses = {
+    /**
+     * OK
+     */
+    200: SuggestPairingsResponse;
+};
+
+export type SuggestPairingsResponse2 = SuggestPairingsResponses[keyof SuggestPairingsResponses];
+
 export type ScanMenuData = {
     body: {
         files: IFormFileCollection;
@@ -679,8 +772,8 @@ export type ScanMenuResponses = {
 
 export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
 
-export type DrawDishPhotoData = {
-    body: DrawDishPhotoRequest;
+export type DrawItemPhotoData = {
+    body: DrawItemPhotoRequest;
     path?: never;
     query?: {
         /**
@@ -691,7 +784,7 @@ export type DrawDishPhotoData = {
     url: '/api/catalog/assist/photo';
 };
 
-export type DrawDishPhotoErrors = {
+export type DrawItemPhotoErrors = {
     /**
      * Bad Request
      */
@@ -706,7 +799,7 @@ export type DrawDishPhotoErrors = {
     403: unknown;
 };
 
-export type DrawDishPhotoError = DrawDishPhotoErrors[keyof DrawDishPhotoErrors];
+export type DrawItemPhotoError = DrawItemPhotoErrors[keyof DrawItemPhotoErrors];
 
 export type QuotePromoData = {
     body?: never;
@@ -1352,6 +1445,44 @@ export type ComposeItemResponses = {
 };
 
 export type ComposeItemResponse = ComposeItemResponses[keyof ComposeItemResponses];
+
+export type CheckBranchPricesData = {
+    body: PriceCheckRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/price-check';
+};
+
+export type CheckBranchPricesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CheckBranchPricesError = CheckBranchPricesErrors[keyof CheckBranchPricesErrors];
+
+export type CheckBranchPricesResponses = {
+    /**
+     * OK
+     */
+    200: PriceCheckResponse;
+};
+
+export type CheckBranchPricesResponse = CheckBranchPricesResponses[keyof CheckBranchPricesResponses];
 
 export type ListItemsData = {
     body?: never;

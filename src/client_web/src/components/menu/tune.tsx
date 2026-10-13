@@ -37,10 +37,10 @@ export type TuneResult = {
 }
 
 /**
- * A dish opened in place: its photo leaves the dish and becomes the
+ * An item opened in place: its photo leaves the item and becomes the
  * sheet's banner, the sheet coming up round it, and closing takes the photo
- * back to the dish. Only a copy of the photo travels, clipped to a frame
- * that goes from the dish's to the banner's, so it changes its crop rather
+ * back to the item. Only a copy of the photo travels, clipped to a frame
+ * that goes from the item's to the banner's, so it changes its crop rather
  * than stretching; the sheet under it only fades and slides. All of it
  * follows the one spring (`progress`), so it moves as one thing, and none
  * of it renders while it moves. The options come in under the photo, all on
@@ -61,14 +61,14 @@ export function Tune({
   onSuggest,
 }: {
   item: CatalogItemDto
-  /** The dish's photo it was opened from: the banner grows out of it and goes back into it; none, the sheet rises in on its own */
+  /** The item's photo it was opened from: the banner grows out of it and goes back into it; none, the sheet rises in on its own */
   from?: HTMLElement | null
   canOrder: boolean
   onClose: () => void
   onAdd: (result: TuneResult, photo: HTMLElement | null) => void
-  /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of going back into the dish */
+  /** Added: its photo has taken off to the tray, so it lets go of it and fades instead of going back into the item */
   leaving?: boolean
-  /** What the business suggests with this dish ("goes well with"), already narrowed to what can be had and is not in the order */
+  /** What the business suggests with this item ("goes well with"), already narrowed to what can be had and is not in the order */
   suggestions?: CatalogItemDto[]
   /** A suggestion tapped, from its photo */
   onSuggest?: (item: CatalogItemDto, photo: HTMLElement | null) => void
@@ -121,7 +121,7 @@ export function Tune({
     setOverrides({ ...selections, [key]: next })
   }
 
-  // The motion. `progress` is the whole of it, 0 at the dish and 1 open; `planned` changes whenever the
+  // The motion. `progress` is the whole of it, 0 at the item and 1 open; `planned` changes whenever the
   // flight is measured again (on opening, on closing), so what follows from it is worked out afresh.
   // Each value below reads both every time: motion follows the values read as it renders, and one
   // read only once there was a flight would never be followed
@@ -158,7 +158,7 @@ export function Tune({
   const footY = useTransform(progress, [0, 1], [reduced ? 0 : 72, 0])
   const closeOpacity = useTransform(progress, [0.6, 1], [0, 1])
 
-  // The dish's own photo is hidden while its copy is out, so there are never two
+  // The item's own photo is hidden while its copy is out, so there are never two
   const hidden = useRef<HTMLElement | null>(null)
   const hideSource = (el: HTMLElement) => {
     el.style.visibility = 'hidden'
@@ -173,7 +173,7 @@ export function Tune({
   const closing = useRef(false)
   const [isPresent, safeToRemove] = usePresence()
 
-  // Opening: measured before the first paint, so the copy is over the dish from the first frame
+  // Opening: measured before the first paint, so the copy is over the item from the first frame
   useLayoutEffect(() => {
     const planned0 = reduced ? null : planFlight(from, photo.current, sheet.current)
     flight.current = planned0
@@ -191,7 +191,7 @@ export function Tune({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Closing: measured again (the sheet may have scrolled, the dish may have moved), then the same spring back
+  // Closing: measured again (the sheet may have scrolled, the item may have moved), then the same spring back
   useEffect(() => {
     if (isPresent) return
     closing.current = true
@@ -204,7 +204,7 @@ export function Tune({
     }
     el.style.pointerEvents = 'none'
     if (leaving) {
-      // Its photo is on its way to the tray: the dish is back at once, the sheet fades off it
+      // Its photo is on its way to the tray: the item is back at once, the sheet fades off it
       showSource()
       run.current = animate(el, { opacity: 0, scale: 0.97 }, { duration: 0.18, ease: ease.exit })
     } else {
@@ -226,7 +226,7 @@ export function Tune({
     <div ref={sheet} role='dialog' aria-modal='true' aria-label={localized(item.name)} className='absolute inset-0 z-30 flex flex-col overflow-hidden'>
       <motion.div aria-hidden style={{ opacity: veil }} className='bg-background absolute inset-0' />
       <div className='no-scrollbar relative flex-1 overflow-y-auto overscroll-contain'>
-        {/* The banner: a short strip across the top, every dish alike, low enough that the options start on the first screen */}
+        {/* The banner: a short strip across the top, every item alike, low enough that the options start on the first screen */}
         <motion.div
           ref={photo}
           style={{ visibility: leaving ? 'hidden' : bannerVisibility, opacity: bannerOpacity }}
@@ -242,7 +242,7 @@ export function Tune({
               className={cn('size-full object-cover', soldOut && 'grayscale')}
             />
           ) : (
-            // No photo: the plate on the business's colour, as everywhere a dish has none (its name is just below)
+            // No photo: the plate on the business's colour, as everywhere an item has none (its name is just below)
             <div className='grid size-full place-items-center'>
               <UtensilsCrossed className='size-12 opacity-50' />
             </div>
@@ -463,7 +463,7 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
 
 
 /**
- * What goes well with the dish: a small card each, in the business's order,
+ * What goes well with the item: a small card each, in the business's order,
  * sideways when there are more than fit. A tap adds one with nothing to
  * choose straight to the order, or opens one that asks a question first.
  */

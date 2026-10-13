@@ -1,4 +1,4 @@
-/** The widths the catalog cuts a dish photo to; anything else is the photo itself */
+/** The widths the catalog cuts an item photo to; anything else is the photo itself */
 export type PictureWidth = 160 | 320 | 640 | 1280
 
 type Pictured = {
@@ -7,7 +7,7 @@ type Pictured = {
 }
 
 /**
- * A dish photo at a width that fits where it is drawn, carrying the photo's
+ * An item photo at a width that fits where it is drawn, carrying the photo's
  * version (from its pictureUri) so the address changes when the photo does
  * and the browser may keep it for good. Without a width it is the full photo.
  *
@@ -25,7 +25,7 @@ export function itemPictureUrl(item: Pictured, width?: PictureWidth): string {
 }
 
 /**
- * A promotion's picture on this site's own address, as a dish photo's is: the
+ * A promotion's picture on this site's own address, as an item photo's is: the
  * pictureUri the catalog sends is absolute, built from the proxy's headers,
  * and only its version is kept
  */
@@ -33,7 +33,7 @@ export function promotionPictureUrl(promotion: Pictured, width: 320 | 640 | 1280
   const query = new URLSearchParams()
   const version = versionOf(promotion.pictureUri)
   if (version) query.set('v', version)
-  // The gateway passes only the dishes' pictures without an api-version
+  // The gateway passes only the items' pictures without an api-version
   query.set('api-version', '1.0')
   query.set('w', String(width))
   return `/api/catalog/promotions/${promotion.id}/pic?${query}`

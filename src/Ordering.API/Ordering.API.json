@@ -2851,6 +2851,80 @@
         ]
       }
     },
+    "/api/orders/delivery/resolve-staff": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Which branches would deliver to a caller, nearest first, paused ones flagged (staff)",
+        "description": "For the call centre, which answers for no branch: from a location the caller shared (a Google Maps link, short or long, or coordinates) or a latitude and longitude, every branch whose area takes the pin in, nearest first, with how far it is, the fee, the minimum and whether it paused its customers' orders (a phone order may still go there). LocationRead is false when a location was given and no point could be read from it.",
+        "operationId": "ResolveDeliveryBranchForStaff",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffDeliveryResolution"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/delivery/known-addresses": {
       "get": {
         "tags": [
@@ -2872,6 +2946,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "everyBranch",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -4541,6 +4623,53 @@
           }
         }
       },
+      "DeliveryAlternative": {
+        "required": [
+          "branchId",
+          "distanceMeters",
+          "fee",
+          "minimumOrder",
+          "paused"
+        ],
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minimumOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        }
+      },
       "DeliveryFailedRequest": {
         "type": "object",
         "properties": {
@@ -4599,6 +4728,21 @@
               "null",
               "string"
             ]
+          },
+          "takenByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "takenAtBranchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "total": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
@@ -4690,6 +4834,10 @@
             "format": "double"
           },
           "signInRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "hasArea": {
             "type": "boolean",
             "default": false
           }
@@ -5838,6 +5986,21 @@
           "source": {
             "type": "string"
           },
+          "takenByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "takenAtBranchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "platform": {
             "oneOf": [
               {
@@ -6393,6 +6556,21 @@
           "source": {
             "type": "string"
           },
+          "takenByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "takenAtBranchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "platform": {
             "oneOf": [
               {
@@ -6816,6 +6994,15 @@
                 "$ref": "#/components/schemas/PosDeliveryRequest"
               }
             ]
+          },
+          "sendToBranchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -7268,6 +7455,48 @@
           }
         }
       },
+      "StaffDeliveryResolution": {
+        "required": [
+          "delivers",
+          "latitude",
+          "longitude",
+          "locationRead",
+          "branches"
+        ],
+        "type": "object",
+        "properties": {
+          "delivers": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "locationRead": {
+            "type": "boolean"
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryAlternative"
+            }
+          }
+        }
+      },
       "StockDisposition": {
         "enum": [
           "Waste",
@@ -7293,7 +7522,8 @@
           "radiusKm",
           "latitude",
           "longitude",
-          "locationRead"
+          "locationRead",
+          "alternatives"
         ],
         "type": "object",
         "properties": {
@@ -7356,6 +7586,16 @@
           },
           "locationRead": {
             "type": "boolean"
+          },
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryAlternative"
+            }
+          },
+          "hasArea": {
+            "type": "boolean",
+            "default": false
           }
         }
       }

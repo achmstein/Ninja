@@ -92,5 +92,23 @@ public class OrderConfirmedIntegrationEventHandler(
             buyerName = @event.BuyerName,
             branchId = @event.BranchId
         });
+
+        // A phone delivery another branch's till took and sent here arrives with
+        // nobody at this till having touched it: its tills chime and say from where
+        if (IsSentFromAnotherBranch(@event))
+        {
+            await hubContext.Clients.Group("admin").SendAsync("OrderSentToBranch", new
+            {
+                orderId = @event.OrderId,
+                branchId = @event.BranchId,
+                fromBranchId = @event.TakenAtBranchId,
+                takenBy = @event.TakenByName,
+                buyerName = @event.BuyerName,
+            });
+        }
     }
+
+    /// <summary>Taken at one branch's till and made at another.</summary>
+    public static bool IsSentFromAnotherBranch(OrderStatusChangedToConfirmedIntegrationEvent @event) =>
+        @event is { TakenAtBranchId: int from, BranchId: int to } && from != to;
 }

@@ -64,6 +64,9 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<TimeOnly>("DayStartTime")
                         .HasColumnType("time without time zone");
 
+                    b.Property<string>("DeliveryArea")
+                        .HasColumnType("jsonb");
+
                     b.Property<decimal>("DeliveryFee")
                         .HasColumnType("numeric");
 
@@ -135,6 +138,12 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<string>("BusinessType")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("CallCentreEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CallCentreEntitled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ContentLanguages")
                         .IsRequired()

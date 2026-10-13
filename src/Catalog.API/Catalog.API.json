@@ -74,7 +74,7 @@
           "Assist"
         ],
         "summary": "Fill in a form's empty fields",
-        "description": "Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).",
+        "description": "Given an admin form's fields as they stand (an item, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).",
         "operationId": "FillForm",
         "parameters": [
           {
@@ -169,6 +169,71 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/catalog/assist/pairings": {
+      "post": {
+        "tags": [
+          "Assist"
+        ],
+        "summary": "Propose what to suggest alongside an item",
+        "description": "The assistant proposes items for an item's \"goes well with\" list, from the menu, the owner's other lists and what the item is bought with (pass the sales pairs report). Only orderable items not on the list already, up to the room it has. Nothing is saved: keep the ones you want through the item's pairings (Admin only).",
+        "operationId": "SuggestPairings",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestPairingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestPairingsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           },
           "400": {
             "description": "Bad Request",
@@ -288,9 +353,9 @@
         "tags": [
           "Assist"
         ],
-        "summary": "Draw a photo of a dish",
-        "description": "The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).",
-        "operationId": "DrawDishPhoto",
+        "summary": "Draw a photo of an item",
+        "description": "The image model draws a photo of the item as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).",
+        "operationId": "DrawItemPhoto",
         "parameters": [
           {
             "name": "api-version",
@@ -306,7 +371,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DrawDishPhotoRequest"
+                "$ref": "#/components/schemas/DrawItemPhotoRequest"
               }
             }
           },
@@ -1349,6 +1414,68 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ComposeItemResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/catalog/price-check": {
+      "post": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Price a cart at another branch",
+        "description": "For each line, what it costs at the branch now (its own price and offer, the options' adjustments), whether the item is on there or sold out, which chosen options it ran out of, and whether the price differs from the one sent. The same pricing the order's check uses (Pos)",
+        "operationId": "CheckBranchPrices",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceCheckResponse"
                 }
               }
             }
@@ -4128,6 +4255,31 @@
   },
   "components": {
     "schemas": {
+      "BoughtTogether": {
+        "required": [
+          "catalogItemId",
+          "together"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "together": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "BranchItemOverrideDto": {
         "required": [
           "id",
@@ -4936,7 +5088,7 @@
           }
         }
       },
-      "DrawDishPhotoRequest": {
+      "DrawItemPhotoRequest": {
         "required": [
           "nameEn",
           "nameAr",
@@ -5551,6 +5703,157 @@
           }
         }
       },
+      "PriceCheckLine": {
+        "required": [
+          "itemId",
+          "optionIds",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "optionIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "PriceCheckRequest": {
+        "required": [
+          "branchId",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lines": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PriceCheckLine"
+            }
+          }
+        }
+      },
+      "PriceCheckResponse": {
+        "required": [
+          "branchId",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceCheckResult"
+            }
+          }
+        }
+      },
+      "PriceCheckResult": {
+        "required": [
+          "itemId",
+          "price",
+          "basePrice",
+          "available",
+          "outOfStock",
+          "soldOutOptionIds",
+          "changed",
+          "wouldPass"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "basePrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "outOfStock": {
+            "type": "boolean"
+          },
+          "soldOutOptionIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "wouldPass": {
+            "type": "boolean"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -6147,6 +6450,26 @@
           }
         }
       },
+      "ProposedPairing": {
+        "required": [
+          "catalogItemId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/LocalizedText"
+          }
+        }
+      },
       "ReorderItemDto": {
         "type": "object",
         "properties": {
@@ -6337,6 +6660,87 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProposedCustomization"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SuggestPairingsRequest": {
+        "required": [
+          "itemId"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "current": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "together": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/BoughtTogether"
+            }
+          },
+          "ticketsWithItem": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "languages": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SuggestPairingsResponse": {
+        "required": [
+          "items",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedPairing"
             }
           },
           "warnings": {

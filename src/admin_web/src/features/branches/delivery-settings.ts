@@ -35,7 +35,10 @@ export function parseDeliverySettings(
   return { ok: false, errors }
 }
 
-/** Saving these stops a delivering branch from delivering (no radius): worth asking first */
-export function stopsDelivering(isDeliveryEnabled: boolean | null | undefined, value: DeliverySettings): boolean {
-  return isDeliveryEnabled === true && value.radius <= 0
+/**
+ * Saving these stops a delivering branch from delivering (no radius, and no
+ * area drawn on the map to deliver to instead): worth asking first
+ */
+export function stopsDelivering(isDeliveryEnabled: boolean | null | undefined, value: DeliverySettings, hasArea = false): boolean {
+  return isDeliveryEnabled === true && value.radius <= 0 && !hasArea
 }

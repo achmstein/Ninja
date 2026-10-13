@@ -60,7 +60,7 @@ public static class Extensions
         builder.Services.AddSingleton<AiRouter>();
         builder.Services.AddSingleton<AiUsageRecorder>();
         builder.Services.AddSingleton<AiImages>();
-        builder.Services.AddScoped<DishPhotos>();
+        builder.Services.AddScoped<ItemPhotos>();
 #pragma warning disable EXTEXP0001
         // A model takes its time; no retries here on top of the stack's SDK's own
         builder.Services.AddHttpClient(ControlApi.AiProviderClient, client => client.Timeout = TimeSpan.FromSeconds(180)).RemoveAllResilienceHandlers();

@@ -118,7 +118,7 @@ export function SignInOptions({ onCard = false }: { onCard?: boolean }) {
 /**
  * The guest's other way in, under the name and phone they are giving: Google
  * or Apple side by side, or a new account. Whichever they choose, the tray
- * keeps its dishes through the round trip, so the order waits for them.
+ * keeps its items through the round trip, so the order waits for them.
  */
 export function GuestSignInChoices() {
   const t = useT()

@@ -41,7 +41,7 @@ const asRequest = (p: PromotionDto, isActive: boolean): PromotionRequest => ({
 /**
  * Promotions: the popup the customer app opens with while one runs, a
  * picture the owner designed (or Ninja designed from their real photo) with
- * a button to a dish, a category or booking. Shown as the pictures
+ * a button to an item, a category or booking. Shown as the pictures
  * themselves, the way the customer will see them, each saying whether it is
  * on now.
  */

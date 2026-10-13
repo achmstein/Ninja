@@ -188,6 +188,35 @@ export function TillBreakdown() {
             </CardContent>
           </Card>
 
+          {/* Who took the orders, the call centre's agents among them: only when any bill says */}
+          {(data.byTaker ?? []).length > 0 && (
+            <Card className='gap-3'>
+              <CardHeader>
+                <CardTitle>{t('byTaker')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className='divide-y'>
+                  {(data.byTaker ?? []).map((taker) => (
+                    <li key={taker.name} className='py-2.5'>
+                      <ListRow
+                        leading={<EntityAvatar name={taker.name || '—'} />}
+                        title={taker.name || '—'}
+                        meta={
+                          <span className='tabular-nums'>
+                            {t('posTicketsCount', {
+                              count: toNumber(taker.count),
+                            })}
+                          </span>
+                        }
+                        trailing={<Money value={taker.net} strong />}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           <div className='grid gap-4 lg:grid-cols-2'>
             <Card className='gap-3'>
               <CardHeader>

@@ -18,7 +18,7 @@ export const Route = createFileRoute('/item/$itemId')({
 })
 
 /**
- * A dish by its link: the menu's own card opened in place, filling the
+ * An item by its link: the menu's own card opened in place, filling the
  * screen as it does over the menu, with its options under the photo and
  * the price rolling on the one button. Added, or closed, it goes back to
  * the menu, where the tray has it.
@@ -28,7 +28,7 @@ function ItemPage() {
   const t = useT()
   const navigate = useNavigate()
   const addToCart = useCart((s) => s.add)
-  // As the menu: a branch that has paused ordering shows the dish but will not add it
+  // As the menu: a branch that has paused ordering shows the item but will not add it
   const canOrder = useSelectedBranch()?.isOrderingEnabled ?? true
 
   const { data: item, isLoading } = useQuery(getItemOptions({ path: { id: Number(itemId) } }))

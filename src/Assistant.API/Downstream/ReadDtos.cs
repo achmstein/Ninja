@@ -281,7 +281,8 @@ public sealed record BranchSettingsView(
     decimal? DeliveryRadiusKm,
     decimal DeliveryFee,
     decimal DeliveryMinimumOrder,
-    bool RequireSignInForDelivery);
+    bool RequireSignInForDelivery,
+    double[][]? DeliveryArea = null);
 
 // --- Notification ------------------------------------------------------------
 

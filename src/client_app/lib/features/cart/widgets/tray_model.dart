@@ -3,7 +3,7 @@ import '../models/cart_item.dart';
 /// What the docked tray shows: the latest lines' photos, how many more there
 /// are, and the running count and total (client_web's tray-model.ts)
 class TraySummary {
-  /// The newest first, so the dish that just went in sits at the front
+  /// The newest first, so the item that just went in sits at the front
   final List<CartItem> thumbs;
 
   /// Lines not shown as a photo

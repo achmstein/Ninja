@@ -19,7 +19,7 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
  * In the open order, where the branch delivers and the customer is not at a
  * table: collect it or have it brought. Brought, the address is a tap away,
  * and under it what the branch says about it — the fee, how much more the
- * dishes must come to, or that it does not go that far (with the nearest
+ * items must come to, or that it does not go that far (with the nearest
  * branch that does, a tap away too).
  */
 export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryState; cloudKitchen: boolean }) {

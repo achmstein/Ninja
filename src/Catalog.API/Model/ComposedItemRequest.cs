@@ -1,8 +1,8 @@
 namespace Ninja.Catalog.API.Model;
 
 /// <summary>
-/// A dish made by POST /items/compose, kept by its request id so the same
-/// request again answers what was made rather than making a second dish.
+/// An item made by POST /items/compose, kept by its request id so the same
+/// request again answers what was made rather than making a second item.
 /// </summary>
 public class ComposedItemRequest
 {

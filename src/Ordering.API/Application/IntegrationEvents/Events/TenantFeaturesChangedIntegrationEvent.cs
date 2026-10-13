@@ -8,4 +8,5 @@ namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 /// </summary>
 /// <param name="Delivery">Last and defaulted at the source: a Tenant.API older than delivery does not send it.</param>
 /// <param name="PayAhead">Customers pay online for a delivery or an order they collect before the business sees it; a Tenant.API older than it does not send it.</param>
-public record TenantFeaturesChangedIntegrationEvent(bool Delivery = false, bool PayAhead = false) : IntegrationEvent;
+/// <param name="CallCentre">A call centre takes the business's phone orders, so a branch till offers no other branch; a Tenant.API older than it does not send it.</param>
+public record TenantFeaturesChangedIntegrationEvent(bool Delivery = false, bool PayAhead = false, bool CallCentre = false) : IntegrationEvent;

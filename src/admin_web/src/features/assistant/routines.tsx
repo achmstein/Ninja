@@ -50,11 +50,11 @@ const ROUTINES: {
     ask: 'assistantRoutineRestockAsk',
   },
   {
-    prompt: 'add_a_dish',
+    prompt: 'add_an_item',
     icon: UtensilsCrossed,
-    title: 'assistantRoutineDish',
-    about: 'assistantRoutineDishAbout',
-    ask: 'assistantRoutineDishAsk',
+    title: 'assistantRoutineItem',
+    about: 'assistantRoutineItemAbout',
+    ask: 'assistantRoutineItemAsk',
   },
   {
     prompt: 'menu_margins',

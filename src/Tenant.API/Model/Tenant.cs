@@ -130,6 +130,14 @@ public class Tenant
     public bool AiEnabled { get; set; } = true;
 
     /// <summary>
+    /// The call-centre till: staff given every branch take the phone orders
+    /// for the whole business, and branch tills stop offering to send an order
+    /// to another branch. On once bought; off on a stack nobody has told
+    /// (the dev host), so a branch till there still offers the nearer branch.
+    /// </summary>
+    public bool CallCentreEnabled { get; set; }
+
+    /// <summary>
     /// What the business's plan allows, set by the control plane: an owner may
     /// switch an entitled module off, never an unentitled one on. All on by
     /// default, so a stack nobody has told otherwise (the dev host, a stack
@@ -157,9 +165,11 @@ public class Tenant
 
     public bool AiEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled, DeliveryEnabled, PayAheadEnabled, AiEnabled);
+    public bool CallCentreEntitled { get; set; } = true;
 
-    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled, DeliveryEntitled, PayAhead: OnlinePaymentsEntitled, Ai: AiEntitled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, OnlinePaymentsEnabled, DeliveryEnabled, PayAheadEnabled, AiEnabled, CallCentreEnabled);
+
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, OnlinePaymentsEntitled, DeliveryEntitled, PayAhead: OnlinePaymentsEntitled, Ai: AiEntitled, CallCentre: CallCentreEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
@@ -177,6 +187,7 @@ public class Tenant
         DeliveryEnabled = f.Delivery;
         PayAheadEnabled = f.PayAhead;
         AiEnabled = f.Ai;
+        CallCentreEnabled = f.CallCentre;
     }
 
     /// <summary>
@@ -200,7 +211,8 @@ public class Tenant
             requested.OnlinePayments ?? now.OnlinePayments,
             requested.Delivery ?? now.Delivery,
             requested.PayAhead ?? now.PayAhead,
-            requested.Ai ?? now.Ai));
+            requested.Ai ?? now.Ai,
+            requested.CallCentre ?? now.CallCentre));
     }
 
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
@@ -212,6 +224,8 @@ public class Tenant
         if (!DeliveryEntitled && entitled.Delivery) DeliveryEnabled = true;
         // So does Ninja AI: bought, its helpers show at once
         if (!AiEntitled && entitled.Ai) AiEnabled = true;
+        // And the call centre: bought, the hotline takes the calls from then on
+        if (!CallCentreEntitled && entitled.CallCentre) CallCentreEnabled = true;
 
         ReservationsEntitled = entitled.Reservations;
         TimeBillingEntitled = entitled.TimeBilling;
@@ -224,6 +238,7 @@ public class Tenant
         OnlinePaymentsEntitled = entitled.OnlinePayments;
         DeliveryEntitled = entitled.Delivery;
         AiEntitled = entitled.Ai;
+        CallCentreEntitled = entitled.CallCentre;
         ApplyFeatures(Features);
     }
 
@@ -408,14 +423,15 @@ public class TenantThemeDark
 /// </summary>
 public record FeatureSwitches(
     bool? Reservations = null, bool? TimeBilling = null, bool? Loyalty = null, bool? Tabs = null, bool? Inventory = null,
-    bool? Finance = null, bool? Payroll = null, bool? Kds = null, bool? OnlinePayments = null, bool? Delivery = null, bool? PayAhead = null, bool? Ai = null);
+    bool? Finance = null, bool? Payroll = null, bool? Kds = null, bool? OnlinePayments = null, bool? Delivery = null, bool? PayAhead = null, bool? Ai = null, bool? CallCentre = null);
 
 /// <summary>The switches, as the surfaces read them and as the plan allows them.</summary>
 /// <param name="OnlinePayments">Last and defaulted: a caller older than online payments does not send it, and it stays off.</param>
 /// <param name="Delivery">Last and defaulted: a caller older than delivery does not send it, and it stays off.</param>
 /// <param name="PayAhead">Customers pay online for a delivery or an order they collect, before the business sees it; on only with <paramref name="OnlinePayments"/>.</param>
 /// <param name="Ai">Ninja AI. Last and defaulted: a control plane older than it does not send it, and it stays off.</param>
-public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false, bool PayAhead = false, bool Ai = false)
+/// <param name="CallCentre">The call-centre till. Last and defaulted: a control plane older than it does not send it, and it stays off.</param>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false, bool PayAhead = false, bool Ai = false, bool CallCentre = false)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
@@ -424,7 +440,8 @@ public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, 
         OnlinePayments && entitled.OnlinePayments, Delivery && entitled.Delivery,
         // Paying ahead is a way of paying online: off with it
         PayAhead && OnlinePayments && entitled.OnlinePayments,
-        Ai && entitled.Ai);
+        Ai && entitled.Ai,
+        CallCentre && entitled.CallCentre);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

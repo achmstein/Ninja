@@ -14,11 +14,11 @@ import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/menu/models/menu_item.dart';
 import 'package:ninja_client/features/menu/providers/favorites_provider.dart';
 import 'package:ninja_client/features/menu/widgets/deck.dart';
-import 'package:ninja_client/features/menu/widgets/dish.dart';
+import 'package:ninja_client/features/menu/widgets/item.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
 
-/// Every way the menu shows a dish, in both directions and both schemes:
-/// each lays out without overflowing and still says what the dish is and
+/// Every way the menu shows an item, in both directions and both schemes:
+/// each lays out without overflowing and still says what the item is and
 /// what it costs; and the button at its end does what the web's does.
 
 class _NoFavorites extends FavoritesNotifier {
@@ -111,11 +111,11 @@ MenuItem _with({bool required = false, bool available = true}) => MenuItem(
 void main() {
   for (final variant in MenuItemLayout.values) {
     for (final (locale, dark) in [(const Locale('en'), false), (const Locale('ar'), true)]) {
-      testWidgets('a ${variant.name} dish lays out (${locale.languageCode}, ${dark ? 'dark' : 'light'})', (tester) async {
+      testWidgets('a ${variant.name} item lays out (${locale.languageCode}, ${dark ? 'dark' : 'light'})', (tester) async {
         final small = variant == MenuItemLayout.card || variant == MenuItemLayout.deck || variant == MenuItemLayout.tiles;
         final width = small ? 180.0 : 400.0;
         await tester.pumpWidget(_host(
-          SizedBox(width: width, child: dishFor(variant, _latte)),
+          SizedBox(width: width, child: itemFor(variant, _latte)),
           style: _style(menuItem: variant),
           locale: locale,
           dark: dark,
@@ -147,8 +147,8 @@ void main() {
     });
   }
 
-  testWidgets("a dish with nothing to choose goes in with its plus, which becomes a stepper", (tester) async {
-    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _latte)), style: _style()));
+  testWidgets("an item with nothing to choose goes in with its plus, which becomes a stepper", (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: itemFor(MenuItemLayout.row, _latte)), style: _style()));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byIcon(LucideIcons.minus), findsNothing);
 
@@ -164,15 +164,15 @@ void main() {
     expect(find.byIcon(LucideIcons.plus), findsOneWidget);
   });
 
-  testWidgets('a dish with something to choose shows a way to its options, not a plus', (tester) async {
-    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _with(required: true))), style: _style()));
+  testWidgets('an item with something to choose shows a way to its options, not a plus', (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: itemFor(MenuItemLayout.row, _with(required: true))), style: _style()));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byIcon(LucideIcons.plus), findsNothing);
     expect(find.byIcon(LucideIcons.chevronRight), findsOneWidget);
   });
 
-  testWidgets('a sold-out dish has no button', (tester) async {
-    await tester.pumpWidget(_host(SizedBox(width: 400, child: dishFor(MenuItemLayout.row, _with(available: false))), style: _style()));
+  testWidgets('a sold-out item has no button', (tester) async {
+    await tester.pumpWidget(_host(SizedBox(width: 400, child: itemFor(MenuItemLayout.row, _with(available: false))), style: _style()));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byIcon(LucideIcons.plus), findsNothing);
     expect(find.byIcon(LucideIcons.chevronRight), findsNothing);

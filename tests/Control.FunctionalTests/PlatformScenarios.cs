@@ -40,11 +40,11 @@ public sealed class PlatformScenarios
         CollectionAssert.AreEquivalent(Enum.GetValues<Module>(), plans.Modules);
         var free = plans.Plans.Single(p => p.Plan == TenantPlan.Free);
         CollectionAssert.AreEqual(new[] { Module.Kds }, free.Included);
-        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai }, free.Addons);
+        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai, Module.CallCentre }, free.Addons);
         var pro = plans.Plans.Single(p => p.Plan == TenantPlan.Pro);
-        CollectionAssert.AreEquivalent(Enum.GetValues<Module>().Where(m => m is not (Module.OnlinePayments or Module.Delivery)).ToArray(), pro.Included);
-        CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery }, pro.Addons, "online payments and delivery are bought on their own, whatever the plan");
-        foreach (var addon in new[] { Module.OnlinePayments, Module.Delivery })
+        CollectionAssert.AreEquivalent(Enum.GetValues<Module>().Where(m => m is not (Module.OnlinePayments or Module.Delivery or Module.CallCentre)).ToArray(), pro.Included);
+        CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery, Module.CallCentre }, pro.Addons, "online payments, delivery and the call centre are bought on their own, whatever the plan");
+        foreach (var addon in new[] { Module.OnlinePayments, Module.Delivery, Module.CallCentre })
             Assert.IsTrue(plans.Plans.All(p => !p.Included.Contains(addon) && p.Addons.Contains(addon)), $"{addon}: an add-on on every plan, included in none");
     }
 

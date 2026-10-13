@@ -29,7 +29,7 @@ export type SaleLine = {
   specialInstructions?: string
   customizations: SaleCustomization[]
   /**
-   * Rung up from what the last dish goes well with. Not part of the line's
+   * Rung up from what the last item goes well with. Not part of the line's
    * key: added again by hand it is the same line, and keeps saying so.
    */
   suggestion?: 'Till'
@@ -64,6 +64,17 @@ export type SaleDelivery = {
   location: string
   latitude: number | null
   longitude: number | null
+  /** Another branch, nearer the caller, makes and delivers it; null (or missing) keeps it here */
+  sendTo?: SaleSendTo | null
+}
+
+/** The branch a phone delivery is sent to, with what it asks, as the till's quote offered it */
+export type SaleSendTo = {
+  branchId: number
+  fee: number
+  minimumOrder: number
+  distanceMeters: number
+  paused: boolean
 }
 
 export const emptyDelivery: SaleDelivery = {
@@ -76,6 +87,7 @@ export const emptyDelivery: SaleDelivery = {
   location: '',
   latitude: null,
   longitude: null,
+  sendTo: null,
 }
 
 /**
@@ -92,7 +104,7 @@ export function basePrice(
 }
 
 /**
- * What the till offers after a dish is rung up: what it goes well with, in
+ * What the till offers after an item is rung up: what it goes well with, in
  * the business's order, only what this branch sells right now and nothing
  * already on the sale.
  */

@@ -16,6 +16,17 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// The build's record (--dart-define-from-file=tenants/<slug>.json), which Flutter hands Gradle
+// base64-encoded, one define each: the Maps SDK key goes into the manifest from here, so the
+// record is the one place it is given. Absent, the manifest carries an empty key and the app
+// draws the free map (lib/core/config/app_config.dart)
+val dartDefines: Map<String, String> = (project.findProperty("dart-defines") as String?)
+    ?.split(",")
+    ?.mapNotNull { runCatching { String(java.util.Base64.getDecoder().decode(it)) }.getOrNull() }
+    ?.mapNotNull { it.split("=", limit = 2).takeIf { pair -> pair.size == 2 }?.let { pair -> pair[0] to pair[1] } }
+    ?.toMap()
+    ?: emptyMap()
+
 android {
     namespace = "com.chillax.client"
     compileSdk = flutter.compileSdkVersion
@@ -37,6 +48,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["googleMapsKey"] = dartDefines["GOOGLE_MAPS_ANDROID_KEY"] ?: ""
     }
 
     signingConfigs {

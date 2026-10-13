@@ -8,6 +8,7 @@ import {
 } from '@/api/control/@tanstack/react-query.gen'
 import { ColorField } from '@/components/brand/color-field'
 import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
+import { MapsField } from '@/components/brand/maps-field'
 import { SocialField } from '@/components/brand/social-field'
 import {
   fromLocalizedValue,
@@ -96,6 +97,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
   const [primaryColor, setPrimaryColor] = useState(tenant.primaryColor ?? '')
   const [dock, setDock] = useState<Dock>(dockOf(tenant.slab))
   const [social, setSocial] = useState(tenant.socialSignIn ?? true)
+  const [maps, setMaps] = useState(tenant.googleMaps ?? false)
   const [customerDomain, setCustomerDomain] = useState(tenant.customerDomain ?? '')
   const [appId, setAppId] = useState(tenant.appId ?? '')
   const [appleTeamId, setAppleTeamId] = useState(tenant.appleTeamId ?? '')
@@ -163,6 +165,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         primaryColor: primaryColor ? primaryColor.toLowerCase() : null,
         slab: dock,
         socialSignIn: social,
+        googleMaps: maps,
         customerDomain: customerDomain.trim() || null,
         // Empty clears it on the record
         appId: appId.trim(),
@@ -210,6 +213,9 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
         <DockField value={dock} onChange={setDock} color={primaryColor} />
         <div className='sm:col-span-2'>
           <SocialField id='record-social' checked={social} onChange={setSocial} />
+        </div>
+        <div className='sm:col-span-2'>
+          <MapsField id='record-maps' checked={maps} onChange={setMaps} available={tenant.googleMapsAvailable ?? false} />
         </div>
         <div className='grid content-start gap-2'>
           <Label htmlFor='record-domain'>{t('customerDomain')}</Label>

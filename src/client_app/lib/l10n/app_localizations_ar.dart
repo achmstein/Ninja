@@ -184,7 +184,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchMenu => 'دور في المنيو...';
 
   @override
-  String get noDishesFound => 'مفيش أصناف بالاسم ده';
+  String get noItemsFound => 'مفيش أصناف بالاسم ده';
 
   @override
   String get noItemsAvailable => 'مفيش حاجات متاحة';
@@ -1603,8 +1603,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String orderMovedDropped(String name, String dishes) {
-    return 'مش موجود في فرع $name، فاتشال من طلبك: $dishes';
+  String orderMovedDropped(String name, String items) {
+    return 'مش موجود في فرع $name، فاتشال من طلبك: $items';
   }
 
   @override
@@ -1625,6 +1625,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deliveryMovePin => 'حرّك الخريطة لحد ما الدبوس ييجي على بابك';
+
+  @override
+  String get deliverySearchAddress => 'دوّر على شارعك أو منطقتك';
+
+  @override
+  String get deliverySearchFailed =>
+      'ملقيناش المكان ده. حرّك الخريطة لحد بابك.';
 
   @override
   String get deliveryNeedPin => 'حرّك الخريطة لحد بابك، أو استخدم مكانك';
@@ -2028,7 +2035,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get searchMenu => 'ابحث في المنيو...';
 
   @override
-  String get noDishesFound => 'لا توجد أصناف بهذا الاسم';
+  String get noItemsFound => 'لا توجد أصناف بهذا الاسم';
 
   @override
   String get noItemsAvailable => 'لا توجد أصناف متاحة';
@@ -3130,8 +3137,8 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String orderMovedDropped(String name, String dishes) {
-    return 'غير متوفر في فرع $name، فأُزيل من طلبك: $dishes';
+  String orderMovedDropped(String name, String items) {
+    return 'غير متوفر في فرع $name، فأُزيل من طلبك: $items';
   }
 
   @override
@@ -3152,6 +3159,13 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get deliveryMovePin => 'حرّك الخريطة حتى يقع الدبوس على بابك';
+
+  @override
+  String get deliverySearchAddress => 'ابحث عن شارعك أو منطقتك';
+
+  @override
+  String get deliverySearchFailed =>
+      'تعذّر العثور على هذا المكان. حرّك الخريطة حتى بابك.';
 
   @override
   String get deliveryNeedPin => 'حرّك الخريطة حتى بابك، أو استخدم موقعك';

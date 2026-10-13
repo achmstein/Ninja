@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, composeItem, createCategory, createCustomization, createItem, createPromo, createPromotion, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, deletePromotion, designPromotion, drawDishPhoto, fillForm, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getLivePromotion, getMyTopItems, getPromotionPicture, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, listPromotions, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, updatePromotion, uploadItemPicture, uploadPromotionPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, ComposeItemData, ComposeItemError, ComposeItemResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, CreatePromotionData, CreatePromotionError, CreatePromotionResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, DeletePromotionData, DeletePromotionResponse, DesignPromotionData, DesignPromotionError, DesignPromotionResponse, DrawDishPhotoData, DrawDishPhotoError, FillFormData, FillFormError, FillFormResponse2, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetLivePromotionData, GetLivePromotionResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetPromotionPictureData, GetPromotionPictureResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, ListPromotionsData, ListPromotionsResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UpdatePromotionData, UpdatePromotionError, UpdatePromotionResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse, UploadPromotionPictureData, UploadPromotionPictureError, UploadPromotionPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, checkBranchPrices, composeItem, createCategory, createCustomization, createItem, createPromo, createPromotion, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, deletePromotion, designPromotion, drawItemPhoto, fillForm, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPairings, getItemPicture, getItemsByName, getItemsByType, getLivePromotion, getMyTopItems, getPromotionPicture, getTalabat, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, importMenu, listCategories, listItems, listPromos, listPromotions, localizeMenuText, type Options, previewTalabatMenu, pushTalabatMenu, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveTalabat, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setItemPairings, setPromoActive, suggestCustomizations, suggestPairings, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, updatePromotion, uploadItemPicture, uploadPromotionPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CheckBranchPricesData, CheckBranchPricesError, CheckBranchPricesResponse, ComposeItemData, ComposeItemError, ComposeItemResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationError, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, CreatePromotionData, CreatePromotionError, CreatePromotionResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, DeletePromotionData, DeletePromotionResponse, DesignPromotionData, DesignPromotionError, DesignPromotionResponse, DrawItemPhotoData, DrawItemPhotoError, FillFormData, FillFormError, FillFormResponse2, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPairingsData, GetItemPairingsResponse, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetLivePromotionData, GetLivePromotionResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetPromotionPictureData, GetPromotionPictureResponse, GetTalabatData, GetTalabatResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ImportMenuData, ImportMenuError, ImportMenuResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, ListPromotionsData, ListPromotionsResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, PreviewTalabatMenuData, PreviewTalabatMenuResponse, PushTalabatMenuData, PushTalabatMenuError, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveTalabatData, SaveTalabatError, SaveTalabatResponse, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetItemPairingsData, SetItemPairingsError, SetItemPairingsResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, SuggestPairingsData, SuggestPairingsError, SuggestPairingsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationError, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UpdatePromotionData, UpdatePromotionError, UpdatePromotionResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse, UploadPromotionPictureData, UploadPromotionPictureError, UploadPromotionPictureResponse } from '../types.gen';
 
 /**
  * Fill in what a menu text is missing
@@ -29,7 +29,7 @@ export const localizeMenuTextMutation = (options?: Partial<Options<LocalizeMenuT
 /**
  * Fill in a form's empty fields
  *
- * Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).
+ * Given an admin form's fields as they stand (an item, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).
  */
 export const fillFormMutation = (options?: Partial<Options<FillFormData>>): UseMutationOptions<FillFormResponse2, AxiosError<FillFormError>, Options<FillFormData>> => {
     const mutationOptions: UseMutationOptions<FillFormResponse2, AxiosError<FillFormError>, Options<FillFormData>> = {
@@ -65,6 +65,25 @@ export const suggestCustomizationsMutation = (options?: Partial<Options<SuggestC
 };
 
 /**
+ * Propose what to suggest alongside an item
+ *
+ * The assistant proposes items for an item's "goes well with" list, from the menu, the owner's other lists and what the item is bought with (pass the sales pairs report). Only orderable items not on the list already, up to the room it has. Nothing is saved: keep the ones you want through the item's pairings (Admin only).
+ */
+export const suggestPairingsMutation = (options?: Partial<Options<SuggestPairingsData>>): UseMutationOptions<SuggestPairingsResponse2, AxiosError<SuggestPairingsError>, Options<SuggestPairingsData>> => {
+    const mutationOptions: UseMutationOptions<SuggestPairingsResponse2, AxiosError<SuggestPairingsError>, Options<SuggestPairingsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await suggestPairings({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Read a menu's photos into proposed categories and items
  *
  * The assistant transcribes the photos of a menu, one per page (up to 8) — sections, items, prices, the choices printed beside them (sizes), both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then save what you keep through the menu import (Admin only).
@@ -84,14 +103,14 @@ export const scanMenuMutation = (options?: Partial<Options<ScanMenuData>>): UseM
 };
 
 /**
- * Draw a photo of a dish
+ * Draw a photo of an item
  *
- * The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).
+ * The image model draws a photo of the item as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).
  */
-export const drawDishPhotoMutation = (options?: Partial<Options<DrawDishPhotoData>>): UseMutationOptions<unknown, AxiosError<DrawDishPhotoError>, Options<DrawDishPhotoData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<DrawDishPhotoError>, Options<DrawDishPhotoData>> = {
+export const drawItemPhotoMutation = (options?: Partial<Options<DrawItemPhotoData>>): UseMutationOptions<unknown, AxiosError<DrawItemPhotoError>, Options<DrawItemPhotoData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DrawItemPhotoError>, Options<DrawItemPhotoData>> = {
         mutationFn: async (fnOptions) => {
-            const { data } = await drawDishPhoto({
+            const { data } = await drawItemPhoto({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -414,6 +433,25 @@ export const composeItemMutation = (options?: Partial<Options<ComposeItemData>>)
     const mutationOptions: UseMutationOptions<ComposeItemResponse, AxiosError<ComposeItemError>, Options<ComposeItemData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await composeItem({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Price a cart at another branch
+ *
+ * For each line, what it costs at the branch now (its own price and offer, the options' adjustments), whether the item is on there or sold out, which chosen options it ran out of, and whether the price differs from the one sent. The same pricing the order's check uses (Pos)
+ */
+export const checkBranchPricesMutation = (options?: Partial<Options<CheckBranchPricesData>>): UseMutationOptions<CheckBranchPricesResponse, AxiosError<CheckBranchPricesError>, Options<CheckBranchPricesData>> => {
+    const mutationOptions: UseMutationOptions<CheckBranchPricesResponse, AxiosError<CheckBranchPricesError>, Options<CheckBranchPricesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await checkBranchPrices({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

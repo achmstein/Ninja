@@ -49,8 +49,8 @@ import { Tune, type TuneResult } from './tune'
  * The menu tab: ordering as one surface that never leaves the page, in the
  * style the business chose (./menu-style.ts). A list (the default) or the tiles
  * are one scrolling page under the tab's title (./list/menu-grid.tsx). On
- * the deck, dishes are big cards (up and down within a category, sideways
- * between them). Either way a dish opens in place into its options; what is added flies into
+ * the deck, items are big cards (up and down within a category, sideways
+ * between them). Either way an item opens in place into its options; what is added flies into
  * the tray; and a held press sends the order through the same path the cart
  * page uses, after which the order pill at the top takes over. Pinch, or tap
  * the category again, to see the whole menu. The bar at the top goes up
@@ -59,7 +59,7 @@ import { Tune, type TuneResult } from './tune'
  * The gestures are each acted out once by a fingertip, on a first visit.
  *
  * The screen itself holds only what moves between the deck and the whole
- * menu. What a tap or a scroll changes (the dish open, the photos in the
+ * menu. What a tap or a scroll changes (the item open, the photos in the
  * air, the tray, the tuck, the category in view) is read by the part that
  * shows it (./menu-screen-store.ts), so none of those renders the menu.
  */
@@ -95,7 +95,7 @@ export function MenuScreen({ menu }: HomeProps) {
   const classic = style.kind !== 'deck'
   const [chosenMode, setMode] = useState<'deck' | 'grid'>('deck')
   const mode = classic ? 'grid' : chosenMode
-  // The dish the deck was on, which the whole menu opens scrolled to
+  // The item the deck was on, which the whole menu opens scrolled to
   const [gridFocus, setGridFocus] = useState<number | null>(null)
 
   // Between the deck and the whole menu, both are on screen for the move: the one left fades out as
@@ -125,7 +125,7 @@ export function MenuScreen({ menu }: HomeProps) {
   const [gridScroller, setGridScroller] = useState<HTMLDivElement | null>(null)
   // The deck goes compact past its first card: the top bar goes up, the tabs fold and the cards grow
   // into both. By where the customer is rather than which way they last swiped, so going back a
-  // card to compare two dishes keeps the room; the first card brings the chrome back
+  // card to compare two items keeps the room; the first card brings the chrome back
   // Held as it was while the deck is being left, so its cards do not change size under their flying photos
   const compact = (mode === 'deck' || leaving === 'deck') && pastFirst && columns.length > 0
   // Asked back on the compact deck, the tabs come up over the next card's peek rather than taking
@@ -164,7 +164,7 @@ export function MenuScreen({ menu }: HomeProps) {
   const swipeHint = useHint('swipe')
   const zoomHint = useHint('zoom')
   const holdHint = useHint('holdAdd')
-  // The customer's saved way of each dish: what a quick add puts in, and whether it may
+  // The customer's saved way of each item: what a quick add puts in, and whether it may
   const preferences = useItemPreferences()
   const quickFor = (item: CatalogItemDto) => canQuickAdd(item, preferences.get(Number(item.id)))
   const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
@@ -178,11 +178,11 @@ export function MenuScreen({ menu }: HomeProps) {
     setPromoOpen(true)
     live.markSeen()
   })
-  // A dish or the order open over the deck is something going on. Only a cue still to show asks: with
+  // An item or the order open over the deck is something going on. Only a cue still to show asks: with
   // none left, or on the whole menu (which has none), opening either does not render the screen
   const covered = useStore(store, (s) => current != null && mode === 'deck' && (s.tuning != null || s.expanded))
   const idle = !loading && columns.length > 0 && mode === 'deck' && !covered && !promoOpen && !promoWaiting
-  // One cue on screen at a time (the tray's pull may be up); and one showing as a dish or the order
+  // One cue on screen at a time (the tray's pull may be up); and one showing as an item or the order
   // opens is over, so no fingertip or words are left over what opened
   const noCue = useNoCueOnScreen()
   const endCue = current?.showing && !idle ? current.done : null
@@ -327,10 +327,10 @@ export function MenuScreen({ menu }: HomeProps) {
     })
   )
 
-  // Every dish by id, for what a dish goes well with
+  // Every item by id, for what an item goes well with
   const byId = useMemo(() => menuById(menu.sections.flatMap((s) => s.items)), [menu.sections])
 
-  // The promotion's button: its dish opened in place, its category turned to, or booking
+  // The promotion's button: its item opened in place, its category turned to, or booking
   const navigate = useNavigate()
   const goPromotion = useHandler((promotion: PromotionDto) => {
     if (promotion.link === 'Book') {
@@ -354,7 +354,7 @@ export function MenuScreen({ menu }: HomeProps) {
     }
   })
 
-  // A dish the open one goes well with: in with its defaults when nothing needs choosing, else open it in its place
+  // An item the open one goes well with: in with its defaults when nothing needs choosing, else open it in its place
   const onSuggest = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!quickFor(item)) {
       store.setState({ tuning: { item, from: photo, suggestion: 'Pairing' } })
@@ -365,7 +365,7 @@ export function MenuScreen({ menu }: HomeProps) {
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }, 'Pairing'))
   })
 
-  const openDish = useHandler((item: CatalogItemDto, from: HTMLElement | null) => store.setState({ tuning: { item, from } }))
+  const openItem = useHandler((item: CatalogItemDto, from: HTMLElement | null) => store.setState({ tuning: { item, from } }))
 
   const onQuickAdd = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!canOrder) {
@@ -454,14 +454,14 @@ export function MenuScreen({ menu }: HomeProps) {
                       store={store}
                       columns={columns}
                       focusId={gridFocus}
-                      onOpen={openDish}
+                      onOpen={openItem}
                       onQuickAdd={onQuickAdd}
                       onZoomIn={zoomInFromGrid}
                       list={list}
                       // The business's own menu opens under the page's large title, as every tab does; the deck zoomed out has the way back in its bar
                       title={classic ? t('menu') : undefined}
                       // The classic menu's search sits on its title's line, leaving the bar to the branch and the scan
-                      titleAction={classic ? <MenuSearch sections={menu.sections} onOpen={openDish} /> : undefined}
+                      titleAction={classic ? <MenuSearch sections={menu.sections} onOpen={openItem} /> : undefined}
                       onScroller={setGridScroller}
                       notice={notice}
                     />
@@ -483,7 +483,7 @@ export function MenuScreen({ menu }: HomeProps) {
                       start={start}
                       usualId={usual ? Number(usual.id) : null}
                       holdHintId={holdHintId}
-                      onOpen={openDish}
+                      onOpen={openItem}
                       onQuickAdd={onQuickAdd}
                       onZoom={onZoom}
                     />
@@ -508,10 +508,10 @@ export function MenuScreen({ menu }: HomeProps) {
               live.promotion && (live.seen || promoOpen) ? (
                 <span className='flex items-center gap-2'>
                   <PromoChip promotion={live.promotion} onOpen={() => setPromoOpen(true)} />
-                  {!classic && <MenuSearch sections={menu.sections} onOpen={openDish} />}
+                  {!classic && <MenuSearch sections={menu.sections} onOpen={openItem} />}
                 </span>
               ) : classic ? undefined : (
-                <MenuSearch sections={menu.sections} onOpen={openDish} />
+                <MenuSearch sections={menu.sections} onOpen={openItem} />
               )
             }
             start={
@@ -614,7 +614,7 @@ function GridTabs({ store, labels, onZoomOut }: { store: MenuScreenStore; labels
   )
 }
 
-/** The dish open in place, over the menu */
+/** The item open in place, over the menu */
 function TuneLayer({
   store,
   canOrder,
@@ -641,7 +641,7 @@ function TuneLayer({
           onClose={() => store.setState({ tuning: null })}
           leaving={tuning.leaving}
           onAdd={(result, photo) => onAdd(tuning, result, photo)}
-          // None on a dish that was itself a suggestion: taking one never brings on the next
+          // None on an item that was itself a suggestion: taking one never brings on the next
           suggestions={tuning.suggestion ? [] : pairedFor(tuning.item, menu, lines).slice(0, MAX_ON_SHEET)}
           onSuggest={onSuggest}
         />
@@ -650,7 +650,7 @@ function TuneLayer({
   )
 }
 
-/** The photos in the air; each lands its dish in the order and gives the tray its nudge */
+/** The photos in the air; each lands its item in the order and gives the tray its nudge */
 function Flights({ store }: { store: MenuScreenStore }) {
   const flights = useStore(store, (s) => s.flights)
   const onLand = useCallback(
@@ -678,7 +678,7 @@ function Announcer({ store }: { store: MenuScreenStore }) {
 /**
  * One dock: the tray over the app's tabs, a single dark slab floating off
  * the edges. It keeps the order's own state (open or not, the nudge as a
- * dish lands, the note and the code going with it, the cart it sends), so
+ * item lands, the note and the code going with it, the cart it sends), so
  * opening the order or a line changing renders the dock, not the menu.
  */
 const MenuDock = memo(function MenuDock({
@@ -700,7 +700,7 @@ const MenuDock = memo(function MenuDock({
   const cloudKitchen = useIsCloudKitchen()
   const trayEmpty = useCart((s) => s.lines.length === 0)
   const live = useLiveBills()
-  // An empty tray with nothing to show in its place (no bill, order, table or room) takes no row until a dish is on its way
+  // An empty tray with nothing to show in its place (no bill, order, table or room) takes no row until an item is on its way
   const dockRow = useDockRowShown(live)
   const inFlight = useStore(store, (s) => s.flights.length > 0)
   const bare = trayEmpty && !dockRow && !inFlight
@@ -799,7 +799,7 @@ function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDiv
 /**
  * Runs `fn` once the frame in progress has been painted. The store's updates render at once, so one
  * made in a frame callback would render before that frame's paint, where React state set there
- * rendered just after it; the one place that waits a frame on purpose (an added dish's sheet letting go)
+ * rendered just after it; the one place that waits a frame on purpose (an added item's sheet letting go)
  * hands its update on to this, which keeps the frame between its two renders
  */
 function afterThisFrame(fn: () => void) {

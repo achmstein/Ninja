@@ -3,22 +3,32 @@
 namespace Ninja.Ordering.API.Deliveries;
 
 /// <param name="Delivers">The branch delivers right now (delivery on, taking orders).</param>
-/// <param name="InRange">The point is within the branch's radius.</param>
+/// <param name="InRange">The point is inside the branch's drawn area when it has one, otherwise within its radius.</param>
+/// <param name="RadiusKm">How far the branch delivers, straight-line; 0 when it has only a drawn area.</param>
 /// <param name="SignInRequired">The branch delivers to signed-in customers only: a guest is asked to sign in first.</param>
-public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false);
+/// <param name="HasArea">The branch delivers to an area drawn on the map, not a circle: "outside the area" rather than "beyond so many km".</param>
+public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false, bool HasArea = false);
 
 /// <summary>Which of the business's branches deliver to a point.</summary>
 /// <param name="Delivers">Some branch delivers right now; false while the business does not deliver at all.</param>
-/// <param name="Branches">The branches whose radius takes the point in, nearest first; empty when none goes that far.</param>
+/// <param name="Branches">The branches whose area (drawn, or the radius) takes the point in, nearest first; empty when none goes that far.</param>
 public record DeliveryResolution(bool Delivers, IReadOnlyList<DeliveringBranch> Branches);
 
 /// <param name="SignInRequired">The branch delivers to signed-in customers only.</param>
 public record DeliveringBranch(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool SignInRequired);
 
 /// <summary>The branch's answer for a delivery the till takes over the phone.</summary>
-/// <param name="InRange">Within the radius; true without a pin, where the cashier knows the streets.</param>
+/// <param name="InRange">Inside the drawn area, or within the radius without one; true without a pin, where the cashier knows the streets.</param>
 /// <param name="Latitude">With <paramref name="Longitude"/>, the pin read from the pasted location; the till sends it with the order.</param>
 /// <param name="LocationRead">False when a location was pasted but no point could be read from it.</param>
+/// <param name="Alternatives">
+/// The business's other branches that deliver to the pin, nearest first, when
+/// it is out of this branch's area or one of them is clearly nearer
+/// (<see cref="DeliveryAlternatives"/>); the till offers to send the order there.
+/// Empty without a pin, and always while a call centre takes the business's
+/// phone orders: then the calls come through the hotline, not a branch.
+/// </param>
+/// <param name="HasArea">The branch delivers to an area drawn on the map, not a circle: the till says "outside the branch's delivery area" rather than a radius.</param>
 public record TillDeliveryQuote(
     bool Delivers,
     bool InRange,
@@ -28,7 +38,30 @@ public record TillDeliveryQuote(
     decimal RadiusKm,
     double? Latitude,
     double? Longitude,
-    bool LocationRead);
+    bool LocationRead,
+    IReadOnlyList<DeliveryAlternative> Alternatives,
+    bool HasArea = false);
+
+/// <summary>The call centre's answer for a caller's address: which branches would take the delivery.</summary>
+/// <param name="Delivers">Some branch delivers at all (paused ones included); false while the business does not deliver.</param>
+/// <param name="Latitude">With <paramref name="Longitude"/>, the pin read from the location; the till sends it with the order.</param>
+/// <param name="LocationRead">False when a location was given but no point could be read from it.</param>
+/// <param name="Branches">
+/// The branches whose area takes the pin in, nearest first, paused ones too and
+/// flagged: the call centre picks the first that is not paused, and the agent
+/// may choose another. Empty without a pin, or when none goes that far.
+/// </param>
+public record StaffDeliveryResolution(
+    bool Delivers,
+    double? Latitude,
+    double? Longitude,
+    bool LocationRead,
+    IReadOnlyList<DeliveryAlternative> Branches);
+
+/// <summary>Another branch that delivers to the caller's pin, with what it would ask.</summary>
+/// <param name="DistanceMeters">From that branch to the pin, as the crow flies.</param>
+/// <param name="Paused">The branch paused its orders: it still takes one sent from a till, but the cashier is asked twice.</param>
+public record DeliveryAlternative(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool Paused);
 
 public record CustomerAddressRequest(
     double Latitude,
@@ -101,6 +134,10 @@ public record DeliveryOrder
     public DateTime? PaidAt { get; init; }
     public string? CustomerName { get; init; }
     public string? CustomerNote { get; init; }
+    /// <summary>The cashier who took the phone order, by name; null for one from the apps.</summary>
+    public string? TakenByName { get; init; }
+    /// <summary>The branch whose till took it and sent it here; null when it was taken here.</summary>
+    public int? TakenAtBranchId { get; init; }
     /// <summary>What the order comes to, the fee in.</summary>
     public decimal Total { get; init; }
     /// <summary>Paid online in the app before the business saw it: the rider collects nothing, and no cash is handed in for it.</summary>

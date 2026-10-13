@@ -94,6 +94,7 @@ public static partial class ControlApi
             PrimaryColor = source.PrimaryColor,
             Slab = source.Slab,
             SocialSignIn = source.SocialSignIn,
+            GoogleMaps = source.GoogleMaps,
             OwnerEmail = Clean(request.OwnerEmail)?.ToLowerInvariant() ?? source.OwnerEmail,
             ContactName = source.ContactName,
             Phone = source.Phone,

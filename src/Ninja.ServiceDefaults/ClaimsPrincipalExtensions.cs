@@ -77,11 +77,47 @@ public static class ClaimsPrincipalExtensions
     /// <summary>
     /// Branch ids from the <c>branches</c> claim (one claim per value under
     /// <c>MapInboundClaims = false</c>). Empty when the claim is absent — an
-    /// unassigned account holds no branch, never every branch.
+    /// unassigned account holds no branch, never every branch. An account given
+    /// every branch (<see cref="AllBranchesValue"/>) gets a set that contains
+    /// any id and lists none: ask it <c>Contains</c>, never enumerate it.
     /// </summary>
     public static IReadOnlySet<int> GetBranchIds(this ClaimsPrincipal principal) =>
-        principal.FindAll(BranchClaimType)
-            .Select(c => int.TryParse(c.Value, out var id) ? id : (int?)null)
-            .OfType<int>()
-            .ToHashSet();
+        principal.HoldsAllBranches()
+            ? AllBranches.Instance
+            : principal.FindAll(BranchClaimType)
+                .Select(c => int.TryParse(c.Value, out var id) ? id : (int?)null)
+                .OfType<int>()
+                .ToHashSet();
+
+    /// <summary>
+    /// The <c>branches</c> value that means every branch of the business, those
+    /// opened later included: a call-centre account, which takes the calls for all
+    /// of them. Not an owner: it holds no more than any other staff account does.
+    /// </summary>
+    public const string AllBranchesValue = "*";
+
+    /// <summary>Whether the account was given every branch (<see cref="AllBranchesValue"/>), whatever ids sit beside it.</summary>
+    public static bool HoldsAllBranches(this ClaimsPrincipal principal) =>
+        principal.FindAll(BranchClaimType).Any(c => c.Value.Trim() == AllBranchesValue);
+
+    /// <summary>
+    /// Every branch, as <see cref="GetBranchIds"/> answers for an account given
+    /// them all: it contains any id, a branch made tomorrow too, and lists none,
+    /// since the token cannot know which there are.
+    /// </summary>
+    private sealed class AllBranches : IReadOnlySet<int>
+    {
+        public static readonly AllBranches Instance = new();
+
+        public int Count => 0;
+        public bool Contains(int item) => true;
+        public bool IsProperSubsetOf(IEnumerable<int> other) => false;
+        public bool IsProperSupersetOf(IEnumerable<int> other) => true;
+        public bool IsSubsetOf(IEnumerable<int> other) => false;
+        public bool IsSupersetOf(IEnumerable<int> other) => true;
+        public bool Overlaps(IEnumerable<int> other) => other.Any();
+        public bool SetEquals(IEnumerable<int> other) => false;
+        public IEnumerator<int> GetEnumerator() => Enumerable.Empty<int>().GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 }

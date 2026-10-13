@@ -101,6 +101,9 @@ export function BranchSheet({
   const address = localized(branch.address)
   const located = branch.latitude != null && branch.longitude != null
   const radiusKm = Number(branch.deliveryRadiusKm ?? 0)
+  // An area drawn on the map, when there is one, decides instead of the radius
+  const hasArea = (branch.deliveryArea?.length ?? 0) >= 3
+  const reaches = radiusKm > 0 || hasArea
   const fee = Number(branch.deliveryFee ?? 0)
   const minimum = Number(branch.deliveryMinimumOrder ?? 0)
 
@@ -178,12 +181,12 @@ export function BranchSheet({
             icon={Bike}
             title={t('deliveryEnabled')}
             hint={
-              located && radiusKm > 0
+              located && reaches
                 ? t('deliveryEnabledHint')
                 : t('deliveryNeedsLocation')
             }
             checked={branch.isDeliveryEnabled ?? false}
-            disabled={savingSettings || !located || radiusKm <= 0}
+            disabled={savingSettings || !located || !reaches}
             onChange={(v) => onToggle('isDeliveryEnabled', v)}
           />
           {/* Who may have it brought: everyone, or signed-in customers only.
@@ -200,9 +203,11 @@ export function BranchSheet({
             icon={Ruler}
             title={t('deliverySettings')}
             value={
-              radiusKm > 0
+              reaches
                 ? [
-                    t('deliveryWithinKm', { km: radiusKm }),
+                    hasArea
+                      ? t('deliveryAreaShort')
+                      : t('deliveryWithinKm', { km: radiusKm }),
                     fee > 0 ? formatEgp(fee) : t('deliveryFree'),
                     minimum > 0
                       ? t('deliveryMinimumShort', {

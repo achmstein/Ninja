@@ -70,9 +70,9 @@ void sayOrderMoved(BuildContext context, List<Branch> branches, OrderMoveNotice 
   final name = branches.where((b) => b.id == notice.branchId).firstOrNull?.name.localized(context) ?? '';
   final move = notice.move;
   if (move.dropped.isNotEmpty) {
-    final dishes = move.dropped.map((l) => l.productName.localized(context)).join(' · ');
+    final items = move.dropped.map((l) => l.productName.localized(context)).join(' · ');
     showIsland(
-      title: AppText(l10n.orderMovedDropped(name, dishes)),
+      title: AppText(l10n.orderMovedDropped(name, items)),
       icon: const Icon(LucideIcons.circleAlert),
       duration: const Duration(seconds: 5),
     );

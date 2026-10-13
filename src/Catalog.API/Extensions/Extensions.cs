@@ -24,8 +24,10 @@ public static class Extensions
         builder.Services.AddFakeAgentScript(FormFiller.AgentKey, FormFillerFake.Respond);
         builder.Services.AddSingleton<CustomizationSuggester>();
         builder.Services.AddFakeAgentScript(CustomizationSuggester.AgentKey, CustomizationSuggesterFake.Respond);
+        builder.Services.AddSingleton<PairingSuggester>();
+        builder.Services.AddFakeAgentScript(PairingSuggester.AgentKey, PairingSuggesterFake.Respond);
         builder.Services.AddSingleton<MenuScanner>();
-        builder.Services.AddSingleton<DishPhotoDrawer>();
+        builder.Services.AddSingleton<ItemPhotoDrawer>();
         builder.Services.AddSingleton<PromotionDesigner>();
         builder.Services.AddFakeAgentScript(MenuScanner.AgentKey, MenuScannerFake.Respond);
         builder.Services.AddFakeAgentScript(MenuScanner.OrdererKey, MenuScannerFake.RespondOrder);

@@ -52,7 +52,7 @@ public sealed record MenuExtraction(IReadOnlyList<ExtractedCategory> Categories,
 public sealed record ExtractedCategory(string NameEn, string NameAr, int CatalogTypeId, IReadOnlyList<ExtractedItem> Items, bool ContinuesPreviousPage = false);
 
 /// <summary>
-/// How a menu's pages read, as the business printed them: <paramref name="Order"/> the pages holding dishes, by
+/// How a menu's pages read, as the business printed them: <paramref name="Order"/> the pages holding items, by
 /// the number they were given in (1 first), in reading order; <paramref name="NotMenu"/> the ones with none (a
 /// cover with only the logo, a contact page).
 /// </summary>

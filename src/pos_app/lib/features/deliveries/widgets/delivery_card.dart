@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/money.dart';
+import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
@@ -100,6 +101,11 @@ class DeliveryCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                // A phone delivery another branch's till took and sent here
+                if (order.sentFromAnotherBranch) ...[
+                  const SizedBox(height: 4),
+                  SentFromLine(order: order),
+                ],
                 const SizedBox(height: 4),
                 // Where it has got to: a long rider name wraps under its first
                 // line rather than being cut, and the icon keeps its size beside it
@@ -120,6 +126,36 @@ class DeliveryCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Sent from Downtown · Sara": the branch whose till took the phone order
+/// and sent it here, by name off the business's whole branch list
+class SentFromLine extends ConsumerWidget {
+  final DeliveryOrder order;
+
+  const SentFromLine({super.key, required this.order});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final branch = branchNameOf(ref.watch(allBranchesProvider).value, order.takenAtBranchId, context);
+    final taker = order.takenByName;
+    return Row(
+      children: [
+        Icon(FIcons.store, size: 14, color: theme.colors.primary),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            taker == null ? l10n.deliverySentFromNoName(branch) : l10n.deliverySentFrom(branch, taker),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.sm.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -29,9 +29,9 @@ public sealed class SubscriptionTests
     {
         CollectionAssert.AreEquivalent(new[] { Module.Kds }, PlanCatalog.Included(TenantPlan.Free).ToArray());
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
-        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments, Module.Delivery])));
-        CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
+        Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All.Except([Module.OnlinePayments, Module.Delivery, Module.CallCentre])));
+        CollectionAssert.AreEquivalent(new[] { Module.OnlinePayments, Module.Delivery, Module.CallCentre }, PlanCatalog.AddonsAvailable(TenantPlan.Pro).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.OnlinePayments, Module.Delivery, Module.Ai, Module.CallCentre }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
         Assert.Contains(Module.Ai, PlanCatalog.Included(TenantPlan.Pro), "Ninja AI comes with Pro");
     }
 
@@ -151,7 +151,29 @@ public sealed class SubscriptionTests
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
         Assert.IsFalse(features["onlinePayments"]!.GetValue<bool>(), "an add-on on every plan");
         Assert.IsFalse(features["delivery"]!.GetValue<bool>(), "an add-on on every plan");
-        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments", "delivery", "ai" }, features.Select(f => f.Key).ToArray());
+        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds", "onlinePayments", "delivery", "ai", "callCentre" }, features.Select(f => f.Key).ToArray());
+    }
+
+    [TestMethod]
+    public void The_call_centre_is_an_addon_on_every_plan_and_starts_on_where_it_was_bought()
+    {
+        foreach (var plan in Enum.GetValues<TenantPlan>())
+        {
+            Assert.DoesNotContain(Module.CallCentre, PlanCatalog.Included(plan), $"{plan} does not include the call centre");
+            Assert.Contains(Module.CallCentre, PlanCatalog.AddonsAvailable(plan), $"{plan} can buy the call centre");
+            Assert.Contains(Module.CallCentre, PlanCatalog.Entitlements(plan, [Module.CallCentre], TenantKind.Customer), $"{plan} with the add-on has it");
+        }
+        Assert.Contains(Module.CallCentre, PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo), "a demo has everything");
+        foreach (var type in Enum.GetValues<BusinessType>())
+        {
+            Assert.Contains(Module.CallCentre, BusinessProfiles.Starting(type, PlanCatalog.All), $"{type} starts with the call centre on once bought");
+            Assert.DoesNotContain(Module.CallCentre, BusinessProfiles.Starting(type, PlanCatalog.Included(TenantPlan.Pro)), $"{type} never starts with a call centre it did not buy");
+        }
+
+        var features = PlanCatalog.ToFeatures(PlanCatalog.Entitlements(TenantPlan.Pro, [Module.CallCentre], TenantKind.Customer));
+        Assert.IsTrue(features["callCentre"]!.GetValue<bool>(), "the entitlements push spells it callCentre, as Tenant.API's record does");
+        Assert.IsFalse(PlanCatalog.ToFeatures(PlanCatalog.Included(TenantPlan.Pro))["callCentre"]!.GetValue<bool>());
+        Assert.AreEqual("callCentre", PlanCatalog.Key(Module.CallCentre));
     }
 
     [TestMethod]

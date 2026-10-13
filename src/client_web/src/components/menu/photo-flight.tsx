@@ -14,12 +14,12 @@ export const FLIGHT_SPRING = { ...springOpen, restDelta: 0.0005, restSpeed: 0.01
 type Box = { x: number; y: number; w: number; h: number }
 
 /**
- * A dish's photo on its way from one place on screen to another (a dish to
+ * An item's photo on its way from one place on screen to another (an item to
  * its sheet's banner, a card to its tile), in the coordinates of the room it
  * flies in: the two frames and their corners, the photo's natural size
  * (each end shows it "cover", cropped its own way) and the room's size,
  * which the clip is measured from. `src` is the photo, or null for the plate
- * on the business's colour; `gray` for a dish sold out.
+ * on the business's colour; `gray` for an item sold out.
  */
 export type Flight = {
   from: Box

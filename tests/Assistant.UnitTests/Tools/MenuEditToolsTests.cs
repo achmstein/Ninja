@@ -72,7 +72,7 @@ public sealed class MenuEditToolsTests
     // --- update_menu_item ------------------------------------------------------
 
     [TestMethod]
-    public async Task Updating_a_dish_previews_the_changes_then_puts_the_whole_item_keeping_the_rest()
+    public async Task Updating_an_item_previews_the_changes_then_puts_the_whole_item_keeping_the_rest()
     {
         var bench = Cafe();
         bench.Handler.On("PUT", "catalog-api/api/catalog/items/11", _ => FakeHandler.Json(new { }));
@@ -286,12 +286,12 @@ public sealed class MenuEditToolsTests
         var post = bench.Handler.Requests.Single(r => r.Method == HttpMethod.Post && r.Url.AbsolutePath.EndsWith("/customizations"));
         var body = BodyOf(post);
         Assert.AreEqual("Sugar", body.GetProperty("name").GetProperty("en").GetString());
-        Assert.AreEqual(2, body.GetProperty("displayOrder").GetInt32(), "after the dish's own groups");
+        Assert.AreEqual(2, body.GetProperty("displayOrder").GetInt32(), "after the item's own groups");
         Assert.AreEqual(2, body.GetProperty("options").GetArrayLength());
     }
 
     [TestMethod]
-    public async Task Suggested_choices_are_asked_for_with_the_groups_the_dish_has()
+    public async Task Suggested_choices_are_asked_for_with_the_groups_the_item_has()
     {
         var bench = Cafe(h => h.OnJson("POST", "catalog-api/api/catalog/assist/customizations", _ => new
         {
@@ -367,7 +367,7 @@ public sealed class MenuEditToolsTests
     // --- set_recipe ------------------------------------------------------------
 
     [TestMethod]
-    public async Task A_recipe_for_a_dish_is_proposed_with_its_real_options_and_set_with_the_new_stock()
+    public async Task A_recipe_for_an_item_is_proposed_with_its_real_options_and_set_with_the_new_stock()
     {
         var bench = Cafe(h =>
         {
@@ -401,7 +401,7 @@ public sealed class MenuEditToolsTests
         StringAssert.Contains(text, "New stock items: Vanilla syrup / صوص فانيليا (in ml)");
         var ask = BodyOf(bench.Handler.Requests.Single(r => r.Url.AbsolutePath.EndsWith("/assist/propose"))).GetProperty("items")[0];
         Assert.AreEqual(11, ask.GetProperty("catalogItemId").GetInt32());
-        Assert.AreEqual(32, ask.GetProperty("options")[1].GetProperty("id").GetInt32(), "the dish's real option ids");
+        Assert.AreEqual(32, ask.GetProperty("options")[1].GetProperty("id").GetInt32(), "the item's real option ids");
         StringAssert.Contains(ask.GetProperty("brief").GetString(), "vanilla");
         Assert.IsFalse(Wrote(bench), "a preview makes no stock item and sets no recipe");
 

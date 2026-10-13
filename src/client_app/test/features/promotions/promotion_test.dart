@@ -47,9 +47,9 @@ class _Brand extends BrandNotifier {
   );
 }
 
-MenuItem _dish(int id) => MenuItem(
+MenuItem _item(int id) => MenuItem(
   id: id,
-  name: LocalizedText(en: 'Dish $id'),
+  name: LocalizedText(en: 'Item $id'),
   description: const LocalizedText(en: ''),
   price: 50,
   catalogTypeId: 1,
@@ -71,7 +71,7 @@ Widget _host() {
   final plain = BrandStyle.plain;
   final style = plain.copyWith(layout: plain.layout.copyWith(menuItem: MenuItemLayout.row));
   final menu = {
-    MenuCategory(id: 1, name: const LocalizedText(en: 'Coffee')): [_dish(1), _dish(2), _dish(3)],
+    MenuCategory(id: 1, name: const LocalizedText(en: 'Coffee')): [_item(1), _item(2), _item(3)],
   };
   return UncontrolledProviderScope(
     container: _container = ProviderContainer(

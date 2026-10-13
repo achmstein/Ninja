@@ -13,6 +13,7 @@ import 'package:ninja_app_core/network/network_status.dart';
 import 'core/offline/offline_queue.dart';
 import 'core/offline/offline_sale.dart';
 import 'package:ninja_app_core/services/chime_service.dart';
+import 'core/services/branch_names.dart';
 import 'core/services/kiosk_service.dart';
 import 'core/services/signalr_service.dart';
 import 'package:ninja_app_core/services/update_service.dart';
@@ -195,6 +196,24 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       signalR.onDeliveryChanged.listen((_) {
         refreshDeliveries();
         refreshTickets();
+      }),
+    );
+    // A phone delivery another branch's till sent here: nobody at this till
+    // touched it, so it rings like a new order and says where it came from
+    _signalRSubscriptions.add(
+      signalR.onOrderSentToBranch.listen((event) {
+        refreshDeliveries();
+        refreshTickets();
+        if (event['branchId'] == null || event['branchId'] != ref.read(selectedBranchIdProvider)) return;
+        ref.read(chimeServiceProvider).play();
+        final orderId = (event['orderId'] as num?)?.toInt() ?? 0;
+        final from = (event['fromBranchId'] as num?)?.toInt();
+        final takenBy = event['takenBy'] as String?;
+        final context = rootNavigatorKey.currentContext;
+        if (context == null || !context.mounted) return;
+        final branch = branchNameOf(ref.read(allBranchesProvider).value, from, context);
+        toast(PosToastType.info,
+            (l10n) => takenBy == null || takenBy.isEmpty ? l10n.newSentDeliveryToastNoName(orderId, branch) : l10n.newSentDeliveryToast(orderId, branch, takenBy));
       }),
     );
     // A rider went on duty or off: only the picker moves

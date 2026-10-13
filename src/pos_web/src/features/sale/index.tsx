@@ -32,13 +32,18 @@ import {
   ChooseCustomerButton,
   SelectedCustomer,
 } from '@/features/customer/selected-customer'
+import { useBranchName } from '@/features/branch/use-branch-name'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
-import { toPosDeliveryRequest } from './sale-delivery'
+import { PriceReviewDialog } from './price-review-dialog'
+import { sendToBranchId, toPosDeliveryRequest } from './sale-delivery'
 import { SaleDeliverySummary } from './sale-delivery-summary'
+import { useBranchPriceCheck, type PriceReview } from './use-branch-price-check'
 import { useSaleDelivery } from './use-sale-delivery'
 import { stayRoster } from '@/features/places/status'
 import { useStay, useStayActions } from '@/features/places/use-places'
+import { useCallCentre } from '@/hooks/use-call-centre'
 import { useIsMobile } from '@/hooks/use-is-mobile'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -227,6 +232,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const saleDelivery = useSaleDelivery(addingToTicket)
   const { delivery, delivering } = saleDelivery
   const deliveryFee = saleDelivery.fee
+  // Sent to the branch nearer the caller: its menu is checked first, and the
+  // order goes there with nothing on this branch's bills
+  const sendTo = sendToBranchId(delivery)
+  const branchName = useBranchName()
+  const priceCheck = useBranchPriceCheck()
+  // Taken at the call centre: nothing is paid here, and the next caller follows
+  const callCentre = useCallCentre().on
+  const [priceReview, setPriceReview] = useState<PriceReview | null>(null)
 
   // Before paint, so the cashier never sees the previous destination's cart
   useLayoutEffect(() => {
@@ -239,7 +252,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   )
   // Opened from a suggestion: what it adds says so
   const [customizeSuggested, setCustomizeSuggested] = useState(false)
-  // The dish rung up last: what it goes well with is offered under the sale
+  // The item rung up last: what it goes well with is offered under the sale
   const [lastAdded, setLastAdded] = useState<CatalogItemDto | null>(null)
   const [customerOpen, setCustomerOpen] = useState(false)
   // On a phone the running order lives in a sheet under the menu, opened
@@ -508,7 +521,13 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         clear()
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getDeliveries' }] })
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-        toast.success(t(orderId === 0 ? 'orderAlreadyPlaced' : 'deliveryPlaced'))
+        toast.success(
+          orderId === 0
+            ? t('orderAlreadyPlaced')
+            : sendTo != null
+              ? t('deliverySentTo', { branch: branchName(sendTo), orderId })
+              : t('deliveryPlaced'),
+        )
         navigate({ to: '/' })
         return
       }
@@ -527,6 +546,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           to: '/ticket/$ticketId',
           params: { ticketId: String(ticketId) },
         })
+        return
+      }
+
+      // A caller collecting at the branch: their bill waits at its counter,
+      // paid when they come for it; the call centre takes the next call
+      if (callCentre) {
+        clear()
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+        toast.success(
+          orderId === 0
+            ? t('orderAlreadyPlaced')
+            : t('callCentrePickupPlaced', { branch: branchName(getActiveBranchId()), orderId }),
+        )
+        navigate({ to: '/' })
         return
       }
 
@@ -553,8 +586,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }
     // The blocking "sending" wait paints under an open sheet otherwise
     setOrderOpen(false)
+    if (sendTo != null) {
+      // The other branch's menu first: its prices, and what it ran out of
+      priceCheck
+        .check(sendTo, lines)
+        .then((review) => (review.items.length === 0 ? send(lines) : setPriceReview(review)))
+        .catch(() => toast.error(t('priceCheckFailed', { branch: branchName(sendTo) })))
+      return
+    }
+    send(lines)
+  }
+
+  /** Places the order with these lines: the cart's, or the other branch's prices of them */
+  const send = (toSend: SaleLine[]) => {
     const signature = JSON.stringify({
-      lines: lines.map((line) => [
+      lines: toSend.map((line) => [
         line.productId,
         line.quantity,
         line.specialInstructions,
@@ -576,7 +622,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     placeOrder.mutate({
       body: {
         // Same BasketItem mapping as client_web's checkout
-        items: lines.map((line) => ({
+        items: toSend.map((line) => ({
           id: crypto.randomUUID(),
           productId: line.productId,
           productName: { en: line.nameEn || null, ar: line.nameAr || null },
@@ -617,6 +663,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         pointsToRedeem: 0,
         // Where it goes; the pin only when the caller shared one
         delivery: delivery ? toPosDeliveryRequest(delivery) : null,
+        // The branch nearer the caller that makes and delivers it
+        sendToBranchId: sendTo,
       },
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
@@ -791,7 +839,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         )}
       </div>
 
-      {/* What the dish rung up last goes well with: one tap to offer it */}
+      {/* What the item rung up last goes well with: one tap to offer it */}
       {suggestions.length > 0 && (
         <div className='border-t px-3 pt-2 pb-1'>
           <div className='text-muted-foreground mb-1.5 text-xs font-medium'>
@@ -1036,6 +1084,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         itemsTotal={itemsTotal}
         onSave={saleDelivery.save}
       />
+      <PriceReviewDialog
+        review={priceReview}
+        branch={branchName(sendTo)}
+        onClose={() => setPriceReview(null)}
+        onUse={(adjusted) => {
+          setPriceReview(null)
+          send(adjusted)
+        }}
+        onKeepHere={() => {
+          // Made here after all: the cashier charges again, at this branch's fee
+          setPriceReview(null)
+          if (delivery) saleDelivery.keepHere()
+        }}
+      />
       <CustomerDialog
         open={customerOpen}
         onOpenChange={setCustomerOpen}
@@ -1045,10 +1107,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
       {/* Blocking wait: the sale is committed, nothing else may be touched
           until the ticket lands (or the lookup gives up) */}
-      {(pending !== null || placeOrder.isPending) && (
+      {(pending !== null || placeOrder.isPending || priceCheck.checking) && (
         <div className='bg-background/80 fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 backdrop-blur-sm'>
           <Loader2 className='size-10 animate-spin' />
-          <p className='text-lg font-semibold'>{t('sendingToKitchen')}</p>
+          <p className='text-lg font-semibold'>
+            {priceCheck.checking ? t('priceChecking', { branch: branchName(sendTo) }) : t('sendingToKitchen')}
+          </p>
         </div>
       )}
     </div>

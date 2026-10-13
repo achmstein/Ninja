@@ -23,6 +23,7 @@ import { useGuestStore } from '@/stores/guest-store'
 import { Input } from '@/components/ui/input'
 import { pillAction } from '@/components/ui/ninja-sheet'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { AddressSearch } from './address-search'
 import { MapPicker } from './map-pin'
 
 /** Where the map opens when neither the customer nor the branch is placed: the middle of the business's country */
@@ -295,6 +296,16 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         void save()
       }}
     >
+      {/* A street named rather than found: the map flies there, and the pin is then put on the door */}
+      <AddressSearch
+        near={pointOf(branch)}
+        onPick={(place) => {
+          setFlyTo({ lat: place.lat, lng: place.lng })
+          setPinned(true)
+          setMoved(true)
+          if (!street.trim() && place.address) setStreet(place.address)
+        }}
+      />
       <div className='relative'>
         <MapPicker
           start={point}

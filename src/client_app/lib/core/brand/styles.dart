@@ -5,7 +5,7 @@
 /// lifted surfaces are the theme's own (ninja_theme.dart); what it brings
 /// here is how headings are set and the seeds it suggests, which the
 /// business's own seeds always win over. The business still chooses how its
-/// menu shows its dishes (`theme.layout.menuItem`, client_web's
+/// menu shows its items (`theme.layout.menuItem`, client_web's
 /// menu-style.ts) and how the Book tab lists its places
 /// (`theme.layout.places`); every other part of the page is the style's.
 library;
@@ -126,7 +126,7 @@ class StylePreset {
   const StylePreset({required this.layout, required this.headings, required this.defaults});
 }
 
-/// Ninja: a list of dishes unless the business picks another, the
+/// Ninja: a list of items unless the business picks another, the
 /// categories as chips, the brand at the start, pill buttons, lifted surfaces
 const ninja = StylePreset(
   layout: Layout(
@@ -145,7 +145,7 @@ T? _pick<T extends Enum>(List<T> values, Object? value) =>
     value is String ? values.where((v) => v.name == value).firstOrNull : null;
 
 /// The layout the customer app wears: Ninja's, with the business's choice
-/// of how the menu shows its dishes and how the Book tab lists its places over it. A value this build does not
+/// of how the menu shows its items and how the Book tab lists its places over it. A value this build does not
 /// know falls back to Ninja's, so an older app never breaks on a newer brand.
 Layout resolveLayout(Map<String, dynamic>? overrides) =>
     ninja.layout.copyWith(

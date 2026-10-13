@@ -129,9 +129,9 @@ public static partial class MenuProposalValidator
 
     /// <summary>
     /// Choices the model left in the name: "Volcano (Lotus / Nutella / Mango)",
-    /// "بركان (لوتس / نوتيلا / مانجو)", the options of one dish at one price,
-    /// listed in brackets after it. The dish is the name before the brackets;
-    /// each option is a choice at the dish's price, named "Type" / "النوع"
+    /// "بركان (لوتس / نوتيلا / مانجو)", the options of one item at one price,
+    /// listed in brackets after it. The item is the name before the brackets;
+    /// each option is a choice at the item's price, named "Type" / "النوع"
     /// unless the model named the group. Only when the item has no choices of
     /// its own and the brackets hold two or more parts: "Espresso (Double)"
     /// stays as printed.

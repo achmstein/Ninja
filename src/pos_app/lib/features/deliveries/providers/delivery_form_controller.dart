@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
+import '../../call_centre/call_centre_mode.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
 
@@ -113,7 +114,11 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
     if (normalizedPhone == _lookedUpPhone && state.known.isNotEmpty) return;
     _lookedUpPhone = normalizedPhone;
     try {
-      final known = await ref.read(deliveryRepositoryProvider).knownAddresses(customerUserId: customerUserId, phone: normalizedPhone);
+      final known = await ref.read(deliveryRepositoryProvider).knownAddresses(
+          customerUserId: customerUserId,
+          phone: normalizedPhone,
+          // The call centre answers for every branch: any of them may have delivered there
+          everyBranch: ref.read(callCentreModeProvider));
       // The same door once, whichever list it came from
       final seen = <String>{};
       if (ref.mounted) state = state.copyWith(known: [for (final a in known) if (seen.add(a.identity)) a]);

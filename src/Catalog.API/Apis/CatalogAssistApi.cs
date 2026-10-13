@@ -28,7 +28,7 @@ public static class CatalogAssistApi
         api.MapPost("/assist/fill", FillForm)
             .WithName("FillForm")
             .WithSummary("Fill in a form's empty fields")
-            .WithDescription("Given an admin form's fields as they stand (a dish, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).")
+            .WithDescription("Given an admin form's fields as they stand (an item, a supplier, a stock item, an expense…), the assistant fills in the empty ones it can tell from the rest: the other language, a description, the fitting choice. Money, quantities, dates and contact details are never invented. Only empty fields come back; nothing is saved (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
@@ -37,6 +37,14 @@ public static class CatalogAssistApi
             .WithName("SuggestCustomizations")
             .WithSummary("Propose customization groups for a menu item")
             .WithDescription("The assistant proposes the option groups (size, sugar, extras…) a menu item is ordered with, in the menu's own wording. The item is sent as the form has it, saved or not; groups it already has are left out. Nothing is saved: add the ones you want through the customization endpoints (Admin only).")
+            .WithTags("Assist")
+            .RequireAuthorization("Admin")
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
+
+        api.MapPost("/assist/pairings", SuggestPairings)
+            .WithName("SuggestPairings")
+            .WithSummary("Propose what to suggest alongside an item")
+            .WithDescription("The assistant proposes items for an item's \"goes well with\" list, from the menu, the owner's other lists and what the item is bought with (pass the sales pairs report). Only orderable items not on the list already, up to the room it has. Nothing is saved: keep the ones you want through the item's pairings (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
@@ -50,10 +58,10 @@ public static class CatalogAssistApi
             .DisableAntiforgery()
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
-        api.MapPost("/assist/photo", DrawDishPhoto)
-            .WithName("DrawDishPhoto")
-            .WithSummary("Draw a photo of a dish")
-            .WithDescription("The image model draws a photo of the dish as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).")
+        api.MapPost("/assist/photo", DrawItemPhoto)
+            .WithName("DrawItemPhoto")
+            .WithSummary("Draw a photo of an item")
+            .WithDescription("The image model draws a photo of the item as the form has it (names, description, category), in one of the house looks (studio, rustic, overhead, moody, fresh) with anything the owner adds. Answers the WebP an upload would store. Nothing is saved: keep it by uploading it as the item's picture (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
@@ -61,9 +69,9 @@ public static class CatalogAssistApi
         return api;
     }
 
-    public static async Task<Results<FileContentHttpResult, BadRequest<ProblemDetails>, ProblemHttpResult>> DrawDishPhoto(
-        DrawDishPhotoRequest request,
-        [FromServices] DishPhotoDrawer drawer,
+    public static async Task<Results<FileContentHttpResult, BadRequest<ProblemDetails>, ProblemHttpResult>> DrawItemPhoto(
+        DrawItemPhotoRequest request,
+        [FromServices] ItemPhotoDrawer drawer,
         HttpContext httpContext,
         CancellationToken ct)
     {
@@ -72,12 +80,12 @@ public static class CatalogAssistApi
 
         if (string.IsNullOrWhiteSpace(request.NameEn) && string.IsNullOrWhiteSpace(request.NameAr))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Name the dish first: its photo is drawn from its name." });
-        if (request.Note is { Length: > DishPhotoDrawer.MaxNoteLength })
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Keep the note under {DishPhotoDrawer.MaxNoteLength} characters." });
+        if (request.Note is { Length: > ItemPhotoDrawer.MaxNoteLength })
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Keep the note under {ItemPhotoDrawer.MaxNoteLength} characters." });
 
         try
         {
-            return TypedResults.File(await drawer.DrawAsync(request, ct), "image/webp", "dish.webp");
+            return TypedResults.File(await drawer.DrawAsync(request, ct), "image/webp", "item.webp");
         }
         catch (NoImageModelException)
         {
@@ -168,6 +176,54 @@ public static class CatalogAssistApi
         try
         {
             return TypedResults.Ok(await suggester.SuggestAsync(request, category, examples, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
+
+    public static async Task<Results<Ok<SuggestPairingsResponse>, NotFound, BadRequest<ProblemDetails>, ProblemHttpResult>> SuggestPairings(
+        SuggestPairingsRequest request,
+        [FromServices] PairingSuggester suggester,
+        CatalogContext context,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        if (!suggester.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        if (PairingsPostProcessor.Validate(request) is { } error)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
+
+        var item = await context.CatalogItems.AsNoTracking()
+            .Include(i => i.CatalogType)
+            .FirstOrDefaultAsync(i => i.Id == request.ItemId, ct);
+        if (item is null)
+            return TypedResults.NotFound();
+
+        var menu = await context.CatalogItems.AsNoTracking()
+            .Include(i => i.CatalogType)
+            .Where(i => i.IsAvailable)
+            .OrderBy(i => i.CatalogType!.DisplayOrder)
+            .ThenBy(i => i.DisplayOrder)
+            .ThenBy(i => i.Id)
+            .ToListAsync(ct);
+
+        // The owner's other lists, the same category first, as their taste in pairings
+        var lists = await context.CatalogItemPairings.AsNoTracking()
+            .Include(p => p.CatalogItem)
+            .Include(p => p.PairedItem)
+            .OrderByDescending(p => p.CatalogItem.CatalogTypeId == item.CatalogTypeId)
+            .ThenBy(p => p.CatalogItem.DisplayOrder)
+            .ThenBy(p => p.CatalogItemId)
+            .ThenBy(p => p.DisplayOrder)
+            .Take(PairingSuggester.MaxExamples * CatalogItemPairing.MaxPerItem * 2)
+            .ToListAsync(ct);
+
+        try
+        {
+            return TypedResults.Ok(await suggester.SuggestAsync(request, item, menu, lists, ct));
         }
         catch (AIException ex)
         {

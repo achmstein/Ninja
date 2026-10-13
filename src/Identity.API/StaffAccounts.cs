@@ -30,8 +30,12 @@ public sealed class StaffAccounts(KeycloakAdmin keycloak, IEventBus eventBus, IL
     /// email then blocks the retry, is never left behind.
     /// </summary>
     public async Task<StaffCreation> CreateAsync(
-        string email, string password, string? name, string role, bool isOwner, IReadOnlyList<int> branchIds, CancellationToken ct = default)
+        string email, string password, string? name, string role, bool isOwner, IReadOnlyList<int> branchIds, CancellationToken ct = default,
+        bool allBranches = false)
     {
+        // Every branch is one value, "*": a call centre's account, which holds a branch opened later too
+        if (allBranches) branchIds = [];
+
         HttpClient client;
         try
         {
@@ -66,7 +70,7 @@ public sealed class StaffAccounts(KeycloakAdmin keycloak, IEventBus eventBus, IL
             emailVerified = true,
             requiredActions = Array.Empty<string>(),
             // Branch membership lives on the user (see PUT users/{id}/branches)
-            attributes = new Dictionary<string, string[]> { ["branches"] = branchIds.Select(id => id.ToString()).ToArray() },
+            attributes = new Dictionary<string, string[]> { ["branches"] = Directory.UserAttributes.BranchValues(branchIds, allBranches) },
             credentials = new[] { new { type = "password", value = password, temporary = false } },
         });
 

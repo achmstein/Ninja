@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTakenByText } from '@/features/branch/use-branch-name'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { PendingOrders } from '@/features/orders/pending-orders'
 import {
@@ -225,6 +226,7 @@ export function TicketScreen({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const auth = useAuth()
+  const takenByText = useTakenByText()
 
   const [discardOpen, setDiscardOpen] = useState(false)
   const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
@@ -501,6 +503,8 @@ export function TicketScreen({
   // tab, which has no place — the name the cashier gave it. Who ordered is a
   // different question, and the line groups below are the honest answer.
   const placeName = localized(ticket.locationName)
+  // Who took the order that opened it, and where when another branch sent it here
+  const takenBy = takenByText(ticket.takenBy, ticket.takenAtBranchId)
   const location = placeName || typeLabel
   const title = placeName || billLabel(ticket.label).text || typeLabel
 
@@ -608,6 +612,7 @@ export function TicketScreen({
               #{toNumber(ticket.id)}
             </span>
           </h1>
+          {takenBy && <p className='text-muted-foreground truncate text-sm'>{takenBy}</p>}
         </div>
         {/* A paid table can still be waiting on the kitchen's paper */}
         {isSettled && <KitchenReprintButton lines={ticket.lines ?? []} />}

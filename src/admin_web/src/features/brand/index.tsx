@@ -94,6 +94,8 @@ const FEATURE_ROWS: {
   { key: 'delivery', label: 'featureDelivery', addon: true },
   // Every AI helper and the owner's assistant: in Pro, bought on top of the others
   { key: 'ai', label: 'featureAi' },
+  // Staff given every branch take the phone orders for all of them; bought on its own
+  { key: 'callCentre', label: 'featureCallCentre', addon: true },
 ]
 
 /** The two slots every business fills and the cover photo, then the four variants behind a disclosure. */
@@ -140,7 +142,7 @@ type ThemeForm = {
   darkSurface: string
   /** The dock's colour: '' a deep shade of the brand colour, 'neutral' black */
   slab: string
-  /** How the menu lists the dishes: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
+  /** How the menu lists the items: '' the swiped cards; 'row' a list, 'card' a photo grid, 'compact' text rows, 'hero' magazine cards */
   menuItem: string
   /** How the Book tab lists the places: '' a big card each, 'list' a slim row each, 'grid' two small tiles a row */
   places: string

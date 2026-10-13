@@ -200,6 +200,16 @@ export function OverviewTab({
               <dd className='truncate' dir='ltr'>{tenant.customerDomain}</dd>
             </>
           )}
+          <dt className={dtClass}>{t('googleMaps')}</dt>
+          <dd className='flex flex-col gap-0.5'>
+            <span>{tenant.googleMaps ? (tenant.googleMapsAvailable ? t('googleMapsOn') : t('googleMapsOnNoKeys')) : t('googleMapsOff')}</span>
+            {/* Google takes the browser key only from the sites it lists: until this one is, its web keeps the free map */}
+            {tenant.mapsDomainToAdd && (
+              <span className='text-muted-foreground text-xs'>
+                {t('googleMapsAddDomain', { pattern: `https://${tenant.mapsDomainToAdd}/*` })}
+              </span>
+            )}
+          </dd>
           <dt className={dtClass}>{t('customerApp')}</dt>
           <dd className='flex min-w-0 items-center justify-between gap-2'>
             <span className='truncate' dir={tenant.appId ? 'ltr' : undefined}>

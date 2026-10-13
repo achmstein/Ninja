@@ -17,6 +17,12 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// <summary>The branch the order belongs to, so a kitchen or till screen can tell whose it is. Null from an older producer.</summary>
     public int? BranchId { get; }
 
+    /// <summary>The cashier who rang it up at a till, by name; null for an order from the apps.</summary>
+    public string? TakenByName { get; init; }
+
+    /// <summary>The branch whose till took it, when another makes it: a phone delivery sent on there.</summary>
+    public int? TakenAtBranchId { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, decimal orderTotal, int pointsToRedeem = 0, string? guestId = null, int? branchId = null)
     {

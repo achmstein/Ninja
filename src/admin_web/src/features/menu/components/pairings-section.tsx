@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Coffee, Link2, X } from 'lucide-react'
-import { type CatalogItemDto } from '@/api/catalog'
+import { type CatalogItemDto, type LocalizedText } from '@/api/catalog'
 import { setItemPairingsMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -9,11 +9,14 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import { AiButton } from '@/components/ai-button'
 import { Combobox } from '@/components/combobox'
 import { EmptyState } from '@/components/empty-state'
 import { SheetActions } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
+import { usePairingsAssist } from '@/features/assist/use-pairings-assist'
 import { itemPictureUrl } from '../pictures'
 
 /** Catalog refuses more; a handful is a suggestion, more is the menu again. */
@@ -55,6 +58,35 @@ function PairingsForm({
   const byId = new Map(items.map((i) => [toNumber(i.id), i]))
   // A paired item deleted since drops out on its own; Catalog already dropped it
   const [ids, setIds] = useState(() => saved.filter((id) => byId.has(id)))
+  // Why Ninja proposed each item it added, shown until the list is saved
+  const [reasons, setReasons] = useState<Map<number, LocalizedText>>(
+    () => new Map()
+  )
+  const [note, setNote] = useState('')
+  const assist = usePairingsAssist(itemId)
+
+  const askAssistant = async () => {
+    try {
+      const result = await assist.suggest({ current: ids, note })
+      const proposed = result.items.map((p) => toNumber(p.catalogItemId))
+      setIds((current) =>
+        [...current, ...proposed.filter((id) => !current.includes(id))].slice(
+          0,
+          MAX_PAIRINGS
+        )
+      )
+      setReasons((current) => {
+        const next = new Map(current)
+        for (const p of result.items)
+          next.set(toNumber(p.catalogItemId), p.reason)
+        return next
+      })
+      if (result.items.length === 0) toast.info(t('assistNoPairings'))
+      for (const warning of result.warnings) toast.warning(warning)
+    } catch {
+      // toasted by the hook
+    }
+  }
 
   const save = useMutation({
     ...setItemPairingsMutation(),
@@ -125,6 +157,11 @@ function PairingsForm({
                   <span className='text-muted-foreground text-xs tabular-nums'>
                     {formatEgp(paired.effectivePrice ?? paired.price)}
                   </span>
+                  {reasons.has(id) && (
+                    <p className='text-primary text-xs'>
+                      {localized(reasons.get(id))}
+                    </p>
+                  )}
                 </div>
                 <div className='flex shrink-0 items-center'>
                   <Button
@@ -171,15 +208,44 @@ function PairingsForm({
       {full ? (
         <p className='text-muted-foreground text-sm'>{t('pairingsFull')}</p>
       ) : (
-        <Combobox
-          value={null}
-          onChange={(value) => {
-            if (value) setIds((current) => [...current, Number(value)])
-          }}
-          options={options}
-          placeholder={t('addPairing')}
-          size='default'
-        />
+        <div className='space-y-2'>
+          <div className='flex gap-2'>
+            <div className='min-w-0 flex-1'>
+              <Combobox
+                value={null}
+                onChange={(value) => {
+                  if (value) setIds((current) => [...current, Number(value)])
+                }}
+                options={options}
+                placeholder={t('addPairing')}
+                size='default'
+              />
+            </div>
+            {assist.available && (
+              <AiButton
+                className='h-9'
+                pending={assist.isPending}
+                onClick={askAssistant}
+              >
+                {t('assistSuggest')}
+              </AiButton>
+            )}
+          </div>
+          {assist.available && (
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 300))}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                if (!assist.isPending) void askAssistant()
+              }}
+              placeholder={t('assistPairingsNotePlaceholder')}
+              aria-label={t('assistPairingsNote')}
+              disabled={assist.isPending}
+            />
+          )}
+        </div>
       )}
 
       <SheetActions>

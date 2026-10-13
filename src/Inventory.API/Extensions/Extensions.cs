@@ -32,6 +32,8 @@ public static class Extensions
         services.AddFakeAgentScript(ReceiptScanner.AgentKey, ReceiptScannerFake.Respond);
         services.AddSingleton<RecipeProposer>();
         services.AddFakeAgentScript(RecipeProposer.AgentKey, RecipeProposerFake.Respond);
+        services.AddSingleton<MenuAdvisor>();
+        services.AddFakeAgentScript(MenuAdvisor.AgentKey, MenuAdvisorFake.Respond);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

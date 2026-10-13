@@ -4,15 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/money.dart';
+import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/phone.dart';
+import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_delivery.dart';
 import '../../sale/models/sale_line.dart';
 import '../models/delivery_order.dart';
 import '../providers/delivery_form_controller.dart';
+import '../services/address_search.dart';
 import 'delivery_details.dart';
 
 /// Enough digits to be worth asking whether the caller had deliveries before
@@ -27,7 +30,9 @@ typedef DeliveryFormResult = ({SaleDelivery delivery, String name});
 /// pin only when they shared their location; without one the rider goes by
 /// the words. The cashier knows the streets, so being past the radius or
 /// under the minimum is said, not refused. A caller who had deliveries
-/// before is offered those addresses, by their account or their number.
+/// before is offered those addresses, by their account or their number. A
+/// pin out of this branch's area, or clearly nearer another branch, offers
+/// that branch: the order is then sent there, made and delivered by it.
 Future<DeliveryFormResult?> showDeliveryFormDialog(
   BuildContext context, {
   SaleDelivery? initial,
@@ -62,6 +67,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   late final _location = TextEditingController(text: widget.initial?.location ?? '');
 
   bool _tried = false;
+
+  /// The branch nearer the caller the cashier chose to send it to
+  late DeliveryAlternative? _sendTo = widget.initial?.sendTo;
 
   String get _country => ref.read(brandProvider).locale.country;
   bool get _hasAccount => (widget.customer?.id ?? '').isNotEmpty;
@@ -113,6 +121,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     if (!_nameOk || !_streetOk || !_phoneOk || form.reading) return;
     // The pin of the very text in the field, never one an earlier text answered
     final pin = form.pinFor(_location.text);
+    final sending = keptSendTo(_sendTo, form.quote?.alternatives ?? const [], pinned: pin != null);
     Navigator.of(context, rootNavigator: true).pop<DeliveryFormResult>((
       delivery: SaleDelivery(
         address: _street.text.trim(),
@@ -124,6 +133,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         location: _location.text.trim(),
         latitude: pin?.latitude,
         longitude: pin?.longitude,
+        sendTo: sending,
       ),
       name: _hasAccount ? widget.customer!.name : _name.text.trim(),
     ));
@@ -140,6 +150,15 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     final reading = form.reading;
     final pasted = _location.text.trim().isNotEmpty;
     final pinned = form.pinFor(_location.text) != null;
+    // The other branches that deliver to this pin, and the one chosen while it
+    // is still offered. None in a business with a call centre: its calls come
+    // through the hotline (the server says so too; this covers an older answer)
+    final alternatives = offeredAlternatives(quote,
+        pinned: pinned, callCentre: ref.watch(featuresProvider.select((f) => f.callCentre)));
+    final sending = keptSendTo(_sendTo, alternatives, pinned: pinned);
+    final branches = ref.watch(allBranchesProvider).value;
+    final minimum = sending?.minimumOrder ?? quote?.minimumOrder ?? 0;
+    final fee = sending?.fee ?? quote?.fee ?? 0;
 
     Widget field(TextEditingController controller, String label,
             {String? hint, TextInputType? keyboard, TextDirection? direction, bool autofocus = false}) =>
@@ -256,6 +275,14 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           field(_directions, l10n.deliveryDirectionsLabel, hint: l10n.deliveryDirectionsHint),
           const SizedBox(height: 12),
           field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
+          // The street the caller names, when the business has Google Maps: its point goes in the field as coordinates
+          if (ref.watch(brandProvider.select((b) => b.addressSearch)))
+            _AddressSearch(
+              onPick: (place) {
+                _location.text = place.locationText;
+                if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
+              },
+            ),
           const SizedBox(height: 4),
           if (reading)
             Row(
@@ -282,16 +309,25 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             )
           else
             Text(form.quoteFailed ? l10n.deliveryLocationNotChecked : l10n.deliveryLocationUnread, style: muted),
+          if (!reading && alternatives.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            NearerBranches(
+              alternatives: alternatives,
+              chosen: sending?.branchId,
+              branchName: (id) => branchNameOf(branches, id, context),
+              onChoose: (a) => setState(() => _sendTo = a),
+            ),
+          ],
           // Said, not refused: the cashier knows the streets and the regulars
           if (quote != null && !reading) ...[
             const SizedBox(height: 12),
-            if (pinned && !quote.inRange) _Warning(text: l10n.deliveryOutOfRange(_km(quote.radiusKm))),
-            if (quote.minimumOrder > 0 && widget.itemsTotal < quote.minimumOrder)
-              _Warning(text: l10n.deliveryUnderMinimum(money(context, quote.minimumOrder))),
+            if (pinned && !quote.inRange && sending == null) _Warning(text: outOfRangeWarning(l10n, quote)),
+            if (minimum > 0 && widget.itemsTotal < minimum)
+              _Warning(text: l10n.deliveryUnderMinimum(money(context, minimum))),
             Row(
               children: [
                 Expanded(child: Text(l10n.deliveryFee, style: muted)),
-                Text(quote.fee > 0 ? money(context, quote.fee) : l10n.deliveryFree,
+                Text(fee > 0 ? money(context, fee) : l10n.deliveryFree,
                     style: muted.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ],
             ),
@@ -301,15 +337,280 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             height: 52,
             child: FButton(
               onPress: reading ? null : () => _save(form),
-              child: Text(l10n.deliverySave, style: theme.typography.lg.forButton),
+              child: Text(
+                sending != null ? l10n.deliverySaveSend(branchNameOf(branches, sending.branchId, context)) : l10n.deliverySave,
+                style: theme.typography.lg.forButton,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  static String _km(double km) => km == km.roundToDouble() ? km.toStringAsFixed(0) : km.toString();
+/// The other branches the form offers to send the order to: those the quote
+/// names for a pin, and none where a call centre takes the business's calls
+List<DeliveryAlternative> offeredAlternatives(TillDeliveryQuote? quote, {required bool pinned, required bool callCentre}) =>
+    pinned && !callCentre ? quote?.alternatives ?? const <DeliveryAlternative>[] : const <DeliveryAlternative>[];
+
+/// What the till says of a pin the branch does not reach: its drawn area, or
+/// the radius when it has none (a branch with only an area has a 0 km radius)
+String outOfRangeWarning(AppLocalizations l10n, TillDeliveryQuote quote) {
+  if (quote.hasArea) return l10n.deliveryOutOfArea;
+  final km = quote.radiusKm;
+  return l10n.deliveryOutOfRange(km == km.roundToDouble() ? km.toStringAsFixed(0) : km.toString());
+}
+
+/// Google's suggestions for the street typed, from the business's own server;
+/// a pick hands [onPick] its point. One session token per search, closed by the pick.
+class _AddressSearch extends ConsumerStatefulWidget {
+  final void Function(PickedPlace place) onPick;
+
+  const _AddressSearch({required this.onPick});
+
+  @override
+  ConsumerState<_AddressSearch> createState() => _AddressSearchState();
+}
+
+class _AddressSearchState extends ConsumerState<_AddressSearch> {
+  final _text = TextEditingController();
+  Timer? _pause;
+  String? _session;
+  String? _asked;
+  String? _picking;
+  bool _searching = false;
+  List<PlaceSuggestion> _suggestions = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _text.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    _pause?.cancel();
+    _text.dispose();
+    super.dispose();
+  }
+
+  void _changed() {
+    _pause?.cancel();
+    final q = searchableQuery(_text.text);
+    if (q == null) {
+      if (_asked != null || _suggestions.isNotEmpty) {
+        setState(() {
+          _asked = null;
+          _suggestions = const [];
+          _searching = false;
+        });
+      }
+      return;
+    }
+    if (q == _asked) return;
+    _pause = Timer(searchDebounce, () => _search(q));
+  }
+
+  Future<void> _search(String q) async {
+    final language = Localizations.localeOf(context).languageCode;
+    _session ??= newSearchSession();
+    setState(() {
+      _asked = q;
+      _searching = true;
+    });
+    final found = await ref.read(addressSearchProvider).suggest(q, session: _session!, language: language);
+    if (!mounted || _asked != q) return;
+    setState(() {
+      _suggestions = found;
+      _searching = false;
+    });
+  }
+
+  Future<void> _pick(PlaceSuggestion suggestion) async {
+    final l10n = AppLocalizations.of(context)!;
+    final language = Localizations.localeOf(context).languageCode;
+    final session = _session ?? newSearchSession();
+    setState(() => _picking = suggestion.placeId);
+    final place = await ref.read(addressSearchProvider).pick(suggestion, session: session, language: language);
+    if (!mounted) return;
+    // The pick closes the session; the next search opens another
+    _session = null;
+    setState(() => _picking = null);
+    if (place == null) {
+      showPosToast(context, PosToastType.error, l10n.deliverySearchFailed);
+      return;
+    }
+    _pause?.cancel();
+    _asked = null;
+    _suggestions = const [];
+    _text.clear();
+    widget.onPick(place);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FTextField(
+            control: FTextFieldControl.managed(controller: _text),
+            hint: l10n.deliverySearchAddress,
+            textInputAction: TextInputAction.search,
+            suffixBuilder: _searching
+                ? (context, style, states) => const Padding(
+                      padding: EdgeInsetsDirectional.only(end: 10),
+                      child: SizedBox.square(dimension: 14, child: FCircularProgress()),
+                    )
+                : null,
+          ),
+          for (final s in _suggestions)
+            InkWell(
+              onTap: _picking == null ? () => _pick(s) : null,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: Row(
+                  children: [
+                    _picking == s.placeId
+                        ? const SizedBox.square(dimension: 14, child: FCircularProgress())
+                        : Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.primaryText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                          if (s.secondaryText != null) Text(s.secondaryText!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The branches nearer the caller that deliver there, nearest first: how far
+/// and for what fee, with Send. A paused branch says so and takes a second
+/// tap. The one chosen says the order goes there, with the way back.
+class NearerBranches extends StatefulWidget {
+  final List<DeliveryAlternative> alternatives;
+  final int? chosen;
+  final String Function(int branchId) branchName;
+  final void Function(DeliveryAlternative? sendTo) onChoose;
+
+  const NearerBranches({super.key, required this.alternatives, required this.chosen, required this.branchName, required this.onChoose});
+
+  @override
+  State<NearerBranches> createState() => _NearerBranchesState();
+}
+
+class _NearerBranchesState extends State<NearerBranches> {
+  /// The paused branch whose Send was tapped once
+  int? _confirming;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final amber = AppColors.amber(theme.colors.brightness);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final a in widget.alternatives)
+          if (widget.chosen == null || widget.chosen == a.branchId)
+            Container(
+              key: ValueKey(a.branchId),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: widget.chosen == a.branchId ? theme.colors.primary.withValues(alpha: 0.06) : null,
+                border: Border.all(color: widget.chosen == a.branchId ? theme.colors.primary : theme.colors.border),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(FIcons.store, size: 16, color: theme.colors.mutedForeground),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text.rich(
+                          TextSpan(children: [
+                            TextSpan(
+                              text: widget.chosen == a.branchId
+                                  ? l10n.deliveryWillSend(widget.branchName(a.branchId))
+                                  : l10n.deliveryNearerBranch(
+                                      widget.branchName(a.branchId),
+                                      distanceLabel(l10n, a.distanceMeters),
+                                      a.fee > 0 ? money(context, a.fee) : l10n.deliveryFree,
+                                    ),
+                            ),
+                            if (a.paused)
+                              TextSpan(text: ' \u00b7 ${l10n.deliveryBranchPaused}', style: TextStyle(color: amber, fontWeight: FontWeight.w600)),
+                          ]),
+                          style: theme.typography.sm,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: widget.chosen == a.branchId
+                        ? FButton(
+                            variant: FButtonVariant.outline,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () => widget.onChoose(null),
+                            child: Text(l10n.deliveryKeepHere),
+                          )
+                        : FButton(
+                            variant: _confirming == a.branchId ? null : FButtonVariant.secondary,
+                            mainAxisSize: MainAxisSize.min,
+                            prefix: const Icon(FIcons.send),
+                            onPress: () {
+                              // A paused branch stopped its customers' orders: the cashier is asked once more
+                              if (a.paused && _confirming != a.branchId) {
+                                setState(() => _confirming = a.branchId);
+                                return;
+                              }
+                              setState(() => _confirming = null);
+                              widget.onChoose(a);
+                            },
+                            child: Flexible(
+                              child: Text(
+                                a.paused && _confirming == a.branchId
+                                    ? l10n.deliverySendToPaused(widget.branchName(a.branchId))
+                                    : l10n.deliverySendTo(widget.branchName(a.branchId)),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
 }
 
 class _Warning extends StatelessWidget {

@@ -25,7 +25,7 @@ public class TalabatCatalogBuilderTest
     private static JsonObject Items(JsonObject catalog) => catalog["items"]!.AsObject();
 
     [TestMethod]
-    public void Every_dish_and_option_carries_the_remote_code_an_order_comes_back_with()
+    public void Every_item_and_option_carries_the_remote_code_an_order_comes_back_with()
     {
         var (items, _) = Menu();
 
@@ -83,7 +83,7 @@ public class TalabatCatalogBuilderTest
     }
 
     [TestMethod]
-    public void A_dish_is_on_when_available_sold_here_and_in_stock()
+    public void An_item_is_on_when_available_sold_here_and_in_stock()
     {
         var item = new CatalogItem(new LocalizedText("Tea", null)) { Id = 1, IsAvailable = true };
 

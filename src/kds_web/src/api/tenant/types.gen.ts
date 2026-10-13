@@ -32,6 +32,7 @@ export type BranchResponse = {
     deliveryFee?: number | string;
     deliveryMinimumOrder?: number | string;
     requireSignInForDelivery?: boolean;
+    deliveryArea?: null | Array<Array<number | string>>;
 };
 
 export type CreateBranchRequest = {
@@ -48,6 +49,7 @@ export type CreateBranchRequest = {
     deliveryRadiusKm?: null | number | string;
     deliveryFee?: number | string;
     deliveryMinimumOrder?: number | string;
+    deliveryArea?: null | Array<Array<number | string>>;
 };
 
 export type FeatureSwitches = {
@@ -61,6 +63,9 @@ export type FeatureSwitches = {
     kds?: null | boolean;
     onlinePayments?: null | boolean;
     delivery?: null | boolean;
+    payAhead?: null | boolean;
+    ai?: null | boolean;
+    callCentre?: null | boolean;
 };
 
 export type IFormFile = Blob | File;
@@ -68,6 +73,18 @@ export type IFormFile = Blob | File;
 export type LocalizedText = {
     en?: null | string;
     ar?: null | string;
+};
+
+export type PlaceLocation = {
+    lat: number | string;
+    lng: number | string;
+    address: null | string;
+};
+
+export type PlaceSuggestion = {
+    placeId: string;
+    primaryText: string;
+    secondaryText: null | string;
 };
 
 export type ProblemDetails = {
@@ -94,6 +111,9 @@ export type TenantFeatures = {
     kds: boolean;
     onlinePayments?: boolean;
     delivery?: boolean;
+    payAhead?: boolean;
+    ai?: boolean;
+    callCentre?: boolean;
 };
 
 export type TenantIcons = {
@@ -125,6 +145,12 @@ export type TenantLocaleDto = {
     contentLanguages?: null | string;
 };
 
+export type TenantMaps = {
+    search: boolean;
+    webKey: null | string;
+    webDomains: Array<string>;
+};
+
 export type TenantResponse = {
     name: LocalizedText;
     primaryColor: null | string;
@@ -145,6 +171,7 @@ export type TenantResponse = {
     guestOrdersAnywhere?: boolean;
     cover?: null | TenantWordmark;
     assistant?: null | AssistantDto;
+    maps?: null | TenantMaps;
 };
 
 export type TenantSocialProvider = {
@@ -203,6 +230,7 @@ export type UpdateBranchRequest = {
     deliveryFee?: null | number | string;
     deliveryMinimumOrder?: null | number | string;
     requireSignInForDelivery?: null | boolean;
+    deliveryArea?: null | Array<Array<number | string>>;
 };
 
 export type UpdateBranchSettingsRequest = {
@@ -651,3 +679,70 @@ export type GetTenantManifestErrors = {
 };
 
 export type GetTenantManifestError = GetTenantManifestErrors[keyof GetTenantManifestErrors];
+
+export type AutocompletePlacesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * What has been typed; fewer than three letters answers nothing
+         */
+        q?: string;
+        /**
+         * The search's session token, a UUID the app makes when the search opens and keeps until a place is picked
+         */
+        session?: string;
+        /**
+         * Where to lean the suggestions, "lat,lng": the branch; left out, the business's first placed branch
+         */
+        near?: string;
+        /**
+         * en or ar; left out, the request's language
+         */
+        lang?: string;
+    };
+    url: '/api/tenant/places/autocomplete';
+};
+
+export type AutocompletePlacesResponses = {
+    /**
+     * OK
+     */
+    200: Array<PlaceSuggestion>;
+};
+
+export type AutocompletePlacesResponse = AutocompletePlacesResponses[keyof AutocompletePlacesResponses];
+
+export type GetPlaceData = {
+    body?: never;
+    path: {
+        placeId: string;
+    };
+    query?: {
+        /**
+         * The session token the suggestions were asked with
+         */
+        session?: string;
+        /**
+         * en or ar; left out, the request's language
+         */
+        lang?: string;
+    };
+    url: '/api/tenant/places/{placeId}';
+};
+
+export type GetPlaceErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetPlaceResponses = {
+    /**
+     * OK
+     */
+    200: PlaceLocation;
+};
+
+export type GetPlaceResponse = GetPlaceResponses[keyof GetPlaceResponses];

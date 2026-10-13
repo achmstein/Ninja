@@ -165,7 +165,7 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
     var branches = (request.BranchIds ?? []).Where(id => id > 0).Distinct().Order().ToList();
 
     // Made whole or not at all: see StaffAccounts.CreateAsync
-    return await staff.CreateAsync(request.Email, request.Password, request.Name, role, request.IsOwner, branches, ct) switch
+    return await staff.CreateAsync(request.Email, request.Password, request.Name, role, request.IsOwner, branches, ct, request.AllBranches) switch
     {
         StaffCreation.Created created => Results.Ok(new { message = "Staff account registered successfully", userId = created.UserId }),
         StaffCreation.Taken => Results.Conflict(new { message = "Username or email already exists" }),
@@ -914,7 +914,7 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
 // branch never matches anything.
 app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBranchesRequest request, KeycloakAdmin keycloak, StaffAccounts staff) =>
 {
-    if (request.BranchIds is null || request.BranchIds.Any(id => id <= 0))
+    if (!request.AllBranches && (request.BranchIds is null || request.BranchIds.Any(id => id <= 0)))
     {
         return Results.BadRequest(new { message = "branchIds must be positive integers" });
     }
@@ -940,9 +940,10 @@ app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBra
         attributes = new JsonObject();
         user["attributes"] = attributes;
     }
-    // An empty set removes the attribute: no claim, no branch
-    var branchIds = request.BranchIds.Distinct().Order().ToList();
-    attributes["branches"] = new JsonArray(branchIds.Select(id => (JsonNode)id.ToString()).ToArray());
+    // An empty set removes the attribute: no claim, no branch. Every branch is
+    // the one value "*", so a branch opened later is held without asking again
+    var branchIds = request.AllBranches ? [] : request.BranchIds!.Distinct().Order().ToList();
+    attributes["branches"] = new JsonArray(UserAttributes.BranchValues(branchIds, request.AllBranches).Select(v => (JsonNode)v).ToArray());
 
     var response = await keycloak.PutUserAsync(client, userId, user);
     if (!response.IsSuccessStatusCode)
@@ -952,7 +953,7 @@ app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBra
     }
 
     await staff.AnnounceAsync(userId);
-    return Results.Ok(new { branches = branchIds });
+    return Results.Ok(new { branches = branchIds, allBranches = request.AllBranches });
 }).RequireAuthorization("Owner");
 
 app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, TenantCountry country) =>
@@ -1022,6 +1023,7 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
         email = CounterCustomer.VisibleEmail(user.Email),
         phoneNumber = phoneNumber,
         branches = BranchesOf(user.Attributes),
+        allBranches = UserAttributes.HoldsAllBranches(user.Attributes),
         isProfileComplete = isProfileComplete
     });
 }).RequireAuthorization();
@@ -1058,8 +1060,10 @@ static class PhoneInput
 
 /// <param name="Name">An older app's one name; FirstName and LastName win when given.</param>
 record RegisterRequest(string? Name, string Email, string Password, string? PhoneNumber, string? FirstName = null, string? LastName = null);
-record RegisterAdminRequest(string? Name, string Email, string Password, bool IsOwner = false, string? Role = "Admin", List<int>? BranchIds = null);
-record SetBranchesRequest(List<int> BranchIds);
+/// <param name="AllBranches">Every branch, those opened later too (a call centre's account): BranchIds is then ignored.</param>
+record RegisterAdminRequest(string? Name, string Email, string Password, bool IsOwner = false, string? Role = "Admin", List<int>? BranchIds = null, bool AllBranches = false);
+/// <param name="AllBranches">Every branch, those opened later too (a call centre's account): BranchIds is then ignored.</param>
+record SetBranchesRequest(List<int>? BranchIds, bool AllBranches = false);
 record ChangePasswordRequest(string NewPassword);
 record UpdateEmailRequest(string NewEmail);
 record UpdateNameRequest(string? NewName, string? FirstName = null, string? LastName = null);
@@ -1078,7 +1082,9 @@ record UserDto(
     List<string> RealmRoles,
     string? PhoneNumber,
     List<int> Branches,
-    bool AddedAtCounter = false
+    bool AddedAtCounter = false,
+    // Given every branch (a call centre's account): Branches is then empty
+    bool AllBranches = false
 )
 {
     public static UserDto From(DirectoryUser user) => new(
@@ -1092,7 +1098,8 @@ record UserDto(
         user.RealmRoles.ToList(),
         user.PhoneNumber,
         user.Branches.ToList(),
-        user.AddedAtCounter);
+        user.AddedAtCounter,
+        user.AllBranches);
 }
 
 // Keycloak user model for deserialization

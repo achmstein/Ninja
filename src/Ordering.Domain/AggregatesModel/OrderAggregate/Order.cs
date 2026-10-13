@@ -48,6 +48,22 @@ public class Order
     /// </summary>
     public OrderSource Source { get; private set; }
 
+    /// <summary>The staff account that rang the order up at a till; null for every order placed from the apps.</summary>
+    public string? TakenByUserId { get; private set; }
+
+    /// <summary>The cashier's name as the order was taken, for the till and the reports to show.</summary>
+    public string? TakenByName { get; private set; }
+
+    /// <summary>
+    /// The branch whose till took the order, when it is not the one that makes it:
+    /// a phone delivery sent on to the branch nearer the customer. Null when it was
+    /// taken where it is cooked, and for every order from the apps.
+    /// </summary>
+    public int? TakenAtBranchId { get; private set; }
+
+    /// <summary>Taken at another branch's till and sent here.</summary>
+    public bool WasSentFromAnotherBranch => TakenAtBranchId is not null;
+
     /// <summary>
     /// The Sales ticket this order must land on, when the cashier rang it up
     /// against an already-open bill. Ordering never reads it — it only carries
@@ -271,7 +287,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null, bool paysOnline = false) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null, bool paysOnline = false, OrderTaker? taker = null) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
@@ -368,6 +384,24 @@ public class Order
             if (HasDestination || SessionId is not null || TicketId is not null)
                 throw new OrderingDomainException("An order to a table or a room is paid on its bill.", PaymentErrors.NotAhead);
             PaysOnline = true;
+        }
+
+        // Who rang it up at the till, and where. Only a phone delivery is made at
+        // another branch than the one that took it: it has no bill or table here
+        if (taker is not null)
+        {
+            if (Source != OrderSource.Pos)
+                throw new OrderingDomainException("Only an order rung up at a till has a cashier who took it.");
+            TakenByUserId = string.IsNullOrWhiteSpace(taker.UserId) ? null : taker.UserId[..Math.Min(taker.UserId.Length, OrderTaker.UserIdLength)];
+            TakenByName = string.IsNullOrWhiteSpace(taker.Name) ? null : taker.Name.Trim()[..Math.Min(taker.Name.Trim().Length, OrderTaker.NameLength)];
+            if (taker.AtBranchId is int at && at != branchId)
+            {
+                if (Delivery is null)
+                    throw new OrderingDomainException("Only a delivery can be sent to another branch.", DeliveryErrors.SendNotDelivery);
+                if (TicketId is not null)
+                    throw new OrderingDomainException("An order on this branch's bill can't be sent to another branch.", DeliveryErrors.SendWithTicket);
+                TakenAtBranchId = at;
+            }
         }
 
         // Add the OrderStartedDomainEvent to the domain events collection

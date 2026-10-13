@@ -46,11 +46,11 @@ export function LoyaltyTransactionList({
     return (
       <div className='space-y-3'>
         <h4 className='text-sm font-medium'>{t('history')}</h4>
-        <div className='space-y-2'>
+        <div>
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className='flex items-center gap-3 rounded-lg border p-3'
+              className='flex items-center gap-3 border-b py-2.5 last:border-b-0'
             >
               <Skeleton className='h-8 w-8 rounded-full' />
               <div className='flex-1 space-y-1'>
@@ -81,11 +81,12 @@ export function LoyaltyTransactionList({
     <div className='space-y-3'>
       <h4 className='text-sm font-medium'>{t('history')}</h4>
       <ScrollArea className='h-[300px]'>
-        <div className='space-y-2 pe-4'>
+        {/* One list, rows split by a hairline, as the place's past stays are */}
+        <div className='pe-4'>
           {transactions.map((transaction) => (
             <div
               key={transaction.id}
-              className='flex items-center gap-3 rounded-lg border p-3'
+              className='flex items-center gap-3 border-b py-2.5 last:border-b-0'
             >
               <div className='bg-muted flex h-8 w-8 items-center justify-center rounded-full'>
                 {getTransactionIcon(transaction.type, transaction.points)}

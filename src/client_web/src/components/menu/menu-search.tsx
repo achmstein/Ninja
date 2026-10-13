@@ -4,10 +4,10 @@ import { ArrowLeft, Search, X } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { DishPhoto } from './dish-photo'
+import { ItemPhoto } from './item-photo'
 import { itemPictureUrl } from './item-picture'
 import { OfferPrice } from './offer'
-import { SoldOutTag } from './list/dish-parts'
+import { SoldOutTag } from './list/item-parts'
 import type { MenuSectionData } from './data/use-menu'
 
 /** Lower case, Arabic without its marks and with one alef and one yaa: "إسبريسو" finds "اسبريسو" */
@@ -21,7 +21,7 @@ export function normalize(text: string): string {
     .trim()
 }
 
-/** The dishes whose name or description holds every word typed, the ones named so first */
+/** The items whose name or description holds every word typed, the ones named so first */
 export function searchMenu(
   items: CatalogItemDto[],
   query: string
@@ -41,9 +41,9 @@ export function searchMenu(
 
 /**
  * Search the menu: a round button in the top bar that opens the whole
- * screen to a field and the dishes it finds as it is typed, by name or by
+ * screen to a field and the items it finds as it is typed, by name or by
  * what they are, in either language (Arabic as it is really typed, without
- * its marks and with any alef). A dish found opens as it does from the menu.
+ * its marks and with any alef). An item found opens as it does from the menu.
  */
 export function MenuSearch({
   sections,
@@ -59,7 +59,7 @@ export function MenuSearch({
   const [query, setQuery] = useState('')
   const input = useRef<HTMLInputElement>(null)
 
-  // Each dish once (a dish is in its category, and maybe in the usuals and the popular too), with its category's name
+  // Each item once (an item is in its category, and maybe in the usuals and the popular too), with its category's name
   const { items, categoryOf } = useMemo(() => {
     const seen = new Map<string, CatalogItemDto>()
     const category = new Map<string, string>()
@@ -135,7 +135,7 @@ export function MenuSearch({
 
             <div className='mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]'>
               {query.trim() !== '' && results.length === 0 && (
-                <p className='text-muted-foreground py-16 text-center text-body'>{t('noDishesFound')}</p>
+                <p className='text-muted-foreground py-16 text-center text-body'>{t('noItemsFound')}</p>
               )}
               <ul className='grid gap-1'>
                 {results.map((item, i) => {
@@ -157,7 +157,7 @@ export function MenuSearch({
                         className={cn('flex w-full items-center gap-3 rounded-2xl p-2 text-start active:bg-muted', soldOut && 'opacity-75')}
                       >
                         <span data-photo className='size-14 shrink-0 overflow-hidden rounded-xl'>
-                          <DishPhoto src={item.pictureUri ? itemPictureUrl(item, 320) : null} />
+                          <ItemPhoto src={item.pictureUri ? itemPictureUrl(item, 320) : null} />
                         </span>
                         <span className='min-w-0 flex-1'>
                           <span className='block truncate text-name font-semibold'>{localized(item.name)}</span>

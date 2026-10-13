@@ -72,7 +72,7 @@ export function buildSections({
 const hasPhoto = (item: CatalogItemDto) => !!item.pictureUri
 
 /**
- * The dish a showcase opens with: the best offer that has a photo, else the
+ * The item a showcase opens with: the best offer that has a photo, else the
  * first popular one with a photo, else any available item with a photo;
  * null when nothing has a photo (the business's cover stands in).
  */
@@ -93,7 +93,7 @@ export function pickHero(offers: CatalogItemDto[], sections: MenuSectionData[]):
 /**
  * The tiles a category-first home shows: offers and your usuals first when
  * there are any, then favourites and each category. Most popular is left
- * out: on a tile grid it is a list of dishes, not a place to go.
+ * out: on a tile grid it is a list of items, not a place to go.
  */
 export function tileSections(
   sections: MenuSectionData[],

@@ -50,9 +50,9 @@ class _Brand extends BrandNotifier {
   );
 }
 
-MenuItem _dish(int id) => MenuItem(
+MenuItem _item(int id) => MenuItem(
   id: id,
-  name: LocalizedText(en: 'Dish $id'),
+  name: LocalizedText(en: 'Item $id'),
   description: const LocalizedText(en: ''),
   price: 50,
   catalogTypeId: 1,
@@ -80,7 +80,7 @@ class _Booking extends StatelessWidget {
 /// frame on the way: once the dock is coming back the page only goes up with it, the top bar stays up,
 /// and the list runs to the page's bottom whatever the dock does (its height never follows the tuck)
 Future<int> _flingToEnd(WidgetTester tester) async {
-  final last = find.text('Dish 48');
+  final last = find.text('Item 48');
   final list = find.descendant(of: find.byType(MenuScreen), matching: find.byType(Scrollable)).first;
   var ends = 0;
   for (var k = 0; k < 5; k++) {
@@ -147,7 +147,7 @@ Widget _host(TargetPlatform platform) {
   var id = 0;
   final menu = {
     for (var c = 1; c <= 8; c++)
-      MenuCategory(id: c, name: LocalizedText(en: 'Cat $c')): [for (var i = 0; i < 6; i++) _dish(++id)],
+      MenuCategory(id: c, name: LocalizedText(en: 'Cat $c')): [for (var i = 0; i < 6; i++) _item(++id)],
   };
   return UncontrolledProviderScope(
     container: _container = ProviderContainer(

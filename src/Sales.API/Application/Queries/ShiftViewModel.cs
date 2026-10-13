@@ -125,7 +125,16 @@ public record BreakdownReport
     /// office can fold the list into categories through CatalogItemId.
     /// </summary>
     public List<ItemTotal> ByItem { get; init; } = [];
+    /// <summary>
+    /// Settled bills by who took the order that opened them (the ticket's
+    /// TakenBy), biggest first: a call centre's agents, who settle nothing at
+    /// the branch, show here. Empty when no bill names a taker.
+    /// </summary>
+    public List<TakerTotal> ByTaker { get; init; } = [];
 }
+
+/// <param name="Count">Settled bills whose order this person took.</param>
+public record TakerTotal(string Name, int Count, decimal Net);
 
 public record HourTotal(int Hour, int Count, decimal Net);
 
@@ -136,3 +145,14 @@ public record CashierTotal(string Name, int Count, decimal Net, decimal Discount
 
 /// <param name="CatalogItemId">The catalog item, when the lines carried one; null groups as uncategorised.</param>
 public record ItemTotal(LocalizedText Description, decimal Qty, decimal Amount, int Tickets, int? CatalogItemId = null);
+
+/// <summary>
+/// What an item is bought with: of the settled tickets that had it, how many
+/// also had each other catalog item, most often first.
+/// </summary>
+/// <param name="TicketsWithItem">Settled tickets in the window that had the item.</param>
+public record ItemPairsReport(int CatalogItemId, int TicketsWithItem, List<ItemPair> Pairs);
+
+/// <param name="Together">Tickets that had both.</param>
+/// <param name="Share">Together over the tickets that had the item, 0 to 1.</param>
+public record ItemPair(int CatalogItemId, int Together, decimal Share);

@@ -7,6 +7,7 @@ import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { tenderLabelKey } from '@/features/ticket/tenders'
+import { useTakenByText } from '@/features/branch/use-branch-name'
 
 export type ReceiptPayment = {
   tender: string
@@ -51,6 +52,7 @@ export function ReceiptSheet({
   const { data: branches = [] } = useQuery(getBranchesOptions())
   const branch = branches.find((b) => Number(b.id) === branchId)
   const footer = localized(branch?.receiptFooter)?.trim()
+  const takenBy = useTakenByText()(ticket.takenBy, ticket.takenAtBranchId)
 
   const payments: ReceiptPayment[] =
     paymentsOverride ??
@@ -112,6 +114,7 @@ export function ReceiptSheet({
         {localized(ticket.locationName) && (
           <div style={{ fontSize: 11 }}>{localized(ticket.locationName)}</div>
         )}
+        {takenBy && <div style={{ fontSize: 11 }}>{takenBy}</div>}
       </div>
 
       <div style={{ borderTop: '1px dashed #000', margin: '2mm 0' }} />

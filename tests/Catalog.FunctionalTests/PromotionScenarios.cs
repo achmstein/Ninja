@@ -106,7 +106,7 @@ public sealed class PromotionScenarios
     }
 
     [TestMethod]
-    public async Task A_promotion_opens_a_dish_that_exists_and_says_what_is_missing()
+    public async Task A_promotion_opens_an_item_that_exists_and_says_what_is_missing()
     {
         var branch = NewBranch();
         var (status, detail) = await Admin.RefusedAsync(HttpMethod.Post, Promotions(), Request(branch, link: "Item", linkId: 987654));

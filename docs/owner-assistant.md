@@ -65,7 +65,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 **Read**
 - Sales and money: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_open_tickets`, `get_orders`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_pricing_rules`.
-- Menu: `get_menu`, `get_menu_item`, `get_recipes`, `get_food_cost` (cost and margin per dish, worst first), `get_promo_codes`.
+- Menu: `get_menu`, `get_menu_item`, `get_recipes`, `get_food_cost` (cost and margin per dish, worst first), `get_menu_engineering` (each dish a star, plowhorse, puzzle or dog from what it sold against its margin), `get_promo_codes`.
 - Stock: `get_stock_levels`, `get_inventory_usage`, `get_stock_movements`, `get_purchases`, `get_stock_counts`, `get_transfers`.
 - People and places: `get_staff`, `get_attendance`, `get_payslips`, `get_reservations`, `get_place_usage`, `get_deliveries`, `get_loyalty_overview`, `get_customer_tabs`, `get_branch_settings`, `get_announcements`.
 
@@ -82,7 +82,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 - A preview built with AI (`create_menu_item`, `set_recipe`, `add_customizations`, `create_category`) returns a `draft`: the plan, signed with HMAC over the plan, user, tool and request (`Auth/DraftSigner.cs`, key `Assistant:DraftKey`, else one drawn at start), valid 30 minutes. The confirm applies exactly that plan and refuses one changed, expired or another's; the server keeps no state.
 - `create_menu_item` confirms through Catalog's `POST /api/catalog/items/compose` (item, category and options in one transaction, keyed by `x-requestid`), then Inventory's stock items and recipe with the options' real ids, then the photo.
 
-Routines (MCP prompts): `morning_briefing`, `close_the_day`, `weekly_review`, `restock_check`, `add_a_dish`, `menu_margins`.
+Routines (MCP prompts): `morning_briefing`, `close_the_day`, `weekly_review`, `restock_check`, `add_an_item`, `menu_margins`.
 
 Periods are business days in the tenant's zone, each branch from its own `dayStartTime`; `today` at 02:00 in a business whose day starts at 17:00 is still yesterday. Leave `branch` out for every active branch, with a total and a line per branch. Answers are JSON, Arabic kept readable, lists trimmed to `top`, and a reply over 60 000 characters is refused with a hint rather than cut.
 

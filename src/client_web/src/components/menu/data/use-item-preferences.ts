@@ -4,13 +4,13 @@ import type { UserItemPreferenceDto } from '@/api/catalog'
 import { getUserPreferencesOptions } from '@/api/catalog/@tanstack/react-query.gen'
 
 const none = new Map<number, UserItemPreferenceDto>()
-// Kept out of the hook so the map is built once per answer, not once per dish per render
+// Kept out of the hook so the map is built once per answer, not once per item per render
 const byItem = (list: UserItemPreferenceDto[]) => new Map(list.map((p) => [Number(p.catalogItemId), p]))
 
 /**
- * The signed-in customer's saved way of each dish (what they chose the last
+ * The signed-in customer's saved way of each item (what they chose the last
  * time they ordered it), by item id: one request for the whole menu, shared
- * by every dish. A guest has none.
+ * by every item. A guest has none.
  */
 export function useItemPreferences(): Map<number, UserItemPreferenceDto> {
   const auth = useAuth()
@@ -24,7 +24,7 @@ export function useItemPreferences(): Map<number, UserItemPreferenceDto> {
   return data ?? none
 }
 
-/** One dish's saved way, or undefined */
+/** One item's saved way, or undefined */
 export function useItemPreference(itemId: number): UserItemPreferenceDto | undefined {
   return useItemPreferences().get(itemId)
 }

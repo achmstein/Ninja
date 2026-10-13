@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
 import { ShiftChip } from '@/features/shift/shift-chip'
+import { useCallCentre } from '@/hooks/use-call-centre'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
@@ -25,12 +26,14 @@ export function PosHeader() {
   const auth = useAuth()
   const { language, setLanguage } = useLanguage()
   const { resolvedTheme, setTheme } = useTheme()
+  // The call centre keeps no drawer: the branch's rider or counter takes the cash
+  const callCentre = useCallCentre().on
 
   return (
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3 max-sm:px-2'>
       <BranchSwitcher />
       <div className='ms-auto flex shrink-0 items-center gap-1'>
-        <ShiftChip />
+        {!callCentre && <ShiftChip />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='ghost' size='icon' className='size-12'>

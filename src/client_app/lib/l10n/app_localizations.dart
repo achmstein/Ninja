@@ -435,11 +435,11 @@ abstract class AppLocalizations {
   /// **'Search menu...'**
   String get searchMenu;
 
-  /// No description provided for @noDishesFound.
+  /// No description provided for @noItemsFound.
   ///
   /// In en, this message translates to:
   /// **'No dishes match that'**
-  String get noDishesFound;
+  String get noItemsFound;
 
   /// No description provided for @noItemsAvailable.
   ///
@@ -2916,8 +2916,8 @@ abstract class AppLocalizations {
   /// No description provided for @orderMovedDropped.
   ///
   /// In en, this message translates to:
-  /// **'Not served at {name}, taken out of your order: {dishes}'**
-  String orderMovedDropped(String name, String dishes);
+  /// **'Not served at {name}, taken out of your order: {items}'**
+  String orderMovedDropped(String name, String items);
 
   /// No description provided for @orderMovedRepriced.
   ///
@@ -2948,6 +2948,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move the map to put the pin on your door'**
   String get deliveryMovePin;
+
+  /// No description provided for @deliverySearchAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for your street or area'**
+  String get deliverySearchAddress;
+
+  /// No description provided for @deliverySearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find that place. Move the map to your door.'**
+  String get deliverySearchFailed;
 
   /// No description provided for @deliveryNeedPin.
   ///

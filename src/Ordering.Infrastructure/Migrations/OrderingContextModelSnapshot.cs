@@ -415,6 +415,17 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<DateTime?>("StockReleasedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("TakenAtBranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TakenByName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TakenByUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<int?>("TicketId")
                         .HasColumnType("integer");
 
@@ -763,6 +774,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("DeliveryArea")
+                        .HasColumnType("jsonb");
+
                     b.Property<decimal>("DeliveryFee")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -774,6 +788,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<decimal?>("DeliveryRadiusKm")
                         .HasPrecision(9, 2)
                         .HasColumnType("numeric(9,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeliveryEnabled")
                         .HasColumnType("boolean");
@@ -940,6 +957,9 @@ namespace Ordering.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("CallCentre")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("Delivery")
                         .HasColumnType("boolean");

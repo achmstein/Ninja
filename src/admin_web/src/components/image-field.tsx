@@ -9,7 +9,7 @@ import { Field } from '@/components/field'
 const ACCEPT_PHOTO = 'image/png,image/jpeg,image/webp'
 
 /**
- * Every picture the admin takes (a dish's photo, the logo, the cover) in
+ * Every picture the admin takes (an item's photo, the logo, the cover) in
  * one shape: the picture or an empty tile, and beside it one row of what
  * can be done to it (Upload or Replace, the AI's way to make one, Remove)
  * over one line on what it wants. The tile is a way to upload too.
@@ -32,7 +32,7 @@ export function ImageField({
   hint?: ReactNode
   src: string | null
   busy?: boolean
-  /** square: a dish, a mark; wide: a wordmark; photo: a cover, cropped */
+  /** square: an item, a mark; wide: a wordmark; photo: a cover, cropped */
   shape?: 'square' | 'wide' | 'photo'
   accept?: string
   onFile: (file: File) => void

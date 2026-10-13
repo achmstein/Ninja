@@ -435,6 +435,37 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
+    public void Maps_reach_the_tenant_service_only_when_the_platform_has_keys()
+    {
+        var blue = Blue();
+        var off = Templates.Compose(blue, TenantHosts.For(blue, Platform), Platform);
+        Assert.DoesNotContain("Maps__", off, "no key, the free map and a typed address");
+        StringAssert.Contains(Templates.Env(blue, Platform), "MAPS_SERVER_KEY=\n");
+
+        var platform = new PlatformOptions { Domain = "ninja.app", KeycloakPublicUrl = "https://auth.ninja.app", Maps = new() { ServerKey = "server-key", BrowserKey = "browser-key", WebTiles = true } };
+        blue.CustomerDomain = "menu.blue.test";
+        Assert.DoesNotContain("Maps__", Templates.Compose(blue, TenantHosts.For(blue, platform), platform), "the platform's keys, but the business has Google Maps off");
+        StringAssert.Contains(Templates.Env(blue, platform), "MAPS_SERVER_KEY=\n");
+        Assert.IsNull(platform.Maps.PendingDomain(blue), "nothing to add for a business without Google Maps");
+
+        blue.GoogleMaps = true;
+        var on = Templates.Compose(blue, TenantHosts.For(blue, platform), platform);
+        StringAssert.Contains(on, "Maps__ServerKey: \"${MAPS_SERVER_KEY}\"");
+        Assert.DoesNotContain("server-key", on, "the server key is in the .env, not the compose file");
+        StringAssert.Contains(Templates.Env(blue, platform), "MAPS_SERVER_KEY=server-key\n");
+        StringAssert.Contains(on, "Maps__BrowserKey: \"browser-key\"");
+        StringAssert.Contains(on, "Maps__WebDomains: \"ninja.app\"", "its own domain is not on the key yet");
+        Assert.AreEqual("menu.blue.test", platform.Maps.PendingDomain(blue));
+
+        platform.Maps.ReferrerDomains = "other.test, MENU.blue.test";
+        StringAssert.Contains(Templates.Compose(blue, TenantHosts.For(blue, platform), platform), "Maps__WebDomains: \"ninja.app,menu.blue.test\"");
+        Assert.IsNull(platform.Maps.PendingDomain(blue));
+
+        platform.Maps.WebTiles = false;
+        Assert.DoesNotContain("Maps__BrowserKey", Templates.Compose(blue, TenantHosts.For(blue, platform), platform), "the web switch off keeps the web on the free map");
+    }
+
+    [TestMethod]
     public void Env_refuses_a_tenant_without_credentials_of_its_own()
     {
         var stampedBefore = Blue();

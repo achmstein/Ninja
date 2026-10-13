@@ -821,8 +821,8 @@
         "tags": [
           "Control"
         ],
-        "summary": "Draw a photo for every dish of a running business that has none, with the AI tab's image model",
-        "operationId": "GenerateDishPhotos",
+        "summary": "Draw a photo for every item of a running business that has none, with the AI tab's image model",
+        "operationId": "GenerateItemPhotos",
         "parameters": [
           {
             "name": "slug",
@@ -4193,6 +4193,24 @@
           "delivery": {
             "type": "boolean",
             "default": false
+          },
+          "payAhead": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "ai": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "callCentre": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -4948,6 +4966,13 @@
               "string"
             ],
             "description": "both, ar or en: the languages the business writes its menu, places and stock in; null is both"
+          },
+          "googleMaps": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off"
           }
         }
       },
@@ -5454,7 +5479,8 @@
           "Kds",
           "OnlinePayments",
           "Delivery",
-          "Ai"
+          "Ai",
+          "CallCentre"
         ]
       },
       "OperatorInvitedResponse": {
@@ -6443,6 +6469,23 @@
               "type": "string"
             },
             "description": "The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…"
+          },
+          "mapsDomainToAdd": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map"
+          },
+          "googleMaps": {
+            "type": "boolean",
+            "description": "Whether the business uses Google Maps with the platform's keys; off, or with no keys on the platform, its apps keep the free map",
+            "default": false
+          },
+          "googleMapsAvailable": {
+            "type": "boolean",
+            "description": "Whether the platform has Google Maps keys at all; without them the business's switch does nothing",
+            "default": false
           }
         }
       },
@@ -7228,6 +7271,13 @@
               "boolean"
             ],
             "description": "Whether customers may sign in with Google and Apple; null leaves it"
+          },
+          "googleMaps": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether the business uses Google Maps with the platform's keys; null leaves it"
           },
           "contentLanguages": {
             "type": [

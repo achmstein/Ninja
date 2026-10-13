@@ -201,7 +201,7 @@ final userPreferenceProvider = FutureProvider.family<UserItemPreference?, int>(
   },
 );
 
-/// The signed-in user's saved way of each dish (what they chose the last time
+/// The signed-in user's saved way of each item (what they chose the last time
 /// they ordered it), by item id: one request for the whole menu. Empty for a guest.
 final itemPreferencesProvider = FutureProvider<Map<int, UserItemPreference>>((ref) async {
   if (!ref.watch(isAuthenticatedProvider)) return const {};
@@ -209,7 +209,7 @@ final itemPreferencesProvider = FutureProvider<Map<int, UserItemPreference>>((re
   return {for (final preference in list) preference.catalogItemId: preference};
 });
 
-/// One dish's saved way, or null (none, or not loaded yet); a dish rebuilds only when its own changes
+/// One item's saved way, or null (none, or not loaded yet); an item rebuilds only when its own changes
 final itemPreferenceProvider = Provider.family<UserItemPreference?, int>((ref, id) => ref.watch(itemPreferencesProvider).value?[id]);
 
 /// The signed-in user's most-ordered items ("your usuals"), ranked. Empty for

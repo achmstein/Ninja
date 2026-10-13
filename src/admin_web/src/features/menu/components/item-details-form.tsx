@@ -450,7 +450,7 @@ export function ItemDetailsForm({
           <PhotoStudio
             open={studioOpen}
             onOpenChange={setStudioOpen}
-            dish={{
+            item={{
               nameEn: form.name.en?.trim() || undefined,
               nameAr: form.name.ar?.trim() || undefined,
               description:

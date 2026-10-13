@@ -22,5 +22,7 @@ describe('stopsDelivering', () => {
     expect(stopsDelivering(true, { radius: 0, fee: 20, minimum: 0 })).toBe(true)
     expect(stopsDelivering(true, { radius: 3, fee: 20, minimum: 0 })).toBe(false)
     expect(stopsDelivering(false, { radius: 0, fee: 20, minimum: 0 })).toBe(false)
+    // A drawn area is enough to keep delivering without a radius
+    expect(stopsDelivering(true, { radius: 0, fee: 20, minimum: 0 }, true)).toBe(false)
   })
 })

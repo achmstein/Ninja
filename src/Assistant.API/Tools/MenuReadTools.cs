@@ -9,7 +9,7 @@ namespace Ninja.Assistant.API.Tools;
 
 /// <summary>
 /// The menu as the owner thinks of it: what is on it and at what price, what
-/// each dish is made of, and what it costs to make. The menu is one list for
+/// each item is made of, and what it costs to make. The menu is one list for
 /// the chain with branch overrides on top, so each branch is read with its own
 /// X-Branch-Id and the answer says where a price or availability differs.
 /// </summary>
@@ -79,7 +79,7 @@ public sealed class MenuReadTools(TenantContext tenant, NinjaApiClient api, Time
     }
 
     [McpServerTool(Name = "get_menu_item", Title = "Menu item", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("One menu item in full: description, category, price and offer, availability and price at each branch, every customization group with its options and what each adds to the price, and, when the business tracks stock, its recipe line by line with what each line costs and the dish's food cost and margin. Use for 'what goes in the Spanish latte', 'what are the latte's options', 'what does a burger cost us to make'.")]
+    [Description("One menu item in full: description, category, price and offer, availability and price at each branch, every customization group with its options and what each adds to the price, and, when the business tracks stock, its recipe line by line with what each line costs and the item's food cost and margin. Use for 'what goes in the Spanish latte', 'what are the latte's options', 'what does a burger cost us to make'.")]
     public async Task<CallToolResult> GetMenuItem(
         [Description("The item's name (English or Arabic, or a part of it) or its id")] string item,
         [Description(BranchDescription)] string? branch = null,
@@ -166,7 +166,7 @@ public sealed class MenuReadTools(TenantContext tenant, NinjaApiClient api, Time
     }
 
     [McpServerTool(Name = "get_recipes", Title = "Recipes", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("What each tracked menu item takes off the shelf per sale: its stock items with quantities and units, and the lines that change with an option (Large: 300 ml milk; plain: no sugar). Also how many menu items are not tracked and which. Use for 'what is in our recipes', 'which dishes have no recipe', 'how much milk goes in a cappuccino'. Needs the inventory module.")]
+    [Description("What each tracked menu item takes off the shelf per sale: its stock items with quantities and units, and the lines that change with an option (Large: 300 ml milk; plain: no sugar). Also how many menu items are not tracked and which. Use for 'what is in our recipes', 'which items have no recipe', 'how much milk goes in a cappuccino'. Needs the inventory module.")]
     public async Task<CallToolResult> GetRecipes(
         [Description("One item's name or id, to see only its recipe")] string? item = null,
         [Description(CategoryDescription)] string? category = null,
@@ -233,7 +233,7 @@ public sealed class MenuReadTools(TenantContext tenant, NinjaApiClient api, Time
     }
 
     [McpServerTool(Name = "get_food_cost", Title = "Food cost and margins", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("What one sale of each tracked dish costs in ingredients at each branch's average costs, against its menu price: cost, margin and food-cost percentage, worst margins first, plus the branch's average food-cost percentage. Use for 'which dishes make the least money', 'food cost of the burgers', 'is the latte priced right'. Needs the inventory module; dishes without a recipe are left out.")]
+    [Description("What one sale of each tracked item costs in ingredients at each branch's average costs, against its menu price: cost, margin and food-cost percentage, worst margins first, plus the branch's average food-cost percentage. Use for 'which items make the least money', 'food cost of the burgers', 'is the latte priced right'. Needs the inventory module; items without a recipe are left out.")]
     public async Task<CallToolResult> GetFoodCost(
         [Description(CategoryDescription)] string? category = null,
         [Description(BranchDescription)] string? branch = null,
@@ -307,6 +307,102 @@ public sealed class MenuReadTools(TenantContext tenant, NinjaApiClient api, Time
         {
             currency = snap!.Currency,
             note = "Costs are one sale with the default choices, at the branch's average ingredient costs; prices are the menu's regular price at the branch. costIncomplete marks a dish with an ingredient never received at the branch: its cost is a lower bound.",
+            branches = perBranch,
+            errors = ErrorsOrNull(fan.Errors),
+        });
+    }
+
+    [McpServerTool(Name = "get_menu_engineering", Title = "Menu engineering", ReadOnly = true, Idempotent = true, OpenWorld = false)]
+    [Description("The menu-engineering matrix per branch over a period: every tracked item placed as a star (sells and pays), plowhorse (sells, leaves little), puzzle (pays, does not sell) or dog (neither), from units sold against the margin of one sale, with what each earned in all. Use for 'which items should I drop', 'what should I promote', 'which prices can I raise', 'menu engineering'. Needs the inventory module and the till; items without a recipe are left out.")]
+    public async Task<CallToolResult> GetMenuEngineering(
+        [Description(PeriodDescription)] string period = "last_30_days",
+        [Description(FromDescription)] string? from = null,
+        [Description(ToDescription)] string? to = null,
+        [Description(BranchDescription)] string? branch = null,
+        [Description(TopDescription)] int top = 10,
+        CancellationToken ct = default)
+    {
+        var (snap, branches, fail) = await ReadSupport.ResolveAsync(tenant, branch, ct);
+        if (fail is not null) return fail;
+        top = ToolResults.ClampTop(top);
+
+        // Costs, prices and sales all differ by branch, so each is read per branch
+        var fan = await PerBranchWithPeriodAsync(snap!, branches!, period, from, to, clock.GetUtcNow(), async (b, p) =>
+        {
+            var costs = await api.GetAsync<List<RecipeCostView>>("inventory-api", "/api/inventory/recipes/costs", b.Id, ct);
+            if (!costs.IsOk) return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Fail(costs.Error!, costs.Status);
+            var menu = await api.GetAsync<List<MenuItemView>>("catalog-api", "/api/catalog/items", b.Id, ct);
+            if (!menu.IsOk) return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Fail(menu.Error!, menu.Status);
+            var sales = await api.GetAsync<BreakdownReport>("sales-api",
+                $"/api/tickets/reports/breakdown?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&offsetMinutes={p.OffsetMinutes}", b.Id, ct);
+            if (!sales.IsOk) return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Fail(sales.Error!, sales.Status);
+            return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Ok((costs.Value!, menu.Value!, sales.Value!));
+        });
+        if (!fan.AnyOk) return ToolResults.Fail(string.Join("\n", fan.Errors));
+
+        var perBranch = fan.Ok.Select(x =>
+        {
+            var (costs, items, sales) = x.Value.Value;
+            var menu = items.ToDictionary(i => i.Id);
+            var sold = (sales.ByItem ?? [])
+                .Where(i => i.CatalogItemId is not null)
+                .GroupBy(i => i.CatalogItemId!.Value)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Qty));
+            var tracked = costs.Where(c => menu.ContainsKey(c.CatalogItemId)).ToList();
+            var matrix = MenuEngineering.Place(tracked.Select(c => new MenuEngineering.Item(
+                c.CatalogItemId,
+                menu[c.CatalogItemId].Price,
+                Math.Round(c.BaseCost, 2),
+                sold.GetValueOrDefault(c.CatalogItemId),
+                Placeable: menu[c.CatalogItemId].Price > 0 && c.Uncosted is not { Count: > 0 })).ToList());
+
+            object Row(MenuEngineering.Placed p)
+            {
+                var i = menu[p.Item.Id];
+                return new
+                {
+                    id = i.Id,
+                    item = i.Name?.Display,
+                    itemAr = i.Name?.Arabic,
+                    category = i.CatalogTypeName?.Display,
+                    price = p.Item.Price,
+                    cost = p.Item.Cost,
+                    margin = Math.Round(p.Item.Margin, 2),
+                    sold = p.Item.Sold,
+                    mixPercent = Math.Round(p.Mix * 100, 1),
+                    earned = Math.Round(p.Item.Margin * p.Item.Sold, 2),
+                };
+            }
+
+            var byClass = MenuEngineering.Classes.ToDictionary(
+                c => c,
+                c =>
+                {
+                    var inClass = matrix.Items.Where(p => p.Class == c).OrderByDescending(p => p.Item.Margin * p.Item.Sold).ToList();
+                    return new { count = inClass.Count, items = inClass.Take(top).Select(Row), more = inClass.Count > top ? inClass.Count - top : (int?)null };
+                });
+            var unplaced = matrix.Items.Where(p => p.Class is null && !p.Item.Placeable).ToList();
+
+            return new
+            {
+                id = x.Branch.Id,
+                name = x.Branch.DisplayName,
+                nameAr = x.Branch.NameAr,
+                period = x.Value.Period.Label,
+                popularFromMixPercent = Math.Round(matrix.PopularShare * 100, 1),
+                payingFromMargin = Math.Round(matrix.AverageMargin, 2),
+                noSales = matrix.NoSales ? true : (bool?)null,
+                classes = byClass,
+                notPlaced = unplaced.Count > 0
+                    ? new { count = unplaced.Count, why = "no price, or an ingredient never received at the branch so its cost is unknown", items = unplaced.Take(top).Select(p => menu[p.Item.Id].Name?.Display) }
+                    : null,
+            };
+        }).ToList();
+
+        return ToolResults.Ok(new
+        {
+            currency = snap!.Currency,
+            note = "star: sells and pays, keep it; plowhorse: sells but leaves little, raise its price a little or trim its recipe; puzzle: pays but does not sell, promote it; dog: neither, rework or drop it unless it is a staple. Popular means its share of units sold reaches popularFromMixPercent; paying means its margin per sale reaches payingFromMargin (the average weighted by units sold). Costs are one sale at the branch's average ingredient costs.",
             branches = perBranch,
             errors = ErrorsOrNull(fan.Errors),
         });

@@ -5,7 +5,7 @@ namespace Ninja.Catalog.API.Talabat;
 
 /// <summary>
 /// A branch's menu in Talabat's catalog shape: one menu of categories, each
-/// dish a product at the branch's price with its questions as toppings and
+/// item a product at the branch's price with its questions as toppings and
 /// their answers as topping products. Every id is the remote code an order
 /// comes back with — <c>item-{id}</c>, <c>option-{id}</c> — so a Talabat
 /// order maps onto this menu without a table between them.
@@ -25,7 +25,7 @@ public static class TalabatCatalogBuilder
     /// <param name="items">Every menu item, with its type and its customizations' options loaded.</param>
     /// <param name="overrides">This branch's overrides.</param>
     /// <param name="stockOuts">The options out at this branch.</param>
-    /// <param name="picBaseUrl">The business's public address; a dish's photo is sent as {it}/api/catalog/items/{id}/pic.</param>
+    /// <param name="picBaseUrl">The business's public address; an item's photo is sent as {it}/api/catalog/items/{id}/pic.</param>
     public static JsonObject Build(
         IReadOnlyList<CatalogItem> items,
         IReadOnlyList<BranchItemOverride> overrides,
@@ -144,7 +144,7 @@ public static class TalabatCatalogBuilder
         return new JsonObject { ["items"] = all };
     }
 
-    /// <summary>A dish is on at a branch when it is available, sold there and not out of stock there.</summary>
+    /// <summary>An item is on at a branch when it is available, sold there and not out of stock there.</summary>
     public static bool ItemAvailable(CatalogItem item, BranchItemOverride? branch)
         => item.IsAvailable && branch?.IsAvailable != false && branch?.IsOutOfStock != true;
 

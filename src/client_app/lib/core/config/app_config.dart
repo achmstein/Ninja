@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Application configuration
 ///
 /// Which stack this build talks to is data, not code: `tenants/<slug>.json`
@@ -80,6 +82,24 @@ class AppConfig {
   // without a server client, which the token exchange then refuses.
   static String? get googleServerClientId =>
       _googleServerClientId.isEmpty ? null : _googleServerClientId;
+
+  // Google's map, through the native Maps SDK (no charge per load): the
+  // record's keys, given only when the business has Google Maps on. Android
+  // reads its key from the manifest (android/app/build.gradle.kts puts it
+  // there from this same define); iOS is handed its key at the first map
+  // (ios/Runner/AppDelegate.swift). Left out, the free OpenFreeMap map.
+  static const String _mapsAndroidKey = String.fromEnvironment('GOOGLE_MAPS_ANDROID_KEY');
+  static const String _mapsIosKey = String.fromEnvironment('GOOGLE_MAPS_IOS_KEY');
+
+  /// This platform's Maps SDK key, or null for the free map
+  static String? get googleMapsKey {
+    final key = switch (defaultTargetPlatform) {
+      TargetPlatform.android => _mapsAndroidKey,
+      TargetPlatform.iOS => _mapsIosKey,
+      _ => '',
+    };
+    return kIsWeb || key.isEmpty ? null : key;
+  }
 
   static const List<String> scopes = [
     'openid',

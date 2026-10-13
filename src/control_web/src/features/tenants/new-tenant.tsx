@@ -14,6 +14,7 @@ import {
 import type { CreateTenantRequest } from '@/api/control'
 import { ColorField } from '@/components/brand/color-field'
 import { DockField, type Dock } from '@/components/brand/dock-field'
+import { MapsField } from '@/components/brand/maps-field'
 import { SocialField } from '@/components/brand/social-field'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { useLogoCleanup } from '@/components/brand/logo-cleanup'
@@ -188,6 +189,8 @@ export function NewTenantPage() {
   const [color, setColor] = useState('')
   const [dock, setDock] = useState<Dock>('brand')
   const [social, setSocial] = useState(true)
+  // Off unless asked for: every search is billed to Ninja
+  const [maps, setMaps] = useState(false)
   const [files, setFiles] = useState<SlotFiles>({})
   const objectUrls = useObjectUrls(files)
   const logoCleanup = useLogoCleanup({
@@ -288,6 +291,7 @@ export function NewTenantPage() {
       primaryColor: color ? color.toLowerCase() : null,
       slab: dock === 'neutral' ? 'neutral' : null,
       socialSignIn: social,
+      googleMaps: maps,
       customerDomain: kind === 'Customer' ? customerDomain.trim() || null : null,
       demoDays: kind === 'Demo' && demoDays.trim() !== '' ? Number(demoDays) : null,
       contactName: contactName.trim() || null,
@@ -576,6 +580,7 @@ export function NewTenantPage() {
               />
               <DockField value={dock} onChange={setDock} color={color} />
               <SocialField id='socialSignIn' checked={social} onChange={setSocial} />
+              <MapsField id='googleMaps' checked={maps} onChange={setMaps} />
               <ImageSlotGrid
                 srcOf={(slot) => objectUrls[slot] ?? null}
                 busySlot={logoCleanup.busySlot}

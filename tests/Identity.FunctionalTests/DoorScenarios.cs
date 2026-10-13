@@ -62,6 +62,7 @@ public record MyProfileView(string Name, string? Email, string? PhoneNumber, Lis
 public record CountView(int Count);
 public record StaffCreatedView(string Message, string UserId);
 public record BranchesView(List<int> Branches);
+public record AllBranchesView(List<int> Branches, bool AllBranches);
 
 /// <summary>
 /// Identity is the door onto Keycloak: signing up, the staff accounts an
@@ -193,6 +194,28 @@ public sealed class DoorScenarios
 
         var (nobody, _) = await Suite.Owner.RefusedAsync(HttpMethod.Put, Suite.Url($"/users/{Guid.NewGuid()}/branches"), new { branchIds = new[] { 1 } });
         Assert.AreEqual(HttpStatusCode.NotFound, nobody, "a login nobody has is not moved anywhere");
+    }
+
+    [TestMethod]
+    public async Task A_call_centre_account_is_given_every_branch_as_one_star()
+    {
+        var id = Suite.Keycloak.Given(AnEmail("salma"), "Salma", "Adel", role: "Cashier", branches: [1]);
+
+        var all = await Suite.Owner.PutAsync<AllBranchesView>(Suite.Url($"/users/{id}/branches"), new { branchIds = new[] { 2 }, allBranches = true });
+        Assert.IsTrue(all.AllBranches);
+        Assert.IsEmpty(all.Branches, "no ids beside it: the star already holds them, and every branch opened later");
+        CollectionAssert.AreEqual(new[] { "*" }, Suite.Keycloak.User(id)!["attributes"]!["branches"]!.AsArray().Select(b => b!.GetValue<string>()).ToArray());
+
+        var back = await Suite.Owner.PutAsync<AllBranchesView>(Suite.Url($"/users/{id}/branches"), new { branchIds = new[] { 3 } });
+        Assert.IsFalse(back.AllBranches);
+        CollectionAssert.AreEqual(new[] { "3" }, Suite.Keycloak.User(id)!["attributes"]!["branches"]!.AsArray().Select(b => b!.GetValue<string>()).ToArray(),
+            "taken off the hotline, back to one branch");
+
+        var hired = await Suite.Owner.PostAsync<StaffCreatedView>(Suite.Url("/register-admin"), new
+        {
+            name = "Rana Hotline", email = AnEmail("rana"), password = "a-good-password", role = "Cashier", branchIds = new[] { 1 }, allBranches = true,
+        });
+        CollectionAssert.AreEqual(new[] { "*" }, Suite.Keycloak.User(hired.UserId)!["attributes"]!["branches"]!.AsArray().Select(b => b!.GetValue<string>()).ToArray());
     }
 
     [TestMethod]

@@ -1235,7 +1235,7 @@ public partial class CatalogContextSeed
         await SeedPairingsAsync(context, ChillaxPairings);
     }
 
-    /// <summary>What tenant one's dishes go well with: something sweet with the coffee, something to nibble with a can.</summary>
+    /// <summary>What tenant one's items go well with: something sweet with the coffee, something to nibble with a can.</summary>
     internal static readonly (string Item, string[] Paired)[] ChillaxPairings =
     [
         ("Turkish Coffee", ["Waffle", "Ice Cream Scoop"]),

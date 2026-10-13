@@ -68,6 +68,18 @@ public class Ticket : Entity, IAggregateRoot
     /// <summary>Phone a guest left at checkout — the only way to reach them.</summary>
     public string? GuestPhone { get; private set; }
 
+    /// <summary>The cashier who rang up the order that opened this bill; null for a bill opened from the apps.</summary>
+    public string? TakenBy { get; private set; }
+
+    /// <summary>
+    /// The branch whose till took that order, when it is not this bill's branch:
+    /// a phone delivery another branch sent here. Null when it was taken here.
+    /// </summary>
+    public int? TakenAtBranchId { get; private set; }
+
+    /// <summary>The longest a cashier's name is kept, as the column is made.</summary>
+    public const int TakenByLength = 200;
+
     public DateTime OpenedAt { get; private set; }
 
     public DateTime? SettledAt { get; private set; }
@@ -309,6 +321,21 @@ public class Ticket : Entity, IAggregateRoot
 
     private static string? CleanLabel(string? label)
         => string.IsNullOrWhiteSpace(label) ? null : label.Trim();
+
+    /// <summary>
+    /// Who took the order this bill opened for, and at which branch's till. The
+    /// first order to say so keeps it: a later round on the same bill does not
+    /// change who took the call. A branch that is this bill's own is not kept.
+    /// </summary>
+    public void NoteTaker(string? takenBy, int? takenAtBranchId)
+    {
+        if (TakenBy is not null || TakenAtBranchId is not null)
+            return;
+
+        var name = string.IsNullOrWhiteSpace(takenBy) ? null : takenBy.Trim();
+        TakenBy = name is { Length: > TakenByLength } ? name[..TakenByLength] : name;
+        TakenAtBranchId = takenAtBranchId is int at && at != BranchId ? at : null;
+    }
 
     /// <summary>
     /// Append a confirmed order's lines. Idempotent by order id — the event

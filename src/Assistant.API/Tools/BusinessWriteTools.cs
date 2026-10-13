@@ -169,7 +169,7 @@ public sealed class BusinessWriteTools(TenantContext tenant, NinjaApiClient api,
     }
 
     [McpServerTool(Name = AnnouncementTool, Title = "Send an announcement to customers", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = true)]
-    [Description("Sends a push notification to the phones of every customer who has the business's app and has not turned off offers: a new dish, a holiday opening, a match night. It cannot be taken back once sent. " +
+    [Description("Sends a push notification to the phones of every customer who has the business's app and has not turned off offers: a new item, a holiday opening, a match night. It cannot be taken back once sent. " +
         "Use for 'tell our customers we open at 2 on Friday', 'announce the new summer menu'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> SendAnnouncement(
         [Description("The title, a few words")] string title,

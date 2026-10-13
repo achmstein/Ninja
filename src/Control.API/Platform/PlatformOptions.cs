@@ -85,6 +85,9 @@ public sealed class PlatformOptions
     /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
     public SocialOptions Social { get; set; } = new();
 
+    /// <summary>Ninja's Google Maps keys, one set for every business; empty leaves the free maps and a typed address as they are.</summary>
+    public MapsOptions Maps { get; set; } = new();
+
     /// <summary>
     /// The Firebase service account on the host (one project for every app),
     /// mounted read-only into each stack's notification service so it can push
@@ -308,6 +311,65 @@ public sealed class SocialProviderOptions
 
     /// <summary>Both halves, or this provider stays off.</summary>
     public bool Configured => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
+}
+
+/// <summary>
+/// Google Maps, kept cheap. Address search goes through each stack's own
+/// server with the server key (Places, session priced, cached), never from a
+/// browser; the phones draw Google's map with the native SDK, which has no
+/// charge per load; the web draws it only when <see cref="WebTiles"/> is on,
+/// with the browser key, and keeps the free OpenFreeMap streets otherwise.
+/// The daily caps and the budget alert are set on the keys in Google Cloud:
+/// above them a request fails and the apps fall back, nothing is billed.
+/// </summary>
+public sealed class MapsOptions
+{
+    /// <summary>Places (New) only, restricted to the box's address; handed to each stack's Tenant.API, never to an app.</summary>
+    public string? ServerKey { get; set; }
+
+    /// <summary>Maps JavaScript only, restricted to the referrers below; handed to the web apps when <see cref="WebTiles"/> is on.</summary>
+    public string? BrowserKey { get; set; }
+
+    /// <summary>Whether the web apps draw Google's map rather than OpenFreeMap's; off by default, since each load of the web map is billed.</summary>
+    public bool WebTiles { get; set; }
+
+    /// <summary>The Maps SDK keys the customer app is built with, restricted to the apps' ids (and Android's signing certificates).</summary>
+    public string? AndroidKey { get; set; }
+
+    public string? IosKey { get; set; }
+
+    /// <summary>
+    /// The businesses' own domains already on the browser key's referrer list
+    /// (the platform's *.{Domain} is put there once, by hand). Google takes a
+    /// key only from the sites it lists, so a domain not here stays on the free
+    /// map until it is added there and here. A comma list: "menu.blue.com,order.cove.eg".
+    /// </summary>
+    public string? ReferrerDomains { get; set; }
+
+    public bool Search => !string.IsNullOrWhiteSpace(ServerKey);
+
+    public bool Web => WebTiles && !string.IsNullOrWhiteSpace(BrowserKey);
+
+    /// <summary>Address search for this business: the platform has the key and the business has Google Maps on.</summary>
+    public bool SearchFor(Tenant tenant) => tenant.GoogleMaps && Search;
+
+    /// <summary>Google's map on this business's web apps: its switch, the key and the platform's web switch.</summary>
+    public bool WebFor(Tenant tenant) => tenant.GoogleMaps && Web;
+
+    /// <summary>A Maps SDK key for this business's app build; null keeps the free map in it.</summary>
+    public string? AppKeyFor(Tenant tenant, string? key) => tenant.GoogleMaps && !string.IsNullOrWhiteSpace(key) ? key : null;
+
+    /// <summary>The domains the browser key works on for this business: the platform's, and its own once listed.</summary>
+    public IReadOnlyList<string> WebDomains(Tenant tenant, PlatformOptions platform)
+        => !string.IsNullOrEmpty(tenant.CustomerDomain) && PendingDomain(tenant) is null ? [platform.Domain, tenant.CustomerDomain] : [platform.Domain];
+
+    /// <summary>The business's own domain when its web map is on and the browser key does not list it yet; null when there is nothing to add.</summary>
+    public string? PendingDomain(Tenant tenant)
+        => WebFor(tenant) && !string.IsNullOrEmpty(tenant.CustomerDomain)
+            && !(ReferrerDomains ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Contains(tenant.CustomerDomain, StringComparer.OrdinalIgnoreCase)
+            ? tenant.CustomerDomain
+            : null;
 }
 
 public sealed class RestoreDrillOptions

@@ -55,7 +55,7 @@ public sealed class MenuWriteToolsTests
         [new("Size", [new("Regular", 0, true), new("Large", 15)], Required: true)];
 
     [TestMethod]
-    public async Task The_preview_shows_the_dish_its_choices_and_recipe_and_writes_nothing()
+    public async Task The_preview_shows_the_item_its_choices_and_recipe_and_writes_nothing()
     {
         var bench = Cafe();
         var result = await Tools(bench).CreateMenuItem("Spanish Latte", 85, "hot drinks", customizations: Sizes, recipe: "18 g beans, 200 ml milk, 30 ml condensed; large 300 ml milk", requestId: "r1");
@@ -80,7 +80,7 @@ public sealed class MenuWriteToolsTests
     }
 
     [TestMethod]
-    public async Task The_confirm_makes_the_dish_then_the_new_stock_then_the_recipe_with_the_real_option_ids()
+    public async Task The_confirm_makes_the_item_then_the_new_stock_then_the_recipe_with_the_real_option_ids()
     {
         var bench = Cafe();
         var tools = Tools(bench);
@@ -96,7 +96,7 @@ public sealed class MenuWriteToolsTests
         Assert.AreNotEqual(true, result.IsError, Bench.TextOf(result));
         Assert.IsTrue(Bench.JsonOf(result).GetProperty("done").GetBoolean(), Bench.TextOf(result));
         var compose = bench.Handler.Requests.Single(r => r.Url.AbsolutePath.EndsWith("/compose"));
-        Assert.IsNotNull(compose.RequestId, "the dish is made under its own idempotency key");
+        Assert.IsNotNull(compose.RequestId, "the item is made under its own idempotency key");
         using (var c = JsonDocument.Parse(compose.Body!))
         {
             Assert.AreEqual(4, c.RootElement.GetProperty("catalogTypeId").GetInt32());

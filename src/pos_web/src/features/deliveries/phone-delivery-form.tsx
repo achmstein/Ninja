@@ -1,23 +1,27 @@
 import { useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Bike, History, Loader2, MapPin } from 'lucide-react'
+import { AlertTriangle, Bike, History, Loader2, MapPin, Search, Send, Store } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import type { KnownAddressView } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, KnownAddressView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { emptyDelivery, type SaleCustomer, type SaleDelivery } from '@/features/sale/cart'
-import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, validatePhoneDelivery } from '@/features/sale/sale-delivery'
+import { useBranchName } from '@/features/branch/use-branch-name'
+import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleSendTo } from '@/features/sale/cart'
+import { DELIVERY_LIMITS, keptSendTo, MIN_PHONE_DIGITS, toSendTo, validatePhoneDelivery } from '@/features/sale/sale-delivery'
 import { API_VERSION } from '@/lib/api-client'
-import { useBrand } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { useAddressSearch } from '@/lib/address-search'
+import { useBrand, useFeatures } from '@/lib/brand'
+import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { digitCount, normalizePhone } from '@/lib/phone'
 import { isModuleOff } from '@/lib/problem'
+import { toast } from '@/lib/toast'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useAddressLine, useDistanceText } from './delivery-details'
+import { outOfRangeKey } from './delivery-format'
 import { useTillDeliveryQuote } from './use-deliveries'
 
 type PhoneDeliveryFormProps = {
@@ -38,7 +42,9 @@ type PhoneDeliveryFormProps = {
  * only when they shared their location; without one the rider goes by the
  * words. The cashier knows the streets, so being past the radius or under the
  * minimum is said, not refused. A caller who had deliveries before is offered
- * those addresses, by their account or their number.
+ * those addresses, by their account or their number. A pin out of this
+ * branch's area, or clearly nearer another branch, offers that branch: the
+ * order is then sent there, made and delivered by it.
  */
 export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDeliveryFormProps) {
   const t = useT()
@@ -68,6 +74,10 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: customer?.phone ?? '' })
   const [name, setName] = useState(customer?.name ?? '')
   const [tried, setTried] = useState(false)
+  const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
+  const branchName = useBranchName()
+  // With a call centre the calls come through the hotline: a branch till keeps what it is rung for
+  const callCentre = useFeatures().callCentre === true
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
   const quote = useTillDeliveryQuote(form.location)
@@ -76,6 +86,9 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   // The pin is the one read from the text now in the field, never an earlier link's
   const pinned = pasted !== '' && quote.settled && quote.answeredFor === pasted && terms?.latitude != null && terms.longitude != null
   const reading = pasted !== '' && !quote.settled
+  // The other branches that deliver to this pin, and the one chosen while it is still offered
+  const alternatives = pinned && !callCentre ? (terms?.alternatives ?? []) : []
+  const sending = keptSendTo(sendTo, alternatives, pinned)
 
   const lookupPhone = useDebounced(digitCount(form.phone) >= MIN_PHONE_DIGITS ? normalizePhone(form.phone, country) : '', 400)
   const known = useQuery({
@@ -100,8 +113,9 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
     })
 
   const errors = validatePhoneDelivery(form, name, !customer?.id)
-  const minimum = toNumber(terms?.minimumOrder)
-  const fee = toNumber(terms?.fee)
+  // What the branch that delivers it asks
+  const minimum = sending ? sending.minimumOrder : toNumber(terms?.minimumOrder)
+  const fee = sending ? sending.fee : toNumber(terms?.fee)
 
   const save = () => {
     setTried(true)
@@ -113,6 +127,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         phone: normalizePhone(form.phone, country),
         latitude: pinned ? toNumber(terms?.latitude) : null,
         longitude: pinned ? toNumber(terms?.longitude) : null,
+        sendTo: sending,
       },
       name.trim(),
     )
@@ -233,6 +248,15 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
           dir='ltr'
           autoComplete='off'
         />
+        {/* The street the caller names, when the business has Google Maps: its point goes in the field as coordinates */}
+        <AddressSearchField
+          onPick={(place) =>
+            set({
+              location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
+              address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+            })
+          }
+        />
         <div id={`${ids}-location-state`} className='text-muted-foreground text-sm' aria-live='polite'>
           {reading ? (
             <span className='flex items-center gap-1.5'>
@@ -259,10 +283,14 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         </div>
       </div>
 
+      {!reading && alternatives.length > 0 && (
+        <NearerBranches alternatives={alternatives} chosen={sending?.branchId ?? null} onChoose={setSendTo} />
+      )}
+
       {/* Said, not refused: the cashier knows the streets and the regulars */}
       {terms && !reading && (
         <div className='flex flex-col gap-1.5'>
-          {pinned && !terms.inRange && <Warning>{t('deliveryOutOfRange', { km: toNumber(terms.radiusKm) })}</Warning>}
+          {pinned && !terms.inRange && !sending && <Warning>{t(outOfRangeKey(terms), { km: toNumber(terms.radiusKm) })}</Warning>}
           {minimum > 0 && itemsTotal < minimum && <Warning>{t('deliveryUnderMinimum', { amount: money(minimum) })}</Warning>}
           <div className='text-muted-foreground flex justify-between text-sm'>
             <span>{t('deliveryFee')}</span>
@@ -272,7 +300,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
       )}
 
       <Button size='lg' className='h-14 text-lg' onClick={save} disabled={reading}>
-        {t('deliverySave')}
+        {sending ? t('deliverySaveSend', { branch: branchName(sending.branchId) }) : t('deliverySave')}
       </Button>
     </div>
   )
@@ -303,11 +331,143 @@ function Field({
   )
 }
 
+/**
+ * The branches nearer the caller that deliver there, nearest first: how far
+ * and for what fee, with Send. A paused branch says so and takes a second tap.
+ * The one chosen says the order goes there, with the way back.
+ */
+function NearerBranches({
+  alternatives,
+  chosen,
+  onChoose,
+}: {
+  alternatives: DeliveryAlternative[]
+  chosen: number | null
+  onChoose: (sendTo: SaleSendTo | null) => void
+}) {
+  const t = useT()
+  const money = useMoney()
+  const distance = useDistanceText()
+  const branchName = useBranchName()
+  const [confirming, setConfirming] = useState<number | null>(null)
+  return (
+    <div className='flex flex-col gap-2' aria-live='polite'>
+      {alternatives.map((a) => {
+        const id = toNumber(a.branchId)
+        const branch = branchName(id)
+        const fee = toNumber(a.fee)
+        const isChosen = chosen === id
+        if (chosen != null && !isChosen) return null
+        return (
+          <div key={id} className={cn('flex flex-col gap-2 rounded-lg border p-3 text-sm', isChosen ? 'border-primary bg-primary/5' : 'bg-background')}>
+            <p className='flex items-start gap-2'>
+              <Store className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
+              <span className='min-w-0 flex-1'>
+                {isChosen
+                  ? t('deliveryWillSend', { branch })
+                  : t('deliveryNearerBranch', { branch, distance: distance(toNumber(a.distanceMeters)), fee: fee > 0 ? money(fee) : t('deliveryFree') })}
+                {a.paused && <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>· {t('deliveryBranchPaused')}</span>}
+              </span>
+            </p>
+            {isChosen ? (
+              <Button variant='outline' className='h-11 self-start' onClick={() => onChoose(null)}>
+                {t('deliveryKeepHere')}
+              </Button>
+            ) : (
+              <Button
+                variant={confirming === id ? 'default' : 'secondary'}
+                className='h-11 self-start'
+                onClick={() => {
+                  // A paused branch stopped its customers' orders: the cashier is asked once more
+                  if (a.paused && confirming !== id) {
+                    setConfirming(id)
+                    return
+                  }
+                  setConfirming(null)
+                  onChoose(toSendTo(a))
+                }}
+              >
+                <Send className='size-4' aria-hidden />
+                {a.paused && confirming === id ? t('deliverySendToPaused', { branch }) : t('deliverySendTo', { branch })}
+              </Button>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function Warning({ children }: { children: ReactNode }) {
   return (
     <p className='flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400'>
       <AlertTriangle className='size-4 shrink-0' aria-hidden />
       {children}
     </p>
+  )
+}
+
+/**
+ * The street the caller names, searched with Google through the business's
+ * own server: shown only when the business has Google Maps. A pick puts its
+ * point in the location field, where the delivery terms are read from it
+ * as from a pasted link.
+ */
+function AddressSearchField({ onPick }: { onPick: (place: { lat: number; lng: number; address: string | null }) => void }) {
+  const t = useT()
+  const language = useLanguage((s) => s.language)
+  const on = useBrand()?.maps?.search === true
+  const search = useAddressSearch({ language, enabled: on })
+  const [picking, setPicking] = useState<string | null>(null)
+  if (!on) return null
+  return (
+    <div className='flex flex-col gap-1'>
+      <div className='relative'>
+        <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' aria-hidden />
+        <Input
+          value={search.text}
+          onChange={(e) => search.setText(e.target.value)}
+          placeholder={t('deliverySearchAddress')}
+          aria-label={t('deliverySearchAddress')}
+          className='h-12 ps-9 text-base'
+          maxLength={100}
+          autoComplete='off'
+          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        />
+        {search.searching && <Loader2 className='text-muted-foreground absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin' aria-hidden />}
+      </div>
+      {search.suggestions.length > 0 && (
+        <ul className='flex flex-col rounded-md border' role='listbox' aria-label={t('deliverySearchAddress')}>
+          {search.suggestions.map((s) => (
+            <li key={s.placeId}>
+              <button
+                type='button'
+                role='option'
+                aria-selected={false}
+                disabled={picking != null}
+                onClick={async () => {
+                  setPicking(s.placeId)
+                  const place = await search.pick(s)
+                  setPicking(null)
+                  if (place) onPick(place)
+                  else toast.error(t('deliverySearchFailed'))
+                }}
+                className='hover:bg-muted flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start'
+              >
+                {picking === s.placeId ? (
+                  <Loader2 className='text-muted-foreground size-4 shrink-0 animate-spin' aria-hidden />
+                ) : (
+                  <MapPin className='text-muted-foreground size-4 shrink-0' aria-hidden />
+                )}
+                <span className='flex min-w-0 flex-col'>
+                  <span className='truncate font-medium'>{s.primaryText}</span>
+                  {s.secondaryText && <span className='text-muted-foreground truncate text-sm'>{s.secondaryText}</span>}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }

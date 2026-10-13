@@ -6,12 +6,15 @@ import '../brand/brand_provider.dart';
 import '../brand/brand_mark.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import '../../features/call_centre/call_centre_mode.dart';
 
 /// Header branch switcher, same contract as pos_web's: the business's mark and
 /// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the
 /// X-Branch-Id header, so everything on screen refetches. Only the branches
 /// the token allows are listed; with a single one there is nothing to switch
-/// and the block is plain.
+/// and the block is plain. A till that may take the business's calls (a call
+/// centre bought, every branch held) also lists Call centre: every sale then
+/// starts from the caller, and the active branch is the one the order is for.
 class BranchSwitcher extends ConsumerWidget {
   const BranchSwitcher({super.key});
 
@@ -20,11 +23,15 @@ class BranchSwitcher extends ConsumerWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final branchState = ref.watch(branchProvider);
+    final mayCallCentre = ref.watch(callCentreAvailableProvider);
+    final inCallCentre = ref.watch(callCentreModeProvider);
 
     final active = branchState.selectedBranch;
-    final branchLabel = active?.name.localized(context) ?? l10n.branches;
+    final branchName = active?.name.localized(context) ?? l10n.branches;
+    // In call-centre mode the till answers for no branch: the one it works as is the caller's
+    final branchLabel = inCallCentre ? '${l10n.callCentre} · $branchName' : branchName;
     final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
-    final switchable = branchState.branches.length > 1;
+    final switchable = branchState.branches.length > 1 || mayCallCentre;
 
     Widget brand({required bool withChevron}) => Row(
           mainAxisSize: MainAxisSize.min,
@@ -91,13 +98,27 @@ class BranchSwitcher extends ConsumerWidget {
             for (final branch in branchState.branches)
               FItem(
                 title: Text(branch.name.localized(context), style: theme.typography.base),
-                suffix: branch.id == branchState.selectedBranchId
+                suffix: !inCallCentre && branch.id == branchState.selectedBranchId
                     ? const Icon(FIcons.check, size: 20)
                     : null,
-                onPress: () => ref.read(branchProvider.notifier).selectBranch(branch.id),
+                onPress: () {
+                  if (inCallCentre) ref.read(callCentreModeSwitchProvider).set(false);
+                  ref.read(branchProvider.notifier).selectBranch(branch.id);
+                },
               ),
           ],
         ),
+        if (mayCallCentre)
+          FItemGroup(
+            children: [
+              FItem(
+                prefix: const Icon(FIcons.headset, size: 20),
+                title: Text(l10n.callCentre, style: theme.typography.base),
+                suffix: inCallCentre ? const Icon(FIcons.check, size: 20) : null,
+                onPress: () => ref.read(callCentreModeSwitchProvider).set(true),
+              ),
+            ],
+          ),
       ],
       // A plain tappable rather than a button: the button's own vertical
       // padding left two lines of text less than the 48 dp they need

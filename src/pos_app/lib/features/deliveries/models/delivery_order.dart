@@ -35,6 +35,12 @@ class DeliveryOrder {
   final String? customerName;
   final String? customerNote;
 
+  /// The cashier who took the phone order, by name
+  final String? takenByName;
+
+  /// The branch whose till took it and sent it here; null when it was taken here
+  final int? takenAtBranchId;
+
   /// Cash to collect at the door, the delivery fee in
   final double total;
   final List<DeliveryLine> items;
@@ -48,6 +54,8 @@ class DeliveryOrder {
     this.paidAt,
     this.customerName,
     this.customerNote,
+    this.takenByName,
+    this.takenAtBranchId,
     required this.total,
     this.items = const [],
     required this.delivery,
@@ -69,6 +77,8 @@ class DeliveryOrder {
         paidAt: _time(json['paidAt']),
         customerName: _text(json['customerName']),
         customerNote: _text(json['customerNote']),
+        takenByName: _text(json['takenByName']),
+        takenAtBranchId: json['takenAtBranchId'] == null ? null : toInt(json['takenAtBranchId']),
         total: toNumber(json['total']),
         items: [
           for (final line in (json['items'] as List<dynamic>? ?? const <dynamic>[]))
@@ -91,6 +101,9 @@ class DeliveryOrder {
   }
 
   bool get isOut => delivery.stage == DeliveryStage.onTheWay;
+
+  /// Taken at another branch's till and sent here
+  bool get sentFromAnotherBranch => takenAtBranchId != null;
 
   /// When the board started counting: confirmed, else placed; null when the server said neither
   DateTime? get since => confirmedAt ?? date;
@@ -143,6 +156,14 @@ class TillDeliveryQuote {
   /// False when a location was pasted but no point could be read from it
   final bool locationRead;
 
+  /// The business's other branches that deliver to the pin, nearest first, when
+  /// it is out of this branch's area or one of them is clearly nearer
+  final List<DeliveryAlternative> alternatives;
+
+  /// The branch delivers to an area drawn on the map, not a circle: being
+  /// outside it is said without a radius (which reads 0 then)
+  final bool hasArea;
+
   const TillDeliveryQuote({
     this.delivers = false,
     this.inRange = true,
@@ -153,6 +174,8 @@ class TillDeliveryQuote {
     this.latitude,
     this.longitude,
     this.locationRead = true,
+    this.alternatives = const [],
+    this.hasArea = false,
   });
 
   bool get pinned => latitude != null && longitude != null;
@@ -167,7 +190,92 @@ class TillDeliveryQuote {
         latitude: json['latitude'] == null ? null : toNumber(json['latitude']),
         longitude: json['longitude'] == null ? null : toNumber(json['longitude']),
         locationRead: json['locationRead'] != false,
+        alternatives: [
+          for (final a in (json['alternatives'] as List<dynamic>? ?? const <dynamic>[]))
+            DeliveryAlternative.fromJson((a as Map).cast<String, dynamic>()),
+        ],
+        hasArea: json['hasArea'] == true,
       );
+}
+
+/// The call centre's answer for a caller's location: every branch whose area
+/// takes it in, nearest first, paused ones flagged
+/// (`GET /api/orders/delivery/resolve-staff`)
+class StaffDeliveryResolution {
+  /// Some branch delivers at all
+  final bool delivers;
+  final double? latitude;
+  final double? longitude;
+
+  /// False when a location was given but no point could be read from it
+  final bool locationRead;
+  final List<DeliveryAlternative> branches;
+
+  const StaffDeliveryResolution({
+    this.delivers = false,
+    this.latitude,
+    this.longitude,
+    this.locationRead = true,
+    this.branches = const [],
+  });
+
+  bool get pinned => latitude != null && longitude != null;
+
+  /// The branch the order goes to unless the agent picks another: the nearest
+  /// one taking orders. A paused branch is never picked for them.
+  DeliveryAlternative? get suggested {
+    for (final b in branches) {
+      if (!b.paused) return b;
+    }
+    return null;
+  }
+
+  factory StaffDeliveryResolution.fromJson(Map<String, dynamic> json) => StaffDeliveryResolution(
+        delivers: json['delivers'] == true,
+        latitude: json['latitude'] == null ? null : toNumber(json['latitude']),
+        longitude: json['longitude'] == null ? null : toNumber(json['longitude']),
+        locationRead: json['locationRead'] != false,
+        branches: [
+          for (final b in (json['branches'] as List<dynamic>? ?? const <dynamic>[]))
+            DeliveryAlternative.fromJson((b as Map).cast<String, dynamic>()),
+        ],
+      );
+}
+
+/// Another branch that delivers to the caller's pin, with what it would ask:
+/// the till offers to send the order there
+class DeliveryAlternative {
+  final int branchId;
+  final int distanceMeters;
+  final double fee;
+  final double minimumOrder;
+
+  /// It paused its orders: it still takes one sent from a till, asked twice
+  final bool paused;
+
+  const DeliveryAlternative({
+    required this.branchId,
+    required this.distanceMeters,
+    this.fee = 0,
+    this.minimumOrder = 0,
+    this.paused = false,
+  });
+
+  factory DeliveryAlternative.fromJson(Map<String, dynamic> json) => DeliveryAlternative(
+        branchId: toInt(json['branchId']),
+        distanceMeters: toInt(json['distanceMeters']),
+        fee: toNumber(json['fee']),
+        minimumOrder: toNumber(json['minimumOrder']),
+        paused: json['paused'] == true,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'branchId': branchId,
+        'distanceMeters': distanceMeters,
+        'fee': fee,
+        'minimumOrder': minimumOrder,
+        'paused': paused,
+      };
 }
 
 /// An address a caller had before: one they saved, or one an earlier

@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ninja.Catalog.API;
 
 /// <summary>
-/// A dish made whole in one call: the item, a new category when it needs
+/// An item made whole in one call: the item, a new category when it needs
 /// one, and its customization groups with their options, all in one
 /// transaction. What the owner's assistant sends once the owner agreed to a
 /// preview, so the recipe (in Inventory) can follow with the options' ids:
 /// each option carries a reference the caller chose and comes back with the
 /// id it got. The request id makes it safe to repeat: the same one returns
-/// what the first call made instead of a second dish.
+/// what the first call made instead of a second item.
 /// </summary>
 public static class ComposeItemApi
 {
@@ -103,7 +103,7 @@ public static class ComposeItemApi
 
         context.CatalogItems.Add(item);
 
-        // The dish and the record of its request land together, or neither does
+        // The item and the record of its request land together, or neither does
         var record = new ComposedItemRequest { RequestId = requestId, CreatedAt = DateTime.UtcNow };
         var strategy = context.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>

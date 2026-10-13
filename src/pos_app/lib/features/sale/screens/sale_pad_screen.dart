@@ -9,17 +9,21 @@ import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
 import '../../../core/network/api_errors.dart';
+import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
+import '../../call_centre/call_centre_mode.dart';
 import '../../catalog/services/catalog_service.dart';
+import '../../deliveries/delivery_errors.dart';
 import '../../deliveries/providers/deliveries_provider.dart';
 import '../../deliveries/widgets/delivery_form_dialog.dart';
 import '../../orders/services/order_service.dart';
@@ -36,6 +40,8 @@ import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../models/pos_order_request.dart';
 import '../models/sale_delivery.dart';
+import '../services/price_check_service.dart';
+import '../widgets/price_review_dialog.dart';
 import '../widgets/sale_delivery_widgets.dart';
 import '../models/sale_line.dart';
 import '../providers/sale_provider.dart';
@@ -100,7 +106,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   // content changes.
   String? _requestSignature;
 
-  /// The dish rung up last: what it goes well with is offered under the sale
+  /// The item rung up last: what it goes well with is offered under the sale
   CatalogItem? _lastAdded;
   String? _requestId;
 
@@ -274,15 +280,53 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       return;
     }
 
+    // The call centre takes nothing offline: the order is for a branch elsewhere
+    final callCentre = ref.read(callCentreModeProvider);
+    if (callCentre && !ref.read(onlineProvider)) {
+      showPosToast(context, PosToastType.warning, l10n.offlineNotAvailable);
+      return;
+    }
+
     // No network: a counter sale is kept on the till and paid right here
     if (!ref.read(onlineProvider)) return _chargeOffline(sale, l10n);
+
+    // Sent to the branch nearer the caller: its menu first, its prices and
+    // what it ran out of, so the order is not turned down when it arrives
+    var lines = sale.lines;
+    final sendTo = delivery?.sendTo;
+    final sendToName = sendTo == null ? '' : branchNameOf(ref.read(allBranchesProvider).value, sendTo.branchId, context);
+    if (sendTo != null) {
+      setState(() => _placing = true);
+      PriceReview review;
+      try {
+        review = await ref.read(priceCheckServiceProvider).check(sendTo.branchId, lines);
+      } catch (_) {
+        if (mounted) {
+          setState(() => _placing = false);
+          showPosToast(context, PosToastType.error, l10n.priceCheckFailed(sendToName));
+        }
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _placing = false);
+      if (!review.agrees) {
+        final choice = await showPriceReviewDialog(context, review, sendToName);
+        if (!mounted || choice == null) return;
+        if (choice == PriceReviewChoice.keepHere) {
+          // Made here after all: the cashier charges again, at this branch's fee
+          ref.read(saleProvider.notifier).setDelivery(delivery!.keptHere());
+          return;
+        }
+        lines = review.lines;
+      }
+    }
 
     var goOffline = false;
     setState(() => _placing = true);
     try {
       final orderId = await ref.read(orderRepositoryProvider).createPosOrder(
             PosOrderRequest(
-              lines: sale.lines,
+              lines: lines,
               note: sale.note,
               customer: sale.customer,
               ticketId: widget.ticketId,
@@ -299,13 +343,25 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       if (!mounted) return;
 
       // A delivery is a bill of its own, settled when the rider's cash comes
-      // in: nothing to pay now, and the rider is picked on the floor
-      if (delivery != null) {
+      // in: nothing to pay now, and the rider is picked on the floor. So is
+      // the call centre's pickup: the branch's counter takes the money when
+      // the caller collects, and the call centre goes on to the next caller
+      if (delivery != null || callCentre) {
         ref.read(saleProvider.notifier).clear();
         _note.clear();
         unawaited(ref.read(deliveriesProvider.notifier).refresh());
         ref.read(openTicketsProvider.notifier).refresh();
-        showPosToast(context, PosToastType.success, orderId == 0 ? l10n.orderAlreadyPlaced : l10n.deliveryPlaced);
+        showPosToast(
+          context,
+          PosToastType.success,
+          orderId == 0
+              ? l10n.orderAlreadyPlaced
+              : callCentre
+                  ? l10n.callCentrePlaced(orderId, ref.read(branchProvider).selectedBranch?.name.localized(context) ?? '')
+                  : sendTo != null
+                  ? l10n.deliverySentTo(sendToName, orderId)
+                  : l10n.deliveryPlaced,
+        );
         context.go('/');
         return;
       }
@@ -338,7 +394,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
         networkStatus.reportFailure();
         goOffline = true;
       } else {
-        showPosToast(context, PosToastType.error, describeError(e, l10n));
+        // A delivery's refusals carry a code the till says in its own words
+        final words = delivery != null && deliveryErrorCode(e) != null ? describeDeliveryError(e, l10n) : describeError(e, l10n);
+        showPosToast(context, PosToastType.error, words);
       }
     } finally {
       if (mounted) setState(() => _placing = false);
@@ -554,8 +612,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     final charge = synced ? _deliveryCharge(sale, watch: true) : DeliveryCharge.none;
     final deliveryBlocked = deliveryBlocksCharge(charge);
     final delivery = charge == DeliveryCharge.ready ? sale.delivery : null;
-    final deliveryFee = delivery != null ? terms!.fee : 0.0;
+    // The fee of the branch that delivers it: this one, or the one it is sent to
+    final deliveryFee = delivery != null ? delivery.feeWith(terms!.fee) : 0.0;
     final total = saleTotal(lines) + deliveryFee;
+    // The call centre says which branch this order is for, and whether it is delivered or collected
+    final callCentreBranch = ref.watch(callCentreModeProvider) ? ref.watch(branchProvider).selectedBranch?.name.localized(context) : null;
+    final saleTitle = callCentreBranch == null
+        ? l10n.currentSale
+        : sale.delivery != null
+            ? l10n.callCentreOrderAt(callCentreBranch)
+            : l10n.callCentrePickupAtBranch(callCentreBranch);
 
     return Stack(
       children: [
@@ -727,7 +793,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                         Expanded(
                           child: Text.rich(
                             TextSpan(
-                              text: l10n.currentSale,
+                              text: saleTitle,
                               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
                               children: [
                                 if (lines.isNotEmpty)
@@ -811,6 +877,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           if (delivery != null)
                             DeliverySummary(
                               delivery: delivery,
+                              sendToName: delivery.sendTo == null
+                                  ? null
+                                  : branchNameOf(ref.watch(allBranchesProvider).value, delivery.sendTo!.branchId, context),
                               onEdit: _openDeliveryForm,
                               onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
                             )
@@ -840,7 +909,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             ),
                           ),
                   ),
-                  // What the dish rung up last goes well with: one tap to offer it
+                  // What the item rung up last goes well with: one tap to offer it
                   if (tillSuggestions(_lastAdded, itemsAsync.value ?? const <CatalogItem>[], lines) case final suggestions
                       when suggestions.isNotEmpty)
                     Container(

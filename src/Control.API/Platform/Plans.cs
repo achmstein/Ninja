@@ -27,11 +27,18 @@ public enum Module
     /// <summary>
     /// Ninja AI: every AI feature at once. In the back office: filling in
     /// names and the other language, proposing customizations, recipes and
-    /// dish photos, reading a menu, a receipt or a bill. And the owner's own
+    /// item photos, reading a menu, a receipt or a bill. And the owner's own
     /// assistant: the business as an MCP server the owner talks to from
     /// Claude or ChatGPT. Included in Pro, an add-on on Free and Starter.
     /// </summary>
     Ai,
+    /// <summary>
+    /// A call-centre till: staff holding every branch take the phone orders
+    /// for the whole business, and the caller's address picks the branch that
+    /// cooks. Branch tills then stop offering to send an order to another
+    /// branch. An add-on on every plan.
+    /// </summary>
+    CallCentre,
 }
 
 /// <summary>
@@ -67,8 +74,9 @@ public static class PlanCatalog
         [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
         // Online payments goes through the business's own payment account, and
         // delivery is a business of its own (riders, an area, a fee): each is
-        // bought on its own, whatever the plan
-        [TenantPlan.Pro] = All.Except([Module.OnlinePayments, Module.Delivery]).ToHashSet(),
+        // bought on its own, whatever the plan; so is a call centre, which only
+        // a business with several branches needs
+        [TenantPlan.Pro] = All.Except([Module.OnlinePayments, Module.Delivery, Module.CallCentre]).ToHashSet(),
     };
 
     /// <summary>
@@ -128,7 +136,7 @@ public static class PlanCatalog
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
 
-    /// <summary>What may be bought on top of the plan: anything it does not include (online payments and delivery on Pro).</summary>
+    /// <summary>What may be bought on top of the plan: anything it does not include (online payments, delivery and the call centre on Pro).</summary>
     public static IReadOnlySet<Module> AddonsAvailable(TenantPlan plan) => All.Except(Included(plan)).ToHashSet();
 
     /// <summary>Included plus add-ons; everything for a demo.</summary>

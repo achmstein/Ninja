@@ -98,7 +98,7 @@
   /* The type scale, one for every page and every menu style. Each step is a job, not a size:
      - title: a page's name, a sheet's, a place's own (28 px at the Ninja heading scale)
      - headline: a section, a menu category, a card's title (20 px)
-     - name: a dish, a row's bold value (16 px)
+     - name: an item, a row's bold value (16 px)
      - body: labels and what is read (15 px); note: what a thing is, under its name (14 px)
      - caption: small details, prices in pills, meta (13 px); micro: badges only (11 px)
      - display: the one big number a card is about (30 px, and 40 px for a balance)

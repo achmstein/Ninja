@@ -1,3 +1,5 @@
+using Ninja.Catalog.API.Application;
+
 namespace Ninja.Catalog.API.IntegrationEvents.EventHandling;
 
 /// <summary>
@@ -17,9 +19,6 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
     ILogger<OrderStatusChangedToAwaitingValidationIntegrationEventHandler> logger) :
     IIntegrationEventHandler<OrderStatusChangedToAwaitingValidationIntegrationEvent>
 {
-    /// <summary>Half a piastre: what rounding may leave between the app's sum and the menu's.</summary>
-    private const decimal Tolerance = 0.005m;
-
     public async Task Handle(OrderStatusChangedToAwaitingValidationIntegrationEvent @event)
     {
         logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
@@ -29,17 +28,8 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
         var lines = @event.Lines
             ?? @event.OrderStockItems.Select(s => new OrderValidationLine(0, s.ProductId, s.Units, 0, null)).ToList();
 
-        var productIds = lines.Select(l => l.ProductId).Distinct().ToList();
-        var items = await catalogContext.CatalogItems
-            .Include(i => i.Customizations)
-                .ThenInclude(c => c.Options)
-            .AsSplitQuery()
-            .Where(i => productIds.Contains(i.Id))
-            .ToDictionaryAsync(i => i.Id);
-        var branchOverrides = await catalogContext.BranchItemOverrides
-            .Where(o => o.BranchId == @event.BranchId && productIds.Contains(o.CatalogItemId))
-            .ToDictionaryAsync(o => o.CatalogItemId);
-        var optionStockOuts = await CatalogApi.GetBranchOptionStockOuts(catalogContext, @event.BranchId);
+        // The branch's menu, priced as the till's price check prices it (BranchMenu)
+        var menu = await BranchMenu.LoadAsync(catalogContext, @event.BranchId, lines.Select(l => l.ProductId));
 
         // The offer the customer saw is the one running when they ordered
         var placedLocal = TenantClock.ToLocal(@event.PlacedAt ?? TenantClock.UtcNow());
@@ -50,17 +40,13 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
 
         foreach (var line in lines)
         {
-            if (!items.TryGetValue(line.ProductId, out var item))
-            {
-                failures.Add(new(line.LineId, line.ProductId, OrderValidationReasons.UnknownItem));
-                continue;
-            }
+            if (menu.Item(line.ProductId) is { } item)
+                categories[item.Id] = item.CatalogTypeId;
 
-            categories[item.Id] = item.CatalogTypeId;
-            branchOverrides.TryGetValue(item.Id, out var branch);
-
-            var (price, reason) = PriceLine(item, branch, line, optionStockOuts, placedLocal);
-            if (reason is null && priced && price > line.UnitPrice + Tolerance)
+            var lineAt = menu.Price(line.ProductId, line.OptionIds, placedLocal);
+            var price = lineAt.Price;
+            var reason = lineAt.Reason;
+            if (reason is null && priced && BranchMenu.CostsMore(price, line.UnitPrice))
                 reason = OrderValidationReasons.PriceChanged;
 
             if (reason is not null)
@@ -101,38 +87,6 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
 
         await catalogIntegrationEventService.SaveEventAndCatalogContextChangesAsync(answer);
         await catalogIntegrationEventService.PublishThroughEventBusAsync(answer);
-    }
-
-    /// <summary>
-    /// What one line costs at the menu's prices, or why it cannot be sold:
-    /// the item off (a branch override can only restrict, the global flag
-    /// always wins, an Inventory stock-out restricts like a manual sold-out),
-    /// an option that is not the item's, or one this branch ran out of.
-    /// </summary>
-    internal static (decimal Price, string? Reason) PriceLine(
-        CatalogItem item,
-        BranchItemOverride? branch,
-        OrderValidationLine line,
-        IReadOnlySet<int> optionStockOuts,
-        DateTime placedLocal)
-    {
-        var isAvailable = item.IsAvailable && (branch is null || (branch.IsAvailable && !branch.IsOutOfStock));
-        if (!isAvailable)
-            return (0, OrderValidationReasons.Unavailable);
-
-        var options = item.Customizations.SelectMany(c => c.Options).ToDictionary(o => o.Id);
-        var adjustments = 0m;
-        // Ordering keeps each chosen option once, as the line is priced
-        foreach (var optionId in (line.OptionIds ?? []).Distinct())
-        {
-            if (!options.TryGetValue(optionId, out var option))
-                return (0, OrderValidationReasons.UnknownOption);
-            if (optionStockOuts.Contains(optionId))
-                return (0, OrderValidationReasons.OptionUnavailable);
-            adjustments += option.PriceAdjustment;
-        }
-
-        return (item.PriceAt(branch, placedLocal).Effective + adjustments, null);
     }
 
     /// <summary>

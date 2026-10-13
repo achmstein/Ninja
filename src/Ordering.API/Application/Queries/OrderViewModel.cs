@@ -163,6 +163,10 @@ public record Order
     public int? SessionId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
+    /// <summary>The cashier who rang it up at a till, by name; null for an order from the apps.</summary>
+    public string? TakenByName { get; init; }
+    /// <summary>The branch whose till took it and sent it here; null when it was taken where it is made.</summary>
+    public int? TakenAtBranchId { get; init; }
     /// <summary>A delivery platform's details; null on every other order.</summary>
     public PlatformOrderView? Platform { get; init; }
     /// <summary>The business's own delivery: where it goes and who takes it; null on every other order.</summary>
@@ -320,6 +324,10 @@ public record OrderSummary
     public int? SessionId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
+    /// <summary>The cashier who rang it up at a till, by name; null for an order from the apps.</summary>
+    public string? TakenByName { get; init; }
+    /// <summary>The branch whose till took it and sent it here; null when it was taken where it is made.</summary>
+    public int? TakenAtBranchId { get; init; }
     /// <summary>A delivery platform's details; null on every other order.</summary>
     public PlatformOrderView? Platform { get; init; }
     /// <summary>The business's own delivery: where it goes and who takes it; null on every other order.</summary>

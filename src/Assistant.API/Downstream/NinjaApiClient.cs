@@ -88,7 +88,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
             {
                 if (typeof(T) == typeof(Unit))
                     return ApiResult<T>.Ok((T)(object)default(Unit));
-                // A file (a drawn dish photo) is read as bytes
+                // A file (a drawn item photo) is read as bytes
                 if (typeof(T) == typeof(byte[]))
                     return ApiResult<T>.Ok((T)(object)await response.Content.ReadAsByteArrayAsync(ct));
                 if (response.Content.Headers.ContentLength == 0)

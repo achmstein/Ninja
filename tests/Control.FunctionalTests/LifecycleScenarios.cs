@@ -26,7 +26,7 @@ public sealed class LifecycleScenarios
         CollectionAssert.AreEqual(
             new[] { "credentials", "databases", "broker", "realm", "stack", "edge", "health", "brand", "entitlements", "owner", "broker-lockdown", "photos" },
             tenant.Steps.Select(s => s.Name).ToArray());
-        // The dishes' photos follow on the same run; with no image model set it says so
+        // The items' photos follow on the same run; with no image model set it says so
         Assert.AreEqual("no image model is set on the AI tab", tenant.Steps.Single(s => s.Name == "photos").Output);
         Assert.IsTrue(tenant.Steps.All(s => s.Status == StepStatus.Done));
         CollectionAssert.AreEqual(new[] { "catalog", "ordering", "spaces", "sales", "identity", "loyalty", "notification", "accounts", "tenant", "assistant" }, tenant.Services.ToArray());

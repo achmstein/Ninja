@@ -27,6 +27,7 @@ public class TenantFeaturesChangedIntegrationEventHandler(
             {
                 Delivery = @event.Delivery,
                 PayAhead = @event.PayAhead,
+                CallCentre = @event.CallCentre,
                 UpdatedAt = @event.CreationDate,
             });
         }
@@ -42,12 +43,13 @@ public class TenantFeaturesChangedIntegrationEventHandler(
 
             row.Delivery = @event.Delivery;
             row.PayAhead = @event.PayAhead;
+            row.CallCentre = @event.CallCentre;
             row.UpdatedAt = @event.CreationDate;
         }
 
         await context.SaveChangesAsync();
         cache?.Remove(BranchSettingsQueries.DeliveryOnCacheKey);
 
-        logger.LogInformation("Tenant features projection: delivery {Delivery}, pay ahead {PayAhead}", @event.Delivery, @event.PayAhead);
+        logger.LogInformation("Tenant features projection: delivery {Delivery}, pay ahead {PayAhead}, call centre {CallCentre}", @event.Delivery, @event.PayAhead, @event.CallCentre);
     }
 }

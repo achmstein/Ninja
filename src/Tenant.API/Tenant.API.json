@@ -638,6 +638,114 @@
           }
         }
       }
+    },
+    "/api/tenant/places/autocomplete": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Google's suggestions for an address being typed, in the business's country and near the branch; 404 when the business does not have Google Maps",
+        "operationId": "AutocompletePlaces",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "What has been typed; fewer than three letters answers nothing",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "session",
+            "in": "query",
+            "description": "The search's session token, a UUID the app makes when the search opens and keeps until a place is picked",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "near",
+            "in": "query",
+            "description": "Where to lean the suggestions, \"lat,lng\": the branch; left out, the business's first placed branch",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "en or ar; left out, the request's language",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceSuggestion"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/places/{placeId}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Where a picked suggestion is: its point and address; closes the search's session",
+        "operationId": "GetPlace",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "session",
+            "in": "query",
+            "description": "The session token the suggestions were asked with",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "en or ar; left out, the request's language",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceLocation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -816,6 +924,23 @@
           "requireSignInForDelivery": {
             "type": "boolean",
             "default": false
+          },
+          "deliveryArea": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                "type": [
+                  "number",
+                  "string"
+                ],
+                "format": "double"
+              }
+            }
           }
         }
       },
@@ -917,6 +1042,23 @@
             ],
             "format": "double",
             "default": 0
+          },
+          "deliveryArea": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                "type": [
+                  "number",
+                  "string"
+                ],
+                "format": "double"
+              }
+            }
           }
         }
       },
@@ -994,6 +1136,12 @@
               "null",
               "boolean"
             ]
+          },
+          "callCentre": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -1011,6 +1159,60 @@
             ]
           },
           "ar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlaceLocation": {
+        "required": [
+          "lat",
+          "lng",
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "lat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lng": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "address": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlaceSuggestion": {
+        "required": [
+          "placeId",
+          "primaryText",
+          "secondaryText"
+        ],
+        "type": "object",
+        "properties": {
+          "placeId": {
+            "type": "string"
+          },
+          "primaryText": {
+            "type": "string"
+          },
+          "secondaryText": {
             "type": [
               "null",
               "string"
@@ -1126,6 +1328,10 @@
             "default": false
           },
           "ai": {
+            "type": "boolean",
+            "default": false
+          },
+          "callCentre": {
             "type": "boolean",
             "default": false
           }
@@ -1256,6 +1462,31 @@
           }
         }
       },
+      "TenantMaps": {
+        "required": [
+          "search",
+          "webKey",
+          "webDomains"
+        ],
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "boolean"
+          },
+          "webKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "webDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "TenantResponse": {
         "required": [
           "name",
@@ -1378,6 +1609,16 @@
               },
               {
                 "$ref": "#/components/schemas/AssistantDto"
+              }
+            ]
+          },
+          "maps": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantMaps"
               }
             ]
           }
@@ -1717,6 +1958,23 @@
               "null",
               "boolean"
             ]
+          },
+          "deliveryArea": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                "type": [
+                  "number",
+                  "string"
+                ],
+                "format": "double"
+              }
+            }
           }
         }
       },
@@ -1831,6 +2089,9 @@
     },
     {
       "name": "Tenant"
+    },
+    {
+      "name": "Places"
     }
   ]
 }

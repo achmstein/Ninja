@@ -1,6 +1,7 @@
-import type { PosDeliveryRequest } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, PosDeliveryRequest } from '@/api/ordering/types.gen'
+import { toNumber } from '@/lib/money'
 import { digitCount } from '@/lib/phone'
-import type { SaleDelivery } from './cart'
+import type { SaleDelivery, SaleSendTo } from './cart'
 
 /** Enough digits to be a phone the rider can call, and to look a caller up by */
 export const MIN_PHONE_DIGITS = 8
@@ -36,6 +37,42 @@ export function toPosDeliveryRequest(delivery: SaleDelivery): PosDeliveryRequest
     apartment: orNull(delivery.apartment),
     directions: orNull(delivery.directions),
   }
+}
+
+/** A branch the till's quote offered, as the sale keeps it */
+export function toSendTo(alternative: DeliveryAlternative): SaleSendTo {
+  return {
+    branchId: toNumber(alternative.branchId),
+    fee: toNumber(alternative.fee),
+    minimumOrder: toNumber(alternative.minimumOrder),
+    distanceMeters: toNumber(alternative.distanceMeters),
+    paused: alternative.paused,
+  }
+}
+
+/**
+ * The branch the delivery goes to, as the quote for the pin now in the form
+ * offers it: kept only while the pin stands and that branch is still offered
+ * (its fee and pause as they are now), dropped otherwise.
+ */
+export function keptSendTo(
+  sendTo: SaleSendTo | null | undefined,
+  alternatives: readonly DeliveryAlternative[] | null | undefined,
+  pinned: boolean,
+): SaleSendTo | null {
+  if (!sendTo || !pinned) return null
+  const offered = (alternatives ?? []).find((a) => toNumber(a.branchId) === sendTo.branchId)
+  return offered ? toSendTo(offered) : null
+}
+
+/** The branch that makes the delivery when it is not this one */
+export function sendToBranchId(delivery: SaleDelivery | null | undefined): number | null {
+  return delivery?.sendTo?.branchId ?? null
+}
+
+/** What the delivery adds to the bill: the fee of the branch that delivers it */
+export function deliveryFeeOf(delivery: SaleDelivery | null | undefined, hereFee: number): number {
+  return delivery?.sendTo ? delivery.sendTo.fee : hereFee
 }
 
 /**

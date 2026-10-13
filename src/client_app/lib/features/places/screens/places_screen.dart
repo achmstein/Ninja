@@ -1040,7 +1040,7 @@ class PlaceListItem extends ConsumerWidget {
     final tappable = free && canReserve;
     final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
 
-    // One bookable place as a big card, the way the deck shows a dish: a free one on the dock's slab
+    // One bookable place as a big card, the way the deck shows an item: a free one on the dock's slab
     // with its name set large and its kind drawn big behind it, a busy one quiet on a light card
     final face = Builder(
       builder: (context) {

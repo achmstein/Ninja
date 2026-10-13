@@ -1,7 +1,7 @@
 import '../catalog/models/catalog_item.dart';
 import 'models/sale_line.dart';
 
-/// What the till offers after a dish is rung up: what it goes well with, in
+/// What the till offers after an item is rung up: what it goes well with, in
 /// the business's order, only what this branch sells right now and nothing
 /// already on the sale.
 List<CatalogItem> tillSuggestions(CatalogItem? last, List<CatalogItem> items, List<SaleLine> lines) {

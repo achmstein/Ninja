@@ -196,8 +196,8 @@ public static partial class ControlApi
             timeout.CancelAfter(TimeSpan.FromSeconds(request.Role == AiRoles.Image ? 90 : 30));
             if (request.Role == AiRoles.Image)
             {
-                // One small drawing, the way a dish's photo is asked for
-                var picture = await images.GenerateAsync(DishPhotos.PromptFor("Espresso", null, "a single shot of espresso in a small cup", null), AiUsageRecorder.Platform, timeout.Token);
+                // One small drawing, the way an item's photo is asked for
+                var picture = await images.GenerateAsync(ItemPhotos.PromptFor("Espresso", null, "a single shot of espresso in a small cup", null), AiUsageRecorder.Platform, timeout.Token);
                 return TypedResults.Ok(new AiTestResult(true, route.ProviderName, route.Model, (int)clock.ElapsedMilliseconds, $"a picture of {picture.Length / 1024} KB", null));
             }
             var response = await chat.GetResponseAsync("Answer with the single word: ready", new ChatOptions { ModelId = route.Role, MaxOutputTokens = 64 }, timeout.Token);

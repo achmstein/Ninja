@@ -151,6 +151,12 @@ class TicketDetail {
   final LocalizedText? locationName;
   final String? label;
   final String? guestPhone;
+
+  /// The cashier who rang up the order that opened the bill
+  final String? takenBy;
+
+  /// The branch whose till took that order and sent it here; null when it was taken here
+  final int? takenAtBranchId;
   final DateTime? openedAt;
   final DateTime? settledAt;
   final String? settledBy;
@@ -192,6 +198,8 @@ class TicketDetail {
     this.locationName,
     this.label,
     this.guestPhone,
+    this.takenBy,
+    this.takenAtBranchId,
     this.openedAt,
     this.settledAt,
     this.settledBy,
@@ -238,6 +246,8 @@ class TicketDetail {
       locationName: LocalizedText.parseNullable(json['locationName']),
       label: json['label'] as String?,
       guestPhone: json['guestPhone'] as String?,
+      takenBy: json['takenBy'] as String?,
+      takenAtBranchId: json['takenAtBranchId'] == null ? null : toInt(json['takenAtBranchId']),
       openedAt: date('openedAt'),
       settledAt: date('settledAt'),
       settledBy: json['settledBy'] as String?,

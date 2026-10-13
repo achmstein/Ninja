@@ -99,6 +99,9 @@ export type BrandFeatures = {
     kds: boolean;
     onlinePayments?: boolean;
     delivery?: boolean;
+    payAhead?: null | boolean;
+    ai?: null | boolean;
+    callCentre?: null | boolean;
 };
 
 export type BrandIcons = {
@@ -241,6 +244,10 @@ export type CreateTenantRequest = {
      * both, ar or en: the languages the business writes its menu, places and stock in; null is both
      */
     contentLanguages?: null | string;
+    /**
+     * Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off
+     */
+    googleMaps?: null | boolean;
 };
 
 export type ExtendRequest = {
@@ -350,7 +357,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery' | 'Ai';
+export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery' | 'Ai' | 'CallCentre';
 
 export type OperatorInvitedResponse = {
     id: string;
@@ -574,6 +581,18 @@ export type TenantDetail = {
      * The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…
      */
     androidCertFingerprints?: null | Array<string>;
+    /**
+     * Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map
+     */
+    mapsDomainToAdd?: null | string;
+    /**
+     * Whether the business uses Google Maps with the platform's keys; off, or with no keys on the platform, its apps keep the free map
+     */
+    googleMaps?: boolean;
+    /**
+     * Whether the platform has Google Maps keys at all; without them the business's switch does nothing
+     */
+    googleMapsAvailable?: boolean;
 };
 
 export type TenantHostsDto = {
@@ -740,6 +759,10 @@ export type UpdateTenantRequest = {
      * Whether customers may sign in with Google and Apple; null leaves it
      */
     socialSignIn?: null | boolean;
+    /**
+     * Whether the business uses Google Maps with the platform's keys; null leaves it
+     */
+    googleMaps?: null | boolean;
     /**
      * both, ar or en: the languages the business writes its menu, places and stock in; null leaves it
      */
@@ -1371,7 +1394,7 @@ export type FillDemoDataResponses = {
     202: unknown;
 };
 
-export type GenerateDishPhotosData = {
+export type GenerateItemPhotosData = {
     body?: never;
     path: {
         slug: string;
@@ -1380,7 +1403,7 @@ export type GenerateDishPhotosData = {
     url: '/api/control/tenants/{slug}/photos';
 };
 
-export type GenerateDishPhotosErrors = {
+export type GenerateItemPhotosErrors = {
     /**
      * Unauthorized
      */
@@ -1399,9 +1422,9 @@ export type GenerateDishPhotosErrors = {
     409: ProblemDetails;
 };
 
-export type GenerateDishPhotosError = GenerateDishPhotosErrors[keyof GenerateDishPhotosErrors];
+export type GenerateItemPhotosError = GenerateItemPhotosErrors[keyof GenerateItemPhotosErrors];
 
-export type GenerateDishPhotosResponses = {
+export type GenerateItemPhotosResponses = {
     /**
      * Accepted
      */

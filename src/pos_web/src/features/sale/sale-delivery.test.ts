@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { emptyDelivery, type SaleDelivery } from './cart'
-import { deliveryReadiness, toPosDeliveryRequest, validatePhoneDelivery } from './sale-delivery'
+import {
+  deliveryFeeOf,
+  deliveryReadiness,
+  keptSendTo,
+  sendToBranchId,
+  toPosDeliveryRequest,
+  toSendTo,
+  validatePhoneDelivery,
+} from './sale-delivery'
 
 const filled: SaleDelivery = {
   ...emptyDelivery,
@@ -59,5 +67,32 @@ describe('deliveryReadiness', () => {
     expect(deliveryReadiness(filled, { ...terms, delivers: false }, true)).toBe('off')
     expect(deliveryReadiness(filled, terms, false)).toBe('off')
     expect(deliveryReadiness(filled, terms, true)).toBe('ready')
+  })
+})
+
+describe('sending to the nearer branch', () => {
+  const maadi = { branchId: '2', distanceMeters: 1200, fee: '25', minimumOrder: 100, paused: false }
+  const sent = toSendTo(maadi)
+
+  it('keeps the offer as numbers', () => {
+    expect(sent).toEqual({ branchId: 2, fee: 25, minimumOrder: 100, distanceMeters: 1200, paused: false })
+  })
+
+  it('stays chosen while the pin stands and the branch is still offered, at its fee now', () => {
+    expect(keptSendTo(sent, [{ ...maadi, fee: 30, paused: true }], true)).toEqual({ ...sent, fee: 30, paused: true })
+  })
+
+  it('is dropped when the pin changes or the branch is no longer offered', () => {
+    expect(keptSendTo(sent, [maadi], false)).toBeNull()
+    expect(keptSendTo(sent, [{ ...maadi, branchId: 3 }], true)).toBeNull()
+    expect(keptSendTo(null, [maadi], true)).toBeNull()
+  })
+
+  it("charges the delivering branch's fee and names it on the order", () => {
+    const delivery = { ...filled, sendTo: sent }
+    expect(deliveryFeeOf(delivery, 20)).toBe(25)
+    expect(deliveryFeeOf(filled, 20)).toBe(20)
+    expect(sendToBranchId(delivery)).toBe(2)
+    expect(sendToBranchId(filled)).toBeNull()
   })
 })

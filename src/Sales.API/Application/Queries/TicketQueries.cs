@@ -33,6 +33,9 @@ public interface ITicketQueries
     /// <summary>The window by hour, weekday, cashier and item; hours in the caller's clock.</summary>
     Task<BreakdownReport> GetBreakdownAsync(int branchId, DateTime from, DateTime to, int offsetMinutes);
 
+    /// <summary>What the item was bought with on the window's settled tickets, most often first.</summary>
+    Task<ItemPairsReport> GetItemPairsAsync(int branchId, int catalogItemId, DateTime from, DateTime to);
+
     /// <summary>The branch's pricing rules, defaults when it never set any.</summary>
     Task<PricingView> GetPricingAsync(int branchId);
 
@@ -347,6 +350,8 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             PlaceKind = ticket.PlaceKind,
             Label = ticket.Label,
             GuestPhone = ticket.GuestPhone,
+            TakenBy = ticket.TakenBy,
+            TakenAtBranchId = ticket.TakenAtBranchId,
             OpenedAt = ticket.OpenedAt,
             LastActivityAt = ticket.LastActivityAt,
             SettledAt = ticket.SettledAt,
@@ -471,11 +476,23 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .OrderByDescending(i => i.Amount)
             .ToList();
 
+        // Who took the orders the bills opened for, over the phone or at the
+        // counter: the call centre's agents among them, who settle nothing
+        // here and so are not among the cashiers
+        var takers = tickets
+            .Where(t => !string.IsNullOrWhiteSpace(t.TakenBy))
+            .GroupBy(t => t.TakenBy!)
+            .Select(g => new TakerTotal(g.Key, g.Count(), g.Sum(t => t.Total)))
+            .OrderByDescending(t => t.Net)
+            .ThenBy(t => t.Name)
+            .ToList();
+
         return new BreakdownReport
         {
             From = from,
             To = to,
             OffsetMinutes = offsetMinutes,
+            ByTaker = takers,
             ByHour = Enumerable.Range(0, 24)
                 .Select(h => new HourTotal(h, byHour.GetValueOrDefault(h).Count, byHour.GetValueOrDefault(h).Net))
                 .ToList(),
@@ -485,6 +502,21 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             ByCashier = cashiers,
             ByItem = items,
         };
+    }
+
+    public async Task<ItemPairsReport> GetItemPairsAsync(int branchId, int catalogItemId, DateTime from, DateTime to)
+    {
+        var tickets = await context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId
+                        && t.Status == TicketStatus.Settled
+                        && t.SettledAt >= from && t.SettledAt < to)
+            .ToListAsync();
+
+        // The same money-off rule as the breakdown: a negative line was not bought
+        return ItemPairs.Count(
+            catalogItemId,
+            tickets.Select(t => t.Lines.Where(l => l.Total > 0).Select(l => l.CatalogItemId)));
     }
 
     public async Task<PricingView> GetPricingAsync(int branchId)

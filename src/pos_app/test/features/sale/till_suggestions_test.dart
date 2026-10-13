@@ -5,9 +5,9 @@ import 'package:pos_app/features/sale/models/pos_order_request.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
 import 'package:pos_app/features/sale/till_suggestions.dart';
 
-CatalogItem dish(int id, {List<int> paired = const [], bool available = true}) => CatalogItem(
+CatalogItem menuItem(int id, {List<int> paired = const [], bool available = true}) => CatalogItem(
       id: id,
-      name: LocalizedText(en: 'Dish $id'),
+      name: LocalizedText(en: 'Item $id'),
       price: 10,
       catalogTypeId: 1,
       isAvailable: available,
@@ -15,14 +15,14 @@ CatalogItem dish(int id, {List<int> paired = const [], bool available = true}) =
     );
 
 SaleLine line(int productId, {String? suggestion}) =>
-    SaleLine(productId: productId, nameEn: 'Dish $productId', nameAr: null, price: 10, suggestion: suggestion);
+    SaleLine(productId: productId, nameEn: 'Item $productId', nameAr: null, price: 10, suggestion: suggestion);
 
 void main() {
   // A cappuccino goes with a waffle, then ice cream, then a cake that is sold out
-  final cappuccino = dish(1, paired: [2, 3, 4]);
-  final menu = [cappuccino, dish(2), dish(3), dish(4, available: false)];
+  final cappuccino = menuItem(1, paired: [2, 3, 4]);
+  final menu = [cappuccino, menuItem(2), menuItem(3), menuItem(4, available: false)];
 
-  test("offers what the last dish goes well with, in the business's order, and nothing sold out", () {
+  test("offers what the last item goes well with, in the business's order, and nothing sold out", () {
     expect(tillSuggestions(cappuccino, menu, [line(1)]).map((d) => d.id), [2, 3]);
   });
 
@@ -30,7 +30,7 @@ void main() {
     expect(tillSuggestions(cappuccino, menu, [line(1), line(2)]).map((d) => d.id), [3]);
   });
 
-  test('offers nothing before a dish is rung up, or once the sale is empty', () {
+  test('offers nothing before an item is rung up, or once the sale is empty', () {
     expect(tillSuggestions(null, menu, [line(1)]), isEmpty);
     expect(tillSuggestions(cappuccino, menu, []), isEmpty);
   });

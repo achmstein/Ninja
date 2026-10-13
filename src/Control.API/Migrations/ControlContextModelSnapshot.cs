@@ -487,6 +487,9 @@ namespace Ninja.Control.API.Migrations
                     b.Property<DateTimeOffset?>("ExpiryWarnedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("GoogleMaps")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("GraceDays")
                         .HasColumnType("integer");
 

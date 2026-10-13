@@ -18,6 +18,7 @@ import 'core/printing/printer_settings.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'features/connect/connect_screen.dart';
+import 'features/call_centre/call_centre_mode.dart';
 import 'features/sale/providers/sale_provider.dart';
 
 void main() async {
@@ -42,6 +43,7 @@ void main() async {
   await initializeBranch();
   await initializePrinterSettings();
   await initializeSale();
+  await initializeCallCentre();
   await initializeOfflineQueue();
   await initializeBrand();
   // Which business this tablet serves; the connect screen asks when none is known

@@ -58,7 +58,7 @@ type Slots = { start: HTMLElement | null; end: HTMLElement | null }
 const SlotsContext = createContext<Slots>({ start: null, end: null })
 
 /**
- * Anything a page opens (an order, a bill, a dish, a person, a shift) in one
+ * Anything a page opens (an order, a bill, an item, a person, a shift) in one
  * shape. The header says what it is: its title, a line under it, its state,
  * its key figures, its tabs. The body scrolls. The footer stays in reach:
  * the way out of it (Delete) on the start side, Cancel and the main action

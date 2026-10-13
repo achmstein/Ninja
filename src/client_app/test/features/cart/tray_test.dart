@@ -17,7 +17,7 @@ import 'package:ninja_client/features/menu/paired_items.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';
 
 /// The tray in the dock and the order it opens into: both lay out with
-/// dishes in them, in either direction, and say what the order comes to.
+/// items in them, in either direction, and say what the order comes to.
 
 class _NoBranches extends BranchNotifier {
   @override
@@ -106,7 +106,7 @@ void main() {
       await tester.pumpWidget(_app(locale: locale, open: false));
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
-      // 50 + 2 × 50 + 70, four dishes
+      // 50 + 2 × 50 + 70, four items
       expect(find.textContaining('220'), findsWidgets);
       if (locale.languageCode == 'en') expect(find.text('4 items'), findsOneWidget);
     });

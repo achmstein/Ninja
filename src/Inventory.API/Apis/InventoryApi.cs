@@ -138,6 +138,12 @@ public static class InventoryApi
             .WithDescription("Nothing is saved: the review sheet creates the ingredients it agrees with, then sets each recipe or tracks the item by unit through the endpoints that already exist.")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
+        api.MapPost("/recipes/assist/menu-advice", AdviseMenu)
+            .WithName("AdviseMenu")
+            .WithSummary("Say what to change on the menu from its menu-engineering matrix")
+            .WithDescription("The back office sends the items as it placed them (price, cost of one sale, units sold, class: star, plowhorse, puzzle or dog); the assistant answers a summary and one move per item worth changing (raise-price, lower-price, promote, rework, remove, keep). Nothing is fetched or saved.")
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
+
         api.MapGet("/recipes/{catalogItemId:int}", GetRecipe)
             .WithName("GetRecipe");
 
@@ -508,6 +514,28 @@ public static class InventoryApi
         try
         {
             return TypedResults.Ok(await proposer.ProposeAsync(items, shelf, ct, request.Languages ?? ContentLanguages.Both));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
+
+    public static async Task<Results<Ok<MenuAdvice>, BadRequest<string>, ProblemHttpResult>> AdviseMenu(
+        MenuAdviceRequest request,
+        HttpContext httpContext,
+        [FromServices] MenuAdvisor advisor,
+        CancellationToken ct)
+    {
+        if (!advisor.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        if (MenuAdvisor.Validate(request) is { } error)
+            return TypedResults.BadRequest(error);
+
+        try
+        {
+            return TypedResults.Ok(await advisor.AdviseAsync(request, ct));
         }
         catch (AIException ex)
         {

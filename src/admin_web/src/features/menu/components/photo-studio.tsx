@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Check, Wand2 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { drawDishPhoto } from '@/api/catalog'
+import { drawItemPhoto } from '@/api/catalog'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input'
 import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage } from '@/features/assist/errors'
 
-export type StudioDish = {
+export type StudioItem = {
   nameEn?: string
   nameAr?: string
   description?: string
@@ -97,22 +97,22 @@ async function readableError(error: unknown, t: ReturnType<typeof useT>) {
 }
 
 /**
- * A photo studio for one dish: pick a look (studio, rustic, overhead,
+ * A photo studio for one item: pick a look (studio, rustic, overhead,
  * moody, fresh), add a word if you like, and the image model draws it.
  * While it works the frame breathes and says what it is doing; the photo
  * then develops out of a blur. Every draw stays on a strip below to
  * compare, and the one kept goes into the form like a picked file, saved
- * with the dish.
+ * with the item.
  */
 export function PhotoStudio({
   open,
   onOpenChange,
-  dish,
+  item,
   onUse,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  dish: StudioDish
+  item: StudioItem
   onUse: (file: File, url: string) => void
 }) {
   const t = useT()
@@ -148,20 +148,20 @@ export function PhotoStudio({
   )
 
   const current = drafts.find((d) => d.id === shown) ?? null
-  const name = dish.nameEn || dish.nameAr || ''
+  const name = item.nameEn || item.nameAr || ''
 
   const draw = async () => {
     setDrawing(true)
     setStep(0)
     setError(null)
     try {
-      const { data } = await drawDishPhoto({
+      const { data } = await drawItemPhoto({
         query: { 'api-version': API_VERSION },
         body: {
-          nameEn: dish.nameEn || null,
-          nameAr: dish.nameAr || null,
-          description: dish.description || null,
-          category: dish.category || null,
+          nameEn: item.nameEn || null,
+          nameAr: item.nameAr || null,
+          description: item.description || null,
+          category: item.category || null,
           style: look,
           note: note.trim() || null,
         },
@@ -169,7 +169,7 @@ export function PhotoStudio({
         throwOnError: true,
       })
       const blob = data as Blob
-      const file = new File([blob], `dish-${look}.webp`, { type: 'image/webp' })
+      const file = new File([blob], `item-${look}.webp`, { type: 'image/webp' })
       const draft: Draft = {
         id: nextId.current++,
         url: URL.createObjectURL(file),

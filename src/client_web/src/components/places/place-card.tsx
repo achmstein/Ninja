@@ -17,11 +17,11 @@ const DOCK_ROOM = 150
 const TOP_ROOM = 16
 
 /**
- * One bookable place as a big card, the way the menu's deck shows a dish: a
+ * One bookable place as a big card, the way the menu's deck shows an item: a
  * free one on the business's colour with its name set large and its kind drawn
  * big behind it, a busy one quiet on a light card. A tap on a free one
  * grows the card and slides the booking in beneath its face, the way a
- * dish opens into its options; a second tap folds it away. Where the
+ * item opens into its options; a second tap folds it away. Where the
  * business lists many places it is a slim row (`list`) or a small tile
  * (`grid`) instead, opening the same way.
  */
@@ -127,7 +127,7 @@ export function PlaceCard({
         </span>
 
         <span className='flex flex-col gap-1.5'>
-          {/* The name travels into the reservation, the way a dish's photo stays on screen as it opens */}
+          {/* The name travels into the reservation, the way an item's photo stays on screen as it opens */}
           <motion.span layoutId={placeNameId(place.id)} transition={springOpen} className='heading text-title w-fit break-words'>
             {localized(place.name)}
           </motion.span>

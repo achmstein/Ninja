@@ -14,6 +14,7 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { PlatformBadge } from './components/platform-badge'
+import { TakenBy } from './components/taken-by'
 import { getOrderStatus, isCancelled, orderSourceKey } from './status'
 
 const columnHelper = createAppColumnHelper<OrderSummary>()
@@ -142,7 +143,12 @@ export function getOrdersColumns({
       id: 'source',
       header: t('source'),
       enableSorting: false,
-      cell: (info) => <OrderSource order={info.row.original} t={t} />,
+      cell: (info) => (
+        <div className='flex flex-col items-start gap-0.5'>
+          <OrderSource order={info.row.original} t={t} />
+          <TakenBy order={info.row.original} />
+        </div>
+      ),
     }),
     columnHelper.accessor('status', {
       id: 'status',

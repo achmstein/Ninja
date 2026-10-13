@@ -9,7 +9,7 @@ import 'tray_hint.dart';
 import 'tray_model.dart';
 import 'tray_seats.dart';
 
-/// A dish's photo on its way into the tray
+/// An item's photo on its way into the tray
 class TrayFlight {
   final int id;
   final Rect from;
@@ -17,10 +17,10 @@ class TrayFlight {
   /// The corner of what it took off from: its clip starts there
   final double radius;
 
-  /// The photo, or null for a dish without one (the business's colour flies instead)
+  /// The photo, or null for an item without one (the business's colour flies instead)
   final String? photo;
 
-  /// What happens as it lands: the dish goes into the order then, not before
+  /// What happens as it lands: the item goes into the order then, not before
   final VoidCallback land;
 
   const TrayFlight({required this.id, required this.from, required this.radius, required this.photo, required this.land});
@@ -33,13 +33,13 @@ class TrayFlights extends ChangeNotifier {
   final List<TrayFlight> _flights = [];
   int _next = 0;
 
-  /// Goes up by one each time a dish lands, to give the tray its nudge
+  /// Goes up by one each time an item lands, to give the tray its nudge
   final ValueNotifier<int> bump = ValueNotifier(0);
 
   /// The tray's first thumbnail's place
   final GlobalKey target = GlobalKey(debugLabel: 'tray-target');
 
-  /// Layers drawing the flights; with none (a test), a dish lands at once
+  /// Layers drawing the flights; with none (a test), an item lands at once
   int _layers = 0;
 
   List<TrayFlight> get flights => List.unmodifiable(_flights);
@@ -105,9 +105,9 @@ class _TrayFlightLayerState extends State<TrayFlightLayer> {
         child: IgnorePointer(
           child: Stack(
             children: [
-              // The dishes' circles between the dock and the open order's rows
+              // The items' circles between the dock and the open order's rows
               const Positioned.fill(child: TraySeatLayer()),
-              // The first dish's cue on how to open the order
+              // The first item's cue on how to open the order
               const Positioned.fill(child: TrayHintLayer()),
               Positioned.fill(
                 child: ListenableBuilder(
@@ -144,7 +144,7 @@ Rect _target(BuildContext context) {
   return Rect.fromLTWH(rtl ? media.size.width - left - 44 : left, top, 44, 44);
 }
 
-/// The photo of a dish just added: it starts exactly over the photo it came
+/// The photo of an item just added: it starts exactly over the photo it came
 /// from, corners and all; on the first part of the way it closes into a
 /// centred circle and rises a little, then comes down into the tray at the
 /// thumbnail's size
@@ -233,7 +233,7 @@ class _FlightState extends State<_Flight> with SingleTickerProviderStateMixin {
   }
 }
 
-/// The tray's nudge as a dish lands in it: a little swell that springs back
+/// The tray's nudge as an item lands in it: a little swell that springs back
 class TrayBump extends StatefulWidget {
   final Widget child;
 

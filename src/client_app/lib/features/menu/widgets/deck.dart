@@ -14,8 +14,8 @@ import '../models/menu_item.dart';
 import '../paired_items.dart';
 import '../services/menu_service.dart';
 import 'hold.dart';
-import 'dish.dart';
-import 'dish_view.dart';
+import 'item.dart';
+import 'item_view.dart';
 import 'zoom_flight.dart';
 
 /// The colour a card without a photo is painted in, round and round the categories
@@ -66,7 +66,7 @@ const _advanceAfter = Duration(milliseconds: 60);
 /// category, side by side; up and down within a category, sideways between
 /// them, each a snap. In Arabic the columns run right to left. Resting on a
 /// column's last card, "up next", carries on into the next category, and
-/// the column left behind goes back to its last dish.
+/// the column left behind goes back to its last item.
 class Deck extends StatefulWidget {
   final List<DeckColumn> columns;
   final int column;
@@ -75,7 +75,7 @@ class Deck extends StatefulWidget {
   /// The card each column opens on (a column not in it, its first); read as a column comes into view
   final Map<int, int> rows;
 
-  /// A column came to rest on a card (the "up next" counts as its last dish)
+  /// A column came to rest on a card (the "up next" counts as its last item)
   final void Function(int column, int row)? onRowChange;
 
   /// The card that carries the one-time "hold to add" cue, if any
@@ -133,9 +133,9 @@ class _DeckState extends State<Deck> {
   void _onRow(int column, int row) {
     _advance?.cancel();
     final col = widget.columns[column];
-    final dish = math.min(row, col.items.length - 1);
-    _rowAt[column] = dish;
-    widget.onRowChange?.call(column, dish);
+    final item = math.min(row, col.items.length - 1);
+    _rowAt[column] = item;
+    widget.onRowChange?.call(column, item);
     if (row < col.items.length || column + 1 >= widget.columns.length) return;
     _advance = Timer(_advanceAfter, () {
       widget.onColumnChange(column + 1);
@@ -264,7 +264,7 @@ class _DeckColumnState extends State<_DeckColumn> {
   );
 }
 
-/// One dish's card: the photo under a scrim with its name, or without a
+/// One item's card: the photo under a scrim with its name, or without a
 /// photo the name set big on the business's colour. A tap opens it grown out
 /// of the card; holding one that needs no choosing fills a ring round a
 /// plus, and at the full ring it is in the tray. Its photo is what flies to
@@ -315,7 +315,7 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    // Held, the ring fills on every dish: at the full ring one with nothing to choose (or a saved
+    // Held, the ring fills on every item: at the full ring one with nothing to choose (or a saved
     // way) is in the tray, any other opens
     final quick = canQuickAdd(item, ref.watch(itemPreferenceProvider(item.id)));
     final hint = widget.hint && quick;
@@ -324,7 +324,7 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
       onTapDown: (_) => _down(),
       onTapCancel: _up,
       onTapUp: (_) => _up(),
-      onTap: () => openDish(context, item),
+      onTap: () => openItem(context, item),
       onLongPressStart: (_) => _down(),
       onLongPress: () {
         _up();
@@ -340,7 +340,7 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
           view: ZoomView.deck,
           item: item,
           radius: cardRadius,
-          child: DishPhotoAnchor(
+          child: ItemPhotoAnchor(
             id: item.id,
             radius: cardRadius,
             child: ClipRRect(
@@ -572,8 +572,8 @@ class CardFace extends ConsumerWidget {
   }
 }
 
-/// The card after a category's last dish: the next category's name on its
-/// colour and a few of its dishes. Resting on it, or tapping it, carries on
+/// The card after a category's last item: the next category's name on its
+/// colour and a few of its items. Resting on it, or tapping it, carries on
 /// into that category.
 class _UpNext extends StatelessWidget {
   final DeckColumn column;
@@ -646,7 +646,7 @@ class _UpNext extends StatelessWidget {
   }
 }
 
-/// A dish on the whole menu: a small photo tile, the name and price under it.
+/// An item on the whole menu: a small photo tile, the name and price under it.
 /// Its photo is what a card's flies to as the deck zooms out ([ZoomPhotoAnchor]).
 class ZoomTile extends ConsumerWidget {
   final MenuItem item;
@@ -663,7 +663,7 @@ class ZoomTile extends ConsumerWidget {
     final name = item.name.getText(locale);
     return HoldPress(
       scale: 0.95,
-      onTap: () => openDish(context, item),
+      onTap: () => openItem(context, item),
       onLongPress: () => quickAdd(context, ref, item),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -706,7 +706,7 @@ class ZoomTile extends ConsumerWidget {
       item: item,
       radius: 18,
       child: item.pictureUri == null
-          ? DishPhotoAnchor(
+          ? ItemPhotoAnchor(
               id: item.id,
               radius: 18,
               child: Container(
@@ -721,7 +721,7 @@ class ZoomTile extends ConsumerWidget {
                 ),
               ),
             )
-          : DishPhotoBox(item: item, radius: 18, ring: false),
+          : ItemPhotoBox(item: item, radius: 18, ring: false),
     );
   }
 }

@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchMenu => 'Search menu...';
 
   @override
-  String get noDishesFound => 'No dishes match that';
+  String get noItemsFound => 'No dishes match that';
 
   @override
   String get noItemsAvailable => 'No items available';
@@ -1608,8 +1608,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String orderMovedDropped(String name, String dishes) {
-    return 'Not served at $name, taken out of your order: $dishes';
+  String orderMovedDropped(String name, String items) {
+    return 'Not served at $name, taken out of your order: $items';
   }
 
   @override
@@ -1630,6 +1630,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryMovePin => 'Move the map to put the pin on your door';
+
+  @override
+  String get deliverySearchAddress => 'Search for your street or area';
+
+  @override
+  String get deliverySearchFailed =>
+      'Couldn\'t find that place. Move the map to your door.';
 
   @override
   String get deliveryNeedPin =>

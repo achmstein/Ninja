@@ -1604,6 +1604,69 @@
         ]
       }
     },
+    "/api/inventory/recipes/assist/menu-advice": {
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Say what to change on the menu from its menu-engineering matrix",
+        "description": "The back office sends the items as it placed them (price, cost of one sale, units sold, class: star, plowhorse, puzzle or dog); the assistant answers a summary and one move per item worth changing (raise-price, lower-price, promote, rework, remove, keep). Nothing is fetched or saved.",
+        "operationId": "AdviseMenu",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuAdviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuAdvice"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/inventory/recipes/{catalogItemId}": {
       "get": {
         "tags": [
@@ -1949,6 +2012,30 @@
         "type": "string",
         "format": "binary"
       },
+      "ItemAdvice": {
+        "required": [
+          "catalogItemId",
+          "action",
+          "advice"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "action": {
+            "type": "string"
+          },
+          "advice": {
+            "$ref": "#/components/schemas/LocalizedText"
+          }
+        }
+      },
       "LocalizedText": {
         "type": "object",
         "properties": {
@@ -1959,6 +2046,137 @@
             ]
           },
           "ar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MenuAdvice": {
+        "required": [
+          "summary",
+          "items",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemAdvice"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MenuAdviceItem": {
+        "required": [
+          "catalogItemId",
+          "name",
+          "category",
+          "price",
+          "cost",
+          "sold",
+          "class"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "category": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "cost": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "class": {
+            "type": "string"
+          }
+        }
+      },
+      "MenuAdviceRequest": {
+        "required": [
+          "items",
+          "days",
+          "averageMargin"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuAdviceItem"
+            }
+          },
+          "days": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "averageMargin": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "languages": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
             "type": [
               "null",
               "string"

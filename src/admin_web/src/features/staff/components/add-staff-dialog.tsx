@@ -62,11 +62,18 @@ export function AddStaffDialog({
   const [branchIds, setBranchIds] = useState<Set<number>>(
     () => new Set(defaults?.branchIds ?? [])
   )
+  const [allBranches, setAllBranches] = useState(false)
   const [error, setError] = useState('')
 
   const branchesQuery = useQuery({ ...getAllBranchesOptions(), enabled: open })
   const branches = branchesQuery.data ?? []
   const makeOwner = role === 'Admin' && isOwner
+  // A call centre's account holds every branch, those opened later too
+  const offerAll =
+    Boolean(features.callCentre) &&
+    !makeOwner &&
+    (role === 'Admin' || role === 'Cashier')
+  const everyBranch = offerAll && allBranches
 
   const reset = () => {
     setName(defaults?.name ?? '')
@@ -75,6 +82,7 @@ export function AddStaffDialog({
     setRole(defaults?.role ?? 'Admin')
     setIsOwner(false)
     setBranchIds(new Set(defaults?.branchIds ?? []))
+    setAllBranches(false)
     setError('')
   }
 
@@ -86,7 +94,11 @@ export function AddStaffDialog({
         password,
         role,
         isOwner: makeOwner,
-        branchIds: makeOwner ? [] : [...branchIds].sort((a, b) => a - b),
+        branchIds:
+          makeOwner || everyBranch
+            ? []
+            : [...branchIds].sort((a, b) => a - b),
+        allBranches: everyBranch,
       }),
     onSuccess: (userId) => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
@@ -189,7 +201,15 @@ export function AddStaffDialog({
               onCheckedChange={setIsOwner}
             />
           )}
-          {!makeOwner && branches.length > 0 && (
+          {offerAll && (
+            <SwitchRow
+              title={t('staffAllBranches')}
+              description={t('staffAllBranchesHint')}
+              checked={allBranches}
+              onCheckedChange={setAllBranches}
+            />
+          )}
+          {!makeOwner && !everyBranch && branches.length > 0 && (
             <Field label={t('initialBranches')}>
               <div className='flex flex-col gap-2 rounded-lg border p-3'>
                 {branches.map((branch) => {

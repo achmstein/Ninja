@@ -590,6 +590,21 @@ public record TenantAuth(string Authority, IReadOnlyList<TenantSocialProvider>? 
                 .Select(p => new TenantSocialProvider(p[0], p[1]))];
 }
 
+/// <param name="Search">Whether address search is on (the platform has a Places key and the business has Google Maps on): the apps show the search field above the map.</param>
+/// <param name="WebKey">The browser key the web apps draw Google's map with; null keeps them on the free map.</param>
+/// <param name="WebDomains">The domains that key works on ("ninjapp.net", a business's own): a web app on any other host keeps the free map, since Google would refuse it.</param>
+public record TenantMaps(bool Search, string? WebKey, IReadOnlyList<string> WebDomains)
+{
+    /// <summary>The stack's Maps__* as the apps may see them: never the server key itself.</summary>
+    public static TenantMaps Of(IConfiguration configuration)
+    {
+        var key = configuration["Maps:BrowserKey"];
+        var domains = (configuration["Maps:WebDomains"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var web = !string.IsNullOrWhiteSpace(key) && domains.Length > 0;
+        return new(!string.IsNullOrWhiteSpace(configuration["Maps:ServerKey"]), web ? key : null, web ? domains : []);
+    }
+}
+
 /// <param name="Provider">google or apple: which button, and which native sign-in the phone apps use.</param>
 /// <param name="Hint">The Keycloak alias the browser app sends as kc_idp_hint.</param>
 public record TenantSocialProvider(string Provider, string Hint);
@@ -617,10 +632,12 @@ public record TenantResponse(
     string? BusinessType = null,
     bool GuestOrdersAnywhere = false,
     TenantWordmark? Cover = null,
-    AssistantDto? Assistant = null)
+    AssistantDto? Assistant = null,
+    TenantMaps? Maps = null)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
-        => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"], configuration["Tenant:SocialSignIn"]);
+        => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"], configuration["Tenant:SocialSignIn"])
+            with { Maps = TenantMaps.Of(configuration) };
 
     public static TenantResponse From(Model.Tenant t, string? authUrl, string? apiUrl = null, string? appsUrl = null, string? socialSignIn = null)
     {

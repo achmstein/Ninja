@@ -9,7 +9,7 @@ import 'package:ninja_client/l10n/app_localizations.dart';
 
 /// An order turned down opens the island out with what client_web's
 /// order-pill.tsx says: the stage and number, that the business could not
-/// take it, the first four dishes and how many more, what it came to, and
+/// take it, the first four items and how many more, what it came to, and
 /// the way to the bill, in either language.
 
 OrderItem _line(String en, String ar, {int units = 1}) => OrderItem(productName: LocalizedText(en: en, ar: ar), unitPrice: 50, units: units);
@@ -58,7 +58,7 @@ void main() {
       expect(find.text(cancelled), findsOneWidget);
       expect(find.textContaining('Chillax'), findsOneWidget);
       expect(find.text('2×'), findsOneWidget);
-      // Four dishes, and how many more
+      // Four items, and how many more
       expect(find.text('+1'), findsOneWidget);
       expect(find.text('300.00 EGP'), findsOneWidget);
 

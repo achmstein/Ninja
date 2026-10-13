@@ -9,8 +9,9 @@ export 'package:ninja_app_core/auth/auth_service.dart';
 extension PosAuthState on AuthState {
   bool get isPosUser => mayUseApp;
 
-  /// Owners hold every branch; anyone else needs at least one assigned
-  bool get hasBranchAccess => isOwner || branches.isNotEmpty;
+  /// Owners hold every branch, as does an account given them all (`*`);
+  /// anyone else needs at least one assigned
+  bool get hasBranchAccess => isOwner || allBranches || branches.isNotEmpty;
 }
 
 /// Provider for the till gate (Admin | Owner | Cashier)

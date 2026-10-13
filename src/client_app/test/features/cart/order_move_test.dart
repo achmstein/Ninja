@@ -8,7 +8,7 @@ import 'package:ninja_client/features/menu/models/menu_item.dart';
 
 CartItem _line(int productId, double unitPrice, {List<int> options = const [], double? original}) => CartItem(
       productId: productId,
-      productName: LocalizedText(en: 'Dish $productId'),
+      productName: LocalizedText(en: 'Item $productId'),
       unitPrice: unitPrice,
       originalUnitPrice: original,
       selectedCustomizations: [
@@ -27,7 +27,7 @@ MenuItem _item(int id, double price,
         {bool available = true, bool outOfStock = false, bool onOffer = false, double? offerPrice, bool optionOut = false}) =>
     MenuItem(
       id: id,
-      name: LocalizedText(en: 'Dish $id'),
+      name: LocalizedText(en: 'Item $id'),
       description: LocalizedText(en: ''),
       price: price,
       catalogTypeId: 1,
@@ -63,7 +63,7 @@ void main() {
       expect(move.repriced, hasLength(2));
     });
 
-    test('drops a dish not served there, sold out there, or with an option sold out there', () {
+    test('drops an item not served there, sold out there, or with an option sold out there', () {
       final move = moveLines(
         [_line(1, 50), _line(2, 50), _line(3, 50), _line(4, 50, options: [2]), _line(5, 50, options: [9])],
         [_item(2, 50, available: false), _item(3, 50, outOfStock: true), _item(4, 50, optionOut: true), _item(5, 50)],

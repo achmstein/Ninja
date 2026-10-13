@@ -305,7 +305,7 @@ class _TickState extends State<_Tick> with SingleTickerProviderStateMixin {
 }
 
 /// The tick, drawn up to the animation's value; shared with other ticks
-/// that should look the same (the kitchen's dish check)
+/// that should look the same (the kitchen's item check)
 class TickPainter extends CustomPainter {
   final Animation<double> progress;
   final Color color;

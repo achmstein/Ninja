@@ -25,10 +25,11 @@ public static class BusinessProfiles
     {
         // Counter service: nobody books a table or pays by the hour
         // Delivery starts on wherever it was bought: the branches still each
-        // need a place on the map and an area before anyone can order to a door
-        [BusinessType.CoffeeShop] = new HashSet<Module> { Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
+        // need a place on the map and an area before anyone can order to a door.
+        // So does a call centre, once bought: its staff still need every branch given
+        [BusinessType.CoffeeShop] = new HashSet<Module> { Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery, Module.CallCentre },
         // Tables are booked, a kitchen cooks; nothing runs on a clock
-        [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
+        [BusinessType.Restaurant] = new HashSet<Module> { Module.Reservations, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery, Module.CallCentre },
         // Rooms and consoles by the hour, booked ahead, snacks from a small kitchen.
         // Online payments starts off everywhere: it needs the business's own payment
         // account keys before a guest can use it, so the owner turns it on
@@ -37,7 +38,7 @@ public static class BusinessProfiles
         // A kitchen and a counter: nobody sits, so nothing is booked or timed.
         // Tabs are for regulars at a counter they come back to, not a hatch
         // they collect from once; the rest runs any kitchen
-        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Loyalty, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery },
+        [BusinessType.CloudKitchen] = new HashSet<Module> { Module.Loyalty, Module.Inventory, Module.Finance, Module.Payroll, Module.Kds, Module.Delivery, Module.CallCentre },
     };
 
     private static readonly IReadOnlyDictionary<BusinessType, IReadOnlySet<Module>> Suggested = new Dictionary<BusinessType, IReadOnlySet<Module>>

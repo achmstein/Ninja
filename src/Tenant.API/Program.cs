@@ -16,8 +16,10 @@ app.MapDefaultEndpoints();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapBranchApi();
 app.MapTenantApi();
+app.MapPlacesApi();
 
 app.Run();

@@ -6,7 +6,7 @@ namespace Ninja.Tenant.UnitTests;
 [TestClass]
 public sealed class TenantEntitlementsTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true, PayAhead: true, Ai: true);
+    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true, true, true, PayAhead: true, Ai: true, CallCentre: true);
     private static readonly TenantFeatures NoInventory = AllOn with { Inventory = false };
 
     [TestMethod]
@@ -14,7 +14,40 @@ public sealed class TenantEntitlementsTests
     {
         var tenant = new API.Model.Tenant();
         Assert.AreEqual(AllOn, tenant.Entitlements, "the dev host and a stack stamped before plans keep every switch usable");
-        Assert.AreEqual(AllOn with { OnlinePayments = false, PayAhead = false }, tenant.Features, "online payments waits for the owner (and the business's payment keys), and paying ahead with it");
+        Assert.AreEqual(AllOn with { OnlinePayments = false, PayAhead = false, CallCentre = false }, tenant.Features,
+            "online payments waits for the owner (and the business's payment keys), and paying ahead with it; a call centre waits to be bought");
+    }
+
+    [TestMethod]
+    public void The_call_centre_comes_on_when_bought_goes_with_the_plan_and_an_older_caller_leaves_it_as_it_is()
+    {
+        var tenant = new API.Model.Tenant();
+        Assert.IsFalse(tenant.CallCentreEnabled, "the dev host's branch tills keep offering the nearer branch");
+
+        // The control plane says it was not bought
+        tenant.ApplyEntitlements(AllOn with { CallCentre = false });
+        tenant.ApplyFeatures(AllOn);
+        Assert.IsFalse(tenant.CallCentreEnabled, "an owner never turns on what is not bought");
+
+        // Bought: on at once
+        tenant.ApplyEntitlements(AllOn);
+        Assert.IsTrue(tenant.CallCentreEnabled, "the hotline takes the calls from the moment it is bought");
+        Assert.IsTrue(tenant.Features.CallCentre);
+
+        // An admin older than the switch sends none of it: it stays on
+        tenant.ApplyFeatures(new FeatureSwitches(Inventory: false));
+        Assert.IsTrue(tenant.CallCentreEnabled);
+
+        // The owner turns it off, and the next push keeps it off
+        tenant.ApplyFeatures(new FeatureSwitches(CallCentre: false));
+        tenant.ApplyEntitlements(AllOn);
+        Assert.IsFalse(tenant.CallCentreEnabled, "only newly bought turns it on");
+
+        // A control plane older than the call centre does not send it: not bought
+        tenant.ApplyFeatures(new FeatureSwitches(CallCentre: true));
+        tenant.ApplyEntitlements(new TenantFeatures(true, true, true, true, true, true, true, true, true, true, true, true));
+        Assert.IsFalse(tenant.CallCentreEnabled);
+        Assert.IsFalse(tenant.CallCentreEntitled);
     }
 
     [TestMethod]

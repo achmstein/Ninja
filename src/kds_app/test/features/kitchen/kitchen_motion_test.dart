@@ -12,12 +12,12 @@ import 'package:kds_app/features/kitchen/models/kitchen_station.dart';
 import 'package:kds_app/features/kitchen/screens/board_screen.dart';
 import 'package:kds_app/features/kitchen/services/kitchen_service.dart';
 import 'package:kds_app/features/kitchen/widgets/bump_exit.dart';
-import 'package:kds_app/features/kitchen/widgets/dish_line.dart';
+import 'package:kds_app/features/kitchen/widgets/item_line.dart';
 import 'package:kds_app/features/kitchen/widgets/elapsed_ring.dart';
 import 'package:kds_app/features/kitchen/widgets/order_card.dart';
 import 'package:kds_app/l10n/app_localizations.dart';
 
-// The kitchen's moments: a dish struck through, the clock ring, a ticket
+// The kitchen's moments: an item struck through, the clock ring, a ticket
 // bumped off the board.
 
 Widget _app(Widget home) => MaterialApp(
@@ -72,9 +72,9 @@ class _Kitchen implements KitchenRepository {
 }
 
 void main() {
-  setUp(() => dishTicks.value = <String>{});
+  setUp(() => itemTicks.value = <String>{});
 
-  testWidgets('a tapped dish is struck through, its check fills, and a second tap takes it back', (tester) async {
+  testWidgets('a tapped item is struck through, its check fills, and a second tap takes it back', (tester) async {
     final order = _order(3121);
     await tester.pumpWidget(_app(SizedBox(
       width: 400,
@@ -88,17 +88,17 @@ void main() {
     await tester.tap(find.text('Latte'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    // Mid-stroke: the line is being drawn, the other dish untouched
+    // Mid-stroke: the line is being drawn, the other item untouched
     expect(tester.widget<StrikeText>(latte).struck, isTrue);
     expect(find.descendant(of: latte, matching: find.byType(CustomPaint)), findsWidgets);
     expect(tester.widget<StrikeText>(find.widgetWithText(StrikeText, 'Croissant')).struck, isFalse);
-    expect(dishTicks.value, {dishKey(3121, 0)});
+    expect(itemTicks.value, {itemKey(3121, 0)});
     await tester.pumpAndSettle();
-    expect(tester.widgetList<DishCheck>(find.byType(DishCheck)).map((c) => c.done), [true, false]);
+    expect(tester.widgetList<ItemCheck>(find.byType(ItemCheck)).map((c) => c.done), [true, false]);
 
     await tester.tap(find.text('Latte'));
     await tester.pumpAndSettle();
-    expect(dishTicks.value, isEmpty);
+    expect(itemTicks.value, isEmpty);
     expect(tester.widget<StrikeText>(latte).struck, isFalse);
   });
 
@@ -109,10 +109,10 @@ void main() {
       child: OrderCard(order: order, now: DateTime.utc(2026, 9, 5, 20, 5), acting: false, onBringBack: () {}),
     )));
     await tester.pumpAndSettle();
-    expect(find.byType(DishCheck), findsNothing);
+    expect(find.byType(ItemCheck), findsNothing);
     expect(find.byType(ElapsedRing), findsNothing);
     await tester.tap(find.text('Latte'));
-    expect(dishTicks.value, isEmpty);
+    expect(itemTicks.value, isEmpty);
   });
 
   testWidgets('the ring fills with the clock and only a late order breathes', (tester) async {

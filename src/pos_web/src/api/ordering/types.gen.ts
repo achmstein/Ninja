@@ -138,6 +138,14 @@ export type DeliveringBranch = {
     signInRequired: boolean;
 };
 
+export type DeliveryAlternative = {
+    branchId: number | string;
+    distanceMeters: number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    paused: boolean;
+};
+
 export type DeliveryFailedRequest = {
     reason?: null | string;
 };
@@ -150,6 +158,8 @@ export type DeliveryOrder = {
     paidAt?: null | string;
     customerName?: null | string;
     customerNote?: null | string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     total?: number | string;
     paidOnline?: boolean;
     toCollect?: number | string;
@@ -166,6 +176,7 @@ export type DeliveryQuote = {
     minimumOrder: number | string;
     radiusKm: number | string;
     signInRequired?: boolean;
+    hasArea?: boolean;
 };
 
 export type DeliveryRequest = {
@@ -382,6 +393,8 @@ export type Order = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     platform?: null | PlatformOrderView;
     delivery?: null | DeliveryView;
     customerNote?: null | string;
@@ -480,6 +493,8 @@ export type OrderSummary = {
     placeName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
+    takenByName?: null | string;
+    takenAtBranchId?: null | number | string;
     platform?: null | PlatformOrderView;
     delivery?: null | DeliveryView;
     userName?: null | string;
@@ -557,6 +572,7 @@ export type PosOrderRequest = {
     placeName?: null | LocalizedText;
     replay?: boolean;
     delivery?: null | PosDeliveryRequest;
+    sendToBranchId?: null | number | string;
 };
 
 export type PosOrderResponse = {
@@ -651,6 +667,14 @@ export type SetOrderReadyRequest = {
     ready: boolean;
 };
 
+export type StaffDeliveryResolution = {
+    delivers: boolean;
+    latitude: null | number | string;
+    longitude: null | number | string;
+    locationRead: boolean;
+    branches: Array<DeliveryAlternative>;
+};
+
 export type StockDisposition = 'Waste' | 'Restock';
 
 export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
@@ -665,6 +689,8 @@ export type TillDeliveryQuote = {
     latitude: null | number | string;
     longitude: null | number | string;
     locationRead: boolean;
+    alternatives: Array<DeliveryAlternative>;
+    hasArea?: boolean;
 };
 
 export type GetOrdersByUserData = {
@@ -2351,12 +2377,48 @@ export type GetTillDeliveryQuoteResponses = {
 
 export type GetTillDeliveryQuoteResponse = GetTillDeliveryQuoteResponses[keyof GetTillDeliveryQuoteResponses];
 
+export type ResolveDeliveryBranchForStaffData = {
+    body?: never;
+    path?: never;
+    query: {
+        location?: string;
+        latitude?: number | string;
+        longitude?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/resolve-staff';
+};
+
+export type ResolveDeliveryBranchForStaffErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ResolveDeliveryBranchForStaffResponses = {
+    /**
+     * OK
+     */
+    200: StaffDeliveryResolution;
+};
+
+export type ResolveDeliveryBranchForStaffResponse = ResolveDeliveryBranchForStaffResponses[keyof ResolveDeliveryBranchForStaffResponses];
+
 export type GetKnownDeliveryAddressesData = {
     body?: never;
     path?: never;
     query: {
         customerUserId?: string;
         phone?: string;
+        everyBranch?: boolean;
         /**
          * The API version, in the format 'major.minor'.
          */

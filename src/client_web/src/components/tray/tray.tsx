@@ -21,7 +21,7 @@ import { PayChoice } from '@/components/pay/pay-choice'
 import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
 import { Odometer } from '../ninja/odometer'
-import { DishPhoto } from '../menu/dish-photo'
+import { ItemPhoto } from '../menu/item-photo'
 import { GestureHint } from '../ninja/gestures/gesture-hint'
 import { gestureMs } from '../ninja/gestures/gesture-timing'
 import { HintBubble } from '../ninja/gestures/hint-bubble'
@@ -51,10 +51,10 @@ export type TrayOrder = {
 
 /**
  * The tray: the order, the top row of the dock (the app's tabs are the row
- * under it, one dark slab). It shows the dishes' photos and a total that
+ * under it, one dark slab). It shows the items' photos and a total that
  * rolls; drag it up (or tap it) and it opens into the order, where a line
  * swipes away and steps up or down. The order goes with a press held until
- * the ring fills. The first dish to land lets the order peek out once, with
+ * the ring fills. The first item to land lets the order peek out once, with
  * a word on dragging it up.
  *
  * The dock never moves. The order is a sheet that rises out of it: under a
@@ -106,7 +106,7 @@ export function Tray({
     if (empty && expanded) onExpandedChange(false)
   }, [empty, expanded, onExpandedChange])
 
-  // The first dish in: a lift, and how to open the order; opening it is the end of that
+  // The first item in: a lift, and how to open the order; opening it is the end of that
   const hint = useHint('tray')
   const { pending: hintPending, show: showHint, done: hintDone } = hint
   useEffect(() => {
@@ -124,7 +124,7 @@ export function Tray({
   const sheetRef = useRef<HTMLDivElement>(null)
   const height = useRef(0)
   // The sheet's height as a value the handle follows: the order grows and shrinks while it is open
-  // (a dish added from its suggestion, one swiped away), and the handle must stay on its edge
+  // (an item added from its suggestion, one swiped away), and the handle must stay on its edge
   const sheetHeight = useMotionValue(0)
   const dragging = useRef(false)
   useMotionValueEvent(y, 'change', (v) =>
@@ -137,7 +137,7 @@ export function Tray({
     setWasExpanded(expanded)
     if (expanded && !empty) setSheetOn(true)
   }
-  // The first dish in: the order peeks out of the dock once and tucks back
+  // The first item in: the order peeks out of the dock once and tucks back
   const [wasHinting, setWasHinting] = useState(hint.showing)
   if (hint.showing !== wasHinting) {
     setWasHinting(hint.showing)
@@ -147,7 +147,7 @@ export function Tray({
     }
   }
 
-  // The dishes' circles: on the way up they leave the dock and fly to their rows; on the way down, back
+  // The items' circles: on the way up they leave the dock and fly to their rows; on the way down, back
   const [seats, setSeats] = useState<Seat[]>([])
   const dockRef = useRef<HTMLDivElement>(null)
   const measureSeats = () => {
@@ -314,7 +314,7 @@ export function Tray({
 
   return (
     // Bare, it takes no room: its row stays drawn where it will be (anchored to the bottom, over the
-    // menu, faded out) so a dish flying in lands on its place while the row grows under it
+    // menu, faded out) so an item flying in lands on its place while the row grows under it
     <div className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none' style={{ height: bare ? 0 : DOCK_H }}>
       <AnimatePresence>
         {hint.showing && !expanded && (
@@ -358,7 +358,7 @@ export function Tray({
       {sheetOn && !empty && !reduced && <SeatFlights seats={seats} openness={openness} />}
 
       {/* The tray's row of the dock */}
-      {/* px-6: the dishes and the total start where a card's name does */}
+      {/* px-6: the items and the total start where a card's name does */}
       <div
         ref={dockRef}
         className={cn(
@@ -450,7 +450,7 @@ function Thumbs({ summary, shown }: { summary: ReturnType<typeof traySummary>; s
     <motion.span className='relative flex items-center -space-x-3' style={{ opacity: shown }}>
       {summary.thumbs.map((thumb) => (
         <span key={thumb.key} data-thumb={thumb.key} className='bg-background/15 ring-foreground relative size-11 shrink-0 overflow-hidden rounded-full ring-2'>
-          <DishPhoto src={thumb.pictureUrl} />
+          <ItemPhoto src={thumb.pictureUrl} />
         </span>
       ))}
       {summary.more > 0 && (
@@ -501,7 +501,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   const { from, to } = seat
   const lerp = (a: number, b: number) => (p: number) => a + (b - a) * p
   const x = useTransform(progress, lerp(from.x, to.x))
-  // A small rise in the middle of the flight, the same arc a dish takes into the tray
+  // A small rise in the middle of the flight, the same arc an item takes into the tray
   const y = useTransform(progress, (p) => lerp(from.y, to.y)(p) - Math.sin(p * Math.PI) * 18)
   const width = useTransform(progress, lerp(from.width, to.width))
   const height = useTransform(progress, lerp(from.height, to.height))
@@ -512,7 +512,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
       // A circle the whole way, as in the dock and on the row: only its size changes
       style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >
-      <DishPhoto src={seat.src} />
+      <ItemPhoto src={seat.src} />
     </motion.span>
   )
 }
@@ -561,7 +561,7 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
         ))}
         {/* What goes well with what is in it: one suggestion, waved away or added in a tap */}
         {canOrder && <TrayNudge />}
-        {/* The note, a code, points: small pills under the dishes, each opening only when wanted */}
+        {/* The note, a code, points: small pills under the items, each opening only when wanted */}
         <div className='mt-3 px-2'>
           <TrayExtras extras={extras} />
         </div>
@@ -627,7 +627,7 @@ function SwipeLine({ line }: { line: CartLine }) {
   const binRight = useTransform(x, (v) => (v < 0 ? 1 : 0))
   const row = useRef<HTMLDivElement>(null)
   const [leaving, setLeaving] = useState(false)
-  // Slid out: the red it leaves behind folds shut, and only then is the dish taken off
+  // Slid out: the red it leaves behind folds shut, and only then is the item taken off
   const [folding, setFolding] = useState(false)
   const key = lineKey(line)
   // A business may write its menu in one language only: each name falls back to the other
@@ -690,7 +690,7 @@ function SwipeLine({ line }: { line: CartLine }) {
           className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-name font-bold'
           style={{ opacity: seatShown }}
         >
-          <DishPhoto src={line.pictureUrl} />
+          <ItemPhoto src={line.pictureUrl} />
         </motion.span>
         <span className='min-w-0 flex-1'>
           <span className='block truncate text-note font-semibold'>{name}</span>

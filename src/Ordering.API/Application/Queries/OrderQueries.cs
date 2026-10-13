@@ -30,6 +30,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             PlaceName = order.PlaceName,
             SessionId = order.SessionId,
             Source = order.Source.ToString(),
+            TakenByName = order.TakenByName,
+            TakenAtBranchId = order.TakenAtBranchId,
             Platform = PlatformOrderView.From(order.Platform),
             Delivery = DeliveryView.From(order.Delivery),
             CustomerNote = order.CustomerNote,
@@ -256,6 +258,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
+                TakenByName = o.TakenByName,
+                TakenAtBranchId = o.TakenAtBranchId,
                 Platform = PlatformOrderView.From(o.Platform),
                 Delivery = DeliveryView.From(o.Delivery),
                 // A guest has no Buyer row, so the name they left at checkout
@@ -479,6 +483,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
+                TakenByName = o.TakenByName,
+                TakenAtBranchId = o.TakenAtBranchId,
                 Platform = PlatformOrderView.From(o.Platform),
                 Delivery = DeliveryView.From(o.Delivery),
                 // A guest has no Buyer row, so the name they left at checkout

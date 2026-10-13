@@ -29,7 +29,7 @@ const SETTLE_MS = 110
 /**
  * The card a column rests on: the last one whose top has reached the room at
  * the column's top. Measured by the cards themselves, since the category's
- * poster at the head of a column is shorter than a dish's card
+ * poster at the head of a column is shorter than an item's card
  */
 function rowAt(column: HTMLElement, count: number): number {
   const line = column.scrollTop + topOf(column) + 8
@@ -127,7 +127,7 @@ export const Deck = memo(function Deck({
 
   // Resting on a column's last card, the "up next" one, moves on to the next
   // category the way a sideways swipe does; the column left behind goes back
-  // to its last dish, so coming back lands on a dish rather than the way on
+  // to its last item, so coming back lands on an item rather than the way on
   // One timer of each kind for the whole deck, all cleared on the way out: nothing is read or told
   // while a swipe is still moving, only once it has come to rest
   const advanceTimer = useRef<number | null>(null)
@@ -143,7 +143,7 @@ export const Deck = memo(function Deck({
     []
   )
   const watchForNext = (c: number, el: HTMLElement) => {
-    // The card is shorter than a dish, so the column cannot bring it to the
+    // The card is shorter than an item, so the column cannot bring it to the
     // top: reaching the end of the column is resting on it
     const next = el.querySelector<HTMLElement>('[data-up-next]')
     if (!next || el.scrollTop + el.clientHeight < el.scrollHeight - 4) return
@@ -253,8 +253,8 @@ export const Deck = memo(function Deck({
 })
 
 /**
- * The card after a category's last dish: the next category's name on its
- * colour and a few of its dishes, rising as it comes into view. Resting on
+ * The card after a category's last item: the next category's name on its
+ * colour and a few of its items, rising as it comes into view. Resting on
  * it, or tapping it, carries on into that category. The last category has
  * none, so the deck ends there with a plain stop.
  */
@@ -301,7 +301,7 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
 }
 
 /**
- * One dish's card. Memoised: it renders only when something about it
+ * One item's card. Memoised: it renders only when something about it
  * changes (the one-time cue), never as the deck scrolls or the menu round it
  * renders. Its photo is what its sheet grows out of and what flies to its
  * tile when the deck zooms out (both find it by its `data-photo`).
@@ -342,7 +342,7 @@ const DeckCard = memo(function DeckCard({
         {...handlers}
       >
         <CardFace item={item} usual={usual} photoRef={photo} />
-        {/* Held, a ring fills round a plus: at the full ring a dish with nothing to choose (or a saved way) is in the tray, any other opens */}
+        {/* Held, a ring fills round a plus: at the full ring an item with nothing to choose (or a saved way) is in the tray, any other opens */}
         {!soldOut && (
           <span
             aria-hidden

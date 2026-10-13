@@ -124,7 +124,7 @@ internal static class Extensions
         // The model asked when the usual one is busy; Gemini's only when the endpoint is Gemini's
         var fallback = builder.Configuration["AI:FallbackModel"] ?? (endpoint == GeminiEndpoint ? GeminiFallbackModel : null);
 
-        // Dish photos: straight at Gemini there is no gateway's "image" role to name
+        // Item photos: straight at Gemini there is no gateway's "image" role to name
         var image = builder.Configuration["AI:ImageModel"] ?? (endpoint == GeminiEndpoint ? "gemini-2.5-flash-image" : null);
 
         foreach (var project in projects)

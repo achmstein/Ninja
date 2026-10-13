@@ -133,6 +133,13 @@ jobs:
           SOCIAL_GOOGLE_CLIENT_SECRET: ${{ secrets.PLATFORM_SOCIAL_GOOGLE_CLIENT_SECRET }}
           SOCIAL_APPLE_CLIENT_ID: ${{ secrets.PLATFORM_SOCIAL_APPLE_CLIENT_ID }}
           SOCIAL_APPLE_CLIENT_SECRET: ${{ secrets.PLATFORM_SOCIAL_APPLE_CLIENT_SECRET }}
+          # Optional: Google Maps (deploy/platform/.env.example says what each key is restricted to)
+          MAPS_SERVER_KEY: ${{ secrets.PLATFORM_MAPS_SERVER_KEY }}
+          MAPS_BROWSER_KEY: ${{ secrets.PLATFORM_MAPS_BROWSER_KEY }}
+          MAPS_WEB_TILES: ${{ vars.PLATFORM_MAPS_WEB_TILES }}
+          MAPS_ANDROID_KEY: ${{ secrets.PLATFORM_MAPS_ANDROID_KEY }}
+          MAPS_IOS_KEY: ${{ secrets.PLATFORM_MAPS_IOS_KEY }}
+          MAPS_REFERRER_DOMAINS: ${{ vars.PLATFORM_MAPS_REFERRER_DOMAINS }}
           # Optional: the Firebase service account every stack's notification service pushes with (riders, customers, staff)
           FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
           # Optional: the app-builder client's secret, which mobile-deploy.yml signs in with to read a
@@ -202,6 +209,12 @@ jobs:
           SOCIAL_GOOGLE_CLIENT_SECRET=$SOCIAL_GOOGLE_CLIENT_SECRET
           SOCIAL_APPLE_CLIENT_ID=$SOCIAL_APPLE_CLIENT_ID
           SOCIAL_APPLE_CLIENT_SECRET=$SOCIAL_APPLE_CLIENT_SECRET
+          MAPS_SERVER_KEY=$MAPS_SERVER_KEY
+          MAPS_BROWSER_KEY=$MAPS_BROWSER_KEY
+          MAPS_WEB_TILES=${MAPS_WEB_TILES:-false}
+          MAPS_ANDROID_KEY=$MAPS_ANDROID_KEY
+          MAPS_IOS_KEY=$MAPS_IOS_KEY
+          MAPS_REFERRER_DOMAINS=$MAPS_REFERRER_DOMAINS
           FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH
           APP_BUILDER_SECRET=$APP_BUILDER_SECRET
           IMAGE_REGISTRY=ghcr.io/${{ github.repository_owner }}/ninja

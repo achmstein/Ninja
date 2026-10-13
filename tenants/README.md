@@ -36,6 +36,7 @@ wanted, and then they never ask.
 | `AUTH_URL` | Keycloak's public host, `https://auth.{domain}` |
 | `REALM` | The tenant's realm, `{slug}` on the platform |
 | `GOOGLE_SERVER_CLIENT_ID` | client_app only: the Web Client ID the realm's Google identity provider uses; leave out for no Google sign-in |
+| `GOOGLE_MAPS_ANDROID_KEY`, `GOOGLE_MAPS_IOS_KEY` | client_app only: the platform's Maps SDK keys, in the record only when the business has Google Maps on (the control plane's switch). Android's goes into the manifest at build time (`android/app/build.gradle.kts` reads it from the defines), iOS's is handed to the SDK at the first map (`ios/Runner/AppDelegate.swift`). Each business's app id (and Android signing SHA-1) must be on the key's restrictions in Google Cloud. Left out, the free OpenFreeMap map |
 | `APPLE_ISSUER` | client_app only: `apple-app` for a business's own app (its id, `net.ninjapp.<business>`, set as "Own customer app" on the control plane's record, which gives its realm the `apple-app` provider for it); left out, `apple`, the shared build's |
 | `REDIRECT_SCHEME` | client_app, own app only: its id, where a browser sign-in comes back to; the realm's `mobile-app` client takes `{id}://callback` once the id is on the record. Left out, `com.chillax.client`, what the folders declare |
 | `APP_ID`, `APP_NAME`, `CUSTOMER_HOST`, `APPLE_TEAM_ID` | client_app, own app only: what `tool/stamp_tenant.dart` stamps into the native folders (the store id, the name under the icon, the App Links host, the team that signs it) |

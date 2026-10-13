@@ -61,6 +61,13 @@ public static partial class DeliveryApi
             .WithDescription("The branch's fee, minimum and radius even while customers' orders are paused. With a location the caller shared (a Google Maps link, short or long, or coordinates), the pin read from it, how far it is and whether it is within the radius. Without one, InRange is true: the cashier knows the streets.")
             .RequireAuthorization("Pos");
 
+        // The call centre: the caller's address picks the branch that cooks
+        newWork.MapGet("/delivery/resolve-staff", ResolveDeliveryBranchForStaffAsync)
+            .WithName("ResolveDeliveryBranchForStaff")
+            .WithSummary("Which branches would deliver to a caller, nearest first, paused ones flagged (staff)")
+            .WithDescription("For the call centre, which answers for no branch: from a location the caller shared (a Google Maps link, short or long, or coordinates) or a latitude and longitude, every branch whose area takes the pin in, nearest first, with how far it is, the fee, the minimum and whether it paused its customers' orders (a phone order may still go there). LocationRead is false when a location was given and no point could be read from it.")
+            .RequireAuthorization("Pos");
+
         newWork.MapGet("/delivery/known-addresses", GetKnownAddressesAsync)
             .WithName("GetKnownDeliveryAddresses")
             .WithSummary("Where a caller has asked to be delivered before (staff)")

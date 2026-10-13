@@ -109,7 +109,7 @@ describe('navTrail', () => {
 })
 
 describe('every page tab keeps its sidebar entry lit', () => {
-  // The tab rows' destinations (Live | Calls, Dishes | Offers, the till's,
+  // The tab rows' destinations (Live | Calls, Items | Offers, the till's,
   // Stock's, Employees', Accounts'): each must light one sidebar entry
   const tabUrls = [
     '/orders/live',

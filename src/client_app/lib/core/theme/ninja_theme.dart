@@ -239,7 +239,7 @@ class NinjaTypography {
   /// A section, a menu category, a card's title (20 px)
   final TextStyle headline;
 
-  /// A dish, a row's bold value
+  /// An item, a row's bold value
   final TextStyle name;
 
   /// Labels and what is read

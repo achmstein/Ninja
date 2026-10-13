@@ -25,7 +25,7 @@ public sealed record DesignPromotionRequest(
 
 /// <summary>
 /// A promotion's picture designed by the image model around the owner's own
-/// photo (the dish, the room, the place as it really is), with the headline
+/// photo (the item, the room, the place as it really is), with the headline
 /// drawn in, through the platform's AI gateway like every other AI call: a few
 /// designs to pick from, each asked for in its own style so they differ, each
 /// the WebP an upload would store. The business's real logo is put on each

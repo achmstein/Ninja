@@ -32,7 +32,7 @@ public static partial class ControlApi
         api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/demo-data", FillDemo).WithName("FillDemoData").WithSummary("Fill a running demo with a month of a business's life (suppliers, stock, recipes, staff, expenses, sales), once").RequireAuthorization("Platform");
-        api.MapPost("/tenants/{slug}/photos", GeneratePhotos).WithName("GenerateDishPhotos").WithSummary("Draw a photo for every dish of a running business that has none, with the AI tab's image model").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/photos", GeneratePhotos).WithName("GenerateItemPhotos").WithSummary("Draw a photo for every item of a running business that has none, with the AI tab's image model").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
@@ -188,6 +188,7 @@ public static partial class ControlApi
             DefaultTheme = defaultTheme,
             Slab = slab,
             SocialSignIn = request.SocialSignIn ?? true,
+            GoogleMaps = request.GoogleMaps ?? false,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -496,7 +497,8 @@ public record CreateTenantRequest(
     string? DefaultTheme = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on")] bool? SocialSignIn = null,
-    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null is both")] string? ContentLanguages = null);
+    [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null is both")] string? ContentLanguages = null,
+    [property: Description("Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off")] bool? GoogleMaps = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -587,7 +589,10 @@ public record TenantDetail(
     [property: Description("The business on Talabat: its chain there and each branch's remote id; null chain when it is not on Talabat")] TenantTalabatDto? Talabat = null,
     [property: Description("The business's own customer app (its iOS bundle ID and Android package); null when it has none")] string? AppId = null,
     [property: Description("The Apple team its own app is published under; null when not given")] string? AppleTeamId = null,
-    [property: Description("The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…")] IReadOnlyList<string>? AndroidCertFingerprints = null)
+    [property: Description("The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…")] IReadOnlyList<string>? AndroidCertFingerprints = null,
+    [property: Description("Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map")] string? MapsDomainToAdd = null,
+    [property: Description("Whether the business uses Google Maps with the platform's keys; off, or with no keys on the platform, its apps keep the free map")] bool GoogleMaps = false,
+    [property: Description("Whether the platform has Google Maps keys at all; without them the business's switch does nothing")] bool GoogleMapsAvailable = false)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -611,7 +616,10 @@ public record TenantDetail(
             TenantTalabatDto.From(t, p),
             t.AppId,
             t.AppleTeamId,
-            AppLinks.Fingerprints(t.AndroidCertFingerprints));
+            AppLinks.Fingerprints(t.AndroidCertFingerprints),
+            p.Maps.PendingDomain(t),
+            t.GoogleMaps,
+            p.Maps.Search || p.Maps.Web || !string.IsNullOrWhiteSpace(p.Maps.AndroidKey) || !string.IsNullOrWhiteSpace(p.Maps.IosKey));
 }
 
 /// <summary>Where the business stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

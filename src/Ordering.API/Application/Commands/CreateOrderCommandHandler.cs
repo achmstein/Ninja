@@ -98,7 +98,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             guestOrdersAnywhere: message.GuestOrdersAnywhere,
             platform: message.Platform,
             delivery: delivery,
-            paysOnline: message.PayOnline);
+            paysOnline: message.PayOnline,
+            taker: message.Taker);
 
         foreach (var item in message.OrderItems)
         {
@@ -107,8 +108,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
 
         // Ids only: a delivery's address and phone stay out of the logs
         _logger.LogInformation(
-            "Creating order at branch {BranchId} from {Source}, {Lines} lines, delivery {IsDelivery}",
-            order.BranchId, order.Source, order.OrderItems.Count, order.IsDelivery);
+            "Creating order at branch {BranchId} from {Source}, {Lines} lines, delivery {IsDelivery}, taken at {TakenAtBranchId}",
+            order.BranchId, order.Source, order.OrderItems.Count, order.IsDelivery, order.TakenAtBranchId);
 
         _orderRepository.Add(order);
 

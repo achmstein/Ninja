@@ -326,7 +326,7 @@ export function SalesChart() {
 }
 
 /**
- * What sold over the same days: the top dishes, and the places that sold the
+ * What sold over the same days: the top items, and the places that sold the
  * most time, as ranked bars that read without hovering, each in a card.
  */
 export function TopLists() {

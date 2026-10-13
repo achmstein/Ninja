@@ -20,7 +20,7 @@ class HoldScope extends StatefulWidget {
 }
 
 class HoldScopeState extends State<HoldScope> with SingleTickerProviderStateMixin {
-  // Made on the first press: a long menu of dishes keeps no ticker each until one is held
+  // Made on the first press: a long menu of items keeps no ticker each until one is held
   AnimationController? _ring;
   bool pressing = false;
 
@@ -58,7 +58,7 @@ class _HoldScopeData extends InheritedWidget {
   bool updateShouldNotify(_HoldScopeData old) => old.pressing != pressing;
 }
 
-/// A dish's press the deck's way: it gives a little as the finger goes down,
+/// An item's press the deck's way: it gives a little as the finger goes down,
 /// the ring starts filling at once, a tap opens it and the full ring is the
 /// long press
 class HoldPress extends StatelessWidget {
@@ -122,7 +122,7 @@ class HoldRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final hold = HoldScope.maybeOf(context);
     if (hold == null) return const SizedBox.shrink();
-    // Built only while held: at rest a dish carries nothing of it
+    // Built only while held: at rest an item carries nothing of it
     return IgnorePointer(
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 150),

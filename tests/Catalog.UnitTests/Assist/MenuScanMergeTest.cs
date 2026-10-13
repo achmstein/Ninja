@@ -55,7 +55,7 @@ public class MenuScanMergeTest
     }
 
     [TestMethod]
-    public void Dishes_at_the_top_of_a_page_under_no_heading_carry_on_the_section_the_page_before_ended_with()
+    public void Items_at_the_top_of_a_page_under_no_heading_carry_on_the_section_the_page_before_ended_with()
     {
         var merged = MenuScanner.Merge(
         [
@@ -80,7 +80,7 @@ public class MenuScanMergeTest
     }
 
     [TestMethod]
-    public void The_pages_are_read_in_the_menus_own_order_and_the_ones_with_no_dishes_left_out()
+    public void The_pages_are_read_in_the_menus_own_order_and_the_ones_with_no_items_left_out()
     {
         var plan = MenuScanner.PlanFrom(new MenuPageOrder([3, 1, 4], [2], ""), 4);
         CollectionAssert.AreEqual(new[] { 3, 1, 4 }, plan!.Order.ToList());

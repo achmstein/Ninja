@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Assistant.API.Auth;
 
 /// <summary>
-/// A preview the assistant's services built with AI (a dish, its options and
+/// A preview the assistant's services built with AI (an item, its options and
 /// its recipe) would come out differently if built again, so the confirm call
 /// must apply exactly what the owner saw. The preview hands the chat app the
 /// plan as an opaque token: the plan itself, when it stops being valid, and an

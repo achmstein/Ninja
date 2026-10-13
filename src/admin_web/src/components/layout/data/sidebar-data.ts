@@ -54,7 +54,7 @@ export const sidebarData: SidebarData = {
     {
       title: 'navMenuStock',
       items: [
-        // The dishes, and the offers and codes on them, as tabs of one page
+        // The items, and the offers and codes on them, as tabs of one page
         {
           title: 'menuItems',
           url: '/menu',

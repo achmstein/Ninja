@@ -261,7 +261,7 @@ function PromotionForm({
                 <SelectValue
                   placeholder={
                     form.link === 'Item'
-                      ? t('promotionPickDish')
+                      ? t('promotionPickItem')
                       : t('promotionPickCategory')
                   }
                 />
@@ -437,7 +437,7 @@ async function logoFile(
 /**
  * The picture, the shape the popup shows it in: the owner's own design
  * uploaded as it is, or Ninja's designs from a real photo of theirs (the
- * dish, the room) with the headline drawn in. A few come back at once to
+ * item, the room) with the headline drawn in. A few come back at once to
  * pick from; a note asks again ("warmer", "fix the spelling").
  */
 function PictureStage({

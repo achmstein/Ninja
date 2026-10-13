@@ -224,7 +224,7 @@ DeliveryProblem? deliveryProblem({
 /// Where the order is going when it is brought: what the tray shows and the
 /// order sends. Offered where the business and the branch deliver and the
 /// customer is not ordering to a table or a room; the address is then quoted
-/// by the branch, and the order can go once it is in range and the dishes
+/// by the branch, and the order can go once it is in range and the items
 /// reach the minimum (client_web's useDelivery)
 @immutable
 class DeliveryState {
@@ -239,7 +239,7 @@ class DeliveryState {
   final double fee;
   final double minimum;
 
-  /// How much more the dishes must come to; 0 when enough
+  /// How much more the items must come to; 0 when enough
   final double short;
   final bool quoted;
   final bool inRange;

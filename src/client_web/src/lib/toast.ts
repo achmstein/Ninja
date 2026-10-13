@@ -5,7 +5,7 @@ type ToastType = 'success' | 'error' | 'info' | 'warning'
 
 type ToastOptions = {
   description?: string
-  /** Stands in for the kind's own icon: a dish's photo, say */
+  /** Stands in for the kind's own icon: an item's photo, say */
   icon?: ReactNode
   /** One action on the toast, like Undo */
   action?: { label: string; onClick: () => void }
@@ -22,7 +22,7 @@ const HOLDS: Record<ToastType, number> = { success: 3200, info: 3200, warning: 3
  * on. The message is the title; its kind is its colour and icon, so no
  * "Success" / "Something went wrong" line sits above it.
  *
- * Say something only when the screen does not already: a dish flying into
+ * Say something only when the screen does not already: an item flying into
  * the tray, a tick on a button or a page changing needs no toast as well.
  * Failures, choices (Undo) and news from the business do.
  */

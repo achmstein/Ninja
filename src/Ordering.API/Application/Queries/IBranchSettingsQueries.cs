@@ -30,9 +30,11 @@ public interface IBranchSettingsQueries
     /// <summary>
     /// Every branch that delivers to customers right now, with its terms, for
     /// finding the one that serves an address. Empty while the business does
-    /// not deliver.
+    /// not deliver. <paramref name="evenWhilePaused"/> is the till's: a branch
+    /// that paused its customers' orders still takes one sent from another
+    /// branch's till, and comes back flagged <see cref="BranchDeliveryTerms.Paused"/>.
     /// </summary>
-    Task<IReadOnlyList<BranchDeliveryTerms>> GetDeliveringBranchesAsync();
+    Task<IReadOnlyList<BranchDeliveryTerms>> GetDeliveringBranchesAsync(bool evenWhilePaused = false);
 
     /// <summary>
     /// Whether the business delivers at all: delivery bought, and not switched
@@ -47,13 +49,39 @@ public interface IBranchSettingsQueries
     /// Fail-closed: a stack that has never said takes no such order.
     /// </summary>
     Task<bool> IsPayAheadOnAsync();
+
+    /// <summary>
+    /// Whether a call centre takes the business's phone orders: the owner bought
+    /// it and kept it on. A branch till then offers no other branch to send an
+    /// order to. Fail-closed: a stack that has never said has no call centre.
+    /// </summary>
+    Task<bool> IsCallCentreOnAsync();
 }
 
 /// <summary>Where a branch delivers from, how far, and what it asks.</summary>
+/// <param name="RadiusKm">How far the riders go, straight-line; 0 when the branch has only a drawn area.</param>
 /// <param name="SignInRequired">A customer must be signed in to order delivery here (the till's phone orders are not held to it).</param>
-public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder, bool SignInRequired = false)
+/// <param name="Area">The area drawn on the map, as [lat, lng] points; when there is one it, not the radius, says where the branch delivers.</param>
+public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder, bool SignInRequired = false, IReadOnlyList<double[]>? Area = null)
 {
     public int RadiusMeters => (int)(RadiusKm * 1000);
+
+    /// <summary>The branch delivers to a drawn area rather than a circle.</summary>
+    public bool HasArea => Area is { Count: >= 3 };
+
+    /// <summary>How far a point is from the branch, as the crow flies: what puts the nearer of two branches first.</summary>
+    public int DistanceTo(double latitude, double longitude) => Geo.DistanceMeters(Latitude, Longitude, latitude, longitude);
+
+    /// <summary>
+    /// Whether the branch brings orders to this point: inside its drawn area when it
+    /// has one, otherwise within its radius. The one question of "does it deliver
+    /// there", asked by the quote, resolve, the till's quote, the policy and the
+    /// alternatives alike.
+    /// </summary>
+    public bool Covers(double latitude, double longitude) => HasArea
+        ? Geo.Contains(Area!, latitude, longitude)
+        : DistanceTo(latitude, longitude) <= RadiusMeters;
 }
 
-public record BranchDeliveryTerms(int BranchId, DeliveryTerms Terms);
+/// <param name="Paused">The branch paused its customers' orders; only the till's are read with it in.</param>
+public record BranchDeliveryTerms(int BranchId, DeliveryTerms Terms, bool Paused = false);

@@ -64,7 +64,7 @@ describe('pickHero', () => {
     expect(pickHero(offers, sections)?.id).toBe(6)
   })
 
-  it('falls back to the first popular dish with a photo, then any dish with one, then none', () => {
+  it('falls back to the first popular item with a photo, then any item with one, then none', () => {
     expect(pickHero([], sections)?.id).toBe(2)
     expect(pickHero([], [{ id: 's', label: '', kind: 'category', items: [item(8, { pictureUri: null }), item(9)] }])?.id).toBe(9)
     expect(pickHero([], [{ id: 's', label: '', kind: 'category', items: [item(8, { pictureUri: null })] }])).toBeNull()
@@ -89,7 +89,7 @@ describe('tileSections', () => {
     expect(tileSections(sections, [], 'Offers')[0].kind).toBe('usuals')
   })
 
-  it('covers a tile with its first photographed dish, or nothing', () => {
+  it('covers a tile with its first photographed item, or nothing', () => {
     expect(coverItem({ id: 'a', label: '', kind: 'category', items: [item(1, { pictureUri: null }), item(2)] })?.id).toBe(2)
     expect(coverItem({ id: 'a', label: '', kind: 'category', items: [item(1, { pictureUri: null })] })).toBeNull()
   })

@@ -26,7 +26,7 @@ export type CartLine = {
   specialInstructions?: string
   customizations: CartCustomization[]
   /**
-   * Added from a suggestion ("goes well with"): on a dish's sheet, or the
+   * Added from a suggestion ("goes well with"): on an item's sheet, or the
    * one the order offers. Not part of the line's key: added again by hand,
    * it is the same line, and keeps saying how it first came.
    */

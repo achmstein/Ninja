@@ -25,6 +25,20 @@ public class ClaimsPrincipalExtensionsTest
     public void Is_empty_without_the_claim()
     {
         Assert.AreEqual(0, WithBranches().GetBranchIds().Count);
+        Assert.IsFalse(WithBranches().HoldsAllBranches());
+    }
+
+    [TestMethod]
+    public void A_star_holds_every_branch_even_one_made_later()
+    {
+        var all = WithBranches("*").GetBranchIds();
+
+        Assert.IsTrue(WithBranches("*").HoldsAllBranches());
+        Assert.IsTrue(WithBranches("2", "*").HoldsAllBranches(), "ids beside it change nothing");
+        Assert.IsTrue(all.Contains(1));
+        Assert.IsTrue(all.Contains(123456), "a branch the token never heard of");
+        Assert.IsFalse(WithBranches("1", "2").HoldsAllBranches());
+        Assert.IsFalse(WithBranches("1", "2").GetBranchIds().Contains(3));
     }
 
     private static ClaimsPrincipal User(string? sub, params string[] roles) =>

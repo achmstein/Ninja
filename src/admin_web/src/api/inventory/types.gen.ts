@@ -26,9 +26,39 @@ export type CreatedResponse = {
 
 export type IFormFile = Blob | File;
 
+export type ItemAdvice = {
+    catalogItemId: number | string;
+    action: string;
+    advice: LocalizedText;
+};
+
 export type LocalizedText = {
     en?: null | string;
     ar?: null | string;
+};
+
+export type MenuAdvice = {
+    summary: LocalizedText;
+    items: Array<ItemAdvice>;
+    warnings: Array<string>;
+};
+
+export type MenuAdviceItem = {
+    catalogItemId: number | string;
+    name: LocalizedText;
+    category: null | LocalizedText;
+    price: number | string;
+    cost: number | string;
+    sold: number | string;
+    class: string;
+};
+
+export type MenuAdviceRequest = {
+    items: Array<MenuAdviceItem>;
+    days: number | string;
+    averageMargin: number | string;
+    languages?: null | string;
+    note?: null | string;
 };
 
 export type MenuItemToTrack = {
@@ -1335,6 +1365,44 @@ export type ProposeRecipesResponses = {
 };
 
 export type ProposeRecipesResponse = ProposeRecipesResponses[keyof ProposeRecipesResponses];
+
+export type AdviseMenuData = {
+    body: MenuAdviceRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/recipes/assist/menu-advice';
+};
+
+export type AdviseMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AdviseMenuError = AdviseMenuErrors[keyof AdviseMenuErrors];
+
+export type AdviseMenuResponses = {
+    /**
+     * OK
+     */
+    200: MenuAdvice;
+};
+
+export type AdviseMenuResponse = AdviseMenuResponses[keyof AdviseMenuResponses];
 
 export type RemoveRecipeData = {
     body?: never;

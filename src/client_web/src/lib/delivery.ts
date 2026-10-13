@@ -20,7 +20,7 @@ export type DeliveryProblem = 'signIn' | 'address' | 'checking' | 'quoteFailed' 
  * checkout sends. Offered when the branch delivers and the customer is not
  * ordering to a table or a room; then the address is quoted by the branch
  * (in range, the fee, the minimum) and the order can go once it is in range
- * and the dishes reach the minimum.
+ * and the items reach the minimum.
  */
 export type DeliveryState = {
   /** The branch delivers and the order is not for a place in it */
@@ -31,7 +31,7 @@ export type DeliveryState = {
   /** What the branch adds for bringing it; 0 until quoted */
   fee: number
   minimum: number
-  /** How much more the dishes must come to before it can go; 0 when enough */
+  /** How much more the items must come to before it can go; 0 when enough */
   short: number
   /** The branch answered for this address */
   quoted: boolean

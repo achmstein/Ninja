@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Loader2, MapPin as PinIcon } from 'lucide-react'
 import type { Map as MapLibre } from 'maplibre-gl'
+import { googleWebKey } from '@/lib/address-search'
+import { useBrand } from '@/lib/brand'
 import type { LatLng } from '@/lib/geo'
-import { useT } from '@/lib/i18n'
+import { useLanguage, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+
+/** Google's map, in its own chunk: fetched only by a page that may draw it */
+const GoogleMapPicker = lazy(() => import('./google-map-pin'))
 
 /**
  * MapLibre's right-to-left shaping, served from this app (no third-party script
@@ -25,15 +30,64 @@ const STREET_ZOOM = 17
  * `to` moves the map (the customer's location found, a saved address picked);
  * one asked for before the map is up is flown to once it is. `onSettle` says
  * where it came to rest, and whether the customer moved it themselves.
+ * Google draws it instead when the platform has the web's Google map on
+ * and its key works on this host; the free map comes back if Google refuses.
  */
-export function MapPicker({
+export function MapPicker(props: {
+  start: LatLng
+  /** A new point to fly to; each new object moves the map once */
+  to?: LatLng | null
+  onSettle: (point: LatLng, byUser: boolean) => void
+  className?: string
+}) {
+  const brand = useBrand()
+  const language = useLanguage((s) => s.language)
+  const [googleFailed, setGoogleFailed] = useState(false)
+  const apiKey = googleFailed ? null : googleWebKey(brand?.maps, window.location.hostname)
+  if (!apiKey) return <FreeMapPicker {...props} />
+  return (
+    <div className={cn('bg-muted relative overflow-hidden rounded-[1.25rem]', props.className)}>
+      <Suspense
+        fallback={
+          <div className='text-muted-foreground absolute inset-0 grid place-items-center'>
+            <Loader2 className='size-5 animate-spin' />
+          </div>
+        }
+      >
+        <GoogleMapPicker
+          apiKey={apiKey}
+          language={language}
+          region={brand?.locale.country ?? 'EG'}
+          start={props.start}
+          to={props.to}
+          onSettle={props.onSettle}
+          onFail={() => setGoogleFailed(true)}
+        />
+      </Suspense>
+    </div>
+  )
+}
+
+/** The pin that stays put while the map moves under it; its tip is the point, and it lifts while the map moves */
+export function CentrePin({ moving }: { moving: boolean }) {
+  return (
+    <div aria-hidden className='pointer-events-none absolute inset-0 grid place-items-center'>
+      <div className={cn('-mt-9 flex flex-col items-center transition-transform duration-150', moving && '-translate-y-2')}>
+        <PinIcon className='fill-primary text-primary-foreground size-9 drop-shadow-md' strokeWidth={1.5} />
+      </div>
+      <span className={cn('absolute size-2 rounded-full bg-black/40 transition-opacity', moving ? 'opacity-30' : 'opacity-70')} />
+    </div>
+  )
+}
+
+/** OpenFreeMap's streets through MapLibre: no key, no bill */
+function FreeMapPicker({
   start,
   to,
   onSettle,
   className,
 }: {
   start: LatLng
-  /** A new point to fly to; each new object moves the map once */
   to?: LatLng | null
   onSettle: (point: LatLng, byUser: boolean) => void
   className?: string
@@ -135,13 +189,7 @@ export function MapPicker({
           </div>
         )
       )}
-      {/* The pin stays put; its tip is the point. It lifts while the map moves under it */}
-      <div aria-hidden className='pointer-events-none absolute inset-0 grid place-items-center'>
-        <div className={cn('-mt-9 flex flex-col items-center transition-transform duration-150', moving && '-translate-y-2')}>
-          <PinIcon className='fill-primary text-primary-foreground size-9 drop-shadow-md' strokeWidth={1.5} />
-        </div>
-        <span className={cn('absolute size-2 rounded-full bg-black/40 transition-opacity', moving ? 'opacity-30' : 'opacity-70')} />
-      </div>
+      <CentrePin moving={moving} />
     </div>
   )
 }

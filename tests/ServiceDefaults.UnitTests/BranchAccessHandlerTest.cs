@@ -45,6 +45,16 @@ public class BranchAccessHandlerTest
     }
 
     [TestMethod]
+    public async Task An_account_given_every_branch_may_name_any_including_one_opened_later()
+    {
+        // The claim names no id: a branch made after the token was issued is held as well
+        Assert.IsTrue(await Evaluate(User("Cashier", "*"), Request(header: "1")));
+        Assert.IsTrue(await Evaluate(User("Cashier", "*"), Request(header: "9999")));
+        Assert.IsTrue(await Evaluate(User("Cashier", "*"), Request(header: "4", routeBranchId: "5")));
+        Assert.IsFalse(await Evaluate(User("Cashier", "1"), Request(header: "9999")), "an ordinary account still holds only its own");
+    }
+
+    [TestMethod]
     public async Task A_request_naming_no_branch_passes()
     {
         Assert.IsTrue(await Evaluate(User("Admin", "1"), Request()));

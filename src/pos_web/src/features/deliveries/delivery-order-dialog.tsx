@@ -77,7 +77,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
         </p>
       )}
       <ul className='flex flex-col gap-1 text-sm'>
-        {/* The count and the name apart, so an English dish name in Arabic still reads count first */}
+        {/* The count and the name apart, so an English item name in Arabic still reads count first */}
         {(order.items ?? []).map((item, i) => (
           <li key={`${localized(item.productName)}-${i}`} className='flex gap-1.5'>
             <span className='tabular-nums'>{toNumber(item.units)}×</span>

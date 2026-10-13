@@ -5,7 +5,7 @@ import { moveLines } from '@/lib/order-move'
 
 const line = (productId: number, price: number, optionIds: number[] = []): CartLine => ({
   productId,
-  nameEn: `Dish ${productId}`,
+  nameEn: `Item ${productId}`,
   nameAr: '',
   price,
   quantity: 1,
@@ -45,7 +45,7 @@ describe('moving the order to another branch', () => {
     expect(moved.lines[0].price).toBe(40)
   })
 
-  it('drops a dish not served there, sold out there, or with an option sold out there', () => {
+  it('drops an item not served there, sold out there, or with an option sold out there', () => {
     const moved = moveLines(
       [line(1, 50), line(2, 50), line(3, 50), line(4, 60, [2]), line(5, 50, [9])],
       [

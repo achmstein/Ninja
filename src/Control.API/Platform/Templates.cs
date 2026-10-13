@@ -574,6 +574,14 @@ public static partial class Templates
                     // The native till and kitchen apps: the host a tablet connects to, and where it downloads them
                     sb.AppendLine($"      Tenant__ApiUrl: \"{hosts.ApiUrl}\"");
                     sb.AppendLine($"      Tenant__AppsUrl: \"{platform.AppsUrl}\"");
+                    // Google Maps, when the business has it on: address search with the platform's server key (from the .env, never in an app),
+                    // and the web map's browser key with the domains it works on, only while the web switch is on
+                    if (platform.Maps.SearchFor(tenant)) sb.AppendLine("      Maps__ServerKey: \"${MAPS_SERVER_KEY}\"");
+                    if (platform.Maps.WebFor(tenant))
+                    {
+                        sb.AppendLine($"      Maps__BrowserKey: \"{Yaml(platform.Maps.BrowserKey!)}\"");
+                        sb.AppendLine($"      Maps__WebDomains: \"{string.Join(',', platform.Maps.WebDomains(tenant, platform))}\"");
+                    }
                     sb.AppendLine("      Storage__Path: \"/app/uploads\"");
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.UploadsVolume(slug)}:/app/uploads\"");
@@ -650,6 +658,8 @@ public static partial class Templates
             $"TALABAT_RELAY_KEY={(platform.Talabat.Configured && !string.IsNullOrWhiteSpace(platform.EncryptionKey) ? TalabatNaming.RelayKey(tenant.Slug, platform.EncryptionKey) : "")}",
             // The business's own key to the platform's AI gateway, only when its plan includes the assistant; no provider's key ever reaches a stack
             $"AI_GATEWAY_KEY={(platform.AssistantFor(tenant) ? AiGatewayKeys.For(tenant.Slug, platform.EncryptionKey) : "")}",
+            // The platform's Places key, which the stack's address search calls Google with, only while the business has Google Maps on; restricted in Google Cloud to the box's address
+            $"MAPS_SERVER_KEY={(platform.Maps.SearchFor(tenant) ? platform.Maps.ServerKey : "")}",
             "",
         ]);
     }

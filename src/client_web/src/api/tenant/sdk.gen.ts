@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantLoginCssData, GetTenantLoginCssResponses, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
+import type { AutocompletePlacesData, AutocompletePlacesResponses, CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetPlaceData, GetPlaceErrors, GetPlaceResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantLoginCssData, GetTenantLoginCssResponses, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -165,3 +165,21 @@ export const getTenantLoginCss = <ThrowOnError extends boolean = false>(options?
  * The web app manifest for one surface, in the tenant's name
  */
 export const getTenantManifest = <ThrowOnError extends boolean = false>(options?: Options<GetTenantManifestData, ThrowOnError>): RequestResult<unknown, GetTenantManifestErrors, ThrowOnError> => (options?.client ?? client).get<unknown, GetTenantManifestErrors, ThrowOnError>({ url: '/api/tenant/manifest', ...options });
+
+/**
+ * Google's suggestions for an address being typed, in the business's country and near the branch; 404 when the business does not have Google Maps
+ */
+export const autocompletePlaces = <ThrowOnError extends boolean = false>(options?: Options<AutocompletePlacesData, ThrowOnError>): RequestResult<AutocompletePlacesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<AutocompletePlacesResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/places/autocomplete',
+    ...options
+});
+
+/**
+ * Where a picked suggestion is: its point and address; closes the search's session
+ */
+export const getPlace = <ThrowOnError extends boolean = false>(options: Options<GetPlaceData, ThrowOnError>): RequestResult<GetPlaceResponses, GetPlaceErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceResponses, GetPlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/places/{placeId}',
+    ...options
+});

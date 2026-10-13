@@ -4,7 +4,7 @@ import { useFeatures } from '@/lib/brand'
 import { toNumber } from '@/lib/money'
 import { isModuleOff } from '@/lib/problem'
 import { useSale } from './cart'
-import { deliveryReadiness } from './sale-delivery'
+import { deliveryFeeOf, deliveryReadiness } from './sale-delivery'
 
 /**
  * A walk-in sale that goes out with a rider instead: whether the till may
@@ -35,12 +35,18 @@ export function useSaleDelivery(addingToTicket: boolean) {
     /** A delivery is on the sale (ready or not): the sale is charged as one or not at all */
     delivering: onSale != null,
     readiness,
-    /** What the delivery adds to the total, once its terms are known */
-    fee: readiness === 'ready' ? toNumber(terms.data?.fee) : 0,
+    /** What the delivery adds to the total, once its terms are known: the fee of the branch that delivers it */
+    fee: readiness === 'ready' ? deliveryFeeOf(onSale, toNumber(terms.data?.fee)) : 0,
+    /** The branch it is sent to, nearer the caller; null when it is made here */
+    sendTo: onSale?.sendTo ?? null,
     formOpen,
     setFormOpen,
     retry: () => void terms.refetch(),
     remove: () => setDelivery(null),
+    /** Made and delivered here after all, not sent to the nearer branch */
+    keepHere: () => {
+      if (delivery) setDelivery({ ...delivery, sendTo: null })
+    },
     save: (saved: NonNullable<typeof delivery>, name: string) => {
       setDelivery(saved)
       // A caller off the street is known by the name they gave

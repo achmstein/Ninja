@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pos_app/features/call_centre/call_centre_mode.dart';
 import 'package:pos_app/features/deliveries/models/delivery_order.dart';
 import 'package:pos_app/features/deliveries/providers/delivery_form_controller.dart';
 import 'package:pos_app/features/deliveries/services/delivery_service.dart';
@@ -10,6 +11,7 @@ class _FakeRepository implements DeliveryRepository {
   final Map<String, TillDeliveryQuote> answers = {};
   final Set<String> failing = {};
   final List<String> asked = [];
+  final List<bool> everyBranchAsked = [];
 
   @override
   Future<TillDeliveryQuote> tillQuote({String? location}) async {
@@ -20,18 +22,24 @@ class _FakeRepository implements DeliveryRepository {
   }
 
   @override
-  Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone}) async => const [
-        KnownAddress(address: 'Tahrir St', building: '12'),
-        KnownAddress(address: 'tahrir st', building: '12', label: 'Home'),
-      ];
+  Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone, bool everyBranch = false}) async {
+    everyBranchAsked.add(everyBranch);
+    return const [
+      KnownAddress(address: 'Tahrir St', building: '12'),
+      KnownAddress(address: 'tahrir st', building: '12', label: 'Home'),
+    ];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
 }
 
-(ProviderContainer, _FakeRepository) _container() {
+(ProviderContainer, _FakeRepository) _container({bool callCentre = false}) {
   final fake = _FakeRepository();
-  final container = ProviderContainer(overrides: [deliveryRepositoryProvider.overrideWithValue(fake)]);
+  final container = ProviderContainer(overrides: [
+    deliveryRepositoryProvider.overrideWithValue(fake),
+    callCentreModeProvider.overrideWithValue(callCentre),
+  ]);
   addTearDown(container.dispose);
   // Keep the auto-disposed controller alive for the test
   container.listen(deliveryFormControllerProvider, (_, _) {});
@@ -87,5 +95,15 @@ void main() {
     final (container, _) = _container();
     await container.read(deliveryFormControllerProvider.notifier).lookUpKnown(customerUserId: null, normalizedPhone: '01001234567');
     expect(container.read(deliveryFormControllerProvider).known, hasLength(1));
+  });
+
+  test("the call centre asks for every branch's earlier deliveries, a branch till for its own", () async {
+    final (branchTill, atBranch) = _container();
+    await branchTill.read(deliveryFormControllerProvider.notifier).lookUpKnown(customerUserId: null, normalizedPhone: '01001234567');
+    final (hotline, atHotline) = _container(callCentre: true);
+    await hotline.read(deliveryFormControllerProvider.notifier).lookUpKnown(customerUserId: null, normalizedPhone: '01001234567');
+
+    expect(atBranch.everyBranchAsked, [false]);
+    expect(atHotline.everyBranchAsked, [true]);
   });
 }

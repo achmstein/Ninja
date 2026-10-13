@@ -50,9 +50,9 @@ public class BranchSettingsService(
         await events.SaveAndPublishAsync(Changed(branch));
 
         logger.LogInformation(
-            "Branch {BranchId} settings: ordering {Ordering}, reservations {Reservations}, delivery {Delivery} within {RadiusKm} km, fee {Fee}, minimum {Minimum}",
+            "Branch {BranchId} settings: ordering {Ordering}, reservations {Reservations}, delivery {Delivery} within {RadiusKm} km or an area of {AreaPoints} points, fee {Fee}, minimum {Minimum}",
             branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled,
-            branch.IsDeliveryEnabled, branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder);
+            branch.IsDeliveryEnabled, branch.DeliveryRadiusKm, branch.DeliveryArea?.Length ?? 0, branch.DeliveryFee, branch.DeliveryMinimumOrder);
     }
 
     /// <summary>
@@ -67,5 +67,7 @@ public class BranchSettingsService(
         branch.IsDeliveryEnabled, branch.Latitude, branch.Longitude,
         branch.DeliveryRadiusKm, branch.DeliveryFee, branch.DeliveryMinimumOrder,
         Version: DateTime.UtcNow.Ticks,
-        RequireSignInForDelivery: branch.RequireSignInForDelivery);
+        RequireSignInForDelivery: branch.RequireSignInForDelivery,
+        IsActive: branch.IsActive,
+        DeliveryArea: branch.DeliveryArea);
 }

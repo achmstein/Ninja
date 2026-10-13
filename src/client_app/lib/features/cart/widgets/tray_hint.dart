@@ -16,11 +16,11 @@ const _passMs = 1400, _gapMs = 500, _delayMs = 200;
 /// How long the cue stays up: both passes, the pause and the start (`gestureMs('drag')`)
 const trayHintFor = Duration(milliseconds: _delayMs + _passMs * 2 + _gapMs + 300);
 
-/// The tray's first-dish cue (client_web's `useHint('tray')`): the first
-/// dish to land lets the order peek out of the dock once, and a fingertip
+/// The tray's first-item cue (client_web's `useHint('tray')`): the first
+/// item to land lets the order peek out of the dock once, and a fingertip
 /// with a word shows how to drag it up. It is one of the app's first-visit
 /// cues ([Hint]): kept in the same book on this phone, and waiting while
-/// another cue (the deck's swipe, pinch or hold) is on screen, the next dish
+/// another cue (the deck's swipe, pinch or hold) is on screen, the next item
 /// asking again. Showing it records it at once, so leaving mid-cue does not
 /// replay it, and opening the order (shown or not) is the end of it.
 class TrayHint extends Hint {
@@ -31,7 +31,7 @@ class TrayHint extends Hint {
     trayFlights.bump.addListener(_landed);
   }
 
-  /// A dish landed in the tray: the first one brings the cue
+  /// An item landed in the tray: the first one brings the cue
   void _landed() => show();
 }
 

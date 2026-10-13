@@ -278,7 +278,7 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
 
     /// <summary>
     /// Pictures made from the owner's own photo by the image role's model, as <paramref name="prompt"/> asks
-    /// (a promotion designed around a dish's real photo), <paramref name="count"/> of them, counted under
+    /// (a promotion designed around an item's real photo), <paramref name="count"/> of them, counted under
     /// <paramref name="slug"/>. Gemini's image models take a photo through their own generateContent, which
     /// its OpenAI-style layer does not offer for edits; any other provider gets OpenAI's images/edits.
     /// <paramref name="portrait"/> asks for a tall picture (a popup's), else a square.

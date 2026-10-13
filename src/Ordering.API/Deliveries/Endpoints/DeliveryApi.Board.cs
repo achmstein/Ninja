@@ -31,16 +31,20 @@ public static partial class DeliveryApi
         IDeliveryBoardQueries board,
         ILoggerFactory loggers,
         string? customerUserId = null,
-        string? phone = null)
+        string? phone = null,
+        bool everyBranch = false)
     {
         var branchId = httpContext.GetRequiredBranchId();
+        // The call centre answers for every branch, so it asks where the caller was
+        // delivered to by any of them; only an account that holds every branch may
+        var acrossBranches = everyBranch && (httpContext.User.HoldsAllBranches() || ClaimsPrincipalExtensions.IsInRole(httpContext.User, "Owner"));
 
         // Who looked up whose addresses, by ids: never the phone or the address
         loggers.CreateLogger("Ninja.Ordering.API.KnownAddresses").LogInformation(
-            "Known addresses read at branch {BranchId} by {Actor} for {Lookup} {CustomerUserId}",
-            branchId, identity.GetUserIdentity(), customerUserId is null ? "a phone number" : "the account", customerUserId);
+            "Known addresses read at branch {BranchId} (every branch: {EveryBranch}) by {Actor} for {Lookup} {CustomerUserId}",
+            branchId, acrossBranches, identity.GetUserIdentity(), customerUserId is null ? "a phone number" : "the account", customerUserId);
 
-        return TypedResults.Ok(await board.GetKnownAddressesAsync(branchId, customerUserId, phone));
+        return TypedResults.Ok(await board.GetKnownAddressesAsync(acrossBranches ? null : branchId, customerUserId, phone));
     }
 
     public static async Task<Ok<List<RiderView>>> GetRidersAsync(

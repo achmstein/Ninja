@@ -25,7 +25,7 @@ public sealed class TalabatOptions
 
 /// <summary>
 /// Notices, as the catalog saves, what Talabat should hear: a change to the
-/// menu (a dish, a price, a question, a category) marks it for a push; an
+/// menu (an item, a price, a question, a category) marks it for a push; an
 /// item or option sold out or back at a branch on Talabat queues that at once.
 /// Runs inside the same save, so nothing is noticed that was not saved.
 /// </summary>
@@ -71,7 +71,7 @@ public static class TalabatChanges
         }
     }
 
-    /// <summary>A stock-out alone is availability, sent on its own; anything else about a dish is the menu.</summary>
+    /// <summary>A stock-out alone is availability, sent on its own; anything else about an item is the menu.</summary>
     private static bool IsMenuChange(EntityEntry entry)
     {
         if (entry.State != EntityState.Modified) return true;

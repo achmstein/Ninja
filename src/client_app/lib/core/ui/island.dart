@@ -6,7 +6,7 @@ import '../theme/theme_provider.dart';
 import 'pressable.dart';
 
 /// What the island says: a line, an icon before it, and a way to act on it
-/// (an Undo). Opened out, a few lines under it say more (an order's dishes).
+/// (an Undo). Opened out, a few lines under it say more (an order's items).
 class IslandFace {
   final Widget title;
   final Widget? icon;

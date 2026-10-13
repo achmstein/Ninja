@@ -112,7 +112,7 @@ class BranchNotifier extends Notifier<BranchState> {
     if (nearest != null && nearest.meters != null) await selectBranch(nearest.item.id);
   }
 
-  /// Moves the app to another branch, the order with it: the dishes stay, at
+  /// Moves the app to another branch, the order with it: the items stay, at
   /// the new branch's prices, and one it does not serve goes (order_move.dart);
   /// what changed is said ([orderMoveProvider]). Branch-scoped providers use
   /// .family(branchId) or watch the selected branch, so they fetch afresh.

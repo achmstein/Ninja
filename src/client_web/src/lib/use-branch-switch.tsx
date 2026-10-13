@@ -15,7 +15,7 @@ import { usePlaceStore } from '@/stores/place-store'
 /**
  * Moving the app to another branch, the order with it: the branch is set
  * and everything on screen, all of it branch-scoped, is fetched again; the
- * dishes stay, at the new branch's prices, and one it does not serve goes
+ * items stay, at the new branch's prices, and one it does not serve goes
  * (lib/order-move.ts), `onMoved` told what changed. Nothing asks: the
  * customer loses nothing they could still have.
  */
@@ -46,8 +46,8 @@ export function useSayOrderMoved() {
     (branchId: number, move: OrderMove) => {
       const name = localized(branches.find((b) => Number(b.id) === branchId)?.name)
       if (move.dropped.length > 0) {
-        const dishes = move.dropped.map((l) => localized({ en: l.nameEn, ar: l.nameAr })).join(' · ')
-        toast.warning(t('orderMovedDropped', { name, dishes }))
+        const items = move.dropped.map((l) => localized({ en: l.nameEn, ar: l.nameAr })).join(' · ')
+        toast.warning(t('orderMovedDropped', { name, items }))
       } else if (move.repriced.length > 0) {
         toast.info(t('orderMovedRepriced', { name }))
       }

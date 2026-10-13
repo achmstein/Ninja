@@ -9,9 +9,9 @@ using Ninja.Assistant.API.Downstream;
 namespace Ninja.Assistant.API.Tools;
 
 /// <summary>
-/// The menu as the owner keeps it from chat: a dish's names, price and
+/// The menu as the owner keeps it from chat: an item's names, price and
 /// category, its offer, a branch's own price, the categories, the choices on
-/// a dish, promo codes and a dish's stock recipe. Setup only: nothing here
+/// an item, promo codes and an item's stock recipe. Setup only: nothing here
 /// deletes, and nothing moves money. Each tool previews first and writes on
 /// the confirm; a preview with the services' AI in it (a name filled in the
 /// other language, suggested choices, a proposed recipe) travels to the
@@ -35,13 +35,13 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
     internal const string PromoActiveTool = "set_promo_active";
     internal const string RecipeTool = "set_recipe";
 
-    // --- A dish ---------------------------------------------------------------
+    // --- An item ---------------------------------------------------------------
 
-    [McpServerTool(Name = UpdateItemTool, Title = "Change a dish on the menu", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Changes a dish already on the menu: its English or Arabic name, its description, its price (the chain's own; set_branch_price changes one branch's), its category, the popular mark or the preparation time. Anything not given stays as it is. " +
+    [McpServerTool(Name = UpdateItemTool, Title = "Change an item on the menu", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Changes an item already on the menu: its English or Arabic name, its description, its price (the chain's own; set_branch_price changes one branch's), its category, the popular mark or the preparation time. Anything not given stays as it is. " +
         "Use for 'raise the latte to 55', 'move the brownie to Desserts', 'the Arabic name of the cold brew is كولد برو', 'mark the burger popular'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> UpdateMenuItem(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("Its new English name")] string? name = null,
         [Description("Its new Arabic name")] string? nameAr = null,
         [Description("Its new English description")] string? description = null,
@@ -62,11 +62,11 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         var snapshot = await tenant.LoadAsync(ct);
         if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
         var snap = snapshot.Value!;
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var chain = Chain(dish);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var chain = Chain(menuItem);
 
-        var categoryId = dish.CatalogTypeId;
+        var categoryId = menuItem.CatalogTypeId;
         LocalizedText? newCategory = null;
         if (!string.IsNullOrWhiteSpace(category))
         {
@@ -78,13 +78,13 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             newCategory = picked.Name;
         }
 
-        var oldName = dish.Name ?? new LocalizedText(null, null);
-        var oldDescription = dish.Description ?? new LocalizedText(null, null);
+        var oldName = menuItem.Name ?? new LocalizedText(null, null);
+        var oldDescription = menuItem.Description ?? new LocalizedText(null, null);
         var newName = new LocalizedText(MenuWriteTools.Clean(name) ?? oldName.En, MenuWriteTools.Clean(nameAr) ?? oldName.Ar);
         var newDescription = new LocalizedText(description is null ? oldDescription.En : MenuWriteTools.Clean(description), descriptionAr is null ? oldDescription.Ar : MenuWriteTools.Clean(descriptionAr));
         var newPrice = price ?? chain.Price;
-        var newPopular = popular ?? dish.IsPopular;
-        var newPrep = prepMinutes is null ? dish.PreparationTimeMinutes : prepMinutes == 0 ? null : prepMinutes;
+        var newPopular = popular ?? menuItem.IsPopular;
+        var newPrep = prepMinutes is null ? menuItem.PreparationTimeMinutes : prepMinutes == 0 ? null : prepMinutes;
 
         // Catalog checks an offer against the price only when the offer is set, so the price is checked here
         if (chain.IsOnOffer && chain.OfferPrice is { } offer && newPrice <= offer)
@@ -96,9 +96,9 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         if (newDescription.En != oldDescription.En) changes.Add($"English description → \"{newDescription.En}\"");
         if (newDescription.Ar != oldDescription.Ar) changes.Add($"Arabic description → \"{newDescription.Ar}\"");
         if (newPrice != chain.Price) changes.Add($"price {snap.Currency} {ToolResults.Money(chain.Price)} → {ToolResults.Money(newPrice)}");
-        if (categoryId != dish.CatalogTypeId) changes.Add($"category \"{dish.CatalogTypeName?.Both}\" → \"{newCategory?.Both}\"");
-        if (newPopular != dish.IsPopular) changes.Add(newPopular ? "marked popular" : "no longer marked popular");
-        if (newPrep != dish.PreparationTimeMinutes) changes.Add(newPrep is null ? "no preparation time" : $"preparation time {newPrep} minutes");
+        if (categoryId != menuItem.CatalogTypeId) changes.Add($"category \"{menuItem.CatalogTypeName?.Both}\" → \"{newCategory?.Both}\"");
+        if (newPopular != menuItem.IsPopular) changes.Add(newPopular ? "marked popular" : "no longer marked popular");
+        if (newPrep != menuItem.PreparationTimeMinutes) changes.Add(newPrep is null ? "no preparation time" : $"preparation time {newPrep} minutes");
         if (string.IsNullOrEmpty(newName.En) && string.IsNullOrEmpty(newName.Ar)) return ToolResults.Fail("A dish needs a name.");
         if (changes.Count == 0) return ToolResults.Fail($"\"{oldName.Both}\" is already so; nothing would change.");
 
@@ -109,17 +109,17 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
 
         var body = new UpdateCatalogItemRequest(newName, newDescription, newPrice, categoryId, chain.IsAvailable, chain.IsOnOffer, chain.OfferPrice,
             chain.OfferWeekdays, chain.OfferFrom, chain.OfferTo, newPopular, newPrep);
-        var result = await api.SendAsync<Unit>(HttpMethod.Put, Catalog, $"/api/catalog/items/{dish.Id}", null, body, null, ct);
-        flow.Audit(UpdateItemTool, new { itemId = dish.Id, item = oldName.Display, changes, requestId }, result.IsOk ? "updated" : result.Error!);
+        var result = await api.SendAsync<Unit>(HttpMethod.Put, Catalog, $"/api/catalog/items/{menuItem.Id}", null, body, null, ct);
+        flow.Audit(UpdateItemTool, new { itemId = menuItem.Id, item = oldName.Display, changes, requestId }, result.IsOk ? "updated" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
-        return ToolResults.Ok(new { done = true, itemId = dish.Id, item = newName.Display, itemAr = newName.Arabic, changes });
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, item = newName.Display, itemAr = newName.Arabic, changes });
     }
 
-    [McpServerTool(Name = OfferTool, Title = "Put a dish on offer or end its offer", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Puts a dish on offer at a lower price, optionally only on some days and hours (happy hour), at every branch or at one; or ends the offer. The days and hours are the dish's own, the same at every branch. " +
+    [McpServerTool(Name = OfferTool, Title = "Put an item on offer or end its offer", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Puts an item on offer at a lower price, optionally only on some days and hours (happy hour), at every branch or at one; or ends the offer. The days and hours are the item's own, the same at every branch. " +
         "Use for 'latte at 45 this week', 'happy hour on iced drinks 4 to 7', 'end the brownie offer at Maadi'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> SetItemOffer(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("true to put it on offer, false to end the offer")] bool on,
         [Description("The offer price, below its usual price; needed when on is true")] decimal? offerPrice = null,
         [Description("The days it runs, e.g. 'fri,sat' or 'mon tue wed'; 'every day' for all; leave out to keep the days it has")] string? days = null,
@@ -139,9 +139,9 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             if (!one.IsOk) return ToolResults.Fail(one.Error!);
             at = one.Value!;
         }
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var chain = Chain(dish);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var chain = Chain(menuItem);
 
         if (on)
         {
@@ -166,24 +166,24 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
 
         var where = at is null ? "at every branch" : $"at {at.BothNames} only";
         var preview = on
-            ? $"Put \"{dish.Name?.Both}\" on offer at {snap.Currency} {ToolResults.Money(offerPrice!.Value)} (usually {ToolResults.Money(chain.Price)}) {where}, {Window(weekdays, from, to)}."
-            : $"End the offer on \"{dish.Name?.Both}\" {where}" + (chain.IsOnOffer && chain.OfferPrice is { } now ? $" (now {snap.Currency} {ToolResults.Money(now)})." : ".");
+            ? $"Put \"{menuItem.Name?.Both}\" on offer at {snap.Currency} {ToolResults.Money(offerPrice!.Value)} (usually {ToolResults.Money(chain.Price)}) {where}, {Window(weekdays, from, to)}."
+            : $"End the offer on \"{menuItem.Name?.Both}\" {where}" + (chain.IsOnOffer && chain.OfferPrice is { } now ? $" (now {snap.Currency} {ToolResults.Money(now)})." : ".");
         requestId ??= WriteFlow.NewRequestId();
         if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
 
-        var result = await api.SendAsync<CatalogItemDetail>(HttpMethod.Patch, Catalog, $"/api/catalog/items/{dish.Id}/offer", at?.Id,
+        var result = await api.SendAsync<CatalogItemDetail>(HttpMethod.Patch, Catalog, $"/api/catalog/items/{menuItem.Id}/offer", at?.Id,
             new SetItemOfferRequest(on, on ? offerPrice : null, weekdays, from, to), null, ct);
-        flow.Audit(OfferTool, new { itemId = dish.Id, item = dish.Name?.Display, on, offerPrice, weekdays, from, to, branch = at?.Id, requestId }, result.IsOk ? (on ? "on offer" : "offer ended") : result.Error!);
+        flow.Audit(OfferTool, new { itemId = menuItem.Id, item = menuItem.Name?.Display, on, offerPrice, weekdays, from, to, branch = at?.Id, requestId }, result.IsOk ? (on ? "on offer" : "offer ended") : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
-        return ToolResults.Ok(new { done = true, itemId = dish.Id, item = dish.Name?.Display, itemAr = dish.Name?.Arabic, onOffer = on, preview });
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, item = menuItem.Name?.Display, itemAr = menuItem.Name?.Arabic, onOffer = on, preview });
     }
 
-    [McpServerTool(Name = BranchPriceTool, Title = "Set a dish's price or availability at one branch", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Gives a dish its own price at one branch, puts it back to the chain's price there, or says whether that branch sells it at all. Other branches are not touched. " +
+    [McpServerTool(Name = BranchPriceTool, Title = "Set an item's price or availability at one branch", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Gives an item its own price at one branch, puts it back to the chain's price there, or says whether that branch sells it at all. Other branches are not touched. " +
         "Use for 'the latte is 60 at the mall branch', 'Maadi does not sell the burger', 'Nasr City back to the normal price for the brownie'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> SetBranchPrice(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("Branch id or name; required when the business has more than one active branch")] string? branch = null,
         [Description("Its price at this branch")] decimal? price = null,
         [Description("true to go back to the chain's price at this branch")] bool usualPrice = false,
@@ -201,13 +201,13 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         var one = BranchSelector.SelectOne(snap.Branches, branch);
         if (!one.IsOk) return ToolResults.Fail(one.Error!);
         var at = one.Value!;
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var chain = Chain(dish);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var chain = Chain(menuItem);
 
         var overrides = await api.GetAsync<List<BranchItemOverrideDto>>(Catalog, $"/api/catalog/branches/{at.Id}/overrides", at.Id, ct);
         if (!overrides.IsOk) return ToolResults.Fail(overrides.Error!);
-        var existing = overrides.Value!.FirstOrDefault(o => o.CatalogItemId == dish.Id);
+        var existing = overrides.Value!.FirstOrDefault(o => o.CatalogItemId == menuItem.Id);
 
         var newPrice = usualPrice ? null : price ?? existing?.PriceOverride;
         var newAvailable = available ?? existing?.IsAvailable ?? true;
@@ -218,19 +218,19 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             changes.Add($"price {snap.Currency} {ToolResults.Money(oldShown)} → {ToolResults.Money(newShown)}{(newPrice is null ? " (the chain's price)" : "")}");
         if (newAvailable != (existing?.IsAvailable ?? true))
             changes.Add(newAvailable ? "sold here again" : "not sold here");
-        if (changes.Count == 0) return ToolResults.Fail($"\"{dish.Name?.Both}\" is already so at {at.BothNames}; nothing would change.");
+        if (changes.Count == 0) return ToolResults.Fail($"\"{menuItem.Name?.Both}\" is already so at {at.BothNames}; nothing would change.");
 
-        var preview = $"At {at.BothNames}, \"{dish.Name?.Both}\": {string.Join("; ", changes)}. Other branches keep theirs.";
+        var preview = $"At {at.BothNames}, \"{menuItem.Name?.Both}\": {string.Join("; ", changes)}. Other branches keep theirs.";
         requestId ??= WriteFlow.NewRequestId();
         if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
 
         // The override is written whole: the branch's offer, set by set_item_offer, is carried over
         var body = new BranchItemOverrideRequest(newAvailable, newPrice, existing?.OfferPriceOverride, existing?.IsOnOfferOverride);
-        var result = await api.SendAsync<BranchItemOverrideDto>(HttpMethod.Put, Catalog, $"/api/catalog/branches/{at.Id}/items/{dish.Id}/override", at.Id, body, null, ct);
-        flow.Audit(BranchPriceTool, new { itemId = dish.Id, item = dish.Name?.Display, branch = at.Id, price = newPrice, available = newAvailable, requestId }, result.IsOk ? "override set" : result.Error!);
+        var result = await api.SendAsync<BranchItemOverrideDto>(HttpMethod.Put, Catalog, $"/api/catalog/branches/{at.Id}/items/{menuItem.Id}/override", at.Id, body, null, ct);
+        flow.Audit(BranchPriceTool, new { itemId = menuItem.Id, item = menuItem.Name?.Display, branch = at.Id, price = newPrice, available = newAvailable, requestId }, result.IsOk ? "override set" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
-        return ToolResults.Ok(new { done = true, itemId = dish.Id, item = dish.Name?.Display, itemAr = dish.Name?.Arabic, branch = at.DisplayName, branchAr = at.NameAr, price = newShown, available = newAvailable });
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, item = menuItem.Name?.Display, itemAr = menuItem.Name?.Arabic, branch = at.DisplayName, branchAr = at.NameAr, price = newShown, available = newAvailable });
     }
 
     // --- Categories -----------------------------------------------------------
@@ -296,7 +296,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
     }
 
     [McpServerTool(Name = RenameCategoryTool, Title = "Rename a menu category", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Renames a menu category in English, in Arabic or both; the name not given stays. Its dishes and place on the menu stay as they are. " +
+    [Description("Renames a menu category in English, in Arabic or both; the name not given stays. Its items and place on the menu stay as they are. " +
         "Use for 'rename Hot drinks to Coffee', 'the Arabic of Desserts is حلويات'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> RenameCategory(
         [Description("The category: its name in English or Arabic, or its id")] string category,
@@ -329,13 +329,13 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         return ToolResults.Ok(new { done = true, categoryId = picked.Id, category = renamed.Display, categoryAr = renamed.Arabic });
     }
 
-    // --- Choices on a dish ----------------------------------------------------
+    // --- Choices on an item ----------------------------------------------------
 
-    [McpServerTool(Name = EditCustomizationTool, Title = "Change an option on a dish", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Changes one choice group already on a dish (a size, a milk, extras): adds an option to it, renames an option, or changes what an option adds to the price. Every other option stays as it is, and so do the recipes that name them. " +
+    [McpServerTool(Name = EditCustomizationTool, Title = "Change an option on an item", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Changes one choice group already on an item (a size, a milk, extras): adds an option to it, renames an option, or changes what an option adds to the price. Every other option stays as it is, and so do the recipes that name them. " +
         "Use for 'add almond milk +15 to the latte's milk', 'large is now +20', 'rename Regular to Medium'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> EditCustomization(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("The choice group on it, e.g. Size or Milk (name or id)")] string group,
         [Description("The option to change (name or id); with add=true, the new option's name in English or Arabic")] string option,
         [Description("true to add the option to the group")] bool add = false,
@@ -349,11 +349,11 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         var snapshot = await tenant.LoadAsync(ct);
         if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
         var snap = snapshot.Value!;
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var groups = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{dish.Id}/customizations", null, ct);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var groups = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{menuItem.Id}/customizations", null, ct);
         if (!groups.IsOk) return ToolResults.Fail(groups.Error!);
-        if (groups.Value!.Count == 0) return ToolResults.Fail($"\"{dish.Name?.Both}\" has no choices yet; add_customizations adds them.");
+        if (groups.Value!.Count == 0) return ToolResults.Fail($"\"{menuItem.Name?.Both}\" has no choices yet; add_customizations adds them.");
         var (g, gError) = NameResolver.Pick(groups.Value!, group, x => x.Id, x => x.Name, "choice group");
         if (g is null) return ToolResults.Fail($"{gError} Its choices are: {string.Join(", ", groups.Value!.Select(x => x.Name?.Both))}.");
 
@@ -368,12 +368,12 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             if (options.FirstOrDefault(o => MenuWriteTools.Same(o.Name, fresh)) is { } there)
             {
                 // A confirm repeated after it landed finds the option already there
-                if (confirm) return ToolResults.Ok(new { done = true, itemId = dish.Id, group = g.Name?.Display, option = there.Name?.Display, note = "It was already there; nothing was added twice." });
+                if (confirm) return ToolResults.Ok(new { done = true, itemId = menuItem.Id, group = g.Name?.Display, option = there.Name?.Display, note = "It was already there; nothing was added twice." });
                 return ToolResults.Fail($"\"{g.Name?.Both}\" already has \"{there.Name?.Both}\".");
             }
             var added = price ?? 0;
             sent.Add(new CustomizationOptionRequest(0, fresh, added, false, options.Count == 0 ? 0 : options.Max(o => o.DisplayOrder) + 1));
-            preview = $"Add \"{fresh.Both}\"{Adds(added, snap.Currency)} to \"{g.Name?.Both}\" on \"{dish.Name?.Both}\".";
+            preview = $"Add \"{fresh.Both}\"{Adds(added, snap.Currency)} to \"{g.Name?.Both}\" on \"{menuItem.Name?.Both}\".";
         }
         else
         {
@@ -388,7 +388,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             if (changes.Count == 0) return ToolResults.Fail("Say what to change: newName, newNameAr or price; or add=true to add an option.");
             var i = sent.FindIndex(s => s.Id == o.Id);
             sent[i] = sent[i] with { Name = renamed, PriceAdjustment = newPrice };
-            preview = $"On \"{dish.Name?.Both}\", in \"{g.Name?.Both}\", \"{old.Both}\": {string.Join("; ", changes)}.";
+            preview = $"On \"{menuItem.Name?.Both}\", in \"{g.Name?.Both}\", \"{old.Both}\": {string.Join("; ", changes)}.";
         }
 
         requestId ??= WriteFlow.NewRequestId();
@@ -397,17 +397,17 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
 
         // Catalog deletes every option an update leaves out, so all of them go, each with its id
         var body = new CustomizationRequest(g.Name ?? new LocalizedText(null, null), g.IsRequired, g.AllowMultiple, g.DisplayOrder, sent);
-        var result = await api.SendAsync<CustomizationDto>(HttpMethod.Put, Catalog, $"/api/catalog/items/{dish.Id}/customizations/{g.Id}", null, body, null, ct);
-        flow.Audit(EditCustomizationTool, new { itemId = dish.Id, groupId = g.Id, option, add, newName, newNameAr, price, requestId }, result.IsOk ? "updated" : result.Error!);
+        var result = await api.SendAsync<CustomizationDto>(HttpMethod.Put, Catalog, $"/api/catalog/items/{menuItem.Id}/customizations/{g.Id}", null, body, null, ct);
+        flow.Audit(EditCustomizationTool, new { itemId = menuItem.Id, groupId = g.Id, option, add, newName, newNameAr, price, requestId }, result.IsOk ? "updated" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
-        return ToolResults.Ok(new { done = true, itemId = dish.Id, group = g.Name?.Display, groupAr = g.Name?.Arabic, preview });
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, group = g.Name?.Display, groupAr = g.Name?.Arabic, preview });
     }
 
-    [McpServerTool(Name = AddCustomizationsTool, Title = "Add choices to a dish", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Adds choice groups (sizes, milks, extras, sugar) to a dish already on the menu: as the owner gave them, or suggested for the dish by the menu's assistant when none are given. Groups it already has are left alone. " +
+    [McpServerTool(Name = AddCustomizationsTool, Title = "Add choices to an item", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Adds choice groups (sizes, milks, extras, sugar) to an item already on the menu: as the owner gave them, or suggested for the item by the menu's assistant when none are given. Groups it already has are left alone. " +
         "Use for 'add sizes to the iced latte: regular, large +15', 'suggest options for the burger'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> AddCustomizations(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("The groups as the owner described them; leave out to have them suggested")] List<MenuWriteTools.GroupInput>? customizations = null,
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
@@ -426,11 +426,11 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         var snapshot = await tenant.LoadAsync(ct);
         if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
         var snap = snapshot.Value!;
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var existing = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{dish.Id}/customizations", null, ct);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var existing = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{menuItem.Id}/customizations", null, ct);
         if (!existing.IsOk) return ToolResults.Fail(existing.Error!);
-        var dishName = dish.Name ?? new LocalizedText(null, null);
+        var itemName = menuItem.Name ?? new LocalizedText(null, null);
 
         var groups = new List<DraftGroup>();
         var warnings = new List<string>();
@@ -447,7 +447,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         else
         {
             var suggested = await api.SendAsync<SuggestCustomizationsResponse>(HttpMethod.Post, Catalog, "/api/catalog/assist/customizations", AnyBranch(snap),
-                new SuggestCustomizationsRequest(dishName, dish.Description, dish.CatalogTypeId, Chain(dish).Price, existing.Value!.Select(g => g.Name).OfType<LocalizedText>().ToList()), null, ct);
+                new SuggestCustomizationsRequest(itemName, menuItem.Description, menuItem.CatalogTypeId, Chain(menuItem).Price, existing.Value!.Select(g => g.Name).OfType<LocalizedText>().ToList()), null, ct);
             if (!suggested.IsOk) return ToolResults.Fail($"No choices were suggested: {suggested.Error}");
             foreach (var g in suggested.Value!.Groups ?? [])
                 groups.Add(new DraftGroup(g.Name, g.IsRequired, g.AllowMultiple, (g.Options ?? []).Select((o, i) => new DraftOption(i, o.Name, o.PriceAdjustment, o.IsDefault)).ToList()));
@@ -457,16 +457,16 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         foreach (var g in groups.ToList())
         {
             if (existing.Value!.FirstOrDefault(e => MenuWriteTools.Same(e.Name, g.Name)) is not { } there) continue;
-            warnings.Add($"\"{dishName.Both}\" already has \"{there.Name?.Both}\"; it is left as it is (edit_customization changes it).");
+            warnings.Add($"\"{itemName.Both}\" already has \"{there.Name?.Both}\"; it is left as it is (edit_customization changes it).");
             groups.Remove(g);
         }
         if (groups.Count == 0) return ToolResults.Fail(warnings.Count > 0 ? string.Join(" ", warnings) : "There were no choices to add.");
 
-        var sb = new StringBuilder($"Add to \"{dishName.Both}\":\n");
+        var sb = new StringBuilder($"Add to \"{itemName.Both}\":\n");
         foreach (var g in groups)
             sb.AppendLine($"Choice \"{g.Name.Both}\" ({(g.Required ? "must pick" : "optional")}{(g.Multiple ? ", several" : "")}): " +
                 string.Join(", ", g.Options.Select(o => o.Name.Both + (o.Price != 0 ? $" +{ToolResults.Money(o.Price)}" : "") + (o.Default ? " (default)" : ""))));
-        var choices = new ChoicesDraft(dish.Id, dishName, groups);
+        var choices = new ChoicesDraft(menuItem.Id, itemName, groups);
         return ToolResults.Ok(new
         {
             preview = sb.ToString().TrimEnd(),
@@ -479,7 +479,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
 
     private async Task<CallToolResult> AddGroupsAsync(ChoicesDraft plan, string requestId, CancellationToken ct)
     {
-        // Catalog takes no request id here: a group already on the dish (a confirm repeated after it landed) is not added again
+        // Catalog takes no request id here: a group already on the item (a confirm repeated after it landed) is not added again
         var existing = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{plan.ItemId}/customizations", null, ct);
         if (!existing.IsOk) return ToolResults.Fail(existing.Error!);
         var order = existing.Value!.Count == 0 ? 0 : existing.Value!.Max(g => g.DisplayOrder) + 1;
@@ -647,13 +647,13 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         return ToolResults.Ok(new { done = true, promoId = promo.Id, code = promo.Code, active = result.Value!.IsActive });
     }
 
-    // --- A dish's recipe ------------------------------------------------------
+    // --- An item's recipe ------------------------------------------------------
 
-    [McpServerTool(Name = RecipeTool, Title = "Set a dish's stock recipe", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Sets the stock recipe of a dish already on the menu, from the owner's own words or proposed: what one sale takes off the stock, and what each of its options changes. It is built from the stock items the business already tracks, adding the ones it lacks in grams, ml or pieces. It replaces the dish's current recipe. " +
+    [McpServerTool(Name = RecipeTool, Title = "Set an item's stock recipe", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Sets the stock recipe of an item already on the menu, from the owner's own words or proposed: what one sale takes off the stock, and what each of its options changes. It is built from the stock items the business already tracks, adding the ones it lacks in grams, ml or pieces. It replaces the item's current recipe. " +
         "Use for 'the latte takes 18 g beans and 200 ml milk, large 300 ml', 'set up the stock for the burger'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> SetRecipe(
-        [Description("The dish: its name in English or Arabic, or its id")] string item,
+        [Description("The item: its name in English or Arabic, or its id")] string item,
         [Description("The recipe in the owner's words ('18 g beans, 200 ml milk, a 12 oz cup; large 300 ml milk; plain: no sugar'), or 'auto' to have one proposed")] string recipe = "auto",
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
@@ -673,19 +673,19 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
         var snap = snapshot.Value!;
         var branch = AnyBranch(snap);
-        var (dish, missing) = await FindItemAsync(snap, item, ct);
-        if (dish is null) return ToolResults.Fail(missing!);
-        var dishName = dish.Name ?? new LocalizedText(null, null);
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var itemName = menuItem.Name ?? new LocalizedText(null, null);
 
-        // The proposer is told the dish's real options, so the lines it makes name real ids
-        var groups = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{dish.Id}/customizations", null, ct);
+        // The proposer is told the item's real options, so the lines it makes name real ids
+        var groups = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{menuItem.Id}/customizations", null, ct);
         if (!groups.IsOk) return ToolResults.Fail(groups.Error!);
         var options = groups.Value!.SelectMany(g => (g.Options ?? []).Select(o => new MenuOptionToTrack(o.Id, g.Name?.Display ?? "", o.Name ?? new LocalizedText(null, null)))).ToList();
         var words = recipe.Trim();
         var brief = words.Length == 0 || words.Equals("auto", StringComparison.OrdinalIgnoreCase) ? null : words.Length > 1000 ? words[..1000] : words;
 
         var proposal = await api.SendAsync<RecipesProposal>(HttpMethod.Post, Inventory, "/api/inventory/recipes/assist/propose", branch,
-            new ProposeRecipesRequest([new MenuItemToTrack(dish.Id, dishName, dish.Description, dish.CatalogTypeName?.Display, Chain(dish).Price, options, brief)]), null, ct);
+            new ProposeRecipesRequest([new MenuItemToTrack(menuItem.Id, itemName, menuItem.Description, menuItem.CatalogTypeName?.Display, Chain(menuItem).Price, options, brief)]), null, ct);
         if (!proposal.IsOk) return ToolResults.Fail($"No recipe was proposed: {proposal.Error}");
         if (proposal.Value!.Recipes?.FirstOrDefault() is not { } proposed || proposed.Kind is not ("recipe" or "unit") || (proposed.Kind == "recipe" && proposed.Lines is not { Count: > 0 }))
             return ToolResults.Fail("No recipe came back for this dish; describe it in your own words (what goes in and how much) and try again.");
@@ -700,12 +700,12 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         warnings.AddRange(proposal.Value.Warnings ?? []);
 
         var shelf = (await api.GetAsync<List<StockItemDto>>(Inventory, "/api/inventory/items", branch, ct)).Value ?? [];
-        var current = await api.GetAsync<RecipeView>(Inventory, $"/api/inventory/recipes/{dish.Id}", branch, ct);
-        var sb = new StringBuilder($"Set the stock recipe of \"{dishName.Both}\"");
+        var current = await api.GetAsync<RecipeView>(Inventory, $"/api/inventory/recipes/{menuItem.Id}", branch, ct);
+        var sb = new StringBuilder($"Set the stock recipe of \"{itemName.Both}\"");
         sb.AppendLine(current.IsOk && current.Value!.Lines is { Count: > 0 } now ? $", in place of its current one ({now.Count} line{(now.Count == 1 ? "" : "s")})." : ".");
         MenuWriteTools.DescribeRecipe(sb, steps, options.ToDictionary(o => o.Id, o => o.Name.Display), shelf);
 
-        var signed = new RecipeDraft(branch, dish.Id, dishName, steps);
+        var signed = new RecipeDraft(branch, menuItem.Id, itemName, steps);
         return ToolResults.Ok(new
         {
             preview = sb.ToString().TrimEnd(),
@@ -773,8 +773,8 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
     /// <summary>Reads that need a branch (the menu list, the assistants) ask as the first active one; the menu is the chain's</summary>
     private static int? AnyBranch(TenantSnapshot snap) => (snap.Branches.FirstOrDefault(b => b.IsActive) ?? snap.Branches.FirstOrDefault())?.Id;
 
-    private static CatalogItemBase Chain(CatalogItemDetail dish)
-        => dish.Base ?? new CatalogItemBase(dish.Price, dish.OfferPrice, dish.IsOnOffer, dish.IsAvailable, dish.OfferWeekdays, dish.OfferFrom, dish.OfferTo);
+    private static CatalogItemBase Chain(CatalogItemDetail menuItem)
+        => menuItem.Base ?? new CatalogItemBase(menuItem.Price, menuItem.OfferPrice, menuItem.IsOnOffer, menuItem.IsAvailable, menuItem.OfferWeekdays, menuItem.OfferFrom, menuItem.OfferTo);
 
     private async Task<(CatalogItemDetail? Item, string? Error)> FindItemAsync(TenantSnapshot snap, string text, CancellationToken ct)
     {

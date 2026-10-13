@@ -63,7 +63,7 @@ class SaleLine {
   final String? specialInstructions;
   final List<SaleCustomization> customizations;
 
-  /// Rung up from what the last dish goes well with ('Till'). Not part of
+  /// Rung up from what the last item goes well with ('Till'). Not part of
   /// the key: added again by hand it is the same line, and keeps saying so.
   final String? suggestion;
 
@@ -117,6 +117,19 @@ class SaleLine {
   }
 
   SaleLine withQuantity(int quantity) => SaleLine(
+        productId: productId,
+        nameEn: nameEn,
+        nameAr: nameAr,
+        price: price,
+        pictureUrl: pictureUrl,
+        quantity: quantity,
+        specialInstructions: specialInstructions,
+        customizations: customizations,
+        suggestion: suggestion,
+      );
+
+  /// The same line at another price: another branch's, for an order sent there
+  SaleLine withPrice(double price) => SaleLine(
         productId: productId,
         nameEn: nameEn,
         nameAr: nameAr,

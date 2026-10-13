@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Store } from 'lucide-react'
 import { getAllBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { SwitchRow } from '@/components/field'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
@@ -70,6 +72,11 @@ function BranchesForm({
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(user.branches ?? [])
   )
+  // Every branch, new ones too: a call centre's account. Offered with the
+  // call centre on, and shown to an account that already has it so it can be taken off
+  const callCentre = Boolean(useFeatures().callCentre)
+  const [allBranches, setAllBranches] = useState(Boolean(user.allBranches))
+  const offerAll = callCentre || Boolean(user.allBranches)
 
   const branchesQuery = useQuery(getAllBranchesOptions())
 
@@ -77,7 +84,8 @@ function BranchesForm({
     mutationFn: () =>
       customersService.setBranches(
         user.id,
-        [...selected].sort((a, b) => a - b)
+        allBranches ? [] : [...selected].sort((a, b) => a - b),
+        allBranches
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
@@ -99,7 +107,16 @@ function BranchesForm({
 
   return (
     <>
-      {branchesQuery.isLoading ? (
+      {offerAll && (
+        <SwitchRow
+          title={t('staffAllBranches')}
+          description={t('staffAllBranchesHint')}
+          checked={allBranches}
+          disabled={save.isPending}
+          onCheckedChange={setAllBranches}
+        />
+      )}
+      {allBranches ? null : branchesQuery.isLoading ? (
         <div className='flex flex-col gap-2'>
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className='h-14 rounded-md' />

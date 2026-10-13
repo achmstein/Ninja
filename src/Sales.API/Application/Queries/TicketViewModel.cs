@@ -60,6 +60,10 @@ public record TicketDetail
     /// <summary>What the bill is called: a counter tab's name, a room's session owner. Not a customer.</summary>
     public string? Label { get; init; }
     public string? GuestPhone { get; init; }
+    /// <summary>The cashier who rang up the order that opened the bill; null for one opened from the apps.</summary>
+    public string? TakenBy { get; init; }
+    /// <summary>The branch whose till took that order and sent it here; null when it was taken here.</summary>
+    public int? TakenAtBranchId { get; init; }
     public DateTime OpenedAt { get; init; }
     public DateTime LastActivityAt { get; init; }
     public DateTime? SettledAt { get; init; }

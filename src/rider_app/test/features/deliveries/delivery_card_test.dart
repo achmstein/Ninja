@@ -51,7 +51,7 @@ void main() {
     expect(find.text("Couldn't deliver"), findsNothing);
   });
 
-  testWidgets('the count stands apart from a Latin dish name in Arabic', (tester) async {
+  testWidgets('the count stands apart from a Latin item name in Arabic', (tester) async {
     await tester.pumpWidget(_host(DeliveryCard(order: _order('Assigned'), money: _money), locale: const Locale('ar')));
     await tester.pumpAndSettle();
     expect(find.text('2×'), findsOneWidget);

@@ -136,6 +136,10 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public bool PayOnline { get; private set; }
 
+    /// <summary>The cashier who rang it up and the branch whose till it was; the POS path's only.</summary>
+    [DataMember]
+    public OrderTaker? Taker { get; private set; }
+
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
     /// sale keyed in by staff.
@@ -175,9 +179,11 @@ public class CreateOrderCommand : IRequest<int>
         bool guestOrdersAnywhere = false,
         PlatformOrder? platform = null,
         DeliveryDraft? delivery = null,
-        bool payOnline = false)
+        bool payOnline = false,
+        OrderTaker? taker = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        Taker = taker;
         Platform = platform;
         Delivery = delivery;
         PayOnline = payOnline;

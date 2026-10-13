@@ -1,11 +1,21 @@
 import { useEffect } from 'react'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { getBranchesQueryKey } from '@/api/tenant/@tanstack/react-query.gen'
+import type { BranchResponse } from '@/api/tenant/types.gen'
 import { getStoredUser } from '@/config/oidc-config'
-import { translate } from '@/lib/i18n'
+import { translate, useLanguage } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
 import { getActiveBranchId } from '@/stores/branch-store'
+
+/** A phone delivery another branch's till took and sent to one of the business's branches */
+type OrderSentToBranchEvent = {
+  orderId?: number
+  branchId?: number
+  fromBranchId?: number
+  takenBy?: string | null
+}
 
 type OrderStatusChangedEvent = {
   type?: string
@@ -14,6 +24,14 @@ type OrderStatusChangedEvent = {
   reminderCount?: number
   minutesPending?: number
   branchId?: number
+}
+
+/** A branch by name, in the till's language, off the cached branch list; its number when the list lacks it */
+function sentFromBranchName(queryClient: QueryClient, branchId: number | undefined): string {
+  const branches = queryClient.getQueryData<BranchResponse[]>(getBranchesQueryKey()) ?? []
+  const name = branches.find((b) => Number(b.id) === branchId)?.name
+  const text = useLanguage.getState().language === 'ar' ? name?.ar || name?.en : name?.en || name?.ar
+  return text || (branchId != null ? `#${branchId}` : '')
 }
 
 // Order events go to every staff connection, but the pending queue is
@@ -113,6 +131,21 @@ export function usePosNotifications() {
           }),
         )
       }
+    })
+
+    // A phone delivery another branch's till sent here: nobody at this till
+    // touched it, so it rings like a new order and says where it came from.
+    // Branch names off the branch list the switcher already holds
+    connection.on('OrderSentToBranch', (event: OrderSentToBranchEvent) => {
+      refresh('getDeliveries', 'getOpenTickets')
+      if (event?.branchId == null || event.branchId !== getActiveBranchId()) return
+      playAlertSound()
+      const branch = sentFromBranchName(queryClient, event.fromBranchId)
+      toast.info(
+        event.takenBy
+          ? translate('newSentDeliveryToast', { orderId: event.orderId ?? 0, branch, name: event.takenBy })
+          : translate('newSentDeliveryToastNoName', { orderId: event.orderId ?? 0, branch }),
+      )
     })
 
     // A delivery given to a rider, out of the door, delivered, its cash in:

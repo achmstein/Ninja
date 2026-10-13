@@ -8,7 +8,7 @@ import '../models/cart_item.dart';
 class OrderMove {
   final List<CartItem> items;
 
-  /// Not served there: the dish, or one of its options, is off that branch's menu or sold out
+  /// Not served there: the item, or one of its options, is off that branch's menu or sold out
   final List<CartItem> dropped;
 
   /// Kept, at that branch's price
@@ -20,7 +20,7 @@ class OrderMove {
 }
 
 /// The order taken to another branch's menu. The menu is the business's own
-/// everywhere; a branch only prices a dish its own way or does not serve it
+/// everywhere; a branch only prices an item its own way or does not serve it
 /// (and sells out an option). So each line stays as the customer made it, at
 /// the price there, and a line that cannot be had there goes. The options'
 /// own prices are the business's, the same at every branch.

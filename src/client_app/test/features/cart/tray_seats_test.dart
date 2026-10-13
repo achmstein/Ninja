@@ -22,8 +22,8 @@ import 'package:ninja_client/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The tray's motion past the plain open and shut (client_web's tray.tsx):
-/// the dishes' circles fly from the dock to their rows as the order opens,
-/// and the first dish lets the order peek out once with a word on dragging
+/// the items' circles fly from the dock to their rows as the order opens,
+/// and the first item lets the order peek out once with a word on dragging
 /// it up, never again on this phone.
 
 class _NoBranches extends BranchNotifier {
@@ -111,7 +111,7 @@ Widget _app({required void Function(TrayMotion motion) onMotion, bool reduced = 
     );
 
 /// The circles in the air, drawn by the flight layer
-Finder _circles() => find.descendant(of: find.byType(TraySeatLayer), matching: find.byType(DishPhoto));
+Finder _circles() => find.descendant(of: find.byType(TraySeatLayer), matching: find.byType(ItemPhoto));
 
 /// The rows' photos, whose own circles hide until theirs have landed
 double _rowPhotoOpacity(WidgetTester tester) {
@@ -127,7 +127,7 @@ void main() {
     cueOnScreen.value = null;
   });
 
-  testWidgets('as the order is pulled up, each dish flies from the dock to its row', (tester) async {
+  testWidgets('as the order is pulled up, each item flies from the dock to its row', (tester) async {
     trayHint.debugReset(seen: true);
     late TrayMotion motion;
     await tester.pumpWidget(_app(onMotion: (m) => motion = m));
@@ -168,7 +168,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('the first dish to land lets the order peek out, with a word on dragging it up, once', (tester) async {
+  testWidgets('the first item to land lets the order peek out, with a word on dragging it up, once', (tester) async {
     late TrayMotion motion;
     await tester.pumpWidget(_app(onMotion: (m) => motion = m));
     await tester.pump();
@@ -193,13 +193,13 @@ void main() {
     expect(find.text('Drag up to see your order'), findsNothing);
     expect((await SharedPreferences.getInstance()).getStringList(hintsStorageKey), contains('tray'));
 
-    // Another dish: no cue
+    // Another item: no cue
     trayFlights.bump.value++;
     await tester.pump();
     expect(trayHint.showing, isFalse);
   });
 
-  testWidgets("another cue on screen (the deck's) holds it back, still pending, till the next dish", (tester) async {
+  testWidgets("another cue on screen (the deck's) holds it back, still pending, till the next item", (tester) async {
     late TrayMotion motion;
     await tester.pumpWidget(_app(onMotion: (m) => motion = m));
     await tester.pump();

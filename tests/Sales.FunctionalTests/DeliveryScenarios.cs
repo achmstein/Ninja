@@ -89,6 +89,24 @@ public sealed class DeliveryScenarios
     }
 
     [TestMethod]
+    public async Task A_phone_delivery_sent_from_another_branch_is_billed_here_saying_who_took_it()
+    {
+        var orderId = Interlocked.Increment(ref _nextOrder);
+
+        await ConfirmAsync(Delivered(orderId, buyer: string.Empty, isDelivery: true) with
+        {
+            TakenByUserId = "cashier-1",
+            TakenByName = "Sara",
+            TakenAtBranchId = Suite.Branch + 1,
+        });
+
+        var ticket = await TicketOfAsync(orderId);
+        Assert.AreEqual(Suite.Branch, ticket.BranchId);
+        Assert.AreEqual("Sara", ticket.TakenBy);
+        Assert.AreEqual(Suite.Branch + 1, ticket.TakenAtBranchId);
+    }
+
+    [TestMethod]
     public async Task A_free_delivery_said_outright_is_billed_alone_too()
     {
         var orderId = Interlocked.Increment(ref _nextOrder);

@@ -1835,6 +1835,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste the Google Maps link the customer sent, on WhatsApp say';
 
   @override
+  String get deliverySearchAddress => 'Or search the street or area';
+
+  @override
+  String get deliverySearchFailed =>
+      'Couldn\'t find that place. Paste the customer\'s link instead.';
+
+  @override
   String get deliveryLocationReading => 'Reading the location…';
 
   @override
@@ -1852,6 +1859,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deliveryOutOfRange(String km) {
     return 'Outside the $km km delivery area';
+  }
+
+  @override
+  String get deliveryOutOfArea => 'Outside the branch\'s delivery area';
+
+  @override
+  String get callCentre => 'Call centre';
+
+  @override
+  String get callCentreNextCaller => 'Next caller';
+
+  @override
+  String get callCentreCallerHint =>
+      'Start from the caller: their number, then where it goes.';
+
+  @override
+  String get callCentreFindBranch => 'Find the branch';
+
+  @override
+  String get callCentreNoBranch =>
+      'No branch delivers there. Take it as a pickup, or check the location.';
+
+  @override
+  String get callCentreNeedsLocation =>
+      'Paste the caller\'s location, or pick one of their addresses, to find the branch.';
+
+  @override
+  String callCentreBranchFor(String branch, String distance, String fee) {
+    return '$branch · $distance · fee $fee';
+  }
+
+  @override
+  String callCentreTakeAt(String branch) {
+    return 'Take the order at $branch';
+  }
+
+  @override
+  String get callCentrePickupAt => 'Pickup at…';
+
+  @override
+  String callCentrePickupAtBranch(String branch) {
+    return 'Pickup at $branch';
+  }
+
+  @override
+  String callCentreOrderAt(String branch) {
+    return 'Order for $branch';
+  }
+
+  @override
+  String callCentrePlaced(int orderId, String branch) {
+    return 'Order #$orderId placed at $branch';
   }
 
   @override
@@ -1943,6 +2002,132 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deliveryErrorPaused =>
       'This branch isn\'t taking orders right now.';
+
+  @override
+  String deliveryNearerBranch(String branch, String distance, String fee) {
+    return '$branch is $distance away and delivers there · fee $fee';
+  }
+
+  @override
+  String get deliveryBranchPaused => 'Paused right now';
+
+  @override
+  String deliverySendTo(String branch) {
+    return 'Send to $branch';
+  }
+
+  @override
+  String deliverySendToPaused(String branch) {
+    return '$branch is paused. Send anyway?';
+  }
+
+  @override
+  String get deliveryKeepHere => 'Keep it here';
+
+  @override
+  String deliveryWillSend(String branch) {
+    return 'Goes to $branch: they make it and deliver it';
+  }
+
+  @override
+  String deliverySaveSend(String branch) {
+    return 'Deliver from $branch';
+  }
+
+  @override
+  String deliverySentTo(String branch, int orderId) {
+    return 'Sent to $branch · #$orderId';
+  }
+
+  @override
+  String deliverySentFrom(String branch, String name) {
+    return 'Sent from $branch · $name';
+  }
+
+  @override
+  String deliverySentFromNoName(String branch) {
+    return 'Sent from $branch';
+  }
+
+  @override
+  String newSentDeliveryToast(int orderId, String branch, String name) {
+    return 'New phone delivery #$orderId from $branch ($name)';
+  }
+
+  @override
+  String newSentDeliveryToastNoName(int orderId, String branch) {
+    return 'New phone delivery #$orderId from $branch';
+  }
+
+  @override
+  String priceReviewTitle(String branch) {
+    return '$branch\'s menu is different';
+  }
+
+  @override
+  String priceReviewChanged(
+    String item,
+    String from,
+    String to,
+    String branch,
+  ) {
+    return '$item: $from → $to at $branch';
+  }
+
+  @override
+  String priceReviewSoldOut(String item, String branch) {
+    return '$item: sold out at $branch';
+  }
+
+  @override
+  String priceReviewOptionsOut(String item, String options, String branch) {
+    return '$item: $options out at $branch';
+  }
+
+  @override
+  String get priceReviewDropped => 'Sold-out items are taken off the order.';
+
+  @override
+  String priceReviewUse(String branch) {
+    return 'Use $branch\'s prices';
+  }
+
+  @override
+  String priceReviewNothingLeft(String branch) {
+    return 'Nothing in this order can be made at $branch.';
+  }
+
+  @override
+  String priceCheckFailed(String branch) {
+    return 'Couldn\'t check $branch\'s menu. Try again.';
+  }
+
+  @override
+  String priceChecking(String branch) {
+    return 'Checking $branch\'s menu…';
+  }
+
+  @override
+  String get deliveryErrorSendNotDelivery =>
+      'Only a delivery can be sent to another branch.';
+
+  @override
+  String get deliveryErrorSendWithTicket =>
+      'Items on this branch\'s bill can\'t be sent to another branch.';
+
+  @override
+  String get deliveryErrorSendBranchClosed =>
+      'That branch isn\'t taking deliveries. Keep it here or pick another.';
+
+  @override
+  String takenBy(String name) {
+    return 'Taken by $name';
+  }
+
+  @override
+  String takenByAt(String name, String branch) {
+    return 'Taken by $name at $branch';
+  }
 
   @override
   String get failReasonNoAnswer => 'Nobody answered';

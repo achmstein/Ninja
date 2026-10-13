@@ -1,5 +1,6 @@
-import { AlertTriangle, Bike, Loader2, MapPin, X } from 'lucide-react'
+import { AlertTriangle, Bike, Loader2, MapPin, Store, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useBranchName } from '@/features/branch/use-branch-name'
 import { useT } from '@/lib/i18n'
 import type { SaleDelivery } from './cart'
 import type { DeliveryReadiness } from './sale-delivery'
@@ -8,7 +9,8 @@ import type { DeliveryReadiness } from './sale-delivery'
  * The delivery on the sale, under the customer: where it goes and the number
  * the rider calls, a tap to change it, a cross to make it a counter sale
  * again. When it can't go yet (terms being read, unreadable, delivery off) it
- * says so with the way out, and the sale waits.
+ * says so with the way out, and the sale waits. One sent to the branch
+ * nearer the caller says which.
  */
 export function SaleDeliverySummary({
   delivery,
@@ -24,6 +26,7 @@ export function SaleDeliverySummary({
   onRetry: () => void
 }) {
   const t = useT()
+  const branchName = useBranchName()
   return (
     <div className='bg-muted mt-2 flex flex-col gap-2 rounded-lg p-2.5 text-sm'>
       <div className='flex items-start gap-2'>
@@ -35,6 +38,12 @@ export function SaleDeliverySummary({
             <span dir='ltr'>{delivery.phone}</span>
             {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
           </span>
+          {delivery.sendTo && (
+            <span className='text-primary mt-0.5 flex items-center gap-1 text-xs font-medium'>
+              <Store className='size-3' aria-hidden />
+              {t('deliveryWillSend', { branch: branchName(delivery.sendTo.branchId) })}
+            </span>
+          )}
         </button>
         <Button variant='ghost' size='icon' className='size-11 shrink-0' aria-label={t('deliveryNotADelivery')} onClick={onRemove}>
           <X className='size-4' />

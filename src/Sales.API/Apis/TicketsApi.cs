@@ -92,6 +92,11 @@ public static class TicketsApi
             .WithSummary("Settled sales in a window by hour, weekday, cashier and item")
             .WithDescription("offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.");
 
+        api.MapGet("/reports/pairs", GetItemPairsReport)
+            .WithName("GetItemPairsReport")
+            .WithSummary("What an item was bought with, on settled tickets in a window")
+            .WithDescription("Of the settled tickets that had the item, how many also had each other catalog item, most often first (up to 15). The pairing suggester weighs these over its own guesses.");
+
         api.MapGet("/by-order/{orderId:int}", GetTicketByOrder)
             .WithName("GetTicketByOrder")
             .WithSummary("The ticket a confirmed order landed on")
@@ -390,6 +395,22 @@ public static class TicketsApi
 
         var branchId = httpContext.GetRequiredBranchId();
         return TypedResults.Ok(await queries.GetBreakdownAsync(branchId, from, to, offsetMinutes));
+    }
+
+    public static async Task<Results<Ok<ItemPairsReport>, BadRequest<string>>> GetItemPairsReport(
+        int itemId,
+        DateTime from,
+        DateTime to,
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries)
+    {
+        if (to <= from)
+        {
+            return TypedResults.BadRequest("The report window must end after it starts.");
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetItemPairsAsync(branchId, itemId, from, to));
     }
 
     public static async Task<Results<Ok<OpenTicketResponse>, NotFound>> GetTicketByOrder(

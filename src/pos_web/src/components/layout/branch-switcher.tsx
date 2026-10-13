@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Check, ChevronsUpDown, Headset } from 'lucide-react'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { useCallCentre } from '@/hooks/use-call-centre'
 import { useBranchStore } from '@/stores/branch-store'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BrandMark } from '@/components/brand-mark'
@@ -19,7 +22,9 @@ import { useLocalized, useT } from '@/lib/i18n'
  * a branch scopes every branch-aware API call via the X-Branch-Id header,
  * so everything on screen is refetched. Only the branches the token allows
  * are offered; with a single one there is nothing to switch and the block
- * is plain text.
+ * is plain text. An account given every branch of a business with the call
+ * centre is also offered "Call centre": every sale then starts from the
+ * caller, and the branch follows the order (features/call-centre).
  */
 export function BranchSwitcher() {
   const t = useT()
@@ -27,12 +32,17 @@ export function BranchSwitcher() {
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
   const { branches } = useAllowedBranches()
+  const callCentre = useCallCentre()
+  const navigate = useNavigate()
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
-  const label = localized(activeBranch?.name) || t('branches')
+  const branchLabel = localized(activeBranch?.name) || t('branches')
+  // At the call centre the branch is only the one the current caller's order is made at
+  const label = callCentre.on ? `${t('callCentre')} · ${branchLabel}` : branchLabel
   const business = useBrandName()
 
   const handleSelect = (id: number) => {
+    callCentre.setOn(false)
     if (id === branchId) return
     setBranchId(id)
     // Everything on screen is scoped to the branch. Reset rather than
@@ -50,12 +60,17 @@ export function BranchSwitcher() {
       <div className='grid min-w-0 flex-1 text-start text-sm leading-tight'>
         <span className='truncate font-semibold'>{business || label}</span>
         {/* One branch: the business is the place, and its branch says nothing more */}
-        {business && branches.length > 1 && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
+        {business && (branches.length > 1 || callCentre.on) && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
       </div>
     </>
   )
 
-  if (branches.length <= 1) {
+  const enterCallCentre = () => {
+    callCentre.setOn(true)
+    navigate({ to: '/' })
+  }
+
+  if (branches.length <= 1 && !callCentre.available) {
     return <div className='flex h-12 min-w-0 items-center gap-2 px-2'>{brand}</div>
   }
 
@@ -78,9 +93,19 @@ export function BranchSwitcher() {
             className='min-h-12 gap-2 p-3 text-base'
           >
             <span className='flex-1 truncate'>{localized(branch.name)}</span>
-            {Number(branch.id) === branchId && <Check className='size-5' />}
+            {!callCentre.on && Number(branch.id) === branchId && <Check className='size-5' />}
           </DropdownMenuItem>
         ))}
+        {callCentre.available && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={enterCallCentre} className='min-h-12 gap-2 p-3 text-base'>
+              <Headset className='size-5' />
+              <span className='flex-1 truncate'>{t('callCentre')}</span>
+              {callCentre.on && <Check className='size-5' />}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

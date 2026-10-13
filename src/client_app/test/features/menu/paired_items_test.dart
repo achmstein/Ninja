@@ -5,9 +5,9 @@ import 'package:ninja_client/features/menu/models/menu_item.dart';
 import 'package:ninja_client/features/menu/models/user_preference.dart';
 import 'package:ninja_client/features/menu/paired_items.dart';
 
-MenuItem dish(int id, {List<int> paired = const [], bool available = true, List<ItemCustomization> customizations = const []}) => MenuItem(
+MenuItem item(int id, {List<int> paired = const [], bool available = true, List<ItemCustomization> customizations = const []}) => MenuItem(
       id: id,
-      name: LocalizedText(en: 'Dish $id'),
+      name: LocalizedText(en: 'Item $id'),
       description: LocalizedText(en: ''),
       price: 10,
       catalogTypeId: 1,
@@ -17,7 +17,7 @@ MenuItem dish(int id, {List<int> paired = const [], bool available = true, List<
       customizations: customizations,
     );
 
-CartItem line(int productId) => CartItem(productId: productId, productName: LocalizedText(en: 'Dish $productId'), unitPrice: 10);
+CartItem line(int productId) => CartItem(productId: productId, productName: LocalizedText(en: 'Item $productId'), unitPrice: 10);
 
 void main() {
   // A cappuccino goes with a waffle, then ice cream, then a cake that is sold out; a waffle goes with a milkshake that needs its size picked
@@ -30,11 +30,11 @@ void main() {
       CustomizationOption(id: 502, name: LocalizedText(en: 'Large'), priceAdjustment: 10),
     ],
   );
-  final cappuccino = dish(1, paired: [2, 3, 4]);
-  final waffle = dish(2, paired: [5]);
-  final iceCream = dish(3);
-  final cake = dish(4, available: false);
-  final milkshake = dish(5, customizations: [size]);
+  final cappuccino = item(1, paired: [2, 3, 4]);
+  final waffle = item(2, paired: [5]);
+  final iceCream = item(3);
+  final cake = item(4, available: false);
+  final milkshake = item(5, customizations: [size]);
   final menu = {for (final d in [cappuccino, waffle, iceCream, cake, milkshake]) d.id: d};
 
   group('pairedFor', () {
@@ -48,7 +48,7 @@ void main() {
 
     test('suggests nothing for an item that pairs with nothing, or with items gone from the menu', () {
       expect(pairedFor(iceCream, menu, []), isEmpty);
-      expect(pairedFor(dish(9, paired: [99]), menu, []), isEmpty);
+      expect(pairedFor(item(9, paired: [99]), menu, []), isEmpty);
     });
   });
 
@@ -91,16 +91,16 @@ void main() {
     });
 
     test('opens an item with choices and no saved way, even optional ones', () {
-      expect(canQuickAdd(dish(7, customizations: [sugar])), isFalse);
+      expect(canQuickAdd(item(7, customizations: [sugar])), isFalse);
       expect(canQuickAdd(milkshake), isFalse);
     });
 
     test('adds with a saved way that still answers every required choice, and puts that way in', () {
-      final shake = dish(5, customizations: [size, sugar]);
+      final shake = item(5, customizations: [size, sugar]);
       expect(canQuickAdd(shake, saved(5, [(60, 602)])), isTrue, reason: 'the size falls back to its default');
       expect(canQuickAdd(shake, saved(5, [(50, 502)])), isTrue);
       expect(quickAddLine(shake, saved(5, [(50, 502)])).selectedCustomizations.map((c) => c.optionId), [502]);
-      expect(canQuickAdd(dish(8, available: false, customizations: [sugar]), saved(8, [(60, 601)])), isFalse);
+      expect(canQuickAdd(item(8, available: false, customizations: [sugar]), saved(8, [(60, 601)])), isFalse);
     });
 
     test('opens when a required choice has nothing left in stock', () {
@@ -110,7 +110,7 @@ void main() {
         isRequired: true,
         options: [CustomizationOption(id: 701, name: LocalizedText(en: 'Small'), isOutOfStock: true)],
       );
-      expect(canQuickAdd(dish(9, customizations: [soldOutSize]), saved(9, [(70, 701)])), isFalse);
+      expect(canQuickAdd(item(9, customizations: [soldOutSize]), saved(9, [(70, 701)])), isFalse);
     });
   });
 

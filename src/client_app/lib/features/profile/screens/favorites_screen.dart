@@ -6,7 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../menu/models/menu_item.dart';
 import '../../menu/services/menu_service.dart';
 import '../../menu/providers/favorites_provider.dart';
-import '../../menu/widgets/dish.dart';
+import '../../menu/widgets/item.dart';
 
 /// Provider that combines favorites with menu items
 final favoriteMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
@@ -23,7 +23,7 @@ final favoriteMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
   return allItems.where((item) => favoriteIds.contains(item.id)).toList();
 });
 
-/// The customer's favourites: the menu's own dish rows, opening and going
+/// The customer's favourites: the menu's own item rows, opening and going
 /// in as they do on the menu
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
@@ -57,7 +57,7 @@ class FavoritesScreen extends ConsumerWidget {
         ],
         data: (list) => list.isEmpty
             ? [EmptyState(icon: LucideIcons.heart, title: l10n.noFavoritesYet)]
-            : [for (final item in list) DishRow(item: item)],
+            : [for (final item in list) ItemRow(item: item)],
       ),
     );
   }

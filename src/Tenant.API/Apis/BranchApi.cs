@@ -92,6 +92,9 @@ public static class BranchApi
             if (point is null) return LocationNotRead();
         }
 
+        var (area, areaProblem) = DeliveryAreaRules.Check(request.DeliveryArea is { Length: > 0 } drawn ? drawn : null, point?.Latitude, point?.Longitude);
+        if (areaProblem is not null) return AreaNotUsable(areaProblem);
+
         var branch = new Model.Branch
         {
             Name = request.Name,
@@ -108,7 +111,8 @@ public static class BranchApi
             Longitude = point?.Longitude,
             DeliveryRadiusKm = request.DeliveryRadiusKm > 0 ? request.DeliveryRadiusKm : null,
             DeliveryFee = request.DeliveryFee,
-            DeliveryMinimumOrder = request.DeliveryMinimumOrder
+            DeliveryMinimumOrder = request.DeliveryMinimumOrder,
+            DeliveryArea = area,
         };
 
         context.Branches.Add(branch);
@@ -171,13 +175,34 @@ public static class BranchApi
             }
         }
 
+        // Null leaves the drawn area as it is; empty takes it away; anything else is held to
+        // the branch as it now stands. A branch moved keeps its area only if it is still near
+        if (request.DeliveryArea is { } drawn)
+        {
+            if (drawn.Length == 0)
+            {
+                branch.DeliveryArea = null;
+            }
+            else
+            {
+                var (area, problem) = DeliveryAreaRules.Check(drawn, branch.Latitude, branch.Longitude);
+                if (problem is not null) return AreaNotUsable(problem);
+                branch.DeliveryArea = area;
+            }
+        }
+        else if (request.Location is not null && branch.DeliveryArea is { } kept && branch.Latitude is not null
+            && DeliveryAreaRules.Check(kept, branch.Latitude, branch.Longitude).Problem is { } movedAway)
+        {
+            return AreaNotUsable(movedAway);
+        }
+
         // A delivering branch keeps somewhere to measure from and somewhere to stop: taking either
         // away is refused, as switching delivery on without them is (UpdateBranchSettings)
         if ((request.IsDeliveryEnabled ?? branch.IsDeliveryEnabled) && !branch.CanDeliver)
             return TypedResults.BadRequest<ProblemDetails>(new()
             {
                 Title = "Delivery not set",
-                Detail = "A branch that delivers needs its location and how far it delivers. Turn delivery off first.",
+                Detail = "A branch that delivers needs its location and how far it delivers: a radius or an area drawn on the map. Turn delivery off first.",
             });
 
         // The flags ride the same save; the service announces the change
@@ -193,6 +218,9 @@ public static class BranchApi
             Title = "Location not read",
             Detail = "Paste the branch's Google Maps link (Share → Copy link) or its coordinates, like 30.0444, 31.2357.",
         });
+
+    private static BadRequest<ProblemDetails> AreaNotUsable(string detail) =>
+        TypedResults.BadRequest<ProblemDetails>(new() { Title = "Delivery area not usable", Detail = detail });
 
     private static BadRequest<ProblemDetails>? DeliveryProblem(decimal? radiusKm, decimal? fee, decimal? minimum) =>
         radiusKm < 0 || radiusKm > 100 || fee < 0 || minimum < 0
@@ -216,7 +244,7 @@ public static class BranchApi
             return TypedResults.BadRequest<ProblemDetails>(new()
             {
                 Title = "Delivery not set",
-                Detail = "Set the branch's location and how far it delivers first.",
+                Detail = "Set the branch's location and how far it delivers (a radius or an area drawn on the map) first.",
             });
         }
 
@@ -235,18 +263,19 @@ public static class BranchApi
 /// <param name="IsDeliveryEnabled">The branch delivers with its own riders, within DeliveryRadiusKm of where it is.</param>
 /// <param name="DayEndTime">Always the same as DayStartTime, a whole day: kept for the apps already installed, which read a day from a start and an end and take an end at its start as a full day round.</param>
 /// <param name="RequireSignInForDelivery">Customers must be signed in to order delivery here; the till's phone orders are not held to it.</param>
-public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null, bool IsDeliveryEnabled = false, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0, bool RequireSignInForDelivery = false)
+/// <param name="DeliveryArea">The area drawn on the map, as [lat, lng] points round it; null for none. When drawn it, not the radius, says where the branch delivers.</param>
+public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled, bool RequireSignInForTableOrders = false, double? Latitude = null, double? Longitude = null, bool IsDeliveryEnabled = false, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0, bool RequireSignInForDelivery = false, double[][]? DeliveryArea = null)
 {
     public static BranchResponse From(Model.Branch b) => new(
         b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder,
         b.DayStartTime.ToString("HH:mm"), b.DayStartTime.ToString("HH:mm"),
         b.IsOrderingEnabled, b.IsReservationsEnabled, b.RequireSignInForTableOrders, b.Latitude, b.Longitude,
-        b.IsDeliveryEnabled, b.DeliveryRadiusKm, b.DeliveryFee, b.DeliveryMinimumOrder, b.RequireSignInForDelivery);
+        b.IsDeliveryEnabled, b.DeliveryRadiusKm, b.DeliveryFee, b.DeliveryMinimumOrder, b.RequireSignInForDelivery, b.DeliveryArea);
 }
 
-public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0);
+public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true, string? Location = null, decimal? DeliveryRadiusKm = null, decimal DeliveryFee = 0, decimal DeliveryMinimumOrder = 0, double[][]? DeliveryArea = null);
 
-public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null, bool? IsDeliveryEnabled = null, decimal? DeliveryRadiusKm = null, decimal? DeliveryFee = null, decimal? DeliveryMinimumOrder = null, bool? RequireSignInForDelivery = null);
+public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, string? Location = null, bool? IsDeliveryEnabled = null, decimal? DeliveryRadiusKm = null, decimal? DeliveryFee = null, decimal? DeliveryMinimumOrder = null, bool? RequireSignInForDelivery = null, double[][]? DeliveryArea = null);
 
 public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null, bool? RequireSignInForTableOrders = null, bool? IsDeliveryEnabled = null, bool? RequireSignInForDelivery = null);
 

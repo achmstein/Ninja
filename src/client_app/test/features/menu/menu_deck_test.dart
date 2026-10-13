@@ -10,7 +10,7 @@ import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/branch_provider.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';
 import 'package:ninja_client/core/shell/deck_compact.dart';
-import 'package:ninja_client/core/shell/dish_layer.dart';
+import 'package:ninja_client/core/shell/item_layer.dart';
 import 'package:ninja_client/core/shell/tuck.dart';
 import 'package:ninja_client/core/ui/gesture_hint.dart';
 import 'package:ninja_client/core/ui/ui.dart';
@@ -52,9 +52,9 @@ class _Brand extends BrandNotifier {
   );
 }
 
-MenuItem _dish(int id) => MenuItem(
+MenuItem _item(int id) => MenuItem(
   id: id,
-  name: LocalizedText(en: 'Dish $id'),
+  name: LocalizedText(en: 'Item $id'),
   description: const LocalizedText(en: ''),
   price: 50,
   catalogTypeId: 1,
@@ -67,8 +67,8 @@ Widget _host({bool reduced = false}) {
   final plain = BrandStyle.plain;
   final style = plain.copyWith(layout: plain.layout.copyWith(menuItem: MenuItemLayout.deck));
   final menu = {
-    MenuCategory(id: 1, name: const LocalizedText(en: 'Coffee')): [_dish(1), _dish(2), _dish(3)],
-    MenuCategory(id: 2, name: const LocalizedText(en: 'Tea')): [_dish(4), _dish(5)],
+    MenuCategory(id: 1, name: const LocalizedText(en: 'Coffee')): [_item(1), _item(2), _item(3)],
+    MenuCategory(id: 2, name: const LocalizedText(en: 'Tea')): [_item(4), _item(5)],
   };
   return UncontrolledProviderScope(
     container: _container = ProviderContainer(
@@ -160,25 +160,25 @@ void main() {
     expect(find.byType(HintBubble), findsNothing);
   });
 
-  testWidgets('the cues wait while the order or a dish is open over the deck', (tester) async {
+  testWidgets('the cues wait while the order or an item is open over the deck', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    addTearDown(() => dishOpen.value = false);
+    addTearDown(() => itemOpen.value = false);
     await tester.pumpWidget(_host());
     _container.read(orderOpenProvider.notifier).set(true);
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 3000));
     expect(find.text('Swipe up for more, sideways for other categories'), findsNothing);
 
-    // A dish open in its place keeps it waiting
-    dishOpen.value = true;
+    // An item open in its place keeps it waiting
+    itemOpen.value = true;
     _container.read(orderOpenProvider.notifier).set(false);
     await tester.pump(const Duration(milliseconds: 3000));
     expect(find.text('Swipe up for more, sideways for other categories'), findsNothing);
 
     // Nothing over the deck: once it has sat idle a moment
-    dishOpen.value = false;
+    itemOpen.value = false;
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1500));
     expect(find.text('Swipe up for more, sideways for other categories'), findsOneWidget);
@@ -267,23 +267,23 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(_container.read(deckCompactProvider), isFalse);
 
-    await tester.fling(find.text('Dish 1'), const Offset(0, -400), 2000);
+    await tester.fling(find.text('Item 1'), const Offset(0, -400), 2000);
     await tester.pumpAndSettle();
     expect(_container.read(deckCompactProvider), isTrue);
     // Swiping on folds the dock's tabs
     expect(_container.read(dockTuckProvider), isTrue);
-    await tester.fling(find.text('Dish 2'), const Offset(0, -400), 2000);
+    await tester.fling(find.text('Item 2'), const Offset(0, -400), 2000);
     await tester.pumpAndSettle();
     expect(_container.read(dockTuckProvider), isTrue);
 
     // A card back asks the tabs back, the chrome staying compact
-    await tester.fling(find.text('Dish 3'), const Offset(0, 400), 2000);
+    await tester.fling(find.text('Item 3'), const Offset(0, 400), 2000);
     await tester.pumpAndSettle();
     expect(_container.read(deckCompactProvider), isTrue);
     expect(_container.read(dockTuckProvider), isFalse);
 
     // The first card brings the chrome back
-    await tester.fling(find.text('Dish 2'), const Offset(0, 400), 2000);
+    await tester.fling(find.text('Item 2'), const Offset(0, 400), 2000);
     await tester.pumpAndSettle();
     expect(_container.read(deckCompactProvider), isFalse);
     expect(_container.read(dockTuckProvider), isFalse);

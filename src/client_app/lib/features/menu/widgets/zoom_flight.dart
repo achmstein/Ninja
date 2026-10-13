@@ -6,13 +6,13 @@ import '../../../core/ui/ui.dart';
 import '../models/menu_item.dart';
 
 /// The one spring a zoom's photos fly on and the two views cross-fade on:
-/// the one a dish opens on (client_web's FLIGHT_SPRING, springOpen settled tight)
+/// the one an item opens on (client_web's FLIGHT_SPRING, springOpen settled tight)
 final zoomSpring = SpringCurve(Motion.springOpen);
 
 /// The deck's two views: its big cards, and the whole menu as small tiles
 enum ZoomView { deck, grid }
 
-/// A dish's photo on its way between a card and its tile, in the stage's
+/// An item's photo on its way between a card and its tile, in the stage's
 /// coordinates: the two frames and their corners
 class ZoomFlight {
   final MenuItem item;
@@ -47,7 +47,7 @@ abstract final class ZoomPhotos {
   /// The flights of a zoom away from [from], measured where both views are
   /// now inside [room]: each card in view with its tile, from the card when
   /// leaving the deck and from the tile when coming back to it. None for a
-  /// card whose dish has no tile laid out.
+  /// card whose item has no tile laid out.
   static List<ZoomFlight> plan(ZoomView from, RenderBox room) {
     if (!room.attached || !room.hasSize) return const [];
     final box = Offset.zero & room.size;
@@ -55,7 +55,7 @@ abstract final class ZoomPhotos {
     for (final card in _anchors.where((a) => a.widget.view == ZoomView.deck)) {
       final cardRect = _rectIn(card, room);
       if (cardRect == null || !cardRect.overlaps(box)) continue;
-      // The dish's tile, the one in view if more than one is laid out
+      // The item's tile, the one in view if more than one is laid out
       ({Rect rect, double radius})? tile;
       for (final t in _anchors.where((a) => a.widget.view == ZoomView.grid && a.widget.item.id == card.widget.item.id)) {
         final rect = _rectIn(t, room);
@@ -78,7 +78,7 @@ abstract final class ZoomPhotos {
   }
 }
 
-/// A card's photo or a tile's, known to [ZoomPhotos] by its view and dish
+/// A card's photo or a tile's, known to [ZoomPhotos] by its view and item
 class ZoomPhotoAnchor extends StatefulWidget {
   final ZoomView view;
   final MenuItem item;
@@ -144,7 +144,7 @@ class ZoomFlights extends StatelessWidget {
   );
 }
 
-/// A dish's photo filling its frame ("cover", so it never stretches), or the business's colour without one
+/// An item's photo filling its frame ("cover", so it never stretches), or the business's colour without one
 class _Photo extends StatelessWidget {
   final MenuItem item;
 

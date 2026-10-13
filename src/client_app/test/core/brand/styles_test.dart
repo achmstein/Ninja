@@ -3,10 +3,10 @@ import 'package:ninja_client/core/brand/styles.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
 
 /// The port of client_web's lib/styles.ts: one style, Ninja, with the
-/// business's choice of how its menu shows its dishes over it.
+/// business's choice of how its menu shows its items over it.
 void main() {
   group('resolveLayout', () {
-    test('nothing chosen is Ninja: a list of dishes, chips, pills, lifted surfaces', () {
+    test('nothing chosen is Ninja: a list of items, chips, pills, lifted surfaces', () {
       final layout = resolveLayout(null);
       expect(layout, ninja.layout);
       expect(layout.menuItem, MenuItemLayout.row);

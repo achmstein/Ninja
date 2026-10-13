@@ -15,7 +15,8 @@ public sealed record DirectoryUser(
     string? PhoneNumber,
     IReadOnlyList<int> Branches,
     bool AddedAtCounter = false,
-    string PhoneNormalized = "")
+    string PhoneNormalized = "",
+    bool AllBranches = false)
 {
     public string DisplayName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))) is { Length: > 0 } full ? full : Username ?? "";
 
@@ -262,7 +263,8 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
             phone,
             UserAttributes.BranchesOf(u.Attributes),
             CounterCustomer.IsAddedAtCounter(u.Attributes),
-            PhoneRules.Normalize(phone, country));
+            PhoneRules.Normalize(phone, country),
+            UserAttributes.HoldsAllBranches(u.Attributes));
     }
 
     private async Task<List<T>> PageAsync<T>(HttpClient client, string url, CancellationToken ct)
@@ -287,4 +289,12 @@ public static class UserAttributes
             .OfType<int>()
             .Order()
             .ToList();
+
+    /// <summary>Whether the account was given every branch: its `branches` attribute holds "*" (a call centre's account).</summary>
+    public static bool HoldsAllBranches(Dictionary<string, string[]>? attributes) =>
+        (attributes?.GetValueOrDefault("branches") ?? []).Any(v => v.Trim() == ClaimsPrincipalExtensions.AllBranchesValue);
+
+    /// <summary>The `branches` attribute as kept: "*" alone for every branch, otherwise the ids.</summary>
+    public static string[] BranchValues(IEnumerable<int> branchIds, bool allBranches) =>
+        allBranches ? [ClaimsPrincipalExtensions.AllBranchesValue] : branchIds.Select(id => id.ToString()).ToArray();
 }

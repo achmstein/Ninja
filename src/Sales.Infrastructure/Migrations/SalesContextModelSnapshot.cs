@@ -840,6 +840,13 @@ namespace Sales.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<int?>("TakenAtBranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TakenBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<decimal>("Total")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");

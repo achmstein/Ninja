@@ -103,6 +103,9 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             DeliveryFee = order.Delivery?.Fee,
             IsDelivery = order.IsDelivery,
             PaidOnlineKey = order.PaysOnline ? order.OnlinePaymentKey : null,
+            TakenByUserId = order.TakenByUserId,
+            TakenByName = order.TakenByName,
+            TakenAtBranchId = order.TakenAtBranchId,
         };
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);

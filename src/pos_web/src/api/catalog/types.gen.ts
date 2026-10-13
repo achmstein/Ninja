@@ -4,6 +4,11 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type BoughtTogether = {
+    catalogItemId: number | string;
+    together: number | string;
+};
+
 export type BranchItemOverrideDto = {
     id: number | string;
     branchId: number | string;
@@ -100,6 +105,45 @@ export type CatalogTypeDto = {
     displayOrder?: number | string;
 };
 
+export type ComposedOption = {
+    ref: number | string;
+    id: number | string;
+};
+
+export type ComposeGroup = {
+    name: LocalizedText;
+    isRequired: boolean;
+    allowMultiple: boolean;
+    options: Array<ComposeOption>;
+};
+
+export type ComposeItemRequest = {
+    name: LocalizedText;
+    description: null | LocalizedText;
+    price: number | string;
+    /**
+     * An existing category; null makes or finds NewCategoryName
+     */
+    catalogTypeId: null | number | string;
+    newCategoryName: null | LocalizedText;
+    isPopular?: boolean;
+    preparationTimeMinutes?: null | number | string;
+    customizations?: null | Array<ComposeGroup>;
+};
+
+export type ComposeItemResult = {
+    itemId: number | string;
+    catalogTypeId: number | string;
+    options: Array<ComposedOption>;
+};
+
+export type ComposeOption = {
+    ref: number | string;
+    name: LocalizedText;
+    priceAdjustment: number | string;
+    isDefault: boolean;
+};
+
 export type CustomizationOption = {
     id?: number | string;
     itemCustomizationId?: number | string;
@@ -119,7 +163,7 @@ export type CustomizationOptionDto = {
     isOutOfStock?: boolean;
 };
 
-export type DrawDishPhotoRequest = {
+export type DrawItemPhotoRequest = {
     nameEn: null | string;
     nameAr: null | string;
     description: null | string;
@@ -267,6 +311,33 @@ export type PaginatedItemsDtoOfCatalogItemDto = {
     data: Array<CatalogItemDto>;
 };
 
+export type PriceCheckLine = {
+    itemId: number | string;
+    optionIds: null | Array<number | string>;
+    unitPrice: number | string;
+};
+
+export type PriceCheckRequest = {
+    branchId: number | string;
+    lines: null | Array<PriceCheckLine>;
+};
+
+export type PriceCheckResponse = {
+    branchId: number | string;
+    lines: Array<PriceCheckResult>;
+};
+
+export type PriceCheckResult = {
+    itemId: number | string;
+    price: number | string;
+    basePrice: number | string;
+    available: boolean;
+    outOfStock: boolean;
+    soldOutOptionIds: Array<number | string>;
+    changed: boolean;
+    wouldPass: boolean;
+};
+
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
@@ -310,6 +381,40 @@ export type PromoQuote = {
     valid?: boolean;
 };
 
+export type PromotionDesignsDto = {
+    designs: Array<string>;
+};
+
+export type PromotionDto = {
+    id: number | string;
+    headline: LocalizedText;
+    pictureUri: null | string;
+    link: string;
+    linkId: null | number | string;
+    branchIds: Array<number | string>;
+    startsAt: null | string;
+    endsAt: null | string;
+    weekdays: null | number | string;
+    showFrom: null | string;
+    showTo: null | string;
+    isActive: boolean;
+    isLive: boolean;
+    updatedAt: string;
+};
+
+export type PromotionRequest = {
+    headline: LocalizedText;
+    link: null | string;
+    linkId: null | number | string;
+    branchIds: null | Array<number | string>;
+    startsAt: null | string;
+    endsAt: null | string;
+    weekdays: null | number | string;
+    showFrom: null | string;
+    showTo: null | string;
+    isActive?: boolean;
+};
+
 export type ProposedCategory = {
     name: LocalizedText;
     catalogTypeId: null | number | string;
@@ -346,6 +451,11 @@ export type ProposedOption = {
     name: LocalizedText;
     priceAdjustment: number | string;
     isDefault: boolean;
+};
+
+export type ProposedPairing = {
+    catalogItemId: number | string;
+    reason: LocalizedText;
 };
 
 export type ReorderItemDto = {
@@ -389,10 +499,25 @@ export type SuggestCustomizationsRequest = {
     price?: number | string;
     existingGroups?: null | Array<LocalizedText>;
     languages?: null | string;
+    note?: null | string;
 };
 
 export type SuggestCustomizationsResponse = {
     groups: Array<ProposedCustomization>;
+    warnings: Array<string>;
+};
+
+export type SuggestPairingsRequest = {
+    itemId: number | string;
+    current?: null | Array<number | string>;
+    together?: null | Array<BoughtTogether>;
+    ticketsWithItem?: number | string;
+    languages?: null | string;
+    note?: null | string;
+};
+
+export type SuggestPairingsResponse = {
+    items: Array<ProposedPairing>;
     warnings: Array<string>;
 };
 
@@ -561,6 +686,48 @@ export type SuggestCustomizationsResponses = {
 
 export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyof SuggestCustomizationsResponses];
 
+export type SuggestPairingsData = {
+    body: SuggestPairingsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/pairings';
+};
+
+export type SuggestPairingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SuggestPairingsError = SuggestPairingsErrors[keyof SuggestPairingsErrors];
+
+export type SuggestPairingsResponses = {
+    /**
+     * OK
+     */
+    200: SuggestPairingsResponse;
+};
+
+export type SuggestPairingsResponse2 = SuggestPairingsResponses[keyof SuggestPairingsResponses];
+
 export type ScanMenuData = {
     body: {
         files: IFormFileCollection;
@@ -605,8 +772,8 @@ export type ScanMenuResponses = {
 
 export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
 
-export type DrawDishPhotoData = {
-    body: DrawDishPhotoRequest;
+export type DrawItemPhotoData = {
+    body: DrawItemPhotoRequest;
     path?: never;
     query?: {
         /**
@@ -617,7 +784,7 @@ export type DrawDishPhotoData = {
     url: '/api/catalog/assist/photo';
 };
 
-export type DrawDishPhotoErrors = {
+export type DrawItemPhotoErrors = {
     /**
      * Bad Request
      */
@@ -632,7 +799,7 @@ export type DrawDishPhotoErrors = {
     403: unknown;
 };
 
-export type DrawDishPhotoError = DrawDishPhotoErrors[keyof DrawDishPhotoErrors];
+export type DrawItemPhotoError = DrawItemPhotoErrors[keyof DrawItemPhotoErrors];
 
 export type QuotePromoData = {
     body?: never;
@@ -871,6 +1038,335 @@ export type SetPromoActiveResponses = {
 
 export type SetPromoActiveResponse = SetPromoActiveResponses[keyof SetPromoActiveResponses];
 
+export type GetLivePromotionData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The branch the customer is at
+         */
+        branchId?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions/live';
+};
+
+export type GetLivePromotionResponses = {
+    /**
+     * OK
+     */
+    200: PromotionDto;
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type GetLivePromotionResponse = GetLivePromotionResponses[keyof GetLivePromotionResponses];
+
+export type GetPromotionPictureData = {
+    body?: never;
+    path: {
+        /**
+         * The promotion id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * A narrower copy: 320, 640 or 1280 px wide
+         */
+        w?: number | string;
+        /**
+         * The picture's version, as its pictureUri carries it
+         */
+        v?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions/{id}/pic';
+};
+
+export type GetPromotionPictureErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetPromotionPictureResponses = {
+    /**
+     * OK
+     */
+    200: string;
+};
+
+export type GetPromotionPictureResponse = GetPromotionPictureResponses[keyof GetPromotionPictureResponses];
+
+export type UploadPromotionPictureData = {
+    body: {
+        file: IFormFile;
+    };
+    path: {
+        /**
+         * The promotion id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions/{id}/pic';
+};
+
+export type UploadPromotionPictureErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadPromotionPictureError = UploadPromotionPictureErrors[keyof UploadPromotionPictureErrors];
+
+export type UploadPromotionPictureResponses = {
+    /**
+     * OK
+     */
+    200: PromotionDto;
+};
+
+export type UploadPromotionPictureResponse = UploadPromotionPictureResponses[keyof UploadPromotionPictureResponses];
+
+export type ListPromotionsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions';
+};
+
+export type ListPromotionsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListPromotionsResponses = {
+    /**
+     * OK
+     */
+    200: Array<PromotionDto>;
+};
+
+export type ListPromotionsResponse = ListPromotionsResponses[keyof ListPromotionsResponses];
+
+export type CreatePromotionData = {
+    body: PromotionRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions';
+};
+
+export type CreatePromotionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreatePromotionError = CreatePromotionErrors[keyof CreatePromotionErrors];
+
+export type CreatePromotionResponses = {
+    /**
+     * Created
+     */
+    201: PromotionDto;
+};
+
+export type CreatePromotionResponse = CreatePromotionResponses[keyof CreatePromotionResponses];
+
+export type DeletePromotionData = {
+    body?: never;
+    path: {
+        /**
+         * The promotion id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions/{id}';
+};
+
+export type DeletePromotionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeletePromotionResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeletePromotionResponse = DeletePromotionResponses[keyof DeletePromotionResponses];
+
+export type UpdatePromotionData = {
+    body: PromotionRequest;
+    path: {
+        /**
+         * The promotion id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promotions/{id}';
+};
+
+export type UpdatePromotionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdatePromotionError = UpdatePromotionErrors[keyof UpdatePromotionErrors];
+
+export type UpdatePromotionResponses = {
+    /**
+     * OK
+     */
+    200: PromotionDto;
+};
+
+export type UpdatePromotionResponse = UpdatePromotionResponses[keyof UpdatePromotionResponses];
+
+export type DesignPromotionData = {
+    body: {
+        photo: IFormFile;
+    } & {
+        headline: string;
+    } & {
+        business?: string;
+    } & {
+        colors?: string;
+    } & {
+        note?: string;
+    } & {
+        count?: number | string;
+    } & {
+        logo?: IFormFile;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/promotion-design';
+};
+
+export type DesignPromotionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DesignPromotionError = DesignPromotionErrors[keyof DesignPromotionErrors];
+
+export type DesignPromotionResponses = {
+    /**
+     * OK
+     */
+    200: PromotionDesignsDto;
+};
+
+export type DesignPromotionResponse = DesignPromotionResponses[keyof DesignPromotionResponses];
+
 export type ImportMenuData = {
     body: MenuImportRequest;
     path?: never;
@@ -908,6 +1404,85 @@ export type ImportMenuResponses = {
 };
 
 export type ImportMenuResponse = ImportMenuResponses[keyof ImportMenuResponses];
+
+export type ComposeItemData = {
+    body: ComposeItemRequest;
+    headers: {
+        'x-requestid': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/items/compose';
+};
+
+export type ComposeItemErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ComposeItemError = ComposeItemErrors[keyof ComposeItemErrors];
+
+export type ComposeItemResponses = {
+    /**
+     * OK
+     */
+    200: ComposeItemResult;
+};
+
+export type ComposeItemResponse = ComposeItemResponses[keyof ComposeItemResponses];
+
+export type CheckBranchPricesData = {
+    body: PriceCheckRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/price-check';
+};
+
+export type CheckBranchPricesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CheckBranchPricesError = CheckBranchPricesErrors[keyof CheckBranchPricesErrors];
+
+export type CheckBranchPricesResponses = {
+    /**
+     * OK
+     */
+    200: PriceCheckResponse;
+};
+
+export type CheckBranchPricesResponse = CheckBranchPricesResponses[keyof CheckBranchPricesResponses];
 
 export type ListItemsData = {
     body?: never;

@@ -20,6 +20,7 @@ public static class CatalogApi
         api.MapPromotionApi();
         api.MapMenuImportApi();
         api.MapComposeItemApi();
+        api.MapPriceCheckApi();
 
         // Menu Items endpoints
         api.MapGet("/items", GetAllItems)

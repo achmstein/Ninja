@@ -354,7 +354,7 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
     }
 
     [McpServerTool(Name = "get_branch_settings", Title = "Branch settings", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("How each branch is set up: address, phone, tax number, business-day hours, whether online ordering, reservations and delivery are on, whether table orders or deliveries need a signed-in customer, and the delivery radius, fee and minimum order. Use for 'is delivery on at Maadi', 'what is our delivery fee', 'what time does the day start'.")]
+    [Description("How each branch is set up: address, phone, tax number, business-day hours, whether online ordering, reservations and delivery are on, whether table orders or deliveries need a signed-in customer, and the delivery radius (or whether an area is drawn on the map instead, which then decides where the branch delivers), fee and minimum order. Use for 'is delivery on at Maadi', 'what is our delivery fee', 'what time does the day start'.")]
     public async Task<CallToolResult> GetBranchSettings(
         [Description(BranchDescription)] string? branch = null,
         CancellationToken ct = default)
@@ -384,8 +384,8 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
                 reservations = b.IsReservationsEnabled ? "on" : "off",
                 tableOrdersNeedSignIn = b.RequireSignInForTableOrders,
                 delivery = b.IsDeliveryEnabled
-                    ? new { on = true, radiusKm = b.DeliveryRadiusKm, fee = (decimal?)b.DeliveryFee, minimumOrder = (decimal?)b.DeliveryMinimumOrder, needsSignIn = (bool?)b.RequireSignInForDelivery }
-                    : new { on = false, radiusKm = (decimal?)null, fee = (decimal?)null, minimumOrder = (decimal?)null, needsSignIn = (bool?)null },
+                    ? new { on = true, radiusKm = b.DeliveryRadiusKm, areaDrawn = (bool?)(b.DeliveryArea is { Length: >= 3 }), fee = (decimal?)b.DeliveryFee, minimumOrder = (decimal?)b.DeliveryMinimumOrder, needsSignIn = (bool?)b.RequireSignInForDelivery }
+                    : new { on = false, radiusKm = (decimal?)null, areaDrawn = (bool?)null, fee = (decimal?)null, minimumOrder = (decimal?)null, needsSignIn = (bool?)null },
                 locationPinned = b.Latitude is not null && b.Longitude is not null,
             }),
         });

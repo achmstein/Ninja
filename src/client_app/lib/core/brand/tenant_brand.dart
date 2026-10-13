@@ -348,7 +348,7 @@ class TenantTheme {
   final String? style;
 
   /// The parts the business dressed its own way, as sent; the app reads
-  /// `menuItem` (how the menu shows its dishes) and `places` (how the Book tab
+  /// `menuItem` (how the menu shows its items) and `places` (how the Book tab
   /// lists its places). Resolved by `resolveLayout`.
   final Map<String, String>? layout;
 
@@ -496,6 +496,10 @@ class TenantBrand {
   /// "cafe", "restaurant", "cloud_kitchen" or "game_station"; null when the stack does not say
   final String? businessType;
 
+  /// Whether the business has address search (Google Maps on, with the
+  /// platform's key): the address form shows a search field above the map
+  final bool addressSearch;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -511,6 +515,7 @@ class TenantBrand {
     this.customerUrl,
     this.socialProviders,
     this.businessType,
+    this.addressSearch = false,
   });
 
   /// A cloud kitchen has no tables: an order is collected or brought, never eaten in
@@ -542,6 +547,7 @@ class TenantBrand {
       customerUrl: json['customerUrl'] as String?,
       socialProviders: _social(json['auth'] is Map ? (json['auth'] as Map)['social'] : null),
       businessType: json['businessType'] as String?,
+      addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
     );
   }
 
@@ -569,6 +575,7 @@ class TenantBrand {
         customerUrl: json['customerUrl'] as String?,
         socialProviders: json['social'] is List ? {for (final p in json['social'] as List) if (p is String) p} : null,
         businessType: json['businessType'] as String?,
+        addressSearch: json['addressSearch'] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -586,6 +593,7 @@ class TenantBrand {
         'customerUrl': customerUrl,
         'social': socialProviders?.toList(),
         'businessType': businessType,
+        'addressSearch': addressSearch,
       };
 
   Color? get primaryColor => _color(primaryColorHex);
@@ -619,10 +627,11 @@ class TenantBrand {
           other.features == features &&
           other.version == version &&
           other.customerUrl == customerUrl &&
-          other.businessType == businessType;
+          other.businessType == businessType &&
+          other.addressSearch == addressSearch;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType, addressSearch);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

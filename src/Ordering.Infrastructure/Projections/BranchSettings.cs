@@ -12,6 +12,13 @@ public class BranchSettings
 {
     public int BranchId { get; set; }
 
+    /// <summary>
+    /// The branch is one the business still runs: one switched off in the admin
+    /// app delivers nothing and is offered to nobody. True for a row from before
+    /// the event carried it.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
     public bool IsOrderingEnabled { get; set; }
 
     public bool IsReservationsEnabled { get; set; }
@@ -41,6 +48,12 @@ public class BranchSettings
     public double? Longitude { get; set; }
 
     public decimal? DeliveryRadiusKm { get; set; }
+
+    /// <summary>
+    /// The area drawn on the map, as [lat, lng] points round it; null for none.
+    /// When there is one it, not the radius, says where the branch delivers.
+    /// </summary>
+    public double[][]? DeliveryArea { get; set; }
 
     /// <summary>What a delivery adds to the bill.</summary>
     public decimal DeliveryFee { get; set; }

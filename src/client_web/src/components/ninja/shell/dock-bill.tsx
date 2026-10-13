@@ -43,7 +43,7 @@ const STAGE_ICONS: Record<PillStage, typeof Send> = {
  * where the order has got to (Sent, Confirmed) above what the bill
  * comes to, rolling as rounds land, each change swapping in with a short
  * blur. A tap opens the bill out of the dock as its sheet, its rounds
- * standing open, the way to pay under them. On the menu a dish going into
+ * standing open, the way to pay under them. On the menu an item going into
  * the tray takes the row back, and it returns when the tray is empty again;
  * on the other tabs it sits above the tabs. At a table, or in a room with
  * the clock running, the row is that place too: its name (the top bar keeps

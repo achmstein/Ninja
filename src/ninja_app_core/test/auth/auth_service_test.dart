@@ -20,4 +20,17 @@ void main() {
       expect(AuthService.extractBranches({'branches': ['x', '', '4']}), [4]);
     });
   });
+
+  group('holdsAllBranches', () {
+    test('a star is every branch, lists no id', () {
+      expect(AuthService.holdsAllBranches({'branches': ['*']}), isTrue);
+      expect(AuthService.holdsAllBranches({'branches': '*'}), isTrue);
+      expect(AuthService.extractBranches({'branches': ['*']}), isEmpty);
+    });
+
+    test('ids alone, or no claim, are not every branch', () {
+      expect(AuthService.holdsAllBranches({'branches': ['1', '2']}), isFalse);
+      expect(AuthService.holdsAllBranches({}), isFalse);
+    });
+  });
 }

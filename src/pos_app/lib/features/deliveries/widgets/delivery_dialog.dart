@@ -140,7 +140,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
           const SizedBox(height: 16),
           DeliveryDetails(delivery: d),
           const SizedBox(height: 12),
-          // The count and the name apart, so an English dish name in Arabic still reads count first
+          // The count and the name apart, so an English item name in Arabic still reads count first
           for (final item in order.items)
             Padding(
               padding: const EdgeInsets.only(bottom: 2),

@@ -69,6 +69,7 @@ export type BreakdownReport = {
     byWeekday?: Array<WeekdayTotal>;
     byCashier?: Array<CashierTotal>;
     byItem?: Array<ItemTotal>;
+    byTaker?: Array<TakerTotal>;
 };
 
 export type CashierTotal = {
@@ -130,6 +131,18 @@ export type HourTotal = {
     hour: number | string;
     count: number | string;
     net: number | string;
+};
+
+export type ItemPair = {
+    catalogItemId: number | string;
+    together: number | string;
+    share: number | string;
+};
+
+export type ItemPairsReport = {
+    catalogItemId: number | string;
+    ticketsWithItem: number | string;
+    pairs: Array<ItemPair>;
 };
 
 export type ItemTotal = {
@@ -201,6 +214,7 @@ export type OrderPayView = {
     paymentKey: null | string;
     paymentStatus: null | string;
     simulated: boolean;
+    holdsCards?: boolean;
 };
 
 export type PagedResultOfPaymentRow = {
@@ -238,6 +252,7 @@ export type PayAheadOptionsView = {
     feePercent: number | string;
     feeFixed: number | string;
     simulated: boolean;
+    holdsCards?: boolean;
 };
 
 export type PayLineView = {
@@ -651,6 +666,12 @@ export type TabPaymentView = {
     shiftId: null | number | string;
 };
 
+export type TakerTotal = {
+    name: string;
+    count: number | string;
+    net: number | string;
+};
+
 export type TenderTotal = {
     tender: string;
     amount: number | string;
@@ -669,6 +690,8 @@ export type TicketDetail = {
     placeKind?: null | string;
     label?: null | string;
     guestPhone?: null | string;
+    takenBy?: null | string;
+    takenAtBranchId?: null | number | string;
     openedAt?: string;
     lastActivityAt?: string;
     settledAt?: null | string;
@@ -1241,6 +1264,47 @@ export type GetBreakdownReportResponses = {
 };
 
 export type GetBreakdownReportResponse = GetBreakdownReportResponses[keyof GetBreakdownReportResponses];
+
+export type GetItemPairsReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        itemId: number | string;
+        from: string;
+        to: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/reports/pairs';
+};
+
+export type GetItemPairsReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetItemPairsReportError = GetItemPairsReportErrors[keyof GetItemPairsReportErrors];
+
+export type GetItemPairsReportResponses = {
+    /**
+     * OK
+     */
+    200: ItemPairsReport;
+};
+
+export type GetItemPairsReportResponse = GetItemPairsReportResponses[keyof GetItemPairsReportResponses];
 
 export type GetTicketByOrderData = {
     body?: never;

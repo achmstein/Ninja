@@ -248,7 +248,10 @@ public record BrandIcons(string Icon192, string Icon512, string Maskable512, str
 
 /// <param name="OnlinePayments">Last and defaulted: a stack older than online payments does not send it.</param>
 /// <param name="Delivery">Last and defaulted: a stack older than delivery does not send it.</param>
-public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false);
+/// <param name="PayAhead">Delivery and pickup paid when ordered; null from a stack older than it, and sent as null it is left as it is.</param>
+/// <param name="Ai">Ninja AI; null from a stack older than it, and sent as null it is left as it is.</param>
+/// <param name="CallCentre">The call-centre till; null from a stack older than it, and sent as null it is left as it is.</param>
+public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool OnlinePayments = false, bool Delivery = false, bool? PayAhead = null, bool? Ai = null, bool? CallCentre = null);
 
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
 /// <param name="ContentLanguages">both, ar or en; null leaves the stack's (a stack older than the setting sends none).</param>

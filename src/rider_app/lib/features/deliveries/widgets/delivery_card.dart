@@ -167,7 +167,7 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                 ],
                 const SizedBox(height: 14),
                 // The bag, to check against before leaving: the count kept apart
-                // from the dish's name, so a Latin name in Arabic still reads count first
+                // from the item's name, so a Latin name in Arabic still reads count first
                 Text(l10n.inTheBag, style: theme.typography.xs.copyWith(color: muted, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 for (final line in order.lines)

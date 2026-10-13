@@ -252,11 +252,42 @@ public static partial class OrdersApi
             return OrderingProblems.Of("order.placed_at_invalid", "The placed-at time is not plausible.");
         }
 
-        var branchId = httpContext.GetRequiredBranchId();
+        // The till's own branch: the cashier works here (the header passed branch access)
+        var tillBranchId = httpContext.GetRequiredBranchId();
+
+        // A phone delivery for the branch nearer the caller is made there, as that
+        // branch's own order: any of the business's branches that delivers, paused
+        // or not, since it lands in that branch's own day. Nothing of it is on this
+        // branch's bills, so it is a delivery with no ticket here
+        var branchId = tillBranchId;
+        if (request.SendToBranchId is int target && target != tillBranchId)
+        {
+            if (request.Delivery is null)
+            {
+                return OrderingProblems.Of(DeliveryErrors.SendNotDelivery, "Only a delivery can be sent to another branch.");
+            }
+
+            if (request.TicketId is not null)
+            {
+                return OrderingProblems.Of(DeliveryErrors.SendWithTicket, "An order on one of this branch's bills can't be sent to another branch.");
+            }
+
+            if (await services.BranchSettings.GetDeliveryTermsAsync(target, evenWhilePaused: true) is null)
+            {
+                return OrderingProblems.Of(DeliveryErrors.SendBranchClosed, "That branch isn't taking deliveries.");
+            }
+
+            branchId = target;
+        }
+
+        var cashierId = services.IdentityService.GetUserIdentity();
+        var cashierName = httpContext.User.GetUserName() ?? services.IdentityService.GetUserName();
 
         services.Logger.LogInformation(
-            "Creating POS order by cashier {Cashier}, customer: {Customer}",
-            services.IdentityService.GetUserIdentity(),
+            "Creating POS order by cashier {Cashier} at branch {TillBranchId} for branch {BranchId}, customer: {Customer}",
+            cashierId,
+            tillBranchId,
+            branchId,
             attachCustomer ? request.CustomerUserId : "walk-in");
 
         // The place the till named, from Spaces' projection; never gated — the
@@ -284,7 +315,9 @@ public static partial class OrdersApi
                 // Held to the branch's terms by the handler: one rule for the app and the till
                 delivery: request.Delivery is { } wanted
                     ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone)
-                    : null);
+                    : null,
+                // Who rang it up, and where: every till order says so
+                taker: new OrderTaker(cashierId, cashierName, tillBranchId));
 
             try
             {

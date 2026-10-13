@@ -10,7 +10,7 @@ using Ninja.Assistant.API.Downstream;
 namespace Ninja.Assistant.API.Tools;
 
 /// <summary>
-/// A dish made whole from chat: the item, its customizations and its recipe
+/// An item made whole from chat: the item, its customizations and its recipe
 /// (with the stock items the recipe needs), and a photo if asked, previewed
 /// together and made with one confirm. The preview's AI parts (the other
 /// language, suggested choices, the recipe) are the services' own assistants;
@@ -41,16 +41,16 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         [property: Description("true for the one picked unless the customer changes it")] bool Default = false,
         [property: Description("The option's Arabic name, when the business shows Arabic")] string? NameAr = null);
 
-    [McpServerTool(Name = CreateTool, Title = "Add a dish to the menu", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Adds a dish to the menu in one go: the item (named in both languages), its customizations (sizes, milks, extras) and its stock recipe built from the stock items the business already tracks, adding the ones it lacks in grams, ml or pieces; optionally a photo. " +
+    [McpServerTool(Name = CreateTool, Title = "Add an item to the menu", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Adds an item to the menu in one go: the item (named in both languages), its customizations (sizes, milks, extras) and its stock recipe built from the stock items the business already tracks, adding the ones it lacks in grams, ml or pieces; optionally a photo. " +
         "The preview shows all of it and writes nothing; the confirm makes it all. Use for 'add a Spanish latte, 85, with sizes and oat milk', 'put a new burger on the menu'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> CreateMenuItem(
-        [Description("The dish's name, in English or Arabic (the other language is filled in)")] string name,
+        [Description("The item's name, in English or Arabic (the other language is filled in)")] string name,
         [Description("Its price, in the business's currency")] decimal price,
         [Description("The category it goes in: an existing one's name or id, or a new name")] string category,
         [Description("A short description, optional")] string? description = null,
         [Description("The customization groups as the owner described them. Leave out to have them suggested when suggestCustomizations is true, or for none.")] List<GroupInput>? customizations = null,
-        [Description("true to have customizations suggested for this dish when none are given")] bool suggestCustomizations = false,
+        [Description("true to have customizations suggested for this item when none are given")] bool suggestCustomizations = false,
         [Description("The recipe in the owner's words ('18 g beans, 200 ml milk, a 12 oz cup; large 300 ml milk; plain: no sugar'), 'auto' to have one proposed, or 'none'")] string recipe = "auto",
         [Description("A photo style to draw one: studio, rustic, overhead, moody or fresh; leave out for no photo")] string? photo = null,
         [Description("true to mark it popular on the menu")] bool popular = false,
@@ -150,17 +150,17 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         }
 
         var style = string.IsNullOrWhiteSpace(photo) || photo.Trim().Equals("none", StringComparison.OrdinalIgnoreCase) ? null : photo.Trim().ToLowerInvariant();
-        var dish = new DishDraft(branch?.Id, itemName, itemDescription, price, existing?.Id, newCategory, (existing?.Name ?? newCategory)!.Both, popular, groups, plan, style);
+        var newItem = new ItemDraft(branch?.Id, itemName, itemDescription, price, existing?.Id, newCategory, (existing?.Name ?? newCategory)!.Both, popular, groups, plan, style);
 
         var shelf = plan.Lines.Any(l => l.StockItemId is not null)
             ? (await api.GetAsync<List<StockItemDto>>("inventory-api", "/api/inventory/items", branch?.Id, ct)).Value ?? []
             : [];
         return ToolResults.Ok(new
         {
-            preview = Describe(dish, snap.Currency, shelf),
+            preview = Describe(newItem, snap.Currency, shelf),
             warnings,
             requestId,
-            draft = flow.Sign(dish, CreateTool, requestId),
+            draft = flow.Sign(newItem, CreateTool, requestId),
             nextStep = WriteFlow.NextStepWithDraft,
         });
     }
@@ -169,81 +169,81 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
 
     private async Task<CallToolResult> ConfirmAsync(string requestId, string? token, CancellationToken ct)
     {
-        var (dish, error) = flow.Open<DishDraft>(token, CreateTool, requestId);
-        if (dish is null) return ToolResults.Fail(error!);
+        var (newItem, error) = flow.Open<ItemDraft>(token, CreateTool, requestId);
+        if (newItem is null) return ToolResults.Fail(error!);
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
 
         var done = new List<string>();
-        var branch = dish.BranchId;
+        var branch = newItem.BranchId;
 
-        // 1. The dish, its category and its options, in one go
-        var compose = new ComposeItemRequest(dish.Name, dish.Description, dish.Price, dish.CategoryId, dish.NewCategory, dish.Popular, null,
-            dish.Groups.Select(g => new ComposeGroup(g.Name, g.Required, g.Multiple, g.Options.Select(o => new ComposeOption(o.Ref, o.Name, o.Price, o.Default)).ToList())).ToList());
+        // 1. The item, its category and its options, in one go
+        var compose = new ComposeItemRequest(newItem.Name, newItem.Description, newItem.Price, newItem.CategoryId, newItem.NewCategory, newItem.Popular, null,
+            newItem.Groups.Select(g => new ComposeGroup(g.Name, g.Required, g.Multiple, g.Options.Select(o => new ComposeOption(o.Ref, o.Name, o.Price, o.Default)).ToList())).ToList());
         var made = await api.SendAsync<ComposeItemResult>(HttpMethod.Post, "catalog-api", "/api/catalog/items/compose", branch, compose, flow.StepKey(CreateTool, requestId, "item"), ct);
-        if (!made.IsOk) return Finish(dish, null, done, $"The dish was not made: {made.Error}");
+        if (!made.IsOk) return Finish(newItem, null, done, $"The dish was not made: {made.Error}");
         var itemId = made.Value!.ItemId;
-        done.Add($"\"{dish.Name.Both}\" is on the menu at {dish.Price:0.##}" + (dish.Groups.Count > 0 ? $", with {string.Join(", ", dish.Groups.Select(g => g.Name.Display))}" : "") + ".");
+        done.Add($"\"{newItem.Name.Both}\" is on the menu at {newItem.Price:0.##}" + (newItem.Groups.Count > 0 ? $", with {string.Join(", ", newItem.Groups.Select(g => g.Name.Display))}" : "") + ".");
         var optionIds = (made.Value.Options ?? []).ToDictionary(o => o.Ref, o => o.Id);
 
         // 2. The stock items the recipe needs that the shelf lacks
         var stockIds = new Dictionary<string, int>();
-        foreach (var stock in dish.Recipe.NewStock)
+        foreach (var stock in newItem.Recipe.NewStock)
         {
             var created = await api.SendAsync<CreatedResponse>(HttpMethod.Post, "inventory-api", "/api/inventory/items", branch,
                 new StockItemRequest(stock.Name, stock.Unit, stock.PackSize, stock.PackName, stock.AutoSoldOut), flow.StepKey(CreateTool, requestId, $"stock:{stock.Key}"), ct);
             var id = created.IsOk ? created.Value!.Id : 0;
             // A repeated confirm: Inventory says the request was already handled, without its id; find it by name
             if (created.IsOk && id == 0) id = await FindStockAsync(stock.Name, branch, ct) ?? 0;
-            if (id == 0) return Finish(dish, itemId, done, $"The stock item \"{stock.Name.Both}\" was not added ({created.Error ?? "not found after adding"}), so the recipe was not set. Set it up on the dish's Stock tab.");
+            if (id == 0) return Finish(newItem, itemId, done, $"The stock item \"{stock.Name.Both}\" was not added ({created.Error ?? "not found after adding"}), so the recipe was not set. Set it up on the dish's Stock tab.");
             stockIds[stock.Key] = id;
             done.Add($"Stock item \"{stock.Name.Both}\" added, counted in {stock.Unit}.");
         }
 
         // 3. The recipe, with the options' real ids
-        if (dish.Recipe.Kind == "unit")
+        if (newItem.Recipe.Kind == "unit")
         {
             var unit = await api.SendAsync<CreatedResponse>(HttpMethod.Post, "inventory-api", "/api/inventory/recipes/track-by-unit", branch,
-                new TrackByUnitRequest(itemId, dish.Name), flow.StepKey(CreateTool, requestId, "unit"), ct);
-            if (!unit.IsOk) return Finish(dish, itemId, done, $"Its stock was not set up ({unit.Error}).");
+                new TrackByUnitRequest(itemId, newItem.Name), flow.StepKey(CreateTool, requestId, "unit"), ct);
+            if (!unit.IsOk) return Finish(newItem, itemId, done, $"Its stock was not set up ({unit.Error}).");
             done.Add("Stock: it is counted as a unit of its own, one per sale.");
         }
-        else if (dish.Recipe.Kind == "recipe" && dish.Recipe.Lines.Count > 0)
+        else if (newItem.Recipe.Kind == "recipe" && newItem.Recipe.Lines.Count > 0)
         {
             var lines = new List<RecipeLineInput>();
-            foreach (var line in dish.Recipe.Lines)
+            foreach (var line in newItem.Recipe.Lines)
             {
                 var stockId = line.StockItemId ?? (line.NewItemKey is { } key && stockIds.TryGetValue(key, out var id) ? id : 0);
                 if (stockId == 0) continue;
                 lines.Add(new RecipeLineInput(stockId, line.Quantity, line.OptionRefs.Select(r => optionIds.GetValueOrDefault(r)).Where(id => id > 0).ToList(), line.Slot, line.None));
             }
             var set = await api.SendAsync<Unit>(HttpMethod.Put, "inventory-api", $"/api/inventory/recipes/{itemId}", branch, new RecipeRequest(lines), null, ct);
-            if (!set.IsOk) return Finish(dish, itemId, done, $"The recipe was not set ({set.Error}). Set it up on the dish's Stock tab.");
+            if (!set.IsOk) return Finish(newItem, itemId, done, $"The recipe was not set ({set.Error}). Set it up on the dish's Stock tab.");
             done.Add($"Recipe set: {lines.Count} line{(lines.Count == 1 ? "" : "s")}; each sale takes its ingredients off the stock.");
         }
 
         // 4. A photo, drawn and uploaded
-        if (dish.PhotoStyle is { } style)
+        if (newItem.PhotoStyle is { } style)
         {
             var drawn = await api.SendAsync<byte[]>(HttpMethod.Post, "catalog-api", "/api/catalog/assist/photo", branch,
-                new DrawDishPhotoRequest(dish.Name.En, dish.Name.Ar, dish.Description?.Display, dish.CategoryLabel, style, null), null, ct);
+                new DrawItemPhotoRequest(newItem.Name.En, newItem.Name.Ar, newItem.Description?.Display, newItem.CategoryLabel, style, null), null, ct);
             if (drawn.IsOk)
             {
                 var form = new MultipartFormDataContent();
                 var file = new ByteArrayContent(drawn.Value!);
                 file.Headers.ContentType = new MediaTypeHeaderValue("image/webp");
-                form.Add(file, "file", "dish.webp");
+                form.Add(file, "file", "item.webp");
                 var uploaded = await api.SendAsync<Unit>(HttpMethod.Post, "catalog-api", $"/api/catalog/items/{itemId}/pic", branch, form, null, ct);
                 done.Add(uploaded.IsOk ? $"A {style} photo was drawn and set." : $"The photo was drawn but not saved ({uploaded.Error}).");
             }
             else done.Add($"No photo was drawn ({drawn.Error}); add one in the back office.");
         }
 
-        return Finish(dish, itemId, done, null);
+        return Finish(newItem, itemId, done, null);
     }
 
-    private CallToolResult Finish(DishDraft dish, int? itemId, List<string> done, string? failure)
+    private CallToolResult Finish(ItemDraft newItem, int? itemId, List<string> done, string? failure)
     {
-        flow.Audit(CreateTool, new { dish = dish.Name.Display, dish.Price, itemId, groups = dish.Groups.Count, recipe = dish.Recipe.Kind, newStock = dish.Recipe.NewStock.Count },
+        flow.Audit(CreateTool, new { item = newItem.Name.Display, newItem.Price, itemId, groups = newItem.Groups.Count, recipe = newItem.Recipe.Kind, newStock = newItem.Recipe.NewStock.Count },
             failure ?? $"item {itemId}");
         return failure is null
             ? ToolResults.Ok(new { done = true, itemId, steps = done })
@@ -291,25 +291,25 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         => (!string.IsNullOrEmpty(b.En) && string.Equals(a?.En, b.En, StringComparison.OrdinalIgnoreCase))
            || (!string.IsNullOrEmpty(b.Ar) && string.Equals(a?.Ar, b.Ar, StringComparison.Ordinal));
 
-    /// <summary>The preview as the owner reads it: the dish, its choices, its recipe in plain lines, what is added to stock</summary>
-    internal static string Describe(DishDraft dish, string currency, IReadOnlyList<StockItemDto> shelf)
+    /// <summary>The preview as the owner reads it: the item, its choices, its recipe in plain lines, what is added to stock</summary>
+    internal static string Describe(ItemDraft newItem, string currency, IReadOnlyList<StockItemDto> shelf)
     {
         var sb = new StringBuilder();
-        sb.Append($"Add \"{dish.Name.Both}\" at {currency} {ToolResults.Money(dish.Price)} to ");
-        sb.AppendLine(dish.CategoryId is null ? $"a new category \"{dish.CategoryLabel}\"." : $"\"{dish.CategoryLabel}\".");
-        if (dish.Description is { } d) sb.AppendLine($"Description: {d.Both}");
-        if (dish.Popular) sb.AppendLine("Marked popular.");
+        sb.Append($"Add \"{newItem.Name.Both}\" at {currency} {ToolResults.Money(newItem.Price)} to ");
+        sb.AppendLine(newItem.CategoryId is null ? $"a new category \"{newItem.CategoryLabel}\"." : $"\"{newItem.CategoryLabel}\".");
+        if (newItem.Description is { } d) sb.AppendLine($"Description: {d.Both}");
+        if (newItem.Popular) sb.AppendLine("Marked popular.");
 
-        var optionName = dish.Groups.SelectMany(g => g.Options).ToDictionary(o => o.Ref, o => o.Name.Display);
-        foreach (var g in dish.Groups)
+        var optionName = newItem.Groups.SelectMany(g => g.Options).ToDictionary(o => o.Ref, o => o.Name.Display);
+        foreach (var g in newItem.Groups)
         {
             var options = string.Join(", ", g.Options.Select(o => o.Name.Both + (o.Price != 0 ? $" +{ToolResults.Money(o.Price)}" : "") + (o.Default ? " (default)" : "")));
             sb.AppendLine($"Choice \"{g.Name.Both}\" ({(g.Required ? "must pick" : "optional")}{(g.Multiple ? ", several" : "")}): {options}");
         }
 
-        DescribeRecipe(sb, dish.Recipe, optionName, shelf);
+        DescribeRecipe(sb, newItem.Recipe, optionName, shelf);
 
-        if (dish.PhotoStyle is { } style) sb.AppendLine($"A {style} photo will be drawn for it.");
+        if (newItem.PhotoStyle is { } style) sb.AppendLine($"A {style} photo will be drawn for it.");
         return sb.ToString().TrimEnd();
     }
 
@@ -341,7 +341,7 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
 
 // The plan a preview makes and a confirm carries out, signed (Auth/DraftSigner)
 
-public sealed record DishDraft(
+public sealed record ItemDraft(
     int? BranchId, LocalizedText Name, LocalizedText? Description, decimal Price,
     int? CategoryId, LocalizedText? NewCategory, string CategoryLabel, bool Popular,
     List<DraftGroup> Groups, DraftRecipe Recipe, string? PhotoStyle);

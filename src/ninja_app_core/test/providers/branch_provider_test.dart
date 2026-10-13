@@ -29,7 +29,7 @@ class _FakeBranches implements BranchRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
 }
 
-AuthState signedIn({required bool owner, List<int> branches = const []}) => AuthState(
+AuthState signedIn({required bool owner, List<int> branches = const [], bool allBranches = false}) => AuthState(
       isInitializing: false,
       isAuthenticated: true,
       mayUseApp: true,
@@ -37,6 +37,7 @@ AuthState signedIn({required bool owner, List<int> branches = const []}) => Auth
       userId: 'u1',
       roles: [owner ? 'Owner' : 'Cashier'],
       branches: branches,
+      allBranches: allBranches,
     );
 
 Future<ProviderContainer> containerFor(AuthState auth) async {
@@ -66,6 +67,12 @@ void main() {
     final container = await containerFor(signedIn(owner: true));
     await container.read(branchProvider.notifier).loadBranches();
     expect(container.read(branchProvider).branches, hasLength(3));
+  });
+
+  test('an account given every branch (a star) sees every branch, one opened later too', () async {
+    final container = await containerFor(signedIn(owner: false, allBranches: true));
+    await container.read(branchProvider.notifier).loadBranches();
+    expect([for (final b in container.read(branchProvider).branches) b.id], [1, 2, 3]);
   });
 
   test('no claim means no branch and nothing selected', () async {

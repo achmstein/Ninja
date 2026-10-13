@@ -1,4 +1,5 @@
-import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Undo2, UserRound } from 'lucide-react'
+import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Store, Undo2, UserRound } from 'lucide-react'
+import { useBranchName } from '@/features/branch/use-branch-name'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
   const money = useMoney()
   const nowMs = useNowMs()
   const line = useAddressLine()
+  const sentFrom = useSentFrom()
   const lane = laneOf(order)
 
   return (
@@ -52,6 +54,12 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         <MapPin className='size-3.5 shrink-0' aria-hidden />
         <span className='truncate'>{line(order.delivery)}</span>
       </div>
+      {order.takenAtBranchId != null && (
+        <div className='text-primary flex items-center gap-1.5 text-sm font-medium'>
+          <Store className='size-3.5 shrink-0' aria-hidden />
+          <span className='truncate'>{sentFrom(order)}</span>
+        </div>
+      )}
       {order.delivery.riderName && (
         <div className='flex items-center gap-1.5 text-sm'>
           <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
@@ -60,6 +68,16 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       )}
     </button>
   )
+}
+
+/** "Sent from Downtown · Sara": a phone delivery another branch's till took and sent here */
+export function useSentFrom() {
+  const t = useT()
+  const branchName = useBranchName()
+  return (order: { takenAtBranchId?: number | string | null; takenByName?: string | null }) => {
+    const branch = branchName(order.takenAtBranchId)
+    return order.takenByName ? t('deliverySentFrom', { branch, name: order.takenByName }) : t('deliverySentFromNoName', { branch })
+  }
 }
 
 /**

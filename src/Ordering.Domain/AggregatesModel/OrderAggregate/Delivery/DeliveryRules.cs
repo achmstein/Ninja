@@ -49,6 +49,12 @@ public static class DeliveryErrors
     /// <summary>Paid ahead online: nothing was collected at the door, so there is no cash to hand in.</summary>
     public const string PaidOnline = "delivery.paid_online";
     public const string Conflict = "delivery.conflict";
+    /// <summary>The till named another branch for an order that is not a delivery.</summary>
+    public const string SendNotDelivery = "delivery.send_not_delivery";
+    /// <summary>The till named another branch for an order on one of its own bills.</summary>
+    public const string SendWithTicket = "delivery.send_with_ticket";
+    /// <summary>The branch the till named is not one of the business's, is closed, or does not deliver.</summary>
+    public const string SendBranchClosed = "delivery.send_branch_closed";
     public const string RiderUnknown = "rider.unknown";
     public const string RiderNotYours = "rider.not_yours";
 

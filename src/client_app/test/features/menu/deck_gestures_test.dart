@@ -47,9 +47,9 @@ class _Brand extends BrandNotifier {
   );
 }
 
-MenuItem _dish(int id) => MenuItem(
+MenuItem _item(int id) => MenuItem(
   id: id,
-  name: LocalizedText(en: 'Dish $id'),
+  name: LocalizedText(en: 'Item $id'),
   description: const LocalizedText(en: ''),
   price: 50,
   catalogTypeId: 1,
@@ -185,8 +185,8 @@ void main() {
 
   group('the deck', () {
     final columns = [
-      DeckColumn(id: 'c0', label: 'Coffee', usuals: false, tone: PosterTone.primary, items: [_dish(1), _dish(2), _dish(3)]),
-      DeckColumn(id: 'c1', label: 'Tea', usuals: false, tone: PosterTone.secondary, items: [_dish(4), _dish(5)]),
+      DeckColumn(id: 'c0', label: 'Coffee', usuals: false, tone: PosterTone.primary, items: [_item(1), _item(2), _item(3)]),
+      DeckColumn(id: 'c1', label: 'Tea', usuals: false, tone: PosterTone.secondary, items: [_item(4), _item(5)]),
     ];
 
     testWidgets('opens each column on the card it was on, and tells the card it comes to rest on', (tester) async {
@@ -203,11 +203,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
       // On its second card, the third peeking under it
-      final second = tester.getRect(find.text('Dish 2'));
+      final second = tester.getRect(find.text('Item 2'));
       expect(second.top, lessThan(700));
-      expect(find.text('Dish 1'), findsNothing);
+      expect(find.text('Item 1'), findsNothing);
 
-      await tester.fling(find.text('Dish 2'), const Offset(0, -400), 2000);
+      await tester.fling(find.text('Item 2'), const Offset(0, -400), 2000);
       await tester.pumpAndSettle();
       expect(rested, contains((0, 2)));
     });
@@ -225,13 +225,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       // Its words beside the ring, on the card it is about and no other
       expect(find.text('Hold to add'), findsOneWidget);
-      expect(tester.getRect(find.text('Hold to add')).top, lessThan(tester.getRect(find.text('Dish 1')).top));
+      expect(tester.getRect(find.text('Hold to add')).top, lessThan(tester.getRect(find.text('Item 1')).top));
     });
   });
 
   group('zoom flights', () {
     test('a flight carries its frame and corner across, and hands over in its last fifth', () {
-      final f = ZoomFlight(item: _dish(1), from: const Rect.fromLTWH(0, 0, 300, 500), to: const Rect.fromLTWH(20, 40, 100, 125), fromRadius: 28, toRadius: 18);
+      final f = ZoomFlight(item: _item(1), from: const Rect.fromLTWH(0, 0, 300, 500), to: const Rect.fromLTWH(20, 40, 100, 125), fromRadius: 28, toRadius: 18);
       expect(f.rectAt(0), f.from);
       expect(f.rectAt(1), f.to);
       expect(f.rectAt(0.5), const Rect.fromLTWH(10, 20, 200, 312.5));
@@ -245,8 +245,8 @@ void main() {
 
     testWidgets('each card in view flies to its own tile', (tester) async {
       final room = GlobalKey();
-      final item = _dish(1);
-      final other = _dish(2);
+      final item = _item(1);
+      final other = _item(2);
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,

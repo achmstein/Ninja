@@ -8,7 +8,7 @@ class CatalogItemPairingEntityTypeConfiguration : IEntityTypeConfiguration<Catal
 
         builder.HasKey(p => p.Id);
 
-        // Deleting either item drops the pairing: a dish that is gone is not suggested
+        // Deleting either item drops the pairing: an item that is gone is not suggested
         builder.HasOne(p => p.CatalogItem)
             .WithMany(i => i.Pairings)
             .HasForeignKey(p => p.CatalogItemId)

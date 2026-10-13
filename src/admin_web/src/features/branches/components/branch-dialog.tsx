@@ -10,6 +10,7 @@ import {
 } from '@/api/tenant/@tanstack/react-query.gen'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
+import { locationText, pointOfText } from '@/lib/maps'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ import {
   localizedFields,
   mergeLocalized,
 } from '@/features/assist/use-form-fill'
+import { BranchMap } from './branch-map'
 
 interface BranchDialogProps {
   open: boolean
@@ -317,6 +319,24 @@ function BranchForm({
           }
         />
       </Field>
+
+      {/* Or put on the map: where it comes to rest is saved as its coordinates, which the link field then shows */}
+      <BranchMap
+        start={
+          pointOfText(form.location) ??
+          (pinned
+            ? { lat: Number(branch?.latitude), lng: Number(branch?.longitude) }
+            : null)
+        }
+        radiusKm={Number(branch?.deliveryRadiusKm ?? 0)}
+        onPlace={(point) =>
+          setForm((prev) => ({
+            ...prev,
+            location: locationText(point),
+            clearLocation: false,
+          }))
+        }
+      />
 
       <Field label={t('taxNumber')} htmlFor='branchTaxNumber'>
         <Input

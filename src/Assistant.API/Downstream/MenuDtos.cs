@@ -1,6 +1,6 @@
 namespace Ninja.Assistant.API.Downstream;
 
-// What the dish tools send to and read from Catalog and Inventory: mirrors of
+// What the item tools send to and read from Catalog and Inventory: mirrors of
 // their contracts, only the fields used.
 
 // --- Catalog -----------------------------------------------------------------
@@ -31,7 +31,7 @@ public sealed record ComposeItemResult(int ItemId, int CatalogTypeId, List<Compo
 
 public sealed record ComposedOption(int Ref, int Id);
 
-public sealed record DrawDishPhotoRequest(string? NameEn, string? NameAr, string? Description, string? Category, string? Style, string? Note);
+public sealed record DrawItemPhotoRequest(string? NameEn, string? NameAr, string? Description, string? Category, string? Style, string? Note);
 
 // --- Inventory ---------------------------------------------------------------
 

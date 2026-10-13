@@ -61,7 +61,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         [Description("Its Arabic name, when the owner gave both")] string? nameAr = null,
         [Description("How much one pack holds, in its unit (1000 for a 1 kg bag of an item in g); optional")] decimal? packSize = null,
         [Description("What a pack is called, e.g. bag, bottle, carton; optional")] string? packName = null,
-        [Description("true when the dishes that need it should sell out when it runs out")] bool autoSoldOut = false,
+        [Description("true when the items that need it should sell out when it runs out")] bool autoSoldOut = false,
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
         CancellationToken ct = default)
@@ -102,7 +102,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
     }
 
     [McpServerTool(Name = UpdateTool, Title = "Change a stock item", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Changes a stock item: its English or Arabic name, its unit, its pack, whether dishes sell out when it runs out, or retires it (active=false) so it leaves the lists without losing its history; active=true brings it back. Nothing is deleted. " +
+    [Description("Changes a stock item: its English or Arabic name, its unit, its pack, whether items sell out when it runs out, or retires it (active=false) so it leaves the lists without losing its history; active=true brings it back. Nothing is deleted. " +
         "Use for 'rename Milk to Full cream milk', 'we stopped using vanilla syrup', 'beans now come in 250 g bags'. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> UpdateStockItem(
         [Description("The stock item: its name in English or Arabic, or its id")] string stock,
@@ -111,7 +111,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         [Description("g, ml or pcs")] string? unit = null,
         [Description("How much one pack holds, in its unit; 0 for no pack")] decimal? packSize = null,
         [Description("What a pack is called, e.g. bag")] string? packName = null,
-        [Description("true when the dishes that need it should sell out when it runs out")] bool? autoSoldOut = null,
+        [Description("true when the items that need it should sell out when it runs out")] bool? autoSoldOut = null,
         [Description("false to retire it, true to bring it back")] bool? active = null,
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,

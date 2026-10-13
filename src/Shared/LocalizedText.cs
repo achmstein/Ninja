@@ -65,7 +65,7 @@ public sealed record LocalizedText
     public static LocalizedText? Optional(LocalizedText? text) => text is { IsEmpty: false } ? text : null;
 
     /// <summary>
-    /// A text whose language nobody said (a delivery platform's dish name, a
+    /// A text whose language nobody said (a delivery platform's item name, a
     /// line read off a receipt): Arabic script goes to <see cref="Ar"/>,
     /// anything else to <see cref="En"/>.
     /// </summary>

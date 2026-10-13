@@ -1,4 +1,5 @@
 import Flutter
+import GoogleMaps
 import UIKit
 import UserNotifications
 
@@ -19,9 +20,28 @@ import UserNotifications
     // Set up method channels
     if let controller = window?.rootViewController as? FlutterViewController {
       SessionNotificationHelper.shared.setupChannel(with: controller)
+      setupMapsChannel(with: controller)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // MARK: - Google Maps
+
+  /// The Maps SDK key comes from the build's record, which only the Dart side
+  /// reads (--dart-define-from-file): it is handed over here once, before the
+  /// first Google map (lib/features/delivery/widgets/google_map_picker.dart).
+  /// A build without a key never asks, and draws the free map.
+  private func setupMapsChannel(with controller: FlutterViewController) {
+    let channel = FlutterMethodChannel(name: "ninja/maps", binaryMessenger: controller.binaryMessenger)
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "provideApiKey", let key = call.arguments as? String, !key.isEmpty else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      GMSServices.provideAPIKey(key)
+      result(nil)
+    }
   }
 
   // MARK: - Deep Link Handling (Live Activity action buttons)

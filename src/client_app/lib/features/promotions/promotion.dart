@@ -8,13 +8,13 @@ import '../../core/network/api_client.dart';
 import '../../core/providers/branch_provider.dart';
 import '../../core/ui/ui.dart';
 import '../../l10n/app_localizations.dart';
-import '../menu/dish_link.dart';
+import '../menu/item_link.dart';
 
 /// Where a promotion's button goes
 enum PromotionLink { none, item, category, book }
 
 /// What the business promotes in the app (client_web's components/promotions):
-/// a designed picture with its headline drawn in, and a button to a dish, a
+/// a designed picture with its headline drawn in, and a button to an item, a
 /// category or booking
 class Promotion {
   final int id;
@@ -42,11 +42,18 @@ class Promotion {
   String get seenKey => '$id:${pictureUri ?? ''}';
 
   /// The picture this many pixels wide (320, 640 or 1280)
-  // The gateway passes only the dishes' pictures without an api-version
+  // The gateway passes only the items' pictures without an api-version
   String? pictureAt(int width) => pictureUri == null ? null : '$pictureUri&api-version=1.0&w=$width';
 }
 
-/// The promotion running now at the customer's branch, or null
+/// How long the app trusts what it was told about the promotion before asking again
+const promotionFresh = Duration(minutes: 2);
+
+/// The promotion running now at the customer's branch, or null. The frame
+/// ([MainScaffold]) asks again every [promotionFresh] and whenever the app
+/// comes back to the screen, so one the business switches off (or on, or
+/// that ends) shows so without a restart; the last answer stays up while
+/// the next is on its way.
 final livePromotionProvider = FutureProvider.autoDispose<Promotion?>((ref) async {
   final branchId = ref.watch(selectedBranchIdProvider);
   final api = ref.watch(catalogApiProvider);
@@ -136,7 +143,7 @@ Future<void> showPromotion(BuildContext context, Promotion promotion) {
                 Navigator.of(context).pop();
                 switch (promotion.link) {
                   case PromotionLink.item:
-                    if (promotion.linkId != null) pendingDish.value = promotion.linkId;
+                    if (promotion.linkId != null) pendingItem.value = promotion.linkId;
                     router?.go('/menu');
                   case PromotionLink.category:
                     pendingCategory.value = promotion.linkId;

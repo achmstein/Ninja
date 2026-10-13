@@ -32,7 +32,7 @@ const HURRY = 120
  * running down round a ring, the place, what to do, and the way to cancel.
  * On `clock` the parts come in one after another, one on each beat; the
  * place's name does not come in at all: it came with the card
- * (placeNameId), the way a dish's photo stays on screen as it opens.
+ * (placeNameId), the way an item's photo stays on screen as it opens.
  */
 export function ReservationFace({ reservation, clock }: { reservation: ReservationViewModel; clock?: MotionValue<number> }) {
   const t = useT()

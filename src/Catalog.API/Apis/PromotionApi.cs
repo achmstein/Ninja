@@ -236,7 +236,7 @@ public static class PromotionApi
     public static async Task<Results<Ok<PromotionDesignsDto>, BadRequest<ProblemDetails>, ProblemHttpResult>> DesignPromotion(
         [FromServices] PromotionDesigner designer,
         HttpContext http,
-        [Description("The owner's real photo: the dish, the room, the place")] IFormFile photo,
+        [Description("The owner's real photo: the item, the room, the place")] IFormFile photo,
         [FromForm, Description("The words drawn into the picture, exactly as typed")] string headline,
         [FromForm, Description("The business's name, small on the design")] string? business,
         [FromForm, Description("The brand's colours, hex, comma separated")] string? colors,

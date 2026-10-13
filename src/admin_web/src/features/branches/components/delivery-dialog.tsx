@@ -1,10 +1,17 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bike } from 'lucide-react'
+import { Bike, PenLine } from 'lucide-react'
 import { type BranchResponse } from '@/api/tenant'
 import { updateBranchMutation } from '@/api/tenant/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
+import {
+  areaOf,
+  areaProblem,
+  areaToApi,
+  type AreaProblem,
+  type DeliveryArea,
+} from '@/lib/maps'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +29,17 @@ import {
   stopsDelivering,
   type DeliverySettings,
 } from '../delivery-settings'
+import { Waiting } from './branch-map'
+
+/** The map the area is drawn on, with terra-draw and the map library, in a chunk of its own */
+const DeliveryAreaMap = lazy(() => import('./delivery-area-map'))
+
+const AREA_PROBLEM_TEXT = {
+  tooFew: 'deliveryAreaTooFew',
+  tooMany: 'deliveryAreaTooMany',
+  crosses: 'deliveryAreaCrosses',
+  tooFar: 'deliveryAreaTooFar',
+} as const satisfies Record<AreaProblem, string>
 
 interface DeliveryDialogProps {
   branch: BranchResponse | null
@@ -33,16 +51,17 @@ const asText = (value: number | string | null | undefined) =>
 
 /**
  * How far this branch's riders go and what a delivery asks: one radius
- * from where the branch is on the map, one fee wherever it goes, and the
- * least the items must come to. Saved with the branch, through the same
- * call its edit form makes.
+ * from where the branch is on the map, or an area drawn on the map round
+ * the streets they reach (which, drawn, decides instead of the radius); one
+ * fee wherever it goes, and the least the items must come to. Saved with the
+ * branch, through the same call its edit form makes.
  */
 export function DeliveryDialog({ branch, onOpenChange }: DeliveryDialogProps) {
   const t = useT()
 
   return (
     <Dialog open={branch != null} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Bike className='h-5 w-5' />
@@ -74,12 +93,21 @@ function DeliveryForm({
   const [radius, setRadius] = useState(asText(branch.deliveryRadiusKm))
   const [fee, setFee] = useState(asText(branch.deliveryFee))
   const [minimum, setMinimum] = useState(asText(branch.deliveryMinimumOrder))
+  const [area, setArea] = useState<DeliveryArea | null>(() =>
+    areaOf(branch.deliveryArea)
+  )
+  const [drawingArea, setDrawingArea] = useState(false)
   const [tried, setTried] = useState(false)
   // Clearing the radius of a branch that delivers stops it: asked once more
   const [confirming, setConfirming] = useState(false)
 
   const parsed = parseDeliverySettings({ radius, fee, minimum })
   const errors = tried && !parsed.ok ? parsed.errors : {}
+  const centre =
+    branch.latitude != null && branch.longitude != null
+      ? { lat: Number(branch.latitude), lng: Number(branch.longitude) }
+      : null
+  const problem = area && centre ? areaProblem(area, centre) : null
 
   const save = useMutation({
     ...updateBranchMutation(),
@@ -94,8 +122,11 @@ function DeliveryForm({
 
   const submit = () => {
     setTried(true)
-    if (!parsed.ok) return
-    if (!confirming && stopsDelivering(branch.isDeliveryEnabled, parsed.value)) {
+    if (!parsed.ok || problem) return
+    if (
+      !confirming &&
+      stopsDelivering(branch.isDeliveryEnabled, parsed.value, area != null)
+    ) {
       setConfirming(true)
       return
     }
@@ -118,6 +149,8 @@ function DeliveryForm({
         deliveryRadiusKm: value.radius,
         deliveryFee: value.fee,
         deliveryMinimumOrder: value.minimum,
+        // Empty takes a drawn area away
+        deliveryArea: areaToApi(area),
       },
     })
 
@@ -127,7 +160,7 @@ function DeliveryForm({
         <Field
           label={t('deliveryRadiusKm')}
           htmlFor='delivery-radius'
-          hint={t('deliveryRadiusHint')}
+          hint={area ? t('deliveryRadiusUnusedHint') : t('deliveryRadiusHint')}
           error={
             errors.radius ? (
               <span id='delivery-radius-error'>{t('deliveryRadiusInvalid')}</span>
@@ -150,6 +183,71 @@ function DeliveryForm({
             }}
           />
         </Field>
+        <div className='space-y-2'>
+          <div className='flex items-center justify-between gap-2'>
+            <span className='text-sm font-medium'>
+              {t('deliveryAreaTitle')}
+            </span>
+            {area && !drawingArea && (
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={() => {
+                  setArea(null)
+                  setConfirming(false)
+                }}
+              >
+                {t('deliveryAreaRemove')}
+              </Button>
+            )}
+          </div>
+          {!centre ? (
+            <p className='text-muted-foreground text-xs'>
+              {t('deliveryAreaNeedsLocation')}
+            </p>
+          ) : drawingArea ? (
+            <Suspense
+              fallback={
+                <div className='bg-muted relative h-64 rounded-lg border'>
+                  <Waiting />
+                </div>
+              }
+            >
+              <DeliveryAreaMap
+                centre={centre}
+                radiusKm={parsed.ok ? parsed.value.radius : 0}
+                initial={area}
+                onChange={(next) => {
+                  setArea(next)
+                  setConfirming(false)
+                }}
+              />
+            </Suspense>
+          ) : (
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <p className='text-muted-foreground text-xs'>
+                {area
+                  ? t('deliveryAreaDrawn', { n: area.length })
+                  : t('deliveryAreaNone')}
+              </p>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => setDrawingArea(true)}
+              >
+                <PenLine />
+                {area ? t('deliveryAreaEdit') : t('deliveryAreaDraw')}
+              </Button>
+            </div>
+          )}
+          {problem && (
+            <p role='alert' className='text-destructive text-sm'>
+              {t(AREA_PROBLEM_TEXT[problem])}
+            </p>
+          )}
+        </div>
         <FieldGrid>
           <Field
             label={`${t('deliveryFee')} (${currency})`}

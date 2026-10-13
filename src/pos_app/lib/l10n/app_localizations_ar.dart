@@ -1847,6 +1847,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'الصق لينك جوجل مابس اللي العميل بعته، على واتساب مثلاً';
 
   @override
+  String get deliverySearchAddress => 'أو دوّر على الشارع أو المنطقة';
+
+  @override
+  String get deliverySearchFailed =>
+      'ملقيناش المكان ده. الصق لينك العميل بداله.';
+
+  @override
   String get deliveryLocationReading => 'بنقرا اللوكيشن…';
 
   @override
@@ -1864,6 +1871,58 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String deliveryOutOfRange(String km) {
     return 'برّه منطقة التوصيل ($km كم)';
+  }
+
+  @override
+  String get deliveryOutOfArea => 'برّه منطقة توصيل الفرع';
+
+  @override
+  String get callCentre => 'الكول سنتر';
+
+  @override
+  String get callCentreNextCaller => 'المتصل اللي بعده';
+
+  @override
+  String get callCentreCallerHint =>
+      'ابدأ من المتصل: رقمه، وبعدين هيتوصّل فين.';
+
+  @override
+  String get callCentreFindBranch => 'شوف الفرع';
+
+  @override
+  String get callCentreNoBranch =>
+      'مفيش فرع بيوصّل هناك. خليه استلام من الفرع، أو راجع اللوكيشن.';
+
+  @override
+  String get callCentreNeedsLocation =>
+      'حط لوكيشن المتصل، أو اختار عنوان من عناوينه، عشان نلاقي الفرع.';
+
+  @override
+  String callCentreBranchFor(String branch, String distance, String fee) {
+    return '$branch · $distance · التوصيل $fee';
+  }
+
+  @override
+  String callCentreTakeAt(String branch) {
+    return 'خد الأوردر على $branch';
+  }
+
+  @override
+  String get callCentrePickupAt => 'استلام من…';
+
+  @override
+  String callCentrePickupAtBranch(String branch) {
+    return 'استلام من $branch';
+  }
+
+  @override
+  String callCentreOrderAt(String branch) {
+    return 'أوردر لـ $branch';
+  }
+
+  @override
+  String callCentrePlaced(int orderId, String branch) {
+    return 'أوردر #$orderId اتعمل في $branch';
   }
 
   @override
@@ -1947,6 +2006,132 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deliveryErrorPaused => 'الفرع مش بياخد طلبات دلوقتي.';
+
+  @override
+  String deliveryNearerBranch(String branch, String distance, String fee) {
+    return '$branch على بعد $distance وبيوصّل هناك · التوصيل $fee';
+  }
+
+  @override
+  String get deliveryBranchPaused => 'واقف دلوقتي';
+
+  @override
+  String deliverySendTo(String branch) {
+    return 'ابعته لـ$branch';
+  }
+
+  @override
+  String deliverySendToPaused(String branch) {
+    return '$branch واقف. تبعته برضه؟';
+  }
+
+  @override
+  String get deliveryKeepHere => 'خليه هنا';
+
+  @override
+  String deliveryWillSend(String branch) {
+    return 'رايح لـ$branch: هما يعملوه ويوصّلوه';
+  }
+
+  @override
+  String deliverySaveSend(String branch) {
+    return 'يتوصّل من $branch';
+  }
+
+  @override
+  String deliverySentTo(String branch, int orderId) {
+    return 'اتبعت لـ$branch · #$orderId';
+  }
+
+  @override
+  String deliverySentFrom(String branch, String name) {
+    return 'جاي من $branch · $name';
+  }
+
+  @override
+  String deliverySentFromNoName(String branch) {
+    return 'جاي من $branch';
+  }
+
+  @override
+  String newSentDeliveryToast(int orderId, String branch, String name) {
+    return 'توصيل تليفون جديد #$orderId من $branch ($name)';
+  }
+
+  @override
+  String newSentDeliveryToastNoName(int orderId, String branch) {
+    return 'توصيل تليفون جديد #$orderId من $branch';
+  }
+
+  @override
+  String priceReviewTitle(String branch) {
+    return 'منيو $branch مختلف';
+  }
+
+  @override
+  String priceReviewChanged(
+    String item,
+    String from,
+    String to,
+    String branch,
+  ) {
+    return '$item: $from ← $to في $branch';
+  }
+
+  @override
+  String priceReviewSoldOut(String item, String branch) {
+    return '$item: خلصان في $branch';
+  }
+
+  @override
+  String priceReviewOptionsOut(String item, String options, String branch) {
+    return '$item: $options خلصان في $branch';
+  }
+
+  @override
+  String get priceReviewDropped => 'الحاجات الخلصانة هتتشال من الطلب.';
+
+  @override
+  String priceReviewUse(String branch) {
+    return 'استخدم أسعار $branch';
+  }
+
+  @override
+  String priceReviewNothingLeft(String branch) {
+    return 'مفيش حاجة في الطلب ده تتعمل في $branch.';
+  }
+
+  @override
+  String priceCheckFailed(String branch) {
+    return 'معرفناش نشوف منيو $branch. جرب تاني.';
+  }
+
+  @override
+  String priceChecking(String branch) {
+    return 'بنشوف منيو $branch…';
+  }
+
+  @override
+  String get deliveryErrorSendNotDelivery =>
+      'التوصيل بس هو اللي يتبعت لفرع تاني.';
+
+  @override
+  String get deliveryErrorSendWithTicket =>
+      'اللي على فاتورة الفرع ده ميتبعتش لفرع تاني.';
+
+  @override
+  String get deliveryErrorSendBranchClosed =>
+      'الفرع ده مش بياخد توصيل. خليه هنا أو اختار فرع تاني.';
+
+  @override
+  String takenBy(String name) {
+    return 'اللي أخده $name';
+  }
+
+  @override
+  String takenByAt(String name, String branch) {
+    return 'اللي أخده $name في $branch';
+  }
 
   @override
   String get failReasonNoAnswer => 'محدش رد';

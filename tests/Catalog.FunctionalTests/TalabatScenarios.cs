@@ -40,7 +40,7 @@ public sealed class TalabatScenarios
         var firstItem = items.EnumerateObject().First(p => p.Name.StartsWith("item-"));
         Assert.AreEqual("Product", firstItem.Value.GetProperty("type").GetString());
 
-        // The till takes a dish off: that goes on its own, not waiting for a menu
+        // The till takes an item off: that goes on its own, not waiting for a menu
         var id = int.Parse(firstItem.Name["item-".Length..]);
         var pendingBefore = (await Owner.GetAsync<TalabatStatus>(Talabat())).Pending;
         await Till.SendAsync<JsonElement>(HttpMethod.Patch, $"/api/catalog/items/{id}/availability?{Version}", new { isAvailable = false }, HttpStatusCode.OK);

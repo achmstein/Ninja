@@ -6,7 +6,7 @@ import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../status.dart';
-import 'dish_line.dart';
+import 'item_line.dart';
 import 'elapsed_ring.dart';
 
 /// The delivery platforms whose own mark we show; anything else falls back to its name
@@ -245,8 +245,8 @@ class OrderCard extends StatelessWidget {
               children: [
                 for (final (index, item) in order.items.indexed) ...[
                   if (index > 0) Container(height: 1, color: theme.colors.border),
-                  // A tap strikes the dish through while it is being worked
-                  DishLine(
+                  // A tap strikes the item through while it is being worked
+                  ItemLine(
                     orderNumber: order.orderNumber,
                     index: index,
                     enabled: onReady != null,

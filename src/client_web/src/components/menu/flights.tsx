@@ -1,27 +1,27 @@
 import { motion } from 'motion/react'
-import { DishPhoto } from './dish-photo'
+import { ItemPhoto } from './item-photo'
 import { flightPath, type Box } from '../tray/tray-model'
 
 export type Flight = {
   id: number
   from: Box
   to: Box
-  /** The photo, or null for a dish without one (its colour flies instead) */
+  /** The photo, or null for an item without one (its colour flies instead) */
   src: string | null
   toneClass: string
   /** The corner of what it took off from, px: the clip starts there */
   radius: number
-  /** What happens as it lands: the dish goes into the order then, not before */
+  /** What happens as it lands: the item goes into the order then, not before */
   land: () => void
 }
 
 /**
- * The photo of a dish just added, flying into the tray. It starts exactly
+ * The photo of an item just added, flying into the tray. It starts exactly
  * over the photo it came from, corners and all, and on the first part of
  * the way its clip closes into a centred circle, so it lands as what it
  * lands on: the tray's round thumbnail, at that thumbnail's size. It rises a
  * little on the way; it is carried and scaled by transform, and only its
- * clip is redrawn. The dish joins the order as it lands (its `land`), so
+ * clip is redrawn. The item joins the order as it lands (its `land`), so
  * the tray changes when the photo gets there; each flight then removes
  * itself, so nothing is left running.
  */
@@ -55,7 +55,7 @@ export function FlightLayer({ flights, onLand }: { flights: Flight[]; onLand: (i
             onAnimationComplete={() => onLand(f.id)}
           >
             {/* A photo that will not load flies as the plate, as the tray shows it, never as a broken image */}
-            <DishPhoto src={f.src} />
+            <ItemPhoto src={f.src} />
           </motion.div>
         )
       })}

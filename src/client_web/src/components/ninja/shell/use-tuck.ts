@@ -89,7 +89,7 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
       }
     }
     // The menu's scroller sits over the dock and gets shorter as the tabs come back at its end; read at its
-    // end, it stays at its end while it shrinks, so the last dishes and their prices are not left under the dock
+    // end, it stays at its end while it shrinks, so the last items and their prices are not left under the dock
     let atEnd = false
     const onScrolled = () => {
       const { y, max } = read()

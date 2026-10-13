@@ -148,3 +148,11 @@ export function cashDifference(collected: number | null | undefined, total: numb
   if (collected == null || !Number.isFinite(collected)) return null
   return Math.round((collected - total) * 100) / 100
 }
+
+/**
+ * How the till says a pin is past the branch's reach: by its drawn area when it
+ * has one (its radius is then 0 and says nothing), by the radius otherwise.
+ */
+export function outOfRangeKey(terms: { hasArea?: boolean }): 'deliveryOutOfArea' | 'deliveryOutOfRange' {
+  return terms.hasArea ? 'deliveryOutOfArea' : 'deliveryOutOfRange'
+}

@@ -43,6 +43,8 @@ export const customersService = {
     role?: StaffRole
     isOwner?: boolean
     branchIds?: number[]
+    /** Every branch, those opened later too: a call centre's account */
+    allBranches?: boolean
   }): Promise<string | null> {
     // The new login's id, so the register can link it to an employee
     const { data } = await apiClient.post<{ userId?: string }>(
@@ -58,9 +60,17 @@ export const customersService = {
   },
 
   // Replace the branches a staff account may work in (Owner). The change
-  // reaches the user's token on its next refresh.
-  async setBranches(userId: string, branchIds: number[]): Promise<void> {
-    await apiClient.put(`/api/identity/users/${userId}/branches`, { branchIds })
+  // reaches the user's token on its next refresh. allBranches gives every
+  // branch, those opened later too (a call centre's account).
+  async setBranches(
+    userId: string,
+    branchIds: number[],
+    allBranches = false
+  ): Promise<void> {
+    await apiClient.put(`/api/identity/users/${userId}/branches`, {
+      branchIds,
+      allBranches,
+    })
   },
 
   // Get a single customer by ID

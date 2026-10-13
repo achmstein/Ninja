@@ -189,7 +189,7 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
     if (stage == live.stage && order.id == live.orderId && rider == live.rider && order.paidAhead == live.paidAhead) return;
     state = LiveOrder(stage, orderId: order.id, rider: rider, paidAhead: order.paidAhead, paysOnline: order.paysOnline);
     if (stage != live.stage) {
-      // Turned down is worth interrupting for: the island says so out loud, opened with the dishes
+      // Turned down is worth interrupting for: the island says so out loud, opened with the items
       if (stage == OrderStage.cancelled) _announce(order);
       // So is a delivery at the door, or one that could not get there
       if (stage == OrderStage.onTheWay || stage == OrderStage.delivered || stage == OrderStage.notDelivered) _announceDelivery(stage, rider, paid: order.paidAhead);
@@ -233,7 +233,7 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
   }
 
   /// The island opened out for a moment (client_web's order-pill.tsx): the
-  /// order turned down, its dishes and what it came to, and the way to the bill
+  /// order turned down, its items and what it came to, and the way to the bill
   void _announce(Order order) {
     final money = ref.read(moneyProvider);
     island.flash(
@@ -282,7 +282,7 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
   // A stay may have started while the order was open; stay-beats-table lives in orderDestinationProvider
   await ref.read(myStaysProvider.notifier).refresh();
   final destination = ref.read(orderDestinationProvider);
-  // Brought by the branch's rider: only once the branch has said yes to the address and the dishes reach its minimum
+  // Brought by the branch's rider: only once the branch has said yes to the address and the items reach its minimum
   final delivery = ref.read(deliveryStateProvider);
   if (delivery.active && !delivery.ready) return false;
   final deliverTo = delivery.active ? delivery.address : null;

@@ -50,6 +50,11 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .Property(o => o.GuestPhone)
             .HasMaxLength(30);
 
+        // The cashier who rang it up, and the branch that took it when another makes it
+        orderConfiguration.Property(o => o.TakenByUserId).HasMaxLength(OrderTaker.UserIdLength);
+        orderConfiguration.Property(o => o.TakenByName).HasMaxLength(OrderTaker.NameLength);
+        orderConfiguration.Ignore(o => o.WasSentFromAnotherBranch);
+
         // The Spaces place the order goes to
         orderConfiguration.Property(o => o.PlaceKind).HasMaxLength(20);
         orderConfiguration.OwnsOne(o => o.PlaceName, b => b.ToJson());

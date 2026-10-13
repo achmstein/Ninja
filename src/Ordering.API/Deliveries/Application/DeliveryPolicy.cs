@@ -66,19 +66,21 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
             throw new OrderingDomainException("Sign in to order delivery from this branch.", DeliveryErrors.SignInRequired);
         }
 
-        int? distance = draft is { Latitude: { } lat, Longitude: { } lng } && IsOnTheMap(lat, lng)
-            ? Geo.DistanceMeters(terms.Latitude, terms.Longitude, lat, lng)
-            : null;
+        var pin = draft is { Latitude: { } lat, Longitude: { } lng } && IsOnTheMap(lat, lng)
+            ? (Latitude: lat, Longitude: lng)
+            : ((double Latitude, double Longitude)?)null;
+        int? distance = pin is { } at ? terms.DistanceTo(at.Latitude, at.Longitude) : null;
 
         if (taker == DeliveryTaker.Customer)
         {
             // The customer pins the door; their order is held to the area and the minimum
-            if (distance is null)
+            if (pin is not { } door)
             {
                 throw new OrderingDomainException("Pin the address on the map.", DeliveryErrors.PinInvalid);
             }
 
-            if (distance > terms.RadiusMeters)
+            // Inside the drawn area when there is one, otherwise within the radius
+            if (!terms.Covers(door.Latitude, door.Longitude))
             {
                 throw new OrderingDomainException("This address is outside the branch's delivery area.", DeliveryErrors.OutOfRange);
             }
@@ -103,4 +105,59 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
 
     private static bool IsOnTheMap(double latitude, double longitude) =>
         latitude is >= -90 and <= 90 && longitude is >= -180 and <= 180;
+}
+
+/// <summary>
+/// Which of the business's other branches the till offers to send a phone
+/// delivery to. Every one that delivers to the pin when this branch does not;
+/// when this branch does, only one clearly nearer, so a few hundred metres
+/// never takes an order from the branch that answered the phone.
+/// </summary>
+public static class DeliveryAlternatives
+{
+    /// <summary>Clearly nearer: at most this share of this branch's distance…</summary>
+    public const double NearerShare = 0.7;
+
+    /// <summary>…and at least this much closer, in metres.</summary>
+    public const int NearerByMeters = 1000;
+
+    /// <param name="hereBranchId">The till's branch, never offered to itself.</param>
+    /// <param name="here">The till's branch's terms.</param>
+    /// <param name="branches">Every delivering branch, paused ones flagged.</param>
+    public static IReadOnlyList<DeliveryAlternative> For(
+        int hereBranchId,
+        DeliveryTerms here,
+        double latitude,
+        double longitude,
+        IEnumerable<BranchDeliveryTerms> branches)
+    {
+        var coveredHere = here.Covers(latitude, longitude);
+        var hereDistance = here.DistanceTo(latitude, longitude);
+
+        return branches
+            .Where(b => b.BranchId != hereBranchId && b.Terms.Covers(latitude, longitude))
+            .Select(b => (Branch: b, Distance: b.Terms.DistanceTo(latitude, longitude)))
+            .Where(b => !coveredHere || IsClearlyNearer(b.Distance, hereDistance))
+            .OrderBy(b => b.Distance)
+            .ThenBy(b => b.Branch.BranchId)
+            .Select(b => new DeliveryAlternative(b.Branch.BranchId, b.Distance, b.Branch.Terms.Fee, b.Branch.Terms.MinimumOrder, b.Branch.Paused))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Every branch whose area takes the pin in, nearest first, paused ones
+    /// flagged: the call centre's choice, where no branch answered the phone.
+    /// </summary>
+    public static IReadOnlyList<DeliveryAlternative> Reaching(double latitude, double longitude, IEnumerable<BranchDeliveryTerms> branches) =>
+        branches
+            .Where(b => b.Terms.Covers(latitude, longitude))
+            .Select(b => (Branch: b, Distance: b.Terms.DistanceTo(latitude, longitude)))
+            .OrderBy(b => b.Distance)
+            .ThenBy(b => b.Branch.BranchId)
+            .Select(b => new DeliveryAlternative(b.Branch.BranchId, b.Distance, b.Branch.Terms.Fee, b.Branch.Terms.MinimumOrder, b.Branch.Paused))
+            .ToList();
+
+    /// <summary>At least 30% and a kilometre closer than this branch.</summary>
+    public static bool IsClearlyNearer(int distance, int hereDistance) =>
+        distance <= hereDistance * NearerShare && hereDistance - distance >= NearerByMeters;
 }

@@ -62,13 +62,22 @@ class DeliveryRepository {
     return TillDeliveryQuote.fromJson((response.data as Map).cast<String, dynamic>());
   }
 
-  /// Where a caller asked to be delivered before, by account or number
-  Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone}) async {
+  /// Where a caller asked to be delivered before, by account or number;
+  /// [everyBranch] is the call centre's: any branch's earlier deliveries
+  Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone, bool everyBranch = false}) async {
     final response = await _orders.get('delivery/known-addresses', queryParameters: {
       if ((customerUserId ?? '').isNotEmpty) 'customerUserId': customerUserId,
       if ((phone ?? '').isNotEmpty) 'phone': phone,
+      if (everyBranch) 'everyBranch': true,
     });
     return [for (final e in _list(response.data)) KnownAddress.fromJson(e)];
+  }
+
+  /// The call centre's question: which branches deliver to the caller's
+  /// [location] (a Google Maps link or coordinates), nearest first
+  Future<StaffDeliveryResolution> resolveForStaff(String location) async {
+    final response = await _orders.get('delivery/resolve-staff', queryParameters: {'location': location.trim()});
+    return StaffDeliveryResolution.fromJson((response.data as Map).cast<String, dynamic>());
   }
 }
 

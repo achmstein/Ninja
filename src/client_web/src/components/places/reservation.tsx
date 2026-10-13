@@ -11,7 +11,7 @@ import { useDockRowShown } from '@/components/ninja/shell/use-dock-row'
 import { ReservationFace } from './reservation-face'
 
 /**
- * The customer's reservation, opened out of its place's card the way a dish
+ * The customer's reservation, opened out of its place's card the way an item
  * opens on the menu (components/menu/tune.tsx): it shares the card's
  * layout id, so it grows from the card's own box to the space between the
  * bars on the menu's spring, solid the whole way (no crossfade: the card's

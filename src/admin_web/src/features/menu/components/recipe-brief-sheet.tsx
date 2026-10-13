@@ -13,7 +13,7 @@ const MAX_BRIEF = 1000
  * they would tell a new barista (what goes in, how much, what each option
  * changes) and the assistant builds it from the shelf, proposing what the
  * shelf lacks, each in the unit it is counted in. Left empty, it guesses
- * from the dish's name and options as before. Nothing is saved here: the
+ * from the item's name and options as before. Nothing is saved here: the
  * review sheet shows the result first.
  */
 export function RecipeBriefSheet({

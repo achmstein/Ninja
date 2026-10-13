@@ -10,6 +10,7 @@ import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
+import '../../../core/services/branch_names.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -470,6 +471,17 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     onVoid: () => _voidGuarded(activeSession),
                     onDiscount: () => _discount(ticket),
                   ),
+                  // Who took the order that opened it, and where when another branch sent it here
+                  if ((ticket.takenBy ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        ticket.takenAtBranchId == null
+                            ? l10n.takenBy(ticket.takenBy!)
+                            : l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
+                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                      ),
+                    ),
                   const FDivider(),
                   if (sessionLoading) ...[
                     const _SessionCardSkeleton(),

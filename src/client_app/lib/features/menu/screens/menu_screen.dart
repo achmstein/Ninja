@@ -9,7 +9,7 @@ import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/shell/deck_compact.dart';
-import '../../../core/shell/dish_layer.dart';
+import '../../../core/shell/item_layer.dart';
 import '../../../core/shell/tuck.dart';
 import '../../../core/ui/gesture_hint.dart';
 import '../../../core/ui/ui.dart';
@@ -21,16 +21,16 @@ import '../models/menu_item.dart';
 import '../paired_items.dart';
 import '../services/menu_service.dart';
 import '../widgets/deck.dart';
-import '../widgets/dish.dart';
+import '../widgets/item.dart';
 import '../widgets/pinch.dart';
 import '../widgets/zoom_flight.dart';
 import '../../promotions/promotion.dart';
 
-/// One of the menu's sections: a category and its dishes
+/// One of the menu's sections: a category and its items
 typedef MenuSection = ({String label, List<MenuItem> items});
 
 /// The menu's sections: each category with anything in it, in the business's
-/// order. The most popular are not repeated here: each of them is a dish in
+/// order. The most popular are not repeated here: each of them is an item in
 /// its category (client_web's list shows the categories alone).
 List<MenuSection> menuSections(Map<MenuCategory, List<MenuItem>> grouped, Locale locale) => [
   for (final MapEntry(key: category, value: items) in grouped.entries)
@@ -42,7 +42,7 @@ const _cueAfter = Duration(milliseconds: 1400);
 
 /// The menu tab as client_web draws it (components/menu/menu-screen.tsx), in
 /// the style the business chose. A list, or the tiles, is one scrolling page
-/// under the tab's large title, each category a heading over its dishes
+/// under the tab's large title, each category a heading over its items
 /// (list/menu-grid.tsx). The deck is big cards, one column a category
 /// (deck/deck.tsx); two fingers closing on it, a tap on the category in
 /// view, or the grid button, zooms out to the whole menu as small tiles, the
@@ -51,7 +51,7 @@ const _cueAfter = Duration(milliseconds: 1400);
 /// deck's first card the chrome makes room for the cards. The categories are
 /// chips above the dock, in the thumb's reach: on the cards they turn the
 /// deck, on the page they follow the one in view and jump to one. A tap on a
-/// dish opens its options; its plus, or a held press, puts it straight in the
+/// item opens its options; its plus, or a held press, puts it straight in the
 /// tray. A first visit is shown the deck's gestures, once each.
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
@@ -132,7 +132,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       hint.addListener(_onHints);
     }
     cueOnScreen.addListener(_onHints);
-    dishOpen.addListener(_onHints);
+    itemOpen.addListener(_onHints);
     pendingCategory.addListener(_turnToCategory);
     ref.listenManual(livePromotionProvider, (_, next) => _offerPromotion(next.value), fireImmediately: true);
   }
@@ -144,7 +144,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     _positions.itemPositions.removeListener(_spy);
     _section.dispose();
     cueOnScreen.removeListener(_onHints);
-    dishOpen.removeListener(_onHints);
+    itemOpen.removeListener(_onHints);
     for (final hint in [_swipeHint, _zoomHint, _holdHint]) {
       hint.removeListener(_onHints);
       hint.dispose();
@@ -168,7 +168,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
   }
 
   /// The deck past its first card: the chrome makes room for the cards. By where the customer is
-  /// rather than which way they last swiped, so going back a card to compare two dishes keeps the
+  /// rather than which way they last swiped, so going back a card to compare two items keeps the
   /// room; the first card brings the chrome back. Held as it was while the deck is being left, so
   /// its cards do not change size under their flying photos
   bool get _compact => _cardsShown && _pastFirst;
@@ -274,7 +274,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       // Seen asked again now: the device's list comes in from storage a moment after a launch
       if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true) || ref.read(seenPromotionsProvider).contains(promotion.seenKey)) return;
       // Something open over the menu: asked again a moment later
-      if (dishOpen.value || ref.read(orderOpenProvider) || cueOnScreen.value != null) return _offerPromotion(promotion);
+      if (itemOpen.value || ref.read(orderOpenProvider) || cueOnScreen.value != null) return _offerPromotion(promotion);
       ref.read(seenPromotionsProvider.notifier).see(promotion);
       showPromotion(context, promotion);
     });
@@ -414,10 +414,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
       _cue(null, Duration.zero, () {});
       return null;
     }
-    // A dish or the order open over the menu, or another tab in front, is something going on. Only a
+    // An item or the order open over the menu, or another tab in front, is something going on. Only a
     // cue still to show asks: with none left, opening either does not rebuild the menu
     final covered =
-        dishOpen.value || ref.watch(orderOpenProvider) || !(ModalRoute.of(context)?.isCurrent ?? true) || !TickerMode.valuesOf(context).enabled;
+        itemOpen.value || ref.watch(orderOpenProvider) || !(ModalRoute.of(context)?.isCurrent ?? true) || !TickerMode.valuesOf(context).enabled;
     final idle = ready && !_grid && _leaving == null && !covered;
     final col = _columns.elementAtOrNull(_column);
     final active = col?.items.elementAtOrNull(_rows[_column] ?? 0);
@@ -429,7 +429,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
         ? GestureKind.pinch
         : GestureKind.hold;
     if (current.showing) {
-      // One showing as a dish opens (or the deck is left) is over, so nothing is left over what opened
+      // One showing as an item opens (or the deck is left) is over, so nothing is left over what opened
       if (!idle) {
         _cue(null, Duration.zero, () {});
         WidgetsBinding.instance.addPostFrameCallback((_) => current.done());
@@ -702,7 +702,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
         Positioned.fill(
           child: AnimatedSwitcher(duration: Motion.base, switchInCurve: Motion.enter, switchOutCurve: Motion.exit, child: content),
         ),
-        // The page under the dock, as the web's menu has it: the dishes end at the categories, and
+        // The page under the dock, as the web's menu has it: the items end at the categories, and
         // none shows round the dock or under it, down to the screen's edge
         AnimatedPositioned(
           duration: tuckSettle,
@@ -816,7 +816,7 @@ class _Head extends StatelessWidget {
   }
 }
 
-/// A category: its heading, then its dishes as the style lays them out
+/// A category: its heading, then its items as the style lays them out
 class _Section extends StatelessWidget {
   final MenuSection section;
   final MenuItemLayout layout;
@@ -827,7 +827,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final items = section.items;
-    final Widget dishes = switch (layout) {
+    final Widget itemList = switch (layout) {
       // Small tiles, three a row: the tiles, and the deck zoomed out
       MenuItemLayout.deck || MenuItemLayout.tiles => Column(
         children: [
@@ -838,7 +838,7 @@ class _Section extends StatelessWidget {
               children: [
                 for (var j = i; j < i + 3; j++) ...[
                   if (j > i) const SizedBox(width: 10),
-                  Expanded(child: j < items.length ? Rise(child: dishFor(layout, items[j])) : const SizedBox()),
+                  Expanded(child: j < items.length ? Rise(child: itemFor(layout, items[j])) : const SizedBox()),
                 ],
               ],
             ),
@@ -852,9 +852,9 @@ class _Section extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Rise(child: dishFor(layout, items[i]))),
+                Expanded(child: Rise(child: itemFor(layout, items[i]))),
                 const SizedBox(width: 12),
-                Expanded(child: i + 1 < items.length ? Rise(child: dishFor(layout, items[i + 1])) : const SizedBox()),
+                Expanded(child: i + 1 < items.length ? Rise(child: itemFor(layout, items[i + 1])) : const SizedBox()),
               ],
             ),
           ],
@@ -864,13 +864,13 @@ class _Section extends StatelessWidget {
         children: [
           for (final (i, item) in items.indexed) ...[
             if (i > 0) Divider(height: 1, thickness: 1, color: theme.colors.border.withValues(alpha: 0.6)),
-            Rise(child: dishFor(layout, item)),
+            Rise(child: itemFor(layout, item)),
           ],
         ],
       ),
       _ => Column(
         children: [
-          for (final (i, item) in items.indexed) ...[if (i > 0) const SizedBox(height: 16), Rise(child: dishFor(layout, item))],
+          for (final (i, item) in items.indexed) ...[if (i > 0) const SizedBox(height: 16), Rise(child: itemFor(layout, item))],
         ],
       ),
     };
@@ -881,7 +881,7 @@ class _Section extends StatelessWidget {
         children: [
           BrandHeading(section.label, style: theme.typography.headline.copyWith(color: theme.colors.foreground)),
           const SizedBox(height: 12),
-          dishes,
+          itemList,
         ],
       ),
     );

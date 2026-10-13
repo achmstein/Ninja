@@ -58,12 +58,20 @@ public class Branch
     /// <summary>How far the riders go, straight-line from the branch; null until set.</summary>
     public decimal? DeliveryRadiusKm { get; set; }
 
+    /// <summary>
+    /// The streets the riders reach, drawn on the map: a ring of [lat, lng] points
+    /// (<see cref="Services.DeliveryAreaRules"/>), stored as one JSON document; null
+    /// for none. When drawn it, not <see cref="DeliveryRadiusKm"/>, says where the
+    /// branch delivers; the radius stays for reference.
+    /// </summary>
+    public double[][]? DeliveryArea { get; set; }
+
     /// <summary>What a delivery adds to the bill, the same wherever it goes.</summary>
     public decimal DeliveryFee { get; set; }
 
     /// <summary>The least the items must come to for a delivery; 0 for none.</summary>
     public decimal DeliveryMinimumOrder { get; set; }
 
-    /// <summary>Whether delivery can be on: the branch is on the map and says how far it goes.</summary>
-    public bool CanDeliver => Latitude != null && Longitude != null && DeliveryRadiusKm > 0;
+    /// <summary>Whether delivery can be on: the branch is on the map and says how far it goes, by a radius or a drawn area.</summary>
+    public bool CanDeliver => Latitude != null && Longitude != null && (DeliveryRadiusKm > 0 || DeliveryArea is { Length: >= 3 });
 }

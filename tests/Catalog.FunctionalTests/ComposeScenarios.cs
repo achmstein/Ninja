@@ -9,7 +9,7 @@ public record ComposedOptionView(int Ref, int Id);
 public record ComposeResultView(int ItemId, int CatalogTypeId, List<ComposedOptionView> Options);
 
 /// <summary>
-/// A dish made whole in one call, as the owner's assistant sends it: the
+/// An item made whole in one call, as the owner's assistant sends it: the
 /// item, its new category and its options, each option answering the id it
 /// got for the caller's reference; the same request id again makes nothing.
 /// </summary>
@@ -56,7 +56,7 @@ public sealed class ComposeScenarios
     };
 
     [TestMethod]
-    public async Task A_dish_is_made_with_its_category_and_options_and_each_reference_gets_its_id()
+    public async Task An_item_is_made_with_its_category_and_options_and_each_reference_gets_its_id()
     {
         var name = $"Spanish {Guid.NewGuid():N}"[..16];
         var response = await ComposeAsync(Guid.NewGuid(), Latte(name));

@@ -15,7 +15,7 @@ import { useDebounced } from '@/components/cart/savings-model'
 const POINTS_PER_EGP = 100
 
 /**
- * What goes with an order besides its dishes: a note, a promo code, points
+ * What goes with an order besides its items: a note, a promo code, points
  * off. One set of rules wherever the order is sent from, the tray or the
  * order page: the server quotes the code and the points against the live
  * subtotal, and only what it accepted goes with the order.

@@ -56,10 +56,14 @@
                 <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/table/"/>
                 <!-- A counter customer's one-time link to claim their account -->
                 <data android:scheme="https" android:host="chillax.site" android:path="/claim"/>
-                <!-- A dish shared by its link: the menu opens with it open -->
+                <!-- An item shared by its link: the menu opens with it open -->
                 <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/item/"/>
             </intent-filter>
         </activity>
+        <!-- Google's Maps SDK key, from the build's record (build.gradle.kts); empty draws the free map -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${googleMapsKey}" />
         <!-- Hand VIEW intents to Flutter so go_router routes them -->
         <meta-data
             android:name="flutter_deeplinking_enabled"

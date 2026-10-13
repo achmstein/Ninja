@@ -11,6 +11,7 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_address.dart';
 import '../services/delivery_service.dart';
+import 'address_search_field.dart';
 import 'map_picker.dart';
 
 /// Where the map opens when neither the customer nor the branch is placed: the middle of the business's country
@@ -382,6 +383,16 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // A street named rather than found: the map flies there, and the pin is then put on the door
+        AddressSearchField(
+          near: ref.read(branchProvider).selectedBranch?.point,
+          onPick: (place) => setState(() {
+            _flyTo = place.point;
+            _pinned = true;
+            _moved = true;
+            if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
+          }),
+        ),
         SizedBox(
           height: 224,
           child: Stack(

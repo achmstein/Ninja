@@ -9,7 +9,7 @@ namespace Ninja.Assistant.UnitTests.Tools;
 [TestClass]
 public sealed class WriteFlowTests
 {
-    private sealed record Plan(string Dish, decimal Price, List<int> Options);
+    private sealed record Plan(string Item, decimal Price, List<int> Options);
 
     private static DraftSigner Signer(FakeTimeProvider clock, string key = "a-key")
         => new(Microsoft.Extensions.Options.Options.Create(new AssistantOptions { DraftKey = key }), clock, NullLogger<DraftSigner>.Instance);
@@ -23,7 +23,7 @@ public sealed class WriteFlowTests
         var (draft, error) = signer.Open<Plan>(token, "owner-1", "create_menu_item", "req-1");
 
         Assert.IsNull(error, error);
-        Assert.AreEqual("لاتيه سبانش", draft!.Dish);
+        Assert.AreEqual("لاتيه سبانش", draft!.Item);
         Assert.AreEqual(85m, draft.Price);
         CollectionAssert.AreEqual(new[] { 900000001, 900000002 }, draft.Options);
     }

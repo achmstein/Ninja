@@ -4,7 +4,7 @@ import type { CatalogItemDto } from '@/api/catalog'
 import { usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
-/** Whether the dish is on an offer that actually takes something off */
+/** Whether the item is on an offer that actually takes something off */
 export function isOnOffer(item: CatalogItemDto): boolean {
   return !!item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
 }

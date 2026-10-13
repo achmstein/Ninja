@@ -24,7 +24,7 @@ public sealed class Provisioner(
     ILogger<Provisioner> logger,
     DemoData? demoData = null,
     ProvisioningQueue? queue = null,
-    DishPhotos? photos = null)
+    ItemPhotos? photos = null)
 {
     private const string Source = "provisioner";
 
@@ -187,8 +187,8 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag, restoredFrom = restore?.Slug }, ct, Source);
 
-            // A new business's dishes get their photos, whichever way its menu came (read at creation, or the
-            // sample's): drawn in the AI lane, minutes of work that hold nothing up; a dish with a photo is left
+            // A new business's items get their photos, whichever way its menu came (read at creation, or the
+            // sample's): drawn in the AI lane, minutes of work that hold nothing up; an item with a photo is left
             // alone, and without an image model the step says so. A restore brings its own pictures
             if (restore is null && queue is not null)
                 await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "photos"), ct);
@@ -448,7 +448,7 @@ public sealed class Provisioner(
         }, ct);
 
     /// <summary>By hand, for a demo made before there was demo data: fills it once, while it runs.</summary>
-    /// <summary>A photo for every dish that has none (<see cref="DishPhotos"/>); the step says how many, and why any were not made.</summary>
+    /// <summary>A photo for every item that has none (<see cref="ItemPhotos"/>); the step says how many, and why any were not made.</summary>
     public async Task PhotosAsync(Guid tenantId, CancellationToken ct)
     {
         if (photos is null) return;
@@ -926,6 +926,37 @@ public sealed class Provisioner(
             tenant.LastError = ex.Message;
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.social.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
+        }
+    }
+
+    /// <summary>
+    /// Google Maps turned on or off for the business: the stack is re-stamped with the platform's Maps keys or
+    /// without them, so Tenant.API answers address search or refuses it and tells the apps which map to draw
+    /// (only Tenant.API is recreated). A stack that is not running gets its files now and the rest on start.
+    /// </summary>
+    public async Task MapsAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        try
+        {
+            await Step(tenant, Guid.NewGuid(), "maps", async () =>
+            {
+                var dir = Dir(tenant);
+                if (!Directory.Exists(dir)) return "nothing stamped";
+                await WriteStackFilesAsync(tenant, ct);
+                if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
+                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
+                if (!result.Ok) throw new ShellException(result.Output);
+                return (tenant.GoogleMaps ? "on" : "off") + "\n" + result.Output;
+            }, ct);
+            await audit.WriteAsync("tenant.maps.done", tenant.Slug, new { on = tenant.GoogleMaps }, ct, Source);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Google Maps for {Slug} failed", tenant.Slug);
+            tenant.LastError = ex.Message;
+            await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.maps.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
         }
     }
 

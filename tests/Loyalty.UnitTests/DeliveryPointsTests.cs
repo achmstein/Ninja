@@ -8,7 +8,7 @@ namespace Ninja.Loyalty.UnitTests;
 public sealed class DeliveryPointsTests
 {
     [TestMethod]
-    public void A_delivery_earns_on_its_dishes_not_its_fee()
+    public void A_delivery_earns_on_its_items_not_its_fee()
     {
         var delivered = new OrderStatusChangedToConfirmedIntegrationEvent { OrderId = 1, OrderTotal = 115m, DeliveryFee = 20m, IsDelivery = true };
         Assert.AreEqual(95m, OrderStatusChangedToConfirmedIntegrationEventHandler.EarningTotal(delivered));

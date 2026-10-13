@@ -19,7 +19,7 @@ export function MenuPage({ actions, fixed, children }: MenuPageProps) {
   return (
     <Main fixed={fixed}>
       <PageHeader title={t('menu')} actions={actions}>
-        <MenuTabs value='dishes' />
+        <MenuTabs value='items' />
       </PageHeader>
       {children}
     </Main>

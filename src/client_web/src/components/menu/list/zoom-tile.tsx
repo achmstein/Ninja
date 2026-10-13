@@ -7,15 +7,15 @@ import { usePress } from '@/components/ninja/gestures/use-press'
 import { PressRing } from '../deck/deck'
 import { TONE_CLASS } from '../deck/deck-model'
 import { OfferBadge } from '../offer'
-import { SoldOutBadge } from './dish-parts'
+import { SoldOutBadge } from './item-parts'
 
 /** A tile's corner; the card it came from is rounder, and the photo's flight carries it across */
 const TILE_RADIUS = 18
 
 /**
- * A dish on the whole menu (the deck zoomed out): a small photo tile, the
+ * An item on the whole menu (the deck zoomed out): a small photo tile, the
  * name and price under it. The photos of the cards that were on screen fly
- * into their tiles (found by `data-photo`); a tap opens the dish's options
+ * into their tiles (found by `data-photo`); a tap opens the item's options
  * grown out of its photo, a held press puts one straight in the tray.
  */
 export const ZoomTile = memo(function ZoomTile({
@@ -67,7 +67,7 @@ export const ZoomTile = memo(function ZoomTile({
             <OfferBadge item={item} />
           </span>
         )}
-        {/* Held, a ring fills: at the full ring the dish drops into the tray, or opens when there is something to choose */}
+        {/* Held, a ring fills: at the full ring the item drops into the tray, or opens when there is something to choose */}
         {!soldOut && (
           <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-150', pressing ? 'opacity-100' : 'opacity-0')}>
             <PressRing pressing={pressing} blur={pressing} small />

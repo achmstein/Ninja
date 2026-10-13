@@ -76,6 +76,9 @@ class BranchNotifier extends Notifier<BranchState> {
     ref.listen(authServiceProvider.select((s) => s.branches), (previous, next) {
       if (previous != null && !listEquals(previous, next) && !state.isLoading) loadBranches();
     });
+    ref.listen(authServiceProvider.select((s) => s.allBranches), (previous, next) {
+      if (previous != null && previous != next && !state.isLoading) loadBranches();
+    });
     return BranchState(
       selectedBranchId: _initialBranchId,
       isLoading: true,
@@ -84,10 +87,11 @@ class BranchNotifier extends Notifier<BranchState> {
 
   Future<void> loadBranches() async {
     try {
-      // The public list, narrowed to the token's branch claim; owners hold all
+      // The public list, narrowed to the token's branch claim; owners hold all,
+      // and so does an account given every branch (`*`, a call centre's)
       final auth = ref.read(authServiceProvider);
       final all = await ref.read(branchRepositoryProvider).getBranches();
-      final branches = auth.isOwner ? all : all.where((b) => auth.branches.contains(b.id)).toList();
+      final branches = allowedBranches(all, auth);
 
       var selectedId = state.selectedBranchId;
 
@@ -128,6 +132,12 @@ class BranchNotifier extends Notifier<BranchState> {
     await prefs.setInt(_branchKey, branchId);
   }
 }
+
+/// The branches an account may work in: every one for an owner or an account
+/// given every branch (a `*` in the claim, new branches included), otherwise
+/// those its claim names.
+List<Branch> allowedBranches(List<Branch> all, AuthState auth) =>
+    auth.isOwner || auth.allBranches ? all : all.where((b) => auth.branches.contains(b.id)).toList();
 
 final branchProvider = NotifierProvider<BranchNotifier, BranchState>(
   BranchNotifier.new,

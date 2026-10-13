@@ -32,8 +32,8 @@ Phases 1, 2 and 3 are committed, and so are the gaps found along the way (see be
 | What | Where |
 |---|---|
 | List menu (`list/menu-grid.tsx` port): large title, categories only (the popular pseudo-category `id -1` is dropped), dishes per style, rise-in; the category chips above the dock with scroll-spy and jump | `lib/features/menu/screens/menu_screen.dart` |
-| Dishes (`list/row.tsx`, `photo-tile.tsx`, `compact-row.tsx`, `hero-card.tsx`, `dish-parts.tsx`): price pill, round plus → stepper, chevron when something must be chosen; tap opens, hold quick-adds | `lib/features/menu/widgets/dish.dart` (`quickAdd`, `openDish`, `dishFor`) |
-| Full-screen dish view (`tune.tsx`): photo flight from the dish into the banner and back (`DishPhotos` registry hides the source), questions as pills (required first, "Choose X" + glow), goes-well-with, note, qty, add with rolling total; on Add the view fades and the banner photo flies to the tray | `lib/features/menu/widgets/dish_view.dart` |
+| Dishes (`list/row.tsx`, `photo-tile.tsx`, `compact-row.tsx`, `hero-card.tsx`, `item-parts.tsx`): price pill, round plus → stepper, chevron when something must be chosen; tap opens, hold quick-adds | `lib/features/menu/widgets/item.dart` (`quickAdd`, `openItem`, `itemFor`) |
+| Full-screen dish view (`tune.tsx`): photo flight from the dish into the banner and back (`ItemPhotos` registry hides the source), questions as pills (required first, "Choose X" + glow), goes-well-with, note, qty, add with rolling total; on Add the view fades and the banner photo flies to the tray | `lib/features/menu/widgets/item_view.dart` |
 | Fly to tray (`flights.tsx`): two-leg arc, clip closes to a circle, lands on the tray's first thumbnail, tray bumps; no layer mounted (tests) → lands at once | `lib/features/cart/widgets/tray_flights.dart` |
 | Deck (`deck/deck.tsx`): columns side by side (usuals first), vertical snap with 44 px peek, "Up next" card auto-advances, hold ring; zoom out to tiles and back via chips/button; tiles layout | `lib/features/menu/widgets/deck.dart` |
 | Removed: `cart_screen.dart`, `item_customization_sheet.dart`, `goes_well_with.dart` | |
@@ -58,15 +58,15 @@ Left from phase 3:
 
 | Gap | Where it landed |
 |---|---|
-| **Dish view over the dock**: a dish opens on the frame's own layer, over the page, its bar and the categories, under the dock, so the tray stays in reach and an added dish lands on it; back or another tab closes it first | `lib/core/shell/dish_layer.dart` (`DishLayer`, `DishNavigator`, `dishOpen`), `main_scaffold.dart` |
+| **Dish view over the dock**: a dish opens on the frame's own layer, over the page, its bar and the categories, under the dock, so the tray stays in reach and an added dish lands on it; back or another tab closes it first | `lib/core/shell/item_layer.dart` (`ItemLayer`, `ItemNavigator`, `itemOpen`), `main_scaffold.dart` |
 | **Top bar** scrolls away with a list and comes back on the way up (`topBarAt`, `TopBarOnScroll`, `TopBarSlot`); past the deck's first card it goes up by its own height (0.3 s, easeOut) and comes back on the first card. The deck swallows its scroll notifications and drives the dock's tuck and `deckCompactProvider` itself (`null` when no cards are on screen, so the page's scroll has the bar; the two never fight) | `lib/core/shell/{top_bar,deck_compact,tuck}.dart`, `menu_screen.dart` |
 | **Deck extras**: pinch out/in (`pinchIntent`, 0.78), photo flights between cards and tiles on zoom, compact chrome past the first card, first-visit cues (swipe, pinch, hold to add) | `features/menu/widgets/{pinch,zoom_flight,deck}.dart`, `lib/core/ui/gesture_hint.dart` |
-| **One cue on screen at a time** across menu and tray: one book (`ninja-style-hints`, as the web; the tray's old `ninja-hint-tray` key is read once into it), `cueOnScreen`; the deck's cues wait while the order or a dish is open (`orderOpenProvider`, `dishOpen`) | `gesture_hint.dart`, `features/cart/widgets/tray_hint.dart`, `tray.dart` |
+| **One cue on screen at a time** across menu and tray: one book (`ninja-style-hints`, as the web; the tray's old `ninja-hint-tray` key is read once into it), `cueOnScreen`; the deck's cues wait while the order or a dish is open (`orderOpenProvider`, `itemOpen`) | `gesture_hint.dart`, `features/cart/widgets/tray_hint.dart`, `tray.dart` |
 | **Tray extras**: seat flights (circles from the dock to their rows following the finger), the one-time peek + "drag up" cue on the first dish | `features/cart/widgets/{tray_seats,tray_hint}.dart` |
-| **Goes-well-with flight**: a suggestion added from the dish view flies from its card's photo | `dish_view.dart` |
+| **Goes-well-with flight**: a suggestion added from the dish view flies from its card's photo | `item_view.dart` |
 | **Dock row sheet**: the bill / table / room open as a slab sheet out of the dock (`showDockBills`, request tiles, `showRoomSheet`) | `lib/core/shell/dock_bill.dart`, `bills/widgets/open_bills.dart`, `service_request/widgets/request_tiles.dart` |
 | **Visit tab countdown** while a place is held | `lib/core/shell/live_visit.dart` |
-| **`/item/{id}` deep link** opens the menu with the dish over it, or says it is not on the menu | `features/menu/dish_link.dart`, `app_router.dart` |
+| **`/item/{id}` deep link** opens the menu with the dish over it, or says it is not on the menu | `features/menu/item_link.dart`, `app_router.dart` |
 | **Hold ring** on a deck card (hold to add) | `features/menu/widgets/deck.dart` |
 | **Old helpers**: `app_theme.dart` deleted, its colours on `NinjaColors` | |
 | **Hard-coded colours**: statuses map to `NinjaColors.success/warning/error` and their web neighbours added beside them (`successSolid/Ink/OnSlab`, `warningSolid/Ink/InkDeep/OnSlab/OnSlabPale`, `errorSolid/OnSlab`, `otherRate`), the rating's stars to amber-400 over faint muted ink as on the web, spinners on buttons to `primaryForeground`. Left on purpose: the receipt paper (black on white), white/black on photos and their shades, the camera screens, white on a solid status fill, shadows' black with alpha | `lib/core/theme/ninja_theme.dart` |

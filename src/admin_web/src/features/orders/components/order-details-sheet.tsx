@@ -14,6 +14,7 @@ import { EntitySheet } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { StatusChip } from '@/components/status-chip'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
+import { TakenBy } from './taken-by'
 import {
   defaultPlatformRejectReason,
   formatEgp,
@@ -182,6 +183,7 @@ export function OrderDetailsSheet({
               </div>
             </div>
           )}
+          <TakenBy order={order} className='text-sm' />
           {(localized(order.placeName) || order.customerNote) && (
             <div className='flex flex-col gap-2'>
               {localized(order.placeName) && (

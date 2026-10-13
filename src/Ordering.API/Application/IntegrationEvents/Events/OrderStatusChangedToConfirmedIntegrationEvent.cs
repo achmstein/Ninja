@@ -108,6 +108,19 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public Guid? PaidOnlineKey { get; init; }
 
+    /// <summary>The cashier who rang it up at a till; null for an order from the apps.</summary>
+    public string? TakenByUserId { get; init; }
+
+    /// <summary>The cashier's name, for the bill and the till to say who took it.</summary>
+    public string? TakenByName { get; init; }
+
+    /// <summary>
+    /// The branch whose till took it, when that is not <see cref="BranchId"/>: a
+    /// phone delivery sent on to the branch nearer the customer. Null when it was
+    /// taken where it is made.
+    /// </summary>
+    public int? TakenAtBranchId { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

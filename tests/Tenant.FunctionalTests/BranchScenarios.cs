@@ -19,7 +19,7 @@ public record BranchView(
     bool RequireSignInForDelivery = false);
 
 /// <summary>A branch as far as its delivery goes.</summary>
-public record DeliveryBranchView(int Id, bool IsDeliveryEnabled, decimal? DeliveryRadiusKm);
+public record DeliveryBranchView(int Id, bool IsDeliveryEnabled, decimal? DeliveryRadiusKm, double[][]? DeliveryArea = null);
 
 /// <summary>
 /// The business's branches: the list every app reads, the owner's to add and
@@ -156,6 +156,57 @@ public sealed class BranchScenarios
             deliveryFee = -1,
         });
         Assert.AreEqual(HttpStatusCode.BadRequest, negative);
+    }
+
+    [TestMethod]
+    public async Task A_branch_delivers_to_an_area_drawn_on_the_map_and_a_crossed_one_is_refused()
+    {
+        // A square of streets round Downtown, drawn closed
+        double[][] square = [[30.035, 31.225], [30.055, 31.225], [30.055, 31.245], [30.035, 31.245], [30.035, 31.225]];
+        var name = new { en = "Drawn", ar = "مرسوم" };
+
+        var created = await Owner.PostAsync<DeliveryBranchView>(Branches, new
+        {
+            name,
+            location = "30.0444, 31.2357",
+            deliveryArea = square,
+            deliveryFee = 20,
+        }, HttpStatusCode.Created);
+        Assert.IsNull(created.DeliveryRadiusKm, "no radius: the area is enough");
+        Assert.HasCount(4, created.DeliveryArea!, "the repeated closing point is dropped");
+
+        // Delivery goes on with the area alone, and the area is read back as saved
+        var on = await Owner.SendAsync<DeliveryBranchView>(HttpMethod.Patch, $"{Branches}/{created.Id}/settings", new { isDeliveryEnabled = true }, HttpStatusCode.OK);
+        Assert.IsTrue(on.IsDeliveryEnabled);
+        var listed = await Owner.GetAsync<List<DeliveryBranchView>>($"{Branches}/all");
+        CollectionAssert.AreEqual(square[2], listed.Single(b => b.Id == created.Id).DeliveryArea![2]);
+
+        // A bow tie crosses itself; a delivering branch's only area cannot go
+        var (crossed, crossedDetail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Branches}/{created.Id}", new
+        {
+            name, isActive = true, displayOrder = 0,
+            deliveryArea = new[] { square[0], square[2], square[1], square[3] },
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, crossed);
+        Assert.Contains("cross", crossedDetail);
+
+        var (cleared, clearedDetail) = await Owner.RefusedAsync(HttpMethod.Put, $"{Branches}/{created.Id}", new
+        {
+            name, isActive = true, displayOrder = 0,
+            deliveryArea = Array.Empty<double[]>(),
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, cleared);
+        Assert.Contains("Turn delivery off first", clearedDetail);
+
+        // With a radius to fall back on, the area may go
+        var plain = await Owner.PutAsync<DeliveryBranchView>($"{Branches}/{created.Id}", new
+        {
+            name, isActive = true, displayOrder = 0,
+            deliveryRadiusKm = 5,
+            deliveryArea = Array.Empty<double[]>(),
+        });
+        Assert.IsTrue(plain.IsDeliveryEnabled);
+        Assert.IsNull(plain.DeliveryArea);
     }
 
     [TestMethod]

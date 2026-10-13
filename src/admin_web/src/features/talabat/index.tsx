@@ -288,7 +288,7 @@ function MenuPreview({ branchId }: { branchId: number }) {
   if (!items) return null
 
   const all = Object.entries(items)
-  const dishes = all.filter(([id]) => id.startsWith('item-')).length
+  const itemCount = all.filter(([id]) => id.startsWith('item-')).length
   const options = all.filter(([id]) => id.startsWith('option-')).length
   const categories = all.filter(([, item]) => item.type === 'Category').length
 
@@ -299,7 +299,7 @@ function MenuPreview({ branchId }: { branchId: number }) {
           <div className='text-sm font-medium'>{t('talabatPreview')}</div>
           <div className='text-muted-foreground mt-0.5 text-sm'>
             {t('talabatPreviewCounts', {
-              dishes: t('dishesCount', { count: dishes }),
+              items: t('itemsCount', { count: itemCount }),
               options: t('menuOptionsCount', { count: options }),
               categories: t('categoriesCount', { count: categories }),
             })}

@@ -31,6 +31,7 @@ public class BranchSettingsChangedIntegrationEventHandler(
             return;
         }
 
+        row.IsActive = @event.IsActive;
         row.IsOrderingEnabled = @event.IsOrderingEnabled;
         row.IsReservationsEnabled = @event.IsReservationsEnabled;
         row.RequireSignInForTableOrders = @event.RequireSignInForTableOrders;
@@ -38,6 +39,7 @@ public class BranchSettingsChangedIntegrationEventHandler(
         row.Latitude = @event.Latitude;
         row.Longitude = @event.Longitude;
         row.DeliveryRadiusKm = @event.DeliveryRadiusKm;
+        row.DeliveryArea = @event.DeliveryArea is { Length: > 0 } area ? area : null;
         row.DeliveryFee = @event.DeliveryFee;
         row.DeliveryMinimumOrder = @event.DeliveryMinimumOrder;
         row.RequireSignInForDelivery = @event.RequireSignInForDelivery;

@@ -23,7 +23,7 @@ type MenuDropProps = {
 /**
  * The new business's menu, read while its form is filled: a PDF or photos dropped
  * here are read by the platform's AI (the admin's menu scan, the same), the
- * dishes and prices appear to tick and fix, and what is ticked goes into the
+ * items and prices appear to tick and fix, and what is ticked goes into the
  * catalog as soon as the business's stack is up.
  */
 export function MenuDrop({ languages, menu, onMenu }: MenuDropProps) {
@@ -199,7 +199,7 @@ function Reading({ pages, preparing }: { pages: string[]; preparing: boolean }) 
   )
 }
 
-/** The dishes read, by section, to untick or fix the price of; each section and dish arriving in turn. */
+/** The items read, by section, to untick or fix the price of; each section and item arriving in turn. */
 function Review({
   menu,
   onMenu,
@@ -211,7 +211,7 @@ function Review({
 }) {
   const t = useT()
   const reduced = useReducedMotion()
-  const dishes = includedCount(menu)
+  const itemCount = includedCount(menu)
   const update = (categoryKey: string, itemKey: string, change: Partial<DropItem>) =>
     onMenu(
       menu.map((c) =>
@@ -224,7 +224,7 @@ function Review({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className='flex flex-col gap-3'>
       <div className='flex items-center justify-between gap-2'>
         <div className='text-sm'>
-          <span className='font-semibold tabular-nums'>{t('menuDropDishes', { count: String(dishes) })}</span>
+          <span className='font-semibold tabular-nums'>{t('menuDropItems', { count: String(itemCount) })}</span>
           <span className='text-muted-foreground'> · {t('menuDropCategories', { count: String(menu.length) })}</span>
         </div>
         <Button type='button' variant='ghost' size='sm' onClick={onReset}>

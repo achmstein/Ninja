@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   boardOrder,
   cashDifference,
+  outOfRangeKey,
   billLabel,
   deliveryOrderOfLabel,
   directionsUrl,
@@ -105,5 +106,13 @@ describe('cashDifference', () => {
     expect(cashDifference(100, 95.5)).toBe(4.5)
     expect(cashDifference(90, 95.5)).toBe(-5.5)
     expect(cashDifference(null, 95.5)).toBeNull()
+  })
+})
+
+describe('outOfRangeKey', () => {
+  it('speaks of the drawn area when the branch has one, of the radius otherwise', () => {
+    expect(outOfRangeKey({ hasArea: true })).toBe('deliveryOutOfArea')
+    expect(outOfRangeKey({ hasArea: false })).toBe('deliveryOutOfRange')
+    expect(outOfRangeKey({})).toBe('deliveryOutOfRange')
   })
 })

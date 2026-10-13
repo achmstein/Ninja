@@ -27,6 +27,20 @@ public sealed class AppConfigTests
         Assert.AreEqual("blue", config["REALM"]!.GetValue<string>());
         Assert.IsFalse(config.ContainsKey("GOOGLE_SERVER_CLIENT_ID"), "no Google app on the platform, no provider in the realm");
         Assert.IsFalse(config.ContainsKey("APPLE_ISSUER"), "the shared build keeps apple");
+        Assert.IsFalse(config.ContainsKey("GOOGLE_MAPS_ANDROID_KEY"), "no Maps key, the free map");
+    }
+
+    [TestMethod]
+    public void The_maps_sdk_keys_go_into_the_build_and_the_server_key_never_does()
+    {
+        var platform = new PlatformOptions { Maps = new() { ServerKey = "server-key", BrowserKey = "browser-key", AndroidKey = "android-key", IosKey = "ios-key" } };
+        Assert.IsFalse(Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test" }, platform).ContainsKey("GOOGLE_MAPS_ANDROID_KEY"), "Google Maps off for the business: the free map");
+        var config = Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test", GoogleMaps = true }, platform);
+
+        Assert.AreEqual("android-key", config["GOOGLE_MAPS_ANDROID_KEY"]!.GetValue<string>());
+        Assert.AreEqual("ios-key", config["GOOGLE_MAPS_IOS_KEY"]!.GetValue<string>());
+        Assert.DoesNotContain("server-key", config.ToJsonString());
+        Assert.DoesNotContain("browser-key", config.ToJsonString());
     }
 
     [TestMethod]

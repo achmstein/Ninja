@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsError, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import { autocompletePlaces, createBranch, deleteTenantImage, getAllBranches, getBranches, getPlace, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { AutocompletePlacesData, AutocompletePlacesResponse, CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetPlaceData, GetPlaceResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsError, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -300,4 +300,40 @@ export const getTenantManifestOptions = (options?: Options<GetTenantManifestData
         return data;
     },
     queryKey: getTenantManifestQueryKey(options)
+});
+
+export const autocompletePlacesQueryKey = (options?: Options<AutocompletePlacesData>) => createQueryKey('autocompletePlaces', options);
+
+/**
+ * Google's suggestions for an address being typed, in the business's country and near the branch; 404 when the business does not have Google Maps
+ */
+export const autocompletePlacesOptions = (options?: Options<AutocompletePlacesData>) => queryOptions<AutocompletePlacesResponse, AxiosError<DefaultError>, AutocompletePlacesResponse, ReturnType<typeof autocompletePlacesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await autocompletePlaces({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: autocompletePlacesQueryKey(options)
+});
+
+export const getPlaceQueryKey = (options: Options<GetPlaceData>) => createQueryKey('getPlace', options);
+
+/**
+ * Where a picked suggestion is: its point and address; closes the search's session
+ */
+export const getPlaceOptions = (options: Options<GetPlaceData>) => queryOptions<GetPlaceResponse, AxiosError<DefaultError>, GetPlaceResponse, ReturnType<typeof getPlaceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlace({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlaceQueryKey(options)
 });

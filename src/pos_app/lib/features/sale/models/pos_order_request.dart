@@ -75,5 +75,7 @@ class PosOrderRequest {
         'pointsToRedeem': 0,
         // Where it goes; the pin only when the caller shared one
         'delivery': delivery?.toRequest(),
+        // The branch nearer the caller that makes and delivers it
+        'sendToBranchId': delivery?.sendTo?.branchId,
       };
 }

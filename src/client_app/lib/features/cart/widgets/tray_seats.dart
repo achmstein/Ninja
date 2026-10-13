@@ -7,7 +7,7 @@ import '../../../core/ui/ui.dart';
 import '../models/cart_item.dart';
 import 'tray.dart';
 
-/// Where a dish's circle sits: its photo in the dock's stack, or on its row
+/// Where an item's circle sits: its photo in the dock's stack, or on its row
 /// in the open order
 enum SeatKind { dock, row }
 
@@ -23,7 +23,7 @@ class _Seat {
   const _Seat(this.item, this.row, this.from, {required this.fromDock});
 }
 
-/// The dishes' circles as the order opens (client_web's tray.tsx
+/// The items' circles as the order opens (client_web's tray.tsx
 /// `SeatFlights`): on the way up each leaves the dock and flies to its row,
 /// on the way down it goes back, driven by how far the order is open, so they
 /// follow a finger and come back the way they went. Only between shut and
@@ -81,7 +81,7 @@ class TraySeats extends ChangeNotifier {
       final rect = _globalRect(context);
       if (rect == null) continue;
       _from[item] = rect;
-      // The front of the stack stands in for the dishes without a photo of their own in the dock
+      // The front of the stack stands in for the items without a photo of their own in the dock
       if (index < front) {
         front = index;
         _stack = rect;
@@ -126,7 +126,7 @@ double _lift(RenderObject row) {
   return child.localToGlobal(Offset.zero).dy - (node as RenderBox).localToGlobal(Offset.zero).dy;
 }
 
-/// Marks a dish's photo as a seat: in the dock it is where the circle
+/// Marks an item's photo as a seat: in the dock it is where the circle
 /// leaves from; on a row it is where it lands, and shows only once the
 /// order is fully open and its circle has landed on it
 class TraySeat extends StatefulWidget {
@@ -268,7 +268,7 @@ class _SeatFlow extends FlowDelegate {
       double lerp(double a, double b) => a + (b - a) * p;
       final width = lerp(from.width, end.width);
       final height = lerp(from.height, end.height);
-      // A small rise in the middle of the way, the same arc a dish takes into the tray
+      // A small rise in the middle of the way, the same arc an item takes into the tray
       final x = lerp(from.left, end.left);
       final y = lerp(from.top, end.top) - math.sin(p * math.pi) * 18;
       context.paintChild(
@@ -283,7 +283,7 @@ class _SeatFlow extends FlowDelegate {
   bool shouldRepaint(_SeatFlow old) => true;
 }
 
-/// A dish's circle in the air, drawn as the dock draws it: a ring of the
+/// An item's circle in the air, drawn as the dock draws it: a ring of the
 /// slab round the photo, a circle the whole way, only its size changing
 class _Circle extends StatelessWidget {
   final CartItem item;
@@ -299,7 +299,7 @@ class _Circle extends StatelessWidget {
       child: ClipOval(
         child: ColoredBox(
           color: c.foreground.withValues(alpha: 0.15),
-          child: SizedBox.expand(child: DishPhoto(url: item.pictureUri)),
+          child: SizedBox.expand(child: ItemPhoto(url: item.pictureUri)),
         ),
       ),
     );

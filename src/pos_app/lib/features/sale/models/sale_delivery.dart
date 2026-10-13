@@ -1,3 +1,5 @@
+import '../../deliveries/models/delivery_order.dart';
+
 /// Where a sale the till took over the phone goes: the words the caller
 /// said, the number the rider calls, and a pin only when they shared their
 /// location (a pasted map link, read by Ordering into [latitude]/[longitude]).
@@ -14,6 +16,9 @@ class SaleDelivery {
   final double? latitude;
   final double? longitude;
 
+  /// Another branch, nearer the caller, makes and delivers it; null keeps it here
+  final DeliveryAlternative? sendTo;
+
   const SaleDelivery({
     required this.address,
     required this.phone,
@@ -24,9 +29,26 @@ class SaleDelivery {
     this.location = '',
     this.latitude,
     this.longitude,
+    this.sendTo,
   });
 
   bool get hasPin => latitude != null && longitude != null;
+
+  /// The same delivery, made here after all
+  SaleDelivery keptHere() => SaleDelivery(
+        address: address,
+        phone: phone,
+        building: building,
+        floor: floor,
+        apartment: apartment,
+        directions: directions,
+        location: location,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+  /// What it adds to the bill: the fee of the branch that delivers it
+  double feeWith(double hereFee) => sendTo?.fee ?? hereFee;
 
   static String? _orNull(String value) => value.trim().isEmpty ? null : value.trim();
 
@@ -52,6 +74,7 @@ class SaleDelivery {
         'location': location,
         'latitude': latitude,
         'longitude': longitude,
+        'sendTo': sendTo?.toJson(),
       };
 
   factory SaleDelivery.fromJson(Map<String, dynamic> json) => SaleDelivery(
@@ -64,7 +87,19 @@ class SaleDelivery {
         location: json['location'] as String? ?? '',
         latitude: (json['latitude'] as num?)?.toDouble(),
         longitude: (json['longitude'] as num?)?.toDouble(),
+        sendTo: json['sendTo'] is Map ? DeliveryAlternative.fromJson((json['sendTo'] as Map).cast<String, dynamic>()) : null,
       );
+}
+
+/// The branch the delivery goes to, as the quote for the pin now in the form
+/// offers it: kept only while the pin stands and that branch is still offered
+/// (its fee and pause as they are now), dropped otherwise
+DeliveryAlternative? keptSendTo(DeliveryAlternative? sendTo, List<DeliveryAlternative> alternatives, {required bool pinned}) {
+  if (sendTo == null || !pinned) return null;
+  for (final a in alternatives) {
+    if (a.branchId == sendTo.branchId) return a;
+  }
+  return null;
 }
 
 /// Whether a sale holding a delivery can be charged as one. A delivery on the

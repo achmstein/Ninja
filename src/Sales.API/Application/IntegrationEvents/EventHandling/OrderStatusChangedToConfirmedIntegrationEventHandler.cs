@@ -57,6 +57,10 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         var ticket = await ResolveTicketAsync(@event);
 
+        // The cashier who took it, and the branch whose till it was when another
+        // sent it here: the bill keeps the first order's
+        ticket.NoteTaker(@event.TakenByName, @event.TakenAtBranchId);
+
         // Whose items these are, so a shared table bill can be read (and
         // split) per person. Ordering sends null when nobody was named, so an
         // anonymous counter add stays untagged instead of being labelled

@@ -61,7 +61,7 @@ describe('the menu read while a business is created', () => {
     })
   })
 
-  it('leaves out a dish with no name, and an empty description', () => {
+  it('leaves out an item with no name, and an empty description', () => {
     const request = toImportRequest([
       { key: 'c', name: { en: 'X', ar: null }, items: [item('a', '  ', '10'), item('b', 'Tea', 'abc')] },
     ]) as { categories: { items: { name: { en: string }; price: number; description: unknown }[] }[] }

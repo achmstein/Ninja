@@ -27,6 +27,10 @@ class AuthState {
   /// the app offers only these
   final List<int> branches;
 
+  /// Given every branch (a `*` in the `branches` claim): a call centre's
+  /// account, which holds a branch opened later too. [branches] lists none then.
+  final bool allBranches;
+
   const AuthState({
     this.isAuthenticated = false,
     this.mayUseApp = false,
@@ -40,6 +44,7 @@ class AuthState {
     this.name,
     this.roles = const [],
     this.branches = const [],
+    this.allBranches = false,
   });
 
   AuthState copyWith({
@@ -55,6 +60,7 @@ class AuthState {
     String? name,
     List<String>? roles,
     List<int>? branches,
+    bool? allBranches,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -69,6 +75,7 @@ class AuthState {
       name: name ?? this.name,
       roles: roles ?? this.roles,
       branches: branches ?? this.branches,
+      allBranches: allBranches ?? this.allBranches,
     );
   }
 }
@@ -127,6 +134,7 @@ class AuthService extends Notifier<AuthState> {
           name: claims['name'] as String?,
           roles: roles,
           branches: extractBranches(claims),
+          allBranches: holdsAllBranches(claims),
         );
 
         // Try to refresh tokens in background
@@ -288,6 +296,7 @@ class AuthService extends Notifier<AuthState> {
       name: claims['name'] as String?,
       roles: roles,
       branches: extractBranches(claims),
+      allBranches: holdsAllBranches(claims),
     );
   }
 
@@ -309,6 +318,14 @@ class AuthService extends Notifier<AuthState> {
     final raw = claims['branches'];
     final List<Object?> values = raw is List ? raw : raw == null ? const <Object>[] : <Object>[raw as Object];
     return values.map((v) => int.tryParse(v.toString())).whereType<int>().toSet().toList()..sort();
+  }
+
+  /// Whether the `branches` claim holds `*`: every branch, those opened later too.
+  @visibleForTesting
+  static bool holdsAllBranches(Map<String, dynamic> claims) {
+    final raw = claims['branches'];
+    final List<Object?> values = raw is List ? raw : raw == null ? const <Object>[] : <Object>[raw as Object];
+    return values.any((v) => v.toString().trim() == '*');
   }
 
   Map<String, dynamic> _parseJwt(String token) {

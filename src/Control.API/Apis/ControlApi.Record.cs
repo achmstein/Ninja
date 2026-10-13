@@ -99,6 +99,8 @@ public static partial class ControlApi
         tenant.Slab = slab;
         var socialChanged = request.SocialSignIn is { } social && social != tenant.SocialSignIn;
         if (socialChanged) tenant.SocialSignIn = request.SocialSignIn!.Value;
+        var mapsChanged = request.GoogleMaps is { } maps && maps != tenant.GoogleMaps;
+        if (mapsChanged) tenant.GoogleMaps = request.GoogleMaps!.Value;
         tenant.AppId = appId;
         tenant.AppleTeamId = teamId;
         tenant.AndroidCertFingerprints = fingerprints;
@@ -118,6 +120,11 @@ public static partial class ControlApi
         // Google and Apple on or off, or its own app given or changed: its realm and hub clients follow, and the apps are told
         if ((socialChanged || appChanged) && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "social"), ct);
+
+        // Google Maps on or off: the stack is re-stamped with the keys or without them (only Tenant.API is recreated),
+        // and its apps follow when they next read the brand
+        if (mapsChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
+            await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "maps"), ct);
 
         // A running business's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
         if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, ct) is { } refused)
@@ -181,6 +188,10 @@ public static partial class ControlApi
         };
         // Only when the realm has the provider: a build told of one it lacks fails every Google sign-in
         if (platform.Social.Google.Configured) config["GOOGLE_SERVER_CLIENT_ID"] = platform.Social.Google.ClientId;
+        // Google's map in the app when the business has Google Maps on, through the native SDK (no charge per load): the build puts each key where its
+        // platform reads it (android/app/build.gradle.kts, ios/Runner/AppDelegate.swift); left out, the free map
+        if (platform.Maps.AppKeyFor(tenant, platform.Maps.AndroidKey) is { } android) config["GOOGLE_MAPS_ANDROID_KEY"] = android;
+        if (platform.Maps.AppKeyFor(tenant, platform.Maps.IosKey) is { } ios) config["GOOGLE_MAPS_IOS_KEY"] = ios;
         // The business's own app: Apple's tokens through its own provider, sign-ins back to its own scheme
         // (the realm's customer app client takes it), and what the build stamps into the native folders
         // (src/client_app/tool/stamp_tenant.dart). Left out, the shared build's
@@ -257,6 +268,7 @@ public record UpdateTenantRequest(
     [property: Description("The kind of place; on a running business only the label changes, never its menu, switches or guest ordering. Null leaves it")] BusinessType? BusinessType = null,
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null leaves it")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple; null leaves it")] bool? SocialSignIn = null,
+    [property: Description("Whether the business uses Google Maps with the platform's keys; null leaves it")] bool? GoogleMaps = null,
     [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null leaves it")] string? ContentLanguages = null,
     [property: Description("The business's own customer app: its iOS bundle ID and Android package (net.ninjapp.lucaffe); empty clears it, null leaves it")] string? AppId = null,
     [property: Description("The Apple team its own app is published under, for its Universal Links; empty clears it, null leaves it")] string? AppleTeamId = null,

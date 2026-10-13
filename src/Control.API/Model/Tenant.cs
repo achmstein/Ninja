@@ -131,6 +131,13 @@ public class Tenant
     public bool SocialSignIn { get; set; } = true;
 
     /// <summary>
+    /// Whether the business uses Google Maps (address search, Google's map in its apps) with the platform's keys.
+    /// Off unless turned on, since its calls are billed to Ninja; off, or with no keys on the platform, its apps
+    /// keep the free map and a pasted or typed address.
+    /// </summary>
+    public bool GoogleMaps { get; set; }
+
+    /// <summary>
     /// The business's own customer app, when it bought one: its bundle ID on iOS and its package on
     /// Android ("net.ninjapp.lucaffe"), the same for both. Apple signs a native sign-in's token for the
     /// app that asked, so the business's realm takes its Apple sign-ins through a provider of its own

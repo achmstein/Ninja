@@ -5,7 +5,7 @@ public enum PromotionLink
 {
     /// <summary>Nowhere: the popup only shows</summary>
     None = 0,
-    /// <summary>A dish, opened (<see cref="Promotion.LinkId"/> the item)</summary>
+    /// <summary>An item, opened (<see cref="Promotion.LinkId"/> the item)</summary>
     Item = 1,
     /// <summary>A category of the menu (<see cref="Promotion.LinkId"/> the category)</summary>
     Category = 2,
@@ -18,7 +18,7 @@ public enum PromotionLink
 /// (the owner's own, or one the image model made from the owner's real photo
 /// with the headline drawn in) shown once to each customer as a popup when
 /// the app opens, while it runs, then kept as a small banner. Its button
-/// opens a dish, a category or booking. One runs at a time per branch: the
+/// opens an item, a category or booking. One runs at a time per branch: the
 /// newest one live there.
 /// </summary>
 public class Promotion
@@ -35,7 +35,7 @@ public class Promotion
 
     public PromotionLink Link { get; set; }
 
-    /// <summary>The dish or category the button opens, per <see cref="Link"/></summary>
+    /// <summary>The item or category the button opens, per <see cref="Link"/></summary>
     public int? LinkId { get; set; }
 
     /// <summary>The branches it runs at; empty for every branch</summary>
@@ -44,7 +44,7 @@ public class Promotion
     public DateTime? StartsAt { get; set; }
     public DateTime? EndsAt { get; set; }
 
-    /// <summary>Which days it shows: a bit per <see cref="DayOfWeek"/>; null or 0 is every day (as a dish's offer)</summary>
+    /// <summary>Which days it shows: a bit per <see cref="DayOfWeek"/>; null or 0 is every day (as an item's offer)</summary>
     public int? Weekdays { get; set; }
 
     /// <summary>Its hours, local time; both null is all day. Ending before it starts runs past midnight</summary>

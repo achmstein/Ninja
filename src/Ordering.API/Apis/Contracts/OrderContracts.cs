@@ -95,7 +95,13 @@ public record PosOrderRequest(
     /// </summary>
     bool Replay = false,
     /// <summary>A delivery the till took over the phone; it lands on a bill of its own, settled when the rider's cash comes in.</summary>
-    PosDeliveryRequest? Delivery = null);
+    PosDeliveryRequest? Delivery = null,
+    /// <summary>
+    /// Another branch of the business to make and deliver it: the one nearer the
+    /// caller. A delivery only, with no bill here; it arrives at that branch as
+    /// its own order, saying who took it and where. Null (or this branch) keeps it here.
+    /// </summary>
+    int? SendToBranchId = null);
 
 /// <summary>
 /// Where a delivery the till took over the phone goes: the address in the

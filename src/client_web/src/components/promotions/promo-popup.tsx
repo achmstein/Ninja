@@ -28,15 +28,17 @@ const keyOf = (p: PromotionDto) => `${p.id}:${p.pictureUri ?? ''}`
 
 /**
  * The promotion running now at the customer's branch, if any, and whether
- * this device has been shown it yet. Asked again every few minutes: one may
- * start (or end) while the app is open.
+ * this device has been shown it yet. Asked again every couple of minutes and
+ * on coming back to the tab: one may start (or end) while the app is open.
  */
 export function useLivePromotion(): { promotion: PromotionDto | null; seen: boolean; markSeen: () => void } {
   const branchId = useBranchStore((s) => s.branchId)
   const { data } = useQuery({
     ...getLivePromotionOptions({ query: { branchId } }),
-    staleTime: 5 * 60_000,
-    refetchInterval: 5 * 60_000,
+    staleTime: 2 * 60_000,
+    refetchInterval: 2 * 60_000,
+    // Back on the tab, asked again: one switched off meanwhile goes without a reload
+    refetchOnWindowFocus: true,
   })
   // No content when none runs: whatever came back that is not a promotion is none
   const promotion = data && typeof data === 'object' && 'id' in data ? (data as PromotionDto) : null
@@ -47,7 +49,7 @@ export function useLivePromotion(): { promotion: PromotionDto | null; seen: bool
 
 /**
  * The promotion as a sheet out of the dock: its picture, the way the
- * business designed it, and the one button it has (to a dish, a category or
+ * business designed it, and the one button it has (to an item, a category or
  * booking). The headline is its title for a screen reader: it is drawn in
  * the picture.
  */

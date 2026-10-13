@@ -3332,6 +3332,18 @@ abstract class AppLocalizations {
   /// **'Paste the Google Maps link the customer sent, on WhatsApp say'**
   String get deliveryLocationHint;
 
+  /// No description provided for @deliverySearchAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Or search the street or area'**
+  String get deliverySearchAddress;
+
+  /// No description provided for @deliverySearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find that place. Paste the customer\'s link instead.'**
+  String get deliverySearchFailed;
+
   /// No description provided for @deliveryLocationReading.
   ///
   /// In en, this message translates to:
@@ -3361,6 +3373,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Outside the {km} km delivery area'**
   String deliveryOutOfRange(String km);
+
+  /// No description provided for @deliveryOutOfArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside the branch\'s delivery area'**
+  String get deliveryOutOfArea;
+
+  /// No description provided for @callCentre.
+  ///
+  /// In en, this message translates to:
+  /// **'Call centre'**
+  String get callCentre;
+
+  /// No description provided for @callCentreNextCaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Next caller'**
+  String get callCentreNextCaller;
+
+  /// No description provided for @callCentreCallerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from the caller: their number, then where it goes.'**
+  String get callCentreCallerHint;
+
+  /// No description provided for @callCentreFindBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the branch'**
+  String get callCentreFindBranch;
+
+  /// No description provided for @callCentreNoBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'No branch delivers there. Take it as a pickup, or check the location.'**
+  String get callCentreNoBranch;
+
+  /// No description provided for @callCentreNeedsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the caller\'s location, or pick one of their addresses, to find the branch.'**
+  String get callCentreNeedsLocation;
+
+  /// No description provided for @callCentreBranchFor.
+  ///
+  /// In en, this message translates to:
+  /// **'{branch} · {distance} · fee {fee}'**
+  String callCentreBranchFor(String branch, String distance, String fee);
+
+  /// No description provided for @callCentreTakeAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Take the order at {branch}'**
+  String callCentreTakeAt(String branch);
+
+  /// No description provided for @callCentrePickupAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup at…'**
+  String get callCentrePickupAt;
+
+  /// No description provided for @callCentrePickupAtBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup at {branch}'**
+  String callCentrePickupAtBranch(String branch);
+
+  /// No description provided for @callCentreOrderAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Order for {branch}'**
+  String callCentreOrderAt(String branch);
+
+  /// No description provided for @callCentrePlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{orderId} placed at {branch}'**
+  String callCentrePlaced(int orderId, String branch);
 
   /// No description provided for @deliveryUnderMinimum.
   ///
@@ -3517,6 +3607,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This branch isn\'t taking orders right now.'**
   String get deliveryErrorPaused;
+
+  /// No description provided for @deliveryNearerBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'{branch} is {distance} away and delivers there · fee {fee}'**
+  String deliveryNearerBranch(String branch, String distance, String fee);
+
+  /// No description provided for @deliveryBranchPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused right now'**
+  String get deliveryBranchPaused;
+
+  /// No description provided for @deliverySendTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to {branch}'**
+  String deliverySendTo(String branch);
+
+  /// No description provided for @deliverySendToPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'{branch} is paused. Send anyway?'**
+  String deliverySendToPaused(String branch);
+
+  /// No description provided for @deliveryKeepHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it here'**
+  String get deliveryKeepHere;
+
+  /// No description provided for @deliveryWillSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes to {branch}: they make it and deliver it'**
+  String deliveryWillSend(String branch);
+
+  /// No description provided for @deliverySaveSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver from {branch}'**
+  String deliverySaveSend(String branch);
+
+  /// No description provided for @deliverySentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {branch} · #{orderId}'**
+  String deliverySentTo(String branch, int orderId);
+
+  /// No description provided for @deliverySentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent from {branch} · {name}'**
+  String deliverySentFrom(String branch, String name);
+
+  /// No description provided for @deliverySentFromNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent from {branch}'**
+  String deliverySentFromNoName(String branch);
+
+  /// No description provided for @newSentDeliveryToast.
+  ///
+  /// In en, this message translates to:
+  /// **'New phone delivery #{orderId} from {branch} ({name})'**
+  String newSentDeliveryToast(int orderId, String branch, String name);
+
+  /// No description provided for @newSentDeliveryToastNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'New phone delivery #{orderId} from {branch}'**
+  String newSentDeliveryToastNoName(int orderId, String branch);
+
+  /// No description provided for @priceReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{branch}\'s menu is different'**
+  String priceReviewTitle(String branch);
+
+  /// No description provided for @priceReviewChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}: {from} → {to} at {branch}'**
+  String priceReviewChanged(String item, String from, String to, String branch);
+
+  /// No description provided for @priceReviewSoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}: sold out at {branch}'**
+  String priceReviewSoldOut(String item, String branch);
+
+  /// No description provided for @priceReviewOptionsOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{item}: {options} out at {branch}'**
+  String priceReviewOptionsOut(String item, String options, String branch);
+
+  /// No description provided for @priceReviewDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold-out items are taken off the order.'**
+  String get priceReviewDropped;
+
+  /// No description provided for @priceReviewUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {branch}\'s prices'**
+  String priceReviewUse(String branch);
+
+  /// No description provided for @priceReviewNothingLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in this order can be made at {branch}.'**
+  String priceReviewNothingLeft(String branch);
+
+  /// No description provided for @priceCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check {branch}\'s menu. Try again.'**
+  String priceCheckFailed(String branch);
+
+  /// No description provided for @priceChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking {branch}\'s menu…'**
+  String priceChecking(String branch);
+
+  /// No description provided for @deliveryErrorSendNotDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a delivery can be sent to another branch.'**
+  String get deliveryErrorSendNotDelivery;
+
+  /// No description provided for @deliveryErrorSendWithTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Items on this branch\'s bill can\'t be sent to another branch.'**
+  String get deliveryErrorSendWithTicket;
+
+  /// No description provided for @deliveryErrorSendBranchClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'That branch isn\'t taking deliveries. Keep it here or pick another.'**
+  String get deliveryErrorSendBranchClosed;
+
+  /// No description provided for @takenBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken by {name}'**
+  String takenBy(String name);
+
+  /// No description provided for @takenByAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken by {name} at {branch}'**
+  String takenByAt(String name, String branch);
 
   /// No description provided for @failReasonNoAnswer.
   ///
