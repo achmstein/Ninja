@@ -14,6 +14,7 @@ abstract class MenuRepository {
   Future<List<MenuCategory>> getCategories();
   Future<UserItemPreference?> getUserPreference(int catalogItemId);
   Future<List<UserItemPreference>> getUserPreferences(List<int> catalogItemIds);
+  Future<List<UserItemPreference>> getAllUserPreferences();
   Future<void> saveUserPreferences(SaveUserPreferencesRequest request);
   Future<List<int>> getFavorites();
   Future<void> addFavorite(int itemId);
@@ -106,6 +107,17 @@ class ApiMenuRepository implements MenuRepository {
     }
   }
 
+  /// Every item the user has a saved way of
+  @override
+  Future<List<UserItemPreference>> getAllUserPreferences() async {
+    try {
+      final response = await _apiClient.get<List<dynamic>>('preferences');
+      return (response.data ?? []).map((e) => UserItemPreference.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Save user's preferences after successful order
   @override
   Future<void> saveUserPreferences(SaveUserPreferencesRequest request) async {
@@ -188,6 +200,17 @@ final userPreferenceProvider = FutureProvider.family<UserItemPreference?, int>(
     return service.getUserPreference(catalogItemId);
   },
 );
+
+/// The signed-in user's saved way of each dish (what they chose the last time
+/// they ordered it), by item id: one request for the whole menu. Empty for a guest.
+final itemPreferencesProvider = FutureProvider<Map<int, UserItemPreference>>((ref) async {
+  if (!ref.watch(isAuthenticatedProvider)) return const {};
+  final list = await ref.watch(menuRepositoryProvider).getAllUserPreferences();
+  return {for (final preference in list) preference.catalogItemId: preference};
+});
+
+/// One dish's saved way, or null (none, or not loaded yet); a dish rebuilds only when its own changes
+final itemPreferenceProvider = Provider.family<UserItemPreference?, int>((ref, id) => ref.watch(itemPreferencesProvider).value?[id]);
 
 /// The signed-in user's most-ordered items ("your usuals"), ranked. Empty for
 /// a guest or a user without enough history, so the menu section hides.

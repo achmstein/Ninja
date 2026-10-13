@@ -422,7 +422,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final col = _columns.elementAtOrNull(_column);
     final active = col?.items.elementAtOrNull(_rows[_column] ?? 0);
     // "Hold to add" waits for a card a long press would add straight away
-    final fits = current != _holdHint || (active != null && canQuickAdd(active));
+    final fits = current != _holdHint || (active != null && canQuickAdd(active, ref.watch(itemPreferenceProvider(active.id))));
     final kind = current == _swipeHint
         ? GestureKind.swipe
         : current == _zoomHint
@@ -441,7 +441,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     } else {
       _cue(null, Duration.zero, () {});
     }
-    return _holdHint.showing && active != null && canQuickAdd(active) ? active.id : null;
+    return _holdHint.showing && active != null && canQuickAdd(active, ref.watch(itemPreferenceProvider(active.id))) ? active.id : null;
   }
 
   /// The deck's own demo of the cue showing: a nudge up for the swipe, a breath out for the pinch

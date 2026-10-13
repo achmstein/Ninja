@@ -8,6 +8,7 @@ import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../menu/paired_items.dart';
+import '../../menu/services/menu_service.dart';
 import '../services/cart_service.dart';
 
 /// The customer said "not now": nothing more is suggested until the cart is emptied.
@@ -35,7 +36,9 @@ class CartNudge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final offer = ref.watch(notNowProvider) ? null : cartNudge(ref.watch(cartProvider).items, ref.watch(menuByIdProvider));
+    final offer = ref.watch(notNowProvider)
+        ? null
+        : cartNudge(ref.watch(cartProvider).items, ref.watch(menuByIdProvider), ref.watch(itemPreferencesProvider).value ?? const {});
     if (offer == null) return const SizedBox.shrink();
 
     final colors = context.theme.colors;
@@ -99,7 +102,7 @@ class CartNudge extends ConsumerWidget {
             semanticLabel: l10n.addSuggestion(name),
             onPress: () {
               HapticFeedback.selectionClick();
-              ref.read(cartProvider.notifier).addItem(suggestedLine(offer, 'CartNudge'));
+              ref.read(cartProvider.notifier).addItem(suggestedLine(offer, 'CartNudge', ref.read(itemPreferenceProvider(offer.id))));
             },
             child: const Icon(LucideIcons.plus),
           ),

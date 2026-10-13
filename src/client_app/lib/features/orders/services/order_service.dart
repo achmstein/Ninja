@@ -498,6 +498,8 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         await _menuService.saveUserPreferences(
           SaveUserPreferencesRequest(items: preferencesToSave),
         );
+        // The menu's quick adds read the saved ways: the next hold adds this order's
+        ref.invalidate(itemPreferencesProvider);
       }
     } catch (e) {
       // Silently fail - preferences are not critical to order success

@@ -312,7 +312,8 @@ class _DishViewState extends ConsumerState<DishView> {
   /// A suggestion tapped: in with its defaults when nothing needs choosing, its photo flying from
   /// its card to the tray as every add's does; else it opens in this one's place, grown out of that photo
   void _suggest(MenuItem suggested, Rect? photo) {
-    if (canQuickAdd(suggested)) {
+    final preference = ref.read(itemPreferenceProvider(suggested.id));
+    if (canQuickAdd(suggested, preference)) {
       HapticFeedback.selectionClick();
       final cart = ref.read(cartProvider.notifier);
       trayFlights.fly(
@@ -320,7 +321,7 @@ class _DishViewState extends ConsumerState<DishView> {
         radius: Ninja.tileRadius,
         photo: suggested.pictureUri,
         reduced: reduceMotion(context),
-        land: () => cart.addItem(suggestedLine(suggested, 'Pairing')),
+        land: () => cart.addItem(suggestedLine(suggested, 'Pairing', preference)),
       );
       return;
     }

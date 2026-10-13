@@ -12,6 +12,8 @@ import '../../../core/utils/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/menu_item.dart';
 import '../paired_items.dart';
+import '../services/menu_service.dart';
+import 'hold.dart';
 import 'dish.dart';
 import 'dish_view.dart';
 import 'zoom_flight.dart';
@@ -301,7 +303,7 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
 
   void _down() {
     setState(() => _pressing = true);
-    if (canQuickAdd(widget.item)) _ring.forward(from: 0);
+    if (widget.item.isAvailable) _ring.forward(from: 0);
   }
 
   void _up() {
@@ -313,6 +315,10 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    // Held, the ring fills on every dish: at the full ring one with nothing to choose (or a saved
+    // way) is in the tray, any other opens
+    final quick = canQuickAdd(item, ref.watch(itemPreferenceProvider(item.id)));
+    final hint = widget.hint && quick;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _down(),
@@ -323,7 +329,7 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
       onLongPress: () {
         _up();
         quickAdd(context, ref, item);
-        if (canQuickAdd(item)) widget.onQuickAdd?.call(item);
+        if (quick) widget.onQuickAdd?.call(item);
       },
       onLongPressCancel: _up,
       child: AnimatedScale(
@@ -343,18 +349,18 @@ class _DeckCardState extends ConsumerState<DeckCard> with SingleTickerProviderSt
                 fit: StackFit.expand,
                 children: [
                   CardFace(item: item, usual: widget.usual),
-                  if (canQuickAdd(item))
+                  if (item.isAvailable)
                     PositionedDirectional(
                       top: 16,
                       end: 16,
                       child: AnimatedOpacity(
-                        opacity: _pressing || widget.hint ? 1 : 0,
-                        duration: const Duration(milliseconds: 200),
+                        opacity: _pressing || hint ? 1 : 0,
+                        duration: const Duration(milliseconds: 150),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (widget.hint) ...[const _HoldWords(), const SizedBox(width: 8)],
-                            _PressRing(progress: _ring),
+                            if (hint) ...[const _HoldWords(), const SizedBox(width: 8)],
+                            PressRing(progress: _ring),
                           ],
                         ),
                       ),
@@ -385,55 +391,6 @@ class _HoldWords extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A ring that fills round a plus while a press is held, full as the long press lands
-class _PressRing extends StatelessWidget {
-  static const size = 44.0;
-
-  final Animation<double> progress;
-
-  const _PressRing({required this.progress});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: const BoxDecoration(color: Color(0x73000000), shape: BoxShape.circle),
-    child: AnimatedBuilder(
-      animation: progress,
-      builder: (context, _) => CustomPaint(
-        painter: _RingPainter(progress.value),
-        child: Icon(LucideIcons.plus, size: size * 0.45, color: Colors.white),
-      ),
-    ),
-  );
-}
-
-class _RingPainter extends CustomPainter {
-  final double t;
-
-  _RingPainter(this.t);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (t <= 0) return;
-    final rect = Rect.fromCircle(center: size.center(Offset.zero), radius: size.width / 2 - 4);
-    canvas.drawArc(
-      rect,
-      -math.pi / 2,
-      2 * math.pi * t,
-      false,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_RingPainter old) => old.t != t;
 }
 
 /// What a card shows
@@ -704,7 +661,7 @@ class ZoomTile extends ConsumerWidget {
     final locale = Localizations.localeOf(context);
     final offer = item.isOnOffer && item.offerPrice != null && item.offerPrice! < item.price;
     final name = item.name.getText(locale);
-    return Pressable(
+    return HoldPress(
       scale: 0.95,
       onTap: () => openDish(context, item),
       onLongPress: () => quickAdd(context, ref, item),
@@ -715,28 +672,13 @@ class ZoomTile extends ConsumerWidget {
             opacity: item.isAvailable ? 1 : 0.5,
             child: AspectRatio(
               aspectRatio: 4 / 5,
-              // What a card's photo flies to as the deck zooms out, and back from as it zooms in
-              child: ZoomPhotoAnchor(
-                view: ZoomView.grid,
-                item: item,
-                radius: 18,
-                child: item.pictureUri == null
-                    ? DishPhotoAnchor(
-                        id: item.id,
-                        radius: 18,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          alignment: AlignmentDirectional.bottomStart,
-                          decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(18)),
-                          child: Text(
-                            name,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: BrandStyle.of(context).heading(context, TextStyle(fontSize: 16, height: 1.05, color: c.primaryForeground)),
-                          ),
-                        ),
-                      )
-                    : DishPhotoBox(item: item, radius: 18),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _zoomPhoto(context, item, name),
+                  // Held, the deck's ring fills in the corner
+                  if (item.isAvailable) const PositionedDirectional(top: 6, end: 6, child: HoldRing(size: 36)),
+                ],
               ),
             ),
           ),
@@ -753,6 +695,33 @@ class ZoomTile extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// What a card's photo flies to as the deck zooms out, and back from as it zooms in
+  Widget _zoomPhoto(BuildContext context, MenuItem item, String name) {
+    final c = context.theme.colors;
+    return ZoomPhotoAnchor(
+      view: ZoomView.grid,
+      item: item,
+      radius: 18,
+      child: item.pictureUri == null
+          ? DishPhotoAnchor(
+              id: item.id,
+              radius: 18,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                alignment: AlignmentDirectional.bottomStart,
+                decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(18)),
+                child: Text(
+                  name,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: BrandStyle.of(context).heading(context, TextStyle(fontSize: 16, height: 1.05, color: c.primaryForeground)),
+                ),
+              ),
+            )
+          : DishPhotoBox(item: item, radius: 18, ring: false),
     );
   }
 }

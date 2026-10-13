@@ -15,7 +15,9 @@ import '../../cart/services/cart_service.dart';
 import '../../cart/widgets/tray_flights.dart';
 import '../models/menu_item.dart';
 import '../paired_items.dart';
+import '../services/menu_service.dart';
 import 'deck.dart';
+import 'hold.dart';
 import 'dish_view.dart';
 
 /// Opens a dish's options, grown out of its photo when it is on screen
@@ -42,7 +44,8 @@ void quickAdd(BuildContext context, WidgetRef ref, MenuItem item) {
     );
     return;
   }
-  if (!canQuickAdd(item)) {
+  final preference = ref.read(itemPreferenceProvider(item.id));
+  if (!canQuickAdd(item, preference)) {
     openDish(context, item);
     return;
   }
@@ -54,7 +57,7 @@ void quickAdd(BuildContext context, WidgetRef ref, MenuItem item) {
     radius: from?.radius ?? 20,
     photo: item.pictureUri,
     reduced: reduceMotion(context),
-    land: () => ref.read(cartProvider.notifier).addItem(quickAddLine(item)),
+    land: () => ref.read(cartProvider.notifier).addItem(quickAddLine(item, preference)),
   );
 }
 
@@ -127,7 +130,9 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   );
 }
 
-/// A dish's press: a tap opens its options, a held one puts it in the tray
+/// A dish's press: a tap opens its options, a held one fills the deck's ring
+/// (on its photo, or its button) and puts it in the tray, or opens it when
+/// there is something to choose
 class _DishPress extends ConsumerWidget {
   final MenuItem item;
   final Widget child;
@@ -137,7 +142,7 @@ class _DishPress extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
-      Pressable(scale: scale, onTap: () => openDish(context, item), onLongPress: () => quickAdd(context, ref, item), child: child);
+      HoldPress(scale: scale, onTap: () => openDish(context, item), onLongPress: () => quickAdd(context, ref, item), child: child);
 }
 
 /// The photo box of a list's dish: the photo, or the plate on the business's colour
@@ -146,7 +151,11 @@ class DishPhotoBox extends StatelessWidget {
   final double radius;
   final Widget? overlay;
 
-  const DishPhotoBox({super.key, required this.item, required this.radius, this.overlay});
+  /// The held press's ring on it: in the corner of a big photo, in the middle of a row's small one
+  final bool ring;
+  final bool small;
+
+  const DishPhotoBox({super.key, required this.item, required this.radius, this.overlay, this.ring = true, this.small = false});
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +182,15 @@ class DishPhotoBox extends StatelessWidget {
       radius: radius,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Stack(fit: StackFit.expand, children: [photo, ?overlay]),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            photo,
+            ?overlay,
+            if (ring && item.isAvailable)
+              small ? const Center(child: HoldRing(size: 36)) : const PositionedDirectional(top: 10, end: 10, child: HoldRing()),
+          ],
+        ),
       ),
     );
   }
@@ -265,7 +282,7 @@ class DishAction extends ConsumerWidget {
       ),
     );
 
-    if (!canQuickAdd(item)) {
+    if (!canQuickAdd(item, ref.watch(itemPreferenceProvider(item.id)))) {
       final rtl = Directionality.of(context) == TextDirection.rtl;
       return round(rtl ? LucideIcons.chevronLeft : LucideIcons.chevronRight, () => openDish(context, item), item.name.getText(Localizations.localeOf(context)));
     }
@@ -347,7 +364,7 @@ class DishRow extends StatelessWidget {
                 children: [
                   SizedBox.square(
                     dimension: short ? 72 : 80,
-                    child: DishPhotoBox(item: item, radius: Ninja.tileRadius),
+                    child: DishPhotoBox(item: item, radius: Ninja.tileRadius, small: true),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -438,52 +455,62 @@ class DishCompactRow extends ConsumerWidget {
     final offer = _onOffer(item);
     final description = item.description.getText(locale);
     final strong = context.localeText(theme.typography.body.copyWith(color: c.foreground));
-    return Opacity(
-      opacity: item.isAvailable ? 1 : 0.5,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: _DishPress(
-                item: item,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(
-                          child: Text(item.name.getText(locale), style: strong.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
-                        ),
-                        const SizedBox(width: 12),
-                        if (offer) ...[
-                          Text(
-                            money(item.price),
-                            style: context.localeText(
-                              theme.typography.caption.copyWith(
-                                color: c.mutedForeground,
-                                decoration: TextDecoration.lineThrough,
-                                fontFeatures: NinjaTypography.tabular,
+    // The press is on the words and its ring on the button: one scope round both
+    return HoldScope(
+      child: Opacity(
+        opacity: item.isAvailable ? 1 : 0.5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: _DishPress(
+                  item: item,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(
+                            child: Text(item.name.getText(locale), style: strong.copyWith(fontWeight: FontWeight.w600, height: 1.3)),
+                          ),
+                          const SizedBox(width: 12),
+                          if (offer) ...[
+                            Text(
+                              money(item.price),
+                              style: context.localeText(
+                                theme.typography.caption.copyWith(
+                                  color: c.mutedForeground,
+                                  decoration: TextDecoration.lineThrough,
+                                  fontFeatures: NinjaTypography.tabular,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            money(offer ? item.offerPrice! : item.price),
+                            style: strong.copyWith(fontWeight: FontWeight.w700, fontFeatures: NinjaTypography.tabular),
                           ),
-                          const SizedBox(width: 6),
                         ],
-                        Text(
-                          money(offer ? item.offerPrice! : item.price),
-                          style: strong.copyWith(fontWeight: FontWeight.w700, fontFeatures: NinjaTypography.tabular),
-                        ),
-                      ],
-                    ),
-                    if (description.isNotEmpty) Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: dishNote(context)),
-                  ],
+                      ),
+                      if (description.isNotEmpty) Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: dishNote(context)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (item.isAvailable) ...[const SizedBox(width: 12), DishAction(item: item)],
-          ],
+              if (item.isAvailable) ...[
+                const SizedBox(width: 12),
+                // No photo to fill a ring on: held, the deck's ring covers the button
+                Stack(
+                  alignment: Alignment.center,
+                  children: [DishAction(item: item), const HoldRing()],
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
