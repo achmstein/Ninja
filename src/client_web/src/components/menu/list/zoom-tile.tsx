@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { usePress } from '@/components/ninja/gestures/use-press'
 import { PressRing } from '../deck/deck'
-import { canQuickAdd, TONE_CLASS } from '../deck/deck-model'
+import { TONE_CLASS } from '../deck/deck-model'
 import { OfferBadge } from '../offer'
 import { SoldOutBadge } from './dish-parts'
 
@@ -34,7 +34,6 @@ export const ZoomTile = memo(function ZoomTile({
   const soldOut = item.isAvailable === false
   const onOffer = item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
   const photo = useRef<HTMLDivElement>(null)
-  const quick = canQuickAdd(item)
   const { pressing, handlers } = usePress({
     onTap: () => onOpen(item, photo.current),
     onLongPress: () => onQuickAdd(item, photo.current),
@@ -68,9 +67,9 @@ export const ZoomTile = memo(function ZoomTile({
             <OfferBadge item={item} />
           </span>
         )}
-        {/* Held, a dish that needs no choosing fills a ring and drops into the tray */}
-        {quick && (
-          <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-200', pressing ? 'opacity-100' : 'opacity-0')}>
+        {/* Held, a ring fills: at the full ring the dish drops into the tray, or opens when there is something to choose */}
+        {!soldOut && (
+          <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-150', pressing ? 'opacity-100' : 'opacity-0')}>
             <PressRing pressing={pressing} blur={pressing} small />
           </span>
         )}

@@ -2,6 +2,7 @@ import { memo, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useLocalized, usePrice } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { PressRing } from '../deck/deck'
 import { OfferBadge } from '../offer'
 import { RowAction, SoldOutTag } from './dish-parts'
 import { DISH_NOTE, rise, useDish, type DishProps } from './use-dish'
@@ -36,8 +37,15 @@ export const CompactRow = memo(function CompactRow({ scroller, item, onOpen, onQ
       {dish.soldOut ? (
         <SoldOutTag />
       ) : (
-        <span ref={photo} className='shrink-0 rounded-full'>
+        <span ref={photo} className='relative shrink-0 rounded-full'>
           <RowAction item={item} quick={dish.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={dish.open} />
+          {/* No photo to fill a ring on: held, the deck's ring covers the button */}
+          <span
+            aria-hidden
+            className={cn('pointer-events-none absolute inset-0 grid place-items-center transition-opacity duration-150', dish.pressing ? 'opacity-100' : 'opacity-0')}
+          >
+            <PressRing pressing={dish.pressing} blur={dish.pressing} />
+          </span>
         </span>
       )}
     </motion.div>

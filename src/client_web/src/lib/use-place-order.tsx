@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { getUserPreferencesQueryKey, saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { brandQueryKey, useBrand } from '@/lib/brand'
 import { isModuleOff, problemMessage } from '@/lib/problem'
@@ -69,7 +69,11 @@ export function usePlaceOrder({
     requireSignInForDelivery: branch?.requireSignInForDelivery ?? false,
   })
 
-  const savePreferences = useMutation(saveUserPreferencesMutation())
+  const savePreferences = useMutation({
+    ...saveUserPreferencesMutation(),
+    // The menu's quick adds read the saved ways: the next hold adds this order's
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: getUserPreferencesQueryKey() }),
+  })
   // One request id per payload, kept in the browser until the order goes through: an answer that never
   // came back (a hang, a closed tab, a phone that lost its signal) is sent again as the same request,
   // which the server answers as placed rather than making a second order or turning it away

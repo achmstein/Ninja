@@ -1,4 +1,4 @@
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto, UserItemPreferenceDto } from '@/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import { canQuickAdd } from './deck/deck-model'
 
@@ -29,12 +29,16 @@ export const MAX_ON_SHEET = 3
  * one never brings on the next; the customer waving it away is kept by the
  * caller, for the rest of the order.
  */
-export function cartNudge(lines: readonly CartLine[], menu: ReadonlyMap<string, CatalogItemDto>): CatalogItemDto | null {
+export function cartNudge(
+  lines: readonly CartLine[],
+  menu: ReadonlyMap<string, CatalogItemDto>,
+  preferences?: ReadonlyMap<number, UserItemPreferenceDto>
+): CatalogItemDto | null {
   if (lines.some((line) => line.suggestion)) return null
   for (const line of [...lines].reverse()) {
     const item = menu.get(String(line.productId))
     if (!item) continue
-    const offer = pairedFor(item, menu, lines).find(canQuickAdd)
+    const offer = pairedFor(item, menu, lines).find((paired) => canQuickAdd(paired, preferences?.get(Number(paired.id))))
     if (offer) return offer
   }
   return null

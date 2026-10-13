@@ -28,6 +28,7 @@ import { useDockRowShown } from '@/components/ninja/shell/use-dock-row'
 import { useTuck, useTuckOnScroll } from '@/components/ninja/shell/use-tuck'
 import { Tray } from '@/components/tray/tray'
 import { LiquidTabs } from './category-tabs'
+import { useItemPreferences } from './data/use-item-preferences'
 import type { HomeProps } from './data/use-menu'
 import { Deck, type DeckPosition } from './deck/deck'
 import { buildDeck, canQuickAdd, pickUsual, positionOf, quickAddChoice, TONE_CLASS } from './deck/deck-model'
@@ -163,6 +164,9 @@ export function MenuScreen({ menu }: HomeProps) {
   const swipeHint = useHint('swipe')
   const zoomHint = useHint('zoom')
   const holdHint = useHint('holdAdd')
+  // The customer's saved way of each dish: what a quick add puts in, and whether it may
+  const preferences = useItemPreferences()
+  const quickFor = (item: CatalogItemDto) => canQuickAdd(item, preferences.get(Number(item.id)))
   const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
   // The promotion running at the branch: shown once on its own as the menu settles, with nothing open over
   // it and no cue on screen, before any cue; after that its chip in the top bar opens it again
@@ -187,10 +191,10 @@ export function MenuScreen({ menu }: HomeProps) {
   }, [endCue])
   const activeItem = columns[column]?.items[activeRow]
   // "Hold to add" waits for a card a long press would add straight away
-  const cueFits = current !== holdHint || (!!activeItem && canQuickAdd(activeItem))
+  const cueFits = current !== holdHint || (!!activeItem && quickFor(activeItem))
   useTimeout(idle && noCue && cueFits && current != null && !current.showing, 1400, () => current?.show())
   useTimeout(!!current?.showing, gestureMs(current === swipeHint ? 'swipe' : current === zoomHint ? 'pinch' : 'hold'), () => current?.done())
-  const holdHintId = holdHint.showing && activeItem && canQuickAdd(activeItem) ? Number(activeItem.id) : null
+  const holdHintId = holdHint.showing && activeItem && quickFor(activeItem) ? Number(activeItem.id) : null
 
   const labels = columns.map((c) => c.label)
   // The whole menu shows the categories alone (each usual is a tile in its own category)
@@ -352,12 +356,12 @@ export function MenuScreen({ menu }: HomeProps) {
 
   // A dish the open one goes well with: in with its defaults when nothing needs choosing, else open it in its place
   const onSuggest = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
-    if (!canQuickAdd(item)) {
+    if (!quickFor(item)) {
       store.setState({ tuning: { item, from: photo, suggestion: 'Pairing' } })
       return
     }
     navigator.vibrate?.(8)
-    const { customizations, unitPrice } = quickAddChoice(item)
+    const { customizations, unitPrice } = quickAddChoice(item, preferences.get(Number(item.id)))
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }, 'Pairing'))
   })
 
@@ -373,13 +377,13 @@ export function MenuScreen({ menu }: HomeProps) {
       return
     }
     // Something to choose first: open it instead
-    if (!canQuickAdd(item)) {
+    if (!quickFor(item)) {
       store.setState({ tuning: { item, from: photo } })
       return
     }
     navigator.vibrate?.(8)
     if (holdHint.pending) holdHint.done()
-    const { customizations, unitPrice } = quickAddChoice(item)
+    const { customizations, unitPrice } = quickAddChoice(item, preferences.get(Number(item.id)))
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
   })
 

@@ -2,6 +2,7 @@ import { useState, type RefObject } from 'react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { springSoft } from '@/lib/motion'
 import { usePress } from '@/components/ninja/gestures/use-press'
+import { useItemPreference } from '../data/use-item-preferences'
 import { canQuickAdd } from '../deck/deck-model'
 
 /** The menu styles a business may choose instead of the deck (the brand's menu item part) */
@@ -46,7 +47,8 @@ export function useDish({
   grows = true,
 }: Pick<DishProps, 'item' | 'onOpen' | 'onQuickAdd'> & { photo: RefObject<HTMLElement | null>; grows?: boolean }) {
   const [failed, setFailed] = useState(false)
-  const open = () => onOpen(item, grows ? photo.current : null)
+  const preference = useItemPreference(Number(item.id))
+  const open =() => onOpen(item, grows ? photo.current : null)
   const { pressing, handlers } = usePress({
     onTap: open,
     onLongPress: () => onQuickAdd(item, photo.current),
@@ -58,7 +60,7 @@ export function useDish({
     fail: () => setFailed(true),
     soldOut: item.isAvailable === false,
     onOffer: !!item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0),
-    quick: canQuickAdd(item),
+    quick: canQuickAdd(item, preference),
     open,
   }
 }

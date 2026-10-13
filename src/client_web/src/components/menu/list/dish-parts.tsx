@@ -8,6 +8,7 @@ import { blurSwap } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { Odometer } from '@/components/ninja/odometer'
+import { PressRing } from '../deck/deck'
 import { TONE_CLASS } from '../deck/deck-model'
 import { OfferBadge, OfferPrice } from '../offer'
 import type { useDish } from './use-dish'
@@ -61,6 +62,19 @@ export function DishPhotoBox({
       {dish.onOffer && !dish.soldOut && (
         <span className={cn('absolute z-10', offerSmall ? 'start-1 top-1' : 'start-2.5 top-2.5')}>
           <OfferBadge item={item} photo={!offerSmall} />
+        </span>
+      )}
+      {/* Held, the deck's ring fills on the photo: in the middle of a row's small one, in the corner of a big one */}
+      {!dish.soldOut && (
+        <span
+          aria-hidden
+          className={cn(
+            'absolute z-20 transition-opacity duration-150',
+            offerSmall ? 'inset-0 grid place-items-center' : 'end-2.5 top-2.5',
+            dish.pressing ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <PressRing pressing={dish.pressing} blur={dish.pressing} small={offerSmall} />
         </span>
       )}
       {children}

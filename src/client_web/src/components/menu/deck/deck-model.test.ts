@@ -73,11 +73,36 @@ describe('positionOf', () => {
 })
 
 describe('quick add', () => {
-  it('is allowed when nothing must be chosen and the item is on', () => {
+  const pref = (...picks: [number, number][]) => ({
+    catalogItemId: 1,
+    selectedOptions: picks.map(([customizationId, optionId]) => ({ customizationId, optionId })),
+  })
+
+  it('is allowed for an item that is on and has nothing to choose', () => {
     expect(canQuickAdd(item(1))).toBe(true)
-    expect(canQuickAdd(item(1, { customizations: [group(1, 'Sugar', [option(1), option(2)])] }))).toBe(true)
-    expect(canQuickAdd(item(1, { customizations: [group(1, 'Size', [option(1)], { isRequired: true })] }))).toBe(false)
     expect(canQuickAdd(item(1, { isAvailable: false }))).toBe(false)
+  })
+
+  it('is not allowed for an item with choices and no saved way, even optional ones', () => {
+    expect(canQuickAdd(item(1, { customizations: [group(1, 'Sugar', [option(1), option(2)])] }))).toBe(false)
+    expect(canQuickAdd(item(1, { customizations: [group(1, 'Size', [option(1)], { isRequired: true })] }))).toBe(false)
+  })
+
+  it('is allowed with a saved way that still answers every required choice', () => {
+    const sized = item(1, {
+      customizations: [group(1, 'Size', [option(1), option(2)], { isRequired: true }), group(2, 'Sugar', [option(3), option(4)])],
+    })
+    expect(canQuickAdd(sized, pref([2, 3]))).toBe(false)
+    expect(canQuickAdd(sized, pref([1, 2]))).toBe(true)
+    expect(canQuickAdd(item(1, { customizations: [group(1, 'Size', [option(1, 0, { isOutOfStock: true })], { isRequired: true })] }), pref([1, 1]))).toBe(false)
+    expect(canQuickAdd(item(1, { isAvailable: false, customizations: [group(1, 'Sugar', [option(1)])] }), pref([1, 1]))).toBe(false)
+  })
+
+  it('adds the saved way over the defaults', () => {
+    const x = item(1, { customizations: [group(1, 'Size', [option(1, 0, { isDefault: true }), option(2, 10)], { isRequired: true })] })
+    const choice = quickAddChoice(x, pref([1, 2]))
+    expect(choice.customizations.map((c) => c.optionId)).toEqual([2])
+    expect(choice.unitPrice).toBe(60)
   })
 
   it('adds the defaults that are in stock, priced with the offer', () => {

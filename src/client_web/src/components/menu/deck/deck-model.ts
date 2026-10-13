@@ -1,8 +1,8 @@
-import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
+import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import {
-  defaultSelections,
   effectiveBasePrice,
+  preferenceSelections,
   selectionsToCustomizations,
   withoutOutOfStock,
 } from '@/components/menu/item-form'
@@ -59,15 +59,28 @@ export function sortedOptions(customization: ItemCustomizationDto) {
   return [...(customization.options ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
 }
 
-/** Whether a long press may add the item straight away: it is on and nothing needs choosing. */
-export function canQuickAdd(item: CatalogItemDto): boolean {
-  if (item.isAvailable === false) return false
-  return !(item.customizations ?? []).some((c) => c.isRequired)
+/** What a dish goes in with untouched: the customer's saved way over the business's defaults, nothing sold out. */
+function quickSelections(item: CatalogItemDto, preference?: UserItemPreferenceDto) {
+  return withoutOutOfStock(item.customizations, preferenceSelections(item.customizations, preference))
 }
 
-/** The line a long press adds: the business's defaults, nothing sold out, one of it. */
-export function quickAddChoice(item: CatalogItemDto): { customizations: CartCustomization[]; unitPrice: number } {
-  const selections = withoutOutOfStock(item.customizations, defaultSelections(item.customizations))
+/**
+ * Whether a held press (or the plus) may add the item straight away: it is on, and either it has
+ * nothing to choose at all or the customer has a saved way of it that still answers every required
+ * choice. Anything else opens, so nobody gets a dish made a way they did not pick.
+ */
+export function canQuickAdd(item: CatalogItemDto, preference?: UserItemPreferenceDto): boolean {
+  if (item.isAvailable === false) return false
+  const customizations = item.customizations ?? []
+  if (customizations.length === 0) return true
+  if (!preference?.selectedOptions?.length) return false
+  const selections = quickSelections(item, preference)
+  return customizations.every((c) => !c.isRequired || (selections[String(c.id)]?.length ?? 0) > 0)
+}
+
+/** The line a quick add puts in: the customer's saved way (else the business's defaults), nothing sold out, one of it. */
+export function quickAddChoice(item: CatalogItemDto, preference?: UserItemPreferenceDto): { customizations: CartCustomization[]; unitPrice: number } {
+  const selections = quickSelections(item, preference)
   const customizations = selectionsToCustomizations(item, selections)
   return {
     customizations,

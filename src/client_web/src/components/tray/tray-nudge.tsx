@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useItemPreferences } from '../menu/data/use-item-preferences'
 import { quickAddChoice } from '../menu/deck/deck-model'
 import { DishPhoto } from '../menu/dish-photo'
 import { itemPictureUrl } from '../menu/item-picture'
@@ -41,7 +42,8 @@ export function TrayNudge() {
     if (empty) reset()
   }, [empty, reset])
 
-  const offer = notNow ? null : cartNudge(lines, menu)
+  const preferences = useItemPreferences()
+  const offer = notNow ? null : cartNudge(lines, menu, preferences)
 
   return (
     <AnimatePresence initial={false}>
@@ -73,7 +75,7 @@ export function TrayNudge() {
               type='button'
               aria-label={t('addSuggestion', { name: localized(offer.name) })}
               onClick={() => {
-                const { customizations, unitPrice } = quickAddChoice(offer)
+                const { customizations, unitPrice } = quickAddChoice(offer, preferences.get(Number(offer.id)))
                 add({
                   productId: Number(offer.id),
                   nameEn: offer.name?.en ?? '',

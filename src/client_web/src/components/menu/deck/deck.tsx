@@ -5,6 +5,7 @@ import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureSrcSet, itemPictureUrl } from '@/components/menu/item-picture'
+import { useItemPreference } from '../data/use-item-preferences'
 import { canQuickAdd, CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 import { OfferBadge } from '../offer'
 
@@ -320,7 +321,8 @@ const DeckCard = memo(function DeckCard({
 }) {
   const t = useT()
   const photo = useRef<HTMLDivElement>(null)
-  const quick = canQuickAdd(item)
+  const quick = canQuickAdd(item, useItemPreference(Number(item.id)))
+  const soldOut = item.isAvailable === false
   const { pressing, handlers } = usePress({
     onTap: () => onOpen(item, photo.current),
     onLongPress: () => onQuickAdd(item, photo.current),
@@ -340,17 +342,17 @@ const DeckCard = memo(function DeckCard({
         {...handlers}
       >
         <CardFace item={item} usual={usual} photoRef={photo} />
-        {/* Holding a dish that needs no choosing: a ring fills round a plus, and at the full ring it is in the tray */}
-        {quick && (
+        {/* Held, a ring fills round a plus: at the full ring a dish with nothing to choose (or a saved way) is in the tray, any other opens */}
+        {!soldOut && (
           <span
             aria-hidden
             className={cn(
-              'absolute end-4 top-4 z-20 flex items-center gap-2 transition-opacity duration-200',
-              pressing || hint ? 'opacity-100' : 'opacity-0'
+              'absolute end-4 top-4 z-20 flex items-center gap-2 transition-opacity duration-150',
+              pressing || (hint && quick) ? 'opacity-100' : 'opacity-0'
             )}
           >
-            {hint && <span className='rounded-full bg-black/55 px-3 py-1.5 text-caption font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
-            <PressRing pressing={pressing} blur={pressing || hint} />
+            {hint && quick && <span className='rounded-full bg-black/55 px-3 py-1.5 text-caption font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
+            <PressRing pressing={pressing} blur={pressing || (hint && quick)} />
           </span>
         )}
       </article>
