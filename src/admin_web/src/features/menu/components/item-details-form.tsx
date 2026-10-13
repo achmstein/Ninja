@@ -46,6 +46,7 @@ import {
   useOnlyLang,
 } from '@/components/localized-input'
 import { NinjaMark } from '@/components/ninja-mark'
+import { ToggleChip } from '@/components/toggle-chip'
 import { halfFilled, hasText } from '@/features/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
 import {
@@ -608,13 +609,12 @@ export function ItemDetailsForm({
                       form.offerWeekdays === 0 ||
                       (form.offerWeekdays & bit) !== 0
                     return (
-                      <Button
+                      <ToggleChip
                         key={day}
-                        type='button'
-                        size='sm'
-                        variant={on ? 'secondary' : 'outline'}
-                        className='h-8 w-11 px-0 text-xs'
-                        onClick={() => {
+                        on={on}
+                        compact
+                        className='w-11'
+                        onToggle={() => {
                           const all = 127
                           const current =
                             form.offerWeekdays === 0 ? all : form.offerWeekdays
@@ -626,7 +626,7 @@ export function ItemDetailsForm({
                         }}
                       >
                         {weekdayName(day)}
-                      </Button>
+                      </ToggleChip>
                     )
                   })}
                 </div>

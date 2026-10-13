@@ -161,22 +161,25 @@ export function PromotionsManagement() {
                       {t('promotionNoPicture')}
                     </span>
                   )}
-                  <span className='absolute start-2 top-2'>{stateOf(p)}</span>
                 </button>
                 <div className='flex items-center gap-2'>
                   <div className='min-w-0 flex-1'>
                     <p className='truncate text-sm font-medium'>
                       {localized(p.headline)}
                     </p>
-                    <p className='text-muted-foreground truncate text-xs'>
-                      {p.startsAt || p.endsAt
-                        ? [p.startsAt, p.endsAt]
-                            .map((d) =>
-                              d ? formatWhen(d, 'date', locale, t) : ''
-                            )
-                            .join(' – ')
-                        : t('always')}
-                    </p>
+                    {/* Its state under the picture, not on it: the design's own headline is where a chip would sit */}
+                    <div className='mt-1 flex min-w-0 items-center gap-1.5'>
+                      {stateOf(p)}
+                      <p className='text-muted-foreground truncate text-xs'>
+                        {p.startsAt || p.endsAt
+                          ? [p.startsAt, p.endsAt]
+                              .map((d) =>
+                                d ? formatWhen(d, 'date', locale, t) : ''
+                              )
+                              .join(' – ')
+                          : t('always')}
+                      </p>
+                    </div>
                   </div>
                   <Switch
                     checked={p.isActive}
