@@ -113,7 +113,7 @@ const webExtras = {
   },
   scanTable: {
     en: 'Scan table',
-    ar: 'امسح الكود',
+    ar: 'سكان الكود',
   },
   scanTableHint: {
     en: 'Point the camera at the QR code on your table',
