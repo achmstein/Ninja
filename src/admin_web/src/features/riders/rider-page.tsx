@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { History, Motorbike } from 'lucide-react'
+import { History, Motorbike, Pencil } from 'lucide-react'
 import { type RiderDeliveryRow } from '@/api/ordering'
 import {
   getRiderDeliveriesOptions,
@@ -43,6 +43,7 @@ import {
   windowTooWide,
 } from './format'
 import { LastSeen, PresenceChip } from './index'
+import { RenameRiderDialog } from './rename-rider-dialog'
 import { TimelineDialog } from './timeline-dialog'
 
 const route = getRouteApi('/_authenticated/riders/$userId')
@@ -128,6 +129,7 @@ export function RiderPage({ userId }: { userId: string }) {
     refetchInterval: 60_000,
   })
   const rider = overview.data?.find((r) => r.userId === userId)
+  const [renaming, setRenaming] = useState(false)
 
   // Now: what is still with them, whenever it was given. A window fixed when
   // the page opens, reaching a day ahead, so a delivery given later still
@@ -298,6 +300,14 @@ export function RiderPage({ userId }: { userId: string }) {
         back={{ to: '/riders' }}
         title={rider?.name ?? '…'}
         badge={rider && <PresenceChip status={rider.status} />}
+        actions={
+          rider && (
+            <Button variant='outline' onClick={() => setRenaming(true)}>
+              <Pencil />
+              {t('riderRenameAction')}
+            </Button>
+          )
+        }
       >
         {rider && (
           <div className='text-muted-foreground flex flex-wrap items-center gap-x-2 text-sm'>
@@ -312,6 +322,14 @@ export function RiderPage({ userId }: { userId: string }) {
           </div>
         )}
       </PageHeader>
+      {rider && (
+        <RenameRiderDialog
+          open={renaming}
+          onOpenChange={setRenaming}
+          userId={userId}
+          name={rider.name ?? ''}
+        />
+      )}
 
       {/* What is out with them right now */}
       <Card className='mb-4'>

@@ -52,6 +52,11 @@ export const customersService = {
     return data?.userId ?? null
   },
 
+  // A staff account's name (Admin): the services that show it hear of the change
+  async updateName(userId: string, name: string): Promise<void> {
+    await apiClient.put(`/api/identity/users/${userId}/profile`, { name })
+  },
+
   // Replace the branches a staff account may work in (Owner). The change
   // reaches the user's token on its next refresh.
   async setBranches(userId: string, branchIds: number[]): Promise<void> {

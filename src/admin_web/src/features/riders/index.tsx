@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { getRealmRoles } from '@/config/oidc-config'
-import { Motorbike, ShieldCheck } from 'lucide-react'
+import { Motorbike, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type RiderOverview } from '@/api/ordering'
 import { getRidersOverviewOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -25,6 +25,8 @@ import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
+import { AddStaffDialog } from '@/features/staff/components/add-staff-dialog'
+import { refreshRiders } from './refresh'
 import {
   compareRiders,
   num,
@@ -74,6 +76,8 @@ export function Riders() {
   const navigate = useNavigate()
   const auth = useAuth()
   const isOwner = getRealmRoles(auth.user).includes('Owner')
+  const queryClient = useQueryClient()
+  const [adding, setAdding] = useState(false)
 
   // "Today" is the admin's own day: Ordering keeps no time zone
   const tzOffsetMinutes = new Date().getTimezoneOffset()
@@ -177,6 +181,14 @@ export function Riders() {
       <PageHeader
         title={t('ridersNav')}
         description={t('ridersDescription')}
+        actions={
+          isOwner ? (
+            <Button onClick={() => setAdding(true)}>
+              <UserPlus />
+              {t('ridersAdd')}
+            </Button>
+          ) : undefined
+        }
         badge={
           riders.length > 0 ? (
             <StatusChip tone={online > 0 ? 'success' : 'muted'}>
@@ -199,12 +211,18 @@ export function Riders() {
           description={t('ridersEmptyDescription')}
           action={
             isOwner ? (
-              <Button asChild variant='outline'>
-                <Link to='/staff'>
-                  <ShieldCheck />
-                  {t('ridersOpenStaff')}
-                </Link>
-              </Button>
+              <div className='flex flex-wrap justify-center gap-2'>
+                <Button onClick={() => setAdding(true)}>
+                  <UserPlus />
+                  {t('ridersAdd')}
+                </Button>
+                <Button asChild variant='outline'>
+                  <Link to='/staff'>
+                    <ShieldCheck />
+                    {t('ridersOpenStaff')}
+                  </Link>
+                </Button>
+              </div>
             ) : undefined
           }
         />
@@ -251,6 +269,14 @@ export function Riders() {
           )}
         />
       )}
+
+      {/* A rider is a staff login with the Rider role, made here as the staff page makes one */}
+      <AddStaffDialog
+        open={adding}
+        onOpenChange={setAdding}
+        defaults={{ role: 'Rider' }}
+        onCreated={() => refreshRiders(queryClient)}
+      />
     </Main>
   )
 }

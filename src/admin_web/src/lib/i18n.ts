@@ -454,6 +454,11 @@ const webExtras = {
   addStaff: { en: "Add staff", ar: "أضف موظفًا" },
   branchesUpdated: { en: "Branches updated", ar: "تم تحديث الفروع" },
   cashierCreatedSuccess: { en: "Cashier account created", ar: "تم إنشاء حساب الكاشير" },
+  ridersAdd: { en: "Add rider", ar: "أضف مندوبًا" },
+  riderRename: { en: "Rename rider", ar: "تغيير اسم المندوب" },
+  riderRenameAction: { en: "Rename", ar: "تغيير الاسم" },
+  riderRenamed: { en: "Rider renamed", ar: "تم تغيير اسم المندوب" },
+  riderRenameFailed: { en: "Couldn't rename the rider", ar: "تعذر تغيير اسم المندوب" },
   riderCreatedSuccess: { en: "Rider account created", ar: "تم إنشاء حساب المندوب" },
   initialBranches: { en: "Branches", ar: "الفروع" },
   // Orders board (KDS-style aging)
