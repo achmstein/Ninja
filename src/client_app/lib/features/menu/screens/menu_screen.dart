@@ -702,6 +702,17 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
         Positioned.fill(
           child: AnimatedSwitcher(duration: Motion.base, switchInCurve: Motion.enter, switchOutCurve: Motion.exit, child: content),
         ),
+        // The page under the dock, as the web's menu has it: the dishes end at the categories, and
+        // none shows round the dock or under it, down to the screen's edge
+        AnimatedPositioned(
+          duration: tuckSettle,
+          curve: Curves.easeOut,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: dock,
+          child: IgnorePointer(child: ColoredBox(color: c.background)),
+        ),
         if (sections.isNotEmpty)
           // The categories, just above the dock; they come down with it as it tucks away
           AnimatedPositioned(
