@@ -23,6 +23,9 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// <summary>The branch whose till took it, when another makes it: a phone delivery sent on there.</summary>
     public int? TakenAtBranchId { get; init; }
 
+    /// <summary>A sale an offline till sent late: already made and handed over. False from an older producer.</summary>
+    public bool Replay { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, decimal orderTotal, int pointsToRedeem = 0, string? guestId = null, int? branchId = null)
     {

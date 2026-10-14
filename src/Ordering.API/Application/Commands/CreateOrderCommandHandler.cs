@@ -101,6 +101,11 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             paysOnline: message.PayOnline,
             taker: message.Taker);
 
+        if (message.RequestId is { } requestId)
+        {
+            order.SetRequestId(requestId);
+        }
+
         foreach (var item in message.OrderItems)
         {
             order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount, item.PictureUrl, item.Units, item.CustomizationsDescription, item.SpecialInstructions, item.OptionIds, item.Suggestion);
@@ -125,9 +130,9 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             // left with the items, so there is nothing for the stock check or
             // the kitchen to decide. The order lands confirmed at once — the
             // same transition a POS order takes after Catalog says yes — and
+            // made when it was rung up, so it is never new work on the board;
             // the confirmed event opens its ticket in Sales like any other.
-            order.SetValidatedStatus();
-            order.SetConfirmedStatus();
+            order.ConfirmReplay();
         }
         else
         {
@@ -171,18 +176,31 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
 /// </summary>
 public class CreateOrderIdentifiedCommandHandler : IdentifiedCommandHandler<CreateOrderCommand, int>
 {
+    private readonly IOrderRepository _orderRepository;
+
     public CreateOrderIdentifiedCommandHandler(
         IMediator mediator,
         IRequestManager requestManager,
-        ILogger<IdentifiedCommandHandler<CreateOrderCommand, int>> logger)
+        ILogger<IdentifiedCommandHandler<CreateOrderCommand, int>> logger,
+        IOrderRepository orderRepository)
         : base(mediator, requestManager, logger)
     {
+        _orderRepository = orderRepository;
     }
 
     protected override int CreateResultForDuplicateRequest()
     {
-        // The retry of an already-created order: the id wasn't recorded
-        // against the request id, so 0 stands for "placed, look it up"
+        // The retry of an already-created order whose id can't be found:
+        // 0 stands for "placed, look it up"
         return 0;
     }
+
+    /// <summary>
+    /// The retry of an already-created order is answered with that order, so
+    /// an offline till replaying a sale whose first answer was lost carries
+    /// on to its bill. Orders from before the request id was kept, or one
+    /// still being made by the first request, answer 0 as before.
+    /// </summary>
+    protected override async Task<int> ResultForDuplicateRequestAsync(Guid requestId)
+        => await _orderRepository.FindIdByRequestIdAsync(requestId) ?? CreateResultForDuplicateRequest();
 }

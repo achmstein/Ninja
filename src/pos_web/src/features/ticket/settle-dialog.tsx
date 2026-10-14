@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Loader2, Printer, Smartphone, X } from 'lucide-react'
+import { CheckCircle2, CloudOff, Loader2, Printer, Smartphone, X } from 'lucide-react'
 import {
   assignTicketLinesCustomerMutation,
   settleTicketMutation,
@@ -16,11 +16,13 @@ import {
 } from '@/components/ui/dialog'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
+import type { OfflinePayment } from '@/features/offline/offline-replay'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { canSettleWith, onlineSummary } from './online-payments'
 import {
@@ -51,6 +53,8 @@ export type SettleOutcome = {
 
 type SettledView = {
   receiptNumber: number
+  /** Taken offline: the till's own number, the real one comes on replay */
+  provisionalNumber?: string
   change: number
   /** The part that went on the customer's tab (0 when none). */
   accountAmount: number
@@ -121,7 +125,15 @@ type SettleDialogProps = {
     | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSettled: (outcome: SettleOutcome) => void
+  onSettled?: (outcome: SettleOutcome) => void
+  /**
+   * A counter sale the server cannot be reached for: the money is taken
+   * here all the same (cash, card or InstaPay, never a tab), and `settle`
+   * queues it and answers with the provisional receipt number it printed
+   */
+  offline?: {
+    settle: (payments: OfflinePayment[], change: number) => Promise<string>
+  }
 }
 
 /**
@@ -137,6 +149,7 @@ export function SettleDialog({
   open,
   onOpenChange,
   onSettled,
+  offline,
 }: SettleDialogProps) {
   const t = useT()
   const features = useFeatures()
@@ -208,7 +221,7 @@ export function SettleDialog({
   // Settling on account needs tabs switched on and a tab to charge (the
   // server enforces both)
   const tenders =
-    features.tabs && accountHolders.length > 0
+    !offline && features.tabs && accountHolders.length > 0
       ? [...BASE_TENDERS, ACCOUNT_TENDER]
       : BASE_TENDERS
 
@@ -281,7 +294,7 @@ export function SettleDialog({
           .filter((p) => p.tender === 'Account')
           .reduce((sum, p) => sum + p.amount, 0),
       })
-      onSettled(outcome)
+      onSettled?.(outcome)
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       // Whatever went on a tab changed what its holder owes
@@ -354,13 +367,57 @@ export function SettleDialog({
   const removePayment = (index: number) =>
     setPayments((prev) => prev.filter((_, i) => i !== index))
 
+  const [savingOffline, setSavingOffline] = useState(false)
   const canSettle =
-    canSettleWith(online, paid, payments.length) && !settle.isPending
+    canSettleWith(online, paid, payments.length) &&
+    !settle.isPending &&
+    !savingOffline
 
-  const doSettle = () =>
+  // A retry on business Wi-Fi must not become a second command: the same
+  // payments keep the same request id until the dialog closes
+  const requestIdRef = useRef<{ signature: string; id: string } | null>(null)
+  useEffect(() => {
+    if (!open) requestIdRef.current = null
+  }, [open])
+
+  const settleOffline = async () => {
+    if (!offline) return
+    setSavingOffline(true)
+    try {
+      const number = await offline.settle(
+        payments.map((p) => ({
+          tender: p.tenderValue,
+          tenderName: p.tenderName,
+          amount: p.amount,
+        })),
+        changeDue,
+      )
+      setResult({
+        receiptNumber: 0,
+        provisionalNumber: number,
+        change: changeDue,
+        accountAmount: 0,
+      })
+    } catch {
+      toast.error(t('offlineSaveFailed'))
+    } finally {
+      setSavingOffline(false)
+    }
+  }
+
+  const doSettle = () => {
+    if (offline) {
+      void settleOffline()
+      return
+    }
+    const signature = JSON.stringify(
+      payments.map((p) => [p.tenderValue, p.amount, p.customerId ?? null])
+    )
+    if (requestIdRef.current?.signature !== signature) {
+      requestIdRef.current = { signature, id: crypto.randomUUID() }
+    }
     settle.mutate({
-      // A retry on business Wi-Fi must not become a second command
-      headers: { 'x-requestid': crypto.randomUUID() },
+      headers: { 'x-requestid': requestIdRef.current.id },
       path: { id: toNumber(ticket.id) },
       query: { 'api-version': API_VERSION },
       body: {
@@ -372,6 +429,7 @@ export function SettleDialog({
         })),
       },
     })
+  }
 
   const tenderLabel = (name: TenderName) => t(tenderLabelKey[name] ?? 'cash')
 
@@ -384,8 +442,16 @@ export function SettleDialog({
             <CheckCircle2 className='size-14 text-emerald-500' />
             <DialogTitle className='text-2xl'>{t('ticketSettled')}</DialogTitle>
             <div className='text-3xl font-bold tabular-nums'>
-              {t('receiptNumber', { number: result.receiptNumber })}
+              {t('receiptNumber', {
+                number: result.provisionalNumber ?? result.receiptNumber,
+              })}
             </div>
+            {result.provisionalNumber && (
+              <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+                <CloudOff className='size-4' />
+                {t('offlineSettledHint')}
+              </div>
+            )}
             {result.change > 0 && (
               <div className='bg-accent w-full rounded-xl p-4'>
                 <div className='text-muted-foreground text-sm'>

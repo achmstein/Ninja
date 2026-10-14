@@ -20,6 +20,11 @@ type ReceiptSheetProps = {
   // the settle dialog passes what it knows so Print works immediately.
   paymentsOverride?: ReceiptPayment[]
   receiptNumberOverride?: number
+  /**
+   * A sale taken while the server was out of reach has no receipt number
+   * yet: it prints the till's provisional one (P-0001) and says so
+   */
+  provisionalNumber?: string
 }
 
 const row = { display: 'flex', justifyContent: 'space-between', gap: 8 } as const
@@ -39,6 +44,7 @@ export function ReceiptSheet({
   ticket,
   paymentsOverride,
   receiptNumberOverride,
+  provisionalNumber,
 }: ReceiptSheetProps) {
   const t = useT()
   const localized = useLocalized()
@@ -99,7 +105,14 @@ export function ReceiptSheet({
             {branch.taxNumber && <div>{t('taxNumber', { number: branch.taxNumber })}</div>}
           </div>
         )}
-        {receiptNumber != null && (
+        {provisionalNumber ? (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>
+              {t('receiptNumber', { number: provisionalNumber })}
+            </div>
+            <div style={{ fontSize: 10 }}>{t('offlineReceiptNote')}</div>
+          </>
+        ) : receiptNumber != null && (
           <div style={{ fontSize: 13, fontWeight: 600 }}>
             {t('receiptNumber', { number: toNumber(receiptNumber) })}
           </div>

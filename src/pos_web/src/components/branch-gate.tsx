@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useIsRestoring } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,10 @@ import { useT } from '@/lib/i18n'
  * no branch sees why, and a way out.
  */
 export function BranchGate({ children }: { children: React.ReactNode }) {
-  const { branches, isLoading, isOwner } = useAllowedBranches()
+  const { branches, isLoading: fetching, isOwner } = useAllowedBranches()
+  // The branches kept from the last visit are still being read back: a till
+  // offline has only those, so nothing is decided before they are in
+  const isLoading = useIsRestoring() || fetching
   const branchId = useBranchStore((s) => s.branchId)
   const reconcile = useBranchStore((s) => s.reconcile)
   const allowedKey = branches.map((b) => Number(b.id)).join(',')

@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
 import { cn } from '@/lib/utils'
 import { useLocale, useT } from '@/lib/i18n'
+import { useNetworkStatus } from '@/lib/network-status'
 import { OpenShiftDialog } from './open-shift-dialog'
 import { useCurrentShift } from './use-current-shift'
 
@@ -27,6 +28,7 @@ export function ShiftChip() {
     refetchInterval: 60_000,
   })
   const { paused } = useBranchFlags()
+  const online = useNetworkStatus((s) => s.online)
 
   // Keep showing the last definite answer through any transient gap — a tab
   // regaining focus refetches (and may briefly re-auth), a branch switch
@@ -39,6 +41,10 @@ export function ShiftChip() {
   const view = settled
     ? { shift: liveShift, noShift: liveNoShift }
     : lastRef.current
+
+  // Opened offline, no answer will come until the internet does: the
+  // offline chip beside it says so, and a placeholder would wait forever
+  if (!view && !online) return null
 
   // Only the very first load, before any answer has ever arrived, holds the
   // place with a neutral placeholder.

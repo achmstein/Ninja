@@ -728,6 +728,12 @@
       }
     }
   },
+  "offlineKitchenChit": "Kitchen · offline",
+  "offlineKitchenChitFailed": "The kitchen chit did not print. Tell the kitchen what to make.",
+  "offlineKitchenPrinter": "Kitchen printer (offline)",
+  "offlineKitchenPrinterHint": "When the network is down, each counter sale prints a chit for the kitchen here. Leave it empty to use the receipt printer.",
+  "closeShiftOfflineSalesWaiting": "{count, plural, =1{1 offline sale is still on this till. Send it before closing the shift.} other{{count} offline sales are still on this till. Send them before closing the shift.}}",
+  "@closeShiftOfflineSalesWaiting": {"placeholders": {"count": {"type": "int"}}},
   "noBranchTitle": "No branch assigned",
   "noBranchDescription": "Ask the owner to assign a branch.",
   "appVersion": "App version",

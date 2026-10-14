@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
+import { OfflineChip } from '@/features/offline/offline-chip'
 import { ShiftChip } from '@/features/shift/shift-chip'
 import { useCallCentre } from '@/hooks/use-call-centre'
 import { useLanguage, useT } from '@/lib/i18n'
@@ -33,6 +34,7 @@ export function PosHeader() {
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3 max-sm:px-2'>
       <BranchSwitcher />
       <div className='ms-auto flex shrink-0 items-center gap-1'>
+        <OfflineChip />
         {!callCentre && <ShiftChip />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

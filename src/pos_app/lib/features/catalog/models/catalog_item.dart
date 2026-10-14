@@ -57,6 +57,21 @@ class CatalogItem {
             .toList(),
         pairedItemIds: ((json['pairedItemIds'] as List<dynamic>?) ?? []).map(toInt).toList(),
       );
+
+  /// The shape [CatalogItem.fromJson] reads, for the menu kept on the till
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name.toJson(),
+        if (description != null) 'description': description!.toJson(),
+        'price': price,
+        if (effectivePrice != null) 'effectivePrice': effectivePrice,
+        if (pictureUri != null) 'pictureUri': pictureUri,
+        'catalogTypeId': catalogTypeId,
+        'isAvailable': isAvailable,
+        'displayOrder': displayOrder,
+        'customizations': [for (final c in customizations) c.toJson()],
+        'pairedItemIds': pairedItemIds,
+      };
 }
 
 /// A customization group on an item ("Size", "Milk")
@@ -87,6 +102,15 @@ class ItemCustomization {
             .map((e) => CustomizationOption.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name.toJson(),
+        'isRequired': isRequired,
+        'allowMultiple': allowMultiple,
+        'displayOrder': displayOrder,
+        'options': [for (final o in options) o.toJson()],
+      };
 }
 
 class CustomizationOption {
@@ -117,6 +141,15 @@ class CustomizationOption {
         displayOrder: toInt(json['displayOrder']),
         isOutOfStock: json['isOutOfStock'] as bool? ?? false,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name.toJson(),
+        'priceAdjustment': priceAdjustment,
+        'isDefault': isDefault,
+        'displayOrder': displayOrder,
+        'isOutOfStock': isOutOfStock,
+      };
 }
 
 class CatalogCategory {
@@ -131,4 +164,6 @@ class CatalogCategory {
         name: LocalizedText.parse(json['name'] ?? json['type']),
         displayOrder: toInt(json['displayOrder']),
       );
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name.toJson(), 'displayOrder': displayOrder};
 }

@@ -64,7 +64,8 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (toPost.Count == 0)
             return;
 
-        await posting.PostAsync(@event.BranchId, toPost, "system");
+        // Its cost lands on the day it was sold, not the day a late replay arrived
+        await posting.PostAsync(@event.BranchId, toPost, "system", @event.PlacedAt);
 
         logger.LogInformation(
             "Order {OrderId} deducted {Count} stock item(s) at branch {BranchId}",

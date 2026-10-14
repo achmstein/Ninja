@@ -712,6 +712,12 @@
       }
     }
   },
+  "offlineKitchenChit": "المطبخ · دون اتصال",
+  "offlineKitchenChitFailed": "لم تُطبع ورقة المطبخ. أخبر المطبخ بالطلب.",
+  "offlineKitchenPrinter": "طابعة المطبخ (دون اتصال)",
+  "offlineKitchenPrinterHint": "عند انقطاع الشبكة تُطبع هنا ورقة للمطبخ مع كل بيع على الكاونتر. اتركها فارغة لتُطبع على طابعة الإيصالات.",
+  "closeShiftOfflineSalesWaiting": "{count, plural, =1{ما زال على هذا الكاشير بيع واحد دون اتصال. أرسله قبل إغلاق الوردية.} other{ما زالت على هذا الكاشير {count} مبيعات دون اتصال. أرسلها قبل إغلاق الوردية.}}",
+  "@closeShiftOfflineSalesWaiting": {"placeholders": {"count": {"type": "int"}}},
   "noBranchTitle": "لم يُعيَّن لك فرع",
   "noBranchDescription": "اطلب من المالك تعيينك على فرع.",
   "appVersion": "إصدار التطبيق",

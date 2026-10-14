@@ -153,6 +153,30 @@ public sealed class MonthScenarios
     }
 
     [TestMethod]
+    public async Task A_sale_an_offline_till_sends_late_lands_on_the_day_it_was_paid()
+    {
+        var branch = Suite.NewBranch();
+        var owner = Suite.OwnerAt(branch);
+
+        // Paid on the last evening of April, reaching Finance on the first of May
+        await TellAsync(new TicketSettledIntegrationEvent
+        {
+            TicketId = branch * 100 + 9,
+            BranchId = branch,
+            Total = 300m,
+            Vat = 42m,
+            SettledAt = Noon(2026, 4, 30),
+            CreationDate = Noon(2026, 5, 1),
+        });
+
+        await ServiceUnderTest<Program>.EventuallyAsync(
+            async () => (await owner.GetAsync<ProfitView>(ProfitUrl(2026, 4))).Sales == 300m,
+            "the sale is April's, when the cash changed hands");
+
+        Assert.AreEqual(0m, (await owner.GetAsync<ProfitView>(ProfitUrl(2026, 5))).Sales, "nothing of it is May's");
+    }
+
+    [TestMethod]
     public async Task The_month_falls_to_the_partners_by_their_shares()
     {
         var branch = Suite.NewBranch();

@@ -34,6 +34,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _host;
   late final TextEditingController _port;
+  late final TextEditingController _kitchenHost;
+  late final TextEditingController _kitchenPort;
   bool _busy = false;
   KioskStatus? _kiosk;
 
@@ -43,6 +45,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settings = ref.read(printerSettingsProvider);
     _host = TextEditingController(text: settings.host);
     _port = TextEditingController(text: '${settings.port}');
+    _kitchenHost = TextEditingController(text: settings.kitchenHost);
+    _kitchenPort = TextEditingController(text: '${settings.kitchenPort}');
     _loadKiosk();
   }
 
@@ -60,15 +64,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void dispose() {
     _host.dispose();
     _port.dispose();
+    _kitchenHost.dispose();
+    _kitchenPort.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     final port = int.tryParse(_port.text.trim()) ?? PrinterSettings.defaultPort;
-    await ref.read(printerSettingsProvider.notifier).save(PrinterSettings(host: _host.text.trim(), port: port));
+    final kitchenPort = int.tryParse(_kitchenPort.text.trim()) ?? PrinterSettings.defaultPort;
+    await ref.read(printerSettingsProvider.notifier).save(PrinterSettings(
+          host: _host.text.trim(),
+          port: port,
+          kitchenHost: _kitchenHost.text.trim(),
+          kitchenPort: kitchenPort,
+        ));
     if (!mounted) return;
     _port.text = '$port';
+    _kitchenPort.text = '$kitchenPort';
     showPosToast(context, PosToastType.success, l10n.printerSaved);
   }
 
@@ -94,6 +107,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
     final kiosk = _kiosk;
+
+    // An address and a port, saved with the button beside them
+    Widget printerFields(TextEditingController host, TextEditingController port, String label, String example) => Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              flex: 3,
+              child: FTextField(
+                control: FTextFieldControl.managed(controller: host),
+                label: Text(label),
+                hint: example,
+                keyboardType: TextInputType.url,
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FTextField(
+                control: FTextFieldControl.managed(controller: port),
+                label: Text(l10n.printerPort),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                maxLines: 1,
+              ),
+            ),
+          ],
+        );
 
     Widget button(String label, VoidCallback? onPress, {IconData? icon, bool primary = false}) => SizedBox(
           height: 44,
@@ -158,28 +198,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          flex: 3,
-                          child: FTextField(
-                            control: FTextFieldControl.managed(controller: _host),
-                            label: Text(l10n.printerHost),
-                            hint: '192.168.1.50',
-                            keyboardType: TextInputType.url,
-                            maxLines: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FTextField(
-                            control: FTextFieldControl.managed(controller: _port),
-                            label: Text(l10n.printerPort),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                            maxLines: 1,
-                          ),
-                        ),
+                        Expanded(child: printerFields(_host, _port, l10n.printerHost, '192.168.1.50')),
                         const SizedBox(width: 12),
                         button(l10n.save, _busy ? null : _save, primary: true),
+                      ],
+                    ),
+                  ),
+                  // Where the kitchen's chit goes when the network is down
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(child: printerFields(_kitchenHost, _kitchenPort, l10n.offlineKitchenPrinter, '192.168.1.51')),
+                            const SizedBox(width: 12),
+                            button(l10n.save, _busy ? null : _save, primary: true),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(l10n.offlineKitchenPrinterHint,
+                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                       ],
                     ),
                   ),

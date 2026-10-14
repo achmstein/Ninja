@@ -1,7 +1,33 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/catalog_item.dart';
 import '../services/catalog_service.dart';
+
+String _itemsKey(int? branchId) => 'pos.catalog.items.${branchId ?? 0}';
+String _categoriesKey(int? branchId) => 'pos.catalog.categories.${branchId ?? 0}';
+
+/// Fetch a list and keep it on the till, so a till started without the
+/// internet still has the branch's menu to sell from. When the fetch fails
+/// the last copy kept stands in; with none, the failure stands.
+Future<List<T>> _fetchKept<T>(
+  String key,
+  Future<List<T>> Function() fetch,
+  Map<String, dynamic> Function(T) toJson,
+  T Function(Map<String, dynamic>) fromJson,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  try {
+    final fresh = await fetch();
+    await prefs.setString(key, json.encode([for (final e in fresh) toJson(e)]));
+    return fresh;
+  } catch (_) {
+    final kept = prefs.getString(key);
+    if (kept == null) rethrow;
+    return [for (final e in json.decode(kept) as List<dynamic>) fromJson(e as Map<String, dynamic>)];
+  }
+}
 
 /// The menu for the active branch (prices and availability are per branch,
 /// carried by the X-Branch-Id header). Refreshed on the hub's
@@ -9,12 +35,19 @@ import '../services/catalog_service.dart';
 class CatalogItemsNotifier extends AsyncNotifier<List<CatalogItem>> {
   @override
   Future<List<CatalogItem>> build() async {
-    ref.watch(selectedBranchIdProvider);
-    return ref.read(catalogRepositoryProvider).getItems();
+    final branchId = ref.watch(selectedBranchIdProvider);
+    return _fetch(branchId);
   }
 
+  Future<List<CatalogItem>> _fetch(int? branchId) => _fetchKept(
+        _itemsKey(branchId),
+        ref.read(catalogRepositoryProvider).getItems,
+        (item) => item.toJson(),
+        CatalogItem.fromJson,
+      );
+
   Future<void> refresh() async {
-    final result = await AsyncValue.guard(() => ref.read(catalogRepositoryProvider).getItems());
+    final result = await AsyncValue.guard(() => _fetch(ref.read(selectedBranchIdProvider)));
     if (!ref.mounted) return;
     if (result.hasValue) state = result;
   }
@@ -56,8 +89,13 @@ final catalogItemsProvider =
     AsyncNotifierProvider<CatalogItemsNotifier, List<CatalogItem>>(CatalogItemsNotifier.new);
 
 final catalogCategoriesProvider = FutureProvider<List<CatalogCategory>>((ref) async {
-  ref.watch(selectedBranchIdProvider);
-  final categories = await ref.read(catalogRepositoryProvider).getCategories();
+  final branchId = ref.watch(selectedBranchIdProvider);
+  final categories = await _fetchKept(
+    _categoriesKey(branchId),
+    ref.read(catalogRepositoryProvider).getCategories,
+    (category) => category.toJson(),
+    CatalogCategory.fromJson,
+  );
   return [...categories]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 });
 

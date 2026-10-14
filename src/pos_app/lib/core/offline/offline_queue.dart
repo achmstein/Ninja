@@ -9,6 +9,7 @@ import '../../features/tickets/models/settle.dart';
 import '../../features/tickets/providers/tickets_provider.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../config/app_config.dart';
+import 'package:ninja_app_core/network/api_client.dart' show inBranch;
 import 'package:ninja_app_core/network/network_status.dart';
 import 'offline_sale.dart';
 
@@ -70,7 +71,8 @@ class OfflineQueueNotifier extends Notifier<List<OfflineSale>> {
     try {
       for (final sale in List.of(state.where((s) => s.status == OfflineSaleStatus.queued))) {
         try {
-          await _replay(sale);
+          // Sent for the branch it was sold at, whichever is selected now
+          await inBranch(sale.branchId, () => _replay(sale));
           await _set(state.where((s) => s.id != sale.id).toList());
         } catch (e) {
           if (NetworkStatus.isConnectionError(e)) {

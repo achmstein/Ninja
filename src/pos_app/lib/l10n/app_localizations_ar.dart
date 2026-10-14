@@ -1413,6 +1413,33 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get offlineKitchenChit => 'المطبخ · دون اتصال';
+
+  @override
+  String get offlineKitchenChitFailed =>
+      'لم تُطبع ورقة المطبخ. أخبر المطبخ بالطلب.';
+
+  @override
+  String get offlineKitchenPrinter => 'طابعة المطبخ (دون اتصال)';
+
+  @override
+  String get offlineKitchenPrinterHint =>
+      'عند انقطاع الشبكة تُطبع هنا ورقة للمطبخ مع كل بيع على الكاونتر. اتركها فارغة لتُطبع على طابعة الإيصالات.';
+
+  @override
+  String closeShiftOfflineSalesWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'ما زالت على هذا الكاشير $count مبيعات دون اتصال. أرسلها قبل إغلاق الوردية.',
+      one:
+          'ما زال على هذا الكاشير بيع واحد دون اتصال. أرسله قبل إغلاق الوردية.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noBranchTitle => 'لم يُعيَّن لك فرع';
 
   @override

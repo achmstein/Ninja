@@ -34,6 +34,7 @@ import {
 } from '@/features/customer/selected-customer'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
+import { useOfflineCharge } from '@/features/offline/offline-charge'
 import { PriceReviewDialog } from './price-review-dialog'
 import { sendToBranchId, toPosDeliveryRequest } from './sale-delivery'
 import { SaleDeliverySummary } from './sale-delivery-summary'
@@ -48,9 +49,11 @@ import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useTillItems } from '@/lib/brand'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { handleServerError } from '@/lib/handle-server-error'
+import { isConnectionError, useNetworkStatus } from '@/lib/network-status'
 import { toast } from '@/lib/toast'
+import { toBasketItems } from './basket-items'
 import {
-  basePrice,
   lineKey,
   saleCount,
   tillSuggestions,
@@ -71,6 +74,8 @@ import { ItemImage } from './item-image'
 // there); the SignalR TicketUpdated invalidation short-circuits the wait.
 const TICKET_POLL_INTERVAL_MS = 600
 const TICKET_POLL_TIMEOUT_MS = 12_000
+/** How long a charge waits for the server before the sale is taken offline */
+const CHARGE_TIMEOUT_MS = 20_000
 /** The attached customer's usuals, shown as a category of their own */
 const USUALS_CATEGORY = -1
 
@@ -567,6 +572,56 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // content changes.
   const requestIdRef = useRef<{ signature: string; id: string } | null>(null)
 
+  /** The request id for charging these lines: the last one's, for the same sale */
+  const requestIdFor = (toSend: SaleLine[]) => {
+    const signature = JSON.stringify({
+      lines: toSend.map((line) => [
+        line.productId,
+        line.quantity,
+        line.specialInstructions,
+        line.customizations.map((c) => [c.customizationId, c.optionId]),
+      ]),
+      note: note.trim(),
+      // Attaching (or removing) a customer makes it a different sale, not a
+      // retry of the previous one — a bare name counts too
+      customer: customer?.id ?? customer?.name ?? null,
+      // The same items against a different bill are a different sale too
+      ticket: ticketId ?? null,
+      // And sent somewhere else, another sale again
+      delivery,
+    })
+    if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
+      requestIdRef.current = { signature, id: crypto.randomUUID() }
+    }
+    return requestIdRef.current.id
+  }
+
+  // With the server out of reach, a counter sale is still taken: priced
+  // here, paid here, printed here, and sent once the server is back
+  // (features/offline). Anything that needs the server's say first waits.
+  const online = useNetworkStatus((s) => s.online)
+  const offlineCharge = useOfflineCharge()
+  const sellsOffline =
+    !addingToTicket && !delivering && !callCentre && sendTo == null && !customer?.id
+  const chargeOffline = () => {
+    if (!sellsOffline) {
+      toast.warning(t('needsInternet'))
+      return
+    }
+    offlineCharge.start({
+      // The id an online attempt already used: if that one did land after
+      // all, the replay is recognised as it rather than sold twice
+      requestId: requestIdFor(lines),
+      lines,
+      note,
+      customerName: customer?.name.trim() || null,
+      onQueued: () => {
+        requestIdRef.current = null
+        clear()
+      },
+    })
+  }
+
   // After a POS order for an attached customer, remember how their items were
   // customized so it prefills next time — the same thing the customer app does
   // for its own orders. Fire-and-forget; a failure just means no prefill.
@@ -603,6 +658,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
   const placeOrder = useMutation({
     ...createPosOrderMutation(),
+    onError: (error) => {
+      // No answer at all: the server is out of reach, and this is how the
+      // till usually finds out — the sale is taken offline instead
+      if (isConnectionError(error)) chargeOffline()
+      else handleServerError(error)
+    },
     onSuccess: (data) => {
       // Save the attached customer's choices before the cart is cleared below
       if (customer?.id) saveCustomerPreferences(customer.id, lines)
@@ -672,6 +733,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   })
 
   const charge = () => {
+    if (!online) {
+      chargeOffline()
+      return
+    }
     // A delivery waits for its terms: it never goes out as a counter sale
     if (delivering && saleDelivery.readiness !== 'ready') return
     // A rider needs a name at the door: taken off the sale, it is asked again
@@ -694,53 +759,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
   /** Places the order with these lines: the cart's, or the other branch's prices of them */
   const send = (toSend: SaleLine[]) => {
-    const signature = JSON.stringify({
-      lines: toSend.map((line) => [
-        line.productId,
-        line.quantity,
-        line.specialInstructions,
-        line.customizations.map((c) => [c.customizationId, c.optionId]),
-      ]),
-      note: note.trim(),
-      // Attaching (or removing) a customer makes it a different sale, not a
-      // retry of the previous one — a bare name counts too
-      customer: customer?.id ?? customer?.name ?? null,
-      // The same items against a different bill are a different sale too
-      ticket: ticketId ?? null,
-      // And sent somewhere else, another sale again
-      delivery,
-    })
-    if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
-      requestIdRef.current = { signature, id: crypto.randomUUID() }
-    }
-
+    const requestId = requestIdFor(toSend)
     placeOrder.mutate({
       body: {
-        // Same BasketItem mapping as client_web's checkout
-        items: toSend.map((line) => ({
-          id: crypto.randomUUID(),
-          productId: line.productId,
-          productName: { en: line.nameEn || null, ar: line.nameAr || null },
-          // Before the options: Ordering adds them back on
-          unitPrice: basePrice(line),
-          quantity: line.quantity,
-          pictureUrl: line.pictureUrl ?? null,
-          specialInstructions: line.specialInstructions ?? null,
-          suggestion: line.suggestion ?? ('None' as const),
-          selectedCustomizations: line.customizations.map((c) => ({
-            customizationId: c.customizationId,
-            customizationName: {
-              en: c.customizationNameEn || null,
-              ar: c.customizationNameAr || null,
-            },
-            optionId: c.optionId,
-            optionName: {
-              en: c.optionNameEn || null,
-              ar: c.optionNameAr || null,
-            },
-            priceAdjustment: c.priceAdjustment,
-          })),
-        })),
+        items: toBasketItems(toSend),
         customerNote: note.trim() || null,
         // No place: a counter sale settles at the till. When the
         // cashier is adding to an open bill, the ticket is named outright —
@@ -761,8 +783,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         // The branch nearer the caller that makes and delivers it
         sendToBranchId: sendTo,
       },
-      headers: { 'x-requestid': requestIdRef.current.id },
+      headers: { 'x-requestid': requestId },
       query: { 'api-version': API_VERSION },
+      // A line that has gone quiet answers nothing for minutes: past this,
+      // the sale is taken offline (and the same request id keeps a late
+      // arrival from becoming a second sale)
+      timeout: CHARGE_TIMEOUT_MS,
     })
   }
 
@@ -846,7 +872,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // phone — the same parts either way, so nothing is out of reach on either
   const orderPanel = (
     <>
-      <div className='flex items-center gap-2 border-b p-3 max-md:pe-14'>
+      {/* Built like the item pad's search row (py-2, a size-12 button), so
+          the two rules under them meet in one line */}
+      <div className='flex shrink-0 items-center gap-2 border-b px-3 py-2 max-md:pe-14'>
         <SaleHeading className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
           <span className='truncate'>{t('currentSale')}</span>
           {count > 0 && (
@@ -858,7 +886,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         <Button
           variant='ghost'
           size='icon'
-          className='size-11'
+          className='size-12'
           aria-label={t('clearSale')}
           disabled={lines.length === 0 && !customer && !note && !delivery}
           onClick={clear}
@@ -1244,6 +1272,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           if (delivery) saleDelivery.keepHere()
         }}
       />
+      {offlineCharge.element}
       <CustomerDialog
         open={customerOpen}
         onOpenChange={setCustomerOpen}

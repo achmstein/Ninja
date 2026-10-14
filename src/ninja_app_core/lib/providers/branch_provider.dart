@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,10 @@ import '../models/branch.dart';
 import '../services/branch_service.dart';
 
 String get _branchKey => '${NinjaCore.config.appKey}_selected_branch_id';
+
+/// The branch list as last fetched, so a device started without the
+/// internet still knows its branch (a till prints its name on receipts)
+String get _branchesKey => '${NinjaCore.config.appKey}_branches';
 
 /// Cached initial branch ID loaded before app starts
 int? _initialBranchId;
@@ -23,6 +28,7 @@ Future<void> forgetBranch() async {
   _initialBranchId = null;
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove(_branchKey);
+  await prefs.remove(_branchesKey);
 }
 
 class BranchState {
@@ -91,26 +97,52 @@ class BranchNotifier extends Notifier<BranchState> {
       // and so does an account given every branch (`*`, a call centre's)
       final auth = ref.read(authServiceProvider);
       final all = await ref.read(branchRepositoryProvider).getBranches();
-      final branches = allowedBranches(all, auth);
-
-      var selectedId = state.selectedBranchId;
-
-      // If no branch selected, or the selected one is gone, pick the first
-      if (selectedId == null || !branches.any((b) => b.id == selectedId)) {
-        selectedId = branches.isNotEmpty ? branches.first.id : null;
-        if (selectedId != null) {
-          unawaited(_saveBranchId(selectedId));
-        }
-      }
-
-      state = state.copyWith(
-        branches: branches,
-        selectedBranchId: selectedId,
-        isLoading: false,
-      );
+      unawaited(_keepBranches(all));
+      _select(allowedBranches(all, auth));
     } catch (e) {
       debugPrint('Failed to load branches: $e');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final kept = await _keptBranches();
+      if (kept != null && kept.isNotEmpty) {
+        // Offline: work from the list last seen; the error stays noted
+        _select(allowedBranches(kept, ref.read(authServiceProvider)));
+        state = state.copyWith(error: e.toString());
+      } else {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
+    }
+  }
+
+  void _select(List<Branch> branches) {
+    var selectedId = state.selectedBranchId;
+
+    // If no branch selected, or the selected one is gone, pick the first
+    if (selectedId == null || !branches.any((b) => b.id == selectedId)) {
+      selectedId = branches.isNotEmpty ? branches.first.id : null;
+      if (selectedId != null) {
+        unawaited(_saveBranchId(selectedId));
+      }
+    }
+
+    state = state.copyWith(
+      branches: branches,
+      selectedBranchId: selectedId,
+      isLoading: false,
+    );
+  }
+
+  Future<void> _keepBranches(List<Branch> all) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_branchesKey, json.encode([for (final b in all) b.toJson()]));
+  }
+
+  Future<List<Branch>?> _keptBranches() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final kept = prefs.getString(_branchesKey);
+      if (kept == null) return null;
+      return [for (final b in json.decode(kept) as List<dynamic>) Branch.fromJson(b as Map<String, dynamic>)];
+    } catch (_) {
+      return null;
     }
   }
 

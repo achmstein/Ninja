@@ -1,13 +1,12 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
-import {
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+import { QueryCache, QueryClient } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { getStoredUser } from '@/config/oidc-config'
 import { bootBrand } from '@/lib/brand'
+import { keepPersistedQueries, queryPersistOptions } from '@/lib/query-persist'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
 import { DirectionProvider } from './context/direction-provider'
@@ -40,6 +39,10 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
+        // A token that ran out while the till was offline is renewed by the
+        // signed-in gate as soon as the server is back; the calls that beat
+        // it there are not a reason to send the cashier to sign in
+        if (getStoredUser()?.expired) return
         // The API no longer accepts the token (expired, or Keycloak was
         // reset and the stored one is signed by a dead key). Sign-in drops
         // the stored user and re-authenticates instead of bouncing back
@@ -57,6 +60,8 @@ const queryClient = new QueryClient({
     },
   }),
 })
+
+keepPersistedQueries(queryClient)
 
 // Create a new router instance
 const router = createRouter({
@@ -82,18 +87,30 @@ declare module '@tanstack/react-router' {
 // the last visit's cache at once, or from the network on a first visit
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
+  // The app itself loads with the internet down: the service worker keeps
+  // the shell (vite.config.ts). Dev serves modules live, so only a build has one.
+  if (import.meta.env.PROD) {
+    const { registerSW } = await import('virtual:pwa-register')
+    registerSW({ immediate: true })
+  }
   await bootBrand(queryClient)
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
       <AuthProvider>
-        <QueryClientProvider client={queryClient}>
+        {/* The menu, the branches and their pricing come back from the last
+            visit before the network answers: a till that reloads with the
+            internet down can still sell (lib/query-persist.ts) */}
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={queryPersistOptions}
+        >
           <ThemeProvider>
             <DirectionProvider>
               <RouterProvider router={router} />
             </DirectionProvider>
           </ThemeProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </AuthProvider>
     </StrictMode>
   )

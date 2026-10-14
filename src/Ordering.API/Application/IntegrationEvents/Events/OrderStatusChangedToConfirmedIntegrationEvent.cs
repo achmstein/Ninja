@@ -121,6 +121,12 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// </summary>
     public int? TakenAtBranchId { get; init; }
 
+    /// <summary>
+    /// A sale an offline till rang up and sent once it was back: already made
+    /// and paid for, dated by <see cref="PlacedAt"/>. Nothing to chime about.
+    /// </summary>
+    public bool Replay { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,

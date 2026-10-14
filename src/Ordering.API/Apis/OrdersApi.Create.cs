@@ -189,7 +189,8 @@ public static partial class OrdersApi
                 delivery: request.Delivery is { } wanted
                     ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone)
                     : null,
-                payOnline: request.PayOnline);
+                payOnline: request.PayOnline,
+                requestId: requestId);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
@@ -317,13 +318,15 @@ public static partial class OrdersApi
                     ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone)
                     : null,
                 // Who rang it up, and where: every till order says so
-                taker: new OrderTaker(cashierId, cashierName, tillBranchId));
+                taker: new OrderTaker(cashierId, cashierName, tillBranchId),
+                requestId: requestId);
 
             try
             {
                 // The id routes the cashier to the ticket this order lands on;
-                // 0 means a deduplicated retry — the POS falls back to the
-                // open-tickets list
+                // a retry is answered with the order it made the first time,
+                // 0 only when that can't be found (placed before request ids
+                // were kept) — the POS then falls back to the open-tickets list
                 var orderId = await services.Mediator.Send(new IdentifiedCommand<CreateOrderCommand, int>(command, requestId));
 
                 return TypedResults.Ok(new PosOrderResponse(orderId));

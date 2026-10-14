@@ -5,4 +5,8 @@ namespace Ninja.Ordering.Domain.Events;
 /// </summary>
 public record class OrderStatusChangedToConfirmedDomainEvent(
     int OrderId,
-    IEnumerable<OrderItem> OrderItems) : INotification;
+    IEnumerable<OrderItem> OrderItems) : INotification
+{
+    /// <summary>An offline till's sale sent late: already made and handed over, nobody to tell.</summary>
+    public bool Replay { get; init; }
+}

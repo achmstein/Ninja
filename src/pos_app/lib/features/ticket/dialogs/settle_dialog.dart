@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/printing/print_service.dart';
+import '../../../core/printing/printer_settings.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/numeric_keypad.dart';
@@ -232,8 +234,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   }
 
   // The money is taken; the sale waits on the till for the network. The
-  // drawer opens for cash exactly as it would online; the receipt, with a
-  // number of the till's own, is a tap away on Print rather than automatic.
+  // receipt, with a number of the till's own, prints at once (opening the
+  // drawer for cash), and so does a chit for the kitchen: the server's
+  // kitchen tickets cannot reach the shop until the network is back.
   Future<void> _settleOffline(OfflineSaleDraft draft) async {
     setState(() {
       _settling = true;
@@ -260,15 +263,30 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
       await ref.read(offlineQueueProvider.notifier).enqueue(sale);
       if (!mounted) return;
       final outcome = SettleOutcome(receiptNumber: 0, provisionalReceiptNumber: number, change: sale.change, payments: payments);
-      // Drawer for cash; the provisional receipt is on screen and one tap
-      // away on Print, but does not come out on its own.
-      _openDrawerForCash(payments);
+      // The sale is safe in the queue: paper that fails only says so
+      unawaited(_printOffline(outcome, sale));
       await _land(outcome, AppLocalizations.of(context)!.provisionalReceipt(number));
     } catch (_) {
       if (mounted) _shakeBack();
       rethrow;
     } finally {
       if (mounted) setState(() => _settling = false);
+    }
+  }
+
+  // One after the other: the two may share a printer, which takes one job at a time
+  Future<void> _printOffline(SettleOutcome outcome, OfflineSale sale) async {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    final service = ref.read(printServiceProvider);
+    if (service.isConfigured) {
+      await _print(outcome, auto: true);
+    }
+    if (ref.read(printerSettingsProvider).offlineKitchenPrinter == null) return;
+    try {
+      await service.printOfflineKitchenChit(sale, l10n: l10n, locale: locale);
+    } catch (_) {
+      if (mounted) showPosToast(context, PosToastType.error, l10n.offlineKitchenChitFailed);
     }
   }
 

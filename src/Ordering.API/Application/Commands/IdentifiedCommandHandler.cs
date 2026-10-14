@@ -31,6 +31,13 @@ public abstract class IdentifiedCommandHandler<T, R> : IRequestHandler<Identifie
     protected abstract R CreateResultForDuplicateRequest();
 
     /// <summary>
+    /// The result for a request already seen, when finding it takes a lookup
+    /// (what the first request made); <see cref="CreateResultForDuplicateRequest"/> otherwise
+    /// </summary>
+    protected virtual Task<R> ResultForDuplicateRequestAsync(Guid requestId)
+        => Task.FromResult(CreateResultForDuplicateRequest());
+
+    /// <summary>
     /// This method handles the command. It just ensures that no other request exists with the same ID, and if this is the case
     /// just enqueues the original inner command.
     /// </summary>
@@ -41,7 +48,7 @@ public abstract class IdentifiedCommandHandler<T, R> : IRequestHandler<Identifie
         var alreadyExists = await _requestManager.ExistAsync(message.Id);
         if (alreadyExists)
         {
-            return CreateResultForDuplicateRequest();
+            return await ResultForDuplicateRequestAsync(message.Id);
         }
         else
         {

@@ -68,4 +68,10 @@ public class OrderRepository
 
         return id is int orderId ? await GetAsync(orderId) : null;
     }
+
+    public Task<int?> FindIdByRequestIdAsync(Guid requestId)
+        => _context.Orders
+            .Where(o => o.RequestId == requestId)
+            .Select(o => (int?)o.Id)
+            .FirstOrDefaultAsync();
 }

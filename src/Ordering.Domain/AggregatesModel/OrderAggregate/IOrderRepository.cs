@@ -23,4 +23,7 @@ public interface IOrderRepository : IRepository<Order>
 
     /// <summary>The order a delivery platform dispatched under this token, loaded whole; null when none was.</summary>
     Task<Order> FindByPlatformTokenAsync(string token);
+
+    /// <summary>The id of the order placed under this request id; null when none was.</summary>
+    Task<int?> FindIdByRequestIdAsync(Guid requestId);
 }

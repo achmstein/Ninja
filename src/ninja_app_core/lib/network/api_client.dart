@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'network_status.dart';
 import 'server_clock.dart';
@@ -43,7 +44,7 @@ class ApiClient {
         // Add branch header if getter is provided
         // The branch header is sent only while a branch is selected: an
         // account with none to work in must not fall back to some default
-        final branchId = branchIdGetter?.call();
+        final branchId = branchInZone ?? branchIdGetter?.call();
         if (branchId != null) {
           options.headers['X-Branch-Id'] = '$branchId';
         }
@@ -110,6 +111,17 @@ class ApiClient {
     return _dio.patch<T>(path, data: data, options: _options(requestId));
   }
 }
+
+const _branchZoneKey = #ninjaBranchId;
+
+/// Run [body] with every call it makes sent for [branchId] rather than the
+/// selected branch: work done at one branch and sent later (a till's offline
+/// sale) lands where it happened, whatever the till has switched to since.
+Future<T> inBranch<T>(int? branchId, Future<T> Function() body) =>
+    branchId == null ? body() : runZoned(body, zoneValues: {_branchZoneKey: branchId});
+
+/// The branch [inBranch] set for the calls made in this zone, if any
+int? get branchInZone => Zone.current[_branchZoneKey] as int?;
 
 /// The selected branch, for a client whose calls carry X-Branch-Id
 int? Function() branchIdGetter(Ref ref) {

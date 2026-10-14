@@ -49,4 +49,20 @@ class Branch {
       isReservationsEnabled: json['isReservationsEnabled'] as bool? ?? true,
     );
   }
+
+  /// The shape [Branch.fromJson] reads, for the list kept on the device
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name.toJson(),
+        if (address != null) 'address': address!.toJson(),
+        if (phone != null) 'phone': phone,
+        if (taxNumber != null) 'taxNumber': taxNumber,
+        if (receiptFooter != null) 'receiptFooter': receiptFooter!.toJson(),
+        'isActive': isActive,
+        'displayOrder': displayOrder,
+        'dayStartTime': dayStartTime,
+        'dayEndTime': dayEndTime,
+        'isOrderingEnabled': isOrderingEnabled,
+        'isReservationsEnabled': isReservationsEnabled,
+      };
 }

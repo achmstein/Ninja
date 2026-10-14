@@ -1,4 +1,6 @@
 ﻿#nullable enable
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
+
 namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
@@ -11,12 +13,14 @@ public class IdentifiedCommandHandlerTest
     private readonly IRequestManager _requestManager;
     private readonly IMediator _mediator;
     private readonly ILogger<IdentifiedCommandHandler<CreateOrderCommand, int>> _loggerMock;
+    private readonly IOrderRepository _orders;
 
     public IdentifiedCommandHandlerTest()
     {
         _requestManager = Substitute.For<IRequestManager>();
         _mediator = Substitute.For<IMediator>();
         _loggerMock = Substitute.For<ILogger<IdentifiedCommandHandler<CreateOrderCommand, int>>>();
+        _orders = Substitute.For<IOrderRepository>();
     }
 
     [TestMethod]
@@ -33,7 +37,7 @@ public class IdentifiedCommandHandlerTest
             .Returns(Task.FromResult(42));
 
         // Act
-        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock);
+        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock, _orders);
         var result = await handler.Handle(fakeOrderCmd, CancellationToken.None);
 
         // Assert
@@ -55,11 +59,28 @@ public class IdentifiedCommandHandlerTest
             .Returns(Task.FromResult(42));
 
         // Act
-        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock);
+        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock, _orders);
         var result = await handler.Handle(fakeOrderCmd, CancellationToken.None);
 
-        // Assert — a duplicate returns 0: "already placed, look it up"
+        // Assert — a duplicate whose order can't be found returns 0: "already placed, look it up"
         Assert.AreEqual(0, result);
+        await _mediator.DidNotReceive().Send(Arg.Any<IRequest<int>>(), default);
+    }
+
+    [TestMethod]
+    public async Task A_duplicate_is_answered_with_the_order_the_first_request_made()
+    {
+        // An offline till replaying a sale whose first answer was lost
+        var requestId = Guid.NewGuid();
+        var fakeOrderCmd = new IdentifiedCommand<CreateOrderCommand, int>(FakeOrderRequest(), requestId);
+
+        _requestManager.ExistAsync(requestId).Returns(Task.FromResult(true));
+        _orders.FindIdByRequestIdAsync(requestId).Returns(Task.FromResult<int?>(81));
+
+        var handler = new CreateOrderIdentifiedCommandHandler(_mediator, _requestManager, _loggerMock, _orders);
+        var result = await handler.Handle(fakeOrderCmd, CancellationToken.None);
+
+        Assert.AreEqual(81, result);
         await _mediator.DidNotReceive().Send(Arg.Any<IRequest<int>>(), default);
     }
 

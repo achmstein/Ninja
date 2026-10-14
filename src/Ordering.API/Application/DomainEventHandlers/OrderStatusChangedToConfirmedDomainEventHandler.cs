@@ -106,6 +106,7 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             TakenByUserId = order.TakenByUserId,
             TakenByName = order.TakenByName,
             TakenAtBranchId = order.TakenAtBranchId,
+            Replay = domainEvent.Replay,
         };
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);

@@ -398,6 +398,9 @@ namespace Ordering.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("SessionId")
                         .HasColumnType("integer");
 
@@ -445,6 +448,8 @@ namespace Ordering.Infrastructure.Migrations
                     b.HasIndex("OrderStatus");
 
                     b.HasIndex("PlaceId");
+
+                    b.HasIndex("RequestId");
 
                     b.HasIndex("SessionId");
 

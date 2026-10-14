@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   createFileRoute,
   Outlet,
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
+import { ErrorResponse } from 'oidc-client-ts'
 import { useAuth } from 'react-oidc-context'
 import { BootSplash } from '@/components/boot-splash'
 import { Button } from '@/components/ui/button'
@@ -12,8 +13,10 @@ import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
 import { KitchenPrinterBanner } from '@/components/layout/kitchen-printer-banner'
 import { PosHeader } from '@/components/layout/pos-header'
+import { useOfflineSync } from '@/features/offline/use-offline-sync'
 import { usePosNotifications } from '@/hooks/use-pos-notifications'
 import { useT } from '@/lib/i18n'
+import { networkStatus, useNetworkStatus } from '@/lib/network-status'
 
 // Everything the till calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. Owner-only actions
@@ -27,6 +30,8 @@ export const Route = createFileRoute('/_authenticated')({
 function AuthenticatedLayout() {
   // One SignalR connection per signed-in session
   usePosNotifications()
+  // What was sold while the server was out of reach goes in when it is back
+  useOfflineSync()
   return (
     <div className='flex min-h-svh flex-col'>
       <PosHeader />
@@ -47,7 +52,37 @@ function AuthenticatedRoute() {
   const navigate = useNavigate()
   const sentToSignIn = useRef(false)
 
-  const needsSignIn = !auth.isLoading && !auth.isAuthenticated
+  const online = useNetworkStatus((s) => s.online)
+
+  // A till that lost the internet keeps selling on the session it had: the
+  // stored sign-in stands, even past its token's expiry, while the server is
+  // out of reach (offline sales need no token until they are replayed). Back
+  // online, an expired token is renewed quietly before anything else; only
+  // Keycloak refusing it sends the cashier to sign in again.
+  const user = auth.user
+  const [refusedFor, setRefusedFor] = useState<string | null>(null)
+  const renewing = useRef(false)
+  const renewalPending =
+    !!user && user.expired === true && refusedFor !== user.access_token
+  useEffect(() => {
+    if (!online || !renewalPending || renewing.current || !user) return
+    renewing.current = true
+    const token = user.access_token
+    auth
+      .signinSilent()
+      .catch((error: unknown) => {
+        // Keycloak said no: the session is over. Anything else is the network.
+        if (error instanceof ErrorResponse) setRefusedFor(token)
+        else networkStatus.reportFailure()
+      })
+      .finally(() => {
+        renewing.current = false
+      })
+  }, [online, renewalPending, user, auth])
+  const keepsOfflineSession = !!user && (!online || renewalPending)
+
+  const needsSignIn =
+    !auth.isLoading && !auth.isAuthenticated && !keepsOfflineSession
 
   // Hand off to Keycloak exactly once. Rendering <Navigate> here instead
   // re-fires on every render (it compares its props by identity, and JSX

@@ -91,7 +91,7 @@ class KitchenTicketSheet extends StatelessWidget {
                   rule,
                   Row(
                     children: [
-                      Text('#${ticket.orderNumber ?? ''}', style: style(40, weight: FontWeight.w700)),
+                      Text(ticket.numberLabel ?? '#${ticket.orderNumber ?? ''}', style: style(40, weight: FontWeight.w700)),
                       const Spacer(),
                       Text(time, style: style(32, weight: FontWeight.w700)),
                     ],

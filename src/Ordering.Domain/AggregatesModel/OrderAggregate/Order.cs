@@ -12,6 +12,14 @@ public class Order
 {
     public DateTime OrderDate { get; private set; }
 
+    /// <summary>
+    /// The request id it was placed under: the same request sent again (an
+    /// answer lost on the way back, an offline till's queue replaying) is
+    /// answered with this order rather than a second one. Null on orders
+    /// from before it was kept.
+    /// </summary>
+    public Guid? RequestId { get; private set; }
+
     public int? BuyerId { get; private set; }
 
     public Buyer? Buyer { get; }
@@ -676,14 +684,33 @@ public class Order
     /// with the branch's <paramref name="routing"/>, every line goes to the
     /// station that makes it and the order is split into one part per station.
     /// </summary>
-    public void SetConfirmedStatus(KitchenRouting? routing = null)
+    public void SetConfirmedStatus(KitchenRouting? routing = null) => Confirm(routing, replay: false);
+
+    /// <summary>
+    /// A sale an offline till rang up and sends now: the customer left with
+    /// the items long ago, so it is confirmed at once, dated when it was rung
+    /// up, and made then — never new work on the kitchen board, only in the
+    /// history it can recall.
+    /// </summary>
+    public void ConfirmReplay()
+    {
+        SetValidatedStatus();
+        Confirm(routing: null, replay: true);
+        ConfirmedAt = OrderDate;
+        ReadyAt = OrderDate;
+    }
+
+    /// <summary>The request id it was placed under, once; see <see cref="RequestId"/>.</summary>
+    public void SetRequestId(Guid requestId) => RequestId ??= requestId;
+
+    private void Confirm(KitchenRouting? routing, bool replay)
     {
         if (OrderStatus != OrderStatus.Submitted)
         {
             throw new OrderingDomainException($"Cannot confirm order from status {OrderStatus}. Order must be in Submitted status.");
         }
 
-        AddDomainEvent(new OrderStatusChangedToConfirmedDomainEvent(Id, _orderItems));
+        AddDomainEvent(new OrderStatusChangedToConfirmedDomainEvent(Id, _orderItems) { Replay = replay });
         OrderStatus = OrderStatus.Confirmed;
         ConfirmedAt = DateTime.UtcNow;
         Description = "Order confirmed and sent to POS.";

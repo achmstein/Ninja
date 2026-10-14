@@ -13,7 +13,9 @@ namespace Ninja.Inventory.API.Application.Services;
 /// </summary>
 public interface IStockPostingService
 {
-    Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor);
+    // at: when it happened, so what it cost lands on that day (a sale an
+    // offline till sent late); now when not given
+    Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor, DateTime? at = null);
 }
 
 public class StockPostingService(
@@ -24,7 +26,7 @@ public class StockPostingService(
     IInventoryIntegrationEventService integrationEvents,
     ILogger<StockPostingService> logger) : IStockPostingService
 {
-    public async Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor)
+    public async Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor, DateTime? at = null)
     {
         var posted = await ledger.PostAsync(branchId, drafts, actor);
 
@@ -45,7 +47,7 @@ public class StockPostingService(
         await AnnounceSoldOutChangesAsync(branchId, changes, items);
         await AnnounceOptionSoldOutChangesAsync(branchId, changes, items);
         await AnnounceLowStockAsync(branchId, changes, items);
-        await AnnounceConsumptionAsync(branchId, drafts, changes);
+        await AnnounceConsumptionAsync(branchId, drafts, changes, at ?? DateTime.UtcNow);
 
         return changes;
     }
@@ -64,7 +66,7 @@ public class StockPostingService(
     /// that went out at nothing returns nothing). Receipts, counts,
     /// adjustments and transfers cost nothing here.
     /// </summary>
-    private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes)
+    private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes, DateTime at)
     {
         var avg = changes.ToDictionary(c => c.StockItemId, c => c.AvgUnitCost);
 
@@ -83,7 +85,7 @@ public class StockPostingService(
 
             var reference = drafts.FirstOrDefault(d => d.Type == kind)?.Reference;
             await integrationEvents.AddAndSaveEventAsync(new StockConsumedIntegrationEvent(
-                branchId, kind.ToString(), reference, Math.Round(cost, 2), DateTime.UtcNow));
+                branchId, kind.ToString(), reference, Math.Round(cost, 2), at));
         }
     }
 

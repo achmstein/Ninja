@@ -668,6 +668,27 @@ const dictionary = {
   riderCashTakeIn: { en: "Take in {amount}", ar: "استلم {amount}" },
   riderCashNoneTicked: { en: "Tick the deliveries the cash is for", ar: "علّم التوصيلات اللي الكاش بتاعها" },
   riderCashTaken: { plural: "count", en: {"=1":"Cash for 1 delivery taken in","other":"Cash for {count} deliveries taken in"}, ar: {"one":"اتسلّم كاش توصيلة واحدة","two":"اتسلّم كاش توصيلتين","few":"اتسلّم كاش {count} توصيلات","many":"اتسلّم كاش {count} توصيلة","other":"اتسلّم كاش {count} توصيلة"} },
+  // Offline sales
+  offline: { en: "Offline", ar: "مفيش إنترنت" },
+  needsInternet: { en: "This needs the internet. Counter sales still work.", ar: "ده محتاج إنترنت. البيع على الكاشير لسه شغال." },
+  offlineSalesWaiting: { en: "Sending sales", ar: "مبيعات مستنية" },
+  offlineSales: { en: "Sales taken offline", ar: "مبيعات من غير إنترنت" },
+  offlineSalesOfflineHint: { en: "No internet. Counter sales are kept on this till and sent when it is back.", ar: "مفيش إنترنت. البيع على الكاشير بيتحفظ هنا ويتبعت لما النت يرجع." },
+  offlineSalesOnlineHint: { en: "Back online. These sales are being sent.", ar: "النت رجع. المبيعات دي بتتبعت." },
+  offlineSalesNone: { en: "Nothing waiting", ar: "مفيش حاجة مستنية" },
+  offlineSendNow: { en: "Send now", ar: "ابعت دلوقتي" },
+  offlineQueued: { en: "Waiting to be sent", ar: "مستني يتبعت" },
+  offlineRetry: { en: "Try again", ar: "جرّب تاني" },
+  offlineDiscard: { en: "Discard", ar: "احذف" },
+  offlineDiscardTitle: { en: "Discard sale {number}?", ar: "تحذف البيع {number}؟" },
+  offlineDiscardHint: { en: "It will never reach the books. Ring it up again if it was paid.", ar: "مش هيتسجل خالص. اعمله تاني لو اتدفع." },
+  offlineAlreadyPlaced: { en: "The order went in already. Settle its bill from the floor.", ar: "الطلب اتبعت قبل كده. اقفل فاتورته من الصالة." },
+  offlineTicketNotReady: { en: "The order went in but its bill isn't there yet. Try again in a moment.", ar: "الطلب اتبعت بس فاتورته لسه ما ظهرتش. جرّب تاني كمان شوية." },
+  offlineSaveFailed: { en: "Couldn't keep this sale on the till. Nothing was saved.", ar: "معرفناش نحفظ البيع ده على الكاشير. ما اتحفظش حاجة." },
+  offlineSettledHint: { en: "Taken offline. It is sent when the internet is back.", ar: "اتعمل من غير إنترنت. هيتبعت لما النت يرجع." },
+  offlineReceiptNote: { en: "Taken offline", ar: "من غير إنترنت" },
+  kitchenChit: { en: "Kitchen", ar: "المطبخ" },
+  offlineSalesBlockClose: { plural: "count", en: {"=1":"Send the 1 offline sale first: its money is in this drawer.","other":"Send the {count} offline sales first: their money is in this drawer."}, ar: {"one":"ابعت البيع اللي اتعمل من غير إنترنت الأول: فلوسه في الدرج ده.","two":"ابعت البيعتين اللي اتعملوا من غير إنترنت الأول: فلوسهم في الدرج ده.","few":"ابعت الـ{count} مبيعات اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده.","many":"ابعت الـ{count} بيعة اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده.","other":"ابعت الـ{count} بيعة اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده."} },
 } satisfies Record<string, Message>
 
 export type TranslationKey = keyof typeof dictionary

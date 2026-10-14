@@ -1,5 +1,6 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
+import { isConnectionError, networkStatus } from '@/lib/network-status'
 import { getActiveBranchId } from '@/stores/branch-store'
 
 // Version sent with every API call; generated clients require it explicitly.
@@ -23,12 +24,30 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     // Branch-scoped endpoints resolve the branch from this header; the
-    // header branch switcher controls it.
+    // header branch switcher controls it. A call that names its own branch
+    // (an offline sale replayed where it was rung up) keeps it.
     const branchId = getActiveBranchId()
-    if (branchId !== null) {
+    if (branchId !== null && !config.headers.has('X-Branch-Id')) {
       config.headers['X-Branch-Id'] = String(branchId)
     }
     return config
   },
   (error) => Promise.reject(error)
+)
+
+// Every call says whether the server is there (lib/network-status.ts): any
+// answer, refusals included, means it is; no answer at all means it is not
+apiClient.interceptors.response.use(
+  (response) => {
+    networkStatus.reportSuccess()
+    return response
+  },
+  (error) => {
+    if (isConnectionError(error)) {
+      networkStatus.reportFailure()
+    } else if (error instanceof AxiosError && error.response) {
+      networkStatus.reportSuccess()
+    }
+    return Promise.reject(error)
+  }
 )

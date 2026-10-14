@@ -57,6 +57,10 @@ class KitchenTicket {
   final bool isReprint;
   final bool isTest;
   final int? orderNumber;
+
+  /// What prints where the order number goes, when it is not one: a sale
+  /// rung up offline has only the till's own number (`P-0001`) yet
+  final String? numberLabel;
   final DateTime? confirmedAt;
 
   /// Who placed it: Customer, Guest or Pos
@@ -80,6 +84,7 @@ class KitchenTicket {
     this.isReprint = false,
     this.isTest = false,
     this.orderNumber,
+    this.numberLabel,
     this.confirmedAt,
     this.source,
     this.placeKind,

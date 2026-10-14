@@ -1,4 +1,5 @@
 import { translate } from '@/lib/i18n'
+import { isConnectionError } from '@/lib/network-status'
 import { problemMessage } from '@/lib/problem'
 import { toast } from '@/lib/toast'
 
@@ -10,6 +11,12 @@ import { toast } from '@/lib/toast'
 export function handleServerError(error: unknown) {
   // eslint-disable-next-line no-console
   console.log(error)
+
+  // No answer: the internet is down, and only a counter sale works without it
+  if (isConnectionError(error)) {
+    toast.warning(translate('needsInternet'))
+    return
+  }
 
   if (error && typeof error === 'object' && 'status' in error && Number(error.status) === 204) {
     toast.error(translate('contentNotFound'))

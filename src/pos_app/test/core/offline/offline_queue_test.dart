@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ninja_app_core/network/api_client.dart' show branchInZone;
 import 'package:ninja_app_core/network/network_status.dart';
+import 'package:pos_app/core/offline/offline_kitchen_ticket.dart';
 import 'package:pos_app/core/offline/offline_queue.dart';
 import 'package:pos_app/core/offline/offline_sale.dart';
 import 'package:pos_app/features/orders/models/order.dart';
@@ -19,9 +21,13 @@ class _FakeOrders implements OrderRepository {
   Object? failWith;
   final List<(PosOrderRequest, String)> created = [];
 
+  /// The branch each call would have carried as X-Branch-Id
+  final List<int?> branches = [];
+
   @override
   Future<int> createPosOrder(PosOrderRequest request, {required String requestId}) async {
     if (failWith != null) throw failWith!;
+    branches.add(branchInZone);
     created.add((request, requestId));
     return 501;
   }
@@ -37,6 +43,7 @@ class _FakeTickets implements TicketsRepository {
   int lookups = 0;
   Object? settleFailsWith;
   final List<(int, SettleRequest, String?)> settled = [];
+  final List<int?> branches = [];
 
   @override
   Future<int?> getTicketByOrder(int orderId) async => ++lookups == 1 ? null : 77;
@@ -44,6 +51,7 @@ class _FakeTickets implements TicketsRepository {
   @override
   Future<SettleResult> settle(int id, SettleRequest request, {String? requestId}) async {
     if (settleFailsWith != null) throw settleFailsWith!;
+    branches.add(branchInZone);
     settled.add((id, request, requestId));
     return const SettleResult(receiptNumber: 1043, change: 0);
   }
@@ -55,13 +63,14 @@ class _FakeTickets implements TicketsRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
 }
 
-OfflineSale sale(String id) => OfflineSale(
+OfflineSale sale(String id, {int branchId = 1, List<SaleLine>? lines, String note = ''}) => OfflineSale(
       id: id,
       settleRequestId: '$id-settle',
       placedAt: DateTime.utc(2026, 9, 5, 14, 30),
-      branchId: 1,
+      branchId: branchId,
       provisionalReceiptNumber: 'P-0001',
-      lines: const [SaleLine(productId: 2, nameEn: 'Cappuccino', nameAr: 'كابتشينو', price: 50, quantity: 2)],
+      lines: lines ?? const [SaleLine(productId: 2, nameEn: 'Cappuccino', nameAr: 'كابتشينو', price: 50, quantity: 2)],
+      note: note,
       payments: const [SettlePayment(tender: PaymentTender.cash, amount: 100)],
       subtotal: 100,
       vat: 0,
@@ -105,6 +114,46 @@ void main() {
     expect(settle.settledAt, DateTime.utc(2026, 9, 5, 14, 30));
     expect(settle.provisionalReceiptNumber, 'P-0001');
     expect(settle.payments.single.amount, 100);
+  });
+
+  test('a replay is sent for the branch the sale was rung up at, not the one selected now', () async {
+    final queue = container.read(offlineQueueProvider.notifier);
+    await queue.enqueue(sale('s1', branchId: 4));
+    await queue.drain();
+
+    expect(orders.branches, [4]);
+    expect(tickets.branches, [4]);
+    expect(branchInZone, isNull);
+  });
+
+  test('the kitchen chit carries the provisional number, the lines and how to make them', () {
+    final chit = offlineKitchenTicket(
+      sale('s1', note: ' No sugar ', lines: const [
+        SaleLine(
+          productId: 2,
+          nameEn: 'Latte',
+          nameAr: 'لاتيه',
+          price: 55,
+          quantity: 3,
+          specialInstructions: 'extra hot',
+          customizations: [
+            SaleCustomization(customizationId: 1, customizationNameEn: 'Milk', customizationNameAr: 'الحليب', optionId: 9, optionNameEn: 'Oat', optionNameAr: 'شوفان'),
+          ],
+        ),
+      ]),
+      title: 'Kitchen · offline',
+    );
+
+    expect(chit.numberLabel, 'P-0001');
+    expect(chit.stationName.pick('en'), 'Kitchen · offline');
+    expect(chit.source, 'Pos');
+    expect(chit.customerNote, 'No sugar');
+    final line = chit.lines.single;
+    expect(line.units, 3);
+    expect(line.name.pick('ar'), 'لاتيه');
+    expect(line.customizations!.pick('en'), 'Milk: Oat');
+    expect(line.customizations!.pick('ar'), 'الحليب: شوفان');
+    expect(line.instructions, 'extra hot');
   });
 
   test('a network still down keeps the sale queued and marks the till offline', () async {

@@ -103,6 +103,10 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public bool Replay { get; private set; }
 
+    /// <summary>The request id it is placed under, kept on the order so the same request again finds it</summary>
+    [DataMember]
+    public Guid? RequestId { get; private set; }
+
     /// <summary>
     /// Who is placing the order. Derived from the identity unless the caller
     /// (the POS path) says otherwise; never bound from a request body.
@@ -180,9 +184,11 @@ public class CreateOrderCommand : IRequest<int>
         PlatformOrder? platform = null,
         DeliveryDraft? delivery = null,
         bool payOnline = false,
-        OrderTaker? taker = null)
+        OrderTaker? taker = null,
+        Guid? requestId = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        RequestId = requestId;
         Taker = taker;
         Platform = platform;
         Delivery = delivery;

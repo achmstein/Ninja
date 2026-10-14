@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
+import '../../../core/offline/offline_queue.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -21,7 +22,15 @@ import '../widgets/shift_report.dart';
 /// frozen Z report from the server: the over/short verdict, the tender
 /// split, and every movement — printed on the 80 mm roll when a printer is
 /// set up. Resolves to the Z once closed.
-Future<ShiftView?> showCloseShiftDialog(BuildContext context, ShiftView shift) {
+///
+/// Not while sales rung up offline are still on the till: the server would
+/// count the drawer without their cash, short now and over next shift.
+Future<ShiftView?> showCloseShiftDialog(BuildContext context, ShiftView shift) async {
+  final waiting = ProviderScope.containerOf(context, listen: false).read(offlineQueueProvider).length;
+  if (waiting > 0) {
+    showPosToast(context, PosToastType.error, AppLocalizations.of(context)!.closeShiftOfflineSalesWaiting(waiting));
+    return null;
+  }
   return showFDialog<ShiftView>(
     context: context,
     useRootNavigator: true,

@@ -1401,6 +1401,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get offlineKitchenChit => 'Kitchen · offline';
+
+  @override
+  String get offlineKitchenChitFailed =>
+      'The kitchen chit did not print. Tell the kitchen what to make.';
+
+  @override
+  String get offlineKitchenPrinter => 'Kitchen printer (offline)';
+
+  @override
+  String get offlineKitchenPrinterHint =>
+      'When the network is down, each counter sale prints a chit for the kitchen here. Leave it empty to use the receipt printer.';
+
+  @override
+  String closeShiftOfflineSalesWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count offline sales are still on this till. Send them before closing the shift.',
+      one:
+          '1 offline sale is still on this till. Send it before closing the shift.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get noBranchTitle => 'No branch assigned';
 
   @override

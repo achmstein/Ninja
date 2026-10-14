@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
+import { useOfflineQueue } from '@/features/offline/offline-queue'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -63,8 +64,13 @@ export function CloseShiftDialog({
     },
   })
 
+  // A sale taken offline is cash in this drawer the server has not heard of
+  // yet: the count would come out short, so it goes in before the close
+  const waiting = useOfflineQueue((s) => s.sales.length)
+
   const amount = Number(amountStr)
   const canClose =
+    waiting === 0 &&
     amountStr !== '' &&
     Number.isFinite(amount) &&
     amount >= 0 &&
@@ -146,6 +152,12 @@ export function CloseShiftDialog({
         </div>
 
         <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+        {waiting > 0 && (
+          <p className='bg-destructive/10 text-destructive rounded-lg px-3 py-2 text-sm'>
+            {t('offlineSalesBlockClose', { count: waiting })}
+          </p>
+        )}
 
         <div className='grid grid-cols-2 gap-2'>
           <Button

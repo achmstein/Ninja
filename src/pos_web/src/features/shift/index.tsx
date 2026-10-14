@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowUpFromLine,
   Banknote,
+  CloudOff,
   History,
   Lock,
 } from 'lucide-react'
@@ -15,6 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { useNetworkStatus } from '@/lib/network-status'
 import { CloseShiftDialog } from './close-shift-dialog'
 import { MovementDialog, type MovementDirection } from './movement-dialog'
 import { OpenShiftDialog } from './open-shift-dialog'
@@ -36,12 +38,24 @@ export function ShiftScreen() {
   const { shift, noShift, isLoading } = useCurrentShift({
     refetchInterval: 20_000,
   })
+  const online = useNetworkStatus((s) => s.online)
 
   const [openShiftOpen, setOpenShiftOpen] = useState(false)
   const [movement, setMovement] = useState<MovementDirection | null>(null)
   const [closeOpen, setCloseOpen] = useState(false)
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
+
+  // Offline the server can't say which shift is open: not "no shift", and
+  // not a load that will ever finish — the drawer waits for the internet
+  if (!online && !shift && !noShift) {
+    return (
+      <div className='flex flex-col items-center gap-4 py-24 text-center'>
+        <CloudOff className='text-muted-foreground size-12' />
+        <p className='text-lg font-medium'>{t('needsInternet')}</p>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (

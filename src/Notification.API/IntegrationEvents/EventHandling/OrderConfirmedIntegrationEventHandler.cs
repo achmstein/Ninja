@@ -82,6 +82,13 @@ public class OrderConfirmedIntegrationEventHandler(
             });
         }
 
+        // An offline till's sale sent late was made and handed over long ago:
+        // no screen chimes for it (its bill reaches the tills as any bill does)
+        if (@event.Replay)
+        {
+            return;
+        }
+
         // Also notify admin group — with the branch, so a kitchen display
         // only chimes for its own orders (missing from older producers,
         // which every screen reads as "for everyone")

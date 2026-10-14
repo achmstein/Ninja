@@ -2594,6 +2594,36 @@ abstract class AppLocalizations {
   /// **'Till copy {number}'**
   String provisionalReceipt(String number);
 
+  /// No description provided for @offlineKitchenChit.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen · offline'**
+  String get offlineKitchenChit;
+
+  /// No description provided for @offlineKitchenChitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The kitchen chit did not print. Tell the kitchen what to make.'**
+  String get offlineKitchenChitFailed;
+
+  /// No description provided for @offlineKitchenPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen printer (offline)'**
+  String get offlineKitchenPrinter;
+
+  /// No description provided for @offlineKitchenPrinterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When the network is down, each counter sale prints a chit for the kitchen here. Leave it empty to use the receipt printer.'**
+  String get offlineKitchenPrinterHint;
+
+  /// No description provided for @closeShiftOfflineSalesWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 offline sale is still on this till. Send it before closing the shift.} other{{count} offline sales are still on this till. Send them before closing the shift.}}'**
+  String closeShiftOfflineSalesWaiting(int count);
+
   /// No description provided for @noBranchTitle.
   ///
   /// In en, this message translates to:

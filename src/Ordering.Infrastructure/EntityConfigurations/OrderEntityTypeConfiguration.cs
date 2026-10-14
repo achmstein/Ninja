@@ -154,5 +154,8 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         // Open orders are counted per place
         orderConfiguration.HasIndex(o => o.PlaceId);
+
+        // A request sent again finds the order it already made
+        orderConfiguration.HasIndex(o => o.RequestId);
     }
 }

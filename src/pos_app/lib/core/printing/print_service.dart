@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/money.dart';
+import '../offline/offline_kitchen_ticket.dart';
+import '../offline/offline_sale.dart';
 import '../../features/receipt/receipt_sheet.dart';
 import '../../features/receipt/tab_payment_sheet.dart';
 import '../../features/shifts/models/shift.dart';
@@ -11,6 +13,7 @@ import '../../features/shifts/widgets/shift_report_sheet.dart';
 import '../../features/tickets/models/ticket_detail.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:ninja_printing/ninja_printing.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'brand_logo.dart';
 import 'printer_settings.dart';
 
@@ -84,6 +87,25 @@ class PrintService {
   Future<void> testPrint({required AppLocalizations l10n, required Locale locale}) async {
     final printer = _printer();
     await printer.send(await _job(TestSheet(l10n: l10n, locale: locale, brandName: _brandName(locale), logo: await _logo())));
+  }
+
+  /// A sale rung up offline, for the kitchen: on the kitchen printer set for
+  /// this, else the receipt printer
+  Future<void> printOfflineKitchenChit(OfflineSale sale, {required AppLocalizations l10n, required Locale locale}) async {
+    final (host, port) = _ref.read(printerSettingsProvider).offlineKitchenPrinter ?? (throw const PrinterNotConfigured());
+    final sheet = KitchenTicketSheet(
+      ticket: offlineKitchenTicket(sale, title: l10n.offlineKitchenChit),
+      labels: KitchenTicketLabels(
+        counter: l10n.counter,
+        pickup: l10n.pickup,
+        reprint: l10n.kitchenTicketReprint,
+        test: l10n.kitchenTicketTest,
+        testBody: l10n.kitchenTicketTestBody,
+      ),
+      languageCode: locale.languageCode,
+      fontFamily: getFontFamily(locale),
+    );
+    await NetworkEscPosPrinter(host, port).send(await sheetJob(sheet));
   }
 
   Future<void> kickDrawer() => _printer().send(EscPosBuilder().init().kickDrawer().toBytes());

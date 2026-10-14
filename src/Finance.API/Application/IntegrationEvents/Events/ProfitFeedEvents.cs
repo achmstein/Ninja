@@ -5,7 +5,7 @@ namespace Ninja.Finance.API.Application.IntegrationEvents.Events;
 // Partial views of other services' events — the class names must match
 // for routing; only the fields the profit projection reads are declared.
 
-/// <summary>A ticket was paid (Sales). Its creation time is the settle time.</summary>
+/// <summary>A ticket was paid (Sales).</summary>
 public record TicketSettledIntegrationEvent : IntegrationEvent
 {
     public int TicketId { get; init; }
@@ -15,6 +15,16 @@ public record TicketSettledIntegrationEvent : IntegrationEvent
     public decimal Total { get; init; }
 
     public decimal Vat { get; init; }
+
+    /// <summary>
+    /// When it was paid: an offline till's sale arrives hours later, dated
+    /// when the cash changed hands. Default from an older producer, whose
+    /// creation time was the settle time.
+    /// </summary>
+    public DateTime SettledAt { get; init; }
+
+    /// <summary>The moment the sale happened, for the day it belongs to.</summary>
+    public DateTime SaleTime => SettledAt == default ? CreationDate : SettledAt;
 }
 
 /// <summary>A credit note was issued against a settled ticket (Sales).</summary>
