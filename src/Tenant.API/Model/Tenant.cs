@@ -81,6 +81,14 @@ public class Tenant
     /// </summary>
     public bool GuestOrdersAnywhere { get; set; }
 
+    /// <summary>
+    /// How the till's sale pad shows the items, one of <see cref="TillItemStyles"/>:
+    /// "photos", a tile with the item's picture (what every till showed before
+    /// it was a choice), or "compact", a text tile, so a restaurant with a long
+    /// menu sees many more items at once. The owner picks it in admin.
+    /// </summary>
+    public string TillItems { get; set; } = TillItemStyles.Photos;
+
     /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a business that only seats people.</summary>
     public bool ReservationsEnabled { get; set; } = true;
 
@@ -442,6 +450,25 @@ public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, 
         PayAhead && OnlinePayments && entitled.OnlinePayments,
         Ai && entitled.Ai,
         CallCentre && entitled.CallCentre);
+}
+
+/// <summary>How the till's sale pad shows the items (<see cref="Tenant.TillItems"/>).</summary>
+public static class TillItemStyles
+{
+    /// <summary>A tile with the item's picture: the default.</summary>
+    public const string Photos = "photos";
+
+    /// <summary>A text tile, no picture, many more to a row: for a long menu.</summary>
+    public const string Compact = "compact";
+
+    public static readonly string[] All = [Photos, Compact];
+
+    /// <summary>The style as sent, trimmed and lower-cased; null when it is not one of <see cref="All"/>.</summary>
+    public static string? Normalize(string value)
+    {
+        var v = value.Trim().ToLowerInvariant();
+        return All.Contains(v) ? v : null;
+    }
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

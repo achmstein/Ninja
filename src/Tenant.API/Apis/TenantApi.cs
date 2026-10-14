@@ -119,6 +119,11 @@ public static partial class TenantApi
         if (localeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
 
+        // Left out (the control plane, an admin older than the setting) keeps the business's choice
+        string? tillItems = null;
+        if (request.TillItems is { } sent && (tillItems = TillItemStyles.Normalize(sent)) is null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"The till items must be one of {string.Join(", ", TillItemStyles.All)}." });
+
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Model.Tenant.SingletonId);
         tenant.Name = request.Name;
         tenant.PrimaryColor = string.IsNullOrEmpty(color) ? null : color;
@@ -127,6 +132,7 @@ public static partial class TenantApi
         if (request.BusinessType is { Length: > 0 } business) tenant.BusinessType = business.Trim().ToLowerInvariant();
         var guestsChanged = request.GuestOrdersAnywhere is { } anywhere && anywhere != tenant.GuestOrdersAnywhere;
         if (guestsChanged) tenant.GuestOrdersAnywhere = request.GuestOrdersAnywhere!.Value;
+        if (tillItems is not null) tenant.TillItems = tillItems;
         if (locale is { } l)
         {
             tenant.Country = l.Country;
@@ -613,6 +619,7 @@ public record TenantSocialProvider(string Provider, string Hint);
 /// <param name="LogoDarkUrl">The mark for dark backgrounds; null falls back to <paramref name="LogoUrl"/>.</param>
 /// <param name="ApiUrl">The host the native till and kitchen apps connect to ("https://api.slug.example.com"); null when the stack was not told.</param>
 /// <param name="AppsUrl">Where those apps are downloaded from, the platform's page; null when the stack was not told.</param>
+/// <param name="TillItems">How the till's sale pad shows the items: photos (tiles with pictures) or compact (text tiles).</param>
 public record TenantResponse(
     LocalizedText Name,
     string? PrimaryColor,
@@ -633,7 +640,8 @@ public record TenantResponse(
     bool GuestOrdersAnywhere = false,
     TenantWordmark? Cover = null,
     AssistantDto? Assistant = null,
-    TenantMaps? Maps = null)
+    TenantMaps? Maps = null,
+    string TillItems = TillItemStyles.Photos)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"], configuration["Tenant:SocialSignIn"])
@@ -667,14 +675,16 @@ public record TenantResponse(
             t.BusinessType,
             t.GuestOrdersAnywhere,
             TenantWordmark.From(t, TenantImageSlots.Cover),
-            AssistantDto.From(t.Assistant));
+            AssistantDto.From(t.Assistant),
+            TillItems: t.TillItems);
     }
 }
 
 /// <param name="BusinessType">What kind of place it is; the control plane says so, null leaves it.</param>
 /// <param name="GuestOrdersAnywhere">Whether a guest may order without being at a table; null leaves it.</param>
 /// <param name="Features">The switches the owner sets; one left out stays as it is.</param>
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, FeatureSwitches? Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null);
+/// <param name="TillItems">How the till shows the items, photos or compact; null leaves it.</param>
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, FeatureSwitches? Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null, string? TillItems = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

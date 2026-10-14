@@ -239,6 +239,13 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<bool>("TabsEntitled")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("TillItems")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("photos");
+
                     b.Property<bool>("TimeBillingEnabled")
                         .HasColumnType("boolean");
 

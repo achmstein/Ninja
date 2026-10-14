@@ -268,6 +268,13 @@ const webExtras = {
   placesLayoutList: { en: "List", ar: "قائمة" },
   placesLayoutGrid: { en: "Grid, two a row", ar: "شبكة، اثنان في الصف" },
   placesLayoutHint: { en: "How the places to book are shown. Big cards suit a few places; the grid, light tiles two a row, a handful; the list, one panel of lines, many on one screen. The grid and the list group places by kind when there are rooms and tables.", ar: "طريقة عرض الأماكن المتاحة للحجز. البطاقات الكبيرة تناسب الأماكن القليلة؛ والشبكة، مربعات خفيفة اثنان في الصف، تناسب عددًا متوسطًا؛ والقائمة، لوحة واحدة من الأسطر، تعرض أماكن كثيرة في شاشة واحدة. الشبكة والقائمة تجمعان الأماكن حسب النوع عند وجود غرف وطاولات." },
+  // How the till's sale pad shows the items: the business's, every till in every branch
+  tillItems: { en: "Till items", ar: "أصناف الكاشير" },
+  tillItemsHint: { en: "How the sale pad shows your items, on every till in every branch.", ar: "طريقة عرض الأصناف على شاشة البيع، في كل كاشير بكل الفروع." },
+  tillItemsPhotos: { en: "Photos", ar: "بالصور" },
+  tillItemsPhotosHint: { en: "A tile with each item's picture. Suits a short menu.", ar: "مربع لكل صنف بصورته. يناسب المنيو القصير." },
+  tillItemsCompact: { en: "Compact", ar: "مختصر" },
+  tillItemsCompactHint: { en: "Name and price only, many more on one screen. For a long menu.", ar: "الاسم والسعر فقط، وأصناف أكثر بكثير في الشاشة. للمنيو الطويل." },
   accentColor: { en: "Secondary", ar: "اللون الثانوي" },
   surfaceColor: { en: "Page", ar: "الصفحة" },
   brandColorHint: { en: "Buttons and highlights; the dock and dark cards take a deep shade of it. Text on it is picked for contrast, not set.", ar: "الأزرار والتمييز، ويأخذ الشريط السفلي والبطاقات الداكنة درجة عميقة منه. يُحدَّد لون النص عليه تلقائيًا ليبقى مقروءًا." },

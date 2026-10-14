@@ -164,6 +164,15 @@ export function useIsCloudKitchen(): boolean {
   return useBrand()?.businessType === 'cloud_kitchen'
 }
 
+/**
+ * How the sale pad shows the items, as the owner chose in admin: "photos",
+ * a tile with each item's picture, or "compact", text tiles for a long menu.
+ * Photos until the brand says otherwise (none yet, an older stack).
+ */
+export function useTillItems(): 'photos' | 'compact' {
+  return useBrand()?.tillItems === 'compact' ? 'compact' : 'photos'
+}
+
 /** Where customers open the menu; this origin when provisioning has not said. */
 export function useCustomerOrigin(): string {
   return useBrand()?.customerUrl ?? window.location.origin

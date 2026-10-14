@@ -22,6 +22,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../call_centre/call_centre_mode.dart';
+import '../category_colour.dart';
 import '../../catalog/services/catalog_service.dart';
 import '../../deliveries/delivery_errors.dart';
 import '../../deliveries/providers/deliveries_provider.dart';
@@ -81,6 +82,9 @@ Widget _bar(FThemeData theme, {required double widthFactor, double height = 12})
         ),
       ),
     );
+
+/// Two lines of name and the price: well over a finger's 56 tall
+const _compactTileHeight = 76.0;
 
 class SalePadScreen extends ConsumerStatefulWidget {
   final int? ticketId;
@@ -607,6 +611,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     // A walk-in sale can go out with a rider instead, where the business and
     // the branch deliver; a round on an open bill never does
     final features = ref.watch(featuresProvider);
+    // The owner's choice in admin: photo tiles, or text tiles for a long menu
+    final compact = ref.watch(compactTillItemsProvider);
     final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
     final canDeliver = terms?.delivers ?? false;
     final charge = synced ? _deliveryCharge(sale, watch: true) : DeliveryCharge.none;
@@ -685,6 +691,42 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                     child: itemsAsync.when(
                       loading: () => LayoutBuilder(
                         builder: (context, constraints) {
+                          if (compact) {
+                            final width = constraints.maxWidth - 24;
+                            final columns = compactColumns(width);
+                            return Shimmer.fromColors(
+                              baseColor: theme.colors.muted,
+                              highlightColor: theme.colors.background,
+                              child: GridView.builder(
+                                padding: const EdgeInsets.all(12),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                  mainAxisExtent: _compactTileHeight,
+                                ),
+                                itemCount: columns * 4,
+                                // Name and price lines, no picture: the compact tile's shape
+                                itemBuilder: (_, _) => DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: theme.colors.border),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _bar(theme, widthFactor: 1),
+                                        _bar(theme, widthFactor: 0.4, height: 10),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
                           // Match the real grid's geometry so the skeleton
                           // sits exactly where the item tiles will land.
                           const gap = 12.0;
@@ -754,6 +796,20 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                         }
                         return LayoutBuilder(
                           builder: (context, constraints) {
+                            if (compact) {
+                              // Packed by the menu's own width: six to eight across beside the sale
+                              return GridView.builder(
+                                padding: const EdgeInsets.all(12),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: compactColumns(constraints.maxWidth - 24),
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                  mainAxisExtent: _compactTileHeight,
+                                ),
+                                itemCount: visible.length,
+                                itemBuilder: (context, index) => CompactItemTile(item: visible[index], onTap: () => _tapItem(visible[index])),
+                              );
+                            }
                             const gap = 12.0;
                             final width = constraints.maxWidth - 24;
                             final columns = (width + gap) ~/ (140 + gap);

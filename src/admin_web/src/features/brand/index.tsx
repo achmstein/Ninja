@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Lock, X } from 'lucide-react'
@@ -33,6 +33,7 @@ import {
 } from '@/lib/content-languages'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -246,6 +247,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(
     brand.guestOrdersAnywhere ?? false
   )
+  const [tillItems, setTillItems] = useState<TillItems>(
+    tillItemsOf(brand.tillItems)
+  )
   const [error, setError] = useState<string | null>(null)
 
   const put = (next: Brand) => queryClient.setQueryData(brandQueryKey(), next)
@@ -332,6 +336,7 @@ function BrandForm({ brand }: { brand: Brand }) {
         customerUrl: customerUrl.trim() || null,
         features,
         guestOrdersAnywhere,
+        tillItems,
         theme: fromThemeForm(theme),
         locale: { ...brand.locale, arabicStyle, contentLanguages },
       },
@@ -738,6 +743,11 @@ function BrandForm({ brand }: { brand: Brand }) {
             />
           </SettingsCard>
 
+          {/* How the till's sale pad shows the items. The business's, not a branch's: every till reads it off the brand */}
+          <SettingsCard title={t('tillItems')} description={t('tillItemsHint')}>
+            <TillItemsChoice value={tillItems} onChange={setTillItems} />
+          </SettingsCard>
+
           {/* Which parts of the platform are on */}
           <SettingsCard title={t('features')}>
             {FEATURE_ROWS.filter(
@@ -805,6 +815,105 @@ function BrandForm({ brand }: { brand: Brand }) {
         </div>
       </div>
     </form>
+  )
+}
+
+type TillItems = 'photos' | 'compact'
+
+/** A stored style the till draws; anything else (none yet, an older stack) is photos. */
+const tillItemsOf = (v: string | null | undefined): TillItems =>
+  v === 'compact' ? 'compact' : 'photos'
+
+const TILL_ITEM_CHOICES: {
+  value: TillItems
+  label: TranslationKey
+  hint: TranslationKey
+  sketch: ReactNode
+}[] = [
+  {
+    value: 'photos',
+    label: 'tillItemsPhotos',
+    hint: 'tillItemsPhotosHint',
+    // Three tiles, a picture over a name
+    sketch: (
+      <div className='grid grid-cols-3 gap-1'>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className='bg-card overflow-hidden rounded-sm border'>
+            <div className='bg-muted-foreground/25 aspect-[4/3]' />
+            <div className='bg-muted-foreground/40 m-1 h-1 w-3/4 rounded-full' />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    value: 'compact',
+    label: 'tillItemsCompact',
+    hint: 'tillItemsCompactHint',
+    // Twice as many to a row, a category's colour down the start edge, no picture
+    sketch: (
+      <div className='grid grid-cols-6 gap-1'>
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              'bg-card flex h-5 flex-col justify-center gap-0.5 rounded-sm border border-s-2 ps-0.5',
+              i % 6 < 3 ? 'border-s-amber-500' : 'border-s-sky-500'
+            )}
+          >
+            <div className='bg-muted-foreground/40 h-0.5 w-3/4 rounded-full' />
+            <div className='bg-muted-foreground/25 h-0.5 w-1/3 rounded-full' />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+]
+
+/** Photos or compact, side by side, each with a sketch of the sale pad it gives. */
+function TillItemsChoice({
+  value,
+  onChange,
+}: {
+  value: TillItems
+  onChange: (v: TillItems) => void
+}) {
+  const t = useT()
+  return (
+    <div
+      role='radiogroup'
+      aria-label={t('tillItems')}
+      className='grid gap-3 px-5 py-4 sm:grid-cols-2'
+    >
+      {TILL_ITEM_CHOICES.map((choice) => {
+        const checked = value === choice.value
+        return (
+          <button
+            key={choice.value}
+            type='button'
+            role='radio'
+            aria-checked={checked}
+            onClick={() => onChange(choice.value)}
+            className={cn(
+              'focus-visible:ring-ring/50 grid content-start gap-3 rounded-lg border p-3 text-start transition-colors focus-visible:ring-[3px] focus-visible:outline-none',
+              checked
+                ? 'border-primary bg-primary/5 ring-primary ring-1'
+                : 'hover:bg-muted/50'
+            )}
+          >
+            <div aria-hidden className='bg-muted rounded-md p-2'>
+              {choice.sketch}
+            </div>
+            <div className='grid gap-0.5'>
+              <span className='text-sm font-medium'>{t(choice.label)}</span>
+              <span className='text-muted-foreground text-xs'>
+                {t(choice.hint)}
+              </span>
+            </div>
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

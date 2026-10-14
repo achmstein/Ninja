@@ -172,6 +172,7 @@ export type TenantResponse = {
     cover?: null | TenantWordmark;
     assistant?: null | AssistantDto;
     maps?: null | TenantMaps;
+    tillItems?: string;
 };
 
 export type TenantSocialProvider = {
@@ -250,6 +251,7 @@ export type UpdateTenantRequest = {
     locale?: null | TenantLocaleDto;
     businessType?: null | string;
     guestOrdersAnywhere?: null | boolean;
+    tillItems?: null | string;
 };
 
 export type GetBranchesData = {

@@ -45,6 +45,7 @@ import { useCallCentre } from '@/hooks/use-call-centre'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { API_VERSION, apiClient } from '@/lib/api-client'
+import { useTillItems } from '@/lib/brand'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -61,6 +62,7 @@ import {
 import { CustomerDialog } from './customer-dialog'
 import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { cn } from '@/lib/utils'
+import { categoryColour } from './category-colour'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
 import { ItemImage } from './item-image'
@@ -104,6 +106,41 @@ function ItemTile({
           {money(item.effectivePrice ?? item.price)}
         </span>
       </div>
+    </button>
+  )
+}
+
+/**
+ * The compact sale pad's tile, for a long menu: the name (two lines at most)
+ * and the price, no picture, and the category's colour down the start edge.
+ * The line keeps the till's direction; the name is isolated in it, so a
+ * Latin name in an Arabic till starts where an Arabic one would.
+ */
+function CompactItemTile({
+  item,
+  onTap,
+}: {
+  item: CatalogItemDto
+  onTap: (item: CatalogItemDto) => void
+}) {
+  const localized = useLocalized()
+  const money = useMoney()
+  const colour = categoryColour(item.catalogTypeId)
+
+  return (
+    <button
+      type='button'
+      disabled={item.isAvailable === false}
+      onClick={() => onTap(item)}
+      style={colour ? { borderInlineStartColor: colour } : undefined}
+      className='bg-card text-card-foreground flex min-h-16 flex-col justify-between gap-1 overflow-hidden rounded-lg border border-s-4 px-2.5 py-2 text-start shadow-xs transition-colors active:scale-[0.98] disabled:opacity-40'
+    >
+      <span className='line-clamp-2 text-sm leading-snug font-medium'>
+        <bdi>{localized(item.name)}</bdi>
+      </span>
+      <span className='text-muted-foreground text-sm tabular-nums'>
+        {money(item.effectivePrice ?? item.price)}
+      </span>
     </button>
   )
 }
@@ -214,6 +251,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const language = useLanguage((s) => s.language)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  // The owner's choice in admin: photo tiles, or text tiles for a long menu
+  const compact = useTillItems() === 'compact'
 
   const {
     lines,
@@ -731,11 +770,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     setSearchTerm('')
   }
 
-  const itemGrid = (tiles: ReactNode) => (
-    <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
-      {tiles}
-    </div>
-  )
+  // Compact packs the row by the menu's own width, not the screen's: six
+  // across beside the order on a 1280 till, eight on a 1920 one
+  const itemGrid = (tiles: ReactNode) =>
+    compact ? (
+      <div className='@container'>
+        <div className='grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-2 @3xl:grid-cols-6 @5xl:grid-cols-7 @7xl:grid-cols-8'>
+          {tiles}
+        </div>
+      </div>
+    ) : (
+      <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
+        {tiles}
+      </div>
+    )
+  const Tile = compact ? CompactItemTile : ItemTile
 
   // The running sale: beside the menu on a tablet, in the bottom sheet on a
   // phone — the same parts either way, so nothing is out of reach on either
@@ -996,19 +1045,30 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         <div className='flex-1 overflow-y-auto p-3'>
           {itemsLoading ? (
             itemGrid(
-              Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className='flex flex-col overflow-hidden rounded-xl border shadow-xs'
-                >
-                  {/* Picture, then name and price lines — the item tile's shape */}
-                  <Skeleton className='aspect-[4/3] w-full rounded-none md:aspect-square' />
-                  <div className='flex flex-col gap-1.5 p-2'>
+              Array.from({ length: compact ? 24 : 8 }).map((_, i) =>
+                compact ? (
+                  /* Name and price lines, no picture — the compact tile's shape */
+                  <div
+                    key={i}
+                    className='flex min-h-16 flex-col justify-between gap-1.5 rounded-lg border border-s-4 px-2.5 py-2 shadow-xs'
+                  >
                     <Skeleton className='h-4 w-full' />
                     <Skeleton className='h-3 w-1/2' />
                   </div>
-                </div>
-              )),
+                ) : (
+                  <div
+                    key={i}
+                    className='flex flex-col overflow-hidden rounded-xl border shadow-xs'
+                  >
+                    {/* Picture, then name and price lines — the item tile's shape */}
+                    <Skeleton className='aspect-[4/3] w-full rounded-none md:aspect-square' />
+                    <div className='flex flex-col gap-1.5 p-2'>
+                      <Skeleton className='h-4 w-full' />
+                      <Skeleton className='h-3 w-1/2' />
+                    </div>
+                  </div>
+                ),
+              ),
             )
           ) : visibleItems.length === 0 ? (
             <p className='text-muted-foreground py-16 text-center'>
@@ -1017,7 +1077,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           ) : (
             itemGrid(
               visibleItems.map((item) => (
-                <ItemTile key={String(item.id)} item={item} onTap={tapItem} />
+                <Tile key={String(item.id)} item={item} onTap={tapItem} />
               )),
             )
           )}

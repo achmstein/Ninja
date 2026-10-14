@@ -56,6 +56,7 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
             entity.Property(e => e.ArabicStyle).HasMaxLength(10);
             entity.Property(e => e.ContentLanguages).HasMaxLength(4).IsRequired().HasDefaultValue(ContentLanguages.Both);
             entity.Property(e => e.BusinessType).HasMaxLength(20);
+            entity.Property(e => e.TillItems).HasMaxLength(10).IsRequired().HasDefaultValue(TillItemStyles.Photos);
             entity.Ignore(e => e.EffectiveArabicStyle);
             entity.OwnsOne(e => e.Assistant, b => b.ToJson());
             entity.OwnsOne(e => e.Theme, b =>

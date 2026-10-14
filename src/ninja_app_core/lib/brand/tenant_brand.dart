@@ -170,6 +170,11 @@ class TenantBrand {
   /// platform's key): the till's delivery form shows a search field
   final bool addressSearch;
 
+  /// How the till's sale pad shows the items, as the owner chose in admin:
+  /// `photos` (a tile with each item's picture) or `compact` (text tiles,
+  /// many more to a row, for a long menu). Photos when the stack does not say
+  final String tillItems;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -182,7 +187,11 @@ class TenantBrand {
     this.customerUrl,
     this.version = 0,
     this.addressSearch = false,
+    this.tillItems = 'photos',
   });
+
+  /// The sale pad shows text tiles instead of photos
+  bool get compactTillItems => tillItems == 'compact';
 
   /// ISO 4217: what the business's money is counted in
   String get currency => locale.currency;
@@ -220,6 +229,7 @@ class TenantBrand {
       customerUrl: _origin(json['customerUrl']),
       version: (json['version'] as num?)?.toInt() ?? 0,
       addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
+      tillItems: _tillItems(json['tillItems']),
     );
   }
 
@@ -241,6 +251,7 @@ class TenantBrand {
         customerUrl: _origin(json['customerUrl']),
         version: (json['version'] as num?)?.toInt() ?? 0,
         addressSearch: json['addressSearch'] == true,
+        tillItems: _tillItems(json['tillItems']),
       );
 
   Map<String, dynamic> toJson() => {
@@ -255,6 +266,7 @@ class TenantBrand {
         'customerUrl': customerUrl,
         'version': version,
         'addressSearch': addressSearch,
+        'tillItems': tillItems,
       };
 
   Color? get primaryColor {
@@ -288,6 +300,9 @@ String? _origin(Object? value) {
 
 /// `light` or `dark`, anything else leaves the app's own default
 String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;
+
+/// `compact` when the brand says so; anything else (none yet, an older stack) is `photos`
+String _tillItems(Object? value) => value == 'compact' ? 'compact' : 'photos';
 
 /// A currency code, or the platform's first market's when none is said
 String _currency(Object? value) => value is String && value.trim().length == 3 ? value.trim().toUpperCase() : 'EGP';

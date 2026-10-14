@@ -1621,6 +1621,10 @@
                 "$ref": "#/components/schemas/TenantMaps"
               }
             ]
+          },
+          "tillItems": {
+            "type": "string",
+            "default": "photos"
           }
         }
       },
@@ -2077,6 +2081,12 @@
             "type": [
               "null",
               "boolean"
+            ]
+          },
+          "tillItems": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }

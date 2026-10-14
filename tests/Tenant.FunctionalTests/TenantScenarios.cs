@@ -123,6 +123,30 @@ public sealed class TenantScenarios
         Assert.Contains("name is required", detail);
     }
 
+    private record TillView(string TillItems, long Version);
+
+    [TestMethod]
+    public async Task The_owner_picks_compact_till_items_and_the_till_reads_them_off_the_brand()
+    {
+        await ResetAsync();
+        var anyone = Suite.TenantApi.AsAnonymous();
+
+        await Owner.PutAsync<TillView>(Tenant, new { name = new { en = "Chillax", ar = "تشيلاكس" }, features = FeaturesView.All, tillItems = "Compact" });
+        Assert.AreEqual("compact", (await anyone.GetAsync<TillView>(Tenant)).TillItems);
+
+        // A save that does not name it (the control plane's, an older admin's) keeps it
+        await Owner.PutAsync<TillView>(Tenant, Update(FeaturesView.All));
+        Assert.AreEqual("compact", (await anyone.GetAsync<TillView>(Tenant)).TillItems);
+
+        var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, new { name = new { en = "Chillax", ar = "تشيلاكس" }, features = FeaturesView.All, tillItems = "grid" });
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("photos, compact", detail);
+
+        // Back to the default, so the other scenarios see the till as every business starts
+        var back = await Owner.PutAsync<TillView>(Tenant, new { name = new { en = "Chillax", ar = "تشيلاكس" }, features = FeaturesView.All, tillItems = "photos" });
+        Assert.AreEqual("photos", back.TillItems);
+    }
+
     private record ThemeView(string? Radius, string? Style, LayoutView? Layout);
     private record LayoutView(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density, string? Places = null);
     private record StyledView(ThemeView Theme, long Version);
