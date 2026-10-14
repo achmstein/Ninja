@@ -3713,6 +3713,114 @@
         ]
       }
     },
+    "/api/control/maps": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The platform's Google Maps keys (shown by their last four characters), the web map switch and the referrer domains",
+        "operationId": "GetMapsSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapsSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Change the Google Maps settings; a key left out keeps the saved one. The businesses with Google Maps on are re-stamped when their stacks would change",
+        "operationId": "SaveMapsSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMapsSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveMapsSettingsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/maps/test": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "One address search through the saved server key, straight to Google: whether it answers and how fast",
+        "operationId": "TestMapsSearch",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapsTestResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -5380,6 +5488,122 @@
           }
         }
       },
+      "MapsKeyDto": {
+        "required": [
+          "set",
+          "hint"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean"
+          },
+          "hint": {
+            "type": "string"
+          }
+        }
+      },
+      "MapsSettingsDto": {
+        "required": [
+          "serverKey",
+          "browserKey",
+          "androidKey",
+          "iosKey",
+          "webTiles",
+          "referrerDomains",
+          "businessesOn",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "serverKey": {
+            "description": "Places API (New) only, restricted to this box's IP: each stack's address search",
+            "$ref": "#/components/schemas/MapsKeyDto"
+          },
+          "browserKey": {
+            "description": "Maps JavaScript API only, restricted to the websites: the web apps' Google map, while web tiles are on",
+            "$ref": "#/components/schemas/MapsKeyDto"
+          },
+          "androidKey": {
+            "description": "Maps SDK for Android, restricted to the apps' packages and signing SHA-1s: in the customer app's next build",
+            "$ref": "#/components/schemas/MapsKeyDto"
+          },
+          "iosKey": {
+            "description": "Maps SDK for iOS, restricted to the apps' bundle IDs: in the customer app's next build",
+            "$ref": "#/components/schemas/MapsKeyDto"
+          },
+          "webTiles": {
+            "type": "boolean",
+            "description": "Whether the web apps draw Google's map (billed per load) rather than the free OpenFreeMap streets"
+          },
+          "referrerDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The businesses' own domains already on the browser key's referrers; a leading *. covers every name under one"
+          },
+          "businessesOn": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many businesses have Google Maps switched on",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "MapsTestResult": {
+        "required": [
+          "ok",
+          "milliseconds",
+          "suggestions",
+          "first",
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "milliseconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "suggestions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "first": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "MenuProposal": {
         "required": [
           "categories",
@@ -6064,6 +6288,91 @@
           }
         }
       },
+      "SaveMapsSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "serverKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "browserKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "androidKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "iosKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clearServerKey": {
+            "type": "boolean",
+            "default": false
+          },
+          "clearBrowserKey": {
+            "type": "boolean",
+            "default": false
+          },
+          "clearAndroidKey": {
+            "type": "boolean",
+            "default": false
+          },
+          "clearIosKey": {
+            "type": "boolean",
+            "default": false
+          },
+          "webTiles": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "referrerDomains": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Hosts, or referrers as Google Cloud shows them (https://menu.blue.com/*); kept as hosts"
+          }
+        }
+      },
+      "SaveMapsSettingsResult": {
+        "required": [
+          "settings",
+          "restamping",
+          "appKeysChanged"
+        ],
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/MapsSettingsDto"
+          },
+          "restamping": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The businesses being re-stamped with the new settings (a maps job each, on the queue)"
+          },
+          "appKeysChanged": {
+            "type": "boolean",
+            "description": "Whether the Android or iOS key changed: the phone apps take it at their next build"
+          }
+        }
+      },
       "ServiceHealth": {
         "required": [
           "service",
@@ -6475,7 +6784,7 @@
               "null",
               "string"
             ],
-            "description": "Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map"
+            "description": "Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to the referrer domains on the platform's Google Maps tab; until then that domain shows the free map"
           },
           "googleMaps": {
             "type": "boolean",
@@ -6484,7 +6793,7 @@
           },
           "googleMapsAvailable": {
             "type": "boolean",
-            "description": "Whether the platform has Google Maps keys at all; without them the business's switch does nothing",
+            "description": "Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing",
             "default": false
           }
         }

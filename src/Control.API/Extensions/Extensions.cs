@@ -64,6 +64,8 @@ public static class Extensions
 #pragma warning disable EXTEXP0001
         // A model takes its time; no retries here on top of the stack's SDK's own
         builder.Services.AddHttpClient(ControlApi.AiProviderClient, client => client.Timeout = TimeSpan.FromSeconds(180)).RemoveAllResilienceHandlers();
+        // The Google Maps tab's test: one call, as a stack would make it, never retried (each is billed)
+        builder.Services.AddHttpClient(MapsSearchTest.ClientName, client => client.Timeout = TimeSpan.FromSeconds(20)).RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
         // A role is what the agents name: the fallback and the vision model are roles too
         builder.Configuration["AI:FallbackModel"] ??= AiRoles.Fallback;

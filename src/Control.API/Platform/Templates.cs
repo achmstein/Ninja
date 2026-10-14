@@ -462,9 +462,11 @@ public static partial class Templates
     /// every name prefixed with the slug so nothing collides on the shared
     /// network, wired to the shared Postgres (its own databases), the shared
     /// broker (its own vhost) and the shared Keycloak (its own realm).
+    /// <paramref name="maps"/> is the Google Maps tab's settings; none stamps no keys.
     /// </summary>
-    public static string Compose(Tenant tenant, TenantHosts hosts, PlatformOptions platform)
+    public static string Compose(Tenant tenant, TenantHosts hosts, PlatformOptions platform, MapsSettings? maps = null)
     {
+        maps ??= new MapsSettings();
         var slug = tenant.Slug;
         var entitled = PlanCatalog.Entitlements(tenant);
         var services = PlanCatalog.Services(entitled);
@@ -576,11 +578,11 @@ public static partial class Templates
                     sb.AppendLine($"      Tenant__AppsUrl: \"{platform.AppsUrl}\"");
                     // Google Maps, when the business has it on: address search with the platform's server key (from the .env, never in an app),
                     // and the web map's browser key with the domains it works on, only while the web switch is on
-                    if (platform.Maps.SearchFor(tenant)) sb.AppendLine("      Maps__ServerKey: \"${MAPS_SERVER_KEY}\"");
-                    if (platform.Maps.WebFor(tenant))
+                    if (maps.SearchFor(tenant)) sb.AppendLine("      Maps__ServerKey: \"${MAPS_SERVER_KEY}\"");
+                    if (maps.WebFor(tenant))
                     {
-                        sb.AppendLine($"      Maps__BrowserKey: \"{Yaml(platform.Maps.BrowserKey!)}\"");
-                        sb.AppendLine($"      Maps__WebDomains: \"{string.Join(',', platform.Maps.WebDomains(tenant, platform))}\"");
+                        sb.AppendLine($"      Maps__BrowserKey: \"{Yaml(maps.BrowserKey!)}\"");
+                        sb.AppendLine($"      Maps__WebDomains: \"{string.Join(',', maps.WebDomains(tenant, platform))}\"");
                     }
                     sb.AppendLine("      Storage__Path: \"/app/uploads\"");
                     sb.AppendLine("    volumes:");
@@ -643,8 +645,9 @@ public static partial class Templates
     }
 
     /// <summary>The stack's .env: its own secrets and nothing of the platform's (the superuser and the shared broker user stay on the control plane).</summary>
-    public static string Env(Tenant tenant, PlatformOptions platform)
+    public static string Env(Tenant tenant, PlatformOptions platform, MapsSettings? maps = null)
     {
+        maps ??= new MapsSettings();
         if (!tenant.HasOwnCredentials)
             throw new InvalidOperationException($"{tenant.Slug} has no credentials of its own yet; the credentials step runs first");
         return string.Join('\n',
@@ -659,7 +662,7 @@ public static partial class Templates
             // The business's own key to the platform's AI gateway, only when its plan includes the assistant; no provider's key ever reaches a stack
             $"AI_GATEWAY_KEY={(platform.AssistantFor(tenant) ? AiGatewayKeys.For(tenant.Slug, platform.EncryptionKey) : "")}",
             // The platform's Places key, which the stack's address search calls Google with, only while the business has Google Maps on; restricted in Google Cloud to the box's address
-            $"MAPS_SERVER_KEY={(platform.Maps.SearchFor(tenant) ? platform.Maps.ServerKey : "")}",
+            $"MAPS_SERVER_KEY={(maps.SearchFor(tenant) ? maps.ServerKey : "")}",
             "",
         ]);
     }

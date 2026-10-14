@@ -339,6 +339,51 @@ export type MailStatusResponse = {
     queued: number | string;
 };
 
+export type MapsKeyDto = {
+    set: boolean;
+    hint: string;
+};
+
+export type MapsSettingsDto = {
+    /**
+     * Places API (New) only, restricted to this box's IP: each stack's address search
+     */
+    serverKey: MapsKeyDto;
+    /**
+     * Maps JavaScript API only, restricted to the websites: the web apps' Google map, while web tiles are on
+     */
+    browserKey: MapsKeyDto;
+    /**
+     * Maps SDK for Android, restricted to the apps' packages and signing SHA-1s: in the customer app's next build
+     */
+    androidKey: MapsKeyDto;
+    /**
+     * Maps SDK for iOS, restricted to the apps' bundle IDs: in the customer app's next build
+     */
+    iosKey: MapsKeyDto;
+    /**
+     * Whether the web apps draw Google's map (billed per load) rather than the free OpenFreeMap streets
+     */
+    webTiles: boolean;
+    /**
+     * The businesses' own domains already on the browser key's referrers; a leading *. covers every name under one
+     */
+    referrerDomains: Array<string>;
+    /**
+     * How many businesses have Google Maps switched on
+     */
+    businessesOn: number | string;
+    updatedAt: null | string;
+};
+
+export type MapsTestResult = {
+    ok: boolean;
+    milliseconds: number | string;
+    suggestions: number | string;
+    first: null | string;
+    error: null | string;
+};
+
 export type MenuProposal = {
     categories: Array<ProposedCategory>;
     warnings: Array<string>;
@@ -488,6 +533,34 @@ export type SaveAiRolesRequest = {
     roles: Array<AiRoleDto>;
 };
 
+export type SaveMapsSettingsRequest = {
+    serverKey?: null | string;
+    browserKey?: null | string;
+    androidKey?: null | string;
+    iosKey?: null | string;
+    clearServerKey?: boolean;
+    clearBrowserKey?: boolean;
+    clearAndroidKey?: boolean;
+    clearIosKey?: boolean;
+    webTiles?: null | boolean;
+    /**
+     * Hosts, or referrers as Google Cloud shows them (https://menu.blue.com*); kept as hosts
+     */
+    referrerDomains?: null | Array<string>;
+};
+
+export type SaveMapsSettingsResult = {
+    settings: MapsSettingsDto;
+    /**
+     * The businesses being re-stamped with the new settings (a maps job each, on the queue)
+     */
+    restamping: Array<string>;
+    /**
+     * Whether the Android or iOS key changed: the phone apps take it at their next build
+     */
+    appKeysChanged: boolean;
+};
+
 export type ServiceHealth = {
     service: string;
     ok: boolean;
@@ -582,7 +655,7 @@ export type TenantDetail = {
      */
     androidCertFingerprints?: null | Array<string>;
     /**
-     * Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map
+     * Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}* to the key's referrers in Google Cloud, then to the referrer domains on the platform's Google Maps tab; until then that domain shows the free map
      */
     mapsDomainToAdd?: null | string;
     /**
@@ -590,7 +663,7 @@ export type TenantDetail = {
      */
     googleMaps?: boolean;
     /**
-     * Whether the platform has Google Maps keys at all; without them the business's switch does nothing
+     * Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing
      */
     googleMapsAvailable?: boolean;
 };
@@ -3433,6 +3506,93 @@ export type ScanMenuForNewTenantResponses = {
 };
 
 export type ScanMenuForNewTenantResponse = ScanMenuForNewTenantResponses[keyof ScanMenuForNewTenantResponses];
+
+export type GetMapsSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/maps';
+};
+
+export type GetMapsSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMapsSettingsResponses = {
+    /**
+     * OK
+     */
+    200: MapsSettingsDto;
+};
+
+export type GetMapsSettingsResponse = GetMapsSettingsResponses[keyof GetMapsSettingsResponses];
+
+export type SaveMapsSettingsData = {
+    body: SaveMapsSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/maps';
+};
+
+export type SaveMapsSettingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveMapsSettingsError = SaveMapsSettingsErrors[keyof SaveMapsSettingsErrors];
+
+export type SaveMapsSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SaveMapsSettingsResult;
+};
+
+export type SaveMapsSettingsResponse = SaveMapsSettingsResponses[keyof SaveMapsSettingsResponses];
+
+export type TestMapsSearchData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/maps/test';
+};
+
+export type TestMapsSearchErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TestMapsSearchResponses = {
+    /**
+     * OK
+     */
+    200: MapsTestResult;
+};
+
+export type TestMapsSearchResponse = TestMapsSearchResponses[keyof TestMapsSearchResponses];
 
 export type TlsAskData = {
     body?: never;

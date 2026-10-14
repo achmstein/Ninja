@@ -26,8 +26,24 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<AiUsage> AiUsage => Set<AiUsage>();
 
+    public DbSet<MapsSettings> MapsSettings => Set<MapsSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MapsSettings>(entity =>
+        {
+            // One row, always id 1
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            // Encrypted like the AI's keys; a Google key is 39 characters, a few times that once encrypted
+            var key = _secrets.NullableConverter();
+            entity.Property(e => e.ServerKey).HasMaxLength(512).HasConversion(key);
+            entity.Property(e => e.BrowserKey).HasMaxLength(512).HasConversion(key);
+            entity.Property(e => e.AndroidKey).HasMaxLength(512).HasConversion(key);
+            entity.Property(e => e.IosKey).HasMaxLength(512).HasConversion(key);
+            entity.Property(e => e.ReferrerDomains).HasMaxLength(4000);
+        });
+
         modelBuilder.Entity<AiProvider>(entity =>
         {
             entity.HasKey(e => e.Id);

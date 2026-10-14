@@ -13,8 +13,8 @@ namespace Ninja.Control.UnitTests;
 [TestClass]
 public sealed class AppConfigTests
 {
-    private static JsonObject Read(Tenant tenant, PlatformOptions platform)
-        => JsonNode.Parse(ControlApi.AppConfig(tenant, platform))!.AsObject();
+    private static JsonObject Read(Tenant tenant, PlatformOptions platform, MapsSettings? maps = null)
+        => JsonNode.Parse(ControlApi.AppConfig(tenant, platform, maps))!.AsObject();
 
     [TestMethod]
     public void A_business_on_the_shared_app_gets_its_hosts_and_realm()
@@ -33,14 +33,21 @@ public sealed class AppConfigTests
     [TestMethod]
     public void The_maps_sdk_keys_go_into_the_build_and_the_server_key_never_does()
     {
-        var platform = new PlatformOptions { Maps = new() { ServerKey = "server-key", BrowserKey = "browser-key", AndroidKey = "android-key", IosKey = "ios-key" } };
-        Assert.IsFalse(Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test" }, platform).ContainsKey("GOOGLE_MAPS_ANDROID_KEY"), "Google Maps off for the business: the free map");
-        var config = Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test", GoogleMaps = true }, platform);
+        var platform = new PlatformOptions();
+        var maps = new MapsSettings { ServerKey = "server-key", BrowserKey = "browser-key", AndroidKey = "android-key", IosKey = "ios-key" };
+        Assert.IsFalse(Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test" }, platform, maps).ContainsKey("GOOGLE_MAPS_ANDROID_KEY"), "Google Maps off for the business: the free map");
+        var config = Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test", GoogleMaps = true }, platform, maps);
 
         Assert.AreEqual("android-key", config["GOOGLE_MAPS_ANDROID_KEY"]!.GetValue<string>());
         Assert.AreEqual("ios-key", config["GOOGLE_MAPS_IOS_KEY"]!.GetValue<string>());
         Assert.DoesNotContain("server-key", config.ToJsonString());
         Assert.DoesNotContain("browser-key", config.ToJsonString());
+
+        maps.IosKey = null;
+        config = Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test", GoogleMaps = true }, platform, maps);
+        Assert.AreEqual("android-key", config["GOOGLE_MAPS_ANDROID_KEY"]!.GetValue<string>());
+        Assert.IsFalse(config.ContainsKey("GOOGLE_MAPS_IOS_KEY"), "no iOS key on the tab: the free map on iPhones");
+        Assert.IsFalse(Read(new Tenant { Slug = "blue", OwnerEmail = "owner@blue.test", GoogleMaps = true }, platform).ContainsKey("GOOGLE_MAPS_ANDROID_KEY"), "nothing saved on the tab yet");
     }
 
     [TestMethod]

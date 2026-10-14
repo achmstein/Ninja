@@ -117,7 +117,7 @@ public static partial class ControlApi
         await audit.WriteAsync("backup.restore", into, new { from = slug, id }, ct);
         await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "provision"), ct);
 
-        return TypedResults.Created($"/api/control/tenants/{into}", TenantDetail.From(tenant, [], [], options.Value));
+        return TypedResults.Created($"/api/control/tenants/{into}", TenantDetail.From(tenant, [], [], options.Value, maps: await MapsStore.LoadAsync(context, ct)));
     }
 }
 

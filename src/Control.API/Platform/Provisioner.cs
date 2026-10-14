@@ -356,9 +356,11 @@ public sealed class Provisioner(
     {
         var dir = Dir(tenant);
         Directory.CreateDirectory(dir);
-        await File.WriteAllTextAsync(Path.Combine(dir, "docker-compose.yaml"), Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform), ct);
+        // Google Maps as the panel's tab has it now: every stamp reads the saved keys afresh
+        var maps = await MapsStore.LoadAsync(context, ct);
+        await File.WriteAllTextAsync(Path.Combine(dir, "docker-compose.yaml"), Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps), ct);
         var env = Path.Combine(dir, ".env");
-        await File.WriteAllTextAsync(env, Templates.Env(tenant, Platform), ct);
+        await File.WriteAllTextAsync(env, Templates.Env(tenant, Platform, maps), ct);
         // The stack's secrets: the control plane (root) and docker read it, nobody else on the box
         OwnerOnly(env);
     }
@@ -930,9 +932,10 @@ public sealed class Provisioner(
     }
 
     /// <summary>
-    /// Google Maps turned on or off for the business: the stack is re-stamped with the platform's Maps keys or
-    /// without them, so Tenant.API answers address search or refuses it and tells the apps which map to draw
-    /// (only Tenant.API is recreated). A stack that is not running gets its files now and the rest on start.
+    /// Google Maps turned on or off for the business, or the platform's keys changed on the Google Maps tab: the
+    /// stack is re-stamped with the saved keys or without them, so Tenant.API answers address search or refuses it
+    /// and tells the apps which map to draw (only Tenant.API is recreated). A stack that is not running gets its
+    /// files now and the rest on start.
     /// </summary>
     public async Task MapsAsync(Guid tenantId, CancellationToken ct)
     {

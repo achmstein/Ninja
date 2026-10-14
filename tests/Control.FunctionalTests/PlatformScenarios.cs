@@ -1,4 +1,5 @@
 using System.Net;
+using Ninja.Control.API.Apis;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
 
@@ -153,10 +154,55 @@ public sealed class PlatformScenarios
     }
 
     [TestMethod]
+    public async Task The_maps_tab_keeps_its_keys_hidden_and_restamps_the_businesses_with_google_maps_on()
+    {
+        const string serverKey = "AIzaFunctionalServerKey0000000000000a1b2";
+        const string browserKey = "AIzaFunctionalBrowserKey000000000000c3d4";
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("maps");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: true);
+        await api.SettledAsync(slug);
+        await api.UpdateAsync(slug, new UpdateTenantRequest("Maps Café", null, null, null, null, null, null, null, null, "EG", "EGP", "Africa/Cairo", "ar") { GoogleMaps = true });
+        var before = await api.SettledAsync(slug);
+        Assert.IsTrue(before.GoogleMaps);
+        StringAssert.Contains(Api.EnvOnDisk(slug), "MAPS_SERVER_KEY=\n", "switched on, but the tab has no keys yet");
+
+        try
+        {
+            var saved = await api.SaveMapsAsync(new SaveMapsSettingsRequest(ServerKey: serverKey, BrowserKey: browserKey, WebTiles: true));
+            Assert.Contains(slug, saved.Restamping);
+            Assert.AreEqual("a1b2", saved.Settings.ServerKey.Hint);
+            await api.SettledAsync(slug);
+            StringAssert.Contains(Api.EnvOnDisk(slug), $"MAPS_SERVER_KEY={serverKey}\n", "the maps job stamped the saved key");
+            StringAssert.Contains(Api.ComposeOnDisk(slug), $"Maps__BrowserKey: \"{browserKey}\"");
+            Assert.IsTrue((await api.TenantAsync(slug)).GoogleMapsAvailable);
+
+            using (var raw = await api.RawAsync(HttpMethod.Get, "/api/control/maps"))
+            {
+                var body = await raw.Content.ReadAsStringAsync();
+                Assert.DoesNotContain(serverKey, body, "a saved key is never shown again");
+                Assert.DoesNotContain(browserKey, body);
+            }
+
+            var kept = await api.SaveMapsAsync(new SaveMapsSettingsRequest(AndroidKey: "AIzaFunctionalAndroid"));
+            Assert.IsTrue(kept.AppKeysChanged);
+            Assert.DoesNotContain(slug, kept.Restamping, "a phone key reaches the next build, not the stack");
+            Assert.AreEqual("a1b2", (await api.MapsAsync()).ServerKey.Hint, "left out, the server key stays");
+        }
+        finally
+        {
+            // The plane is shared: the next scenario finds the tab as it was
+            await api.SaveMapsAsync(new SaveMapsSettingsRequest(ClearServerKey: true, ClearBrowserKey: true, ClearAndroidKey: true, WebTiles: false));
+        }
+        await api.SettledAsync(slug);
+        StringAssert.Contains(Api.EnvOnDisk(slug), "MAPS_SERVER_KEY=\n", "cleared on the tab, gone from the stack");
+    }
+
+    [TestMethod]
     public async Task Every_platform_endpoint_is_behind_the_door()
     {
         using var nobody = Api.AsPlatformAdmin().Anonymous();
-        foreach (var path in new[] { "/api/control/platform", "/api/control/platform/capacity", "/api/control/platform/plans", "/api/control/platform/jobs", "/api/control/platform/updates", "/api/control/platform/mail", "/api/control/platform/backups", "/api/control/audit", "/api/control/tenants" })
+        foreach (var path in new[] { "/api/control/platform", "/api/control/platform/capacity", "/api/control/platform/plans", "/api/control/platform/jobs", "/api/control/platform/updates", "/api/control/platform/mail", "/api/control/platform/backups", "/api/control/audit", "/api/control/tenants", "/api/control/ai", "/api/control/maps" })
         {
             using var response = await nobody.GetAsync(path);
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode, path);

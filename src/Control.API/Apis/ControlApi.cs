@@ -49,6 +49,7 @@ public static partial class ControlApi
         MapOperatorsApi(api);
         MapTalabatSettingsApi(api);
         MapAiApi(api);
+        MapMapsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
@@ -219,7 +220,7 @@ public static partial class ControlApi
         if (request.Provision ?? true)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "provision"), ct);
 
-        return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], [], options.Value));
+        return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], [], options.Value, maps: await MapsStore.LoadAsync(context, ct)));
     }
 
     public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, UpdateCache updates, IOptions<PlatformOptions> options, string slug, CancellationToken ct)
@@ -228,7 +229,7 @@ public static partial class ControlApi
         if (tenant is null) return TypedResults.NotFound();
         var lastRun = await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id).OrderByDescending(s => s.Id).Select(s => s.RunId).FirstOrDefaultAsync(ct);
         var steps = lastRun == Guid.Empty ? [] : await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id && s.RunId == lastRun).OrderBy(s => s.Id).ToListAsync(ct);
-        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value, updates.For(slug), await OpenJobsAsync(context, tenant, ct)));
+        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value, updates.For(slug), await OpenJobsAsync(context, tenant, ct), await MapsStore.LoadAsync(context, ct)));
     }
 
     public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(
@@ -382,7 +383,7 @@ public static partial class ControlApi
         tenant.DestroyWarnedAt = null;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("demo.extended", slug, new { request.Days, tenant.ExpiresAt }, ct);
-        return TypedResults.Ok(TenantDetail.From(tenant, [], [], options.Value));
+        return TypedResults.Ok(TenantDetail.From(tenant, [], [], options.Value, maps: await MapsStore.LoadAsync(context, ct)));
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Destroy(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
@@ -590,12 +591,15 @@ public record TenantDetail(
     [property: Description("The business's own customer app (its iOS bundle ID and Android package); null when it has none")] string? AppId = null,
     [property: Description("The Apple team its own app is published under; null when not given")] string? AppleTeamId = null,
     [property: Description("The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…")] IReadOnlyList<string>? AndroidCertFingerprints = null,
-    [property: Description("Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to Platform__Maps__ReferrerDomains; until then that domain shows the free map")] string? MapsDomainToAdd = null,
+    [property: Description("Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to the referrer domains on the platform's Google Maps tab; until then that domain shows the free map")] string? MapsDomainToAdd = null,
     [property: Description("Whether the business uses Google Maps with the platform's keys; off, or with no keys on the platform, its apps keep the free map")] bool GoogleMaps = false,
-    [property: Description("Whether the platform has Google Maps keys at all; without them the business's switch does nothing")] bool GoogleMapsAvailable = false)
+    [property: Description("Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing")] bool GoogleMapsAvailable = false)
 {
-    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+    /// <param name="maps">The Google Maps tab's settings; none reads as no keys.</param>
+    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null, MapsSettings? maps = null)
+    {
+        maps ??= new MapsSettings();
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),
@@ -617,9 +621,10 @@ public record TenantDetail(
             t.AppId,
             t.AppleTeamId,
             AppLinks.Fingerprints(t.AndroidCertFingerprints),
-            p.Maps.PendingDomain(t),
+            maps.PendingDomain(t),
             t.GoogleMaps,
-            p.Maps.Search || p.Maps.Web || !string.IsNullOrWhiteSpace(p.Maps.AndroidKey) || !string.IsNullOrWhiteSpace(p.Maps.IosKey));
+            maps.Available);
+    }
 }
 
 /// <summary>Where the business stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

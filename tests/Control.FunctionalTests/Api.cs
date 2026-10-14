@@ -86,6 +86,8 @@ public sealed class Api
     public Task<List<TenantSummary>> ListAsync() => GetAsync<List<TenantSummary>>("/api/control/tenants");
     public Task<ImpersonationLink> ImpersonateAsync(string slug) => PostAsync<ImpersonationLink>($"/api/control/tenants/{slug}/impersonate", new { }, HttpStatusCode.OK);
     public Task<MailStatusResponse> MailAsync() => GetAsync<MailStatusResponse>("/api/control/platform/mail");
+    public Task<MapsSettingsDto> MapsAsync() => GetAsync<MapsSettingsDto>("/api/control/maps");
+    public Task<SaveMapsSettingsResult> SaveMapsAsync(SaveMapsSettingsRequest request) => PutAsync<SaveMapsSettingsResult>("/api/control/maps", request);
     public Task<List<ServiceHealth>> HealthAsync(string slug) => GetAsync<List<ServiceHealth>>($"/api/control/tenants/{slug}/health");
     public Task<BrandDto> BrandAsync(string slug) => GetAsync<BrandDto>($"/api/control/tenants/{slug}/brand");
     public Task<BrandDto> SetBrandAsync(string slug, UpdateBrandRequest brand) => PutAsync<BrandDto>($"/api/control/tenants/{slug}/brand", brand);

@@ -50,13 +50,14 @@ import { AiSettings } from './ai-settings'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
+import { MapsSettings } from './maps-settings'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
 import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team' | 'ai'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team' | 'ai' | 'maps'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -216,7 +217,7 @@ export function PlatformPage() {
           navigate({ search: { tab: v as Tab }, replace: true })
         }
       >
-        {/* Seven tabs are wider than a phone: the list scrolls sideways in
+        {/* Eight tabs are wider than a phone: the list scrolls sideways in
             its own box rather than pushing the page past the screen, as the
             tenant page's tabs do */}
         <div className='max-w-full overflow-x-auto'>
@@ -228,6 +229,7 @@ export function PlatformPage() {
             <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
             <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
             <TabsTrigger value='ai'>{t('tabAi')}</TabsTrigger>
+            <TabsTrigger value='maps'>{t('tabMaps')}</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value='tenants'>
@@ -265,6 +267,9 @@ export function PlatformPage() {
         </TabsContent>
         <TabsContent value='ai'>
           <AiSettings />
+        </TabsContent>
+        <TabsContent value='maps'>
+          <MapsSettings />
         </TabsContent>
       </Tabs>
     </div>

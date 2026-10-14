@@ -210,7 +210,10 @@ var tenantApi = builder.AddProject<Projects.Tenant_API>("tenant-api")
     // The dev realm carries Google and Apple itself (no hub): the browser is sent to them by their own names
     .WithEnvironment("Tenant__SocialSignIn", builder.Configuration["Tenant:SocialSignIn"] ?? "google=google,apple=apple")
     // Google Maps in dev, from the AppHost's user secrets (Maps:ServerKey, and Maps:BrowserKey to try the
-    // web's Google map on localhost); none set leaves the free map and a typed address, as on a fresh stamp
+    // web's Google map on localhost); none set leaves the free map and a typed address, as on a fresh stamp.
+    // This stack is the AppHost's own, not one the control plane stamps, so it takes the keys straight from
+    // here; on a platform they are entered on the control panel's Google Maps tab, which stamps them into each
+    // business that has Google Maps on (the dev control plane dry-runs and starts with that tab empty)
     .WithEnvironment("Maps__ServerKey", builder.Configuration["Maps:ServerKey"] ?? "")
     .WithEnvironment("Maps__BrowserKey", builder.Configuration["Maps:BrowserKey"] ?? "")
     .WithEnvironment("Maps__WebDomains", builder.Configuration["Maps:WebDomains"] ?? "localhost");

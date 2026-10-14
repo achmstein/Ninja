@@ -133,6 +133,34 @@ public sealed class ProvisionerTests
 
     private static readonly string[] ModuleServices = ["inventory", "finance", "payroll", "loyalty", "accounts"];
 
+    [TestMethod]
+    public async Task A_maps_job_stamps_the_keys_saved_on_the_maps_tab()
+    {
+        await OnPlanAsync(TenantPlan.Pro);
+        _tenant.GoogleMaps = true;
+        _context.MapsSettings.Add(new MapsSettings { ServerKey = "server-key", BrowserKey = "browser-key", WebTiles = true, AndroidKey = "android-key" });
+        await _context.SaveChangesAsync();
+
+        await _provisioner.MapsAsync(_tenant.Id, CancellationToken.None);
+
+        Assert.IsNull(_tenant.LastError, string.Join(", ", Steps()));
+        StringAssert.Contains(File.ReadAllText(Path.Combine(_root, "blue", ".env")), "MAPS_SERVER_KEY=server-key\n");
+        var compose = ComposeOnDisk();
+        StringAssert.Contains(compose, "Maps__ServerKey: \"${MAPS_SERVER_KEY}\"");
+        StringAssert.Contains(compose, "Maps__BrowserKey: \"browser-key\"");
+        Assert.DoesNotContain("android-key", compose, "the app keys go to the app's build, not the stack");
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("up -d", StringComparison.Ordinal)), "a running stack is brought up on the new files");
+
+        // The keys taken off the tab: the next stamp leaves them out
+        var saved = await _context.MapsSettings.SingleAsync();
+        saved.ServerKey = null;
+        saved.WebTiles = false;
+        await _context.SaveChangesAsync();
+        await _provisioner.MapsAsync(_tenant.Id, CancellationToken.None);
+        StringAssert.Contains(File.ReadAllText(Path.Combine(_root, "blue", ".env")), "MAPS_SERVER_KEY=\n");
+        Assert.DoesNotContain("Maps__", ComposeOnDisk());
+    }
+
     private static void AssertShape(string yaml, params string[] present)
     {
         foreach (var service in ModuleServices)

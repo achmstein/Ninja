@@ -36,7 +36,7 @@ wanted, and then they never ask.
 | `AUTH_URL` | Keycloak's public host, `https://auth.{domain}` |
 | `REALM` | The tenant's realm, `{slug}` on the platform |
 | `GOOGLE_SERVER_CLIENT_ID` | client_app only: the Web Client ID the realm's Google identity provider uses; leave out for no Google sign-in |
-| `GOOGLE_MAPS_ANDROID_KEY`, `GOOGLE_MAPS_IOS_KEY` | client_app only: the platform's Maps SDK keys, in the record only when the business has Google Maps on (the control plane's switch). Android's goes into the manifest at build time (`android/app/build.gradle.kts` reads it from the defines), iOS's is handed to the SDK at the first map (`ios/Runner/AppDelegate.swift`). Each business's app id (and Android signing SHA-1) must be on the key's restrictions in Google Cloud. Left out, the free OpenFreeMap map |
+| `GOOGLE_MAPS_ANDROID_KEY`, `GOOGLE_MAPS_IOS_KEY` | client_app only: the platform's Maps SDK keys, as saved on the control panel's Platform page, Google Maps tab, in the record only when the business has Google Maps on (the switch on its record) and the tab has the key. The record is read at build time, so a key changed on the tab reaches the phones only with their next build. Android's goes into the manifest at build time (`android/app/build.gradle.kts` reads it from the defines), iOS's is handed to the SDK at the first map (`ios/Runner/AppDelegate.swift`). Each business's app id (and Android signing SHA-1) must be on the key's restrictions in Google Cloud. Left out, the free OpenFreeMap map |
 | `APPLE_ISSUER` | client_app only: `apple-app` for a business's own app (its id, `net.ninjapp.<business>`, set as "Own customer app" on the control plane's record, which gives its realm the `apple-app` provider for it); left out, `apple`, the shared build's |
 | `REDIRECT_SCHEME` | client_app, own app only: its id, where a browser sign-in comes back to; the realm's `mobile-app` client takes `{id}://callback` once the id is on the record. Left out, `com.chillax.client`, what the folders declare |
 | `APP_ID`, `APP_NAME`, `CUSTOMER_HOST`, `APPLE_TEAM_ID` | client_app, own app only: what `tool/stamp_tenant.dart` stamps into the native folders (the store id, the name under the icon, the App Links host, the team that signs it) |
@@ -47,6 +47,23 @@ grouped with another: Apple gives a person's name once per app, on their
 first sign-in, and grouped apps count as one. Its Play app is in its own Play
 account too: many near-identical apps in one account is what Play's spam
 policy takes down.
+
+## Google Maps
+
+Ninja's Google Maps keys are one set for every business, entered on the
+control panel's Platform page, Google Maps tab (kept encrypted in controldb,
+shown again only by their last four characters): the server key (Places API
+(New) only, restricted to the box's IP) for each stack's address search, the
+browser key (Maps JavaScript API only, restricted to `https://*.{domain}/*` and
+the businesses' own domains listed on the tab) for the web's Google map while
+"web tiles" is on, and the Android and iOS keys (Maps SDK only, restricted to
+the apps' packages and signing SHA-1s, and bundle IDs) for the records above.
+A business uses them only with Google Maps switched on on its record. Saving a
+server key, browser key, web tiles or referrer change re-stamps every business
+it reaches (a `maps` job each); the phone keys reach the apps at their next
+build. Locally the AppHost's own stack reads the user secrets `Maps:ServerKey`,
+`Maps:BrowserKey` and `Maps:WebDomains` instead, since the control plane does
+not stamp it.
 
 ## A business's own app
 

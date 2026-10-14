@@ -130,7 +130,7 @@ public static partial class ControlApi
         if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, ct) is { } refused)
             return TypedResults.Problem(detail: $"Saved on the record, but the business did not take it: {refused}", statusCode: StatusCodes.Status502BadGateway);
 
-        return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
+        return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value, maps: await MapsStore.LoadAsync(context, ct)));
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public static partial class ControlApi
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
-        return TypedResults.File(AppConfig(tenant, options.Value), "application/json", $"{slug}.json");
+        return TypedResults.File(AppConfig(tenant, options.Value, await MapsStore.LoadAsync(context, ct)), "application/json", $"{slug}.json");
     }
 
     public static async Task<Results<JsonHttpResult<System.Text.Json.Nodes.JsonArray>, NotFound>> GetAssetLinks(
@@ -178,7 +178,7 @@ public static partial class ControlApi
             .FirstOrDefaultAsync(ct);
     }
 
-    internal static byte[] AppConfig(Tenant tenant, PlatformOptions platform)
+    internal static byte[] AppConfig(Tenant tenant, PlatformOptions platform, MapsSettings? maps = null)
     {
         var config = new System.Text.Json.Nodes.JsonObject
         {
@@ -188,10 +188,11 @@ public static partial class ControlApi
         };
         // Only when the realm has the provider: a build told of one it lacks fails every Google sign-in
         if (platform.Social.Google.Configured) config["GOOGLE_SERVER_CLIENT_ID"] = platform.Social.Google.ClientId;
-        // Google's map in the app when the business has Google Maps on, through the native SDK (no charge per load): the build puts each key where its
-        // platform reads it (android/app/build.gradle.kts, ios/Runner/AppDelegate.swift); left out, the free map
-        if (platform.Maps.AppKeyFor(tenant, platform.Maps.AndroidKey) is { } android) config["GOOGLE_MAPS_ANDROID_KEY"] = android;
-        if (platform.Maps.AppKeyFor(tenant, platform.Maps.IosKey) is { } ios) config["GOOGLE_MAPS_IOS_KEY"] = ios;
+        // Google's map in the app when the business has Google Maps on and the Google Maps tab has the key, through the native SDK (no charge per load):
+        // the build puts each key where its platform reads it (android/app/build.gradle.kts, ios/Runner/AppDelegate.swift); left out, the free map.
+        // Read at build time, so a key changed on the tab reaches the phones with their next build
+        if (maps?.AppKeyFor(tenant, maps.AndroidKey) is { } android) config["GOOGLE_MAPS_ANDROID_KEY"] = android;
+        if (maps?.AppKeyFor(tenant, maps.IosKey) is { } ios) config["GOOGLE_MAPS_IOS_KEY"] = ios;
         // The business's own app: Apple's tokens through its own provider, sign-ins back to its own scheme
         // (the realm's customer app client takes it), and what the build stamps into the native folders
         // (src/client_app/tool/stamp_tenant.dart). Left out, the shared build's
@@ -228,7 +229,7 @@ public static partial class ControlApi
         await audit.WriteAsync("tenant.converted", slug, new { plan = request?.Plan, tenant.PaidThrough }, ct);
         await subscriptions.ApplyAsync(tenant, request?.Plan ?? (tenant.Plan == TenantPlan.Free ? TenantPlan.Starter : tenant.Plan), request?.Addons ?? tenant.Addons, null, ct);
 
-        return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
+        return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value, maps: await MapsStore.LoadAsync(context, ct)));
     }
 
     public static async Task<Ok<List<AuditEntry>>> ListAudit(

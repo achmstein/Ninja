@@ -133,17 +133,6 @@ services:
       Platform__Social__Google__ClientSecret: ${SOCIAL_GOOGLE_CLIENT_SECRET:-}
       Platform__Social__Apple__ClientId: ${SOCIAL_APPLE_CLIENT_ID:-}
       Platform__Social__Apple__ClientSecret: ${SOCIAL_APPLE_CLIENT_SECRET:-}
-      # Google Maps, one set of keys for every business; empty leaves the free maps and a typed address.
-      # The server key (Places only, restricted to this box's IP) goes to each stack's Tenant.API for address search;
-      # the browser key (Maps JavaScript only, referrers *.${PLATFORM_DOMAIN}/* and each own domain listed below)
-      # draws the web map only while MAPS_WEB_TILES is true; the app keys go into the customer app's build record
-      Platform__Maps__ServerKey: ${MAPS_SERVER_KEY:-}
-      Platform__Maps__BrowserKey: ${MAPS_BROWSER_KEY:-}
-      Platform__Maps__WebTiles: ${MAPS_WEB_TILES:-false}
-      Platform__Maps__AndroidKey: ${MAPS_ANDROID_KEY:-}
-      Platform__Maps__IosKey: ${MAPS_IOS_KEY:-}
-      # The businesses' own domains already on the browser key's referrers, a comma list; the tenant page names any to add
-      Platform__Maps__ReferrerDomains: ${MAPS_REFERRER_DOMAINS:-}
       # The Firebase service account on the host, mounted read-only into every stack's notification service
       Platform__FirebaseCredentialsPath: ${FIREBASE_CREDENTIALS_PATH:-}
       # Ninja's Talabat (Delivery Hero POS) integration, one account for every café; empty leaves it off
