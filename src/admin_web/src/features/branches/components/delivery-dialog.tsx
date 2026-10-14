@@ -24,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Field, FieldGrid } from '@/components/field'
+import { StatusChip } from '@/components/status-chip'
 import {
   parseDeliverySettings,
   stopsDelivering,
@@ -157,13 +158,24 @@ function DeliveryForm({
   return (
     <>
       <div className='space-y-4 py-2'>
+        {/* A drawn area decides where the branch delivers: the distance is greyed out and says
+            so where it is read, not behind the hint, and comes back when the area is removed */}
         <Field
           label={t('deliveryRadiusKm')}
           htmlFor='delivery-radius'
-          hint={area ? t('deliveryRadiusUnusedHint') : t('deliveryRadiusHint')}
+          hint={area ? undefined : t('deliveryRadiusHint')}
+          end={
+            area ? (
+              <StatusChip tone='muted' dot={false}>
+                {t('deliveryRadiusNotUsed')}
+              </StatusChip>
+            ) : undefined
+          }
           error={
             errors.radius ? (
-              <span id='delivery-radius-error'>{t('deliveryRadiusInvalid')}</span>
+              <span id='delivery-radius-error'>
+                {t('deliveryRadiusInvalid')}
+              </span>
             ) : undefined
           }
         >
@@ -175,13 +187,29 @@ function DeliveryForm({
             max={100}
             step='0.5'
             value={radius}
+            // Still open when it holds something unreadable, so it can be put right
+            disabled={area != null && !errors.radius}
             aria-invalid={errors.radius || undefined}
-            aria-describedby={errors.radius ? 'delivery-radius-error' : undefined}
+            aria-describedby={
+              errors.radius
+                ? 'delivery-radius-error'
+                : area
+                  ? 'delivery-radius-unused'
+                  : undefined
+            }
             onChange={(e) => {
               setRadius(e.target.value)
               setConfirming(false)
             }}
           />
+          {area && (
+            <p
+              id='delivery-radius-unused'
+              className='text-muted-foreground text-xs'
+            >
+              {t('deliveryRadiusUnusedHint')}
+            </p>
+          )}
         </Field>
         <div className='space-y-2'>
           <div className='flex items-center justify-between gap-2'>
@@ -254,7 +282,9 @@ function DeliveryForm({
             htmlFor='delivery-fee'
             error={
               errors.fee ? (
-                <span id='delivery-fee-error'>{t('deliveryAmountInvalid')}</span>
+                <span id='delivery-fee-error'>
+                  {t('deliveryAmountInvalid')}
+                </span>
               ) : undefined
             }
           >

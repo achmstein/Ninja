@@ -1560,7 +1560,8 @@ const webExtras = {
   deliveryCashCollectedLabel: { en: "Cash handed in", ar: "الكاش المسلّم" },
   deliveryRadiusHint: { en: "Straight-line distance from the branch's location on the map.", ar: "المسافة المباشرة من موقع الفرع على الخريطة." },
   // The delivery area drawn on the map instead of the circle: it wins over the distance where it is drawn
-  deliveryRadiusUnusedHint: { en: "An area is drawn on the map, so the area decides where it delivers; the distance stays for reference.", ar: "فيه منطقة مرسومة على الخريطة، فهي اللي بتحدد بيوصّل فين؛ والمسافة بتفضل للمقارنة بس." },
+  deliveryRadiusNotUsed: { en: "Not used while an area is drawn", ar: "مش مستخدمة طول ما فيه منطقة مرسومة" },
+  deliveryRadiusUnusedHint:{ en: "An area is drawn on the map, so the area decides where it delivers; the distance stays for reference.", ar: "فيه منطقة مرسومة على الخريطة، فهي اللي بتحدد بيوصّل فين؛ والمسافة بتفضل للمقارنة بس." },
   deliveryAreaTitle: { en: "Area on the map", ar: "المنطقة على الخريطة" },
   deliveryAreaShort: { en: "Area on the map", ar: "منطقة على الخريطة" },
   deliveryAreaNone: { en: "None drawn: it delivers within the distance.", ar: "مفيش منطقة مرسومة: بيوصّل في حدود المسافة." },
