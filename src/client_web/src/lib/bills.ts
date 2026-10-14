@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useAuth } from 'react-oidc-context'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { getMyBillsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { type StayViewModel } from '@/api/spaces'
 import { API_VERSION } from './api-client'
+import { useGuestStore } from '@/stores/guest-store'
 import { useSelectedBranch } from './branch'
 import { businessDayStart } from './business-day'
 import { serverNow } from './clock'
@@ -30,6 +32,8 @@ export function closedAt(bill: BillView): Date | null {
  * guest reads the same list.
  */
 export function useMyBills() {
+  const auth = useAuth()
+  const guestId = useGuestStore((s) => s.guestId)
   const branch = useSelectedBranch()
   // Today = the branch's current business day
   const dayStart = businessDayStart(branch)
@@ -38,6 +42,10 @@ export function useMyBills() {
     ...getMyBillsOptions({
       query: { 'api-version': API_VERSION, since: since.toISOString() },
     }),
+    // Only someone the till could know: signed in, or a guest who has ordered (the id is
+    // made at the first guest checkout). Someone only browsing has no bills, and asking
+    // anyway was a 401, retried, in their console
+    enabled: auth.isAuthenticated || guestId != null,
     // A friend's round landing on the same bill sends this browser no
     // event, so an open bill is re-read now and then as well
     refetchInterval: (query) =>
