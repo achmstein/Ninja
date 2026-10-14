@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTable } from '@tanstack/react-table'
 import { getRealmRoles } from '@/config/oidc-config'
-import { Store, UserPlus } from 'lucide-react'
+import { Pencil, Store, UserPlus } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -27,6 +27,7 @@ import {
   getCustomerDisplayName,
 } from '@/features/customers/types'
 import { AddStaffDialog } from './components/add-staff-dialog'
+import { EditStaffDialog } from './components/edit-staff-dialog'
 import { ManageBranchesDialog } from './components/manage-branches-dialog'
 
 const columnHelper = createAppColumnHelper<Customer>()
@@ -43,6 +44,7 @@ export function StaffManagement() {
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [branchesUser, setBranchesUser] = useState<Customer | null>(null)
+  const [editUser, setEditUser] = useState<Customer | null>(null)
 
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
@@ -108,10 +110,17 @@ export function StaffManagement() {
     />
   )
 
-  // Owners hold every branch implicitly; Admins and Cashiers are assigned theirs
+  // Owners hold every branch implicitly; Admins and Cashiers are assigned theirs.
+  // Anyone's own details, an owner's too, are the owner's to change
   const actionsOf = (user: (typeof staff)[number]) => (
     <RowActions
       actions={[
+        {
+          label: t('edit'),
+          icon: Pencil,
+          hidden: !isOwner,
+          onSelect: () => setEditUser(user),
+        },
         {
           label: t('assignedBranches'),
           icon: Store,
@@ -223,6 +232,13 @@ export function StaffManagement() {
       </Main>
 
       <AddStaffDialog open={addOpen} onOpenChange={setAddOpen} />
+
+      <EditStaffDialog
+        user={editUser}
+        onOpenChange={(open) => {
+          if (!open) setEditUser(null)
+        }}
+      />
 
       <ManageBranchesDialog
         user={branchesUser}

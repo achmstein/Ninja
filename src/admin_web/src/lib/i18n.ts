@@ -466,7 +466,13 @@ const webExtras = {
   riderCreatedSuccess: { en: "Rider account created", ar: "تم إنشاء حساب المندوب" },
   initialBranches: { en: "Branches", ar: "الفروع" },
   staffAllBranches: { en: "All branches", ar: "كل الفروع" },
-  staffAllBranchesHint: { en: "For the call centre: takes phone orders for every branch, including ones opened later", ar: "للكول سنتر: ياخد طلبات التليفون لكل الفروع، حتى اللي هتفتح بعدين" },
+  editStaffAccount: { en: "Edit account", ar: "تعديل الحساب" },
+  firstName: { en: "First name", ar: "الاسم الأول" },
+  lastName: { en: "Last name", ar: "اسم العيلة" },
+  staffPasswordUnchanged: { en: "Leave empty to keep the current password", ar: "سيبه فاضي عشان الباسورد يفضل زي ما هو" },
+  staffEmailTaken: { en: "There's already an account with this email", ar: "فيه حساب بالإيميل ده بالفعل" },
+  staffPasswordRejected: { en: "The password doesn't meet the sign-in rules: try a longer one with letters and numbers", ar: "الباسورد مش مطابق لشروط الدخول: جرّب واحد أطول فيه حروف وأرقام" },
+  staffAllBranchesHint:{ en: "For the call centre: takes phone orders for every branch, including ones opened later", ar: "للكول سنتر: ياخد طلبات التليفون لكل الفروع، حتى اللي هتفتح بعدين" },
   // Orders board (KDS-style aging)
   delayed: { en: "Delayed", ar: "متأخر" },
   // Override the generated single-form ARB strings with humanized plurals

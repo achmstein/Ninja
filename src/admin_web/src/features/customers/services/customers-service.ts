@@ -59,6 +59,21 @@ export const customersService = {
     await apiClient.put(`/api/identity/users/${userId}/profile`, { name })
   },
 
+  // A staff account's name and phone (Admin); a null phone leaves it as it is
+  async updateProfile(
+    userId: string,
+    profile: { firstName: string; lastName: string; phoneNumber: string | null }
+  ): Promise<void> {
+    await apiClient.put(`/api/identity/users/${userId}/profile`, profile)
+  },
+
+  // A new password for a staff account that forgot its own (Admin)
+  async setPassword(userId: string, newPassword: string): Promise<void> {
+    await apiClient.put(`/api/identity/users/${userId}/password`, {
+      newPassword,
+    })
+  },
+
   // Replace the branches a staff account may work in (Owner). The change
   // reaches the user's token on its next refresh. allBranches gives every
   // branch, those opened later too (a call centre's account).

@@ -28,6 +28,7 @@ import {
   customersService,
   type StaffRole,
 } from '@/features/customers/services/customers-service'
+import { staffError } from '../staff-errors'
 
 interface AddStaffDialogProps {
   open: boolean
@@ -117,7 +118,17 @@ export function AddStaffDialog({
       reset()
       onOpenChange(false)
     },
-    onError: () => toast.error(t('failedToCreateAdmin')),
+    // The server's reason when it gives one: a taken email or a refused password is the owner's to fix
+    onError: (error) => {
+      const why = staffError(error)
+      toast.error(
+        why === null
+          ? t('failedToCreateAdmin')
+          : 'key' in why
+            ? t(why.key)
+            : `${t('failedToCreateAdmin')}: ${why.text}`
+      )
+    },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
