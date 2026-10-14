@@ -5,7 +5,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import '../../catalog/models/catalog_item.dart';
-import '../category_colour.dart';
 
 /// A menu item's picture, or the same default the customer app shows when
 /// it has none or the file fails to load: the utensils mark on a muted box.
@@ -93,7 +92,7 @@ class ItemTile extends StatelessWidget {
 }
 
 /// The compact pad's tile, for a long menu: the name (two lines at most) and
-/// the price, no picture, and the category's colour down the start edge.
+/// the price, no picture, plain as the rest of the till.
 /// Sold-out items stay in place, dimmed and untappable, as on the photo pad.
 /// A Latin name in an Arabic till is laid out in its own direction and
 /// pinned to the line's start, so it reads and truncates as written.
@@ -128,8 +127,6 @@ class CompactItemTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The start edge: the right one in an Arabic till
-            ColoredBox(color: categoryColour(item.catalogTypeId), child: const SizedBox(width: 4)),
             Expanded(
               child: Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 8, 6),

@@ -850,16 +850,13 @@ const TILL_ITEM_CHOICES: {
     value: 'compact',
     label: 'tillItemsCompact',
     hint: 'tillItemsCompactHint',
-    // Twice as many to a row, a category's colour down the start edge, no picture
+    // Twice as many to a row, a name and a price, no picture
     sketch: (
       <div className='grid grid-cols-6 gap-1'>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
           <div
             key={i}
-            className={cn(
-              'bg-card flex h-5 flex-col justify-center gap-0.5 rounded-sm border border-s-2 ps-0.5',
-              i % 6 < 3 ? 'border-s-amber-500' : 'border-s-sky-500'
-            )}
+            className='bg-card flex h-5 flex-col justify-center gap-0.5 rounded-sm border ps-0.5'
           >
             <div className='bg-muted-foreground/40 h-0.5 w-3/4 rounded-full' />
             <div className='bg-muted-foreground/25 h-0.5 w-1/3 rounded-full' />

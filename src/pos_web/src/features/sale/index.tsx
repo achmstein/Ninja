@@ -62,7 +62,6 @@ import {
 import { CustomerDialog } from './customer-dialog'
 import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { cn } from '@/lib/utils'
-import { categoryColour } from './category-colour'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
 import { ItemImage } from './item-image'
@@ -112,7 +111,7 @@ function ItemTile({
 
 /**
  * The compact sale pad's tile, for a long menu: the name (two lines at most)
- * and the price, no picture, and the category's colour down the start edge.
+ * and the price, no picture, plain as the rest of the till.
  * The line keeps the till's direction; the name is isolated in it, so a
  * Latin name in an Arabic till starts where an Arabic one would.
  */
@@ -125,21 +124,65 @@ function CompactItemTile({
 }) {
   const localized = useLocalized()
   const money = useMoney()
-  const colour = categoryColour(item.catalogTypeId)
 
   return (
     <button
       type='button'
       disabled={item.isAvailable === false}
       onClick={() => onTap(item)}
-      style={colour ? { borderInlineStartColor: colour } : undefined}
-      className='bg-card text-card-foreground flex min-h-16 flex-col justify-between gap-1 overflow-hidden rounded-lg border border-s-4 px-2.5 py-2 text-start shadow-xs transition-colors active:scale-[0.98] disabled:opacity-40'
+      className='bg-card text-card-foreground flex min-h-16 flex-col justify-between gap-1 overflow-hidden rounded-lg border px-2.5 py-2 text-start shadow-xs transition-colors active:scale-[0.98] disabled:opacity-40'
     >
       <span className='line-clamp-2 text-sm leading-snug font-medium'>
         <bdi>{localized(item.name)}</bdi>
       </span>
       <span className='text-muted-foreground text-sm tabular-nums'>
         {money(item.effectivePrice ?? item.price)}
+      </span>
+    </button>
+  )
+}
+
+/**
+ * One category in the compact till's side list: its name (two lines at most,
+ * a Latin one isolated so it starts where the line does) and how many items
+ * it holds, the one open filled in.
+ */
+function RailCategory({
+  label,
+  count,
+  active,
+  icon,
+  onClick,
+}: {
+  label: string
+  count: number
+  active: boolean
+  icon?: ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      type='button'
+      aria-current={active ? 'true' : undefined}
+      onClick={onClick}
+      className={cn(
+        'flex min-h-12 w-full items-center gap-2 rounded-md px-3 py-2 text-start text-sm font-medium transition-colors',
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'hover:bg-accent text-foreground',
+      )}
+    >
+      {icon}
+      <span className='line-clamp-2 min-w-0 flex-1'>
+        <bdi>{label}</bdi>
+      </span>
+      <span
+        className={cn(
+          'shrink-0 text-xs tabular-nums',
+          active ? 'text-primary-foreground/80' : 'text-muted-foreground',
+        )}
+      >
+        {count}
       </span>
     </button>
   )
@@ -462,7 +505,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       : activeCategory === USUALS_CATEGORY && !hasUsuals
         ? firstCategoryId
         : activeCategory
-  const needle = searchOpen ? searchTerm.trim().toLowerCase() : ''
+  // A long menu on a tablet (compact) lists its categories down the side
+  // instead of rows of chips over the items, with the search always in view
+  const rail = compact && !isMobile
+  const needle = searchOpen || rail ? searchTerm.trim().toLowerCase() : ''
+  const countIn = new Map<number, number>()
+  for (const item of items) {
+    const id = toNumber(item.catalogTypeId)
+    countIn.set(id, (countIn.get(id) ?? 0) + 1)
+  }
+  const pickCategory = (id: number) => {
+    setActiveCategory(id)
+    // Picking a category leaves the search: the rail's list is the way in now
+    if (rail) setSearchTerm('')
+  }
   const visibleItems = needle
     ? items.filter(
         (item) =>
@@ -979,11 +1035,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
               </Link>
             )}
           </Button>
-          {searchOpen ? (
+          {searchOpen || rail ? (
             <div className='relative min-w-0 flex-1'>
               <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
               <Input
-                autoFocus
+                autoFocus={!rail}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={t('searchItems')}
@@ -1042,7 +1098,36 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           </Button>
         </div>
 
-        <div className='flex-1 overflow-y-auto p-3'>
+        <div className='flex min-h-0 flex-1'>
+          {rail && (
+            <nav
+              aria-label={t('categories')}
+              className='flex w-52 shrink-0 flex-col gap-1 overflow-y-auto border-e p-2'
+            >
+              {hasUsuals && (
+                <RailCategory
+                  active={!needle && activeCategoryId === USUALS_CATEGORY}
+                  onClick={() => pickCategory(USUALS_CATEGORY)}
+                  label={t('usuals')}
+                  count={usualItems.length}
+                  icon={<Sparkles className='size-4 shrink-0' />}
+                />
+              )}
+              {sortedCategories.map((category) => {
+                const id = toNumber(category.id)
+                return (
+                  <RailCategory
+                    key={id}
+                    active={!needle && id === activeCategoryId}
+                    onClick={() => pickCategory(id)}
+                    label={localized(category.name)}
+                    count={countIn.get(id) ?? 0}
+                  />
+                )
+              })}
+            </nav>
+          )}
+          <div className='min-w-0 flex-1 overflow-y-auto p-3'>
           {itemsLoading ? (
             itemGrid(
               Array.from({ length: compact ? 24 : 8 }).map((_, i) =>
@@ -1050,7 +1135,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                   /* Name and price lines, no picture — the compact tile's shape */
                   <div
                     key={i}
-                    className='flex min-h-16 flex-col justify-between gap-1.5 rounded-lg border border-s-4 px-2.5 py-2 shadow-xs'
+                    className='flex min-h-16 flex-col justify-between gap-1.5 rounded-lg border px-2.5 py-2 shadow-xs'
                   >
                     <Skeleton className='h-4 w-full' />
                     <Skeleton className='h-3 w-1/2' />
@@ -1081,6 +1166,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
               )),
             )
           )}
+          </div>
         </div>
 
         {/* The phone's way to the order: always on screen under the menu,

@@ -472,6 +472,7 @@ const dictionary = {
   outOfStock: { en: "Out of stock", ar: "نفد من المخزون" },
   available: { en: "Available", ar: "متاح" },
   searchItems: { en: "Search items", ar: "ابحث عن الأصناف" },
+  categories: { en: "Categories", ar: "الأقسام" },
   noItemsMatch: { en: "No items match", ar: "لا توجد أصناف بهذا الاسم" },
   failedToUpdateAvailability: { en: "Failed to update availability", ar: "تعذّر تحديث التوفر" },
 

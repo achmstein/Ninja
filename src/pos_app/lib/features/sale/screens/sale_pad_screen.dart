@@ -22,7 +22,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../call_centre/call_centre_mode.dart';
-import '../category_colour.dart';
+import '../compact_columns.dart';
 import '../../catalog/services/catalog_service.dart';
 import '../../deliveries/delivery_errors.dart';
 import '../../deliveries/providers/deliveries_provider.dart';
