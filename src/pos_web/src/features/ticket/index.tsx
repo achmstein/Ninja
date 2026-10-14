@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTakenByText } from '@/features/branch/use-branch-name'
+import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { PendingOrders } from '@/features/orders/pending-orders'
 import {
@@ -607,7 +608,7 @@ export function TicketScreen({
               left-to-right and an inline start margin ends up on the outer
               edge, not between the two */}
           <h1 className='flex items-baseline gap-2 text-xl font-bold'>
-            <span className='truncate'>{title}</span>
+            <BillTitle title={title} className='truncate' />
             <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
               #{toNumber(ticket.id)}
             </span>

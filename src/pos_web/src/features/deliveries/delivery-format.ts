@@ -137,6 +137,17 @@ export function deliveryOrderOfLabel(label: string | null | undefined): number |
   return match ? Number(match[1]) : null
 }
 
+/**
+ * A delivery bill's label in its parts, "#42 · Mona" as 42 and "Mona" (the
+ * name empty when the order had none), so each is laid out on its own: a
+ * Latin name read as one run with "#42" puts the sign after the number in
+ * an Arabic till. Null for any other label.
+ */
+export function deliveryLabelParts(label: string | null | undefined): { number: number; name: string } | null {
+  const match = /^#(\d+)(?:\s·\s?(.*))?$/.exec(label?.trim() ?? '')
+  return match ? { number: Number(match[1]), name: (match[2] ?? '').trim() } : null
+}
+
 /** A bill's label as the till shows it, and whether it is a delivery's bill (drawn with the bike) */
 export function billLabel(label: string | null | undefined): { text: string; delivery: boolean } {
   const text = label?.trim() ?? ''

@@ -47,9 +47,8 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
             Each is isolated: a Latin name and "#81" would otherwise run together the wrong way in Arabic */}
         <span className='min-w-0 flex-1 truncate'>
           <bdi className='text-base font-semibold'>{order.customerName || t('guest')}</bdi>
-          <bdi dir='ltr' className='text-muted-foreground ms-2 text-sm tabular-nums'>
-            #{toNumber(order.orderNumber)}
-          </bdi>
+          {/* In the till's direction, not forced left-to-right: Arabic reads the sign before the number */}
+          <span className='text-muted-foreground ms-2 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
         </span>
         <span className='shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>

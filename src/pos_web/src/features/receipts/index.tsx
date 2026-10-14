@@ -17,6 +17,7 @@ import { getSettledTickets } from '@/api/sales/sdk.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -165,7 +166,7 @@ export function Receipts() {
                 </span>
                 <Icon className='text-muted-foreground size-5 shrink-0' />
                 <span className='min-w-0 flex-1'>
-                  <span className='block truncate text-base font-medium'>{title}</span>
+                  <BillTitle title={title} className='block truncate text-base font-medium' />
                   <span className='text-muted-foreground block truncate text-sm'>
                     {bill.settledAt &&
                       new Intl.DateTimeFormat(locale, {

@@ -4,6 +4,7 @@ import {
   cashDifference,
   outOfRangeKey,
   billLabel,
+  deliveryLabelParts,
   deliveryOrderOfLabel,
   directionsUrl,
   distanceParts,
@@ -88,6 +89,13 @@ describe('billLabel', () => {
   it('leaves any other bill as it is', () => {
     expect(billLabel('Ahmed Elhady')).toEqual({ text: 'Ahmed Elhady', delivery: false })
     expect(billLabel(null)).toEqual({ text: '', delivery: false })
+  })
+
+  it("splits a delivery's label into its number and name, and nothing else", () => {
+    expect(deliveryLabelParts('#81 · Ahmed Elhady')).toEqual({ number: 81, name: 'Ahmed Elhady' })
+    expect(deliveryLabelParts('#7')).toEqual({ number: 7, name: '' })
+    expect(deliveryLabelParts('Ahmed Elhady')).toBeNull()
+    expect(deliveryLabelParts(null)).toBeNull()
   })
 })
 

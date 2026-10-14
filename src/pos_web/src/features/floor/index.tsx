@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { BillTitle } from '@/features/deliveries/bill-title'
 import { DeliveriesSummary } from '@/features/deliveries/deliveries-summary'
 import { billLabel, deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
 import { useDeliveries } from '@/features/deliveries/use-deliveries'
@@ -117,12 +118,10 @@ function BillCard({
         <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
         {/* Two lines for a name, laid out in the name's own script so a long
             English name in an Arabic till is cut at its end, not its start */}
-        <span
-          dir='auto'
+        <BillTitle
+          title={title}
           className='line-clamp-2 min-w-0 flex-1 text-base font-semibold ltr:text-left rtl:text-right'
-        >
-          {title}
-        </span>
+        />
         {waiting && (
           <span
             className='mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-500'
