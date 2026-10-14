@@ -50,7 +50,7 @@ public sealed class PrintWorker(ConnectorConfig config, ILogger<PrintWorker> log
                         await queue.PrintedAsync(ticket.JobId, stoppingToken);
                         logger.LogInformation("Printed ticket {Job} for station {Station}", ticket.JobId, ticket.StationName.En);
                     }
-                    catch (Exception e) when (e is not OperationCanceledException)
+                    catch (Exception e) when (!stoppingToken.IsCancellationRequested)
                     {
                         logger.LogWarning(e, "Ticket {Job} did not print", ticket.JobId);
                         await queue.FailedAsync(ticket.JobId, e.Message, stoppingToken);
@@ -63,9 +63,12 @@ public sealed class PrintWorker(ConnectorConfig config, ILogger<PrintWorker> log
                 logger.LogError("{Message}", e.Message);
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
-            catch (Exception e) when (e is not OperationCanceledException)
+            catch (Exception e) when (!stoppingToken.IsCancellationRequested)
             {
-                // The business's Wi-Fi dropped, or the API is restarting: try again shortly
+                // The business's Wi-Fi dropped, or the API is restarting: try again shortly.
+                // A call that timed out is a cancellation too, and it must not stop
+                // the service: the till's own printing (LocalApi) runs in it
+                // exactly while the internet is down
                 logger.LogWarning("Queue unreachable: {Message}", e.Message);
             }
 

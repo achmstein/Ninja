@@ -1,0 +1,33 @@
+<Project Sdk="MSTest.Sdk">
+
+  <!--
+    The print connector's local API, the web till's way to this PC's
+    printers: who may call it, what it answers, and the ESC/POS it sends,
+    against a fake printer. Windows only (System.Drawing, winspool), so CI
+    runs it in a Windows job of its own (pr-validation.yml).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsPublishable>false</IsPublishable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Ninja.PrintConnector.Tests</RootNamespace>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- The connector ships self-contained; its tests run on the installed runtime -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Built framework-dependent here, or its bundled runtime lands beside the tests and the host looks for .NET there -->
+    <ProjectReference Include="..\..\src\Ninja.PrintConnector\Ninja.PrintConnector.csproj" AdditionalProperties="SelfContained=false;PublishSingleFile=false" />
+  </ItemGroup>
+
+</Project>

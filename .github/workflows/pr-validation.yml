@@ -27,6 +27,20 @@ jobs:
       - name: Test
         run: dotnet test --solution Ninja.Web.slnf --no-build --no-progress --output detailed
 
+  # The print connector is a Windows service (System.Drawing, the spooler), so
+  # it is not in the solution filter above; its tests run on Windows.
+  print-connector:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET (global.json)
+        uses: actions/setup-dotnet@v3
+      - name: Build
+        run: dotnet build tests/Ninja.PrintConnector.Tests/Ninja.PrintConnector.Tests.csproj
+      - name: Test
+        run: dotnet test tests/Ninja.PrintConnector.Tests/Ninja.PrintConnector.Tests.csproj --no-build --no-progress --output detailed
+
   # The control plane's adapters against real Postgres, RabbitMQ and Keycloak
   # in containers (Testcontainers), as they run in production: the hand-over
   # SQL, rabbitmqctl, the admin API, pg_dump and pg_restore. Its own job so the

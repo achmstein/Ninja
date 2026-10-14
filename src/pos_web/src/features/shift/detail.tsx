@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { printSheets } from '@/features/printing/print-sheets'
 import { ShiftReport } from './shift-report'
 import { ShiftReportSheet } from './shift-report-sheet'
 
@@ -67,7 +68,7 @@ export function ShiftDetail({ shiftId }: { shiftId: number }) {
         <Badge className='h-8 px-3 text-sm' variant='secondary'>
           {t(closed ? 'shiftClosedBadge' : 'shiftOpenBadge')}
         </Badge>
-        <Button className='h-12 gap-2 px-4' onClick={() => window.print()}>
+        <Button className='h-12 gap-2 px-4' onClick={() => void printSheets()}>
           <Printer className='size-5' />
           <span className='hidden sm:inline'>{t('print')}</span>
         </Button>

@@ -71,6 +71,7 @@ import { orderIdsOn } from '@/lib/stock-disposition'
 import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
 import { KitchenReprintButton } from './kitchen-reprint'
+import { printSheets } from '@/features/printing/print-sheets'
 import { BreakdownDialog } from './breakdown-dialog'
 import { onlineSummary } from './online-payments'
 import { OnlinePaymentsPanel } from './online-payments-panel'
@@ -996,7 +997,7 @@ export function TicketScreen({
                   <Button
                     size='lg'
                     className='h-14 px-6 text-lg max-sm:h-12 max-sm:flex-1 max-sm:px-3 max-sm:text-base'
-                    onClick={() => window.print()}
+                    onClick={() => void printSheets()}
                   >
                     <Printer className='size-5' />
                     {t('print')}

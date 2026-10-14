@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { Languages, LogOut, Moon, Settings, Sun } from 'lucide-react'
+import { Languages, LogOut, Moon, Printer, Settings, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
 import { OfflineChip } from '@/features/offline/offline-chip'
+import { PrintSettingsDialog } from '@/features/printing/print-settings-dialog'
 import { ShiftChip } from '@/features/shift/shift-chip'
 import { useCallCentre } from '@/hooks/use-call-centre'
 import { useLanguage, useT } from '@/lib/i18n'
@@ -29,6 +31,7 @@ export function PosHeader() {
   const { resolvedTheme, setTheme } = useTheme()
   // The call centre keeps no drawer: the branch's rider or counter takes the cash
   const callCentre = useCallCentre().on
+  const [printingOpen, setPrintingOpen] = useState(false)
 
   return (
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3 max-sm:px-2'>
@@ -72,6 +75,13 @@ export function PosHeader() {
                 {resolvedTheme === 'dark' ? t('themeDark') : t('themeLight')}
               </span>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              className='min-h-12 gap-2 p-3 text-base'
+              onSelect={() => setPrintingOpen(true)}
+            >
+              <Printer className='size-5' />
+              <span className='flex-1'>{t('printingSettings')}</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant='destructive'
@@ -83,6 +93,7 @@ export function PosHeader() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <PrintSettingsDialog open={printingOpen} onOpenChange={setPrintingOpen} />
       </div>
     </header>
   )

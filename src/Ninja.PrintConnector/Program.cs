@@ -13,6 +13,8 @@ if (args.Contains("--service"))
     builder.Services.AddWindowsService(o => o.ServiceName = ServiceName);
     builder.Services.AddSingleton(config);
     builder.Services.AddHostedService<PrintWorker>();
+    // The web till on this PC prints through it, with or without the internet
+    builder.Services.AddHostedService<LocalApiService>();
     builder.Logging.AddEventLog(o => o.SourceName = ServiceName);
     await builder.Build().RunAsync();
     return 0;
@@ -49,6 +51,28 @@ Console.WriteLine("Prints the kitchen's tickets on this PC's printers.");
 Console.WriteLine();
 
 var link = args.FirstOrDefault(a => a.Contains("/connect/", StringComparison.OrdinalIgnoreCase));
+
+// A new version run on a PC already paired: put it in place and keep the
+// pairing, unless someone asks to pair again (or passed a new link)
+if (link is null && ConnectorConfig.Load() is { } current && Sc($"query {ServiceName}") == 0)
+{
+    Console.WriteLine($"This PC is already paired with {current.Server} as connector {current.ConnectorId}.");
+    var answer = "";
+    if (!Console.IsInputRedirected)
+    {
+        Console.Write("Press Enter to update it, or type P to pair it again: ");
+        answer = Console.ReadLine()?.Trim() ?? "";
+    }
+    if (!string.Equals(answer, "P", StringComparison.OrdinalIgnoreCase))
+    {
+        Install();
+        Console.WriteLine();
+        Console.WriteLine("Updated. The connector runs in the background and starts with Windows.");
+        Pause();
+        return 0;
+    }
+}
+
 while (link is null)
 {
     Console.Write("Paste the pairing link from admin (Branches → Kitchen → Pair a Windows PC): ");
@@ -74,28 +98,7 @@ catch (Exception e)
     return 1;
 }
 
-// A fixed home, so the download can be deleted and the service still starts
-var installDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Ninja", "PrintConnector");
-Directory.CreateDirectory(installDir);
-var installed = Path.Combine(installDir, "ninja-print-connector.exe");
-var self = Environment.ProcessPath!;
-Sc($"stop {ServiceName}");
-if (!string.Equals(self, installed, StringComparison.OrdinalIgnoreCase))
-{
-    // A running service keeps the old copy locked for a moment after stopping
-    for (var attempt = 0; ; attempt++)
-    {
-        try { File.Copy(self, installed, overwrite: true); break; }
-        catch (IOException) when (attempt < 10) { Thread.Sleep(500); }
-    }
-}
-
-Sc($"delete {ServiceName}");
-Sc($"create {ServiceName} binPath= \"\\\"{installed}\\\" --service\" start= auto DisplayName= \"Ninja Print Connector\"");
-Sc($"description {ServiceName} \"Prints the kitchen's tickets from Ninja on this PC's printers.\"");
-// Come back by itself if it ever stops unexpectedly
-Sc($"failure {ServiceName} reset= 86400 actions= restart/5000/restart/5000/restart/30000");
-Sc($"start {ServiceName}");
+Install();
 
 Console.WriteLine();
 Console.WriteLine("Done. The connector runs in the background and starts with Windows.");
@@ -103,10 +106,37 @@ Console.WriteLine("In admin, pick this PC's printer for a kitchen station; it sh
 Pause();
 return 0;
 
-static void Sc(string arguments)
+// A fixed home, so the download can be deleted and the service still starts
+static void Install()
+{
+    var installDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Ninja", "PrintConnector");
+    Directory.CreateDirectory(installDir);
+    var installed = Path.Combine(installDir, "ninja-print-connector.exe");
+    var self = Environment.ProcessPath!;
+    Sc($"stop {ServiceName}");
+    if (!string.Equals(self, installed, StringComparison.OrdinalIgnoreCase))
+    {
+        // A running service keeps the old copy locked for a moment after stopping
+        for (var attempt = 0; ; attempt++)
+        {
+            try { File.Copy(self, installed, overwrite: true); break; }
+            catch (IOException) when (attempt < 10) { Thread.Sleep(500); }
+        }
+    }
+
+    Sc($"delete {ServiceName}");
+    Sc($"create {ServiceName} binPath= \"\\\"{installed}\\\" --service\" start= auto DisplayName= \"Ninja Print Connector\"");
+    Sc($"description {ServiceName} \"Prints the kitchen's tickets and the till's receipts from Ninja on this PC's printers.\"");
+    // Come back by itself if it ever stops unexpectedly
+    Sc($"failure {ServiceName} reset= 86400 actions= restart/5000/restart/5000/restart/30000");
+    Sc($"start {ServiceName}");
+}
+
+static int Sc(string arguments)
 {
     using var process = Process.Start(new ProcessStartInfo("sc.exe", arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true })!;
     process.WaitForExit();
+    return process.ExitCode;
 }
 
 static void Pause()

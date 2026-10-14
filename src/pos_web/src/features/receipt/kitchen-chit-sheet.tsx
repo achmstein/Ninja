@@ -14,8 +14,9 @@ export function KitchenChitSheet({ sale }: { sale: OfflineSale }) {
   const locale = useLocale()
 
   return createPortal(
-    // The print stylesheet shows every .receipt-sheet; this one starts a new page
-    <div className='receipt-sheet' style={{ breakBefore: 'page', pageBreakBefore: 'always' }}>
+    // The print stylesheet shows every .receipt-sheet; this one starts a new
+    // page, and through the print connector goes to the kitchen's printer
+    <div className='receipt-sheet kitchen-chit' style={{ breakBefore: 'page', pageBreakBefore: 'always' }}>
       <div style={{ textAlign: 'center', marginBottom: '3mm' }}>
         <div style={{ fontSize: 16, fontWeight: 700 }}>{t('kitchenChit')}</div>
         <div style={{ fontSize: 20, fontWeight: 700 }}>{sale.provisionalReceiptNumber}</div>

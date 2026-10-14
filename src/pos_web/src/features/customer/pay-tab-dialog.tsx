@@ -13,6 +13,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { openCashDrawer, printSheets } from '@/features/printing/print-sheets'
 import type { CardCustomer } from './customer-card'
 import { TabPaymentSheet, type TabPaymentSlip } from './tab-payment-sheet'
 import { usePayTab } from './use-customer-card'
@@ -86,6 +87,8 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             balanceAfter: balance - amount,
             at: new Date(),
           })
+          // Cash paid into the tab goes in the drawer
+          if (tender.value === 0) void openCashDrawer()
           // A fresh id for whatever the cashier records next
           requestId.current = crypto.randomUUID()
         },
@@ -125,7 +128,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             >
               {t('done')}
             </Button>
-            <Button size='lg' className='h-14 text-base' onClick={() => window.print()}>
+            <Button size='lg' className='h-14 text-base' onClick={() => void printSheets()}>
               <Printer className='size-5' />
               {t('print')}
             </Button>

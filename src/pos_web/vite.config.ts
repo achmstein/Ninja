@@ -54,9 +54,10 @@ export default defineConfig({
             },
           },
           {
-            // The tenant's icons and manifest: a till installed to the home screen keeps its face
+            // The tenant's icons, images and manifest: a till installed to the
+            // home screen keeps its face, and an offline receipt its logo
             urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin && /^\/api\/tenant\/(icons\/|manifest)/.test(url.pathname),
+              sameOrigin && /^\/api\/tenant\/(icons\/|images\/|manifest)/.test(url.pathname),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'tenant-icons',
@@ -65,9 +66,15 @@ export default defineConfig({
             },
           },
           {
+            // Loaded with crossorigin (index.html), so the receipt's picture
+            // can read it: an opaque copy would fail that, hence a fresh
+            // cache name and only readable answers kept
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
             handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts-css' },
+            options: {
+              cacheName: 'google-fonts-css-v2',
+              cacheableResponse: { statuses: [200] },
+            },
           },
           {
             urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',

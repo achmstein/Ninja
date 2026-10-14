@@ -18,6 +18,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { useMoney, toNumber } from '@/lib/money'
+import { printSheets } from '@/features/printing/print-sheets'
 import { ShiftReport } from './shift-report'
 import { ShiftReportSheet } from './shift-report-sheet'
 
@@ -108,7 +109,7 @@ export function CloseShiftDialog({
             <Button
               size='lg'
               className='h-14 text-base'
-              onClick={() => window.print()}
+              onClick={() => void printSheets()}
             >
               <Printer className='size-5' />
               {t('print')}

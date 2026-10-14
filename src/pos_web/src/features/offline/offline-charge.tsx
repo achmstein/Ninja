@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { TicketDetail } from '@/api/sales/types.gen'
+import { printSheets, takesCash } from '@/features/printing/print-sheets'
 import { KitchenChitSheet } from '@/features/receipt/kitchen-chit-sheet'
 import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
 import { saleTotal, type SaleLine } from '@/features/sale/cart'
@@ -119,9 +120,9 @@ export function useOfflineCharge() {
   }
 
   // The receipt for the customer and the chit for the kitchen, in one go,
-  // once both sheets are on the page
+  // once both sheets are on the page; cash opens the drawer with them
   useEffect(() => {
-    if (queued) window.print()
+    if (queued) void printSheets({ kickDrawer: takesCash(queued.payments) })
   }, [queued])
 
   // Back to an empty pad for the next customer: the floor has nothing to

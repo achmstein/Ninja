@@ -14,10 +14,19 @@ public static class EscPos
     // Bands keep a single GS v 0 block within what small printers buffer
     private const int BandRows = 512;
 
-    public static byte[] Job(Bitmap image)
+    /// <summary>Dots across 80 mm paper's printable 72 mm at 203 dpi.</summary>
+    public const int PaperDots = 576;
+
+    // ESC p 0 25 250: pulse the drawer on pin 2, as the tills do (ninja_printing escpos_builder.dart)
+    private static readonly byte[] DrawerKick = [0x1B, 0x70, 0x00, 0x19, 0xFA];
+
+    /// <summary>The image as one job; with <paramref name="kickDrawer"/> the cash drawer opens as it starts.</summary>
+    public static byte[] Job(Bitmap image, bool kickDrawer = false)
     {
         var bytes = new List<byte>();
         bytes.AddRange([0x1B, 0x40]);          // ESC @  reset
+        if (kickDrawer)
+            bytes.AddRange(DrawerKick);
         bytes.AddRange([0x1B, 0x61, 0x01]);    // ESC a 1  centre
 
         var (rows, widthBytes) = Pack(image);
@@ -34,6 +43,27 @@ public static class EscPos
         bytes.AddRange([0x1B, 0x64, 0x04]);    // ESC d 4  feed four lines
         bytes.AddRange([0x1D, 0x56, 0x01]);    // GS V 1  partial cut
         return [.. bytes];
+    }
+
+    /// <summary>The drawer alone: reset, then the kick, nothing printed.</summary>
+    public static byte[] Kick() => [0x1B, 0x40, .. DrawerKick];
+
+    /// <summary>
+    /// A copy no wider than the paper: a wider picture is scaled down, its
+    /// shape kept, so a till that drew at a finer pitch still fits the roll.
+    /// </summary>
+    public static Bitmap FitToPaper(Bitmap image)
+    {
+        if (image.Width <= PaperDots)
+            return new Bitmap(image);
+
+        var height = Math.Max(1, (int)Math.Round(image.Height * (double)PaperDots / image.Width));
+        var fitted = new Bitmap(PaperDots, height, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(fitted);
+        graphics.Clear(Color.White);
+        graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+        graphics.DrawImage(image, 0, 0, PaperDots, height);
+        return fitted;
     }
 
     /// <summary>One bit per dot, most significant first, black = 1: what GS v 0 reads.</summary>

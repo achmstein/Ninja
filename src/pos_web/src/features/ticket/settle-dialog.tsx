@@ -21,6 +21,11 @@ import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
+import {
+  openCashDrawer,
+  printSheets,
+  takesCash,
+} from '@/features/printing/print-sheets'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -295,6 +300,11 @@ export function SettleDialog({
           .reduce((sum, p) => sum + p.amount, 0),
       })
       onSettled?.(outcome)
+      // Cash opens the drawer though the receipt waits for Print: the
+      // cashier needs to make change (pos_app's _openDrawerForCash)
+      if (takesCash(payments.map((p) => ({ tender: p.tenderValue })))) {
+        void openCashDrawer()
+      }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       // Whatever went on a tab changed what its holder owes
@@ -485,7 +495,7 @@ export function SettleDialog({
             <Button
               size='lg'
               className='h-14 text-base'
-              onClick={() => window.print()}
+              onClick={() => void printSheets()}
             >
               <Printer className='size-5' />
               {t('print')}

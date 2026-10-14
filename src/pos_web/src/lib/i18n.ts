@@ -343,7 +343,7 @@ const dictionary = {
   noPaymentsYet: { en: "No payments taken yet", ar: "لا توجد مدفوعات بعد" },
   confirmSettle: { en: "Confirm & settle", ar: "أكّد وأغلق" },
   ticketSettled: { en: "Ticket settled", ar: "أُغلقت الفاتورة" },
-  receiptNumber: { en: "Receipt #{number}", ar: "إيصال #{number}" },
+  receiptNumber: { en: "Receipt #{number}", ar: "إيصال ⁦#{number}⁩" },
   print: { en: "Print", ar: "اطبع" },
   done: { en: "Done", ar: "تم" },
 
@@ -689,6 +689,23 @@ const dictionary = {
   offlineReceiptNote: { en: "Taken offline", ar: "من غير إنترنت" },
   kitchenChit: { en: "Kitchen", ar: "المطبخ" },
   offlineSalesBlockClose: { plural: "count", en: {"=1":"Send the 1 offline sale first: its money is in this drawer.","other":"Send the {count} offline sales first: their money is in this drawer."}, ar: {"one":"ابعت البيع اللي اتعمل من غير إنترنت الأول: فلوسه في الدرج ده.","two":"ابعت البيعتين اللي اتعملوا من غير إنترنت الأول: فلوسهم في الدرج ده.","few":"ابعت الـ{count} مبيعات اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده.","many":"ابعت الـ{count} بيعة اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده.","other":"ابعت الـ{count} بيعة اللي اتعملت من غير إنترنت الأول: فلوسها في الدرج ده."} },
+  printingSettings: { en: "This PC's printing", ar: "طباعة الجهاز ده" },
+  printingSettingsHint: { en: "Receipts print straight to this PC's printers through the print connector, with no print dialog, and the drawer opens for cash.", ar: "الإيصالات بتتطبع على طول على طابعات الجهاز ده عن طريق برنامج الطباعة، من غير شاشة الطباعة، والدرج بيفتح مع الكاش." },
+  printConnectorFound: { en: "Print connector on {name} · version {version}", ar: "برنامج الطباعة على {name} · إصدار {version}" },
+  printConnectorMissing: { en: "No print connector answers on this PC, so receipts open the print dialog.", ar: "مفيش برنامج طباعة بيرد على الجهاز ده، فالإيصالات بتفتح شاشة الطباعة." },
+  printConnectorInstall: { en: "Download the print connector", ar: "نزّل برنامج الطباعة" },
+  printConnectorInstallHint: { en: "Install it on this PC and pair it from the branch's kitchen in admin.", ar: "نزّله على الجهاز ده واربطه من إعدادات مطبخ الفرع في الإدارة." },
+  printConnectorAllowHint: { en: "The first time, Edge may ask to let this page reach devices on your network: press Allow.", ar: "أول مرة ممكن Edge يسأل لو الصفحة دي تقدر توصل للأجهزة اللي على الشبكة: دوس سماح." },
+  printConnectorFailed: { en: "Couldn't print through the print connector, so the print dialog opens instead.", ar: "معرفناش نطبع عن طريق برنامج الطباعة، فهتفتح شاشة الطباعة بدالها." },
+  receiptPrinter: { en: "Receipt printer", ar: "طابعة الإيصالات" },
+  kitchenChitPrinter: { en: "Kitchen chit printer (offline)", ar: "طابعة ورقة المطبخ (من غير إنترنت)" },
+  sameAsReceiptPrinter: { en: "Same as the receipt printer", ar: "نفس طابعة الإيصالات" },
+  noReceiptPrinter: { en: "None: use the print dialog", ar: "مفيش: استخدم شاشة الطباعة" },
+  openDrawerOnCash: { en: "Open the drawer for cash", ar: "افتح الدرج مع الكاش" },
+  testPrint: { en: "Test print", ar: "طباعة تجربة" },
+  testPrintBody: { en: "If you can read this, receipts print here.", ar: "لو قادر تقرا ده، الإيصالات هتتطبع هنا." },
+  testPrintSent: { en: "Sent to the printer", ar: "اتبعت للطابعة" },
+  openDrawer: { en: "Open drawer", ar: "افتح الدرج" },
 } satisfies Record<string, Message>
 
 export type TranslationKey = keyof typeof dictionary
