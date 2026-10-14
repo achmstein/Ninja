@@ -43,16 +43,21 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         </span>
       </div>
       <div className='mt-1 flex items-baseline gap-2'>
-        {/* The name and its number share the room up to the amount; a long name is cut there */}
+        {/* The name and its number share the room up to the amount; a long name is cut there.
+            Each is isolated: a Latin name and "#81" would otherwise run together the wrong way in Arabic */}
         <span className='min-w-0 flex-1 truncate'>
-          <span className='text-base font-semibold'>{order.customerName || t('guest')}</span>
-          <span className='text-muted-foreground ms-2 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
+          <bdi className='text-base font-semibold'>{order.customerName || t('guest')}</bdi>
+          <bdi dir='ltr' className='text-muted-foreground ms-2 text-sm tabular-nums'>
+            #{toNumber(order.orderNumber)}
+          </bdi>
         </span>
         <span className='shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
       <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />
-        <span className='truncate'>{line(order.delivery)}</span>
+        <span className='min-w-0 truncate'>
+          <bdi>{line(order.delivery)}</bdi>
+        </span>
       </div>
       {order.takenAtBranchId != null && (
         <div className='text-primary flex items-center gap-1.5 text-sm font-medium'>
@@ -63,7 +68,9 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       {order.delivery.riderName && (
         <div className='flex items-center gap-1.5 text-sm'>
           <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
-          <bdi className='truncate font-medium'>{order.delivery.riderName}</bdi>
+          <span className='min-w-0 truncate font-medium'>
+            <bdi>{order.delivery.riderName}</bdi>
+          </span>
         </div>
       )}
     </button>

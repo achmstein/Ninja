@@ -56,7 +56,8 @@ export function DeliveriesBoard() {
   )
 
   return (
-    <div className='flex h-full min-h-0 flex-col gap-4 p-4'>
+    // The screen under the header, as the sale pad takes it: the lanes reach the bottom and scroll there
+    <div className='flex h-[calc(100svh-4rem)] min-h-0 flex-col gap-4 p-4'>
       <div className='flex items-center gap-2'>
         <Button variant='ghost' size='icon' className='size-12' onClick={() => navigate({ to: '/' })} aria-label={t('goBack')}>
           <BackIcon className='size-6' />
@@ -170,17 +171,22 @@ function Column({
         <div className={cn('flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5', !header && 'pt-2.5')}>
           {!grouped
             ? orders.map(card)
-            : byRider(orders).map((group) => {
+            : byRider(orders).map((group, i) => {
                 const name = group.riderName ?? t('deliveryNoRider')
                 const owed = group.orders.reduce((sum, o) => sum + toNumber(o.total), 0)
                 return (
-                  <div key={group.riderUserId ?? ''} className='bg-background flex flex-col gap-2 rounded-xl border p-2.5'>
-                    <div className='flex items-center gap-2.5'>
-                      <span className='bg-secondary grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold' aria-hidden>
+                  // A rider is a heading over their cards, not a box round them: one border a card,
+                  // and a rule between riders
+                  <div key={group.riderUserId ?? ''} className={cn('flex flex-col gap-2', i > 0 && 'border-t pt-3')}>
+                    <div className='flex items-center gap-2.5 px-0.5'>
+                      <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full border text-sm font-bold' aria-hidden>
                         {[...name][0]?.toUpperCase()}
                       </span>
+                      {/* The name in an isolate inside a line of the page's direction: it starts where the line does */}
                       <span className='min-w-0 flex-1'>
-                        <bdi className='block truncate font-semibold'>{name}</bdi>
+                        <span className='block truncate font-semibold'>
+                          <bdi>{name}</bdi>
+                        </span>
                         <span className='text-muted-foreground block text-sm tabular-nums'>
                           {t('riderOrders', { count: group.orders.length })}
                           {lane === 'cashDue' && <> · {money(owed)}</>}
