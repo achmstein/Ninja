@@ -24,7 +24,7 @@ public class TicketSettledIntegrationEventHandler(
                 return;
 
             // On the day it was paid, which for an offline till's sale is not the day it arrived
-            facts.Add(new SalesFact(@event.BranchId, BusinessDay.Of(@event.SaleTime), SalesFactKind.Sale, @event.Total, @event.Vat, reference));
+            facts.Add(new SalesFact(@event.BranchId, BusinessDay.Of(@event.SaleTime()), SalesFactKind.Sale, @event.Total, @event.Vat, reference));
             await facts.UnitOfWork.SaveEntitiesAsync();
 
             logger.LogInformation("Sale of {Total} recorded for branch {BranchId} from ticket {TicketId}", @event.Total, @event.BranchId, @event.TicketId);

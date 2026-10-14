@@ -13,7 +13,7 @@ public class ProfitFeedEventsTest
         var paid = new DateTime(2026, 4, 30, 19, 0, 0, DateTimeKind.Utc);
         var settled = new TicketSettledIntegrationEvent { SettledAt = paid, CreationDate = paid.AddHours(14) };
 
-        Assert.AreEqual(paid, settled.SaleTime);
+        Assert.AreEqual(paid, settled.SaleTime());
     }
 
     [TestMethod]
@@ -22,6 +22,6 @@ public class ProfitFeedEventsTest
         var at = new DateTime(2026, 4, 30, 19, 0, 0, DateTimeKind.Utc);
         var settled = new TicketSettledIntegrationEvent { CreationDate = at };
 
-        Assert.AreEqual(at, settled.SaleTime);
+        Assert.AreEqual(at, settled.SaleTime());
     }
 }

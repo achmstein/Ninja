@@ -23,8 +23,11 @@ public record TicketSettledIntegrationEvent : IntegrationEvent
     /// </summary>
     public DateTime SettledAt { get; init; }
 
-    /// <summary>The moment the sale happened, for the day it belongs to.</summary>
-    public DateTime SaleTime => SettledAt == default ? CreationDate : SettledAt;
+    /// <summary>
+    /// The moment the sale happened, for the day it belongs to. A method, not
+    /// a property: nothing on the wire carries it (see Ninja.Contracts.Tests).
+    /// </summary>
+    public DateTime SaleTime() => SettledAt == default ? CreationDate : SettledAt;
 }
 
 /// <summary>A credit note was issued against a settled ticket (Sales).</summary>
