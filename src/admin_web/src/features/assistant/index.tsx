@@ -25,7 +25,7 @@ import { InfoTip } from '@/components/info-tip'
 import { SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
-import { claudeCodeCommand, mcpUrl } from './connect'
+import { claudeCodeCommand, MCP_CLIENT_ID, mcpUrl } from './connect'
 import { PersonalityCard } from './personality-card'
 import { RoutinesCard } from './routines'
 
@@ -54,19 +54,33 @@ const VENDORS: {
   },
 ]
 
-/** One short line a step; the longer sentence behind its ⓘ. `address` puts the copy field under it. */
-type Step = { line: TranslationKey; more?: TranslationKey; address?: boolean }
+/**
+ * One short line a step; the longer sentence behind its ⓘ. `copy` puts a copy
+ * field under it: the server's address, or the sign-in's client id.
+ */
+type Step = {
+  line: TranslationKey
+  more?: TranslationKey
+  copy?: 'address' | 'clientId'
+}
 
 const STEPS: Record<Vendor, Step[]> = {
   claude: [
     { line: 'assistantStepClaude1', more: 'assistantClaude1' },
-    { line: 'assistantStepClaude2', address: true },
+    { line: 'assistantStepClaude2', copy: 'address' },
+    // The sign-in's own client (docs/owner-assistant.md): its return addresses are
+    // Claude's, so ChatGPT, which registers itself, is not given it
+    {
+      line: 'assistantStepClaudeClientId',
+      more: 'assistantClaudeClientId',
+      copy: 'clientId',
+    },
     { line: 'assistantStepClaude3', more: 'assistantClaude3' },
     { line: 'assistantStepClaude4', more: 'assistantClaude4' },
   ],
   chatgpt: [
     { line: 'assistantStepChatGpt1', more: 'assistantChatGpt1' },
-    { line: 'assistantStepChatGpt2', address: true },
+    { line: 'assistantStepChatGpt2', copy: 'address' },
     { line: 'assistantStepChatGpt3', more: 'assistantChatGpt3' },
     { line: 'assistantStepChatGpt4', more: 'assistantChatGpt4' },
   ],
@@ -229,10 +243,14 @@ function ConnectSection() {
                   <p>{t(step.line, { name })}</p>
                   {step.more && <InfoTip>{t(step.more, { name })}</InfoTip>}
                 </div>
-                {step.address && (
+                {step.copy && (
                   <CopyField
-                    value={url}
-                    copied={t('appsAddressCopied')}
+                    value={step.copy === 'address' ? url : MCP_CLIENT_ID}
+                    copied={t(
+                      step.copy === 'address'
+                        ? 'appsAddressCopied'
+                        : 'assistantClientIdCopied'
+                    )}
                     large
                   />
                 )}
