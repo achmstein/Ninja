@@ -185,6 +185,18 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         </div>
       )}
 
+      {/* First what a caller says first, the street or a landmark, when the business has Google Maps:
+          a pick puts its point in the location field, as coordinates, and the street when it is empty.
+          The same order as the call centre's */}
+      <AddressSearchField
+        onPick={(place) =>
+          set({
+            location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
+            address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+          })
+        }
+      />
+
       <Field id={`${ids}-street`} label={t('deliveryStreetLabel')} error={tried && errors.address ? t('deliveryNeedsStreet') : null}>
         {(a) => (
           <Input
@@ -246,15 +258,6 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
           className='h-12 text-base'
           dir='ltr'
           autoComplete='off'
-        />
-        {/* The street the caller names, when the business has Google Maps: its point goes in the field as coordinates */}
-        <AddressSearchField
-          onPick={(place) =>
-            set({
-              location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
-              address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
-            })
-          }
         />
         <div id={`${ids}-location-state`} className='text-muted-foreground text-sm' aria-live='polite'>
           {reading ? (

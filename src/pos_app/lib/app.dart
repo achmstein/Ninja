@@ -43,11 +43,18 @@ class NinjaPosApp extends ConsumerStatefulWidget {
 class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingObserver {
   final List<StreamSubscription> _signalRSubscriptions = [];
 
+  /// A till on screen all day never comes back to the front, so it asks again
+  /// what the business has set (its till items, its features) every few
+  /// minutes, as the web till does: a change saved in admin reaches it
+  /// without a restart
+  Timer? _brandRecheck;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeApp();
+    _brandRecheck = Timer.periodic(const Duration(minutes: 5), (_) => ref.read(brandProvider.notifier).refresh());
 
     // Sales rung up offline replay the moment the network is back — and at
     // start, in case the till was restarted while some were still waiting
@@ -73,6 +80,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
 
   @override
   void dispose() {
+    _brandRecheck?.cancel();
     for (final sub in _signalRSubscriptions) {
       sub.cancel();
     }

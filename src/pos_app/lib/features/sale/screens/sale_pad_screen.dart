@@ -23,6 +23,7 @@ import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../call_centre/call_centre_mode.dart';
 import '../compact_columns.dart';
+import '../../../core/utils/bidi.dart';
 import '../../catalog/services/catalog_service.dart';
 import '../../deliveries/delivery_errors.dart';
 import '../../deliveries/providers/deliveries_provider.dart';
@@ -98,6 +99,9 @@ class SalePadScreen extends ConsumerStatefulWidget {
 class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   int? _activeCategory;
   final _note = TextEditingController();
+
+  /// The compact pad's search, always in view over its category list
+  final _search = TextEditingController();
   bool _placing = false;
   int? _pendingOrderId;
   Timer? _poll;
@@ -140,6 +144,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       _note.text = ref.read(saleProvider).note;
     });
     _note.addListener(() => ref.read(saleProvider.notifier).setNote(_note.text));
+    _search.addListener(() => setState(() {}));
   }
 
   @override
@@ -147,6 +152,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     _poll?.cancel();
     _timeout?.cancel();
     _note.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -613,6 +619,19 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     final features = ref.watch(featuresProvider);
     // The owner's choice in admin: photo tiles, or text tiles for a long menu
     final compact = ref.watch(compactTillItemsProvider);
+    // A long menu lists its categories down the side, with the search always
+    // in view, instead of rows of chips over the items
+    final rail = compact;
+    final needle = rail ? _search.text.trim().toLowerCase() : '';
+    final countIn = <int, int>{};
+    for (final item in itemsAsync.value ?? const <CatalogItem>[]) {
+      countIn[item.catalogTypeId] = (countIn[item.catalogTypeId] ?? 0) + 1;
+    }
+    void pickCategory(int id) {
+      // Picking a category leaves the search: the list is the way in now
+      if (_search.text.isNotEmpty) _search.clear();
+      setState(() => _activeCategory = id);
+    }
     final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
     final canDeliver = terms?.delivers ?? false;
     final charge = synced ? _deliveryCharge(sale, watch: true) : DeliveryCharge.none;
@@ -653,8 +672,23 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // Compact: the search, the categories being the list beside the items
+                        if (rail)
+                          Expanded(
+                            child: FTextField(
+                              control: FTextFieldControl.managed(controller: _search),
+                              hint: l10n.searchItems,
+                              textInputAction: TextInputAction.search,
+                              prefixBuilder: (context, style, states) => Padding(
+                                padding: const EdgeInsetsDirectional.only(start: 10),
+                                child: Icon(FIcons.search, size: 18, color: theme.colors.mutedForeground),
+                              ),
+                              clearable: (value) => value.text.isNotEmpty,
+                            ),
+                          )
                         // Every category in view: the chips wrap into rows
                         // rather than scrolling sideways
+                        else
                         Expanded(
                           child: Wrap(
                             spacing: 8,
@@ -688,6 +722,20 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                     ),
                   ),
                   Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (rail)
+                          _CategoryRail(
+                            entries: [
+                              if (usuals.isNotEmpty) (id: _usualsCategory, name: l10n.usuals, count: usuals.length, icon: FIcons.sparkles),
+                              for (final category in categories)
+                                (id: category.id, name: category.name.localized(context), count: countIn[category.id] ?? 0, icon: null),
+                            ],
+                            active: needle.isEmpty ? activeCategoryId : null,
+                            onPick: pickCategory,
+                          ),
+                        Expanded(
                     child: itemsAsync.when(
                       loading: () => LayoutBuilder(
                         builder: (context, constraints) {
@@ -785,13 +833,21 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                       ),
                       error: (_, _) => Center(child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground))),
                       data: (items) {
-                        final visible = activeCategoryId == _usualsCategory
-                            ? usuals
-                            : (items.where((i) => i.catalogTypeId == activeCategoryId).toList()
-                              ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)));
+                        final visible = needle.isNotEmpty
+                            // A search runs across every category, in either language
+                            ? items
+                                .where((i) =>
+                                    (i.name.en ?? '').toLowerCase().contains(needle) ||
+                                    (i.name.ar ?? '').toLowerCase().contains(needle))
+                                .toList()
+                            : activeCategoryId == _usualsCategory
+                                ? usuals
+                                : (items.where((i) => i.catalogTypeId == activeCategoryId).toList()
+                                  ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)));
                         if (visible.isEmpty) {
                           return Center(
-                            child: Text(l10n.noItemsInCategory, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                            child: Text(needle.isNotEmpty ? l10n.noItemsMatch : l10n.noItemsInCategory,
+                                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                           );
                         }
                         return LayoutBuilder(
@@ -829,6 +885,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           },
                         );
                       },
+                    ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1126,6 +1185,102 @@ class _WhoseRoundChips extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// One entry in the compact till's category list
+typedef _RailEntry = ({int id, String name, int count, IconData? icon});
+
+/// The compact till's categories down the start side, however many there
+/// are, scrolling on their own: each one's name (two lines at most, a Latin
+/// one laid out as it is written from the line's start) and how many items it
+/// holds, the open one filled in. The web till's is the same.
+class _CategoryRail extends StatelessWidget {
+  final List<_RailEntry> entries;
+
+  /// The open category; none while a search is shown
+  final int? active;
+  final void Function(int id) onPick;
+
+  const _CategoryRail({required this.entries, required this.active, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      width: 208,
+      decoration: BoxDecoration(border: BorderDirectional(end: BorderSide(color: theme.colors.border))),
+      child: ListView(
+        padding: const EdgeInsets.all(8),
+        children: [
+          for (final entry in entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: _RailCategory(entry: entry, active: entry.id == active, onTap: () => onPick(entry.id)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RailCategory extends StatelessWidget {
+  final _RailEntry entry;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _RailCategory({required this.entry, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final ink = active ? theme.colors.primaryForeground : theme.colors.foreground;
+    return Semantics(
+      button: true,
+      selected: active,
+      child: FTappable(
+        onPress: onTap,
+        builder: (context, states, child) => Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: active
+                ? theme.colors.primary
+                : states.contains(FTappableVariant.hovered) || states.contains(FTappableVariant.pressed)
+                    ? theme.colors.secondary
+                    : null,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: child,
+        ),
+        child: Row(
+          children: [
+            if (entry.icon != null) ...[
+              Icon(entry.icon, size: 16, color: ink),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                entry.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textDirection: textDirectionFor(entry.name),
+                textAlign: textAlignFor(context),
+                style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: ink),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${entry.count}',
+              style: theme.typography.xs.copyWith(
+                color: active ? theme.colors.primaryForeground.withValues(alpha: 0.8) : theme.colors.mutedForeground,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -127,9 +127,21 @@ export function useBrand(): Brand | undefined {
   return useQuery(brandQueryOptions()).data
 }
 
-/** Keeps the page's head and theme in step with the brand and the language. Mount once. */
+/** How often a till open all day asks again what the business has set (its till items, its features) */
+const BRAND_RECHECK_MS = 5 * 60_000
+
+/**
+ * Keeps the page's head and theme in step with the brand and the language,
+ * and asks for the brand again every few minutes and on coming back to the
+ * till, so a change the owner saves in admin reaches a till left open
+ * without a reload. Mount once.
+ */
 export function useBrandEffects() {
-  const brand = useBrand()
+  const brand = useQuery({
+    ...brandQueryOptions(),
+    refetchInterval: BRAND_RECHECK_MS,
+    refetchOnWindowFocus: 'always',
+  }).data
   const language = useLanguage((s) => s.language)
   useEffect(() => {
     if (!brand) return

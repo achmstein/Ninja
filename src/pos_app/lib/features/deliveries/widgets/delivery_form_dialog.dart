@@ -256,6 +256,16 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 ),
               ),
           ],
+          // First what a caller says first, the street or a landmark, when the business has Google Maps:
+          // a pick puts its point in the location field, as coordinates, and the street when it is empty.
+          // The same order as the call centre's
+          if (ref.watch(brandProvider.select((b) => b.addressSearch)))
+            AddressSearchField(
+              onPick: (place) {
+                _location.text = place.locationText;
+                if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
+              },
+            ),
           const SizedBox(height: 12),
           field(_street, l10n.deliveryStreetLabel),
           errorText(!_streetOk, l10n.deliveryNeedsStreet),
@@ -274,14 +284,6 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           field(_directions, l10n.deliveryDirectionsLabel, hint: l10n.deliveryDirectionsHint),
           const SizedBox(height: 12),
           field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
-          // The street the caller names, when the business has Google Maps: its point goes in the field as coordinates
-          if (ref.watch(brandProvider.select((b) => b.addressSearch)))
-            AddressSearchField(
-              onPick: (place) {
-                _location.text = place.locationText;
-                if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
-              },
-            ),
           const SizedBox(height: 4),
           if (reading)
             Row(
