@@ -5,10 +5,14 @@ name: Backup
 # the newest archive is fresh every morning and keeps an encrypted copy off
 # the machine as a workflow artifact, so a lost disk is not a lost cafe.
 # A failed run is the alert: GitHub mails the repository owner.
+#
+# Only for the single-server stack (deploy.yml), now retired, so it no longer
+# runs on a schedule: its SERVER_* secrets are gone and every run failed. The
+# platform backs every business up itself each night, mails ops when one
+# fails, and copies them off the box once PLATFORM_OFFSITE_* is set
+# (deploy/platform/README.md).
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       run_backup_now:
