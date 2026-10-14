@@ -16,6 +16,7 @@ import '../../core/widgets/pos_dialog.dart';
 import '../../core/widgets/pos_toast.dart';
 import '../../l10n/app_localizations.dart';
 import '../deliveries/models/delivery_order.dart';
+import '../deliveries/widgets/address_search_field.dart';
 import '../deliveries/widgets/delivery_details.dart';
 import '../sale/models/sale_delivery.dart';
 import '../sale/models/sale_line.dart';
@@ -266,6 +267,19 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                     ),
                   ),
                 ),
+            ],
+            // What a caller says first is the street or a landmark: a pick fills the location and
+            // finds the branch at once, and the street when it is still empty. With Google Maps on
+            if (ref.watch(brandProvider.select((b) => b.addressSearch))) ...[
+              const SizedBox(height: 4),
+              AddressSearchField(
+                onPick: (place) {
+                  _location.text = place.locationText;
+                  if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
+                  setState(() => _confirming = null);
+                  _controller.resolve(_location.text);
+                },
+              ),
             ],
             const SizedBox(height: 12),
             field(_street, l10n.deliveryStreetLabel),

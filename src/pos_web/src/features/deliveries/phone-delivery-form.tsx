@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Bike, History, Loader2, MapPin, Search, Send, Store } from 'lucide-react'
+import { AlertTriangle, Bike, History, Loader2, MapPin, Send, Store } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import type { DeliveryAlternative, KnownAddressView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
@@ -11,16 +11,15 @@ import { useBranchName } from '@/features/branch/use-branch-name'
 import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleSendTo } from '@/features/sale/cart'
 import { DELIVERY_LIMITS, keptSendTo, MIN_PHONE_DIGITS, toSendTo, validatePhoneDelivery } from '@/features/sale/sale-delivery'
 import { API_VERSION } from '@/lib/api-client'
-import { useAddressSearch } from '@/lib/address-search'
 import { useBrand, useFeatures } from '@/lib/brand'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { digitCount, normalizePhone } from '@/lib/phone'
 import { isModuleOff } from '@/lib/problem'
-import { toast } from '@/lib/toast'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useAddressLine, useDistanceText } from './delivery-details'
+import { AddressSearchField } from './address-search-field'
 import { outOfRangeKey } from './delivery-format'
 import { useTillDeliveryQuote } from './use-deliveries'
 
@@ -404,70 +403,5 @@ function Warning({ children }: { children: ReactNode }) {
       <AlertTriangle className='size-4 shrink-0' aria-hidden />
       {children}
     </p>
-  )
-}
-
-/**
- * The street the caller names, searched with Google through the business's
- * own server: shown only when the business has Google Maps. A pick puts its
- * point in the location field, where the delivery terms are read from it
- * as from a pasted link.
- */
-function AddressSearchField({ onPick }: { onPick: (place: { lat: number; lng: number; address: string | null }) => void }) {
-  const t = useT()
-  const language = useLanguage((s) => s.language)
-  const on = useBrand()?.maps?.search === true
-  const search = useAddressSearch({ language, enabled: on })
-  const [picking, setPicking] = useState<string | null>(null)
-  if (!on) return null
-  return (
-    <div className='flex flex-col gap-1'>
-      <div className='relative'>
-        <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' aria-hidden />
-        <Input
-          value={search.text}
-          onChange={(e) => search.setText(e.target.value)}
-          placeholder={t('deliverySearchAddress')}
-          aria-label={t('deliverySearchAddress')}
-          className='h-12 ps-9 text-base'
-          maxLength={100}
-          autoComplete='off'
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-        />
-        {search.searching && <Loader2 className='text-muted-foreground absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin' aria-hidden />}
-      </div>
-      {search.suggestions.length > 0 && (
-        <ul className='flex flex-col rounded-md border' role='listbox' aria-label={t('deliverySearchAddress')}>
-          {search.suggestions.map((s) => (
-            <li key={s.placeId}>
-              <button
-                type='button'
-                role='option'
-                aria-selected={false}
-                disabled={picking != null}
-                onClick={async () => {
-                  setPicking(s.placeId)
-                  const place = await search.pick(s)
-                  setPicking(null)
-                  if (place) onPick(place)
-                  else toast.error(t('deliverySearchFailed'))
-                }}
-                className='hover:bg-muted flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start'
-              >
-                {picking === s.placeId ? (
-                  <Loader2 className='text-muted-foreground size-4 shrink-0 animate-spin' aria-hidden />
-                ) : (
-                  <MapPin className='text-muted-foreground size-4 shrink-0' aria-hidden />
-                )}
-                <span className='flex min-w-0 flex-col'>
-                  <span className='truncate font-medium'>{s.primaryText}</span>
-                  {s.secondaryText && <span className='text-muted-foreground truncate text-sm'>{s.secondaryText}</span>}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   )
 }

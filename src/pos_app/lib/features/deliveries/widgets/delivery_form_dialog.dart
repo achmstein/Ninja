@@ -8,14 +8,13 @@ import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/phone.dart';
-import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_delivery.dart';
 import '../../sale/models/sale_line.dart';
 import '../models/delivery_order.dart';
 import '../providers/delivery_form_controller.dart';
-import '../services/address_search.dart';
+import 'address_search_field.dart';
 import 'delivery_details.dart';
 
 /// Enough digits to be worth asking whether the caller had deliveries before
@@ -277,7 +276,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
           // The street the caller names, when the business has Google Maps: its point goes in the field as coordinates
           if (ref.watch(brandProvider.select((b) => b.addressSearch)))
-            _AddressSearch(
+            AddressSearchField(
               onPick: (place) {
                 _location.text = place.locationText;
                 if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
@@ -360,145 +359,6 @@ String outOfRangeWarning(AppLocalizations l10n, TillDeliveryQuote quote) {
   if (quote.hasArea) return l10n.deliveryOutOfArea;
   final km = quote.radiusKm;
   return l10n.deliveryOutOfRange(km == km.roundToDouble() ? km.toStringAsFixed(0) : km.toString());
-}
-
-/// Google's suggestions for the street typed, from the business's own server;
-/// a pick hands [onPick] its point. One session token per search, closed by the pick.
-class _AddressSearch extends ConsumerStatefulWidget {
-  final void Function(PickedPlace place) onPick;
-
-  const _AddressSearch({required this.onPick});
-
-  @override
-  ConsumerState<_AddressSearch> createState() => _AddressSearchState();
-}
-
-class _AddressSearchState extends ConsumerState<_AddressSearch> {
-  final _text = TextEditingController();
-  Timer? _pause;
-  String? _session;
-  String? _asked;
-  String? _picking;
-  bool _searching = false;
-  List<PlaceSuggestion> _suggestions = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    _text.addListener(_changed);
-  }
-
-  @override
-  void dispose() {
-    _pause?.cancel();
-    _text.dispose();
-    super.dispose();
-  }
-
-  void _changed() {
-    _pause?.cancel();
-    final q = searchableQuery(_text.text);
-    if (q == null) {
-      if (_asked != null || _suggestions.isNotEmpty) {
-        setState(() {
-          _asked = null;
-          _suggestions = const [];
-          _searching = false;
-        });
-      }
-      return;
-    }
-    if (q == _asked) return;
-    _pause = Timer(searchDebounce, () => _search(q));
-  }
-
-  Future<void> _search(String q) async {
-    final language = Localizations.localeOf(context).languageCode;
-    _session ??= newSearchSession();
-    setState(() {
-      _asked = q;
-      _searching = true;
-    });
-    final found = await ref.read(addressSearchProvider).suggest(q, session: _session!, language: language);
-    if (!mounted || _asked != q) return;
-    setState(() {
-      _suggestions = found;
-      _searching = false;
-    });
-  }
-
-  Future<void> _pick(PlaceSuggestion suggestion) async {
-    final l10n = AppLocalizations.of(context)!;
-    final language = Localizations.localeOf(context).languageCode;
-    final session = _session ?? newSearchSession();
-    setState(() => _picking = suggestion.placeId);
-    final place = await ref.read(addressSearchProvider).pick(suggestion, session: session, language: language);
-    if (!mounted) return;
-    // The pick closes the session; the next search opens another
-    _session = null;
-    setState(() => _picking = null);
-    if (place == null) {
-      showPosToast(context, PosToastType.error, l10n.deliverySearchFailed);
-      return;
-    }
-    _pause?.cancel();
-    _asked = null;
-    _suggestions = const [];
-    _text.clear();
-    widget.onPick(place);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FTextField(
-            control: FTextFieldControl.managed(controller: _text),
-            hint: l10n.deliverySearchAddress,
-            textInputAction: TextInputAction.search,
-            suffixBuilder: _searching
-                ? (context, style, states) => const Padding(
-                      padding: EdgeInsetsDirectional.only(end: 10),
-                      child: SizedBox.square(dimension: 14, child: FCircularProgress()),
-                    )
-                : null,
-          ),
-          for (final s in _suggestions)
-            InkWell(
-              onTap: _picking == null ? () => _pick(s) : null,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                child: Row(
-                  children: [
-                    _picking == s.placeId
-                        ? const SizedBox.square(dimension: 14, child: FCircularProgress())
-                        : Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.primaryText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
-                          if (s.secondaryText != null) Text(s.secondaryText!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 /// The branches nearer the caller that deliver there, nearest first: how far

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBranchName } from '@/features/branch/use-branch-name'
+import { AddressSearchField } from '@/features/deliveries/address-search-field'
 import { useAddressLine, useDistanceText } from '@/features/deliveries/delivery-details'
 import { emptyDelivery, useSale, type SaleDelivery } from '@/features/sale/cart'
 import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, validatePhoneDelivery } from '@/features/sale/sale-delivery'
@@ -25,8 +26,9 @@ import { callerDelivery, chosenBranch } from './call-centre'
 /**
  * The call centre's "next caller": every sale starts from who is calling and
  * where they are, not from a branch. Their number brings up the addresses any
- * branch delivered them to; the address (a pasted Maps link, or coordinates)
- * picks the nearest branch that delivers there, which the agent may change —
+ * branch delivered them to; the address (searched with Google where the
+ * business has it, or a pasted Maps link, or coordinates) picks the nearest
+ * branch that delivers there, which the agent may change —
  * or the caller collects, at a branch they name. The till then switches to
  * that branch and the order is rung up there as any other: its menu, its
  * prices, its kitchen, its riders. No drawer, no shift, no tables.
@@ -41,7 +43,9 @@ export function CallCentre() {
   const ids = useId()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const country = useBrand()?.locale.country ?? 'EG'
+  const brand = useBrand()
+  const country = brand?.locale.country ?? 'EG'
+  const searchOn = brand?.maps?.search === true
   const { branches: allBranches } = useAllowedBranches()
   const setBranchId = useBranchStore((s) => s.setBranchId)
   const sale = useSale()
@@ -191,6 +195,18 @@ export function CallCentre() {
           <Bike className='size-5' aria-hidden />
           {t('callCentreDelivery')}
         </h2>
+        {/* What a caller says first is the street or a landmark: a pick fills the location, which
+            picks the branch, and the street when it is still empty. Shown with Google Maps on */}
+        <AddressSearchField
+          onPick={(place) => {
+            setPicked(null)
+            setConfirmingPaused(null)
+            set({
+              location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
+              address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+            })
+          }}
+        />
         <Labelled id={`${ids}-street`} label={t('deliveryStreetLabel')} error={tried && errors.address ? t('deliveryNeedsStreet') : null}>
           <Input
             id={`${ids}-street`}
@@ -250,7 +266,7 @@ export function CallCentre() {
         {/* Which branches deliver there, nearest first: the suggestion is chosen, the agent may pick another */}
         <div className='flex flex-col gap-2 text-sm' aria-live='polite'>
           {!form.location.trim() ? (
-            <p className='text-muted-foreground'>{t('callCentreLocationHint')}</p>
+            <p className='text-muted-foreground'>{t(searchOn ? 'callCentreLocationHintSearch' : 'callCentreLocationHint')}</p>
           ) : reading ? (
             <p className='text-muted-foreground flex items-center gap-1.5'>
               <Loader2 className='size-3.5 animate-spin' aria-hidden />
